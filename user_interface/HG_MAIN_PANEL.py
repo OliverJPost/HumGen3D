@@ -559,6 +559,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         flow.prop(makeup_node.inputs['Eyeliner Opacity'], 'default_value', text = 'Opacity', slider = True)
         flow.prop(makeup_node.inputs['Eyeliner Color'], 'default_value', text = 'Color')
 
+        return #TODO hide eyebrow section until issue resolved
         flow = self.skin_section_flow(boxbox, 'Eyebrows:')
 
         flow.prop(makeup_node.inputs['Eyebrows Opacity'], 'default_value', text = 'Opacity', slider = True)
