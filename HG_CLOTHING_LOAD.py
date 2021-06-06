@@ -28,10 +28,8 @@ def load_outfit(self,context, footwear = False):
         return
 
     mask_remove_list, tag = remove_old_outfits(pref, hg_rig, footwear)
-    print('print1', [obj for obj in bpy.data.objects if 'hg_body' in obj])
 
     cloth_objs, distance_dict, collections = import_cloth_items(context, sett, pref, hg_rig, footwear)
-    print('print2', [obj for obj in bpy.data.objects if 'hg_body' in obj])
     
     new_mask_list = []
     for obj in cloth_objs:     
@@ -54,15 +52,11 @@ def load_outfit(self,context, footwear = False):
             sk.value = 0
 
         backup_body_copy = set_gender_sk(backup_body)
-        print('print3', [obj for obj in bpy.data.objects if 'hg_body' in obj])
         distance_dict = HG_SHAPEKEY_CALCULATOR.build_distance_dict(self, backup_body_copy, obj, apply = False)    
-        print('print4', [obj for obj in bpy.data.objects if 'hg_body' in obj])
         obj.parent = hg_rig
         deform_from_distance(distance_dict, hg_body, obj, context)
-        print('print5', [obj for obj in bpy.data.objects if 'hg_body' in obj])
         context.view_layer.objects.active = obj
         set_armature(context, obj, hg_rig)
-        print('print6', [obj for obj in bpy.data.objects if 'hg_body' in obj])
         context.view_layer.objects.active = hg_rig
         
         bpy.data.objects.remove(backup_body_copy)
