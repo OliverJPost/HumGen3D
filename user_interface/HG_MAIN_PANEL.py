@@ -750,7 +750,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         
         self.tertiary_hair_ui(hair_systems, box)
         self.hair_material_ui(hair_systems, box)
-        self.hair_cards_ui(hair_systems, box)
+        #self.hair_cards_ui(hair_systems, box)
 
 
     def secondary_hair_ui(self, hair_systems, box):
