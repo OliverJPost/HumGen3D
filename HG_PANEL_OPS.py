@@ -120,13 +120,14 @@ class HG_OPENPREF(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        old_area = bpy.context.area.ui_type
+        old_area = bpy.context.area
+        old_ui_type = old_area.ui_type
         bpy.context.area.ui_type = 'PREFERENCES'
         bpy.context.preferences.active_section= 'ADDONS'
         bpy.context.window_manager.addon_support = {'COMMUNITY'}
         bpy.context.window_manager.addon_search='Human Generator 3D'
         bpy.ops.screen.area_dupli('INVOKE_DEFAULT')
-        bpy.context.area.ui_type = old_area       
+        old_area.ui_type = old_ui_type    
         return {'FINISHED'}
 
 class HG_DELETE(bpy.types.Operator):
