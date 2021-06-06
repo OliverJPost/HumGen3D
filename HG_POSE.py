@@ -31,7 +31,8 @@ class HG_RIGIFY(bpy.types.Operator):
 
         try:
             bpy.ops.pose.rigify_generate()
-        except:
+        except Exception as e:
+            print('Rigify Error:', e)
             self.report({'WARNING'}, 'Something went wrong, please check if Rigify is enabled')
             return {'FINISHED'}
                
