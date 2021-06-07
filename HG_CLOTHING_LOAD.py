@@ -36,12 +36,6 @@ def load_outfit(self,context, footwear = False):
         new_mask_list.extend(find_masks(obj))
         obj[tag] = 1 #adds a custom property to the cloth for identifying purposes
 
-        #apply shapekeys if original clothing pack
-        if obj.data.shape_keys:
-            if 'Shorten' in obj.data.shape_keys.key_blocks:
-                obj.data.shape_keys.key_blocks['Shorten'].value = .335
-            apply_shapekeys(obj)
-
         backup_rig = hg_rig.HG.backup
         obj.parent = backup_rig
 

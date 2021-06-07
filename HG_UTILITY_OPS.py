@@ -551,6 +551,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
 
 #FIXME male to female not working, other way?
 #FIXME texture saving
+#FIXME origin to model origin? Correction?
 #FIXME shoes corrective shapekeys
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
     bl_idname = "hg3d.saveoutfit"
