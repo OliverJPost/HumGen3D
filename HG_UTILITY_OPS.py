@@ -338,7 +338,8 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
         hg_body = hg_rig.HG.body_obj
         hg_eyes = [obj for obj in hg_rig.children if 'hg_eyes' in obj]
         
-        self.save_thumb(self.folder, self.thumb, self.name)
+        if not self.sett.dont_export_thumb:
+            self.save_thumb(self.folder, self.thumb, self.name)
 
         preset_data = {}
         preset_data['gender'] = hg_rig.HG.gender
@@ -365,7 +366,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
         self.hg_rig = find_human(context.object)
 
         self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb:
+        if not self.thumb and not self.sett.dont_export_thumb:
             self.show_message('No thumbnail selected')
             return {'CANCELLED'}
         if not self.sett.preset_name:
@@ -464,7 +465,8 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
             folder = pref.filepath + str(Path('hair/{}/{}Custom/'.format(hair_type, f'{gender}/' if hair_type == 'head' else '')))  
             if not os.path.exists(folder):
                 os.makedirs(folder)     
-            self.save_thumb(folder, self.thumb, self.name)  
+            if not self.sett.dont_export_thumb:
+                self.save_thumb(folder, self.thumb, self.name)  
             self.make_hair_json(context, hair_obj, folder, self.name)
             
         self.save_objects_optimized(context, hair_obj, self.folder, self.name, clear_ps = False, clear_vg = False) 
@@ -508,7 +510,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
         self.hg_rig = find_human(context.object)
 
         self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb:
+        if not self.thumb and not self.sett.dont_export_thumb:
             self.show_message('No thumbnail selected')
             return {'CANCELLED'}
         if not (self.sett.savehair_male or self.sett.savehair_female):
@@ -576,7 +578,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
 
         for gender in genders:
             gender_folder = self.folder + str(Path(f'/{gender}/Custom'))
-            self.save_thumb(gender_folder, self.thumb, self.name)
+            if not self.sett.dont_export_thumb:
+                self.save_thumb(gender_folder, self.thumb, self.name)
         
         body_copy = self.hg_rig.HG.body_obj.copy()
         body_copy.data = body_copy.data.copy()
@@ -636,7 +639,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
         self.col = context.scene.saveoutfit_col
 
         self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb:
+        if not self.thumb and not self.sett.dont_export_thumb:
             self.show_message('No thumbnail selected')
             return {'CANCELLED'}    
         if not self.hg_rig:

@@ -363,6 +363,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default=  '',
         subtype = 'DIR_PATH'
     )
+    dont_export_thumb: bpy.props.BoolProperty(default = False)
 
     hair_mat_male : bpy.props.EnumProperty(
         name="posing",

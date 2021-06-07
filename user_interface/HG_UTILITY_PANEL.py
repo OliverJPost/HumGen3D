@@ -31,6 +31,7 @@ class Tools_PT_Base:
         box.template_ID(sett, "preset_thumbnail", open="image.open")
         if img and img.name == 'Render Result':
             box.label(text = "Can't preview img, but it will be saved")
+        box.prop(sett, 'dont_export_thumb', text = "Don't export thumbnail")
 
     def not_creation(self, hg_rig, layout):
         if not hg_rig.HG.phase in ['body', 'face', 'skin', 'hair', 'length']:
