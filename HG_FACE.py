@@ -5,10 +5,10 @@ class HG_RESET_FACE(bpy.types.Operator):
     """
     Resets all face deformation values to 0
     """
-    bl_idname = "hg3d.resetface"
-    bl_label = "Reset face"
+    bl_idname      = "hg3d.resetface"
+    bl_label       = "Reset face"
     bl_description = "Resets all face deformation values to 0"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):
         hg_rig = find_human(context.object)

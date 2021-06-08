@@ -14,16 +14,16 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
     """   
     bl_idname = __package__
 
-    latest_version: bpy.props.IntVectorProperty(default = (0,0,0))
+    latest_version        : bpy.props.IntVectorProperty(default = (0,0,0))
     cpack_update_available: bpy.props.BoolProperty(default = False)
-    cpack_update_required: bpy.props.BoolProperty(default = False)
+    cpack_update_required : bpy.props.BoolProperty(default = False)
 
     pref_tabs : bpy.props.EnumProperty(
         name="tabs",
         description="",
         items = [
-                ("settings", "Settings", "","INFO", 0),
-                ("cpacks", "Content Packs", "","INFO", 1),
+                ("settings", "Settings",      "", "INFO", 0),
+                ("cpacks",   "Content Packs", "", "INFO", 1),
             ],
         default = "settings",
         update = cpacks_refresh
@@ -33,8 +33,8 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
         name="units",
         description="",
         items = [
-                ("metric", "Metric", "", 0),
-                ("imperial", "Imperial", "", 1),
+                ("metric",      "Metric",   "", 0),
+                ("imperial",    "Imperial", "", 1),
             ],
         default = "metric",
         )   
@@ -42,26 +42,26 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
         name="Show hair section",
         description="",
         items = [
-                ("both", "Both phases", "", 0),
-                ("creation", "Creation phase only", "", 1),
-                ("finalize", "Finalize phase only", "", 2),
+                ("both",        "Both phases",          "", 0),
+                ("creation",    "Creation phase only",  "", 1),
+                ("finalize",    "Finalize phase only",  "", 2),
             ],
         default = "creation",
         )   
 
-    show_confirmation: bpy.props.BoolProperty(default = True)
-    dev_tools:  bpy.props.BoolProperty(name="Show Dev Tools", description="", default=True)
+    show_confirmation    : bpy.props.BoolProperty(default = True)
+    dev_tools            : bpy.props.BoolProperty(name="Show Dev Tools", description="", default=True)
     auto_hide_hair_switch: bpy.props.BoolProperty(default = True)
-    auto_hide_popup: bpy.props.BoolProperty(default = True)
-    remove_clothes: bpy.props.BoolProperty(default = True)
-    compact_ff_ui: bpy.props.BoolProperty(name = 'Compact face UI', default = False)
-    keep_all_shapekeys: bpy.props.BoolProperty(name = 'Keep all shapekeys after creation phase', default = False)
+    auto_hide_popup      : bpy.props.BoolProperty(default = True)
+    remove_clothes       : bpy.props.BoolProperty(default = True)
+    compact_ff_ui        : bpy.props.BoolProperty(name = 'Compact face UI', default = False)
+    keep_all_shapekeys   : bpy.props.BoolProperty(name = 'Keep all shapekeys after creation phase', default = False)
 
     #RELEASE remove default path
-    filepath: bpy.props.StringProperty(name= 'Install Filepath', default = '')
-    installing: bpy.props.BoolProperty(default = False)
+    filepath    : bpy.props.StringProperty(name= 'Install Filepath', default = '')
+    installing  : bpy.props.BoolProperty(default = False)
     file_current: bpy.props.IntProperty()
-    file_all: bpy.props.IntProperty()
+    file_all    : bpy.props.IntProperty()
 
     nc_colorspace_name: bpy.props.StringProperty(default = '')
     debug_mode: bpy.props.BoolProperty(default = False)
@@ -78,12 +78,14 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
         update_available = 'cpack_required' if self.cpack_update_required else 'addon' if tuple(bl_info['version']) < tuple(self.latest_version) else 'cpack_available' if self.cpack_update_available else None 
         if update_available:
             box = col.box().column(align = True)
-            row = box.row()
+            
+            row           = box.row()
             row.alignment = 'CENTER'
             row.label(text = '*****************************************')
-            col_h = box.column()
+            
+            col_h         = box.column()
             col_h.scale_y = 3
-            col_h.alert = update_available == 'cpack_required' 
+            col_h.alert   = update_available == 'cpack_required'
             alert_dict = {
                 'cpack_required': ['One or more Content Packs are incompatible and need to be updated!', 'ERROR'],
                 'addon': ['A new update of the Human Generator add-on is available!', 'INFO'],
@@ -141,8 +143,8 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
 
     def cpack_ui(self, context):
         layout = self.layout
-        col = layout.column()
-        row = col.row()
+        col    = layout.column()
+        row    = col.row()
         row.label(text = 'Install path:')
         if self.filepath:
             subrow = row.row()
@@ -170,6 +172,7 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
         if selected_packs:
             box = col.box()
             box.label(text = 'Install selected packs')
+            
             row = box.row()
             row.scale_y = 1.5
             row.operator('hg3d.cpackinstall', text = 'Install Selected Content Packs', depress =True, icon = 'PACKAGE')
@@ -178,10 +181,11 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
         layout = self.layout
         
         #tutorial link section
-        box = layout.box()
+        box         = layout.box()
         box.scale_y = 1.5
         box.label(text = 'STEP 1: Follow the installation tutorial')
-        row = box.row()
+        
+        row       = box.row()
         row.alert = True
         row.operator("wm.url_open", text = 'Installation tutorial [Opens browser]', icon= 'HELP', depress = True).url = 'https://www.humgen3d.com/install'
 
@@ -228,14 +232,14 @@ class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     '''
     Changes the path via file browser popup
     '''
-    bl_idname = "hg3d.pathchange"
-    bl_label = "Change Path"
+    bl_idname      = "hg3d.pathchange"
+    bl_label       = "Change Path"
     bl_description = "Change the install path"
 
     def execute(self,context):
         pref = context.preferences.addons[__package__].preferences
 
-        pref.filepath = self.filepath
+        pref.filepath  = self.filepath
         pref.pref_tabs = 'cpacks'
         pref.pref_tabs = 'settings'
 
@@ -246,24 +250,24 @@ class HG_ICON_LEGEND(bpy.types.Panel):
     '''
     Legend popover for the icons used in the ui_list
     '''
-    bl_label = 'Icon legend'
-    bl_space_type = 'VIEW_3D'
+    bl_label       = 'Icon legend'
+    bl_space_type  = 'VIEW_3D'
     bl_region_type = 'HEADER'
-    bl_ui_units_x = 8
+    bl_ui_units_x  = 8
 
     def draw (self,context): 
         layout = self.layout       
         hg_icons = preview_collections["hg_icons"]
 
         icon_dict = {
-            'Human Meshes': 'humans',
+            'Human Meshes'  : 'humans',
             'Human Textures': 'textures',
-            'Shapekeys': 'body',
-            'Hairstyles': 'hair',
-            'Poses': 'pose',
-            'Outfits': 'clothing',
-            'Footwear': 'footwear',
-            'Expressions': 'expression'
+            'Shapekeys'     : 'body',
+            'Hairstyles'    : 'hair',
+            'Poses'         : 'pose',
+            'Outfits'       : 'clothing',
+            'Footwear'      : 'footwear',
+            'Expressions'   : 'expression'
             }
 
         for icon_desc, icon in icon_dict.items():

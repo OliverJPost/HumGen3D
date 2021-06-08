@@ -6,9 +6,9 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
     """   
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
-        viewport_visible= "RESTRICT_VIEW_OFF" if item.viewport_visible else "RESTRICT_VIEW_ON"
-        render_visible = "RESTRICT_RENDER_OFF" if item.render_visible else "RESTRICT_RENDER_ON"
+        enabledicon      = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
+        viewport_visible = "RESTRICT_VIEW_OFF" if item.viewport_visible else "RESTRICT_VIEW_ON"
+        render_visible   = "RESTRICT_RENDER_OFF" if item.render_visible else "RESTRICT_RENDER_ON"
 
         row = layout.row(align = True)
 
@@ -38,13 +38,13 @@ class MODAPPLY_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
-    mod_name: bpy.props.StringProperty(name = 'Modifier Name', default = '')  
-    mod_type: bpy.props.StringProperty(name = 'Modifier Type', default = '')  
-    enabled: bpy.props.BoolProperty(default = True)
-    render_visible: bpy.props.BoolProperty(default = True)
+    mod_name        : bpy.props.StringProperty(name = 'Modifier Name', default = '')
+    mod_type        : bpy.props.StringProperty(name = 'Modifier Type', default = '')
+    enabled         : bpy.props.BoolProperty(default = True)
+    render_visible  : bpy.props.BoolProperty(default = True)
     viewport_visible: bpy.props.BoolProperty(default = True)
-    count: bpy.props.IntProperty(default = 0)
-    object: bpy.props.PointerProperty(type=bpy.types.Object)
+    count           : bpy.props.IntProperty(default = 0)
+    object          : bpy.props.PointerProperty(type=bpy.types.Object)
 
 class HG_UL_SHAPEKEYS(bpy.types.UIList):
     """
@@ -66,9 +66,9 @@ class SHAPEKEY_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
-    sk_name: bpy.props.StringProperty(name = 'Modifier Name', default = '')   
+    sk_name: bpy.props.StringProperty(name = 'Modifier Name', default = '')
     enabled: bpy.props.BoolProperty(default = False)
-    on: bpy.props.BoolProperty(default = True)
+    on     : bpy.props.BoolProperty(default = True)
     
 
 class HG_UL_SAVEHAIR(bpy.types.UIList):
@@ -113,8 +113,8 @@ class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
-    obj_name: bpy.props.StringProperty(name = 'Ojbect Name', default = '')   
-    cor_sks_present: bpy.props.BoolProperty(default = False)
+    obj_name            : bpy.props.StringProperty(name = 'Ojbect Name', default = '')
+    cor_sks_present     : bpy.props.BoolProperty(default = False)
     weight_paint_present: bpy.props.BoolProperty(default = False)
 
 

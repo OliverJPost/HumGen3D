@@ -15,7 +15,14 @@ def list_blends_in_dir(dir, pcoll_type):
     """
     sett = bpy.context.scene.HG3D
     
-    search_term_dict = {'poses': sett.search_term_poses, 'expressions': sett.search_term_expressions, 'outfit': sett.search_term_outfit, 'patterns': sett.search_term_patterns, 'footwear': sett.search_term_footwear}
+    search_term_dict = {
+        'poses'      : sett.search_term_poses,
+        'expressions': sett.search_term_expressions,
+        'outfit'     : sett.search_term_outfit,
+        'patterns'   : sett.search_term_patterns,
+        'footwear'   : sett.search_term_footwear
+        }
+
     search_term = search_term_dict[pcoll_type] if pcoll_type in search_term_dict else ''
 
     file_paths = []
@@ -92,27 +99,27 @@ def populate_pcoll(self, context, pcoll_categ):
         gender = None
 
     dir_categ_dict = {
-        'poses': 'poses',
-        'outfit': 'outfits/{}'.format(gender),
-        'hair': 'hair/head/{}'.format(gender),
-        'face_hair': 'hair/face_hair',
+        'poses'      : 'poses',
+        'outfit'     : 'outfits/{}'.format(gender),
+        'hair'       : 'hair/head/{}'.format(gender),
+        'face_hair'  : 'hair/face_hair',
         'expressions': 'expressions',
-        'humans': 'models',
-        'footwear': 'footwear/{}'.format(gender),
-        'patterns': 'patterns',
-        'textures': 'textures/{}'.format(gender)
+        'humans'     : 'models',
+        'footwear'   : 'footwear/{}'.format(gender),
+        'patterns'   : 'patterns',
+        'textures'   : 'textures/{}'.format(gender)
         }
     dir_categ = dir_categ_dict[pcoll_categ]
     dir_sub_dict = {
-        'poses': sett.pose_sub,
-        'outfit': sett.outfit_sub,
-        'hair': sett.hair_sub,
-        'face_hair': sett.face_hair_sub,
+        'poses'      : sett.pose_sub,
+        'outfit'     : sett.outfit_sub,
+        'hair'       : sett.hair_sub,
+        'face_hair'  : sett.face_hair_sub,
         'expressions': sett.expressions_sub,
-        'humans' : sett.gender,
-        'footwear' : sett.footwear_sub,
-        'patterns': sett.patterns_sub,
-        'textures': sett.texture_library
+        'humans'     : sett.gender,
+        'footwear'   : sett.footwear_sub,
+        'patterns'   : sett.patterns_sub,
+        'textures'   : sett.texture_library
         }
     dir_subcateg = dir_sub_dict[pcoll_categ]
     

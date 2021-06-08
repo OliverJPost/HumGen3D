@@ -13,10 +13,10 @@ class HG_UPDATE_LENGTH(bpy.types.Operator):
     """
     plus or minus button to change the length of the human
     """
-    bl_idname = "hg3d.updatelength"
-    bl_label = "Update Length"
+    bl_idname      = "hg3d.updatelength"
+    bl_label       = "Update Length"
     bl_description = 'Update Length'
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     longer : bpy.props.BoolProperty()
 
@@ -34,10 +34,10 @@ class HG_RANDOM_LENGTH(bpy.types.Operator):
     """
     plus or minus button to change the length of the human
     """
-    bl_idname = "hg3d.randomlength"
-    bl_label = "Random Length"
+    bl_idname      = "hg3d.randomlength"
+    bl_label       = "Random Length"
     bl_description = 'Random Length'
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):
         sett = context.scene.HG3D
@@ -46,9 +46,9 @@ class HG_RANDOM_LENGTH(bpy.types.Operator):
 
 
 def update_length_v2(self, context):
-    hg_rig = find_human(context.active_object)
+    hg_rig  = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj
-    sett = context.scene.HG3D
+    sett    = context.scene.HG3D
     
     if context.scene.HG3D.update_exception:
         return
@@ -58,17 +58,17 @@ def update_length_v2(self, context):
     old_length = hg_rig.dimensions[2]
 
     stretch_bone_dict = {
-        'stretch_upper_arm': {'sym': True, 'max_loc': (0, 0.0255, 0), 'min_loc': (0, -0.051, 0)},
-        'stretch_forearm': {'sym': True, 'max_loc': (0, 0.0204, 0), 'min_loc': (0, -0.0408, 0)},
-        'stretch_thigh': {'sym': True, 'max_loc': (0, 0.0468, 0), 'min_loc': (0, -0.0936, 0)},
-        'stretch_shin': {'sym': True, 'max_loc': (0, 0.0408, 0), 'min_loc': (0, -0.0816, 0)},
-        'stretch_foot': {'sym': True, 'max_loc': (0, 0.0066, 0.004286), 'min_loc': (0, -0.0132, -0.008571)},
-        'stretch_spine': {'sym': False, 'max_loc': (0, 0.0214, 0), 'min_loc': (0, -0.0428, 0)},
-        'stretch_spine.001': {'sym': False, 'max_loc': (0, 0.0214, 0), 'min_loc': (0, -0.0428, 0)},
-        'stretch_spine.002': {'sym': False, 'max_loc': (0, 0.0107, 0), 'min_loc': (0, -0.0214, 0)},
-        'stretch_spine.003': {'sym': False, 'max_loc': (0, 0.0107, 0), 'min_loc': (0, -0.0214 , 0)},
-        'stretch_neck': {'sym': False, 'max_loc': (0, 0.0108, 0), 'min_loc': (0, -0.0214, 0)},
-        'stretch_head': {'sym': False, 'max_loc': (0, 0.0015, 0), 'min_loc': (0, -0.003, 0)},
+        'stretch_upper_arm': {'sym': True,  'max_loc': (0, 0.0255, 0),          'min_loc': (0, -0.051, 0)},
+        'stretch_forearm'  : {'sym': True,  'max_loc': (0, 0.0204, 0),          'min_loc': (0, -0.0408, 0)},
+        'stretch_thigh'    : {'sym': True,  'max_loc': (0, 0.0468, 0),          'min_loc': (0, -0.0936, 0)},
+        'stretch_shin'     : {'sym': True,  'max_loc': (0, 0.0408, 0),          'min_loc': (0, -0.0816, 0)},
+        'stretch_foot'     : {'sym': True,  'max_loc': (0, 0.0066, 0.004286),   'min_loc': (0, -0.0132, -0.008571)},
+        'stretch_spine'    : {'sym': False, 'max_loc': (0, 0.0214, 0),          'min_loc': (0, -0.0428, 0)},
+        'stretch_spine.001': {'sym': False, 'max_loc': (0, 0.0214, 0),          'min_loc': (0, -0.0428, 0)},
+        'stretch_spine.002': {'sym': False, 'max_loc': (0, 0.0107, 0),          'min_loc': (0, -0.0214, 0)},
+        'stretch_spine.003': {'sym': False, 'max_loc': (0, 0.0107, 0),          'min_loc': (0, -0.0214 , 0)},
+        'stretch_neck'     : {'sym': False, 'max_loc': (0, 0.0108, 0),          'min_loc': (0, -0.0214, 0)},
+        'stretch_head'     : {'sym': False, 'max_loc': (0, 0.0015, 0),          'min_loc': (0, -0.003, 0)},
     }
 
     bones = hg_rig.pose.bones
@@ -80,8 +80,8 @@ def update_length_v2(self, context):
             bone_list = [bones[stretch_bone],]
 
         xyz_substracted = numpy.subtract(bone_data['max_loc'], bone_data['min_loc'])
-        xyz_multiplied = tuple([multiplier*x for x in xyz_substracted])
-        x_y_z_location = numpy.subtract(bone_data['max_loc'], xyz_multiplied)
+        xyz_multiplied  = tuple([multiplier*x for x in xyz_substracted])
+        x_y_z_location  = numpy.subtract(bone_data['max_loc'], xyz_multiplied)
 
         for b in bone_list:
             b.location = x_y_z_location
@@ -106,10 +106,10 @@ def update_length(context, longer, hg_rig = None, small_increment = False):
         return
 
     upper_arm_controls = 'stretch_upper_arm'
-    forearm_controls = 'stretch_forearm'
-    thigh_controls = 'stretch_thigh'
-    shin_controls = 'stretch_shin'
-    foot_controls = 'stretch_foot'
+    forearm_controls   = 'stretch_forearm'
+    thigh_controls     = 'stretch_thigh'
+    shin_controls      = 'stretch_shin'
+    foot_controls      = 'stretch_foot'
 
     #in centimeters
     translation_value = {upper_arm_controls: .85, forearm_controls: .68, thigh_controls: 1.56, shin_controls:  1.36, foot_controls: .22}
@@ -120,9 +120,9 @@ def update_length(context, longer, hg_rig = None, small_increment = False):
             move_bone(hg_rig.pose.bones[control_bone+suff], 'y', y_value*.01 if longer else y_value*-.01 )
 
     spine_controls_short = ('stretch_spine{}'.format(suff) for suff in ['', '.001'])
-    spine_controls_long = ('stretch_spine{}'.format(suff) for suff in [ '.002', '.003'])
-    neck_controls = ('stretch_neck',)
-    head_controls = ('stretch_head',)
+    spine_controls_long  = ('stretch_spine{}'.format(suff) for suff in [ '.002', '.003'])
+    neck_controls        = ('stretch_neck',)
+    head_controls        = ('stretch_head',)
 
     z_change = translation_value[shin_controls]/100 + translation_value[thigh_controls]/100
     
@@ -209,7 +209,7 @@ def random_length(context, hg_rig):
 
 def move_bone(bone, axis, translation):        
     global_translation = mathutils.Vector((0.0, translation, 0.0))
-    rot_matrix = bone.rotation_euler.to_matrix()
+    rot_matrix         = bone.rotation_euler.to_matrix()
     rot_matrix.invert()
     local_translation = global_translation @ rot_matrix
-    bone.location = bone.location + local_translation
+    bone.location     = bone.location + local_translation

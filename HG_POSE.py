@@ -12,13 +12,13 @@ class HG_RIGIFY(bpy.types.Operator):
     """
     Changes the rig to make it compatible with Rigify, then generates the rig
     """
-    bl_idname = "hg3d.rigify"
-    bl_label = "Generate Rigify Rig"
+    bl_idname      = "hg3d.rigify"
+    bl_label       = "Generate Rigify Rig"
     bl_description = "Generates a Rigify rig for this human"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        hg_rig = find_human(context.active_object)
+        hg_rig  = find_human(context.active_object)
         context.view_layer.objects.active = hg_rig
         hg_body = hg_rig.HG.body_obj
             
@@ -62,12 +62,12 @@ class HG_RIGIFY(bpy.types.Operator):
     def set_HG(self, hg_rig, rigify_rig):
         nHG = rigify_rig.HG
         HG = hg_rig.HG
-        nHG.ishuman = True
-        nHG.phase = HG.phase
-        nHG.gender = HG.gender
+        nHG.ishuman  = True
+        nHG.phase    = HG.phase
+        nHG.gender   = HG.gender
         nHG.body_obj = HG.body_obj
-        nHG.backup = HG.backup
-        nHG.length = HG.length
+        nHG.backup   = HG.backup
+        nHG.length   = HG.length
 
     def iterate_children(self, hg_rig, rigify_rig):
         for child in hg_rig.children:

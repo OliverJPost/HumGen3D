@@ -15,21 +15,21 @@ from . HG_COMMON_FUNC import apply_shapekeys
 
 def status_text_callback(header, context):
     print('text callback')
-    sett = context.scene.HG3D
-
+    sett   = context.scene.HG3D
     layout = header.layout
 
     layout.separator_spacer()
     layout.alignment = 'EXPAND'
-    row = layout.row(align=False)
-    row.alignment='CENTER'
+    
+    row           = layout.row(align=False)
+    row.alignment = 'CENTER'
     
     # if sett.building:
     #     layout.label(text=t('info_building_model'), icon='TIME')
     # else:
     layout.label(text='Building Human X', icon='TIME')
     
-    col = layout.column()
+    col         = layout.column()
     col.scale_x = 1.6
     col.prop(sett, "batch_progress")
     print('setting prop PROGRESSSSSSSSSSSSSSSS', sett.batch_progress)
@@ -51,12 +51,12 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def __init__(self):
-        self.human_idx = 0
+        self.human_idx       = 0
         self.generate_amount = 4
-        self.finish_step = False
-        self.done = False
-        self.timer = None
-        self.x_loc = 0
+        self.finish_step     = False
+        self.done            = False
+        self.timer           = None
+        self.x_loc           = 0
 
     def modal(self, context, event):
         """ Event handling. """

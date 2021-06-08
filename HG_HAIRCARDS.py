@@ -7,10 +7,10 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     """
     Removes the corresponding hair system
     """
-    bl_idname = "hg3d.haircards"
-    bl_label = "Convert to hair cards"
+    bl_idname      = "hg3d.haircards"
+    bl_label       = "Convert to hair cards"
     bl_description = "Converts this system to hair cards"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
 
     def execute(self,context):

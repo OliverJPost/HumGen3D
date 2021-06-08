@@ -5,9 +5,9 @@ from .. HG_PCOLL import preview_collections
 from . HG_PANEL_FUNCTIONS import tab_switching_menu, get_flow
 
 class Tools_PT_Base:
-    bl_space_type = "VIEW_3D"
+    bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "HumGen"
+    bl_category    = "HumGen"
 
     def Header (self, context):
         return True
@@ -47,9 +47,9 @@ class Tools_PT_Poll:
         hg_rig = find_human(context.object)
         return hg_rig 
         
-class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
+class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel): 
     bl_idname = "HG_PT_UTILITY"
-    bl_label = "Extras"
+    bl_label  = "Extras"
 
     @classmethod
     def poll(cls, context):
@@ -75,8 +75,8 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
  
 class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Texture Baking"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Texture Baking"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'RENDER_RESULT')
@@ -113,16 +113,16 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
         row.label(text = 'HumGen folder when left empty', icon = 'INFO')
         col.prop(sett, 'bake_file_type', text = 'Format:')
 
-        col = layout.column()
+        col         = layout.column()
         col.scale_y = 1.5
-        col.alert = True
+        col.alert   = True
         col.operator('hg3d.bake', icon = 'OUTPUT', depress = True)
         col.label(text = 'Blender freezes in current version', icon = 'INFO')
 
 class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Apply modifiers"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Apply modifiers"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'MOD_SUBSURF')
@@ -170,8 +170,8 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
 class HG_PT_T_PRESET(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Save as starting human"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Save as starting human"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     #poll inherited
     
@@ -207,8 +207,8 @@ class HG_PT_T_PRESET(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 #RELEASE update base shapekeys json    
 class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Save custom shapekeys"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Save custom shapekeys"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     #poll inherited
 
@@ -253,8 +253,8 @@ class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 
 class HG_PT_T_HAIR(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Save custom hairstyles"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Save custom hairstyles"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     #poll inherited
 
@@ -263,10 +263,10 @@ class HG_PT_T_HAIR(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
         self.layout.label(text = '', icon_value = hg_icons['hair'].icon_id)
 
     def draw(self, context):   
-        hg_rig = find_human(context.object)
+        hg_rig   = find_human(context.object)
         hg_icons = preview_collections['hg_icons']
-        sett = context.scene.HG3D
-        layout = self.layout
+        sett     = context.scene.HG3D
+        layout   = self.layout
 
         col= layout.column(align = True)
 
@@ -307,8 +307,8 @@ class HG_PT_T_HAIR(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 
 class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Save custom outfits"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Save custom outfits"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
         hg_icons = preview_collections['hg_icons']
@@ -355,8 +355,8 @@ class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
 
 class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Mesh --> Clothing"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Mesh --> Clothing"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
@@ -367,8 +367,8 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         self.layout.label(text = '', icon_value = hg_icons['clothing'].icon_id)
 
     def draw(self, context):   
-        sett = context.scene.HG3D
-        layout = self.layout
+        sett     = context.scene.HG3D
+        layout   = self.layout
         hg_icons = preview_collections['hg_icons']
         
         box = layout.box().row()
@@ -432,7 +432,7 @@ class HG_PT_T_MASKS(Tools_PT_Base, bpy.types.Panel):
         
 class HG_PT_T_CLOTHWEIGHT(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label = "Weight painting"
+    bl_label     = "Weight painting"
     
     def draw(self, context):        
         sett = context.scene.HG3D
@@ -453,7 +453,7 @@ class HG_PT_T_CLOTHWEIGHT(Tools_PT_Base, bpy.types.Panel):
         
 class HG_PT_T_CLOTHSK(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label = "Corrective shapekeys"
+    bl_label     = "Corrective shapekeys"
     
     def draw(self, context):   
         hg_rig = find_human(context.object)
@@ -470,7 +470,7 @@ class HG_PT_T_CLOTHSK(Tools_PT_Base, bpy.types.Panel):
         
 class HG_PT_T_CLOTHMAT(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label = "Clothing material"
+    bl_label     = "Clothing material"
     
     def draw(self, context):   
         hg_rig = find_human(context.object)
@@ -499,8 +499,8 @@ class HG_PT_T_CLOTHMAT(Tools_PT_Base, bpy.types.Panel):
 
 class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Developer tools"
-    bl_options = {'DEFAULT_CLOSED'}
+    bl_label     = "Developer tools"
+    bl_options   = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'PREFERENCES')

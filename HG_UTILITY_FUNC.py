@@ -8,13 +8,13 @@ from . HG_COMMON_FUNC import ShowMessageBox, find_human
 def refresh_modapply(self, context):
     print('refreshing modapply')
     sett = context.scene.HG3D
-    col = context.scene.modapply_col
+    col  = context.scene.modapply_col
     col.clear()
 
-    header = col.add()
+    header          = col.add()
     header.mod_name = 'HEADER'
-    header.count = 1 if sett.modapply_search_modifiers == 'summary' else 0
-    objs = build_object_list(context, sett)
+    header.count    = 1 if sett.modapply_search_modifiers == 'summary' else 0
+    objs            = build_object_list(context, sett)
     
     for obj in objs:
         for mod in obj.modifiers:
@@ -34,14 +34,14 @@ def build_object_list(context, sett):
     return list(set(objs))
 
 def build_full_list(col, mod, obj):
-    item = col.add()
+    item          = col.add()
     item.mod_name = mod.name
     item.mod_type = mod.type
 
     item.viewport_visible = mod.show_viewport
-    item.render_visible = mod.show_render
-    item.count = 0
-    item.object = obj
+    item.render_visible   = mod.show_render
+    item.count            = 0
+    item.object           = obj
 
     if mod.type in ['ARMATURE', 'SUBSURF']:
         item.enabled = False
@@ -57,7 +57,7 @@ def build_summary_list(col, mod):
         item = col.add()
         item.mod_name = mod.type.title().replace('_', ' ')
         item.mod_type = mod.type
-        item.count = 1
+        item.count    = 1
         if mod.type in ['ARMATURE', 'SUBSURF']:
             item.enabled = False
         else:
@@ -71,7 +71,7 @@ def get_preset_thumbnail(self, context):
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = context.preferences.addons[__package__].preferences
-    col = context.scene.shapekeys_col
+    col  = context.scene.shapekeys_col
     col.clear()
 
     existing_sks = ['Basis',]
@@ -103,7 +103,7 @@ def refresh_shapekeys_ul(self, context):
 def refresh_hair_ul(self, context):
     sett = context.scene.HG3D
     pref = context.preferences.addons[__package__].preferences
-    col = context.scene.savehair_col
+    col  = context.scene.savehair_col
     col.clear()
 
     hg_rig = find_human(context.object)
@@ -120,7 +120,7 @@ def refresh_hair_ul(self, context):
 def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D
     pref = context.preferences.addons[__package__].preferences
-    col = context.scene.saveoutfit_col
+    col  = context.scene.saveoutfit_col
     col.clear()
     
     hg_rig = next((o for o in context.selected_objects if o.HG.ishuman), None)

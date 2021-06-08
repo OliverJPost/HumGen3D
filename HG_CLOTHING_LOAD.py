@@ -16,10 +16,11 @@ def load_outfit(self,context, footwear = False):
     """
     loads the outfit that is the current active item in the outfit preview_collection
     """  
-    pref = context.preferences.addons[__package__].preferences
-    sett = context.scene.HG3D
-    hg_rig = find_human(context.active_object)    
+    pref    = context.preferences.addons[__package__].preferences
+    sett    = context.scene.HG3D
+    hg_rig  = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj
+
     hg_rig.hide_set(False)
     hg_rig.hide_viewport = False
     
@@ -46,8 +47,9 @@ def load_outfit(self,context, footwear = False):
             sk.value = 0
 
         backup_body_copy = set_gender_sk(backup_body)
-        distance_dict = HG_SHAPEKEY_CALCULATOR.build_distance_dict(self, backup_body_copy, obj, apply = False)    
-        obj.parent = hg_rig
+        distance_dict    = HG_SHAPEKEY_CALCULATOR.build_distance_dict(self, backup_body_copy, obj, apply = False)
+        obj.parent       = hg_rig
+
         deform_from_distance(distance_dict, hg_body, obj, context)
         context.view_layer.objects.active = obj
         set_armature(context, obj, hg_rig)
@@ -72,7 +74,7 @@ def load_outfit(self,context, footwear = False):
     
 
 def set_gender_sk(backup_body):
-    copy = backup_body.copy()
+    copy      = backup_body.copy()
     copy.data = backup_body.data.copy()
     bpy.context.scene.collection.objects.link(copy)    
 
@@ -95,7 +97,7 @@ def deform_from_distance(distance_dict, hg_body, cloth_obj, context):
 def set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
     #remove duplicates from mask lists
     mask_remove_list = list(set(mask_remove_list))
-    new_mask_list = list(set(new_mask_list))
+    new_mask_list    = list(set(new_mask_list))
 
     #find the overlap between both lists, these will be ignored
     ignore_masks = list(set(mask_remove_list) & set(new_mask_list))
@@ -113,7 +115,7 @@ def set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
     #add new masks used by new clothes
     for mask in new_mask_list:
         mod = hg_body.modifiers.new(mask, 'MASK')
-        mod.vertex_group = mask
+        mod.vertex_group        = mask
         mod.invert_vertex_group = True
 
 def set_armature(context, obj, hg_rig):
@@ -133,7 +135,7 @@ def set_armature(context, obj, hg_rig):
 def import_cloth_items(context, sett, pref, hg_rig, footwear):
     #load the whole collection from the outfit file. It loads collections instead of objects because this allows loading of linked objects
     pcoll_item = sett.pcoll_footwear if footwear else sett.pcoll_outfit
-    blendfile = str(pref.filepath) + str(Path(pcoll_item))
+    blendfile  = str(pref.filepath) + str(Path(pcoll_item))
     with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
         data_to.collections = data_from.collections
         data_to.texts = data_from.texts
@@ -182,15 +184,15 @@ def set_cloth_shapekeys(sk, hg_rig):
     """  
     sk_names = ['Muscular', 'Overweight', 'Skinny']
 
-    for i, sk_name in enumerate(sk_names):
-        sk[sk_name].mute = False
+    for i, sk_name in enumerate(sk_names): 
+        sk[sk_name].mute  = False
         sk[sk_name].value = hg_rig.HG.body_shape[i]
     
-    if 'Chest' in sk:
-        sk['Chest'].mute = False
+    if 'Chest' in sk: 
+        sk['Chest'].mute  = False
         sk['Chest'].value = (hg_rig.HG.body_shape[3] * 3) - 2.5
 
-    sk['Shorten'].mute = False
+    sk['Shorten'].mute  = False
     sk['Shorten'].value = (-1.9801 * hg_rig.HG.length) + 3.8989
 
 def set_cloth_corrective_drivers(hg_body, sk):
@@ -200,18 +202,18 @@ def set_cloth_corrective_drivers(hg_body, sk):
     for driver in hg_body.data.shape_keys.animation_data.drivers:
         target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '')
         if target_sk in [shapekey.name for shapekey in sk]:
-            new_driver = sk[target_sk].driver_add('value')
-            new_var = new_driver.driver.variables.new()
-            new_var.type = 'TRANSFORMS'
-            new_target = new_var.targets[0]
-            old_var = driver.driver.variables[0]
-            old_target = old_var.targets[0]
+            new_driver    = sk[target_sk].driver_add('value')
+            new_var       = new_driver.driver.variables.new()
+            new_var.type  = 'TRANSFORMS'
+            new_target    = new_var.targets[0]
+            old_var       = driver.driver.variables[0]
+            old_target    = old_var.targets[0]
             new_target.id = hg_body.parent
 
             new_driver.driver.expression = driver.driver.expression
-            new_target.bone_target = old_target.bone_target
-            new_target.transform_type = old_target.transform_type
-            new_target.transform_space = old_target.transform_space
+            new_target.bone_target       = old_target.bone_target
+            new_target.transform_type    = old_target.transform_type
+            new_target.transform_space   = old_target.transform_space
 
 def find_masks(obj):
     """

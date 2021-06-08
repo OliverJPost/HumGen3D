@@ -38,7 +38,7 @@ class Utility_tools:
         if current_name != 'Render Result':    
             try:
                 img.filepath_raw = str(Path(f'{folder}/{save_name}.jpg'))
-                img.file_format = 'JPEG'
+                img.file_format  = 'JPEG'
                 img.save()
             except RuntimeError as e:
                 self.show_message("Thumbnail image doesn't have any image data")
@@ -67,7 +67,7 @@ class Utility_tools:
                     bpy.ops.object.particle_system_remove()
 
         new_scene = bpy.data.scenes.new(name='test_scene')
-        new_col = bpy.data.collections.new(name='HG')
+        new_col   = bpy.data.collections.new(name='HG')
         new_scene.collection.children.link(new_col)
         for obj in objs:
             new_col.objects.link(obj)    
@@ -99,10 +99,10 @@ class HG_MAKE_EXPERIMENTAL(bpy.types.Operator, Utility_tools):
     """
     Makes human experimental, loosening limits on shapekeys and sliders
     """
-    bl_idname = "hg3d.experimental"
-    bl_label = "Make human experimental"
+    bl_idname      = "hg3d.experimental"
+    bl_label       = "Make human experimental"
     bl_description = "Makes human experimental, loosening limits on shapekeys and sliders"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):        
         hg_rig = find_human(context.active_object)
@@ -111,9 +111,9 @@ class HG_MAKE_EXPERIMENTAL(bpy.types.Operator, Utility_tools):
 
         is_experimental = HG.experimental
 
-        s_max = 1 if is_experimental else 2
+        s_max    =  1 if is_experimental else  2
         s_min_ff = -1 if is_experimental else -2
-        s_min_bd = 0 if is_experimental else -.5
+        s_min_bd =  0 if is_experimental else -.5
 
         for sk in hg_body.data.shape_keys.key_blocks: 
             if sk.name.startswith('ff_'):
@@ -132,10 +132,10 @@ class HG_MAKE_EXPERIMENTAL(bpy.types.Operator, Utility_tools):
         return {'FINISHED'}
 
 class HG_OT_MODAPPLY(bpy.types.Operator, Utility_tools):
-    bl_idname = "hg3d.modapply"
-    bl_label = "Apply selected modifiers"
+    bl_idname      = "hg3d.modapply"
+    bl_label       = "Apply selected modifiers"
     bl_description = "Apply selected modifiers"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):        
         sett = context.scene.HG3D
@@ -215,8 +215,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator, Utility_tools):
                 print(f'Error while applying modifier {mod.name} on {obj.name}, with error as {e}')
 
 class HG_OT_REFRESH_UL(bpy.types.Operator):
-    bl_idname = "hg3d.ulrefresh"
-    bl_label = "Refresh list"
+    bl_idname      = "hg3d.ulrefresh"
+    bl_label       = "Refresh list"
     bl_description = "Refresh list"
 
     type: bpy.props.StringProperty()
@@ -233,10 +233,10 @@ class HG_OT_REFRESH_UL(bpy.types.Operator):
         return {'FINISHED'}
 
 class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
-    bl_idname = "hg3d.selectmodapply"
-    bl_label = "Select all/none modifiers"
+    bl_idname      = "hg3d.selectmodapply"
+    bl_label       = "Select all/none modifiers"
     bl_description = "Select all/none modifiers"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     all: bpy.props.BoolProperty()
 
@@ -251,8 +251,8 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         return {'FINISHED'}
 
 class HG_OT_OPEN_FOLDER(bpy.types.Operator):
-    bl_idname = "hg3d.openfolder"
-    bl_label = "Open folder"
+    bl_idname      = "hg3d.openfolder"
+    bl_label       = "Open folder"
     bl_description = "Opens the folder that belongs to this type of content"
 
     subpath: bpy.props.StringProperty()
@@ -282,7 +282,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Utility_tools):
 
         data = [item.sk_name for item in self.collection if item.enabled]
    
-        sk_obj = hg_rig.HG.body_obj.copy()
+        sk_obj      = hg_rig.HG.body_obj.copy()
         sk_obj.data = sk_obj.data.copy()
         sk_obj.name = 'hg_shapekey'
         context.collection.objects.link(sk_obj)
@@ -304,8 +304,8 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        pref = context.preferences.addons[__package__].preferences
-        self.sett = context.scene.HG3D
+        pref            = context.preferences.addons[__package__].preferences
+        self.sett       = context.scene.HG3D
         self.collection = context.scene.shapekeys_col
 
         has_selected = next((True for item in self.collection if item.enabled), False)
@@ -325,8 +325,8 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Utility_tools):
         return self.execute(context)
 
 class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
-    bl_idname = "hg3d.savepreset"
-    bl_label = "Save as starting human"
+    bl_idname      = "hg3d.savepreset"
+    bl_label       = "Save as starting human"
     bl_description = "Save as starting human"
 
     name: bpy.props.StringProperty()
@@ -361,8 +361,8 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        pref = context.preferences.addons[__package__].preferences
-        self.sett = context.scene.HG3D
+        pref        = context.preferences.addons[__package__].preferences
+        self.sett   = context.scene.HG3D
         self.hg_rig = find_human(context.object)
 
         self.thumb = self.sett.preset_thumbnail_enum
@@ -430,8 +430,8 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
         return preset_data
 
 class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
-    bl_idname = "hg3d.savehair"
-    bl_label = "Save as starting human"
+    bl_idname      = "hg3d.savehair"
+    bl_label       = "Save as starting human"
     bl_description = "Save as starting human"
 
     name: bpy.props.StringProperty()
@@ -440,11 +440,11 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
         sett = self.sett
         pref = context.preferences.addons[__package__].preferences
 
-        hg_rig = self.hg_rig
+        hg_rig  = self.hg_rig
         hg_body = hg_rig.HG.body_obj
-        col = context.scene.savehair_col
+        col     = context.scene.savehair_col
 
-        hair_obj = hg_body.copy()
+        hair_obj      = hg_body.copy()
         hair_obj.data = hair_obj.data.copy()
         hair_obj.name = 'HG_Body'
         context.collection.objects.link(hair_obj)
@@ -538,11 +538,11 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
         ps_dict = {}
         for mod in hair_obj.modifiers:
             if mod.type == 'PARTICLE_SYSTEM':
-                ps = mod.particle_system
-                ps_length = ps.settings.child_length
+                ps          = mod.particle_system
+                ps_length   = ps.settings.child_length
                 ps_children = ps.settings.child_nbr
-                ps_steps = ps.settings.display_step
-                ps_dict[ps.name]= {"length": ps_length, "children_amount": ps_children, "path_steps": ps_steps}
+                ps_steps    = ps.settings.display_step
+                ps_dict[ps.name]    = {"length": ps_length, "children_amount": ps_children, "path_steps": ps_steps}
 
         json_data = {"blend_file": f'{style_name}.blend', "hair_systems": ps_dict}
 
@@ -556,10 +556,10 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
 #FIXME origin to model origin? Correction?
 #FIXME shoes corrective shapekeys
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
-    bl_idname = "hg3d.saveoutfit"
-    bl_label = "Save as outfit"
+    bl_idname      = "hg3d.saveoutfit"
+    bl_label       = "Save as outfit"
     bl_description = "Save as outfit"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     name: bpy.props.StringProperty()
     alert: bpy.props.StringProperty()
@@ -567,7 +567,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
     def execute(self,context):        
         sett = self.sett
         pref = context.preferences.addons[__package__].preferences
-        col = self.col
+        col  = self.col
         objs = [bpy.data.objects[item.obj_name] for item in col]
                   
         genders = []
@@ -633,10 +633,10 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        self.pref = context.preferences.addons[__package__].preferences
-        self.sett = context.scene.HG3D
+        self.pref   = context.preferences.addons[__package__].preferences
+        self.sett   = context.scene.HG3D
         self.hg_rig = find_human(self.sett.saveoutfit_human)
-        self.col = context.scene.saveoutfit_col
+        self.col    = context.scene.saveoutfit_col
 
         self.thumb = self.sett.preset_thumbnail_enum
         if not self.thumb and not self.sett.dont_export_thumb:
@@ -717,10 +717,10 @@ class MESH_TO_CLOTH_TOOLS(Utility_tools):
             
 #TODO make compatible with non-standard poses
 class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
-    bl_idname = "hg3d.autoweight"
-    bl_label = "Auto weight paint"
+    bl_idname      = "hg3d.autoweight"
+    bl_label       = "Auto weight paint"
     bl_description = "Automatic weight painting"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):     
         cloth_obj = context.object
@@ -731,7 +731,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         for mod in self.hg_rig.HG.body_obj.modifiers:
             if mod.type == 'MASK':
                 mod.show_viewport = False
-                mod.show_render = False
+                mod.show_render   = False
         
         if self.sett.mtc_add_armature_mod:
             armature = next((mod for mod in cloth_obj.modifiers if mod.type == 'ARMATURE'), None) 
@@ -767,18 +767,18 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         return {'FINISHED'}
 
 class HG_OT_ADDCORRECTIVE(bpy.types.Operator, Utility_tools):
-    bl_idname = "hg3d.addcorrective"
-    bl_label = "Add corrective shapekeys"
+    bl_idname      = "hg3d.addcorrective"
+    bl_label       = "Add corrective shapekeys"
     bl_description = "Automatic weight painting"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):   
         self.sett = context.scene.HG3D
-        hg_rig = self.sett.mtc_armature
-        sett = self.sett
+        hg_rig    = self.sett.mtc_armature
+        sett      = self.sett
         cloth_obj = context.object
         
-        body_copy = hg_rig.HG.body_obj.copy()
+        body_copy      = hg_rig.HG.body_obj.copy()
         body_copy.data = body_copy.data.copy()
         context.collection.objects.link(body_copy)
         
@@ -835,10 +835,10 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator, Utility_tools):
         return context.window_manager.invoke_props_dialog(self)
     
 class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
-    bl_idname = "hg3d.addclothmat"
-    bl_label = "Add clothing material"
+    bl_idname      = "hg3d.addclothmat"
+    bl_label       = "Add clothing material"
     bl_description = "Adds the default HumGen clothing material for you to set up"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context): 
         pref = get_prefs()

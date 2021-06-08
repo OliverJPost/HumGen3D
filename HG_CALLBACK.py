@@ -20,8 +20,9 @@ class HG_ACTIVATE(bpy.types.Operator):
     bl_description = "Activate HumGen"
     
     def execute(self, context):    
-        sett = bpy.context.scene.HG3D
+        sett            = bpy.context.scene.HG3D
         sett.subscribed = False
+
         msgbus(self, context)
         refresh_pcoll(self, context, 'humans')
         print('activating HumGen')
@@ -38,9 +39,9 @@ def msgbus(self, context):
 
     subscribe_to = bpy.types.LayerObjects, "active"
     bpy.msgbus.subscribe_rna(
-        key = subscribe_to,
-        owner = self,
-        args = (self,),
+        key    = subscribe_to,
+        owner  = self,
+        args   = (self,),
         notify = HG_Callback,
         )
     sett.subscribed = True    
@@ -75,7 +76,7 @@ def HG_Callback(self):
     sett.update_exception = True
     try:
         principled_bsdf = [node for node in hg_rig.HG.body_obj.data.materials[0].node_tree.nodes if node.type == 'BSDF_PRINCIPLED'][0]
-        sett.skin_sss = 'off' if principled_bsdf.inputs['Subsurface'].default_value == 0 else 'on'
+        sett.skin_sss   = 'off' if principled_bsdf.inputs['Subsurface'].default_value == 0 else 'on'
     except:
         print('could not set subsurface toggle')
 

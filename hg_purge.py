@@ -2,7 +2,7 @@ import os
 import bpy #type: ignore
 
 override = bpy.context.copy()
-override["area.type"] = ['OUTLINER']
+override["area.type"]    = ['OUTLINER']
 override["display_mode"] = ['ORPHAN_DATA']
 for i in range(8):
     bpy.ops.outliner.orphans_purge(override) 

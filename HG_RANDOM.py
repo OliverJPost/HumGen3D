@@ -13,20 +13,20 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
     """
     sets the color slot to a random color from the color dicts from HG_COLORS
     """
-    bl_idname = "hg3d.colorrandom"
-    bl_label = "Random Color"
+    bl_idname      = "hg3d.colorrandom"
+    bl_label       = "Random Color"
     bl_description = "Randomize this property"
-    bl_options = {"UNDO", 'INTERNAL'}
+    bl_options     = {"UNDO", 'INTERNAL'}
 
-    input_name: bpy.props.StringProperty()
+    input_name : bpy.props.StringProperty()
     color_group: bpy.props.StringProperty()
 
     def execute(self,context):
-        color_hex = random.choice(color_dict[self.color_group])
-        color_rgb = [int(color_hex[i:i+2], 16) for i in (0, 2, 4)]
+        color_hex       = random.choice(color_dict[self.color_group])
+        color_rgb       = [int(color_hex[i:i+2], 16) for i in (0, 2, 4)]
         float_color_rgb = [x / 255.0 for x in color_rgb]
         float_color_rgb.append(1)
-        input = context.object.active_material.node_tree.nodes['HG_Control'].inputs[self.input_name]
+        input               = context.object.active_material.node_tree.nodes['HG_Control'].inputs[self.input_name]
         input.default_value = tuple(float_color_rgb)
         
         return {'FINISHED'}
@@ -35,10 +35,10 @@ class HG_RANDOM(bpy.types.Operator):
     """
     randomizes this specific property, may it be a slider of a pcoll
     """
-    bl_idname = "hg3d.random"
-    bl_label = "Redraw Random"
+    bl_idname      = "hg3d.random"
+    bl_label       = "Redraw Random"
     bl_description = "Randomize this property"
-    bl_options = {"UNDO", 'INTERNAL'}
+    bl_options     = {"UNDO", 'INTERNAL'}
 
     type : bpy.props.StringProperty()
 
@@ -58,17 +58,17 @@ class HG_RANDOM(bpy.types.Operator):
         elif type.startswith('face'):
             key = type[5:]
             prefix_dict = {
-                'all': 'ff',
+                'all'    : 'ff',
                 'u_skull': ('ff_a', 'ff_b'),
-                'eyes': 'ff_c',
+                'eyes'   : 'ff_c',
                 'l_skull': 'ff_d',
-                'nose': 'ff_e',
-                'mouth': 'ff_f',
-                'chin' : 'ff_g',
-                'cheeks': 'ff_h',
-                'jaw': 'ff_i',
-                'ears': 'ff_j',
-                'custom': 'ff_x'
+                'nose'   : 'ff_e',
+                'mouth'  : 'ff_f',
+                'chin'   : 'ff_g',
+                'cheeks' : 'ff_h',
+                'jaw'    : 'ff_i',
+                'ears'   : 'ff_j',
+                'custom' : 'ff_x'
                 }
             face_sk = [sk for sk in hg_rig.HG.body_obj.data.shape_keys.key_blocks if sk.name.startswith(prefix_dict[key])] 
             for sk in face_sk:
@@ -80,11 +80,11 @@ def randomize_skin(context, hg_body):
     mat = hg_body.data.materials[0]
     nodes = mat.node_tree.nodes
     node_randomize_dict= {
-        nodes['Lighten_hsv'].inputs['Value']: (0,2),
-        nodes['Darken_hsv'].inputs['Value']: (0,2),
-        nodes['Skin_tone'].inputs[1]: (.1, 3),
-        nodes['Skin_tone'].inputs[2]: (-1, 1),
-        nodes['Freckles_control'].inputs['Pos2']: None
+        nodes['Lighten_hsv'].inputs['Value']     : (0,2),
+        nodes['Darken_hsv'].inputs['Value']      : (0,2),
+        nodes['Skin_tone'].inputs[1]             : (.1, 3),
+        nodes['Skin_tone'].inputs[2]             : (-1, 1),
+        nodes['Freckles_control'].inputs['Pos2'] : None
     }
 
 def random_body_type(hg_rig):

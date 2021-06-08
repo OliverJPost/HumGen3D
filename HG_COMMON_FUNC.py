@@ -60,8 +60,8 @@ def apply_shapekeys(ob):
         return
 
     bpy.ops.object.shape_key_add(from_mix=True)
-    ob.active_shape_key.value =1.0
-    ob.active_shape_key.name = "All shape"
+    ob.active_shape_key.value = 1.0
+    ob.active_shape_key.name  = "All shape"
     
     i = ob.active_shape_key_index
 

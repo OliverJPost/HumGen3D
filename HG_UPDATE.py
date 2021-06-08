@@ -5,10 +5,10 @@ from . import bl_info
 
 def check_update():
     pref = bpy.context.preferences.addons[__package__].preferences
-    url = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
+    url  = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
     resp = requests.get(url)
 
-    pref.cpack_update_required = False
+    pref.cpack_update_required  = False
     pref.cpack_update_available = False
 
     try:

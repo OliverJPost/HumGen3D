@@ -12,10 +12,10 @@ class HG_DESELECT(bpy.types.Operator):
     """
     sets the active object as none
     """
-    bl_idname = "hg3d.deselect"
-    bl_label = "Deselect"
+    bl_idname      = "hg3d.deselect"
+    bl_label       = "Deselect"
     bl_description = "Deselects active object"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         for obj in bpy.context.selected_objects:
@@ -28,10 +28,12 @@ class HG_UITOGGLE(bpy.types.Operator):
     """
     section buttons, pressing it will make that section the active one, closing any other opened sections
     """
-    bl_idname = "hg3d.uitoggle"
-    bl_label = ""
-    bl_description = """Open this menu
-    CTRL+Click to keep hair children turned on"""
+    bl_idname      = "hg3d.uitoggle"
+    bl_label       = ""
+    bl_description = """
+        Open this menu
+        CTRL+Click to keep hair children turned on
+        """
 
     categ: bpy.props.StringProperty()
 
@@ -66,10 +68,10 @@ class HG_NEXTPREV(bpy.types.Operator):
     """
     Zooms in on next or previous human in the scene
     """
-    bl_idname = "hg3d.nextprev"
-    bl_label = "Deselect"
+    bl_idname      = "hg3d.nextprev"
+    bl_label       = "Deselect"
     bl_description = "Deselects active object"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     forward : bpy.props.BoolProperty(name = '', default = False)
 
@@ -120,12 +122,14 @@ class HG_OPENPREF(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        old_area = bpy.context.area
+        old_area    = bpy.context.area
         old_ui_type = old_area.ui_type
-        bpy.context.area.ui_type = 'PREFERENCES'
-        bpy.context.preferences.active_section= 'ADDONS'
+        
+        bpy.context.area.ui_type                 = 'PREFERENCES'
+        bpy.context.preferences.active_section   = 'ADDONS'
         bpy.context.window_manager.addon_support = {'COMMUNITY'}
-        bpy.context.window_manager.addon_search='Human Generator 3D'
+        bpy.context.window_manager.addon_search  = 'Human Generator 3D'
+        
         bpy.ops.screen.area_dupli('INVOKE_DEFAULT')
         old_area.ui_type = old_ui_type    
         return {'FINISHED'}
@@ -134,10 +138,10 @@ class HG_DELETE(bpy.types.Operator):
     """
     Deletes the active human, including it's backup human if it's not in use by any other humans
     """
-    bl_idname = "hg3d.delete"
-    bl_label = "Delete Human"
+    bl_idname      = "hg3d.delete"
+    bl_label       = "Delete Human"
     bl_description = "Deletes human and all objects associated with the human"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         hg_rig = find_human(context.active_object)
@@ -174,8 +178,8 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
     """
     clears searchfield
     """
-    bl_idname = "hg3d.clearsearch"
-    bl_label = "Clear search"
+    bl_idname      = "hg3d.clearsearch"
+    bl_label       = "Clear search"
     bl_description = "Clears the searchbox"
 
     categ: bpy.props.StringProperty()

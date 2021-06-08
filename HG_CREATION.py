@@ -25,9 +25,9 @@ class HG_REVERT_CREATION(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self,context):
-        hg_rig = find_human(context.active_object)
+        hg_rig    = find_human(context.active_object)
         hg_backup = hg_rig.HG.backup
-        children = [child for child in hg_rig.children]
+        children  = [child for child in hg_rig.children]
 
         #remove current human, including all children of the current human
         for child in children:
@@ -35,9 +35,9 @@ class HG_REVERT_CREATION(bpy.types.Operator):
         bpy.data.objects.remove(hg_rig)
 
         #backup human: rename, make visible, add to collection
-        hg_backup.name = hg_backup.name.replace('_Backup', '')
+        hg_backup.name          = hg_backup.name.replace('_Backup', '')
         hg_backup.hide_viewport = False
-        hg_backup.hide_render = False
+        hg_backup.hide_render   = False
         add_to_collection(context, hg_backup)
         
         #backup children: set correct body_obj property, add to collection, make visible
@@ -48,7 +48,7 @@ class HG_REVERT_CREATION(bpy.types.Operator):
                 hg_body = child
             add_to_collection(context, child)
             child.hide_viewport = False
-            child.hide_render = False
+            child.hide_render   = False
 
         #point constraints to the correct rig
         p_bones= hg_backup.pose.bones
@@ -105,12 +105,12 @@ def load_human_v2(context, creator = False):
     gender = sett.gender if not creator else 'female'
     
     #link to scene
-    hg_rig = data_to.objects[0]
+    hg_rig          = data_to.objects[0]
     hg_rig.location = context.scene.cursor.location
-    hg_body = data_to.objects[1]
-    hg_eyes = data_to.objects[2]
-    scene = context.scene
-    for obj in data_to.objects:
+    hg_body         = data_to.objects[1]
+    hg_eyes         = data_to.objects[2]
+    scene           = context.scene
+    for obj in data_to.objects: 
         scene.collection.objects.link(obj)
         add_to_collection(context, obj)
 
@@ -122,12 +122,12 @@ def load_human_v2(context, creator = False):
         tooth['hg_teeth'] = 1
 
     #custom properties
-    HG = hg_rig.HG
-    HG.ishuman = True
-    HG.gender = sett.gender
-    HG.phase = 'body' if not creator else 'creator'
+    HG          = hg_rig.HG
+    HG.ishuman  = True
+    HG.gender   = sett.gender
+    HG.phase    = 'body' if not creator else 'creator'
     HG.body_obj = hg_body
-    HG.length = hg_rig.dimensions[2]
+    HG.length   = hg_rig.dimensions[2]
 
     load_external_shapekeys(context, pref, hg_body)
 
@@ -146,7 +146,7 @@ def load_human_v2(context, creator = False):
         #set correct gender specific node group
         if gender == 'male':
             male_specific_shader(hg_body)
-        mat = hg_body.data.materials[0]
+        mat   = hg_body.data.materials[0]
         nodes = mat.node_tree.nodes
         mat.node_tree.nodes.remove(nodes['Delete_node'])
         
@@ -170,10 +170,10 @@ def load_human_v2(context, creator = False):
                 missed_shapekeys += 1
 
         refresh_pcoll(None, context, 'textures')
-        texture_name = preset_data['material']['diffuse']
-        texture_library = preset_data['material']['texture_library']
+        texture_name         = preset_data['material']['diffuse']
+        texture_library      = preset_data['material']['texture_library']
         sett.texture_library = preset_data['material']['texture_library']
-        sett.pcoll_textures = str(Path(f'/textures/{gender}/{texture_library}/{texture_name}'))
+        sett.pcoll_textures  = str(Path(f'/textures/{gender}/{texture_library}/{texture_name}'))
 
         nodes = hg_body.data.materials[0].node_tree.nodes
         for node_name, input_dict in preset_data['material']['node_inputs'].items():
@@ -216,11 +216,11 @@ def load_human(context, creator = False):
     ethnicity = os.path.splitext(os.path.basename(sett.pcoll_humans))[0] if not creator else 'Caucasian'
 
     #link to scene
-    hg_rig = data_to.objects[0]
+    hg_rig          = data_to.objects[0]
     hg_rig.location = context.scene.cursor.location
-    hg_body = data_to.objects[1]
-    hg_eyes = data_to.objects[2]
-    scene = context.scene
+    hg_body         = data_to.objects[1]
+    hg_eyes         = data_to.objects[2]
+    scene           = context.scene
     for obj in data_to.objects:
         scene.collection.objects.link(obj)
         add_to_collection(context, obj)
@@ -256,18 +256,18 @@ def load_human(context, creator = False):
         hair_children_to_1(hg_body)
 
     #custom properties
-    HG = hg_rig.HG
-    HG.ishuman = True
-    HG.gender = sett.gender
-    HG.phase = 'body' if not creator else 'creator'
+    HG          = hg_rig.HG
+    HG.ishuman  = True
+    HG.gender   = sett.gender
+    HG.phase    = 'body' if not creator else 'creator'
     HG.body_obj = hg_body
-    HG.length = hg_rig.dimensions[2]
+    HG.length   = hg_rig.dimensions[2]
 
     refresh_pcoll(None, context, 'textures')
     sett.textures_censoring = 'censored'
-    texture_name = '/female_skin_light_col_4k_b.png'
-    sett.texture_library = 'Default'
-    sett.pcoll_textures = str(Path(f'/textures/{gender}/Default/{texture_name}'))
+    texture_name            = '/female_skin_light_col_4k_b.png'
+    sett.texture_library    = 'Default'
+    sett.pcoll_textures     = str(Path(f'/textures/{gender}/Default/{texture_name}'))
 
     #collapse modifiers
     for mod in hg_body.modifiers:
@@ -352,13 +352,13 @@ def set_ethnicity_gender_shapekeys(hg_body, gender, ethnicity):
                 sk.value = 0      
 
 def load_textures(self, context):
-    hg_rig = find_human(context.object)
+    hg_rig  = find_human(context.object)
     hg_body = hg_rig.HG.body_obj
-    gender = hg_rig.HG.gender
+    gender  = hg_rig.HG.gender
 
-    sett = context.scene.HG3D
+    sett            = context.scene.HG3D
     diffuse_texture = sett.pcoll_textures
-    library = sett.texture_library
+    library         = sett.texture_library
 
     if diffuse_texture == 'none':
         print('tex is none')
@@ -429,39 +429,39 @@ def scale_bones(self, context, bone_type):
     """
     Scales the bones based on the user input
     """
-    hg_rig = find_human(context.object)
+    hg_rig       = find_human(context.object)
     experimental = hg_rig.HG.experimental
-    sett = context.scene.HG3D
+    sett         = context.scene.HG3D
 
     size_dict= {
-        'head': sett.head_size,
-        'neck': sett.neck_size,
-        'shoulder': sett.shoulder_size,
-        'chest': sett.chest_size,
-        'breast': sett.breast_size,
-        'forearm': sett.forearm_size,
+        'head'     : sett.head_size,
+        'neck'     : sett.neck_size,
+        'shoulder' : sett.shoulder_size,
+        'chest'    : sett.chest_size,
+        'breast'   : sett.breast_size,
+        'forearm'  : sett.forearm_size,
         'upper_arm': sett.upper_arm_size,
-        'hips': sett.hips_size,
-        'thigh': sett.thigh_size,
-        'shin': sett.shin_size,
-        'foot': sett.foot_size,
-        'hand': sett.hand_size,
+        'hips'     : sett.hips_size,
+        'thigh'    : sett.thigh_size,
+        'shin'     : sett.shin_size,
+        'foot'     : sett.foot_size,
+        'hand'     : sett.hand_size,
     }
 
     s = size_dict[bone_type]
     scaling_dict = {
-        'head': {'x': s/5+0.9, 'y': 'copy', 'z': 'copy', 'bones': ['head']},
-        'neck': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['neck']},
-        'chest': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['spine.002', 'spine.003']},
-        'shoulder': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['shoulder.L', 'shoulder.R']},
-        'breast': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['breast.L', 'breast.R']},
-        'forearm': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['forearm.L', 'forearm.R']},
+        'head'     : {'x': s/5+0.9,   'y': 'copy', 'z': 'copy', 'bones': ['head']},
+        'neck'     : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['neck']},
+        'chest'    : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['spine.002', 'spine.003']},
+        'shoulder' : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['shoulder.L', 'shoulder.R']},
+        'breast'   : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['breast.L', 'breast.R']},
+        'forearm'  : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['forearm.L', 'forearm.R']},
         'upper_arm': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['upper_arm.L', 'upper_arm.R']},
-        'hips': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['spine.001', 'spine']},
-        'thigh': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['thigh.L', 'thigh.R']},
-        'shin': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['shin.L', 'shin.R']},
-        'foot': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['foot.L', 'foot.R']},
-        'hand': {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['hand.L', 'hand.R']},
+        'hips'     : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['spine.001', 'spine']},
+        'thigh'    : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['thigh.L', 'thigh.R']},
+        'shin'     : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['shin.L', 'shin.R']},
+        'foot'     : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['foot.L', 'foot.R']},
+        'hand'     : {'x': (s+2.5)/3, 'y': 'copy', 'z': 'copy', 'bones': ['hand.L', 'hand.R']},
     }
 
     # if experimental:

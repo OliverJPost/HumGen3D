@@ -22,10 +22,10 @@ class HG_TESTOP(bpy.types.Operator):
     """
     operator for testing bits of code
     """
-    bl_idname = "hg3d.testop"
-    bl_label = "Test"
+    bl_idname      = "hg3d.testop"
+    bl_label       = "Test"
     bl_description = ""
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):
         return {'FINISHED'}
@@ -37,10 +37,10 @@ class HG_RENDER_THUMBS(bpy.types.Operator):
     """
     Renders thumbnails for the selected preview collection
     """
-    bl_idname = "hg3d.renderthumbs"
-    bl_label = "Render thumbnails"
+    bl_idname      = "hg3d.renderthumbs"
+    bl_label       = "Render thumbnails"
     bl_description = "Renders thumbnails of selected category"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     @classmethod
     def poll (cls, context):
@@ -73,13 +73,13 @@ class HG_RENDER_THUMBS(bpy.types.Operator):
                 eye_mat = [child for child in hg_rig.children if 'hg_eyes' in child][0].data.materials[1]
                 eye_nodes = eye_mat.node_tree.nodes
 
-                nodes['Skin_tone'].inputs[1].default_value = random.uniform(.2,3)
-                nodes['Skin_tone'].inputs[2].default_value = random.uniform(-1,1)
-                eye_nodes['HG_Eye_Color'].inputs[2].default_value = (random.uniform(0,1), random.uniform(0,1), random.uniform(0,1), 1)
-                nodes['Darken_hsv'].inputs[2].default_value = random.uniform(0,2)
-                nodes['Lighten_hsv'].inputs[2].default_value = random.uniform(0,2)
-                nodes['Freckles_control'].inputs[3].default_value = random.uniform(0,.5)
-                nodes['Splotches_control'].inputs[3].default_value = random.uniform(0,.5)
+                nodes    ['Skin_tone'].inputs[1].default_value         = random.uniform(.2,3)
+                nodes    ['Skin_tone'].inputs[2].default_value         = random.uniform(-1,1)
+                eye_nodes['HG_Eye_Color'].inputs[2].default_value      = (random.uniform(0,1), random.uniform(0,1), random.uniform(0,1), 1)
+                nodes    ['Darken_hsv'].inputs[2].default_value        = random.uniform(0,2)
+                nodes    ['Lighten_hsv'].inputs[2].default_value       = random.uniform(0,2)
+                nodes    ['Freckles_control'].inputs[3].default_value  = random.uniform(0,.5)
+                nodes    ['Splotches_control'].inputs[3].default_value = random.uniform(0,.5)
 
                 old_chance = random.choice([0,0,0,0,0,0,0,0, .3, .3, .6, .6, 1, 1])
                 hg_body.data.shape_keys.key_blocks["age_old.Transferred"].value = old_chance
@@ -89,10 +89,10 @@ class HG_RENDER_THUMBS(bpy.types.Operator):
                 if hg_rig.HG.gender == 'male':
                     nodes['Gender_Group'].inputs[2].default_value = makeup_chance/2
                     nodes['Gender_Group'].inputs[3].default_value = makeup_chance/2
-                else:
+                else: 
                     nodes['Gender_Group'].inputs[10].default_value = makeup_chance
-                    nodes['Gender_Group'].inputs[8].default_value = makeup_chance
-                    nodes['Gender_Group'].inputs[6].default_value = makeup_chance
+                    nodes['Gender_Group'].inputs[8].default_value  = makeup_chance
+                    nodes['Gender_Group'].inputs[6].default_value  = makeup_chance
 
                 grey_chance= random.choice([1,1,1,1,.8,.8,.8,.6,.6,.3,.3,0])
                 hair_mat = hg_body.data.materials[1]
@@ -132,10 +132,10 @@ class HG_CHECK_DISTANCE(bpy.types.Operator):
     """
     Places an empty at all vertex positions that are closer than 3mm to the human
     """
-    bl_idname = "hg3d.checkdistance"
-    bl_label = "Distance"
+    bl_idname      = "hg3d.checkdistance"
+    bl_label       = "Distance"
     bl_description = "Places an empty at all vertex positions that are closer than 3mm to the human"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll (cls, context):
@@ -155,16 +155,16 @@ class HG_CHECK_DISTANCE(bpy.types.Operator):
             self.report({'INFO'}, 'Multiple cloth objects selected, only ran for the first selected cloth object')  
 
         for vert in cloth[0].data.vertices:
-            vert_global = cloth[0].matrix_world @ vert.co
-            vert_local = human.matrix_world.inverted() @ vert_global
+            vert_global    = cloth[0].matrix_world @ vert.co
+            vert_local     = human.matrix_world.inverted() @ vert_global
             (_, loc, _, _) = human.closest_point_on_mesh(vert_local)
             
             v_dist = np.linalg.norm(vert_local-loc)
 
             if v_dist < .003:
-                empty = bpy.data.objects.new( "HG_Empty", None )
+                empty          = bpy.data.objects.new( "HG_Empty", None )
                 empty.location = vert_global
-                empty.scale = (.01, .01, .01)       
+                empty.scale    = (.01, .01, .01)
                 bpy.context.scene.collection.objects.link(empty)
                 empty.select_set(True)
 
@@ -175,10 +175,10 @@ class HG_DELETE_EMPTIES(bpy.types.Operator):
     """
     removes all HG empties
     """
-    bl_idname = "hg3d.delempty"
-    bl_label = ""
+    bl_idname      = "hg3d.delempty"
+    bl_label       = ""
     bl_description = "Removes all the empties placed by the check distance operator"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         empties = [obj for obj in bpy.data.objects if 'HG_Empty' in obj.name]
@@ -191,10 +191,10 @@ class HG_CREATOR_MODEL(bpy.types.Operator):
     """
     Adds a new human in creator mode. This stops the script from removing parts of the hg_human, for example the shapekeys of the opposite gender
     """
-    bl_idname = "hg3d.creatorhuman"
-    bl_label = "Add creator human"
+    bl_idname      = "hg3d.creatorhuman"
+    bl_label       = "Add creator human"
     bl_description = "Places the full HumGen human model, this is used for clothing modeling"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         bpy.ops.view3d.snap_cursor_to_center()
@@ -206,10 +206,10 @@ class HG_PURGE_FILE(bpy.types.Operator):
     """
     Purges the current file and saves it again. It reports how much filesize was removed
     """
-    bl_idname = "hg3d.purge"
-    bl_label = ""
+    bl_idname      = "hg3d.purge"
+    bl_label       = ""
     bl_description = "Blend files contain about 500kb of unneeded data. This operator removes that data, so the library can be much smaller in filesize"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         if not bpy.data.is_saved:
@@ -293,10 +293,10 @@ class HG_CLOTH_CALCULATOR(bpy.types.Operator):
     """
     Calculates correct shapekeys for proportion changes
     """
-    bl_idname = "hg3d.clothcalc"
-    bl_label = "Calc"
+    bl_idname      = "hg3d.clothcalc"
+    bl_label       = "Calc"
     bl_description = "Calculate cloth"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     @classmethod
     def poll (cls, context):
@@ -374,7 +374,7 @@ class HG_SHAPEKEY_CALCULATOR(bpy.types.Operator):
             self.report({'WARNING'}, 'Active object is not a HumGen body object')
             return {'FINISHED'}
         
-        source = bpy.context.active_object.copy()
+        source      = bpy.context.active_object.copy()
         source.data = source.data.copy()
         bpy.context.scene.collection.objects.link(source)
 
@@ -535,7 +535,7 @@ class HG_SHAPEKEY_CALCULATOR(bpy.types.Operator):
         """
         Creates a shapekey from the difference between the distance_dict value and the current distance to that corresponding vertex
         """
-        source_copy = source.copy()
+        source_copy      = source.copy()
         source_copy.data = source_copy.data.copy()
         bpy.context.scene.collection.objects.link(source_copy)
         apply_shapekeys(source_copy)
@@ -555,8 +555,8 @@ class HG_SHAPEKEY_CALCULATOR(bpy.types.Operator):
 
         for vertex_index in distance_dict:
             source_new_vert_loc = source_copy.matrix_world @ source_copy.data.vertices[distance_dict[vertex_index][0]].co
-            distance_to_vert = distance_dict[vertex_index][1]
-            world_new_loc = source_new_vert_loc - distance_to_vert
+            distance_to_vert    = distance_dict[vertex_index][1]
+            world_new_loc       = source_new_vert_loc - distance_to_vert
             if vertex_index == 24:
                 print('test', world_new_loc, distance_to_vert)
 
@@ -572,10 +572,10 @@ class HG_MASK_PROP(bpy.types.Operator):
     """
     Adds a custom property to the object indicating what mesh mask should be added to the human for this cloth
     """
-    bl_idname = "hg3d.maskprop"
-    bl_label = "Add"
+    bl_idname      = "hg3d.maskprop"
+    bl_label       = "Add"
     bl_description = "Adds a custom prop with the name of the mask"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
  
     def execute(self, context):
         obj = context.object
@@ -595,10 +595,10 @@ class HG_DELETE_STRETCH(bpy.types.Operator):
     """
     Deletes stretch bones from this human
     """
-    bl_idname = "hg3d.delstretch"
-    bl_label = "Remove stretch bones"
+    bl_idname      = "hg3d.delstretch"
+    bl_label       = "Remove stretch bones"
     bl_description = "Removes all stretch bones"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
  
     def execute(self, context):
         hg_rig = find_human(context.object)
@@ -622,10 +622,10 @@ class HG_MAKE_HAIR_JSON(bpy.types.Operator):
     """
     Creates a json file that states which file the hair systems are in and what hair systems should be imported including their steps, children count and length
     """
-    bl_idname = "hg3d.hairjson"
-    bl_label = "Make Hair JSON"
+    bl_idname      = "hg3d.hairjson"
+    bl_label       = "Make Hair JSON"
     bl_description = "Makes json for hair"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
  
     def execute(self, context):
         sett = context.scene.HG3D
@@ -647,11 +647,11 @@ class HG_MAKE_HAIR_JSON(bpy.types.Operator):
 
         for mod in hair_obj.modifiers:
             if mod.type == 'PARTICLE_SYSTEM' and mod.show_viewport:
-                ps = mod.particle_system
-                ps_length = ps.settings.child_length
+                ps          = mod.particle_system
+                ps_length   = ps.settings.child_length
                 ps_children = ps.settings.child_nbr
-                ps_steps = ps.settings.display_step
-                ps_dict[ps.name]= {"length": ps_length, "children_amount": ps_children, "path_steps": ps_steps}
+                ps_steps    = ps.settings.display_step
+                ps_dict[ps.name]    = {"length": ps_length, "children_amount": ps_children, "path_steps": ps_steps}
 
         if len(ps_dict) == 0:
             self.report({'WARNING'}, 'no hair systems that are visible')

@@ -10,15 +10,15 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
     """
     Removes the corresponding hair system
     """
-    bl_idname = "hg3d.removehair"
-    bl_label = "Remove hair system"
+    bl_idname      = "hg3d.removehair"
+    bl_label       = "Remove hair system"
     bl_description = "Removes this specific hair system from your human"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     hair_system: bpy.props.StringProperty()
 
     def execute(self,context):
-        hg_rig = find_human(context.object)
+        hg_rig  = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
         ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) if ps.name == self.hair_system]
@@ -33,14 +33,14 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
     """
     Removes the corresponding hair system
     """
-    bl_idname = "hg3d.eyebrowswitch"
-    bl_label = "Switch eyebrows"
+    bl_idname      = "hg3d.eyebrowswitch"
+    bl_label       = "Switch eyebrows"
     bl_description = "Next or previous eyebrow style"
 
     forward: bpy.props.BoolProperty()
 
     def execute(self,context):
-        hg_rig = find_human(context.object)
+        hg_rig  = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
         eyebrows = [mod for mod in hg_body.modifiers if mod.type == 'PARTICLE_SYSTEM' and mod.particle_system.name.startswith('Eyebrows')]
@@ -97,10 +97,10 @@ def load_hair(self,context, type):
     with bpy.data.libraries.load(blendpath, link = False) as (data_from ,data_to):
         data_to.objects = ['HG_Body'] 
     hair_obj = data_to.objects[0]
-    scene = context.scene
+    scene    = context.scene
     scene.collection.objects.link(hair_obj)
 
-    hg_rig = find_human(context.active_object)
+    hg_rig  = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj
     hg_rig.hide_set(False)
     hg_rig.hide_viewport = False
@@ -140,12 +140,12 @@ def load_hair(self,context, type):
                 json_sett = json_systems[ps]
                 if 'length' in json_sett:
                     psys.child_length = json_sett['length']
-                if 'children_amount' in json_sett:
-                    psys.child_nbr = json_sett['children_amount']
+                if 'children_amount' in json_sett: 
+                    psys.child_nbr            = json_sett['children_amount']
                     psys.rendered_child_count = json_sett['children_amount']
-                if "path_steps" in json_sett:
+                if "path_steps" in json_sett: 
                     psys.display_step = json_sett['path_steps']
-                    psys.render_step = json_sett['path_steps']
+                    psys.render_step  = json_sett['path_steps']
 
         override = bpy.context.copy()
         override['particle_system'] = hair_obj.particle_systems[ps]
@@ -191,7 +191,7 @@ def move_modifiers_above_masks(hg_body, new_systems):
 
 
 def morph_to_shape(context, hg_body, hair_obj):
-    body_copy = hg_body.copy()
+    body_copy      = hg_body.copy()
     body_copy.data = body_copy.data.copy()
     context.scene.collection.objects.link(body_copy)
 
@@ -317,7 +317,7 @@ def set_correct_material(new_systems, hg_body, hair_type):
     sets face hair material for face hair systems and head head material for head hair
     """
     search_mat = '.HG_Hair_Face' if hair_type == 'face' else '.HG_Hair_Head'
-    mat_name = [mat.name for mat in hg_body.data.materials if mat.name.startswith(search_mat)]
+    mat_name   = [mat.name for mat in hg_body.data.materials if mat.name.startswith(search_mat)]
     for ps in new_systems:
         ps.particle_system.settings.material_slot = mat_name[0]
 
@@ -325,10 +325,10 @@ class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
     """
     toggles visibility of hair children in viewport
     """
-    bl_idname = "hg3d.togglechildren"
-    bl_label = "Toggle hair children"
+    bl_idname      = "hg3d.togglechildren"
+    bl_label       = "Toggle hair children"
     bl_description = "Toggle between hidden and visible hair children"
-    bl_options = {"REGISTER", "UNDO"}
+    bl_options     = {"REGISTER", "UNDO"}
 
     def execute(self,context):
         hg_rig = find_human(context.active_object)

@@ -11,11 +11,11 @@ import os
 
 
 class HG_PT_PANEL(bpy.types.Panel):
-    bl_idname = "HG_PT_Panel"
-    bl_label = "HumGen"
-    bl_space_type = "VIEW_3D"
+    bl_idname      = "HG_PT_Panel"
+    bl_label       = "HumGen"
+    bl_space_type  = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "HumGen"
+    bl_category    = "HumGen"
 
     @classmethod
     def poll(cls, context):
@@ -25,10 +25,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         tab_switching_menu(self.layout, context.scene.HG3D)
 
     def draw(self,context):
-        layout = self.layout
-        self.sett = context.scene.HG3D
-        self.pref = context.preferences.addons[os.path.splitext(__package__)[0]].preferences
-        self.update = 'cpack_required' if self.pref.cpack_update_required else 'addon' if tuple(bl_info['version']) < tuple(self.pref.latest_version) else 'cpack_available' if self.pref.cpack_update_available else None 
+        layout      = self.layout
+        self.sett   = context.scene.HG3D
+        self.pref   = context.preferences.addons[os.path.splitext(__package__)[0]].preferences
+        self.update = 'cpack_required' if self.pref.cpack_update_required else 'addon' if tuple(bl_info['version']) < tuple(self.pref.latest_version) else 'cpack_available' if self.pref.cpack_update_available else None
         
         if not self.pref.filepath:
             layout.alert = True
@@ -103,21 +103,21 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.scale_y = 4
         col.operator('hg3d.showinfo', text = 'Welcome to Human Generator!', depress = True)
 
-        col_h = col.column(align=True)
+        col_h         = col.column(align=True)
         col_h.scale_y = .5
-        col_h.alert = True
+        col_h.alert   = True
 
         col_h.operator('hg3d.drawtutorial', text = 'Get Started!', depress = True, icon = 'FAKE_USER_ON').first_time = True
 
     def creator_ui(self):
-        layout = self.layout
-        box = layout.box()
+        layout      = self.layout
+        box         = layout.box()
         box.scale_y = 2
         box.operator('hg3d.showinfo', text = 'Creator Human', icon = 'INFO', depress = True)
 
     def warning_header(self, context):
         col = self.layout.column(align = True)
-        col_h = col.column(align = True)
+        col_h         = col.column(align = True)
         col_h.scale_y = 1.5
         
         
@@ -179,20 +179,20 @@ class HG_PT_PANEL(bpy.types.Panel):
 
     def create_human_ui(self):
         layout = self.layout
-        sett = self.sett
+        sett   = self.sett
 
         box = layout.box()
         col = box.column(align = True)
         col.label(text='Select a body type')
         col.template_icon_view(sett, "pcoll_humans", show_labels=True, scale=10, scale_popup=6)   
         
-        row = col.row()
+        row         = col.row()
         row.scale_y = 2
         row.prop(sett, 'gender', expand = True)
 
-        col = box.column()
+        col         = box.column()
         col.scale_y = 2
-        col.alert = True
+        col.alert   = True
         col.operator('hg3d.startcreation', icon = 'COMMUNITY', depress = True)
 
     # .______     ______    _______  ____    ____ 
@@ -277,12 +277,12 @@ class HG_PT_PANEL(bpy.types.Panel):
         length = self.hg_rig.dimensions[2]
         col = box.column(align = True)
 
-        row = col.box().row()
-        row.scale_y = 2
+        row           = col.box().row()
+        row.scale_y   = 2
         row.alignment = 'CENTER'
-        length_feet = length / 0.3048
+        length_feet   = length / 0.3048
         length_inches = length_feet*12.0 - int(length_feet)*12.0
-        length_label = '{} m   |   '.format(round(length, 2)) + "{}' ".format(int(length_feet)) + '{}"'.format(int(length_inches))
+        length_label  = '{} m   |   '.format(round(length, 2)) + "{}' ".format(int(length_feet)) + '{}"'.format(int(length_inches))
         row.label(text = length_label, icon = 'EMPTY_SINGLE_ARROW') #also in inches
 
         row = col.row(align= True)
@@ -337,17 +337,17 @@ class HG_PT_PANEL(bpy.types.Panel):
             flow_presets = self.get_ff_flow(col, 'Presets', 'presets')       
             
             prefix_dict = {
-                'ff_a': (flow_u_skull, sett.ui_u_skull),
-                'ff_b': (flow_u_skull, sett.ui_u_skull),
-                'ff_c_eye': (flow_eyes, sett.ui_eyes), 
-                'ff_d': (flow_l_skull, sett.ui_l_skull),
-                'ff_e_nose': (flow_nose, sett.ui_nose),
-                'ff_f_lip': (flow_mouth, sett.ui_mouth),
-                'ff_g_chin': (flow_chin, sett.ui_chin),
+                'ff_a'      : (flow_u_skull, sett.ui_u_skull),
+                'ff_b'      : (flow_u_skull, sett.ui_u_skull),
+                'ff_c_eye'  : (flow_eyes, sett.ui_eyes),
+                'ff_d'      : (flow_l_skull, sett.ui_l_skull),
+                'ff_e_nose' : (flow_nose, sett.ui_nose),
+                'ff_f_lip'  : (flow_mouth, sett.ui_mouth),
+                'ff_g_chin' : (flow_chin, sett.ui_chin),
                 'ff_h_cheek': (flow_cheeks, sett.ui_cheeks),
-                'ff_i_jaw': (flow_jaw, sett.ui_jaw),
-                'ff_j_ear': (flow_ears, sett.ui_ears),
-                'ff_x': (flow_custom, sett.ui_custom),
+                'ff_i_jaw'  : (flow_jaw, sett.ui_jaw),
+                'ff_j_ear'  : (flow_ears, sett.ui_ears),
+                'ff_x'      : (flow_custom, sett.ui_custom),
                 }
             
             for prefix in prefix_dict:
@@ -377,17 +377,17 @@ class HG_PT_PANEL(bpy.types.Panel):
         boxbox.scale_y = 1 if self.pref.compact_ff_ui else 1.5 
        
         ui_bools = {
-            'nose': sett.ui_nose,
+            'nose'   : sett.ui_nose,
             'u_skull': sett.ui_u_skull,
-            'chin': sett.ui_chin,
-            'mouth': sett.ui_mouth,
-            'eyes': sett.ui_eyes,
-            'cheeks': sett.ui_cheeks,
+            'chin'   : sett.ui_chin,
+            'mouth'  : sett.ui_mouth,
+            'eyes'   : sett.ui_eyes,
+            'cheeks' : sett.ui_cheeks,
             'l_skull': sett.ui_l_skull,
-            'jaw': sett.ui_jaw,
-            'ears': sett.ui_ears,
-            'other': sett.ui_other,
-            'custom': sett.ui_custom,
+            'jaw'    : sett.ui_jaw,
+            'ears'   : sett.ui_ears,
+            'other'  : sett.ui_other,
+            'custom' : sett.ui_custom,
             'presets': sett.ui_presets
             }
 
@@ -410,10 +410,10 @@ class HG_PT_PANEL(bpy.types.Panel):
 
     def skin_section(self):
         spoiler_open, box = spoiler_box(self, 'skin')
-        sett = self.sett 
+        sett    = self.sett
         hg_body = self.hg_rig.HG.body_obj
-        mat = hg_body.data.materials[0]
-        nodes = mat.node_tree.nodes
+        mat     = hg_body.data.materials[0]
+        nodes   = mat.node_tree.nodes
 
         if not spoiler_open:   
             return
@@ -586,11 +586,11 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.prop(bs_node.inputs[1], 'default_value', text = 'Seed [Randomize]')
 
     def skin_section_flow(self, layout, label):
-        row = layout.row()
+        row           = layout.row()
         row.alignment = 'CENTER'
         row.label(text = label, icon = 'HANDLETYPE_AUTO_CLAMP_VEC')
-        flow = get_flow(self.sett, layout)
-        flow.scale_y = 1.2   
+        flow         = get_flow(self.sett, layout)
+        flow.scale_y = 1.2
 
         return flow     
 

@@ -25,7 +25,7 @@ class HG_OT_INFO(bpy.types.Operator):
         def draw(self, context):
             nonlocal message_title
             layout = self.layout
-            eval(message_title+'(layout)')
+            eval(message_title +'(layout)')
 
         bpy.context.window_manager.popup_menu(draw, title = 'Info', icon = 'QUESTION')
 

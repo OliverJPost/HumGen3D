@@ -3,22 +3,22 @@ import os
 from .. HG_PCOLL import preview_collections
 
 def tab_switching_menu(layout, sett):
-    row = layout.row()
-    row.scale_x = 1.5
+    row           = layout.row()
+    row.scale_x   = 1.5
     row.alignment = 'EXPAND'
     row.prop(sett, 'active_ui_tab', expand = True, icon_only = True)
 
 def next_phase(self):
-    layout = self.layout
-    col = layout.column()
-    col.alert = True
+    layout      = self.layout
+    col         = layout.column()
+    col.alert   = True
     col.scale_y = 1.5
     col.operator('hg3d.finishcreation', text = 'Finish Creation Phase' , icon = 'FILE_ARCHIVE', depress = True)
 
 def get_flow(sett, col, animation = False):
     col_2 =  col.column(align = True)
-    col_2.use_property_split = True
-    col_2.use_property_decorate = animation            
+    col_2.use_property_split    = True
+    col_2.use_property_decorate = animation
     flow = col_2.grid_flow(row_major=False, columns=1, even_columns=True, even_rows=False, align=True)
     return flow
 
@@ -30,18 +30,18 @@ def spoiler_box(self, ui_name):
     
     #fallback icons for when custom ones don't load
     icon_dict = {
-        'body' : 'COMMUNITY',
-        'face' : 'COMMUNITY',
-        'skin' : 'COMMUNITY',
-        'hair' : 'OUTLINER_OB_HAIR',
-        'length': 'EMPTY_SINGLE_ARROW',
+        'body'          : 'COMMUNITY',
+        'face'          : 'COMMUNITY',
+        'skin'          : 'COMMUNITY',
+        'hair'          : 'OUTLINER_OB_HAIR',
+        'length'        : 'EMPTY_SINGLE_ARROW',
         'creation_phase': 'COMMUNITY',
-        'clothing' : 'MATCLOTH',
-        'footwear' : 'MATCLOTH',
-        'pose' : 'ARMATURE_DATA',
-        'expression': 'GHOST_ENABLED',
-        'simulation' : 'NETWORK_DRIVE',
-        'compression': 'FOLDER_REDIRECT'
+        'clothing'      : 'MATCLOTH',
+        'footwear'      : 'MATCLOTH',
+        'pose'          : 'ARMATURE_DATA',
+        'expression'    : 'GHOST_ENABLED',
+        'simulation'    : 'NETWORK_DRIVE',
+        'compression'   : 'FOLDER_REDIRECT'
         }
 
     is_open = True if self.sett.ui_phase == ui_name else False

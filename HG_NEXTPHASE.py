@@ -85,7 +85,7 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
     apply_shapekeys(hg_body)
 
     context.view_layer.objects.active = hg_rig
-    hg_eyes = [child for child in hg_rig.children if 'hg_eyes' in child][0]
+    hg_eyes  = [child for child in hg_rig.children if 'hg_eyes'  in child][0]
     hg_teeth = [child for child in hg_rig.children if 'hg_teeth' in child]
 
     child_list = [hg_eyes, hg_body, hg_teeth[0], hg_teeth[1]]
@@ -122,10 +122,10 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
     sk['cor_ShoulderSideRaise_Lt'].mute = True
     sk['cor_ShoulderSideRaise_Lt'].mute = False
 
-    sett.summer_toggle = True
-    sett.normal_toggle = True
-    sett.winter_toggle = True
-    sett.inside_toggle = True
+    sett.summer_toggle  = True
+    sett.normal_toggle  = True
+    sett.winter_toggle  = True
+    sett.inside_toggle  = True
     sett.outside_toggle = True
 
     context.space_data.shading.type = old_shading
@@ -147,10 +147,10 @@ def set_teeth_parent(hg_rig):
     bpy.ops.object.mode_set(mode='OBJECT')
 
 def set_backup(context, hg_rig):
-    hg_backup = hg_rig.copy()
+    hg_backup        = hg_rig.copy()
     hg_rig.HG.backup = hg_backup
-    hg_backup.data = hg_backup.data.copy()
-    hg_backup.name = hg_rig.name + '_Backup'
+    hg_backup.data   = hg_backup.data.copy()
+    hg_backup.name   = hg_rig.name + '_Backup'
     
 
     context.collection.objects.link(hg_backup)
@@ -168,7 +168,7 @@ def set_backup(context, hg_rig):
         if armatures:
             armatures[0].object = hg_backup
         obj_copy.hide_viewport = True
-        obj_copy.hide_render = True
+        obj_copy.hide_render   = True
 
 
     hg_backup.matrix_parent_inverse = hg_rig.matrix_world.inverted()
@@ -236,8 +236,8 @@ def corrective_shapekey_copy(context, hg_body, apply_armature = True):
         ob.name = shapekey.name
         obj_list.append(ob)
 
-        face_sk = ob.data.shape_keys.key_blocks[shapekey.name]
-        face_sk.mute = False
+        face_sk       = ob.data.shape_keys.key_blocks[shapekey.name]
+        face_sk.mute  = False
         face_sk.value = 1
         apply_shapekeys(ob)
         if apply_armature:
@@ -249,13 +249,15 @@ def build_driver_dict(obj, remove = True):
     driver_dict = {}
     remove_list = []
     for driver in obj.data.shape_keys.animation_data.drivers:
-        target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '')
-        expression = driver.driver.expression
-        var = driver.driver.variables[0]
-        target = var.targets[0]
-        target_bone = target.bone_target
-        transform_type = target.transform_type
+        
+        target_sk       = driver.data_path.replace('key_blocks["', '').replace('"].value', '')
+        expression      = driver.driver.expression
+        var             = driver.driver.variables[0]
+        target          = var.targets[0]
+        target_bone     = target.bone_target
+        transform_type  = target.transform_type
         transform_space = target.transform_space
+        
         driver_dict[target_sk] = {'expression': expression, 'target_bone': target_bone, 'transform_type': transform_type, 'transform_space': transform_space}
         remove_list.append(driver)
     if remove:
@@ -283,15 +285,15 @@ def reapply_shapekeys(context, sk_objects, hg_body, driver_dict):
         bpy.data.objects.remove(ob)
 
 def add_driver(hg_body, target_sk, sett_dict):
-    driver = target_sk.driver_add('value').driver
-    var = driver.variables.new()
-    var.type = 'TRANSFORMS'
-    target = var.targets[0]
+    driver    = target_sk.driver_add('value').driver
+    var       = driver.variables.new()
+    var.type  = 'TRANSFORMS'
+    target    = var.targets[0]
     target.id = hg_body.parent
 
-    driver.expression = sett_dict['expression']
-    target.bone_target = sett_dict['target_bone']
-    target.transform_type = sett_dict['transform_type']
+    driver.expression      = sett_dict['expression']
+    target.bone_target     = sett_dict['target_bone']
+    target.transform_type  = sett_dict['transform_type']
     target.transform_space = sett_dict['transform_space']
 
 def remove_unused_eyebrows(hg_body):

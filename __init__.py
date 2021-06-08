@@ -30,7 +30,7 @@ bl_info = {
 
 import bpy #type: ignore
 import sys, os
-from bpy.utils import previews #type: ignore
+from bpy.utils import previews #type         : ignore
 from bpy.app.handlers import persistent #type: ignore
 
 if __name__ != "HG3D":

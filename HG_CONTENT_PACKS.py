@@ -6,17 +6,17 @@ Installpack = a collection item that represents a zip file the user has selected
 cpack = Abbreviation of content pack. Represents a collection of items downloaded together and extracted in the HumGen file strucure, forming content to be used in the add-on. Settings and properties stored in a .json file
 """  
 
-from . HG_UPDATE import check_update
-import bpy #type: ignore
-import os
-import json
-import shutil
-import zipfile
-import time
-from pathlib import Path
-from . HG_PCOLL import preview_collections
-from bpy_extras.io_utils import ImportHelper #type: ignore
-from . HG_COMMON_FUNC import ShowMessageBox
+from    . HG_UPDATE import check_update
+import  bpy                                    #type: ignore
+import  os
+import  json
+import  shutil
+import  zipfile
+import  time
+from    pathlib     import Path
+from    . HG_PCOLL  import preview_collections
+from    bpy_extras.io_utils import ImportHelper #type: ignore
+from    . HG_COMMON_FUNC import ShowMessageBox
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):
     """
@@ -25,18 +25,18 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):      
         alert_dict = {
-            'not_cpack': 'Not a content pack',
-            'no_json': 'No .json file in pack',
+            'not_cpack'          : 'Not a content pack',
+            'no_json'            : 'No .json file in pack',
             'incorrect_structure': 'Incorrect file structure',
-            'not_zip': 'Not a zip file',
-            'already_installed': 'Already installed, delete old pack before installing a new one'
+            'not_zip'            : 'Not a zip file',
+            'already_installed'  : 'Already installed, delete old pack before installing a new one'
         }
         
         row = layout.row(align = True)
         row.label(text= item.pack_name)#, icon = 'INFO' if item.installed else 'TRASH')
         if item.alert != 'None':
             row.alert = True
-            row = row.row()
+            row       = row.row()
             row.label(text = alert_dict[item.alert], icon = 'ERROR')
 
 class HG_UL_CONTENTPACKS(bpy.types.UIList):
@@ -63,9 +63,9 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         #version
         subrow.label(text = 'Version:' if header else '%s.%s'% tuple(item.pack_version))           
         subrow.alignment = 'LEFT'
-        pack_version = tuple(item.pack_version)
-        req_version = tuple(item.required_version)
-        latest_version = tuple(item.latest_version)
+        pack_version     = tuple(item.pack_version)
+        req_version      = tuple(item.required_version)
+        latest_version   = tuple(item.latest_version)
         if header:
             subrow.label(text = 'Update info:    ')
         else:
@@ -79,14 +79,14 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             subrow.alert = False
         #section with dots showing what is included in this pack
         icon_dict = {
-            'humans': 'humans',
+            'humans'        : 'humans',
             'human_textures': 'textures',
-            'shapekeys': 'body',
-            'hair': 'hair',
-            'poses': 'pose',
-            'clothes': 'clothing',
-            'footwear': 'footwear',
-            'expressions': 'expression'
+            'shapekeys'     : 'body',
+            'hair'          : 'hair',
+            'poses'         : 'pose',
+            'clothes'       : 'clothing',
+            'footwear'      : 'footwear',
+            'expressions'   : 'expression'
             }
             
         for categ, icon in icon_dict.items():
@@ -114,11 +114,11 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
     bl_description = "Opens a file browser for you to select the zip files of the content packs you wish to install"
 
     files: bpy.props.CollectionProperty(
-            name="File Path",
-            type=bpy.types.OperatorFileListElement,
+            name = "File Path",
+            type = bpy.types.OperatorFileListElement,
             )
     directory: bpy.props.StringProperty(
-            subtype='DIR_PATH',
+            subtype = 'DIR_PATH',
             )
 
     def execute(self, context):
@@ -133,10 +133,10 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
 
         #iterate over all the files the user selected in the importhelper popup
         for fn in self.files:
-            item = coll.add()
+            item     = coll.add()
             filepath = os.path.join(directory, fn.name)
             
-            item.name = filepath
+            item.name      = filepath
             item.pack_name = filepath
             
             if not os.path.basename(filepath).startswith('HG_CP'):
@@ -178,12 +178,12 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
     _timer = None
     
     def execute(self,context):
-        self.pref = context.preferences.addons[__package__].preferences
-        self.files = [file for file in context.scene.installpacks_col if file.alert == 'None']
-        pref = self.pref
-        pref.installing = True
+        self.pref         = context.preferences.addons[__package__].preferences
+        self.files        = [file for file in context.scene.installpacks_col if file.alert == 'None']
+        pref              = self.pref
+        pref.installing   = True
         pref.file_current = 1
-        pref.file_all = len(self.files)
+        pref.file_all     = len(self.files)
 
         for zip_path in self.files:
             self.unzip_file(zip_path)
@@ -201,7 +201,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
         print('starting unzip', zipfile)
         zf = zipfile.ZipFile(zip_path.name)
 
-        file_list = [fn for fn in zf.namelist() if not fn.endswith('/')] 
+        file_list = [fn for fn in zf.namelist() if not fn.endswith('/')]
         file_dict = {'files': file_list}
         
         filepath = self.pref.filepath
@@ -223,49 +223,49 @@ class HG_CONTENT_PACK(bpy.types.PropertyGroup):
     Properties of the content pack
     """
     pack_name: bpy.props.StringProperty(
-        name='Content Pack Name',
-        description="",
-        default= '',
+        name        = 'Content Pack Name',
+        description = "",
+        default     = '',
         )  
-    creator: bpy.props.StringProperty()
+    creator     : bpy.props.StringProperty()
     pack_version: bpy.props.IntVectorProperty(default = (0,0), size = 2)
-    weblink: bpy.props.StringProperty()
-    icon_name: bpy.props.StringProperty(default = 'COMMUNITY')
+    weblink     : bpy.props.StringProperty()
+    icon_name   : bpy.props.StringProperty(default = 'COMMUNITY')
 
     #booleans for showing in the UI what categories are in this pack
-    humans: bpy.props.BoolProperty(default = False)
+    humans        : bpy.props.BoolProperty(default = False)
     human_textures: bpy.props.BoolProperty(default = False)
-    shapekeys: bpy.props.BoolProperty(default = False)
-    hair: bpy.props.BoolProperty(default = False)
-    poses: bpy.props.BoolProperty(default = False)
-    clothes: bpy.props.BoolProperty(default = False)
-    footwear: bpy.props.BoolProperty(default = False)
-    expressions: bpy.props.BoolProperty(default = False)
+    shapekeys     : bpy.props.BoolProperty(default = False)
+    hair          : bpy.props.BoolProperty(default = False)
+    poses         : bpy.props.BoolProperty(default = False)
+    clothes       : bpy.props.BoolProperty(default = False)
+    footwear      : bpy.props.BoolProperty(default = False)
+    expressions   : bpy.props.BoolProperty(default = False)
 
-    json_path: bpy.props.StringProperty()
+    json_path       : bpy.props.StringProperty()
     required_version: bpy.props.IntVectorProperty(default = (0,0), size = 2)
-    latest_version: bpy.props.IntVectorProperty(default = (0,0), size = 2)
+    latest_version  : bpy.props.IntVectorProperty(default = (0,0), size = 2)
 
 class HG_INSTALLPACK(bpy.types.PropertyGroup):
     """
     Properties of the installpack representation of the selected zip files
     """
     pack_name: bpy.props.StringProperty(
-        name='Content Pack Name',
-        description="",
-        default= '',
+        name        = 'Content Pack Name',
+        description = "",
+        default     = '',
         )  
     json_path: bpy.props.StringProperty()
     installed: bpy.props.BoolProperty(default = False)
-    alert: bpy.props.EnumProperty(
-        name="posing",
-        description="",
-        items = [
-                ("None", "None", "", 0),
-                ("not_cpack", "Not a content pack", "", 1),
-                ("incorrect_structure", "Incorrect zip method", "", 2),
-                ("no_json", "Doesn't contain .json file", "", 3),
-                ("already_installed", "Already installed, delete old pack before installing a new one", "", 4)
+    alert    : bpy.props.EnumProperty(
+        name        = "posing",
+        description = "",
+        items       = [
+                ("None",                "None",                         "", 0),
+                ("not_cpack",           "Not a content pack",           "", 1),
+                ("incorrect_structure", "Incorrect zip method",         "", 2),
+                ("no_json",             "Doesn't contain .json file",   "", 3),
+                ("already_installed",   "Already installed, delete old pack before installing a new one", "", 4)
             ],
         default = "None",
         )   
@@ -292,7 +292,7 @@ def cpacks_refresh(self, context):
     coll.clear()
 
     #add the fake header as an item to the collection, to be used in the ui list as a header
-    header = coll.add()
+    header      = coll.add()
     header.name = 'header'
 
     json_folder = str(pref.filepath) + str(Path('/content_packs/'))
@@ -322,9 +322,9 @@ def cpacks_refresh(self, context):
         
 
         item.json_path = filepath
-        categs = data['categs']
-        for name, incl in categs.items():
-            item[name] = incl     
+        categs         = data['categs']
+        for name, incl in categs.items(): 
+            item[name] = incl
 
     check_update()
 
@@ -340,11 +340,10 @@ class HG_DELETE_CPACK(bpy.types.Operator):
     item_name: bpy.props.StringProperty()
 
     def execute(self,context):
-        pref = context.preferences.addons[__package__].preferences
-        
-        col = context.scene.contentpacks_col
+        pref = context.preferences.addons[__package__].preferences       
+        col   = context.scene.contentpacks_col
         index = context.scene.contentpacks_col_index
-        item = col[self.item_name]
+        item  = col[self.item_name]
         
         #delete files from dict in json
         with open(item.json_path) as f:

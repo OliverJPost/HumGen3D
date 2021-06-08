@@ -13,10 +13,10 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
     """
     Removes the corresponding shapekey
     """
-    bl_idname = "hg3d.removesk"
-    bl_label = "Remove this shapekey"
+    bl_idname      = "hg3d.removesk"
+    bl_label       = "Remove this shapekey"
     bl_description = "Remove this shapekey"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     shapekey: bpy.props.StringProperty()
 
@@ -45,7 +45,7 @@ def load_expression(self, context):
     
     sett_dict = {}
 
-    filepath = str(pref.filepath) + str(item)
+    filepath  = str(pref.filepath) + str(item)
     sett_file = open(filepath)
     for line in sett_file:
         key, value = line.split()
@@ -55,9 +55,9 @@ def load_expression(self, context):
     hg_body = hg_rig.HG.body_obj
     if 'expr_{}'.format(sk_name) in [sk.name for sk in hg_body.data.shape_keys.key_blocks]:
         new_key = hg_body.data.shape_keys.key_blocks['expr_{}'.format(sk_name)]
-        exists = True
+        exists  = True
     else:
-        backup_rig = hg_rig.HG.backup
+        backup_rig  = hg_rig.HG.backup
         backup_body = [child for child in backup_rig.children if 'hg_body' in child]
         transfer_as_one_shapekey(context, backup_body[0], hg_body, sett_dict, backup_rig)
 
@@ -80,10 +80,10 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     """
     transfers a shapekey 
     """
-    backup_rig_copy = backup_rig.copy()
+    backup_rig_copy      = backup_rig.copy()
     backup_rig_copy.data = backup_rig_copy.data.copy()
     context.scene.collection.objects.link(backup_rig_copy)
-    source_copy = source.copy()
+    source_copy      = source.copy()
     source_copy.data = source_copy.data.copy()
     context.scene.collection.objects.link(source_copy)
 
@@ -99,9 +99,9 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     apply_shapekeys(source_copy)
 
     context.view_layer.objects.active = backup_rig_copy
-    backup_rig_copy.hide_viewport = False
-    source_copy.hide_viewport = False
-    backup_rig_copy.HG.body_obj = source_copy
+    backup_rig_copy.hide_viewport     = False
+    source_copy.hide_viewport         = False
+    backup_rig_copy.HG.body_obj       = source_copy
     apply_armature(backup_rig_copy, source_copy)
     apply_length_to_rig(backup_rig_copy)
 
@@ -156,10 +156,10 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
     """
     Removes the corresponding shapekey
     """
-    bl_idname = "hg3d.addfrig"
-    bl_label = "Add facial rig"
+    bl_idname      = "hg3d.addfrig"
+    bl_label       = "Add facial rig"
     bl_description = "Adds facial rig"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):        
         hg_rig = find_human(context.active_object)
@@ -216,10 +216,10 @@ class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
     """
     Removes the corresponding shapekey
     """
-    bl_idname = "hg3d.removefrig"
-    bl_label = "Remove facial rig"
+    bl_idname      = "hg3d.removefrig"
+    bl_label       = "Remove facial rig"
     bl_description = "Remove facial rig"
-    bl_options = {"UNDO"}
+    bl_options     = {"UNDO"}
 
     def execute(self,context):        
         hg_rig = find_human(context.active_object)
