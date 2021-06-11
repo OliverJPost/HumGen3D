@@ -253,38 +253,55 @@ class HG_PT_PANEL(bpy.types.Panel):
 
     def _top_widget(self):
         hg_rig = self.hg_rig
+        
+        col = self.layout.column(align = True)
+        
+        row_h = col.row(align = True)
+        row_h.scale_y = 1.5
+        subrow_h = row_h.row(align = True)
+        if hg_rig and hg_rig.HG.experimental:        
+            subrow_h.alert = True
+        
+        #button showing name and gender of human
+        subrow_h.operator('view3d.view_selected', 
+                     text = self._get_label(hg_rig),
+                     depress = bool(hg_rig)
+                     )
+        
+        #show button for switching to experimental
+        if hg_rig and self.in_creation_phase(hg_rig):
+            self._experimental_mode_button(hg_rig, row_h)
+
+        row = col.row(align=True)
+        row.operator('hg3d.nextprev', text = 'Previous', icon = 'TRIA_LEFT').forward = False
+        row.operator('hg3d.nextprev', text = 'Next', icon = 'TRIA_RIGHT').forward = True
+        
+        row = col.row(align=True)
+        row.operator('hg3d.deselect', icon = 'RESTRICT_SELECT_ON')
+        row.operator('hg3d.delete', text = 'Delete', icon = 'TRASH')
+
+    def in_creation_phase(self, hg_rig):
+        return hg_rig.HG.phase in ['body', 'face', 'skin', 'length']
+
+    def _experimental_mode_button(self, hg_rig, row_h):
+        subrow = row_h.row(align = True)
+        is_expr = hg_rig.HG.experimental
+        if not is_expr:
+            subrow.alert = True
+                
+        subrow.operator('hg3d.experimental',
+            text = '',
+            icon = 'GHOST_{}'.format('DISABLED' if is_expr else 'ENABLED'),
+            depress = True)
+
+    def _get_label(self, hg_rig):
         if not hg_rig:
             label = 'No Human selected'          
         else:
             name = hg_rig.name.replace('HG_', '').replace('_RIGIFY', '')     
             gender = hg_rig.HG.gender.capitalize()
             label = f'This is {name} [{gender}]'
-
-        col = self.layout.column(align = True)
-        row_h = col.row(align = True)
-        row_h.scale_y = 1.5
-        row = row_h.row(align = True)
-        if hg_rig and hg_rig.HG.experimental:        
-            row.alert = True
-        row.operator('view3d.view_selected', text = label, depress = bool(hg_rig))
-        if hg_rig and hg_rig.HG.phase in ['body', 'face', 'skin', 'length']:
-            row = row_h.row(align = True)
-            if not hg_rig.HG.experimental:
-                row.alert = True
-            row.operator('hg3d.experimental', text = '', icon = 'GHOST_{}'.format('DISABLED' if hg_rig.HG.experimental else 'ENABLED'), depress = True)
-
-
-        if hg_rig and hg_rig.HG.phase == 'completed':
-            row = col.row(align = True)
-            row.alert = True
-            row.operator('hg3d.showinfo', text='Completed Model', depress = True).info = 'completed'
-            row.operator('hg3d.showinfo', icon = 'QUESTION', depress = True).info = 'completed'
-        row = col.row(align=True)
-        row.operator('hg3d.nextprev', text = 'Previous', icon = 'TRIA_LEFT').forward = False
-        row.operator('hg3d.nextprev', text = 'Next', icon = 'TRIA_RIGHT').forward = True
-        row = col.row(align=True)
-        row.operator('hg3d.deselect', icon = 'RESTRICT_SELECT_ON')
-        row.operator('hg3d.delete', text = 'Delete', icon = 'TRASH')
+        return label
 
     #   ______ .______       _______     ___   .___________. _______ 
     #  /      ||   _  \     |   ____|   /   \  |           ||   ____|
