@@ -51,12 +51,12 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def __init__(self):
-        self.human_idx       = 0
+        self.human_idx = 0
         self.generate_amount = 4
-        self.finish_step     = False
-        self.done            = False
-        self.timer           = None
-        self.x_loc           = 0
+        self.finish_step = False
+        self.done  = False
+        self.timer = None
+        self.x_loc = 0
 
     def modal(self, context, event):
         """ Event handling. """

@@ -8,7 +8,7 @@ def tab_switching_menu(layout, sett):
     row.alignment = 'EXPAND'
     row.prop(sett, 'active_ui_tab', expand = True, icon_only = True)
 
-def next_phase(self):
+def _draw_next_phase_button(self):
     layout      = self.layout
     col         = layout.column()
     col.alert   = True
@@ -21,6 +21,9 @@ def get_flow(sett, col, animation = False):
     col_2.use_property_decorate = animation
     flow = col_2.grid_flow(row_major=False, columns=1, even_columns=True, even_rows=False, align=True)
     return flow
+
+def in_creation_phase(hg_rig):
+    return hg_rig.HG.phase in ['body', 'face', 'skin', 'length']
 
 def spoiler_box(self, ui_name):
     """
