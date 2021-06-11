@@ -14,8 +14,8 @@ class HG_BACK_TO_HUMAN(bpy.types.Operator):
     """
     makes the rig the active object, changing the ui back to the default state
     """
-    bl_idname = "hg3d.backhuman"
-    bl_label = "Back to Human"
+    bl_idname      = "hg3d.backhuman"
+    bl_label       = "Back to Human"
     bl_description = "Makes the human the active object"
     
     def execute(self, context):    

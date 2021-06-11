@@ -2,9 +2,15 @@ import bpy #type: ignore
 from .. import bl_info
 from sys import platform
 from .. HG_PCOLL import preview_collections
-from .. HG_COMMON_FUNC import find_human
+from .. HG_COMMON_FUNC import find_human, get_prefs
 from .. HG_COLORS import color_dict
-from . HG_PANEL_FUNCTIONS import spoiler_box, next_phase, get_flow, searchbox, tab_switching_menu
+from . HG_PANEL_FUNCTIONS import (
+    spoiler_box,
+    next_phase,
+    get_flow,
+    searchbox,
+    tab_switching_menu
+    )
 from pathlib import Path
 import addon_utils #type: ignore
 import os
@@ -27,45 +33,14 @@ class HG_PT_PANEL(bpy.types.Panel):
     def draw(self,context):
         layout      = self.layout
         self.sett   = context.scene.HG3D
-        self.pref   = context.preferences.addons[os.path.splitext(__package__)[0]].preferences
-        self.update = 'cpack_required' if self.pref.cpack_update_required else 'addon' if tuple(bl_info['version']) < tuple(self.pref.latest_version) else 'cpack_available' if self.pref.cpack_update_available else None
+        self.pref   = get_prefs()
         
-        if not self.pref.filepath:
-            layout.alert = True
-            layout.label(text = 'No filepath selected')
-            layout.label(text = 'Select one in the preferences')
-            layout.operator('hg3d.openpref', text = 'Open preferences', icon ='PREFERENCES')
+        found_problem = self._info_and_warning_labels(layout)
+        if found_problem:
             return
-
-        base_content = os.path.exists(self.pref.filepath + str(Path('content_packs/Base_Humans.json'))) 
-        if not base_content:
-            layout.alert = True
-            layout.label(text = "Filepath selected, but couldn't")
-            layout.label(text = 'find any humans.')
-            layout.label(text = 'Check if filepath is correct and')
-            layout.label(text = 'if the content packs are installed.')
-            layout.operator('hg3d.openpref', text = 'Open preferences', icon ='PREFERENCES')
-            return
-        if not self.sett.subscribed:
-            self.welcome_menu()
-            return
-
-        if self.update == 'cpack_required':
-            layout.alert = True
-            layout.label(text = 'One or more cpacks outdated!')
-            layout.operator('hg3d.openpref', text = 'Open preferences', icon ='PREFERENCES')
-            return
-
+        
         self.hg_rig = find_human(context.active_object)
-    
-        if self.warning_header(context):
-            return
-
-        if self.update:
-            label = 'Add-on update available!' if self.update == 'addon' else 'CPack updates available'
-            layout.operator("hg3d.openpref", text = label, icon = 'PACKAGE', depress = True, emboss = True if self.update == 'addon' else False)#.url = 'https://humgen3d.com/support/update'
-
-        self.top_widget()
+        self._top_widget()
 
         hg_rig = self.hg_rig
         if not hg_rig:
@@ -96,53 +71,194 @@ class HG_PT_PANEL(bpy.types.Panel):
             self.footwear_section()
             self.pose_section()
             self.expression_section()
-  
 
-    def welcome_menu(self):
-        col = self.layout.column()
+    def _info_and_warning_labels(self, context, layout) -> bool:
+        """Collection of all info and warning labels of HumGen
+
+        Args:
+            context : Blender Context
+            layout : HumGen main panel layout
+
+        Returns:
+            bool: True if problem was found, causing the HumGen UI to stop
+            displaying anything after the warning labels
+        """
+        filepath_problem = self._filepath_warning(layout)
+        if filepath_problem:
+            return True
+        
+        base_content_found = self._base_content_warning(layout)
+        if not base_content_found:
+            return True
+        
+        if not self.sett.subscribed:
+            self._welcome_menu(layout)
+            return True
+
+        update_problem = self._update_notification(layout)
+        if update_problem:
+            return True
+           
+        general_problem = self._warning_header(context)
+        if general_problem:
+            return True
+        
+        return False #no problems found
+        
+
+    def _filepath_warning(self, layout) -> bool:
+        """Shows warning if no filepath is selected
+
+        Args:
+            layout (AnyType): Main HumGen panel layout
+
+        Returns:
+            Bool: True if filepath was not found, causing the UI to cancel
+        """
+        if self.pref.filepath:
+            return False
+        
+        layout.alert = True
+        layout.label(text = 'No filepath selected')
+        layout.label(text = 'Select one in the preferences')
+        layout.operator(
+            'hg3d.openpref',
+            text = 'Open preferences',
+            icon ='PREFERENCES')
+        
+        return True       
+
+    def _base_content_warning(self, layout) -> bool:
+        """Looks if base content is installed, otherwise shows warning and 
+        stops the rest of the UI from showing
+
+        Args:
+            layout (AnyType): Main Layout of HumGen Panel
+
+        Returns:
+            Bool: True if base content found, False causes panel to return
+        """
+        base_humans_path = (
+            self.pref.filepath
+            + str(Path('content_packs/Base_Humans.json'))
+            )
+        
+        base_content = os.path.exists(base_humans_path)
+        
+        if not base_content:
+            layout.alert = True
+            
+            layout.label(text = "Filepath selected, but couldn't")
+            layout.label(text = 'find any humans.')
+            layout.label(text = 'Check if filepath is correct and')
+            layout.label(text = 'if the content packs are installed.')
+            
+            layout.operator('hg3d.openpref',
+                            text = 'Open preferences',
+                            icon ='PREFERENCES'
+                            )     
+            
+        return base_content
+
+    def _update_notification(self, layout) -> bool:
+        """Shows notifications for available or required updates of both the
+        add-on and the content packs.
+
+        Args:
+            layout ([AnyType]): Main layout of HumGen panel
+
+        Returns:
+            bool: True if update required, causing panel to only show error message
+        """
+        #find out what kind of update is available
+        if self.pref.cpack_update_required:      
+            self.update = 'cpack_required'
+        elif tuple(bl_info['version']) < tuple(self.pref.latest_version):
+            self.update = 'addon'
+        elif self.pref.cpack_update_available:
+            self.update = 'cpack_available'
+        else:
+            self.update = None
+
+        if not self.update:
+            return False
+
+        if self.update == 'cpack_required':
+            layout.alert = True
+            layout.label(text = 'One or more cpacks outdated!')
+            layout.operator('hg3d.openpref',
+                            text = 'Open preferences',
+                            icon ='PREFERENCES'
+                            )
+            return True
+        else:
+            addon_label = 'Add-on update available!'
+            cpack_label = 'CPack updates available'
+            label = addon_label if self.update == 'addon' else cpack_label
+            layout.operator("hg3d.openpref",
+                            text = label,
+                            icon = 'PACKAGE',
+                            depress = True,
+                            emboss = True if self.update == 'addon' else False)
+            return False
+
+    def _welcome_menu(self, layout):
+        col = layout.column()
         col.scale_y = 4
-        col.operator('hg3d.showinfo', text = 'Welcome to Human Generator!', depress = True)
+        col.operator('hg3d.showinfo',
+                     text = 'Welcome to Human Generator!',
+                     depress = True
+                     )
 
-        col_h         = col.column(align=True)
+        col_h = col.column(align=True)
         col_h.scale_y = .5
-        col_h.alert   = True
+        col_h.alert = True
 
-        col_h.operator('hg3d.drawtutorial', text = 'Get Started!', depress = True, icon = 'FAKE_USER_ON').first_time = True
+        col_h.operator('hg3d.drawtutorial',
+                       text = 'Get Started!',
+                       depress = True,
+                       icon = 'FAKE_USER_ON'
+                       ).first_time = True
 
     def creator_ui(self):
-        layout      = self.layout
-        box         = layout.box()
+        layout = self.layout
+        box    = layout.box()
         box.scale_y = 2
         box.operator('hg3d.showinfo', text = 'Creator Human', icon = 'INFO', depress = True)
 
-    def warning_header(self, context):
-        col = self.layout.column(align = True)
-        col_h         = col.column(align = True)
-        col_h.scale_y = 1.5
-        
-        
+    def _warning_header(self, context, layout) -> bool:
+        """Checks if context is in object mode and if a body object can be
+        found
+
+        Args:
+            context (AnyType): Blender context
+            layout (AnyType): Main HumGen panel layout
+
+        Returns:
+            bool: returns True if problem was found, causing panel to only show
+            these error messages
+        """
+       
         if not context.mode == 'OBJECT':
-            col_h.alert = True
-            col_h.label(text = 'HumGen only works in Object Mode')
+            layout.alert = True
+            layout.label(text = 'HumGen only works in Object Mode')
             return True
 
         if self.hg_rig and 'no_body' in self.hg_rig:
-            col_h.alert = True
-            col_h.label(text = 'No body object found for this rig')
+            layout.alert = True
+            layout.label(text = 'No body object found for this rig')
             return True
         
         return False
 
-    def top_widget(self):
+    def _top_widget(self):
         hg_rig = self.hg_rig
         if not hg_rig:
-            selection = 'No Human selected'  
-            depress = False         
+            label = 'No Human selected'          
         else:
             name = hg_rig.name.replace('HG_', '').replace('_RIGIFY', '')     
-            gender = hg_rig.HG.gender
-            selection = 'This is {} [{}]'.format(name,gender.capitalize())
-            depress = True
+            gender = hg_rig.HG.gender.capitalize()
+            label = f'This is {name} [{gender}]'
 
         col = self.layout.column(align = True)
         row_h = col.row(align = True)
@@ -150,7 +266,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row = row_h.row(align = True)
         if hg_rig and hg_rig.HG.experimental:        
             row.alert = True
-        row.operator('view3d.view_selected', text = selection, depress = bool(hg_rig))
+        row.operator('view3d.view_selected', text = label, depress = bool(hg_rig))
         if hg_rig and hg_rig.HG.phase in ['body', 'face', 'skin', 'length']:
             row = row_h.row(align = True)
             if not hg_rig.HG.experimental:
