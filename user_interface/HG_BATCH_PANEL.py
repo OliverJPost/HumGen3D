@@ -1,7 +1,3 @@
-"""
-This file is currently inactive
-"""
-
 import bpy #type: ignore
 from .. HG_PCOLL import preview_collections
 from . HG_PANEL_FUNCTIONS import get_flow, draw_panel_switch_header
