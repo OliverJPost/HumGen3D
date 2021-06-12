@@ -2,7 +2,7 @@ import bpy #type: ignore
 import json
 import os
 import time
-from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys
+from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
 from . HG_LENGTH import apply_armature
 from pathlib import Path
 
@@ -75,7 +75,7 @@ def load_hair(self,context, type):
     """
     loads the active hairstyle in the hair preview collection
     """
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     sett = context.scene.HG3D
 

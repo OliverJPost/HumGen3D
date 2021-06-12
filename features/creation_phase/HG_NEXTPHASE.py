@@ -5,7 +5,7 @@ Operator and corresponding functions for the next_tab and next_phase buttons
 
 import bpy #type: ignore
 from ... features.common.HG_INFO_POPUPS import HG_OT_INFO
-from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, apply_shapekeys, add_to_collection
+from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, apply_shapekeys, add_to_collection, get_prefs
 from .   HG_LENGTH import apply_armature, apply_length_to_rig, add_applied_armature
 from ... core.HG_PCOLL import refresh_pcoll
 from ... features.finalize_phase.HG_POSE import import_pose
@@ -27,7 +27,7 @@ class HG_FINISH_CREATION(bpy.types.Operator):
 
     def execute(self,context):
         sett = context.scene.HG3D
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
 
         hg_rig = find_human(context.active_object)
         hg_rig.select_set(True)
@@ -60,7 +60,7 @@ class HG_FINISH_CREATION(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         
         if pref.show_confirmation:
             return context.window_manager.invoke_confirm(self, event)
@@ -214,7 +214,7 @@ def remove_stretch_bones(hg_rig):
     bpy.ops.object.mode_set(mode='OBJECT')    
 
 def corrective_shapekey_copy(context, hg_body, apply_armature = True):
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     
     obj_list = []
     

@@ -5,7 +5,7 @@ Operators and functions used for clothing, outfits and footwear of the humans.
 import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys 
+from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys, get_prefs 
 from ... core.HG_PCOLL import refresh_pcoll
 from ... features.common.HG_RANDOM import get_random_from_pcoll
 # from . HG_POSE import set_high_heel_rotation
@@ -109,7 +109,7 @@ def load_pattern(self,context):
     """
     loads the pattern that is the current active item in the patterns preview_collection
     """  
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     mat = context.object.active_material
 
     #finds image node, returns error if for some reason the node doesn't exist
@@ -129,7 +129,7 @@ def load_outfit(self,context, footwear = False):
     """
     loads the outfit that is the current active item in the outfit preview_collection
     """  
-    pref             = context.preferences.addons[__package__].preferences
+    pref             = get_prefs()
     mask_remove_list = []
     scene            = context.scene
     sett             = scene.HG3D

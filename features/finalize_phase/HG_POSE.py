@@ -5,7 +5,7 @@ Operators and functions relating to the posing of the human
 import bpy #type: ignore
 from pathlib import Path
 import os
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human
+from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs
 from ... core.HG_PCOLL import refresh_pcoll
 
 class HG_RIGIFY(bpy.types.Operator):
@@ -104,7 +104,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
 
 def import_pose(context):
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     blendfile = str(pref.filepath) + context.scene.HG3D.pcoll_poses
     with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
@@ -144,7 +144,7 @@ def copy_pose(context, pose):
 
 def apply_pose(self, context):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     
     if sett.load_exception:
         return

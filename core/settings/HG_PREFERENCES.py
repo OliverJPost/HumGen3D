@@ -1,18 +1,17 @@
+from ... features.common.HG_COMMON_FUNC import get_prefs
 import bpy #type: ignore
 from ... import bl_info
-import shutil
 import os
 from pathlib import Path
 from bpy_extras.io_utils import ImportHelper #type: ignore
-from ... features.common.HG_COMMON_FUNC import ShowMessageBox
 from ... core.content.HG_CONTENT_PACKS import cpacks_refresh
 from ... core.HG_PCOLL import preview_collections
 
-class HG_PREFERENCES(bpy.types.AddonPreferences):
+class HG_PREF(bpy.types.AddonPreferences):
     """
     user preferences 
     """   
-    bl_idname = __package__
+    bl_idname = __package__.split('.')[0]
 
     latest_version        : bpy.props.IntVectorProperty(default = (0,0,0))
     cpack_update_available: bpy.props.BoolProperty(default = False)
@@ -59,9 +58,6 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
 
     #RELEASE remove default path
     filepath    : bpy.props.StringProperty(name= 'Install Filepath', default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\2nd_test_install_cpacks\\')
-    installing  : bpy.props.BoolProperty(default = False)
-    file_current: bpy.props.IntProperty()
-    file_all    : bpy.props.IntProperty()
 
     nc_colorspace_name: bpy.props.StringProperty(default = '')
     debug_mode: bpy.props.BoolProperty(default = False)
@@ -237,7 +233,7 @@ class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     bl_description = "Change the install path"
 
     def execute(self,context):
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
 
         pref.filepath  = self.filepath
         pref.pref_tabs = 'cpacks'

@@ -6,7 +6,7 @@ from ... features.creation_phase.HG_NEXTPHASE import add_driver, build_driver_di
 import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys
+from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
 from ... features.creation_phase.HG_LENGTH import apply_armature, apply_length_to_rig, add_applied_armature
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
@@ -38,7 +38,7 @@ def load_expression(self, context):
     loads the active expression in the preview collection
     """
     
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     item = context.scene.HG3D.pcoll_expressions
     sk_name, _ = os.path.splitext(os.path.basename(item))
@@ -176,7 +176,7 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
         return {'FINISHED'}
 
     def load_FACS_sks(self, context, hg_body):
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         context.view_layer.objects.active = hg_body
 
         blendfile = pref.filepath + str(Path('/models/FACS/HG_FACS.blend'))

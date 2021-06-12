@@ -5,14 +5,14 @@ functions used by properties
 import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
 
 def find_folders(self, context, categ, gender_toggle, include_all = True):
     '''
     returns enum of folders found in a specific directory. These serve as categories for that specific pcoll
     '''
     hg_rig = find_human(context.active_object)
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     if isinstance(gender_toggle, (bool)):
         if hg_rig:
@@ -51,7 +51,7 @@ def find_item_amount(context, categ, gender, folder):
     '''
     used by batch menu, showing the total amount of items of the selected categories
     '''
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     
     if categ == 'expressions':
         ext = '.txt'

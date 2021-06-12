@@ -1,6 +1,6 @@
 import bpy #type: ignore
 import bmesh #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
 from pathlib import Path
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -14,7 +14,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
 
     def execute(self,context):
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         
         hg_rig = find_human(context.object)
         hg_body = hg_rig.HG.body_obj

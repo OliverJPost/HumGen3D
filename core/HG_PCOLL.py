@@ -5,7 +5,7 @@ Functions related to the preview_collections of human generator, including popul
 import bpy #type: ignore
 import os
 from pathlib import Path
-from .. features.common.HG_COMMON_FUNC import find_human
+from .. features.common.HG_COMMON_FUNC import find_human, get_prefs
 
 preview_collections = {} #master dictionary of all pcolls
 
@@ -74,7 +74,7 @@ def populate_pcoll(self, context, pcoll_categ):
     populates the preview collection enum list with blend file filepaths and icons
     '''
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     pcoll = preview_collections["pcoll_{}".format(pcoll_categ)]
     

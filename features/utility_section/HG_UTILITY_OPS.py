@@ -259,7 +259,7 @@ class HG_OT_OPEN_FOLDER(bpy.types.Operator):
     subpath: bpy.props.StringProperty()
 
     def execute(self,context):        
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         path = pref.filepath + str(Path(self.subpath))
 
         if platform.system() == "Windows":
@@ -305,7 +305,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        pref            = context.preferences.addons[__package__].preferences
+        pref            = get_prefs()
         self.sett       = context.scene.HG3D
         self.collection = context.scene.shapekeys_col
 
@@ -362,7 +362,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        pref        = context.preferences.addons[__package__].preferences
+        pref        = get_prefs()
         self.sett   = context.scene.HG3D
         self.hg_rig = find_human(context.object)
 
@@ -439,7 +439,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
 
     def execute(self,context):        
         sett = self.sett
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
 
         hg_rig  = self.hg_rig
         hg_body = hg_rig.HG.body_obj
@@ -506,7 +506,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         self.sett = context.scene.HG3D
         self.hg_rig = find_human(context.object)
 
@@ -567,7 +567,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
 
     def execute(self,context):        
         sett = self.sett
-        pref = context.preferences.addons[__package__].preferences
+        pref = get_prefs()
         col  = self.col
         objs = [bpy.data.objects[item.obj_name] for item in col]
                   
@@ -634,7 +634,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Utility_tools):
         self.overwrite_warning()
 
     def invoke(self, context, event):
-        self.pref   = context.preferences.addons[__package__].preferences
+        self.pref   = get_prefs()
         self.sett   = context.scene.HG3D
         self.hg_rig = find_human(self.sett.saveoutfit_human)
         self.col    = context.scene.saveoutfit_col

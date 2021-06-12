@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .   HG_NAMEGEN import get_name
 from ... features.finalize_phase.HG_POSE import apply_pose
-from ... features.common.HG_COMMON_FUNC import ShowMessageBox, add_to_collection, find_human
+from ... features.common.HG_COMMON_FUNC import ShowMessageBox, add_to_collection, find_human, get_prefs
 from ... core.HG_PCOLL import refresh_pcoll
 
 import time
@@ -97,7 +97,7 @@ class HG_START_CREATION(bpy.types.Operator):
 
 def load_human_v2(context, creator = False):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     #import from HG_Human file
     blendfile = str(pref.filepath) + str(Path('/models/HG_HUMAN.blend'))
@@ -207,7 +207,7 @@ def load_human_v2(context, creator = False):
 #REMOVE
 def load_human(context, creator = False):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     #import from HG_Human file
     blendfile = str(pref.filepath) + str(Path('/models/HG_HUMAN.blend'))
@@ -366,7 +366,7 @@ def load_textures(self, context):
         print('tex is none')
         return
 
-    pref = bpy.context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     mat = hg_body.data.materials[0]
     nodes = mat.node_tree.nodes
 
@@ -383,7 +383,7 @@ def add_texture(node, sub_path, tx_type):
     """
     Adds correct image to the teximage node
     """
-    pref = bpy.context.preferences.addons[__package__].preferences
+    pref = get_prefs()
 
     filepath = str(pref.filepath) + str(Path(sub_path))
 

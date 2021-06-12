@@ -3,7 +3,7 @@ Texture baking operators
 '''
 
 import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
 import datetime
 from pathlib import Path
 import os
@@ -99,7 +99,7 @@ class HG_BAKE(bpy.types.Operator):
         return bake_dict
     def bake_texture(self, context, mat, bake_type, naming, obj_type, hg_rig):
         
-        pref  = context.preferences.addons[__package__].preferences
+        pref  = get_prefs()
         sett  = context.scene.HG3D
         nodes = mat.node_tree.nodes
         links = mat.node_tree.links

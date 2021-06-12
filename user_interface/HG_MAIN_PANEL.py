@@ -41,7 +41,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         layout      = self.layout
         self.sett   = context.scene.HG3D
         self.pref   = get_prefs()
-        print(self.pref)
+
         self.hg_rig = find_human(context.active_object)
         found_problem = self._draw_info_and_warning_labels(context, layout) 
         if found_problem:

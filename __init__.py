@@ -36,13 +36,12 @@ from bpy.app.handlers import persistent #type: ignore
 if __name__ != "HG3D":
     sys.modules['HG3D'] = sys.modules[__name__]
 
-
 #core
 from . core.HG_CALLBACK import HG_ACTIVATE
 from . core.settings.HG_PREFERENCES import (
     HG_ICON_LEGEND,
     HG_PATHCHANGE,
-    HG_PREFERENCES)
+    HG_PREF)
 from . core.settings.HG_PROPS import (
     HG_OBJECT_PROPS,
     HG_SETTINGS)
@@ -207,10 +206,12 @@ from . tutorial_operator import HG_TUTORIAL_OP
 # from . features.utility_section.HG_BAKE import HG_BAKE
 # from . HG_UPDATE import check_update
 
+print(HG_PREF)
+
 classes = (
     #Add-on backbones
     HG_ACTIVATE,
-    HG_PREFERENCES,
+    HG_PREF,
     
     #Props
     HG_SETTINGS,
@@ -431,7 +432,7 @@ def register():
     #RELEASE remove print statements
     #RELEASE TURN OFF SSS
     for cls in classes:    
-        print('registering', cls)
+        #print('registering', cls)
         bpy.utils.register_class(cls)
     
     bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS) #Main props

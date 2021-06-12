@@ -5,7 +5,7 @@ Operators and functions used for clothing, outfits and footwear of the humans.
 import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys 
+from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys, get_prefs 
 from ... core.HG_PCOLL import refresh_pcoll
 from ... features.common.HG_RANDOM import get_random_from_pcoll
 from ... features.utility_section.HG_DEVTOOLS import HG_SHAPEKEY_CALCULATOR #create_shapekey_from_difference, build_distance_dict
@@ -16,7 +16,7 @@ def load_outfit(self,context, footwear = False):
     """
     loads the outfit that is the current active item in the outfit preview_collection
     """  
-    pref    = context.preferences.addons[__package__].preferences
+    pref    = get_prefs()
     sett    = context.scene.HG3D
     hg_rig  = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj

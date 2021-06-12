@@ -3,7 +3,7 @@ Operators used in the main panel, not related to any particular section
 """
 
 import bpy #type: ignore
-from . HG_COMMON_FUNC import ShowMessageBox, find_human
+from . HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
 from ... core.HG_PCOLL import refresh_pcoll
 from . HG_INFO_POPUPS import HG_OT_INFO
 import os
@@ -45,7 +45,7 @@ class HG_UITOGGLE(bpy.types.Operator):
             for item in categ_dict[self.categ]:
                  refresh_pcoll(self, context, item)
         
-        pref = context.preferences.addons[os.path.splitext(__package__)[0]].preferences
+        pref = get_prefs()
         if pref.auto_hide_hair_switch and not self.keep_hair:
             for mod in find_human(context.object).HG.body_obj.modifiers:
                 if mod.type == 'PARTICLE_SYSTEM':

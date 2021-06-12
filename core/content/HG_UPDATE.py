@@ -1,10 +1,11 @@
+from ... features.common.HG_COMMON_FUNC import get_prefs
 import bpy #type: ignore
 import requests #type: ignore
 import json
 from ... import bl_info
 
 def check_update():
-    pref = bpy.context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     url  = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
     resp = requests.get(url)
 

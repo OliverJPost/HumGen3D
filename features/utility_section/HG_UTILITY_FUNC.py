@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human
+from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
 
 def refresh_modapply(self, context):
     print('refreshing modapply')
@@ -70,7 +70,7 @@ def get_preset_thumbnail(self, context):
 
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     col  = context.scene.shapekeys_col
     col.clear()
 
@@ -102,7 +102,7 @@ def refresh_shapekeys_ul(self, context):
 
 def refresh_hair_ul(self, context):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     col  = context.scene.savehair_col
     col.clear()
 
@@ -119,7 +119,7 @@ def refresh_hair_ul(self, context):
 #TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D
-    pref = context.preferences.addons[__package__].preferences
+    pref = get_prefs()
     col  = context.scene.saveoutfit_col
     col.clear()
     
