@@ -1,9 +1,9 @@
 import bpy #type: ignore
 from .. import bl_info
 from sys import platform
-from .. HG_PCOLL import preview_collections
-from .. HG_COMMON_FUNC import find_human, get_prefs
-from .. HG_COLORS import color_dict
+from .. core.HG_PCOLL import preview_collections
+from .. features.common.HG_COMMON_FUNC import find_human, get_prefs
+from .. data.HG_COLORS import color_dict
 from . HG_PANEL_FUNCTIONS import (
     draw_sub_spoiler,
     in_creation_phase,
@@ -41,7 +41,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         layout      = self.layout
         self.sett   = context.scene.HG3D
         self.pref   = get_prefs()
-        
+        print(self.pref)
         self.hg_rig = find_human(context.active_object)
         found_problem = self._draw_info_and_warning_labels(context, layout) 
         if found_problem:
