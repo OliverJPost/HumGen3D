@@ -2,61 +2,76 @@ import bpy #type: ignore
 
 class HG_UL_MODAPPLY(bpy.types.UIList):
     """
-    UIList showing clothing libraries
+    UIList showing modifiers
     """   
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        enabledicon      = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
-        viewport_visible = "RESTRICT_VIEW_OFF" if item.viewport_visible else "RESTRICT_VIEW_ON"
-        render_visible   = "RESTRICT_RENDER_OFF" if item.render_visible else "RESTRICT_RENDER_ON"
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
+        enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
+        viewport_visible_icon = ("RESTRICT_VIEW_OFF" if item.viewport_visible 
+                                else "RESTRICT_VIEW_ON")
+        render_visible_icon = ("RESTRICT_RENDER_OFF" if item.render_visible 
+                              else "RESTRICT_RENDER_ON")
 
         row = layout.row(align = True)
 
         if item.mod_name == 'HEADER':
-            row.label(text = '', icon = 'BLANK1')
-            row.label(text = 'Type:' if item.count else 'Name:', icon = 'BLANK1')
+            self._draw_header_row(item, row)
+            return
+  
+        row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
+        
+        modifier_icon = ('PARTICLES' if item.mod_type == 'PARTICLE_SYSTEM' 
+                     else 'MOD_{}'.format(item.mod_type)
+                     )
+        try:
+            row.label(text=item.mod_name, icon = modifier_icon)
+        except:
+            row.label(text=item.mod_name, icon = 'QUESTION')
+
+        if item.count:
             row.separator()
-            row.label(text = 'Amount:' if item.count else '')
-
+            row.label(text = str(item.count))
         else:
-            row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
-            
-            icon_name = 'PARTICLES' if item.mod_type == 'PARTICLE_SYSTEM' else 'MOD_{}'.format(item.mod_type)
-            try:
-                row.label(text=item.mod_name, icon = icon_name)
-            except:
-                row.label(text=item.mod_name, icon = 'QUESTION')
+            row.label(text = '', icon = viewport_visible_icon)
+            row.label(text = '', icon = render_visible_icon)
 
-            if item.count:
-                row.separator()
-                row.label(text = str(item.count))
-            else:
-                row.label(text = '', icon = viewport_visible)
-                row.label(text = '', icon = render_visible)
+    def _draw_header_row(self, item, row):
+        """header with label for uilists
+        """
+        row.label(text = '', icon = 'BLANK1')
+        row.label(text = 'Type:' if item.count else 'Name:', icon = 'BLANK1')
+        row.separator()
+        row.label(text = 'Amount:' if item.count else '')
 
 class MODAPPLY_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
-    mod_name        : bpy.props.StringProperty(name = 'Modifier Name', default = '')
-    mod_type        : bpy.props.StringProperty(name = 'Modifier Type', default = '')
-    enabled         : bpy.props.BoolProperty(default = True)
+    mod_name : bpy.props.StringProperty(name = 'Modifier Name', default = '')
+    mod_type : bpy.props.StringProperty(name = 'Modifier Type', default = '')
+    enabled  : bpy.props.BoolProperty(default = True)
     render_visible  : bpy.props.BoolProperty(default = True)
     viewport_visible: bpy.props.BoolProperty(default = True)
-    count           : bpy.props.IntProperty(default = 0)
-    object          : bpy.props.PointerProperty(type=bpy.types.Object)
+    count : bpy.props.IntProperty(default = 0)
+    object: bpy.props.PointerProperty(type=bpy.types.Object)
 
 class HG_UL_SHAPEKEYS(bpy.types.UIList):
     """
     UIList showing shapekeys
     """   
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
         enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
 
         row = layout.row(align = True)
         row.enabled = item.on
-        row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
+        row.prop(item, "enabled",
+                 text="",
+                 icon=enabledicon,
+                 emboss=False
+                 )
         
         row.label(text=item.sk_name)
         if not item.on:
@@ -68,15 +83,16 @@ class SHAPEKEY_ITEM(bpy.types.PropertyGroup):
     """
     sk_name: bpy.props.StringProperty(name = 'Modifier Name', default = '')
     enabled: bpy.props.BoolProperty(default = False)
-    on     : bpy.props.BoolProperty(default = True)
+    on : bpy.props.BoolProperty(default = True)
     
 
 class HG_UL_SAVEHAIR(bpy.types.UIList):
     """
-    UIList showing shapekeys
+    UIList showing hair particle systems
     """   
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
         enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
 
         row = layout.row(align = True)
@@ -96,7 +112,8 @@ class HG_UL_SAVEOUTFIT(bpy.types.UIList):
     UIList showing shapekeys
     """   
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
         row = layout.row(align = True)      
         row.label(text=item.obj_name)
         
@@ -113,8 +130,8 @@ class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
-    obj_name            : bpy.props.StringProperty(name = 'Ojbect Name', default = '')
-    cor_sks_present     : bpy.props.BoolProperty(default = False)
+    obj_name : bpy.props.StringProperty(name = 'Ojbect Name', default = '')
+    cor_sks_present : bpy.props.BoolProperty(default = False)
     weight_paint_present: bpy.props.BoolProperty(default = False)
 
 
