@@ -62,8 +62,6 @@ def iter_submodules(path, package_name):
 
 def iter_submodule_names(path, root=""):
     for _, module_name, is_package in pkgutil.iter_modules([str(path)]):
-        if module_name == 'hg_purge.py':
-            continue
         if is_package:
             sub_path = path / module_name
             sub_root = root + module_name + "."
