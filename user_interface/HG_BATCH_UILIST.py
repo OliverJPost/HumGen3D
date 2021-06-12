@@ -1,3 +1,7 @@
+"""
+This file is currently inactive
+"""
+
 import bpy #type: ignore
 from .. HG_PROP_FUNCTIONS import find_folders, find_item_amount
 from .. HG_PCOLL import preview_collections
