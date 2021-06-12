@@ -1,6 +1,6 @@
 import bpy #type: ignore
 from .. HG_PCOLL import preview_collections
-from . HG_PANEL_FUNCTIONS import get_flow, tab_switching_menu
+from . HG_PANEL_FUNCTIONS import get_flow, draw_panel_switch_header
 
 class Batch_PT_Base:
     bl_space_type = "VIEW_3D"
@@ -20,7 +20,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         return context.scene.HG3D.active_ui_tab == 'BATCH'
     
     def draw_header(self, context):
-        tab_switching_menu(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self,context):
         layout=self.layout

@@ -5,12 +5,12 @@ from .. HG_PCOLL import preview_collections
 from .. HG_COMMON_FUNC import find_human, get_prefs
 from .. HG_COLORS import color_dict
 from . HG_PANEL_FUNCTIONS import (
+    draw_sub_spoiler,
     in_creation_phase,
-    spoiler_box,
-    _draw_next_phase_button,
+    draw_spoiler_box,
     get_flow,
     searchbox,
-    tab_switching_menu
+    draw_panel_switch_header
     )
 from pathlib import Path
 import addon_utils #type: ignore
@@ -18,6 +18,12 @@ import os
 
 
 class HG_PT_PANEL(bpy.types.Panel):
+    """Main Human Generator panel, divided into creation phase and finalize 
+    phase. These phases are then divided into sections (i.e. hair, body, face)
+
+    One exception is the clothing material section. If a HumGen clothing object
+    is selected, this UI shows options to change the material
+    """
     bl_idname      = "HG_PT_Panel"
     bl_label       = "HumGen"
     bl_space_type  = "VIEW_3D"
@@ -29,7 +35,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         return context.scene.HG3D.active_ui_tab == 'CREATE'
 
     def draw_header(self, context):
-        tab_switching_menu(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self,context):
         layout      = self.layout
@@ -48,7 +54,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not hg_rig:
             self._draw_starting_human_ui(layout)
         elif 'cloth' in context.object or 'shoe' in context.object:
-            self._draw_material_ui(context, layout)
+            self._draw_cloth_material_ui(context, layout)
+        #creation phase
         elif in_creation_phase(hg_rig):
             self._draw_creation_section() 
             self._draw_length_section() 
@@ -57,7 +64,8 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._draw_eyes_section() 
             if self.pref.hair_section in ['both', 'creation']:
                 self._draw_hair_section(context) 
-            _draw_next_phase_button(self)    
+            self._draw_finish_creation_button(layout)    
+        #finalize phase
         else:
             self.draw_creation_backup_section() 
             if self.pref.hair_section in ['both', 'finalize']:
@@ -259,9 +267,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         
         #button showing name and gender of human
         subrow_h.operator('view3d.view_selected', 
-                     text = self._get_header_label(hg_rig),
-                     depress = bool(hg_rig)
-                     )
+                          text = self._get_header_label(hg_rig),
+                          depress = bool(hg_rig)
+                          )
         
         #show button for switching to experimental
         if hg_rig and in_creation_phase(hg_rig):
@@ -351,7 +359,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         sett = self.sett
         
-        spoiler_open, box = spoiler_box(self, 'body')
+        spoiler_open, box = draw_spoiler_box(self, 'body')
         if not spoiler_open:   
             return
         
@@ -390,14 +398,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): Box layout of body section
             sett (Scene.HG3D): Humgen properties
         """
-        boxbox = box.box()
-        boxbox.prop(sett, 'indiv_scale_ui',
-            icon="TRIA_DOWN" if sett.indiv_scale_ui else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True)
-
-        if not sett.indiv_scale_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'indiv_scale_ui', 'Individual scaling')
+        if not is_open:
+            return 
         
         col = boxbox.column(align = True)
         col.use_property_split = True
@@ -432,7 +436,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """Section showing a slider for changing human length and a label that
         shows the active length in metric and imperial measurements
         """
-        spoiler_open, box = spoiler_box(self, 'length')
+        spoiler_open, box = draw_spoiler_box(self, 'length')
         if not spoiler_open:   
             return
     
@@ -476,7 +480,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         sett = self.sett
         
-        spoiler_open, box = spoiler_box(self, 'face')
+        spoiler_open, box = draw_spoiler_box(self, 'face')
         if not spoiler_open or not box.enabled:   
             return
 
@@ -632,7 +636,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     def _draw_skin_section(self):
         """Collapsable section with options for changing the shader of the human
         """
-        spoiler_open, box = spoiler_box(self, 'skin')
+        spoiler_open, box = draw_spoiler_box(self, 'skin')
         if not spoiler_open:   
             return
         
@@ -666,16 +670,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        boxbox = box.box()
-        
-        row = boxbox.row()
-        row.prop(sett, 'main_skin_ui',
-                 text = 'Main settings',
-                 icon = 'TRIA_DOWN' if sett.main_skin_ui else 'TRIA_RIGHT' ,
-                 emboss= False
-                 )
-        if not sett.main_skin_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'main_skin_ui', 'Main settings')
+        if not is_open:
+            return 
 
         col = boxbox.column(align = True)
         col.scale_y = 1.2
@@ -723,16 +721,11 @@ class HG_PT_PANEL(bpy.types.Panel):
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
         """
-        boxbox = box.box()
         
-        row = boxbox.row()
-        row.prop(sett, 'texture_ui',
-                 text = 'Base texture',
-                 icon = 'TRIA_RIGHT' if not sett.texture_ui else 'TRIA_DOWN' ,
-                 emboss= False
-                 )   
-        if not sett.texture_ui:
-            return        
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'texture_ui', 'Texture sets')
+        if not is_open:
+            return       
 
         col = boxbox.column()
         col.template_icon_view(sett, "pcoll_textures",
@@ -750,17 +743,11 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        boxbox = box.box()
         
-        row = boxbox.row()
-        row.prop(sett, 'light_dark_ui',
-                 text = 'Dark/Light areas',
-                 icon = 'TRIA_DOWN' if sett.light_dark_ui else 'TRIA_RIGHT',
-                 emboss= False
-                 )
-
-        if not sett.light_dark_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'light_dark_ui', 'Light & dark areas')
+        if not is_open:
+            return 
 
         light_hsv = nodes['Lighten_hsv']
         dark_hsv = nodes['Darken_hsv']
@@ -784,15 +771,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        boxbox = box.box()
-        
-        row = boxbox.row()
-        row.prop(sett, 'age_ui',
-                 text = 'Age',
-                 icon = 'TRIA_DOWN' if sett.light_dark_ui else 'TRIA_RIGHT',
-                 emboss= False)
-        if not sett.age_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'age_ui', 'Age')
+        if not is_open:
+            return 
 
         hg_body = self.hg_rig.HG.body_obj
         sk = hg_body.data.shape_keys.key_blocks
@@ -819,15 +801,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        boxbox = box.box()
-        row = boxbox.row()
-        row.prop(sett, 'freckles_ui',
-                 text = 'Freckles',
-                 icon = 'TRIA_DOWN' if sett.light_dark_ui else 'TRIA_RIGHT',
-                 emboss= False
-                 )
-        if not sett.freckles_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'freckles_ui', 'Freckles')
+        if not is_open:
+            return 
 
         freckles_node = nodes['Freckles_control']
         splotches_node = nodes['Splotches_control']
@@ -852,18 +829,14 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
+        
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'makeup_ui', 'Makeup')
+        if not is_open:
+            return 
+        
         makeup_node = nodes['Gender_Group']
         
-        boxbox = box.box()
-        row = boxbox.row()
-        row.prop(sett, 'makeup_ui',
-                 text = 'Makeup',
-                 icon = 'TRIA_DOWN' if sett.makeup_ui else 'TRIA_RIGHT' ,
-                 emboss= False
-                 )
-        if not sett.makeup_ui:
-            return
-
         #TODO make loop. First try failed, don't remember why
         flow = self._get_skin_flow(boxbox, 'Foundation:')
         flow.prop(makeup_node.inputs['Foundation Amount'], 'default_value',
@@ -947,15 +920,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         if platform == 'darwin': #not compatible with MacOS 8-texture material
             return
 
-        boxbox = box.box()
-        
-        row = boxbox.row()
-        row.prop(sett, 'beautyspots_ui',
-                 text = 'Beauty spots',
-                 icon = 'TRIA_DOWN' if sett.beautyspots_ui else 'TRIA_RIGHT',
-                 emboss= False
-                 )
-        if not sett.beautyspots_ui:
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'beautyspots_ui', 'Beauty Spots')
+        if not is_open:
             return        
 
         bs_node = nodes['BS_Control']
@@ -983,15 +950,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        boxbox = box.box()
-        row = boxbox.row()
-        row.prop(sett, 'beard_shadow_ui',
-                 text = 'Beard shadow',
-                 icon = 'TRIA_DOWN' if sett.beard_shadow_ui else 'TRIA_RIGHT',
-                 emboss= False
-                 )
-        if not sett.beard_shadow_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'beard_shadow_ui', 'Beard Shadow')
+        if not is_open:
+            return 
 
         beard_node = nodes['Gender_Group']
 
@@ -1016,7 +978,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     def _draw_eyes_section(self):
         """Options for changing eyebrows and eye shader
         """
-        spoiler_open, box = spoiler_box(self, 'eyes')    
+        spoiler_open, box = draw_spoiler_box(self, 'eyes')    
         if not spoiler_open:   
             return
 
@@ -1097,63 +1059,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         return eye_systems
 
     
-
-#   ______ .______       _______     ___   .___________. __    ______   .__   __.    .______        ___       ______  __  ___  __    __  .______   
-#  /      ||   _  \     |   ____|   /   \  |           ||  |  /  __  \  |  \ |  |    |   _  \      /   \     /      ||  |/  / |  |  |  | |   _  \  
-# |  ,----'|  |_)  |    |  |__     /  ^  \ `---|  |----`|  | |  |  |  | |   \|  |    |  |_)  |    /  ^  \   |  ,----'|  '  /  |  |  |  | |  |_)  | 
-# |  |     |      /     |   __|   /  /_\  \    |  |     |  | |  |  |  | |  . `  |    |   _  <    /  /_\  \  |  |     |    <   |  |  |  | |   ___/  
-# |  `----.|  |\  \----.|  |____ /  _____  \   |  |     |  | |  `--'  | |  |\   |    |  |_)  |  /  _____  \ |  `----.|  .  \  |  `--'  | |  |      
-#  \______|| _| `._____||_______/__/     \__\  |__|     |__|  \______/  |__| \__|    |______/  /__/     \__\ \______||__|\__\  \______/  | _|
-
-    def draw_creation_backup_section(self):  
-        """Se3ction for options that are still accesible from creation phase
-        """
-        spoiler_open, box = spoiler_box(self, 'creation_phase')
-        if not spoiler_open:
-            return
-        
-        sett = self.sett
-        hg_icons = preview_collections["hg_icons"]
-
-        col_h = box.column()
-        col_h.scale_y = 1.5
-        col_h.alert= True
-        col_h.operator('hg3d.revert',
-                       text = 'Revert to Creation Phase',
-                       icon = 'ERROR',
-                       depress = True
-                       )
-
-        boxbox = box.box()
-        
-        row = boxbox.row()
-        row.alignment = 'CENTER'
-        row.label(text = 'Skin Settings', icon_value = hg_icons['skin'].icon_id)
-        
-        nodes = self.hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
-        
-        self._draw_main_skin_subsection(sett, boxbox, nodes)
-        
-        if self.hg_rig.HG.gender == 'female':
-            self._draw_makeup_subsection(sett, boxbox, nodes)
-
-        if not self.pref.hair_section == 'creation':
-            return
-        
-        boxbox = box.box()
-        
-        hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj)
-        
-        row = boxbox.row()
-        row.alignment = 'CENTER'
-        row.label(text = 'Hair Settings',
-                  icon_value = hg_icons['hair'].icon_id
-                  )
-        
-        self._draw_hair_children_switch(hair_systems, boxbox)
-        self._draw_hair_length_ui(hair_systems, boxbox)
-        self._draw_hair_material_ui(hair_systems, boxbox)
-             
+   
     #  __    __       ___       __  .______      
     # |  |  |  |     /   \     |  | |   _  \     
     # |  |__|  |    /  ^  \    |  | |  |_)  |    
@@ -1162,7 +1068,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |__|  |__| /__/     \__\ |__| | _| `._____|
 
     def _draw_hair_section(self, context):
-        spoiler_open, box = spoiler_box(self, 'hair')
+        spoiler_open, box = draw_spoiler_box(self, 'hair')
         if not spoiler_open:
             return
         
@@ -1204,13 +1110,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         col=box.column(align=True)
         
-        boxbox = col.box()
-        boxbox.prop(sett, 'face_hair_ui',
-            icon="TRIA_DOWN" if sett.face_hair_ui else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True)
-        if not sett.face_hair_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'face_hair_ui', 'Face Hair')
+        if not is_open:
+            return 
         
         col.template_icon_view(
             sett, "pcoll_face_hair",
@@ -1395,6 +1298,79 @@ class HG_PT_PANEL(bpy.types.Panel):
         return hair_systems
 
 
+    def _draw_finish_creation_button(self, layout):
+        """pink button to finish creation phase
+
+        Args:
+            layout (UILayout): layout to draw button in
+        """
+        col = layout.column() 
+        col.alert   = True
+        col.scale_y = 1.5
+        col.operator('hg3d.finishcreation',
+                    text = 'Finish Creation Phase' ,
+                    icon = 'FILE_ARCHIVE',
+                    depress = True
+                    )
+
+
+#   ______ .______       _______     ___   .___________. __    ______   .__   __.    .______        ___       ______  __  ___  __    __  .______   
+#  /      ||   _  \     |   ____|   /   \  |           ||  |  /  __  \  |  \ |  |    |   _  \      /   \     /      ||  |/  / |  |  |  | |   _  \  
+# |  ,----'|  |_)  |    |  |__     /  ^  \ `---|  |----`|  | |  |  |  | |   \|  |    |  |_)  |    /  ^  \   |  ,----'|  '  /  |  |  |  | |  |_)  | 
+# |  |     |      /     |   __|   /  /_\  \    |  |     |  | |  |  |  | |  . `  |    |   _  <    /  /_\  \  |  |     |    <   |  |  |  | |   ___/  
+# |  `----.|  |\  \----.|  |____ /  _____  \   |  |     |  | |  `--'  | |  |\   |    |  |_)  |  /  _____  \ |  `----.|  .  \  |  `--'  | |  |      
+#  \______|| _| `._____||_______/__/     \__\  |__|     |__|  \______/  |__| \__|    |______/  /__/     \__\ \______||__|\__\  \______/  | _|
+
+    def draw_creation_backup_section(self):  
+        """Se3ction for options that are still accesible from creation phase
+        """
+        spoiler_open, box = draw_spoiler_box(self, 'creation_phase')
+        if not spoiler_open:
+            return
+        
+        sett = self.sett
+        hg_icons = preview_collections["hg_icons"]
+
+        col_h = box.column()
+        col_h.scale_y = 1.5
+        col_h.alert= True
+        col_h.operator('hg3d.revert',
+                       text = 'Revert to Creation Phase',
+                       icon = 'ERROR',
+                       depress = True
+                       )
+
+        boxbox = box.box()
+        
+        row = boxbox.row()
+        row.alignment = 'CENTER'
+        row.label(text = 'Skin Settings', icon_value = hg_icons['skin'].icon_id)
+        
+        nodes = self.hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
+        
+        self._draw_main_skin_subsection(sett, boxbox, nodes)
+        
+        if self.hg_rig.HG.gender == 'female':
+            self._draw_makeup_subsection(sett, boxbox, nodes)
+
+        if not self.pref.hair_section == 'creation':
+            return
+        
+        boxbox = box.box()
+        
+        hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj)
+        
+        row = boxbox.row()
+        row.alignment = 'CENTER'
+        row.label(text = 'Hair Settings',
+                  icon_value = hg_icons['hair'].icon_id
+                  )
+        
+        self._draw_hair_children_switch(hair_systems, boxbox)
+        self._draw_hair_length_ui(hair_systems, boxbox)
+        self._draw_hair_material_ui(hair_systems, boxbox)
+          
+
     #   ______  __        ______   .___________. __    __   __  .__   __.   _______ 
     #  /      ||  |      /  __  \  |           ||  |  |  | |  | |  \ |  |  /  _____|
     # |  ,----'|  |     |  |  |  | `---|  |----`|  |__|  | |  | |   \|  | |  |  __  
@@ -1405,13 +1381,13 @@ class HG_PT_PANEL(bpy.types.Panel):
     def _draw_clothing_section(self):
         """draws a template_icon_view for adding outfits
         """
-        spoiler_open, box = spoiler_box(self, 'clothing')
+        spoiler_open, box = draw_spoiler_box(self, 'clothing')
         if not spoiler_open:
             return
 
         sett = self.sett
         
-        searchbox(self, 'outfit', box)
+        searchbox(sett, 'outfit', box)
 
         row = box.row(align = True)
         row.template_icon_view(
@@ -1439,13 +1415,13 @@ class HG_PT_PANEL(bpy.types.Panel):
     def _draw_footwear_section(self):
         """draws a template icon view to add footwear to the human
         """
-        spoiler_open, box = spoiler_box(self, 'footwear')
+        spoiler_open, box = draw_spoiler_box(self, 'footwear')
         if not spoiler_open:
             return
         
         sett = self.sett
         
-        searchbox(self, 'footwear', box)
+        searchbox(sett, 'footwear', box)
 
         row = box.row(align = True)
         row.template_icon_view(
@@ -1472,7 +1448,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
     #pose
     def _draw_pose_section(self):
-        spoiler_open, box = spoiler_box(self, 'pose')
+        spoiler_open, box = draw_spoiler_box(self, 'pose')
         if not spoiler_open:
             return
        
@@ -1521,7 +1497,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                          ).info = 'rigify_library'
             return
         
-        searchbox(self, 'poses', box)
+        searchbox(sett, 'poses', box)
         
         box.template_icon_view(
             sett, "pcoll_poses",
@@ -1549,7 +1525,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """section for selecting expressions from template_icon_view or adding 
         facial rig
         """
-        spoiler_open, box = spoiler_box(self, 'expression')
+        spoiler_open, box = draw_spoiler_box(self, 'expression')
         if not spoiler_open:
             return
 
@@ -1578,7 +1554,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                          )
             return
 
-        searchbox(self, 'expressions', box)
+        searchbox(sett, 'expressions', box)
         
         box.template_icon_view(
             sett, "pcoll_expressions",
@@ -1614,15 +1590,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not expr_sks:
             return
         
-        boxbox = box.box()
-        boxbox.prop(
-            sett, 'expression_slider_ui',
-            icon="TRIA_DOWN" if sett.expression_slider_ui else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True
-            )
-        if not sett.expression_slider_ui:
-            return
+        is_open, boxbox = draw_sub_spoiler(
+            box, sett, 'expression_slider_ui', 'Strength')
+        if not is_open:
+            return 
         
         flow = get_flow(sett, box, animation = True)
         for sk in [sk for sk in filtered_obj_sks.key_blocks if not sk.mute]:
@@ -1663,7 +1634,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |__|  |__| /__/     \__\  |__|     |_______|| _| `._____||__| /__/     \__\ |_______|
 
     #TODO add compatibility with any material, not just standard material
-    def _draw_material_ui(self, context, layout):
+    def _draw_cloth_material_ui(self, context, layout):
         """draws ui for changing the material of the active clothing object
 
         Args:
@@ -1823,7 +1794,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             control_node (ShaderNodeGroup): control nodegroup of cloth material
             p_flow (UILayout): layout where the pattern stuff is drawn in
         """
-        searchbox(self, 'patterns', p_flow)
+        searchbox(sett, 'patterns', p_flow)
 
         col = p_flow.column(align = False)
         col.scale_y = .8

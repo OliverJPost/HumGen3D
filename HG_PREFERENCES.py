@@ -58,7 +58,7 @@ class HG_PREFERENCES(bpy.types.AddonPreferences):
     keep_all_shapekeys   : bpy.props.BoolProperty(name = 'Keep all shapekeys after creation phase', default = False)
 
     #RELEASE remove default path
-    filepath    : bpy.props.StringProperty(name= 'Install Filepath', default = '')
+    filepath    : bpy.props.StringProperty(name= 'Install Filepath', default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\2nd_test_install_cpacks\\')
     installing  : bpy.props.BoolProperty(default = False)
     file_current: bpy.props.IntProperty()
     file_all    : bpy.props.IntProperty()

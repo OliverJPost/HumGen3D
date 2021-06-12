@@ -1,7 +1,7 @@
 import bpy #type: ignore
 import os
 from .. HG_COMMON_FUNC import find_human
-from . HG_PANEL_FUNCTIONS import tab_switching_menu
+from . HG_PANEL_FUNCTIONS import draw_panel_switch_header
 
 
 class Dev_PT_Base:
@@ -22,7 +22,7 @@ class HG_PT_DEVTOOLS(Dev_PT_Base, bpy.types.Panel):
         return context.scene.HG3D.active_ui_tab == 'TOOLS'
 
     def draw_header(self, context):
-        tab_switching_menu(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
 
     def draw(self,context):
