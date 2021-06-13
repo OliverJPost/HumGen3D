@@ -9,19 +9,19 @@ from ... features.common.HG_COMMON_FUNC import (
 )
 
 def load_textures(self, context):
+    """Called by prop update. Loads selected texture set on human"""
     hg_rig  = find_human(context.object)
     hg_body = hg_rig.HG.body_obj
     gender  = hg_rig.HG.gender
 
-    sett            = context.scene.HG3D
+    sett = context.scene.HG3D
+    
     diffuse_texture = sett.pcoll_textures
     library         = sett.texture_library
 
     if diffuse_texture == 'none':
-        print('tex is none')
         return
 
-    pref = get_prefs()
     mat = hg_body.data.materials[0]
     nodes = mat.node_tree.nodes
 
@@ -35,8 +35,13 @@ def load_textures(self, context):
     mat['texture_library'] = library
 
 def add_texture(node, sub_path, tx_type):
-    """
-    Adds correct image to the teximage node
+    """Adds correct image to the teximage node
+    
+    Args:
+        node      (ShaderNode): TexImage node to add image to
+        sub_path  (Path)      : Path relative to HumGen folder where the texture 
+                               is located
+        tx_type   (str)       : what kind of texture it is (Diffuse, Roughness etc.)
     """
     pref = get_prefs()
 
@@ -69,9 +74,11 @@ def add_texture(node, sub_path, tx_type):
             ShowMessageBox(message = 'Could not find colorspace alternative for non-color data, default colorspace used')
 
 def male_specific_shader(hg_body):
-    """
-    Male and female humans of HumGen use the same shader, but one node group is different.
-    This function ensures the right nodegroup is connected
+    """Male and female humans of HumGen use the same shader, but one node 
+    group is different. This function ensures the right nodegroup is connected
+    
+    Args:
+        hg_body (Object)
     """
     mat = hg_body.data.materials[0]
     nodes = mat.node_tree.nodes

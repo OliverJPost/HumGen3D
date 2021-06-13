@@ -1,7 +1,5 @@
 import bpy #type: ignore
 import json
-import os
-import time
 from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
 from . HG_LENGTH import apply_armature
 from pathlib import Path
@@ -137,7 +135,8 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
         return {'FINISHED'}
 
 def load_hair(self,context, type):
-    """Loads the active item in pcoll_hair to the active HumGen human
+    """Loads hair system the user selected by reading the json that belongs to
+    the selected hairstyle
 
     Args:
         type (str): type of hair to load ('head' or 'facial_hair')
@@ -145,26 +144,12 @@ def load_hair(self,context, type):
     pref = get_prefs()
     sett = context.scene.HG3D
 
-    if type == 'head':
-        short_path = sett.pcoll_hair
-    else:
-        short_path = sett.pcoll_face_hair
+    hair_data = _get_hair_json(type, pref, sett)
 
-    full_path = str(pref.filepath) + short_path
+    blendfile = hair_data['blend_file']
+    json_systems = hair_data['hair_systems']
 
-    with open(full_path) as f:
-        data = json.load(f)
-
-    blendfile = data['blend_file']
-    json_systems = data['hair_systems']
-
-    #import hair object, linking it to the scene and collection
-    blendpath = str(pref.filepath) + str(Path('/hair/{}/{}'.format('head' if type == 'head' else 'face_hair', blendfile)))
-    with bpy.data.libraries.load(blendpath, link = False) as (data_from ,data_to):
-        data_to.objects = ['HG_Body'] 
-    hair_obj = data_to.objects[0]
-    scene    = context.scene
-    scene.collection.objects.link(hair_obj)
+    hair_obj = _import_hair_obj(context, type, pref, blendfile)
 
     hg_rig  = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj
@@ -177,14 +162,11 @@ def load_hair(self,context, type):
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = False
 
-    sk_body = hg_body.data.shape_keys.key_blocks
-
     #IMPORTANT: Hair systems do not transfer correctly if they are hidden in the viewport
     for mod in hair_obj.modifiers:
         if mod.type == 'PARTICLE_SYSTEM':
             mod.show_viewport = True
    
-
     context.view_layer.objects.active = hair_obj
     _morph_hair_obj_to_body_obj(context, hg_body, hair_obj)
 
@@ -193,69 +175,126 @@ def load_hair(self,context, type):
 
     for obj in context.selected_objects:
         obj.select_set(False)
-
     context.view_layer.objects.active = hair_obj
-    
     hg_body.select_set(True)
     
     #iterate over hair systems that need to be transferred
-    for ps in json_systems:
-        for mod in [mod for mod in hair_obj.modifiers if mod.type == 'PARTICLE_SYSTEM']:
-            if mod.particle_system.name == ps:
-                psys = mod.particle_system.settings
-                json_sett = json_systems[ps]
-                if 'length' in json_sett:
-                    psys.child_length = json_sett['length']
-                if 'children_amount' in json_sett: 
-                    psys.child_nbr            = json_sett['children_amount']
-                    psys.rendered_child_count = json_sett['children_amount']
-                if "path_steps" in json_sett: 
-                    psys.display_step = json_sett['path_steps']
-                    psys.render_step  = json_sett['path_steps']
-
-        override = bpy.context.copy()
-        override['particle_system'] = hair_obj.particle_systems[ps]
-        bpy.ops.particle.copy_particle_systems(override, remove_target_particles=False, use_active=True)  
+    for ps_name in json_systems:
+        _transfer_hair_system(json_systems, hair_obj, ps_name)
 
     for vg in hair_obj.vertex_groups:
         if vg.name.lower().startswith(('hair', 'fh')):
             _transfer_vertexgroup(hg_body, hair_obj, vg.name)
 
-    new_systems = _get_hair_systems_dict(hg_body, hair_obj)
+    new_hair_systems = _get_hair_systems_dict(hg_body, hair_obj)
 
     context.view_layer.objects.active = hg_body
-    for mod in new_systems:
-        for i, ps in enumerate(hg_body.particle_systems):
-            if ps.name == mod.particle_system.name:
-                ps_idx = i
-        hg_body.particle_systems.active_index = ps_idx
-        bpy.ops.particle.connect_hair(all=False)
+    for mod in new_hair_systems:
+        _reconnect_hair(hg_body, mod)
 
-    _set_correct_particle_vertexgroups(new_systems, hair_obj, hg_body)
-    _set_correct_hair_material(new_systems, hg_body, type)
+    _set_correct_particle_vertexgroups(new_hair_systems, hair_obj, hg_body)
+    _set_correct_hair_material(new_hair_systems, hg_body, type)
 
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'PARTICLE_SYSTEM']:
         mod.show_expanded = False
 
-    _move_modifiers_above_masks(hg_body, new_systems)
+    _move_modifiers_above_masks(hg_body, new_hair_systems)
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = True
 
     bpy.data.objects.remove(hair_obj)
 
-def _move_modifiers_above_masks(hg_body, new_systems):
-    lowest_mask_index = next((i for i, mod in enumerate(hg_body.modifiers) if mod.type == 'MASK'), None)
-    if not lowest_mask_index:
-        return
+def _get_hair_json(type, pref, sett) -> dict:
+    """Loads the data from the json that belongs to the selected hair system
+
+    Args:
+        type (str): type of hair to import ('facial_hair' or 'head')
+        pref (AddonPreferences): HumGen preferences
+        sett (PropertyGroup): addon props
+
+    Returns:
+        dict: 
+            key 'blend_file':
+                value (str): filename of .blend that contains the hair systems
+            key 'hair_systems':
+                value (dict):
+                    key (str): name of particle system
+                    value (dict):
+                        key (str): name of setting prop
+                        value (AnyType): value to set prop to 
+    """
+    if type == 'head':
+        short_path = sett.pcoll_hair
+    else:
+        short_path = sett.pcoll_face_hair
+
+    full_path = str(pref.filepath) + short_path
+    with open(full_path) as f:
+        data = json.load(f)
         
-    for mod in new_systems:
-        if (2, 90, 0) > bpy.app.version: #use old method for versions older than 2.90
-            while hg_body.modifiers.find(mod.name) > lowest_mask_index:
-                bpy.ops.object.modifier_move_up({'object': hg_body}, modifier=mod.name)
-        elif hg_body.modifiers.find(mod.name) > lowest_mask_index:
-            bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=lowest_mask_index)
+    return data
+
+def _import_hair_obj(context, type, pref, blendfile) -> bpy.types.Object:
+    """Imports the object that contains the hair systems named in the json file
+
+    Args:
+        context ([type]): [description]
+        type (str): type of hair system ('facial hair' or 'head')
+        pref (AddonPreferences): HumGen preferences
+        blendfile (str): name of blendfile to open
+
+    Returns:
+        Object: body object that contains the hair systems
+    """
+    #import hair object, linking it to the scene and collection
+    blendpath = (str(pref.filepath)
+                 + str(Path('/hair/{}/{}'.format('head' if type == 'head' 
+                                                 else 'face_hair',
+                                                 blendfile
+                                                 )
+                            )
+                       )
+                 )
+    
+    with bpy.data.libraries.load(blendpath, link = False) as (data_from ,data_to):
+        data_to.objects = ['HG_Body'] 
+    
+    hair_obj = data_to.objects[0]
+    scene    = context.scene
+    scene.collection.objects.link(hair_obj)
+    
+    return hair_obj
+
+def _remove_old_hair(hg_body, remove_face_hair):
+    """Removes old hair systems from body object
+    
+    Args:
+        hg_body (Object)
+        remove_face_hair (bool): True if facial hair needs to be removed, False
+            if head hair needs to be removed
+    """
+    remove_list = []
+    for ps in hg_body.particle_systems:
+        if ps.name.lower().startswith('fh') and remove_face_hair:
+            remove_list.append(ps.name)
+        elif not (ps.name.lower().startswith(('fh', 'eye')) 
+                  and remove_face_hair):
+            remove_list.append(ps.name)
+
+    for ps_name in remove_list:    
+        ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) 
+                  if ps.name == ps_name]
+        hg_body.particle_systems.active_index = ps_idx[0]
+        bpy.ops.object.particle_system_remove()
 
 def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
+    """Gives the imported hair object the exact same shape as hg, to make sure
+    the hair systems get transferred correctly
+
+    Args:
+        hg_body (Object): body object
+        hair_obj (Oject): imported hair object
+    """
     body_copy      = hg_body.copy()
     body_copy.data = body_copy.data.copy()
     context.scene.collection.objects.link(body_copy)
@@ -276,10 +315,51 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
 
     bpy.data.objects.remove(body_copy)
 
-def _transfer_vertexgroup(to_obj, from_obj, vg_name):
+def _transfer_hair_system(json_systems, hair_obj, ps):
+    ps_mods = [mod for mod in hair_obj.modifiers 
+                    if mod.type == 'PARTICLE_SYSTEM']
+    for mod in ps_mods:
+        if mod.particle_system.name == ps:
+            _set_particle_settings(json_systems, mod, ps)
+            break
+    override = bpy.context.copy()
+    override['particle_system'] = hair_obj.particle_systems[ps]
+    bpy.ops.particle.copy_particle_systems(override,
+                                               remove_target_particles=False,
+                                               use_active=True)
+
+def _set_particle_settings(json_systems, mod, ps_name):
+    """Sets the settings of this particle settings according to the json dict
+
+    Args:
+        json_systems (dict): 
+            key (str): name of hair system
+            value (dict):
+                key (str): name of setting
+                value (Anytype): value to set that setting to
+        mod (bpy.types.modifier): modifier of this particle system
+        ps_name (str): name of the particle system
     """
-    copies vertex group from one to the other object
-    """    
+    psys = mod.particle_system.settings
+    json_sett = json_systems[ps_name]
+    if 'length' in json_sett:
+        psys.child_length = json_sett['length']
+    if 'children_amount' in json_sett: 
+        psys.child_nbr            = json_sett['children_amount']
+        psys.rendered_child_count = json_sett['children_amount']
+    if "path_steps" in json_sett: 
+        psys.display_step = json_sett['path_steps']
+        psys.render_step  = json_sett['path_steps']
+
+def _transfer_vertexgroup(to_obj, from_obj, vg_name):
+    """Copies vertex groups from one object to the other
+
+    Args:
+        to_obj   (Object): object to transfer vertex groups to
+        from_obj (Object): object to transfer vertex group from
+        vg_name  (str)   : name of vertex group to transfer
+    """
+
     vert_dict = {}
     for vert_idx, _ in enumerate(from_obj.data.vertices):
         try:
@@ -292,25 +372,17 @@ def _transfer_vertexgroup(to_obj, from_obj, vg_name):
     for v in vert_dict:
         target_vg.add([v,], vert_dict[v], 'ADD')   
 
-def _remove_old_hair(hg_body, remove_face_hair):
-    """
-    removes old hair systems from body object
-    """
-    remove_list = []
-    for ps in hg_body.particle_systems:
-        if ps.name.lower().startswith('fh') and remove_face_hair:
-            remove_list.append(ps.name)
-        elif not ps.name.lower().startswith(('fh', 'eye')) and not remove_face_hair:
-            remove_list.append(ps.name)
+def _get_hair_systems_dict(hg_body, hair_obj) -> dict:
+    """Gets hair particle systems on passed object, including modifiers
 
-    for ps_name in remove_list:    
-        ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) if ps.name == ps_name]
-        hg_body.particle_systems.active_index = ps_idx[0]
-        bpy.ops.object.particle_system_remove()
-  
-def _get_hair_systems_dict(hg_body, hair_obj):
-    """
-    returns particle systems in a dict of the modifier and the name
+    Args:
+        hg_body (Object)
+        hair_obj (Object): imported hair obj
+
+    Returns:
+        dict: 
+            key   (bpy.types.modifier)       : Modifier of a particle system
+            value (bpy.types.particle_system): Particle hair system
     """
 
     system_names = []
@@ -325,9 +397,27 @@ def _get_hair_systems_dict(hg_body, hair_obj):
 
     return new_mod_dict
 
-def _set_correct_particle_vertexgroups(new_systems, source_obj, new_obj):
+def _reconnect_hair(hg_body, mod):
+    """Reconnects the transferred hair systems to the skull
+
+    Args:
+        hg_body (Object): hg body object
+        mod (bpy.types.modifier): Modifier of type particle system to reconnect
     """
-    transferring particle systems results in the wrong vertex group being set, this corrects that
+    for i, ps in enumerate(hg_body.particle_systems):
+        if ps.name == mod.particle_system.name:
+            ps_idx = i
+    hg_body.particle_systems.active_index = ps_idx
+    bpy.ops.particle.connect_hair(all=False)
+
+def _set_correct_particle_vertexgroups(new_systems, from_obj, to_obj):
+    """Transferring particle systems results in the wrong vertex group being set,
+    this corrects that
+
+    Args:
+        new_systems (dict): modifiers and particle_systems to correct vgs for
+        from_obj (Object): Object to check correct particle vertex group on
+        to_obj (Object): Object to rectify particle vertex groups on
     """
     for ps_name in [new_systems[mod] for mod in new_systems]:
 
@@ -347,32 +437,44 @@ def _set_correct_particle_vertexgroups(new_systems, source_obj, new_obj):
             'vertex_group_velocity'
             ]
   
-        old_ps_sett = source_obj.particle_systems[ps_name]
-        new_ps_sett = new_obj.particle_systems[ps_name]
+        old_ps_sett = from_obj.particle_systems[ps_name]
+        new_ps_sett = to_obj.particle_systems[ps_name]
 
         for vg_attr in vg_attributes:
             setattr(new_ps_sett, vg_attr, getattr(old_ps_sett, vg_attr))
         
-        # new_ps_sett.vertex_group_clump =
-        # new_ps_sett.vertex_group_density =
-        # new_ps_sett.vertex_group_field =
-        # new_ps_sett.vertex_group_kink =
-        # new_ps_sett.vertex_group_length =
-        # new_ps_sett.vertex_group_rotation =
-        # new_ps_sett.vertex_group_roughness_1 =
-        # new_ps_sett.vertex_group_roughness_2 =
-        # new_ps_sett.vertex_group_roughness_end =
-        # new_ps_sett.vertex_group_size =
-        # new_ps_sett.vertex_group_tangent =
-        # new_ps_sett.vertex_group_twist =
-        # new_ps_sett.vertex_group_velocity =
-  
 def _set_correct_hair_material(new_systems, hg_body, hair_type):
-    """
-    sets face hair material for face hair systems and head head material for head hair
+    """Sets face hair material for face hair systems and head head material for 
+    head hair
+
+    Args:
+        new_systems (dict): Dict of modifiers and particle_systems of hair systems
+        hg_body (Object): 
+        hair_type (str): 'head' for normal, 'facial_hair' for facial hair
     """
     search_mat = '.HG_Hair_Face' if hair_type == 'face' else '.HG_Hair_Head'
-    mat_name   = [mat.name for mat in hg_body.data.materials if mat.name.startswith(search_mat)]
+    mat_name   = [mat.name for mat in hg_body.data.materials 
+                  if mat.name.startswith(search_mat)]
+    
     for ps in new_systems:
         ps.particle_system.settings.material_slot = mat_name[0]
+
+def _move_modifiers_above_masks(hg_body, new_systems):
+    lowest_mask_index = next(
+        (i for i, mod in enumerate(hg_body.modifiers)
+         if mod.type == 'MASK'),
+        None
+        )
+    if not lowest_mask_index:
+        return
+        
+    for mod in new_systems:
+        if (2, 90, 0) > bpy.app.version: #use old method when older than 2.90
+            while hg_body.modifiers.find(mod.name) > lowest_mask_index:
+                bpy.ops.object.modifier_move_up({'object': hg_body},
+                                                modifier=mod.name)
+        
+        elif hg_body.modifiers.find(mod.name) > lowest_mask_index:
+            bpy.ops.object.modifier_move_to_index(modifier=mod.name,
+                                                  index=lowest_mask_index)
 

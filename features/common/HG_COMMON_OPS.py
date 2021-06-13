@@ -61,7 +61,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
 
     def execute(self,context):
         sett = context.scene.HG3D
-        sett.ui_phase = 'closed' if sett.ui_phase == self.categ else self.categ
+        sett.ui_phase = 'closed' if sett.ui_phase == self.section_name else self.section_name
         #PCOLL add here
         categ_dict = {
             'clothing': ('outfit',),
@@ -71,8 +71,8 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             'expression': ('expressions',)
         }
         
-        if self.categ in categ_dict:
-            for item in categ_dict[self.categ]:
+        if self.section_name in categ_dict:
+            for item in categ_dict[self.section_name]:
                  refresh_pcoll(self, context, item)
         
         pref = get_prefs()

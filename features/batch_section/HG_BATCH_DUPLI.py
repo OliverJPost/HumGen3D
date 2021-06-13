@@ -16,10 +16,10 @@ from .. common.HG_RANDOM import (
     random_body_type,
     random_length
 )
-from .. creation_phase.HG_NEXTPHASE import (
-    corrective_shapekey_copy,
+from .. creation_phase.HG_FINISH_CREATION_PHASE import (
+    _extract_corrective_shapekeys,
     reapply_shapekeys,
-    set_backup,
+    _create_backup_human,
     finish_creation_phase
 )
 from .. creation_phase.HG_LENGTH import random_length

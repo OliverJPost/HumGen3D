@@ -2,12 +2,12 @@
 Operators and functions for adding and managing expressions
 """
 
-from ... features.creation_phase.HG_NEXTPHASE import add_driver, build_driver_dict
+from ... features.creation_phase.HG_FINISH_CREATION_PHASE import add_driver, build_driver_dict
 import bpy #type: ignore
 import os
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
-from ... features.creation_phase.HG_LENGTH import apply_armature, apply_length_to_rig, add_applied_armature
+from ... features.creation_phase.HG_LENGTH import apply_armature, apply_length_to_rig
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
     """

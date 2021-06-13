@@ -9,8 +9,7 @@ from pathlib import Path
 import mathutils #type: ignore
 from ... features.common.HG_COMMON_FUNC import apply_shapekeys, find_human, get_prefs
 from ... features.creation_phase.HG_LENGTH import apply_armature, update_length
-from ... features.creation_phase.HG_CREATION import load_human
-from ... features.creation_phase.HG_NEXTPHASE import remove_stretch_bones
+from ... features.creation_phase.HG_FINISH_CREATION_PHASE import remove_stretch_bones
 import numpy as np #type: ignore
 import os
 import json
@@ -198,7 +197,7 @@ class HG_CREATOR_MODEL(bpy.types.Operator):
 
     def execute(self,context):
         bpy.ops.view3d.snap_cursor_to_center()
-        load_human(context)
+        #load_human(context)
         return {'FINISHED'}
 
 #REMOVE
@@ -506,7 +505,7 @@ class HG_SHAPEKEY_CALCULATOR(bpy.types.Operator):
         apply_shapekeys(source)
         hg_rig = find_human(bpy.context.object)
         if apply:
-            apply_armature(hg_rig, source)
+            apply_armature(source)
 
         v_source = source.data.vertices
         v_target = target.data.vertices
@@ -542,7 +541,7 @@ class HG_SHAPEKEY_CALCULATOR(bpy.types.Operator):
         bpy.context.scene.collection.objects.link(source_copy)
         apply_shapekeys(source_copy)
         hg_rig = find_human(bpy.context.object)
-        #apply_armature(hg_rig, source_copy)
+        #apply_armature(source_copy)
 
         if 'Female_' in name or 'Male_' in name:
             name = name.replace('Female_', '')

@@ -1,3 +1,5 @@
+"""UNDER CONSTRUCTION"""
+
 import bpy #type: ignore
 import bmesh #type: ignore
 from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
@@ -11,7 +13,6 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     bl_label       = "Convert to hair cards"
     bl_description = "Converts this system to hair cards"
     bl_options     = {"REGISTER", "UNDO"}
-
 
     def execute(self,context):
         pref = get_prefs()

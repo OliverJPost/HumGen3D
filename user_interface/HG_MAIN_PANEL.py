@@ -443,13 +443,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column(align = True)
   
         length_m = self.hg_rig.dimensions[2]
-        length_feet   = str(int(length_m / 0.3048))
-        length_inches = str(int(length_feet*12.0 - int(length_feet)*12.0))
+        length_feet   = length_m / 0.3048
+        length_inches = int(length_feet*12.0 - int(length_feet)*12.0)
         length_label  = (str(round(length_m, 2))
                          + ' m   |   '
-                         + length_feet
+                         + str(int(length_feet))
                          + '"'
-                         + length_inches
+                         + str(length_inches)
                          +'"'
                          ) #example: 1.83m   |   5'11"
 

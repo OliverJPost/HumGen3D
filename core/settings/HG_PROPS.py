@@ -29,7 +29,7 @@ from ... features.creation_phase.HG_BODY import scale_bones
 from ... user_interface import HG_BATCH_UILIST
 from ... features.creation_phase.HG_SKIN import toggle_sss
 from ... core.HG_CALLBACK import tab_change_update
-from ... features.creation_phase.HG_LENGTH import update_length_v2
+from ... features.creation_phase.HG_LENGTH import update_length
 from ... features.utility_section.HG_UTILITY_FUNC import (
     get_preset_thumbnail,
     refresh_shapekeys_ul)
@@ -171,7 +171,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         soft_max = 200,
         min = 120,
         max = 250,
-        update = update_length_v2
+        update = update_length
         )
 
     head_size: FloatProperty(

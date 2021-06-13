@@ -6,8 +6,7 @@ from typing import Any
 import bpy #type: ignore
 import random
 from .   HG_COMMON_FUNC import find_human
-from ... core.HG_PCOLL import preview_collections, refresh_pcoll
-from ..  creation_phase.HG_LENGTH import random_length
+from ... core.HG_PCOLL import refresh_pcoll
 
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
@@ -92,8 +91,6 @@ class HG_RANDOM(bpy.types.Operator):
 
         if r_type == 'body_type':
             random_body_type(hg_rig)
-        elif r_type == 'length':
-            random_length(context,hg_rig)
         elif r_type in ('poses', 'expressions', 'outfit', 'patterns', 'footwear', 'hair'):
             set_random_active_in_pcoll(context, sett, r_type)
         elif r_type == 'skin':
