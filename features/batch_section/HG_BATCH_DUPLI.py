@@ -12,7 +12,7 @@ from .. creation_phase.HG_CREATION import (
     give_name
 )
 from .. common.HG_RANDOM import (
-    get_random_from_pcoll,
+    set_random_active_in_pcoll,
     random_body_type,
     random_length
 )
@@ -171,7 +171,7 @@ def generate_human(self, context):
 
     gender = random.choices(('male', 'female'), weights = (sett.male_chance, sett.female_chance), k=1)[0]
     sett.gender = gender
-    get_random_from_pcoll(context, sett, 'humans')
+    set_random_active_in_pcoll(context, sett, 'humans')
     #ethnicity
     hg_rig, hg_body = load_human(context) 
 
@@ -185,7 +185,7 @@ def generate_human(self, context):
 
 
     if sett.batch_hair:
-        get_random_from_pcoll(context, sett, 'hair')
+        set_random_active_in_pcoll(context, sett, 'hair')
 
 
     random_length(context, hg_rig)
@@ -197,15 +197,15 @@ def generate_human(self, context):
     context.view_layer.objects.active = hg_rig
 
     if sett.batch_clothing:
-        get_random_from_pcoll(context, sett, 'outfit')
+        set_random_active_in_pcoll(context, sett, 'outfit')
 
 
     if sett.batch_pose:
-        get_random_from_pcoll(context, sett, 'poses')
+        set_random_active_in_pcoll(context, sett, 'poses')
 
     if sett.batch_expression:
         pick_library(context, 'expressions')
-        get_random_from_pcoll(context, sett, 'expressions')
+        set_random_active_in_pcoll(context, sett, 'expressions')
 
 
     print('total time {}'.format(time.time()-total_start))

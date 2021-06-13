@@ -245,18 +245,29 @@ class HG_DELETE(bpy.types.Operator):
 
 class HG_CLEAR_SEARCH(bpy.types.Operator):
     """Clears the passed searchfield
+    
+    API: False
+    
+    Operator type:
+        Preview collection manipulation
+        
+    Prereq:
+        None
+    
+    Args:
+        pcoll_type (str): Name of preview collection to clear the searchbox for
     """
     bl_idname      = "hg3d.clear_searchbox"
     bl_label       = "Clear search"
     bl_description = "Clears the searchbox"
 
-    categ: bpy.props.StringProperty()
+    pcoll_type: bpy.props.StringProperty()
 
     def execute(self,context):
         sett = context.scene.HG3D
         
-        sett['search_term_{}'.format(self.categ)] = ''
-        refresh_pcoll(self, context, self.categ)
+        sett['search_term_{}'.format(self.pcoll_type)] = ''
+        refresh_pcoll(self, context, self.pcoll_type)
 
         return {'FINISHED'}
 

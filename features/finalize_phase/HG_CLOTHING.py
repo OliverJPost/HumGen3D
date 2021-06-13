@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys, get_prefs 
 from ... core.HG_PCOLL import refresh_pcoll
-from ... features.common.HG_RANDOM import get_random_from_pcoll
+from ... features.common.HG_RANDOM import set_random_active_in_pcoll
 # from . HG_POSE import set_high_heel_rotation
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
@@ -75,7 +75,7 @@ class HG_OT_PATTERN(bpy.types.Operator):
             self.nodes['HG_Control'].inputs['Pattern'].default_value = (0,0,0,1)
             return {'FINISHED'} 
         
-        get_random_from_pcoll(context, context.scene.HG3D, 'patterns')
+        set_random_active_in_pcoll(context, context.scene.HG3D, 'patterns')
         return {'FINISHED'} 
 
     def check_node(self, name):

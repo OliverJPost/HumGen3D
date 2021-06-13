@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys, get_prefs 
 from ... core.HG_PCOLL import refresh_pcoll
-from ... features.common.HG_RANDOM import get_random_from_pcoll
+from ... features.common.HG_RANDOM import set_random_active_in_pcoll
 from ... features.utility_section.HG_DEVTOOLS import HG_SHAPEKEY_CALCULATOR #create_shapekey_from_difference, build_distance_dict
 
 #FIXME make sure new textures are not duplicated

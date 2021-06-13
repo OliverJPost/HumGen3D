@@ -5,6 +5,7 @@ Contains functions that get used a lot by other operators
 import os
 import bpy #type: ignore
 
+#MODULE
 def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Collection:
     """Adds the giver object toa colleciton. By default added to HumGen collection
 
@@ -36,7 +37,7 @@ def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Col
 
     return collection
 
-
+#MODULE
 def get_prefs() -> bpy.types.AddonPreferences:
     """Get HumGen preferences
 
@@ -47,6 +48,7 @@ def get_prefs() -> bpy.types.AddonPreferences:
     
     return bpy.context.preferences.addons[addon_name].preferences
 
+#MODULE
 def find_human(obj) -> bpy.types.Object:
     """Checks if the passed object is part of a HumGen human
     
@@ -70,7 +72,7 @@ def find_human(obj) -> bpy.types.Object:
     else:
         return obj
 
-
+#MODULE
 def apply_shapekeys(ob):
     """Applies all shapekeys on the given object, so modifiers on the object can
     be applied

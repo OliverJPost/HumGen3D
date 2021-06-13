@@ -22,13 +22,20 @@ from .. features.common.HG_COMMON_FUNC import find_human
 class HG_ACTIVATE(bpy.types.Operator):
     """
     Activates the HumGen msgbus, also refreshes human pcoll
+    
+    Operator type:
+        -Backend
+        -Prop setter
+    
+    Prereq:
+        -Not subscribed to Msgbus (sett.subscribed == False)
     """
     bl_idname      = "hg3d.activate"
     bl_label       = "Activate"
     bl_description = "Activate HumGen"
     
     def execute(self, context):    
-        sett            = bpy.context.scene.HG3D
+        sett = bpy.context.scene.HG3D
         sett.subscribed = False
 
         msgbus(self, context)

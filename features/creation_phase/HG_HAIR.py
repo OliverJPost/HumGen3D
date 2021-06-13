@@ -7,13 +7,20 @@ from . HG_LENGTH import apply_armature
 from pathlib import Path
 
 class HG_REMOVE_HAIR(bpy.types.Operator):
-    """
-    Removes the corresponding hair system
+    """Removes the corresponding hair system
+    
+    Operator type:
+        Particle systems
+    
+    Prereq:
+        Hair_system passed, and hair system is present on active object
+        Active object is part of a HumGen human
+        
     """
     bl_idname      = "hg3d.removehair"
     bl_label       = "Remove hair system"
     bl_description = "Removes this specific hair system from your human"
-    bl_options     = {"REGISTER", "UNDO"}
+    bl_options     = {"UNDO"}
 
     hair_system: bpy.props.StringProperty()
 
@@ -21,17 +28,67 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
         hg_rig  = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
-        ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) if ps.name == self.hair_system]
-        hg_body.particle_systems.active_index = ps_idx[0]
+        context.view_layer.objects.active = hg_body
+
+        ps_idx = next(
+            [i for i, ps in enumerate(hg_body.particle_systems)
+            if ps.name == self.hair_system]
+        )
+        hg_body.particle_systems.active_index = ps_idx
         bpy.ops.object.particle_system_remove()  
         return {'FINISHED'}
 
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
-class HG_EYEBROW_SWITCH(bpy.types.Operator):
+class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
+    """Turn hair children to 1 or back to render amount
+
+    Operator type:
+        Particle system
+    
+    Prereq:
+        Active object is part of HumGen human
     """
-    Removes the corresponding hair system
+    bl_idname      = "hg3d.togglechildren"
+    bl_label       = "Toggle hair children"
+    bl_description = "Toggle between hidden and visible hair children"
+    bl_options     = {"REGISTER", "UNDO"}
+
+    def execute(self,context):
+        hg_rig = find_human(context.active_object)
+        hg_body = hg_rig.HG.body_obj
+
+        hair_systems= []
+        make_zero = False
+        for mod in hg_body.modifiers:
+            if mod.type == 'PARTICLE_SYSTEM':
+                ps = mod.particle_system
+                hair_systems.append(ps)
+                if ps.settings.child_nbr > 1:
+                    make_zero = True
+        for ps in hair_systems:
+            if make_zero:
+                ps.settings.child_nbr =  1
+            else:
+                render_children = ps.settings.rendered_child_count
+                ps.settings.child_nbr = render_children
+
+        return {'FINISHED'}
+
+class HG_EYEBROW_SWITCH(bpy.types.Operator):
+    """Cycle trough all eyebrow particle systems on this object
+    
+    Operator type:
+        Particle system
+    
+    Prereq:
+        forward passed
+        Active object is part of HumGen human
+        At least 2 particle systems on this object starting with 'Eyebrows'
+        
+    Args:
+        forward (bool): True if go forward in list, False if go backward
     """
     bl_idname      = "hg3d.eyebrowswitch"
     bl_label       = "Switch eyebrows"
@@ -43,7 +100,11 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
         hg_rig  = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
-        eyebrows = [mod for mod in hg_body.modifiers if mod.type == 'PARTICLE_SYSTEM' and mod.particle_system.name.startswith('Eyebrows')]
+        eyebrows = [mod for mod in hg_body.modifiers 
+                    if mod.type == 'PARTICLE_SYSTEM' 
+                    and mod.particle_system.name.startswith('Eyebrows')
+                    ]
+        
         if not eyebrows:
             self.report({'WARNING'}, 'No eyebrow particle systems found')
             return {'FINISHED'}
@@ -51,7 +112,11 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
             self.report({'WARNING'}, 'Only one eyebrow system found')
             return {'FINISHED'}            
         
-        idx, current_ps = next(((i, mod) for i, mod in enumerate(eyebrows) if mod.show_viewport or mod.show_render), 0)
+        idx, current_ps = next(
+            ((i, mod) for i, mod in enumerate(eyebrows)
+             if mod.show_viewport or mod.show_render),
+             0
+            )
         print(idx, current_ps, current_ps.particle_system.name)
 
         next_idx = idx + 1 if self.forward else idx - 1
@@ -72,11 +137,12 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
         return {'FINISHED'}
 
 def load_hair(self,context, type):
-    """
-    loads the active hairstyle in the hair preview collection
+    """Loads the active item in pcoll_hair to the active HumGen human
+
+    Args:
+        type (str): type of hair to load ('head' or 'facial_hair')
     """
     pref = get_prefs()
-
     sett = context.scene.HG3D
 
     if type == 'head':
@@ -106,7 +172,7 @@ def load_hair(self,context, type):
     hg_rig.hide_viewport = False
 
     remove_fh = True if type == 'face' else False
-    remove_old_hair(hg_body, remove_fh)
+    _remove_old_hair(hg_body, remove_fh)
 
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = False
@@ -120,7 +186,7 @@ def load_hair(self,context, type):
    
 
     context.view_layer.objects.active = hair_obj
-    morph_to_shape(context, hg_body, hair_obj)
+    _morph_hair_obj_to_body_obj(context, hg_body, hair_obj)
 
     context.view_layer.objects.active = hair_obj 
     bpy.ops.particle.disconnect_hair(all=True) 
@@ -153,9 +219,9 @@ def load_hair(self,context, type):
 
     for vg in hair_obj.vertex_groups:
         if vg.name.lower().startswith(('hair', 'fh')):
-            copy_vg(hg_body, hair_obj, vg.name)
+            _transfer_vertexgroup(hg_body, hair_obj, vg.name)
 
-    new_systems = find_systems(hg_body, hair_obj)
+    new_systems = _get_hair_systems_dict(hg_body, hair_obj)
 
     context.view_layer.objects.active = hg_body
     for mod in new_systems:
@@ -165,19 +231,19 @@ def load_hair(self,context, type):
         hg_body.particle_systems.active_index = ps_idx
         bpy.ops.particle.connect_hair(all=False)
 
-    set_correct_vg(new_systems, hair_obj, hg_body)
-    set_correct_material(new_systems, hg_body, type)
+    _set_correct_particle_vertexgroups(new_systems, hair_obj, hg_body)
+    _set_correct_hair_material(new_systems, hg_body, type)
 
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'PARTICLE_SYSTEM']:
         mod.show_expanded = False
 
-    move_modifiers_above_masks(hg_body, new_systems)
+    _move_modifiers_above_masks(hg_body, new_systems)
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = True
 
     bpy.data.objects.remove(hair_obj)
 
-def move_modifiers_above_masks(hg_body, new_systems):
+def _move_modifiers_above_masks(hg_body, new_systems):
     lowest_mask_index = next((i for i, mod in enumerate(hg_body.modifiers) if mod.type == 'MASK'), None)
     if not lowest_mask_index:
         return
@@ -189,8 +255,7 @@ def move_modifiers_above_masks(hg_body, new_systems):
         elif hg_body.modifiers.find(mod.name) > lowest_mask_index:
             bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=lowest_mask_index)
 
-
-def morph_to_shape(context, hg_body, hair_obj):
+def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     body_copy      = hg_body.copy()
     body_copy.data = body_copy.data.copy()
     context.scene.collection.objects.link(body_copy)
@@ -211,32 +276,23 @@ def morph_to_shape(context, hg_body, hair_obj):
 
     bpy.data.objects.remove(body_copy)
 
-def set_sk_values(sk_body, sk_hair_obj):
-    for sk in sk_body:
-        if not sk.mute:
-            try:
-                sk_hair_obj[sk.name].mute = False
-                sk_hair_obj[sk.name].value = sk.value
-            except:
-                pass
-
-def copy_vg(target_obj, source_obj, vg_name):
+def _transfer_vertexgroup(to_obj, from_obj, vg_name):
     """
     copies vertex group from one to the other object
     """    
     vert_dict = {}
-    for vert_idx, _ in enumerate(source_obj.data.vertices):
+    for vert_idx, _ in enumerate(from_obj.data.vertices):
         try:
-            vert_dict[vert_idx] = source_obj.vertex_groups[vg_name].weight(vert_idx)
+            vert_dict[vert_idx] = from_obj.vertex_groups[vg_name].weight(vert_idx)
         except RuntimeError:
             pass
 
-    target_vg = target_obj.vertex_groups.new(name=vg_name)
+    target_vg = to_obj.vertex_groups.new(name=vg_name)
 
     for v in vert_dict:
         target_vg.add([v,], vert_dict[v], 'ADD')   
 
-def remove_old_hair(hg_body, remove_face_hair):
+def _remove_old_hair(hg_body, remove_face_hair):
     """
     removes old hair systems from body object
     """
@@ -251,9 +307,8 @@ def remove_old_hair(hg_body, remove_face_hair):
         ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) if ps.name == ps_name]
         hg_body.particle_systems.active_index = ps_idx[0]
         bpy.ops.object.particle_system_remove()
-
-            
-def find_systems(hg_body, hair_obj):
+  
+def _get_hair_systems_dict(hg_body, hair_obj):
     """
     returns particle systems in a dict of the modifier and the name
     """
@@ -270,7 +325,7 @@ def find_systems(hg_body, hair_obj):
 
     return new_mod_dict
 
-def set_correct_vg(new_systems, source_obj, new_obj):
+def _set_correct_particle_vertexgroups(new_systems, source_obj, new_obj):
     """
     transferring particle systems results in the wrong vertex group being set, this corrects that
     """
@@ -312,7 +367,7 @@ def set_correct_vg(new_systems, source_obj, new_obj):
         # new_ps_sett.vertex_group_twist =
         # new_ps_sett.vertex_group_velocity =
   
-def set_correct_material(new_systems, hg_body, hair_type):
+def _set_correct_hair_material(new_systems, hg_body, hair_type):
     """
     sets face hair material for face hair systems and head head material for head hair
     """
@@ -321,32 +376,3 @@ def set_correct_material(new_systems, hg_body, hair_type):
     for ps in new_systems:
         ps.particle_system.settings.material_slot = mat_name[0]
 
-class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
-    """
-    toggles visibility of hair children in viewport
-    """
-    bl_idname      = "hg3d.togglechildren"
-    bl_label       = "Toggle hair children"
-    bl_description = "Toggle between hidden and visible hair children"
-    bl_options     = {"REGISTER", "UNDO"}
-
-    def execute(self,context):
-        hg_rig = find_human(context.active_object)
-        hg_body = hg_rig.HG.body_obj
-
-        hair_systems= []
-        make_zero = False
-        for mod in hg_body.modifiers:
-            if mod.type == 'PARTICLE_SYSTEM':
-                ps = mod.particle_system
-                hair_systems.append(ps)
-                if ps.settings.child_nbr > 1:
-                    make_zero = True
-        for ps in hair_systems:
-            if make_zero:
-                ps.settings.child_nbr =  1
-            else:
-                render_children = ps.settings.rendered_child_count
-                ps.settings.child_nbr = render_children
-
-        return {'FINISHED'}

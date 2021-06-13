@@ -392,6 +392,14 @@ class HG_PREF(bpy.types.AddonPreferences):
 class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     '''
     Changes the path via file browser popup
+    
+    Operator Type:
+        -Preferences
+        -Prop setter
+        -Path selection
+        
+    Prereq:
+        None
     '''
     bl_idname      = "hg3d.pathchange"
     bl_label       = "Change Path"

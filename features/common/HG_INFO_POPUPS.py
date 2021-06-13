@@ -4,7 +4,16 @@ class HG_OT_INFO(bpy.types.Operator):
     """
     Operator for showing a popup message when the questionmark icon is pressed.
     
-    Credits to DB3D for inventing this way of showing information popups
+    API: False
+    
+    Operator type:
+        Tutorial
+    
+    Prereq:
+        None
+    
+    Args:
+        info (str): Name of message function in this document
     """
     bl_idname      = "hg3d.showinfo"
     bl_label       = ""
@@ -23,7 +32,7 @@ class HG_OT_INFO(bpy.types.Operator):
         """Draw a message popup
 
         Args:
-            message_txt_key (str): key to the message txts stored in this file
+            message_txt_key (str): key to the message function in this file
         """
         def draw(self, context):
             nonlocal message_txt_key

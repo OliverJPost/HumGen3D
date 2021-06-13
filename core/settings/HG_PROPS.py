@@ -24,9 +24,8 @@ from ... features.finalize_phase.HG_CLOTHING import load_pattern
 from ... features.finalize_phase.HG_CLOTHING_LOAD import load_outfit
 from ... features.finalize_phase.HG_EXPRESSION import load_expression
 from ... features.creation_phase.HG_HAIR import load_hair
-from ... features.creation_phase.HG_CREATION import (
-    scale_bones,
-    load_textures)
+from ... features.creation_phase.HG_MATERIAL import load_textures
+from ... features.creation_phase.HG_BODY import scale_bones
 from ... user_interface import HG_BATCH_UILIST
 from ... features.creation_phase.HG_SKIN import toggle_sss
 from ... core.HG_CALLBACK import tab_change_update

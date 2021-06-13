@@ -8,7 +8,7 @@ import time
 import threading
 
 from .. creation_phase.HG_CREATION import load_human, give_name
-from .. common.HG_RANDOM import get_random_from_pcoll, random_body_type, random_length
+from .. common.HG_RANDOM import set_random_active_in_pcoll, random_body_type, random_length
 from .. creation_phase.HG_NEXTPHASE import corrective_shapekey_copy, reapply_shapekeys, set_backup, finish_creation_phase
 from .. creation_phase.HG_LENGTH import random_length
 from .. common.HG_COMMON_FUNC import apply_shapekeys
@@ -33,7 +33,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
         gender = random.choices(('male', 'female'), weights = (sett.male_chance, sett.female_chance), k=1)[0]
         sett.gender = gender
-        get_random_from_pcoll(context, sett, 'humans')
+        set_random_active_in_pcoll(context, sett, 'humans')
         #ethnicity
         hg_rig, hg_body = load_human(context) 
 
@@ -44,7 +44,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
 
         if sett.batch_hair:
-            get_random_from_pcoll(context, sett, 'hair')
+            set_random_active_in_pcoll(context, sett, 'hair')
 
 
         random_length(context, hg_rig)
@@ -57,17 +57,17 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
         start_time = time.time()
         if sett.batch_clothing:
-            get_random_from_pcoll(context, sett, 'outfit')
+            set_random_active_in_pcoll(context, sett, 'outfit')
         print('clothing {}'.format(time.time()-start_time))
 
 
         if sett.batch_pose:
-            get_random_from_pcoll(context, sett, 'poses')
+            set_random_active_in_pcoll(context, sett, 'poses')
 
 
         if sett.batch_expression:
             pick_library(context, 'expressions')
-            get_random_from_pcoll(context, sett, 'expressions')
+            set_random_active_in_pcoll(context, sett, 'expressions')
 
 
         print('total time {}'.format(time.time()-total_start))

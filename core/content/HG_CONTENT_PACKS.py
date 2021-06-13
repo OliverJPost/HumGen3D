@@ -168,6 +168,15 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
     operator adds them to a collection property, meanwhile checking if any 
     problems arise that mean the pack should not be installed
 
+    API: False
+
+    Operator Type:
+        HumGen installation
+        File/dir selection
+        
+    Prereq:
+        None
+
     Args:
         ImportHelper: prompts a filebrowser popup
     """
@@ -262,7 +271,15 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
 
 class HG_INSTALL_CPACK(bpy.types.Operator):
     """Installs (unzips into file structure) all packs in the installpack 
-    collection if they don't have any error codes."""  
+    collection if they don't have any error codes.
+    
+    Operator type:
+        HumGen installation
+        File management
+    
+    Prereq:
+        Items in installpack collection
+    """  
     bl_idname = "hg3d.cpackinstall"
     bl_label = "Install"
     bl_description = "Refresh the content pack list"
@@ -378,6 +395,12 @@ class HG_INSTALLPACK(bpy.types.PropertyGroup):
 class HG_REFRESH_CPACKS(bpy.types.Operator):
     """Operator for the refresh cpacks button. Refresh function is outside class
     because it is called as an update for certain props
+    
+    Operator type:
+        UI_list refresh
+    
+    Prereq:
+        None
     """
     bl_idname      = "hg3d.cpacksrefresh"
     bl_label       = "Refresh"
@@ -450,7 +473,17 @@ def _add_cpack_to_coll(coll, json_folder, fn):
 class HG_DELETE_CPACK(bpy.types.Operator):
     """Deletes the cpack from the content pack collection. 
     Uses the dictionary of files in the .json of the cpack to delete all files 
-    belonging to this cpack"""
+    belonging to this cpack
+    
+    Operator type:
+        File management
+    
+    Prereq:
+        Cpack passed. Needs to be installed, not copied in
+    
+    Args:
+        item_name (str): name of cpack item to remove
+    """
     bl_idname      = "hg3d.cpackdel"
     bl_label       = "Delete content pack"
     bl_description = "Delete this content pack"
@@ -515,6 +548,15 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 class HG_DELETE_INSTALLPACK(bpy.types.Operator):
     """
     Removes installpack from ui_list collection
+    
+    API: False
+    
+    Operator type:
+        UI list removal
+        
+    Prereq:
+        Installpacks in installpack_col
+        Active installpack
     """
     bl_idname = "hg3d.removeipack"
     bl_label = ""

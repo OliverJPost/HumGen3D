@@ -371,7 +371,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'body_type'
+                       ).random_type = 'body_type'
 
         col.separator()
         
@@ -487,7 +487,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column()
         col.scale_y = 1.5
         row = col.row(align = True)
-        row.operator('hg3d.random', text = 'Randomize all').type = 'face_all'
+        row.operator('hg3d.random', text = 'Randomize all').random_type = 'face_all'
         row.operator('hg3d.resetface', text = '', icon = 'LOOP_BACK')
         
         col = box.column(align= True)
@@ -612,7 +612,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                 text = '',
                 icon = 'FILE_REFRESH',
                 emboss = False
-                ).type = 'face_{}'.format(is_open_propname)
+                ).random_type = 'face_{}'.format(is_open_propname)
         else:
             row.operator(
                 'hg3d.showinfo',
@@ -1403,7 +1403,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'outfit'
+                       ).random_type = 'outfit'
 
 #      _______. __    __    ______    _______ 
 #     /       ||  |  |  |  /  __  \  |   ____|
@@ -1437,7 +1437,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'footwear'
+                       ).random_type = 'footwear'
 
     # .______     ______        _______. _______ 
     # |   _  \   /  __  \      /       ||   ____|
@@ -1512,7 +1512,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'poses'
+                       ).random_type = 'poses'
 
     #  __________   ___ .______   .______       _______     _______.     _______. __    ______   .__   __. 
     # |   ____\  \ /  / |   _  \  |   _  \     |   ____|   /       |    /       ||  |  /  __  \  |  \ |  | 
@@ -1569,7 +1569,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'expressions'
+                       ).random_type = 'expressions'
         
         filtered_obj_sks = self.hg_rig.HG.body_obj.data.shape_keys
         if filtered_obj_sks:
@@ -1819,7 +1819,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row_h.operator('hg3d.random',
                        text = 'Random',
                        icon = 'FILE_REFRESH'
-                       ).type = 'patterns'
+                       ).random_type = 'patterns'
         
         p_flow.separator()
 

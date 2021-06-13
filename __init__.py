@@ -71,9 +71,8 @@ from . features.common.HG_RANDOM import (
     HG_COLOR_RANDOM,
     HG_RANDOM)
     #creation phase
-from . features.creation_phase.HG_CREATION import (
-    HG_REVERT_TO_CREATION,
-    HG_START_CREATION)
+from . features.creation_phase.HG_BACKUP import HG_REVERT_TO_CREATION
+from . features.creation_phase.HG_CREATION import HG_START_CREATION
 from . features.creation_phase.HG_FACE import HG_RESET_FACE
 from . features.creation_phase.HG_HAIR import (
     HG_EYEBROW_SWITCH,

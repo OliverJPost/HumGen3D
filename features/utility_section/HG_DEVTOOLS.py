@@ -65,8 +65,8 @@ class HG_RENDER_THUMBS(bpy.types.Operator):
         if pcoll_name == 'randomize_human':
             for i in range(20):
                 context.scene.render.filepath = sett.thumb_render_path + str(random.randint(0,9999)) + '.jpg'
-                bpy.ops.hg3d.random(type="body_type")
-                bpy.ops.hg3d.random(type="face_all")
+                bpy.ops.hg3d.random(random_type="body_type")
+                bpy.ops.hg3d.random(random_type="face_all")
                 hg_body = hg_rig.HG.body_obj
                 mat = hg_body.data.materials[0]
                 nodes = mat.node_tree.nodes
@@ -198,7 +198,7 @@ class HG_CREATOR_MODEL(bpy.types.Operator):
 
     def execute(self,context):
         bpy.ops.view3d.snap_cursor_to_center()
-        load_human(context, creator = True)
+        load_human(context)
         return {'FINISHED'}
 
 #REMOVE
