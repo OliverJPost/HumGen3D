@@ -1,14 +1,13 @@
 import bpy #type: ignore
 
-"""
-Operator for showing a popup message when the questionmark icon is pressed.
-Credits to DB3D for inventing this way of showing information popups
-"""
-
 class HG_OT_INFO(bpy.types.Operator):
-
-    bl_idname = "hg3d.showinfo"
-    bl_label = ""
+    """
+    Operator for showing a popup message when the questionmark icon is pressed.
+    
+    Credits to DB3D for inventing this way of showing information popups
+    """
+    bl_idname      = "hg3d.showinfo"
+    bl_label       = ""
     bl_description = "Info about these options"
 
     info : bpy.props.StringProperty()
@@ -20,14 +19,23 @@ class HG_OT_INFO(bpy.types.Operator):
 
         return {'FINISHED'}
 
-    def ShowMessageBox(self, message_title):
-        
-        def draw(self, context):
-            nonlocal message_title
-            layout = self.layout
-            eval(message_title +'(layout)')
+    def ShowMessageBox(self, message_txt_key):
+        """Draw a message popup
 
-        bpy.context.window_manager.popup_menu(draw, title = 'Info', icon = 'QUESTION')
+        Args:
+            message_txt_key (str): key to the message txts stored in this file
+        """
+        def draw(self, context):
+            nonlocal message_txt_key
+            layout = self.layout
+            eval(message_txt_key +'(layout)')
+
+        bpy.context.window_manager.popup_menu(
+            draw,
+            title='Info',
+            icon='QUESTION'
+        )
+
 
 hair_children_txt = '''Enabling hair children, especially at render density can really slow down
 viewport performance. Therefore HumGen keeps them hidden by default,

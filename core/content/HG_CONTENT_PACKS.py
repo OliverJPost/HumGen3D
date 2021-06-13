@@ -2,8 +2,13 @@
 Operators and functions used for installing and managing HumGen's content packs
 
 Nomenclature:
-Installpack = a collection item that represents a zip file the user has selected. Pressing 'install all packs' unzips these files into the file structure, making them cpacks (content packs)
-cpack = Abbreviation of content pack. Represents a collection of items downloaded together and extracted in the HumGen file strucure, forming content to be used in the add-on. Settings and properties stored in a .json file
+Installpack = a collection item that represents a zip file the user has selected. 
+    Pressing 'install all packs' unzips these files into the file structure,
+    making them cpacks (content packs)
+cpack = Abbreviation of content pack. Represents a collection of items
+    downloaded together and extracted in the HumGen file strucure, forming
+    content to be used in the add-on. Settings and properties stored in a
+    .json file
 """  
 
 

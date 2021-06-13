@@ -11,9 +11,20 @@ from ... data.HG_COLORS import color_dict
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
     """
-    sets the color slot to a random color from the color dicts from HG_COLORS
+    Sets the color slot to a random color from the color dicts from HG_COLORS
+    
+    Operator type:
+        Material
+    
+    Prereq:
+        Passed arguments
+        Active material of active object is a HumGen clothing material
+        
+    Args:
+        input_name (str):
+        color_group (str):
     """
-    bl_idname      = "hg3d.colorrandom"
+    bl_idname      = "hg3d.color_random"
     bl_label       = "Random Color"
     bl_description = "Randomize this property"
     bl_options     = {"UNDO", 'INTERNAL'}
@@ -26,7 +37,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
         color_rgb       = [int(color_hex[i:i+2], 16) for i in (0, 2, 4)]
         float_color_rgb = [x / 255.0 for x in color_rgb]
         float_color_rgb.append(1)
-        input               = context.object.active_material.node_tree.nodes['HG_Control'].inputs[self.input_name]
+        input = context.object.active_material.node_tree.nodes['HG_Control'].inputs[self.input_name]
         input.default_value = tuple(float_color_rgb)
         
         return {'FINISHED'}

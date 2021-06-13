@@ -1,16 +1,25 @@
 """
-Operators used in the main panel, not related to any particular section
+Operators not related to any particular section
 """
 
 import bpy #type: ignore
-from . HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
+from . HG_COMMON_FUNC import (
+    find_human,
+    get_prefs
+)
 from ... core.HG_PCOLL import refresh_pcoll
 from . HG_INFO_POPUPS import HG_OT_INFO
-import os
 
 class HG_DESELECT(bpy.types.Operator):
     """
-    sets the active object as none
+    Sets the active object as none
+    
+    Operator Type: 
+        Selection 
+        HumGen UI manipulation
+    
+    Prereq:
+        -Human selected
     """
     bl_idname      = "hg3d.deselect"
     bl_label       = "Deselect"
@@ -24,54 +33,92 @@ class HG_DESELECT(bpy.types.Operator):
         context.view_layer.objects.active = None
         return {'FINISHED'}
 
-class HG_UITOGGLE(bpy.types.Operator):
+class HG_SECTION_TOGGLE(bpy.types.Operator):
     """
-    section buttons, pressing it will make that section the active one, closing any other opened sections
+    Section tabs, pressing it will make that section the open/active one, 
+    closing any other opened sections
+    
+    API: False
+    
+    Operator Type: 
+        HumGen UI manipulation
+    
+    Args:
+        section_name (str): name of the section to toggle
     """
-    bl_idname      = "hg3d.uitoggle"
+    bl_idname      = "hg3d.section_toggle"
     bl_label       = ""
     bl_description = """
         Open this menu
         CTRL+Click to keep hair children turned on
         """
 
-    categ: bpy.props.StringProperty()
+    section_name: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        self.children_hide_exception = event.ctrl
+        return self.execute(context)
 
     def execute(self,context):
         sett = context.scene.HG3D
         sett.ui_phase = 'closed' if sett.ui_phase == self.categ else self.categ
-        categ_dict = {'clothing': ('outfit',),'footwear': ('footwear',), 'pose': ('poses',), 'hair': ('hair', 'face_hair'), 'expression': ('expressions',)}
+        #PCOLL add here
+        categ_dict = {
+            'clothing': ('outfit',),
+            'footwear': ('footwear',),
+            'pose': ('poses',),
+            'hair': ('hair', 'face_hair'),
+            'expression': ('expressions',)
+        }
+        
         if self.categ in categ_dict:
             for item in categ_dict[self.categ]:
                  refresh_pcoll(self, context, item)
         
         pref = get_prefs()
-        if pref.auto_hide_hair_switch and not self.keep_hair:
-            for mod in find_human(context.object).HG.body_obj.modifiers:
-                if mod.type == 'PARTICLE_SYSTEM':
-                    ps_sett = mod.particle_system.settings
-                    if ps_sett.child_nbr > 1:
-                        ps_sett.child_nbr = 1 #put in try except 
-                        self.report({'INFO'}, 'Hair children were hidden to improve performance. This can be turned off in preferences')
-                        if pref.auto_hide_popup:
-                            HG_OT_INFO.ShowMessageBox(None, 'autohide_hair')
-
-
+        if pref.auto_hide_hair_switch and not self.children_hide_exception:
+            self._hide_hair_children(context, pref)
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        self.keep_hair = event.ctrl
-        return self.execute(context)
-        
+    def _hide_hair_children(self, context, pref):
+        """Hides hair children to improve viewport performance
 
-class HG_NEXTPREV(bpy.types.Operator):
+        Args:
+            pref (AddonPreferences): HumGen preferences
+        """
+        mods = find_human(context.object).HG.body_obj.modifiers
+        for mod in [m for m in mods if m.type == 'PARTICLE_SYSTEM']:
+            ps_sett = mod.particle_system.settings
+            if ps_sett.child_nbr <= 1:
+                continue
+                
+            ps_sett.child_nbr = 1
+            self.report(
+                {'INFO'},
+                'Hair children were hidden to improve performance.'
+            )
+            
+            if pref.auto_hide_popup:
+                HG_OT_INFO.ShowMessageBox(None, 'autohide_hair')
+
+class HG_NEXT_PREV_HUMAN(bpy.types.Operator):
+    """Zooms in on next or previous human in the scene
+
+    Operator Type:
+        Selection
+        VIEW 3D (zoom)
+
+    Args:
+        forward (bool): True if go to next, False if go to previous
+    
+    Prereq:
+        Humans in scene
     """
-    Zooms in on next or previous human in the scene
-    """
-    bl_idname      = "hg3d.nextprev"
-    bl_label       = "Deselect"
-    bl_description = "Deselects active object"
-    bl_options     = {"REGISTER", "UNDO"}
+    
+    bl_idname      = "hg3d.next_prev_human"
+    bl_label       = "Next/Previous"
+    bl_description = "Goes to the next human"
+    bl_options     = {"UNDO"}
 
     forward : bpy.props.BoolProperty(name = '', default = False)
 
@@ -82,19 +129,18 @@ class HG_NEXTPREV(bpy.types.Operator):
             obj.select_set(False)
 
         humans = []
-        for obj in bpy.data.objects:
+        for obj in context.scene.objects: #CHECK if works
             if obj.HG.ishuman and not 'backup' in obj.name.lower():
                 humans.append(obj)
 
         if len(humans) == 0:
             self.report({'INFO'}, "No Humans in this scene")
             return {'FINISHED'}
-        
-        index = 0
+         
         hg_rig = find_human(context.active_object)
-        if hg_rig in humans:
-            index = humans.index(hg_rig)
-
+        
+        index = humans.index(hg_rig) if hg_rig in humans else 0
+  
         if forward:
             if index + 1 < len(humans):
                 next_index = index + 1
@@ -107,14 +153,24 @@ class HG_NEXTPREV(bpy.types.Operator):
                 next_index = len(humans) -1
 
         next_human = humans[next_index]
+        
         context.view_layer.objects.active = next_human
         next_human.select_set(True)
+        
         bpy.ops.view3d.view_selected()
+        
         return {'FINISHED'}
 
 class HG_OPENPREF(bpy.types.Operator):
-    """
-    Opens the preferences. 
+    """Opens the preferences. 
+    
+    API: False
+    
+    Operator type:
+        Blender UI manipulation
+        
+    Prereq:
+        None
     """
     bl_idname = "hg3d.openpref"
     bl_label = ""
@@ -136,12 +192,22 @@ class HG_OPENPREF(bpy.types.Operator):
 
 class HG_DELETE(bpy.types.Operator):
     """
-    Deletes the active human, including it's backup human if it's not in use by any other humans
+    Deletes the active human, including it's backup human if it's not in use by 
+    any other humans
+    
+    Operator type:
+        Object deletion
+    
+    Prereq:
+        Active object is part of HumGen human
     """
     bl_idname      = "hg3d.delete"
     bl_label       = "Delete Human"
     bl_description = "Deletes human and all objects associated with the human"
-    bl_options     = {"REGISTER", "UNDO"}
+    bl_options     = {"UNDO"}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
 
     def execute(self,context):
         hg_rig = find_human(context.active_object)
@@ -151,7 +217,11 @@ class HG_DELETE(bpy.types.Operator):
 
         backup_obj = hg_rig.HG.backup
         humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
-        copied_humans = [human for human in humans if human.HG.backup == backup_obj and human != hg_rig]
+        
+        copied_humans = [human for human in humans
+                         if human.HG.backup == backup_obj 
+                         and human != hg_rig
+                         ]
 
         delete_list = [hg_rig,]
         for child in hg_rig.children:
@@ -169,16 +239,14 @@ class HG_DELETE(bpy.types.Operator):
                 bpy.data.objects.remove(obj)
             except:
                 print('could not remove', obj)
+                
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
 
 class HG_CLEAR_SEARCH(bpy.types.Operator):
+    """Clears the passed searchfield
     """
-    clears searchfield
-    """
-    bl_idname      = "hg3d.clearsearch"
+    bl_idname      = "hg3d.clear_searchbox"
     bl_label       = "Clear search"
     bl_description = "Clears the searchbox"
 

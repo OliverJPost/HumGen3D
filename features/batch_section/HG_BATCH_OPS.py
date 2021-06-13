@@ -15,7 +15,7 @@ from .. common.HG_COMMON_FUNC import apply_shapekeys
 
 class HG_BATCH_GENERATE(bpy.types.Operator):
     """
-    clears searchfield
+    clears searchfield INACTIVE
     """
     bl_idname = "hg3d.generate"
     bl_label = "Generate"
@@ -78,6 +78,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
 
 def pick_library(context, categ, gender = None):
+    #INACTIVE
     sett = context.scene.HG3D
 
     if categ == 'expressions':

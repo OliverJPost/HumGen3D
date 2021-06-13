@@ -1,21 +1,29 @@
-import os
-import bpy #type: ignore
-
 """
 Contains functions that get used a lot by other operators
 """  
 
-def add_to_collection(context, obj, collection_name = 'HumGen'):
+import os
+import bpy #type: ignore
+
+def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Collection:
+    """Adds the giver object toa colleciton. By default added to HumGen collection
+
+    Args:
+        obj (Object): object to add to collection
+        collection_name (str, optional): Name of collection. Defaults to 'HumGen'.
+
+    Returns:
+        bpy.types.Collection: Collection the object was added to
     """
-    Adds the given object to the given collection
-    """  
     try: 
         collection = bpy.data.collections[collection_name]
     except:
-        collection = bpy.data.collections.new(name= collection_name )
+        collection = bpy.data.collections.new(name= collection_name)
         if collection_name == "HumGen_Backup [Don't Delete]":
             bpy.data.collections["HumGen"].children.link(collection)
-            context.view_layer.layer_collection.children['HumGen'].children[collection_name].exclude = True
+            #disable collection?
+            context.view_layer.layer_collection.children['HumGen'].children[
+                collection_name].exclude = True
         else:
             context.scene.collection.children.link(collection)
 
@@ -29,16 +37,28 @@ def add_to_collection(context, obj, collection_name = 'HumGen'):
     return collection
 
 
-def get_prefs():
+def get_prefs() -> bpy.types.AddonPreferences:
+    """Get HumGen preferences
+
+    Returns:
+        AddonPreferences: HumGen user preferences
+    """
     addon_name = __package__.split('.')[0]
+    
     return bpy.context.preferences.addons[addon_name].preferences
 
-def find_human(obj):
+def find_human(obj) -> bpy.types.Object:
+    """Checks if the passed object is part of a HumGen human
+    
+    This makes sure the add-on works as expected, even if a child object of the 
+    rig is selected. 
+
+    Args:
+        obj ([type]): [description]
+
+    Returns:
+        Object: Armature of human (hg_rig), None if not part of human
     """
-    Used extensively to find the hg_rig object corresponding to the selected object. 
-    This makes sure the add-on works as expected, even if a child object of the rig is selected. 
-    Returns none if object is not part of a human, otherwise returns hg_rig
-    """  
     if not obj:
         return None
     elif not obj.HG.ishuman:
@@ -52,9 +72,12 @@ def find_human(obj):
 
 
 def apply_shapekeys(ob):
+    """Applies all shapekeys on the given object, so modifiers on the object can
+    be applied
+
+    Args:
+        ob (Object): object to apply shapekeys on
     """
-    Applies all shapekeys on the given object, so modifiers on the object can be applied
-    """  
     bpy.context.view_layer.objects.active = ob
     if not ob.data.shape_keys:
         return
@@ -74,23 +97,32 @@ def apply_shapekeys(ob):
             
 
 def ShowMessageBox(message = "", title = "Human Generator - Alert", icon = 'INFO'):
-    """
-    shows a warning popup with the given text
+    """Shows a message popup with the passed text
+
+    Args:
+        message (str, optional): Message to display. Defaults to "".
+        title (str, optional): Title for popup. Defaults to "Human Generator - Alert".
+        icon (str, optional): Icon code. Defaults to 'INFO'.
     """
     def draw(self, context):
         self.layout.label(text = message)
 
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
-def ShowConfirmationBox(message = '', title = "Human Generator - Alert", icon = 'INFO'):
+def ShowConfirmationBox(message = ''):
+    """Shows a confirmation box to the user with the given text"""    
     def draw(self, context):
         self.layout.label(text = message)
 
     bpy.context.window_manager.invoke_props_dialog(draw)
 
 def make_path_absolute(key):
-    """ Prevent Blender's relative paths of doom """
-    # This can be a collection property or addon preferences
+    """Makes sure the passed path is absolute
+
+    Args:
+        key (str): path
+    """
+
     props = bpy.context.scene.HG3D 
     sane_path = lambda p: os.path.abspath(bpy.path.abspath(p)) 
     if key in props and props[key].startswith('//'):
@@ -117,4 +149,4 @@ def make_path_absolute(key):
 #     if block.users == 0:
 #         bpy.data.images.remove(block)
 
-#TODO add pre-save handler
+#TODO add pre-save handler to remove unused data

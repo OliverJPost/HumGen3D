@@ -1,19 +1,33 @@
 '''
-Inactive file to be implemented later, batch mode for generating multiple humans at once
+Inactive file to be implemented later, batch mode for generating multiple 
+humans at once
 '''
 
 import bpy #type: ignore
 import random
 import time
-import threading
 
-from .. creation_phase.HG_CREATION import load_human, give_name
-from .. common.HG_RANDOM import get_random_from_pcoll, random_body_type, random_length
-from .. creation_phase.HG_NEXTPHASE import corrective_shapekey_copy, reapply_shapekeys, set_backup, finish_creation_phase
+from .. creation_phase.HG_CREATION import (
+    load_human,
+    give_name
+)
+from .. common.HG_RANDOM import (
+    get_random_from_pcoll,
+    random_body_type,
+    random_length
+)
+from .. creation_phase.HG_NEXTPHASE import (
+    corrective_shapekey_copy,
+    reapply_shapekeys,
+    set_backup,
+    finish_creation_phase
+)
 from .. creation_phase.HG_LENGTH import random_length
 from .. common.HG_COMMON_FUNC import apply_shapekeys
 
 def status_text_callback(header, context):
+    #INACTIVE
+    
     print('text callback')
     sett   = context.scene.HG3D
     layout = header.layout
@@ -43,7 +57,7 @@ def status_text_callback(header, context):
 
 class HG_BATCH_GENERATE(bpy.types.Operator):
     """
-    clears searchfield
+    clears searchfield INACTIVE
     """
     bl_idname = "hg3d.generate"
     bl_label = "Generate"
@@ -121,7 +135,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        #context.window.cursor_modal_set('WAIT')
+        #INACTIVE
 
         sett = context.scene.HG3D
 
@@ -144,6 +158,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         return {'CANCELLED'}
 
 def generate_human(self, context):
+    #INACTIVE
+    
     sett = context.scene.HG3D
     total_start = time.time()
 
@@ -197,6 +213,7 @@ def generate_human(self, context):
 
 
 def pick_library(context, categ, gender = None):
+    #INACTIVE
     sett = context.scene.HG3D
 
     if categ == 'expressions':

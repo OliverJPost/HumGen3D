@@ -1,34 +1,57 @@
+
+import bpy  #type: ignore
+from bpy.props import (         #type: ignore
+    BoolProperty,
+    StringProperty,
+    EnumProperty,
+    PointerProperty,
+    IntProperty,
+    FloatProperty,
+    )
 from ... features.common.HG_COMMON_FUNC import make_path_absolute
-from ... features.utility_section.HG_UTILITY_FUNC import refresh_hair_ul, refresh_modapply
-import bpy #type: ignore
-from . HG_PROP_FUNCTIONS import find_folders, get_resolutions
-from ... core.HG_PCOLL import refresh_pcoll, get_pcoll_items
+from ... features.utility_section.HG_UTILITY_FUNC import (
+    refresh_hair_ul,
+    refresh_modapply)
+from . HG_PROP_FUNCTIONS import (
+    find_folders,
+    get_resolutions,
+    poll_mtc_armature)
+from ... core.HG_PCOLL import (
+    refresh_pcoll,
+    get_pcoll_enum_items)
 from ... features.finalize_phase.HG_POSE import apply_pose
-from ... features.finalize_phase.HG_CLOTHING import load_pattern #,load_outfit
+from ... features.finalize_phase.HG_CLOTHING import load_pattern 
 from ... features.finalize_phase.HG_CLOTHING_LOAD import load_outfit
 from ... features.finalize_phase.HG_EXPRESSION import load_expression
 from ... features.creation_phase.HG_HAIR import load_hair
-from ... features.creation_phase.HG_CREATION import scale_bones, load_textures
+from ... features.creation_phase.HG_CREATION import (
+    scale_bones,
+    load_textures)
 from ... user_interface import HG_BATCH_UILIST
 from ... features.creation_phase.HG_SKIN import toggle_sss
 from ... core.HG_CALLBACK import tab_change_update
 from ... features.creation_phase.HG_LENGTH import update_length_v2
-from ... features.utility_section.HG_UTILITY_FUNC import get_preset_thumbnail, refresh_shapekeys_ul
+from ... features.utility_section.HG_UTILITY_FUNC import (
+    get_preset_thumbnail,
+    refresh_shapekeys_ul)
 
-def poll_mtc_armature(self, object):
-    return object.type == 'ARMATURE'
 
 class HG_SETTINGS(bpy.types.PropertyGroup):   
     ######### back end #########
-    diagnostics     : bpy.props.BoolProperty(name="Diagnostic boolean", description="", default=False)
-    load_exception  : bpy.props.BoolProperty(name="load_exception", description="", default=False)
-    subscribed      : bpy.props.BoolProperty(name="subscribed", description="", default=False)
-    update_exception: bpy.props.BoolProperty(default = False)
+    diagnostics : BoolProperty(
+        name="Diagnostic boolean",
+        default=False)
+    load_exception  : BoolProperty(
+        name="load_exception",
+        default=False)
+    subscribed : BoolProperty(
+        name="subscribed",
+        default=False)
+    update_exception: BoolProperty(default = False)
 
     ######### ui back end ###############
-    ui_phase : bpy.props.EnumProperty(
+    ui_phase : EnumProperty(
         name="phase",
-        description="",
         items = [
                 ("body",            "body",           "", 0),
                 ("face",            "face",           "", 1),
@@ -49,9 +72,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "body",
         )   
 
-    active_ui_tab : bpy.props.EnumProperty(
-        name        = "ui_tab",
-        description = "",
+    active_ui_tab : EnumProperty(
+        name = "ui_tab",
         items = [
                 ("CREATE", "Create", "", "OUTLINER_OB_ARMATURE", 0),
                 #("BATCH", "Batch", "","COMMUNITY", 1),
@@ -64,217 +86,296 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     ########### ui toggles #################
     #body
-    indiv_scale_ui: bpy.props.BoolProperty(name="Individual Scaling", description="", default=False)
+    indiv_scale_ui: BoolProperty(name="Individual Scaling", default=False)
     
     #hair
-    hair_length_ui: bpy.props.BoolProperty(name="Hair Length", description="", default=False)
-    face_hair_ui  : bpy.props.BoolProperty(name="Facial Hair", description="Click to unfold facial hair ui", default=False)
-    hair_mat_ui   : bpy.props.BoolProperty(name="Hair Material", description="", default=False)
-    hair_cards_ui : bpy.props.BoolProperty(name="Hair Cards", description="", default=False)
+    hair_length_ui : BoolProperty(name="Hair Length", default=False)
+    face_hair_ui   : BoolProperty(name="Facial Hair",
+                                  description="Click to unfold facial hair ui",
+                                  default=False)
+    hair_mat_ui    : BoolProperty(name="Hair Material", default=False)
+    hair_cards_ui  : BoolProperty(name="Hair Cards", default=False)
 
     #skin
-    makeup_ui      : bpy.props.BoolProperty(default=False)
-    beard_shadow_ui: bpy.props.BoolProperty(default=False)
-    main_skin_ui   : bpy.props.BoolProperty(default=True)
-    light_dark_ui  : bpy.props.BoolProperty(default=False)
-    freckles_ui    : bpy.props.BoolProperty(default=False)
-    age_ui         : bpy.props.BoolProperty(default=False)
-    beautyspots_ui : bpy.props.BoolProperty(default=False)
-    eyes_section   : bpy.props.BoolProperty(default=False)
-    texture_ui     : bpy.props.BoolProperty(default=True)
-
-    #clothes
-    summer_toggle : bpy.props.BoolProperty(name="Summer Clothes",  description="", default=True, update = lambda a,b: refresh_pcoll(a,b,"outfit"))
-    normal_toggle : bpy.props.BoolProperty(name="Normal Clothes",  description="", default=True, update = lambda a,b: refresh_pcoll(a,b,"outfit"))
-    winter_toggle : bpy.props.BoolProperty(name="Winter Clothes",  description="", default=True, update = lambda a,b: refresh_pcoll(a,b,"outfit"))
-    inside_toggle : bpy.props.BoolProperty(name="Inside Clothes",  description="", default=True, update = lambda a,b: refresh_pcoll(a,b,"outfit"))
-    outside_toggle: bpy.props.BoolProperty(name="Outside Clothes", description="", default=True, update = lambda a,b: refresh_pcoll(a,b,"outfit"))
-    clothing_sidebar_toggle:  bpy.props.BoolProperty(name="", description="Click to unfold sidebar", default=False)
+    makeup_ui      : BoolProperty(default=False)
+    beard_shadow_ui: BoolProperty(default=False)
+    main_skin_ui   : BoolProperty(default=True)
+    light_dark_ui  : BoolProperty(default=False)
+    freckles_ui    : BoolProperty(default=False)
+    age_ui         : BoolProperty(default=False)
+    beautyspots_ui : BoolProperty(default=False)
+    eyes_section   : BoolProperty(default=False)
+    texture_ui     : BoolProperty(default=True)
 
     #pose
-    pose_choice : bpy.props.EnumProperty(
-        name        = "posing",
-        description = "",
+    pose_choice : EnumProperty(
+        name = "posing",
         items = [
                 ("library", "Library", "", 0),
                 ("rigify",  "Rigify",  "", 1),
-                #("retarget", "Retarget", "", 2),
             ],
         default = "library",
         )   
 
     #expression
-    expression_slider_ui: bpy.props.BoolProperty(name="Expression sliders", description="Click to unfold panel", default=True)
-    expression_type     : bpy.props.EnumProperty(
+    expression_slider_ui: BoolProperty(
+        name="Expression sliders",
+        description="Click to unfold panel",
+        default=True)
+    expression_type : EnumProperty(
         name="Expression",
-        description="",
         items = [
                 ("1click", "1-Click",  "", 0),
                 ("frig",   "Face Rig", "", 1),
-                #("retarget", "Retarget", "", 2),
             ],
         default = "1click",
         )   
 
 
     #material mode
-    material_ui : bpy.props.BoolProperty(name="", description="", default=False)
-    pattern_bool: bpy.props.BoolProperty(name="Bottom", description="", default=False)
-    decal_bool  : bpy.props.BoolProperty(name="Footwear", description="", default=False)
+    material_ui : BoolProperty(name = "",         default=False)
+    pattern_bool: BoolProperty(name = "Bottom",   default=False)
+    decal_bool  : BoolProperty(name = "Footwear", default=False)
 
     #face
-    ui_nose   : bpy.props.BoolProperty(name="Nose", description="", default=False)
-    ui_cheeks : bpy.props.BoolProperty(name="Cheeks", description="", default=False)
-    ui_eyes   : bpy.props.BoolProperty(name="Eyes", description="", default=False)
-    ui_l_skull: bpy.props.BoolProperty(name="Lower Skull", description="", default=False)
-    ui_u_skull: bpy.props.BoolProperty(name="Upper Skull", description="", default=False)
-    ui_chin   : bpy.props.BoolProperty(name="Chin", description="", default=False)
-    ui_ears   : bpy.props.BoolProperty(name="Ears", description="", default=False)
-    ui_mouth  : bpy.props.BoolProperty(name="Mouth", description="", default=False)
-    ui_jaw    : bpy.props.BoolProperty(name="Jaw", description="", default=False)
-    ui_other  : bpy.props.BoolProperty(name="Other", description="", default=False)
-    ui_custom : bpy.props.BoolProperty(name="Custom", description="", default=False)
-    ui_presets: bpy.props.BoolProperty(name="Presets", description="", default=False)
+    ui_nose   : BoolProperty(name = "Nose",        default=False)
+    ui_cheeks : BoolProperty(name = "Cheeks",      default=False)
+    ui_eyes   : BoolProperty(name = "Eyes",        default=False)
+    ui_l_skull: BoolProperty(name = "Lower Skull", default=False)
+    ui_u_skull: BoolProperty(name = "Upper Skull", default=False)
+    ui_chin   : BoolProperty(name = "Chin",        default=False)
+    ui_ears   : BoolProperty(name = "Ears",        default=False)
+    ui_mouth  : BoolProperty(name = "Mouth",       default=False)
+    ui_jaw    : BoolProperty(name = "Jaw",         default=False)
+    ui_other  : BoolProperty(name = "Other",       default=False)
+    ui_custom : BoolProperty(name = "Custom",      default=False)
+    ui_presets: BoolProperty(name = "Presets",     default=False)
 
 
-    thumb_ui: bpy.props.BoolProperty(default=False)
+    thumb_ui: BoolProperty(default=False)
 
     ############# creation ##############
-    gender: bpy.props.EnumProperty(
+    gender: EnumProperty(
         name        = "Gender",
         description = "Choose a gender",
-        items = [
+        items       = [
                 ("male",   "Male",   "", 0),
                 ("female", "Female", "", 1),
             ],
-        default = "male",
-        update = lambda a,b: refresh_pcoll(a,b,"humans")
+        default     = "male",
+        update      = lambda a, b: refresh_pcoll(a,b,"humans")
         )    
 
-    human_length: bpy.props.FloatProperty(default = 183, soft_min = 150, soft_max = 200, min = 120, max = 250, update = update_length_v2)#, unit = 'LENGTH')
+    human_length: FloatProperty(
+        default = 183,
+        soft_min = 150,
+        soft_max = 200,
+        min = 120,
+        max = 250,
+        update = update_length_v2
+        )
 
-    head_size: bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"head"))
-    neck_size: bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"neck"))
+    head_size: FloatProperty(
+        default = .5,
+        soft_min = 0,
+        soft_max = 1,
+        update = lambda a,b: scale_bones(a,b,"head")
+        )
+    neck_size: FloatProperty(
+        default = .5,
+        soft_min = 0,
+        soft_max = 1,
+        update = lambda a,b: scale_bones(a,b,"neck")
+        )
     
-    chest_size   : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"chest"))
-    shoulder_size: bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"shoulder"))
-    breast_size  : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"breast"))
-    hips_size    : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"hips"))
+    chest_size: FloatProperty(
+        default = .5,
+        soft_min = 0,
+        soft_max = 1,
+        update = lambda a,b: scale_bones(a,b,"chest")
+        )
+    shoulder_size: FloatProperty(
+        default = .5,
+        soft_min = 0,
+        soft_max = 1,
+        update = lambda a,b: scale_bones(a,b,"shoulder")
+        )
+    breast_size: FloatProperty(
+        default = .5,
+        soft_min = 0,
+        soft_max = 1,
+        update = lambda a,b: scale_bones(a,b,"breast")
+        )
+    hips_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a,b: scale_bones(a, b, "hips")
+    )
     
-    upper_arm_size: bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"upper_arm"))
-    forearm_size  : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"forearm"))
-    hand_size     : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"hand"))
+    upper_arm_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a,b: scale_bones(a, b, "upper_arm")
+    )
+    forearm_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a,b: scale_bones(a, b, "forearm")
+    )
+    hand_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a, b: scale_bones(a, b, "hand")
+    )
 
-    thigh_size: bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"thigh"))
-    shin_size : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"shin"))
-    foot_size : bpy.props.FloatProperty(default = .5, soft_min = 0, soft_max = 1, update = lambda a,b: scale_bones(a,b,"foot"))
-
-
+    thigh_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a, b: scale_bones(a, b, "thigh")
+    )
+    shin_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a, b: scale_bones(a, b, "shin")
+    )
+    foot_size: FloatProperty(
+        default=.5,
+        soft_min=0,
+        soft_max=1,
+        update=lambda a, b: scale_bones(a, b, "foot")
+    )
 
 
     ####### preview collections ########
     #creation
-    pcoll_humans: bpy.props.EnumProperty(
-        items = lambda a,b: get_pcoll_items(a,b,"humans")
+    pcoll_humans: EnumProperty(
+        items = lambda a,b: get_pcoll_enum_items(a,b,"humans")
         )  
 
     #posing
-    pcoll_poses: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"poses"),
+    pcoll_poses: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"poses"),
         update = apply_pose
         )   
-    pose_sub : bpy.props.EnumProperty(
+    pose_sub : EnumProperty(
         name="Pose Library",
         items  = lambda a,b: find_folders(a,b,"poses", False),
         update = lambda a,b: refresh_pcoll(a,b,"poses")
         )   
-    search_term_poses : bpy.props.StringProperty(name = 'Search:', default = '', update = lambda a,b: refresh_pcoll(a,b,"poses") )
+    search_term_poses: StringProperty(
+        name='Search:',
+        default='',
+        update=lambda a, b: refresh_pcoll(a, b, "poses")
+    )
 
     #outfit
-    pcoll_outfit: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"outfit"),
+    pcoll_outfit: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"outfit"),
         update = lambda a,b: load_outfit(a,b, footwear = False)
         )  
-    outfit_sub : bpy.props.EnumProperty(
+    outfit_sub : EnumProperty(
         name="Outfit Library",
         items  = lambda a,b: find_folders(a,b,'outfits', True),
         update = lambda a,b: refresh_pcoll(a,b,"outfit")
         ) 
-    search_term_outfit : bpy.props.StringProperty(name = 'Search:', default = '', update = lambda a,b: refresh_pcoll(a,b,"outfit") )
+    search_term_outfit: StringProperty(
+        name='Search:',
+        default='',
+        update=lambda a, b: refresh_pcoll(a, b, "outfit")
+    )
 
     #hair
-    pcoll_hair: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"hair"),
+    pcoll_hair: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"hair"),
         update = lambda a,b: load_hair(a,b,"head")
         )  
-    hair_sub : bpy.props.EnumProperty(
+    hair_sub : EnumProperty(
         name="Hair Library",
         items  = lambda a,b: find_folders(a,b,'hair/head', True),
         update = lambda a,b: refresh_pcoll(a,b,"hair")
         ) 
-    pcoll_face_hair: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"face_hair"),
+    pcoll_face_hair: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"face_hair"),
         update = lambda a,b: load_hair(a,b,"face")
         )  
-    face_hair_sub : bpy.props.EnumProperty(
+    face_hair_sub : EnumProperty(
         name="Facial Hair Library",
         items  = lambda a,b: find_folders(a,b,'hair/face_hair', False),
         update = lambda a,b: refresh_pcoll(a,b,"face_hair")
         ) 
 
     #expression
-    pcoll_expressions: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"expressions"),
+    pcoll_expressions: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"expressions"),
         update = load_expression
         )  
-    expressions_sub : bpy.props.EnumProperty(
+    expressions_sub : EnumProperty(
         name="Expressions Library",
         items  = lambda a,b: find_folders(a,b,'expressions', False),
         update = lambda a,b: refresh_pcoll(a,b,"expressions")
         ) 
-    search_term_expressions : bpy.props.StringProperty(name = 'Search:', default = '', update = lambda a,b: refresh_pcoll(a,b,"expressions") )
+    search_term_expressions: StringProperty(
+        name='Search:',
+        default='',
+        update=lambda a, b: refresh_pcoll(a, b, "expressions")
+    )
 
     #footwear
-    pcoll_footwear: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"footwear"),
+    pcoll_footwear: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"footwear"),
         update = lambda a,b: load_outfit(a,b, footwear = True)
         )  
-    footwear_sub : bpy.props.EnumProperty(
+    footwear_sub : EnumProperty(
         name="Footwear Library",
         items  = lambda a,b: find_folders(a,b,'footwear', True),
         update = lambda a,b: refresh_pcoll(a,b,"footwear")
         ) 
-    search_term_footwear : bpy.props.StringProperty(name = 'Search:', default = '', update = lambda a,b: refresh_pcoll(a,b,"footwear") )
+    search_term_footwear: StringProperty(
+        name='Search:',
+        default='',
+        update=lambda a, b: refresh_pcoll(a, b, "footwear")
+    )
 
     #patterns
-    pcoll_patterns: bpy.props.EnumProperty(
-        items = lambda a,b: get_pcoll_items(a,b,"patterns"),
+    pcoll_patterns: EnumProperty(
+        items = lambda a,b: get_pcoll_enum_items(a,b,"patterns"),
         update = load_pattern
         )  
-    patterns_sub : bpy.props.EnumProperty(
+    patterns_sub : EnumProperty(
         name="Pattern Library",
         items  = lambda a,b: find_folders(a,b,"patterns", False),
         update = lambda a,b: refresh_pcoll(a,b,"patterns")
         )  
-    search_term_patterns : bpy.props.StringProperty(name = 'Search:', default = '', update = lambda a,b: refresh_pcoll(a,b,"patterns") )
+    search_term_patterns: StringProperty(
+        name='Search:',
+        default='',
+        update=lambda a, b: refresh_pcoll(a, b, "patterns")
+    )
 
-    pcoll_textures: bpy.props.EnumProperty(
-        items  = lambda a,b: get_pcoll_items(a,b,"textures"),
+    pcoll_textures: EnumProperty(
+        items  = lambda a,b: get_pcoll_enum_items(a,b,"textures"),
         update = load_textures
         )  
-    texture_library : bpy.props.EnumProperty(
+    texture_library : EnumProperty(
         name="Texture Library",
-        items  = lambda a,b: find_folders(a,b,"textures", True, include_all = False),
+        items  = lambda a,b: find_folders(a,b,"textures",
+                                          True,
+                                          include_all = False),
         update = lambda a,b: refresh_pcoll(a,b,"textures")
         )  
 
-
-    preset_thumbnail_enum: bpy.props.EnumProperty(
+    preset_thumbnail_enum: EnumProperty(
         items = get_preset_thumbnail,
         )  
 
     ######### skin props ###########
-    skin_sss: bpy.props.EnumProperty(
+    skin_sss: EnumProperty(
         description="Turns on/off subsurface scattering on the skin shader",
         items = [
                 ("on",  "On ", "", 0),
@@ -285,24 +386,50 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         )  
 
     ####### batch mode ###########
-    generate_amount: bpy.props.IntProperty(name = 'Amount', default = 10, min = 1, max = 100)
-    batch_progress : bpy.props.IntProperty(subtype='PERCENTAGE', min = 0, max = 100, default = 0)
+    generate_amount:IntProperty(name='Amount',
+                                default=10,
+                                min=1,
+                                max=100)
+    batch_progress: IntProperty(subtype='PERCENTAGE',
+                                min=0,
+                                max=100,
+                                default=0)
 
-    male_chance  : bpy.props.IntProperty(name = 'Male', subtype="PERCENTAGE", min=0, max=100, default = 100)
-    female_chance: bpy.props.IntProperty(name = 'Female',subtype="PERCENTAGE", min=0, max=100, default = 100)
+    male_chance:    IntProperty(name='Male',
+                                subtype="PERCENTAGE",
+                                min=0,
+                                max=100,
+                                default=100)
+    female_chance:  IntProperty(name='Female',
+                                subtype="PERCENTAGE",
+                                min=0,
+                                max=100,
+                                default=100)
 
-    caucasian_chance: bpy.props.IntProperty(name = 'Caucasian',subtype="PERCENTAGE", min=0, max=100, default = 100)
-    black_chance    : bpy.props.IntProperty(name = 'Black',subtype="PERCENTAGE", min=0, max=100, default = 100)
-    asian_chance    : bpy.props.IntProperty(name = 'Asian',subtype="PERCENTAGE", min=0, max=100, default = 100)
 
-    batch_pose      : bpy.props.BoolProperty(default = False)
-    batch_clothing  : bpy.props.BoolProperty(default = True)
-    batch_expression: bpy.props.BoolProperty(default = False)
-    batch_hair      : bpy.props.BoolProperty(default = True)
+    caucasian_chance: IntProperty(name='Caucasian',
+                                  subtype="PERCENTAGE",
+                                  min=0,
+                                  max=100,
+                                  default=100)
+    black_chance:     IntProperty(name='Black',
+                                  subtype="PERCENTAGE",
+                                  min=0,
+                                  max=100,
+                                  default=100)
+    asian_chance:     IntProperty(name='Asian',
+                                  subtype="PERCENTAGE",
+                                  min=0,
+                                  max=100,
+                                  default=100)
 
-    batch_hairtype: bpy.props.EnumProperty(
-        name="Hair Type",
-        description="",
+    batch_pose      : BoolProperty(default = False)
+    batch_clothing  : BoolProperty(default = True)
+    batch_expression: BoolProperty(default = False)
+    batch_hair      : BoolProperty(default = True)
+
+    batch_hairtype: EnumProperty(
+        name="Hair Type",   
         items = [
                 ("system", "Hair Systems", "", 0),
                 ("cards",  "Hair Cards",   "", 1),
@@ -310,14 +437,20 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "system",
         )    
 
-    batch_clothing_inside : bpy.props.BoolProperty(name="Inside", description="", default=True, update = lambda a,b: HG_BATCH_UILIST.uilist_refresh(a,b,"outfits"))
-    batch_clothing_outside: bpy.props.BoolProperty(name="Outside", description="", default=True, update = lambda a,b: HG_BATCH_UILIST.uilist_refresh(a,b,"outfits"))
-
+    batch_clothing_inside: BoolProperty(
+        name="Inside",
+        default=True,
+        update=lambda a, b: HG_BATCH_UILIST.uilist_refresh(a, b, "outfits")
+    )
+    batch_clothing_outside: BoolProperty(
+        name="Outside",
+        default=True,
+        update=lambda a, b: HG_BATCH_UILIST.uilist_refresh(a, b, "outfits")
+    )
 
     ######### Dev tools ######## 
-    shapekey_calc_type: bpy.props.EnumProperty(
-        name="calc type",
-        description="",
+    shapekey_calc_type: EnumProperty(
+        name="calc type",   
         items = [
                 ("pants", "Bottom",    "", 0),
                 ("top",   "Top",       "", 1),
@@ -326,12 +459,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ],
         default = "top",
         )   
-    dev_delete_unselected: bpy.props.BoolProperty(name="Delete unselected objs", description="", default=True)
-    dev_tools_ui         : bpy.props.BoolProperty(name="Developer tools", description="", default=True)
-    calc_gender          : bpy.props.BoolProperty(name="Calculate both genders", description="", default=False)
-    dev_mask_name: bpy.props.EnumProperty(
+    dev_delete_unselected: BoolProperty(name="Delete unselected objs",
+                                        default=True)
+    dev_tools_ui: BoolProperty(name="Developer tools", default=True)
+    calc_gender : BoolProperty(name="Calculate both genders", default=False)
+    dev_mask_name: EnumProperty(
         name="mask_name",
-        description="",
         items = [
                 ("lower_short", "Lower Short", "", 0),
                 ("lower_long",  "Lower Long",  "", 1),
@@ -343,10 +476,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "lower_short",
         )  
 
-    hair_json_path: bpy.props.StringProperty(subtype = 'FILE_PATH')
-    hair_json_name: bpy.props.StringProperty()
+    hair_json_path: StringProperty(subtype = 'FILE_PATH')
+    hair_json_name: StringProperty()
 
-    pcoll_render: bpy.props.EnumProperty(
+    pcoll_render: EnumProperty(
         items = [ 
                 ("outfit",          "outfit",          "", 0),
                 ("hair",            "hair",            "", 1),
@@ -359,15 +492,15 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "outfit"
         )   
 
-    thumb_render_path: bpy.props.StringProperty(
+    thumb_render_path: StringProperty(
         default = '',
         subtype = 'DIR_PATH'
     )
-    dont_export_thumb: bpy.props.BoolProperty(default = False)
+    dont_export_thumb: BoolProperty(default = False)
 
-    hair_mat_male : bpy.props.EnumProperty(
+    hair_mat_male : EnumProperty(
         name="posing",
-        description="",
+        
         items = [
                 ("eye",  "Eyebrows & Eyelashes", "", 0),
                 ("face", "Facial Hair",          "", 1),
@@ -376,9 +509,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "eye",
         )   
 
-    hair_mat_female : bpy.props.EnumProperty(
+    hair_mat_female : EnumProperty(
         name="posing",
-        description="",
+        
         items = [
                 ("eye",  "Eyebrows & Eyelashes", "", 0),
                 ("head", "Hair",                 "", 1),
@@ -388,27 +521,31 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
 
     #baking
-    bake_res_body: bpy.props.EnumProperty(
+    bake_res_body: EnumProperty(
         items   = get_resolutions(),
         default = "4096",
         )  
-    bake_res_eyes: bpy.props.EnumProperty(
+    bake_res_eyes: EnumProperty(
         items   = get_resolutions(),
         default = "1024",
         )  
-    bake_res_teeth: bpy.props.EnumProperty(
+    bake_res_teeth: EnumProperty(
         items   = get_resolutions(),
         default = "1024",
         )  
-    bake_res_clothes: bpy.props.EnumProperty(
+    bake_res_clothes: EnumProperty(
         items   = get_resolutions(),
         default = "2048",
         )  
 
+    bake_export_folder: StringProperty(
+        name='Baking export',
+        subtype='DIR_PATH',
+        default='',
+        update=lambda s, c: make_path_absolute('bake_export_folder')
+    )
 
-    bake_export_folder: bpy.props.StringProperty(name= 'Baking export', subtype = 'DIR_PATH', default = '', update = lambda s,c: make_path_absolute('bake_export_folder'))
-
-    bake_samples: bpy.props.EnumProperty(
+    bake_samples: EnumProperty(
         items = [
                 ( "4",  "4", "", 0),
                 ("16", "16", "", 1),
@@ -418,7 +555,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         )  
 
 
-    bake_file_type: bpy.props.EnumProperty(
+    bake_file_type: EnumProperty(
         items = [
                 ("png",   ".PNG", "", 0),
                 ("jpeg", ".JPEG", "", 1),
@@ -427,7 +564,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "png",
         )  
 
-    modapply_search_objects: bpy.props.EnumProperty(
+    modapply_search_objects: EnumProperty(
         name  = 'Objects to apply',
         items = [
                 ("selected", "Selected objects", "", 0),
@@ -438,7 +575,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update  = refresh_modapply
         )  
 
-    modapply_search_modifiers: bpy.props.EnumProperty(
+    modapply_search_modifiers: EnumProperty(
         name = 'Modifier display method',
         items = [
                 ("summary",    "Modifier summary",     "", 0),
@@ -448,9 +585,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update = refresh_modapply
         )  
 
-    modapply_apply_hidden  : bpy.props.BoolProperty(default = False)
-    modapply_keep_shapekeys: bpy.props.BoolProperty(default = True)
-    save_shapekeys_as      : bpy.props.EnumProperty(
+    modapply_apply_hidden  : BoolProperty(default = False)
+    modapply_keep_shapekeys: BoolProperty(default = True)
+    save_shapekeys_as      : EnumProperty(
         name = 'Save as',
         items = [
                 ("ff", "Facial features", "", 0),
@@ -460,14 +597,17 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "ff",
         )  
     
-    preset_thumbnail: bpy.props.PointerProperty(type=bpy.types.Image ,description='Thumbnail image for starting human')
-    preset_name     : bpy.props.StringProperty(default = '')
+    preset_thumbnail: PointerProperty(
+        type=bpy.types.Image,
+        description='Thumbnail image for starting human')
+    preset_name     : StringProperty(default = '')
 
-    shapekey_col_name: bpy.props.StringProperty(default = '')
-    show_saved_sks   : bpy.props.BoolProperty(default = False, update = refresh_shapekeys_ul)
+    shapekey_col_name: StringProperty(default = '')
+    show_saved_sks   : BoolProperty(default = False,
+                                    update = refresh_shapekeys_ul)
 
-    hairstyle_name: bpy.props.StringProperty(default = '')
-    save_hairtype: bpy.props.EnumProperty(
+    hairstyle_name: StringProperty(default = '')
+    save_hairtype: EnumProperty(
         name = 'Hairtype',
         items = [
                 ("head",      "Regular Hair", "", 0),
@@ -476,12 +616,14 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "head",
         )  
 
-    savehair_male  : bpy.props.BoolProperty(default = True)
-    savehair_female: bpy.props.BoolProperty(default = True)
-    show_eyesystems: bpy.props.BoolProperty(name = 'Show eye hairsystems', default = False, update = refresh_hair_ul)
+    savehair_male  : BoolProperty(default = True)
+    savehair_female: BoolProperty(default = True)
+    show_eyesystems: BoolProperty(name = 'Show eye hairsystems',
+                                  default = False,
+                                  update = refresh_hair_ul)
 
-    saveoutfit_name: bpy.props.StringProperty(default = '')
-    saveoutfit_categ: bpy.props.EnumProperty(
+    saveoutfit_name: StringProperty(default = '')
+    saveoutfit_categ: EnumProperty(
         name = 'Clothing type',
         items = [
                 ("outfits",   "Outfit", "", 0),
@@ -490,23 +632,26 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "outfits",
         )  
 
-    saveoutfit_male  : bpy.props.BoolProperty(default = True)
-    saveoutfit_female: bpy.props.BoolProperty(default = True)
-    saveoutfit_human : bpy.props.PointerProperty(name = 'Human', type = bpy.types.Object)
+    saveoutfit_male  : BoolProperty(default = True)
+    saveoutfit_female: BoolProperty(default = True)
+    saveoutfit_human : PointerProperty(name = 'Human',
+                                       type = bpy.types.Object)
     
-    open_exported_outfits  : bpy.props.BoolProperty(default = False)
-    open_exported_hair     : bpy.props.BoolProperty(default = False)
-    open_exported_shapekeys: bpy.props.BoolProperty(default = False)
+    open_exported_outfits  : BoolProperty(default = False)
+    open_exported_hair     : BoolProperty(default = False)
+    open_exported_shapekeys: BoolProperty(default = False)
 
-    mtc_armature        : bpy.props.PointerProperty(name = 'Armature', type = bpy.types.Object, poll = poll_mtc_armature)
-    mtc_add_armature_mod: bpy.props.BoolProperty(default = True)
-    mtc_parent          : bpy.props.BoolProperty(default = True)
+    mtc_armature        : PointerProperty(name = 'Armature',
+                                          type = bpy.types.Object,
+                                          poll = poll_mtc_armature)
+    mtc_add_armature_mod: BoolProperty(default = True)
+    mtc_parent          : BoolProperty(default = True)
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
-    ishuman: bpy.props.BoolProperty(name="Is Human", description="", default=False)
-    phase  : bpy.props.EnumProperty(
+    ishuman: BoolProperty(name="Is Human", default=False)
+    phase  : EnumProperty(
         name="phase",
-        description="",
+        
         items = [
                 ("base_human", "base_human",   "",  0),
                 ("body",        "body",        "",  1),
@@ -525,7 +670,7 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
             ],
         default = "base_human",
         )    
-    gender : bpy.props.EnumProperty(
+    gender : EnumProperty(
         name        = "gender",
         description = "",
         items = [
@@ -534,7 +679,7 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
             ],
         default = "male",
         )  
-    body_obj    : bpy.props.PointerProperty(name="hg_body", type=bpy.types.Object)
-    backup      : bpy.props.PointerProperty(name="hg_backup", type=bpy.types.Object)
-    length      : bpy.props.FloatProperty()
-    experimental: bpy.props.BoolProperty(default = False)
+    body_obj    : PointerProperty(name="hg_body", type=bpy.types.Object)
+    backup      : PointerProperty(name="hg_backup", type=bpy.types.Object)
+    length      : FloatProperty()
+    experimental: BoolProperty(default = False)

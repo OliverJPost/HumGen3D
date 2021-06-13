@@ -276,8 +276,8 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._experimental_mode_button(hg_rig, row_h)
 
         row = col.row(align=True)
-        row.operator('hg3d.nextprev', text = 'Previous', icon = 'TRIA_LEFT').forward = False
-        row.operator('hg3d.nextprev', text = 'Next', icon = 'TRIA_RIGHT').forward = True
+        row.operator('hg3d.next_prev_human', text = 'Previous', icon = 'TRIA_LEFT').forward = False
+        row.operator('hg3d.next_prev_human', text = 'Next', icon = 'TRIA_RIGHT').forward = True
         
         row = col.row(align=True)
         row.operator('hg3d.deselect', icon = 'RESTRICT_SELECT_ON')
@@ -1732,7 +1732,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
         
         c_random = row.operator(
-            'hg3d.colorrandom',
+            'hg3d.color_random',
             text = '',
             icon = 'FILE_REFRESH'
             )

@@ -60,19 +60,19 @@ from . core.content.HG_UPDATE import check_update
 #features
     #common
 from . features.common.HG_INFO_POPUPS import HG_OT_INFO
-from . features.common.HG_PANEL_OPS import (
+from . features.common.HG_COMMON_OPS import (
     HG_CLEAR_SEARCH,
     HG_DELETE,
     HG_DESELECT,
-    HG_NEXTPREV,
+    HG_NEXT_PREV_HUMAN,
     HG_OPENPREF,
-    HG_UITOGGLE)
+    HG_SECTION_TOGGLE)
 from . features.common.HG_RANDOM import (
     HG_COLOR_RANDOM,
     HG_RANDOM)
     #creation phase
 from . features.creation_phase.HG_CREATION import (
-    HG_REVERT_CREATION,
+    HG_REVERT_TO_CREATION,
     HG_START_CREATION)
 from . features.creation_phase.HG_FACE import HG_RESET_FACE
 from . features.creation_phase.HG_HAIR import (
@@ -136,15 +136,15 @@ from . tutorial_operator import HG_TUTORIAL_OP
 #     HG_UTILITY_UILISTS)
 # from . HG_CREATION import (
 #     HG_START_CREATION,
-#     HG_REVERT_CREATION)
+#     HG_REVERT_TO_CREATION)
 # from . HG_LENGTH import (
 #     HG_UPDATE_LENGTH,
 #     HG_RANDOM_LENGTH)
 # from . HG_POSE import HG_RIGIFY
-# from . HG_PANEL_OPS import (
+# from . HG_COMMON_OPS import (
 #     HG_DESELECT,
-#     HG_NEXTPREV,
-#     HG_UITOGGLE,
+#     HG_NEXT_PREV_HUMAN,
+#     HG_SECTION_TOGGLE,
 #     HG_DELETE,
 #     HG_CLEAR_SEARCH,
 #     HG_OPENPREF)
@@ -271,9 +271,9 @@ classes = (
     #Panel ops
     HG_CLEAR_SEARCH,
     HG_FINISH_CREATION,
-    HG_NEXTPREV,
+    HG_NEXT_PREV_HUMAN,
     HG_RANDOM,
-    HG_UITOGGLE,
+    HG_SECTION_TOGGLE,
     HG_OT_INFO,
     HG_OPENPREF,
 
@@ -298,7 +298,7 @@ classes = (
 
     #Creation
     HG_START_CREATION,
-    HG_REVERT_CREATION,
+    HG_REVERT_TO_CREATION,
 
     #Length
     HG_UPDATE_LENGTH,
