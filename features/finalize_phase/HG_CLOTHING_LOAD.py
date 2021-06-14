@@ -2,20 +2,26 @@
 Operators and functions used for clothing, outfits and footwear of the humans.
 """ 
 
+
 import bpy #type: ignore
-import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, apply_shapekeys, get_prefs 
+from ... features.common.HG_COMMON_FUNC import (
+    add_to_collection,
+    find_human,
+    apply_shapekeys,
+    get_prefs
+)
 from ... core.HG_PCOLL import refresh_pcoll
-from ... features.common.HG_RANDOM import set_random_active_in_pcoll
-from ... features.utility_section.HG_DEVTOOLS import HG_SHAPEKEY_CALCULATOR #create_shapekey_from_difference, build_distance_dict
+from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict, deform_obj_from_difference
 
 #FIXME make sure new textures are not duplicated
 #TODO make new outfit color random
 def load_outfit(self,context, footwear = False):
-    """
-    loads the outfit that is the current active item in the outfit preview_collection
-    """  
+    """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
+    
+    Args:
+        footwear (boolean): True if called by pcoll_footwear, else loads as outfit
+    """ 
     pref    = get_prefs()
     sett    = context.scene.HG3D
     hg_rig  = find_human(context.active_object)
@@ -24,77 +30,119 @@ def load_outfit(self,context, footwear = False):
     hg_rig.hide_set(False)
     hg_rig.hide_viewport = False
     
-    #returns immediately if the active item in the preview_collection is the 'click here to select' icon
-    if (not footwear and sett.pcoll_outfit == 'none') or (footwear and sett.pcoll_footwear == 'none'):
+    #returns immediately if the active item in the preview_collection is the 
+    # 'click here to select' icon
+    if ((not footwear and sett.pcoll_outfit == 'none')
+        or (footwear and sett.pcoll_footwear == 'none')):
         return
 
-    mask_remove_list, tag = remove_old_outfits(pref, hg_rig, footwear)
+    tag = 'shoe' if footwear else 'cloth'
+    mask_remove_list = remove_old_outfits(pref, hg_rig, tag)
 
-    cloth_objs, distance_dict, collections = import_cloth_items(context, sett, pref, hg_rig, footwear)
+    cloth_objs, collections = _import_cloth_items(context, sett, pref, hg_rig,
+                                                  footwear)
     
     new_mask_list = []
     for obj in cloth_objs:     
         new_mask_list.extend(find_masks(obj))
         obj[tag] = 1 #adds a custom property to the cloth for identifying purposes
 
-        backup_rig = hg_rig.HG.backup
-        obj.parent = backup_rig
-
-
-        backup_rig.HG.body_obj.hide_viewport = False
-        backup_body = [obj for obj in backup_rig.children if 'hg_body' in obj][0]
-        for sk in [sk for sk in backup_body.data.shape_keys.key_blocks if sk.name not in ['Basis', 'Male']]:
-            sk.value = 0
-
-        backup_body_copy = set_gender_sk(backup_body)
-        distance_dict    = HG_SHAPEKEY_CALCULATOR.build_distance_dict(self, backup_body_copy, obj, apply = False)
-        obj.parent       = hg_rig
-
-        deform_from_distance(distance_dict, hg_body, obj, context)
-        context.view_layer.objects.active = obj
-        set_armature(context, obj, hg_rig)
-        context.view_layer.objects.active = hg_rig
+        _deform_cloth_to_human(self, context, hg_rig, hg_body, obj)
         
-        bpy.data.objects.remove(backup_body_copy)
-        
-        #collapse modifiers
         for mod in obj.modifiers:
-            mod.show_expanded = False
+            mod.show_expanded = False #collapse modifiers
 
     #remove collection that was imported along with the cloth objects
     for col in collections:
         bpy.data.collections.remove(col)
 
-    set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
-    print('print7', [obj for obj in bpy.data.objects if 'hg_body' in obj])
+    _set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
 
     #refresh pcoll for consistent 'click here to select' icon
     refresh_pcoll(self, context, 'outfit')
 
-    
+def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
+    """Deforms the cloth object to the shape of the active HumGen human by using
+    HG_SHAPEKEY_CALCULATOR
 
-def set_gender_sk(backup_body):
+    Args:
+        hg_rig (Object): HumGen armature
+        hg_body (Object): HumGen body
+        obj (Object): cloth object to deform
+    """
+    backup_rig = hg_rig.HG.backup
+    obj.parent = backup_rig
+
+    backup_rig.HG.body_obj.hide_viewport = False
+    backup_body = [obj for obj in backup_rig.children 
+                   if 'hg_body' in obj][0]
+    for sk in [sk for sk in backup_body.data.shape_keys.key_blocks 
+               if sk.name not in ['Basis', 'Male']]:
+        sk.value = 0
+
+    backup_body_copy = _copy_backup_with_gender_sk(backup_body)
+    
+    distance_dict = build_distance_dict(
+        backup_body_copy,
+        obj,
+        apply=False
+    )
+    
+    obj.parent    = hg_rig
+
+    deform_obj_from_difference(
+        '',
+        distance_dict,
+        hg_body,
+        obj,
+        as_shapekey=False
+    )
+        
+    context.view_layer.objects.active = obj
+    _set_armature(context, obj, hg_rig)
+    context.view_layer.objects.active = hg_rig
+        
+    bpy.data.objects.remove(backup_body_copy)
+ 
+
+def _copy_backup_with_gender_sk(backup_body) -> bpy.types.Object:
+    """Creates a copy of the backup human with the correct gender settings
+
+    Args:
+        backup_body (Object): body of the hidden backup human
+
+    Returns:
+        bpy.types.Object: copy of the backup body
+    """
     copy      = backup_body.copy()
     copy.data = backup_body.data.copy()
     bpy.context.scene.collection.objects.link(copy)    
 
     gender = backup_body.parent.HG.gender
-    print(gender)
-    if gender == 'male':
-        try:
-            sk = copy.data.shape_keys.key_blocks
-            sk['Male'].value = 1
-            apply_shapekeys(copy)
-        except:
-            pass
+
+    if gender == 'female':
+        return copy
+    
+    try:
+        sk = copy.data.shape_keys.key_blocks
+        sk['Male'].value = 1
+        apply_shapekeys(copy)
+    except:
+        pass
 
     return copy
 
-def deform_from_distance(distance_dict, hg_body, cloth_obj, context):
-    HG_SHAPEKEY_CALCULATOR.deform_obj_from_difference(None, 'test', distance_dict, hg_body, cloth_obj, as_shapekey = False)
-    #cloth_obj.data.shape_keys.key_blocks['test'].value = 1  
+def _set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
+    """Adds geometry mask modifiers to hg_body based on custom properties on the
+    imported clothing
 
-def set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
+    Args:
+        mask_remove_list (list): list of masks to remove from the human, that
+                                 were added by previous outfits
+        new_mask_list (list): list of masks to add that were not on theh human
+                              before
+        hg_body (Object): HumGen body to add the modifiers on
+    """
     #remove duplicates from mask lists
     mask_remove_list = list(set(mask_remove_list))
     new_mask_list    = list(set(new_mask_list))
@@ -118,22 +166,57 @@ def set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
         mod.vertex_group        = mask
         mod.invert_vertex_group = True
 
-def set_armature(context, obj, hg_rig):
+def _set_armature(context, obj, hg_rig):
+    """Adds an armature modifier to this cloth object
+
+    Args:
+        obj (Object): cloth object to add armature to
+        hg_rig (Object): HumGen armature
+    """
     #checks if the cloth object already has an armature modifier, adds one if it doesnt
-    armature_mods = [mod for mod in obj.modifiers if mod.type == 'ARMATURE']
+    armature_mods = [mod for mod in obj.modifiers 
+                     if mod.type == 'ARMATURE']
+    
     if not armature_mods:
         armature_mods.append(obj.modifiers.new("Armature", 'ARMATURE'))
+        
     armature_mods[0].object = hg_rig
+    _move_armature_to_top(context, obj, armature_mods)
+
+def _move_armature_to_top(context, obj, armature_mods):
+    """Moves the armature modifier to the top of the stack
+
+    Args:
+        context ([type]): [description]
+        obj (Object): object the armature mod is on
+        armature_mods (list): list of armature modifiers on this object
+    """
     context.view_layer.objects.active = obj
     for mod in armature_mods:
         if (2, 90, 0) > bpy.app.version: #use old method for versions older than 2.90
             while obj.modifiers.find(mod.name) != 0:
-                bpy.ops.object.modifier_move_up({'object': obj}, modifier=mod.name)
+                bpy.ops.object.modifier_move_up({'object': obj},
+                                                modifier=mod.name)
         else:
             bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
 
-def import_cloth_items(context, sett, pref, hg_rig, footwear):
-    #load the whole collection from the outfit file. It loads collections instead of objects because this allows loading of linked objects
+def _import_cloth_items(context, sett, pref, hg_rig, footwear) -> tuple[list, list]:
+    """Imports the cloth objects from an external file
+
+    Args:
+        context ([type]): [description]
+        sett (PropertyGroup): HumGen props
+        pref (AddonPreferences): HumGen preferences
+        hg_rig (Object): HumGen armature object
+        footwear (bool): True if import footwear, False if import clothing
+
+    Returns:
+        tuple[list, list]: 
+            cloth_objs: list with imported clothing objects
+            collections: list with imported collections the cloth objs were in     
+    """
+    #load the whole collection from the outfit file. It loads collections 
+    # instead of objects because this allows loading of linked objects
     pcoll_item = sett.pcoll_footwear if footwear else sett.pcoll_outfit
     blendfile  = str(pref.filepath) + str(Path(pcoll_item))
     with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
@@ -142,7 +225,6 @@ def import_cloth_items(context, sett, pref, hg_rig, footwear):
 
     #appends all collections and objects to scene
     collections = data_to.collections
-    distance_dict = None #data_to.texts['hg_cloth_distance_dict']
         
     cloth_objs = []
     for col in collections:
@@ -153,7 +235,8 @@ def import_cloth_items(context, sett, pref, hg_rig, footwear):
     for obj in context.selected_objects:
         obj.select_set(False)
 
-    #loads cloth objects in the humgen collection and sets the rig as their parent. This also makes sure their rotation and location is correct
+    #loads cloth objects in the humgen collection and sets the rig as their 
+    # parent. This also makes sure their rotation and location is correct
     for obj in cloth_objs:
         add_to_collection(context, obj)
         obj.parent = hg_rig
@@ -163,61 +246,65 @@ def import_cloth_items(context, sett, pref, hg_rig, footwear):
     bpy.ops.object.make_local(type='SELECT_OBDATA_MATERIAL')
     bpy.ops.object.make_local(type='ALL')
 
-    return cloth_objs, distance_dict, collections
+    return cloth_objs, collections
 
-def remove_old_outfits(pref, hg_rig, footwear):
+def remove_old_outfits(pref, hg_rig, tag) -> list:
+    """Removes the cloth objects that were already on the human
+
+    Args:
+        pref (AddonPreferences): preferences of HumGen
+        hg_rig (Object): HumGen armature
+        tag (str): tag for identifying cloth and shoe objects
+
+    Returns:
+        list: list of geometry masks that need to be removed
+    """
     #removes previous outfit/shoes if the preferences option is True
     mask_remove_list = []
     
-    tag = 'shoe' if footwear else 'cloth'
     if pref.remove_clothes:  
         for child in [child for child in hg_rig.children]:
             if tag in child:
                 mask_remove_list.extend(find_masks(child))
                 bpy.data.objects.remove(child)
 
-    return mask_remove_list, tag
-
-def set_cloth_shapekeys(sk, hg_rig):
-    """
-    sets the cloth shapekeys to the same value as the human
-    """  
-    sk_names = ['Muscular', 'Overweight', 'Skinny']
-
-    for i, sk_name in enumerate(sk_names): 
-        sk[sk_name].mute  = False
-        sk[sk_name].value = hg_rig.HG.body_shape[i]
-    
-    if 'Chest' in sk: 
-        sk['Chest'].mute  = False
-        sk['Chest'].value = (hg_rig.HG.body_shape[3] * 3) - 2.5
-
-    sk['Shorten'].mute  = False
-    sk['Shorten'].value = (-1.9801 * hg_rig.HG.length) + 3.8989
+    return mask_remove_list
 
 def set_cloth_corrective_drivers(hg_body, sk):
-    """
-    sets up the drivers of the corrective shapekeys on the clothes
+    """Sets up the drivers of the corrective shapekeys on the clothes
+    
+    Args:
+        hg_body (Object): HumGen body object
+        sk (list): List of shapekeys on hg_body #CHECK
     """  
     for driver in hg_body.data.shape_keys.animation_data.drivers:
-        target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '')
-        if target_sk in [shapekey.name for shapekey in sk]:
-            new_driver    = sk[target_sk].driver_add('value')
-            new_var       = new_driver.driver.variables.new()
-            new_var.type  = 'TRANSFORMS'
-            new_target    = new_var.targets[0]
-            old_var       = driver.driver.variables[0]
-            old_target    = old_var.targets[0]
-            new_target.id = hg_body.parent
+        target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '') #TODO this is horrible
+        
+        if target_sk not in [shapekey.name for shapekey in sk]:
+            continue
+        
+        new_driver    = sk[target_sk].driver_add('value')
+        new_var       = new_driver.driver.variables.new()
+        new_var.type  = 'TRANSFORMS'
+        new_target    = new_var.targets[0]
+        old_var       = driver.driver.variables[0]
+        old_target    = old_var.targets[0]
+        new_target.id = hg_body.parent
 
-            new_driver.driver.expression = driver.driver.expression
-            new_target.bone_target       = old_target.bone_target
-            new_target.transform_type    = old_target.transform_type
-            new_target.transform_space   = old_target.transform_space
+        new_driver.driver.expression = driver.driver.expression
+        new_target.bone_target       = old_target.bone_target
+        new_target.transform_type    = old_target.transform_type
+        new_target.transform_space   = old_target.transform_space
 
-def find_masks(obj):
-    """
-    looks at the custom properties of the object, searching for custom tags that indicate mesh masks added for this cloth
+def find_masks(obj) -> list:
+    """Looks at the custom properties of the object, searching for custom tags 
+    that indicate mesh masks added for this cloth.
+    
+    Args:
+        obj (Object): object to look for masks on
+        
+    Retruns:
+        mask_list (list): list of str names of masks on this object
     """  
     mask_list = []
     for i in range(10):
@@ -227,16 +314,3 @@ def find_masks(obj):
             continue
     
     return mask_list
-
-
-'''
-fix outfits:
-
-stylish casual - tshirt
-new intern- shirt collar
-relaxed dresscode - shirt
-stock exchange - shirt
-bbq barry - tshirt
-office excursion - shirt
-frosty evening - tshirt
-'''

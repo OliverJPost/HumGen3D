@@ -58,18 +58,20 @@ from . features.utility_section.HG_BAKE import HG_BAKE
 from . features.utility_section.HG_DEVTOOLS import *
 from . features.utility_section.HG_UTILITY_OPS import (
     HG_MAKE_EXPERIMENTAL,
-    HG_OT_AUTOWEIGHT,
-    HG_OT_ADDCLOTHMATH,
-    HG_OT_ADDCORRECTIVE,
     HG_OT_MODAPPLY,
-    HG_OT_OPEN_FOLDER,
+    HG_OT_REFRESH_UL,
+    HG_OT_SELECTMODAPPLY)
+from . features.utility_section.HG_CONTENT_SAVING import (
+    HG_OT_SAVEOUTFIT,
     HG_OT_SAVE_SHAPEKEY,
     HG_OT_SAVEHAIR,
-    HG_OT_SAVEPRESET,
-    HG_OT_REFRESH_UL,
-    HG_OT_SELECTMODAPPLY,
-    HG_OT_SAVEOUTFIT,
-    HG_SHAPEKEY_CALCULATOR)
+    HG_OT_OPEN_FOLDER,
+    HG_OT_SAVEPRESET)
+from . features.utility_section.HG_MESH_TO_CLOTH import (
+    HG_OT_ADDCLOTHMATH,
+    HG_OT_ADDCORRECTIVE,
+    HG_OT_AUTOWEIGHT
+)
 #user interface
 from . user_interface import (
     HG_MAIN_PANEL,
@@ -200,15 +202,7 @@ hg_classes = (
     HG_OT_ADDCLOTHMATH,
     
     #Devtools
-    HG_SHAPEKEY_CALCULATOR,
-    HG_CHECK_DISTANCE,
-    HG_DELETE_EMPTIES,
-    HG_PURGE_FILE,
-    HG_CREATOR_MODEL,
     HG_DELETE_STRETCH,
-    HG_MAKE_HAIR_JSON,
     HG_MASK_PROP,
-    HG_RENDER_THUMBS,
-    HG_CLOTH_CALCULATOR,
     HG_TESTOP
     )

@@ -2,16 +2,32 @@
 Operators and functions for adding and managing expressions
 """
 
-from ... features.creation_phase.HG_FINISH_CREATION_PHASE import add_driver, build_driver_dict
 import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
-from ... features.creation_phase.HG_LENGTH import apply_armature, apply_length_to_rig
+from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (
+    add_driver,
+    build_driver_dict)
+from ... features.common.HG_COMMON_FUNC import (
+    find_human,
+    apply_shapekeys,
+    get_prefs)
+from ... features.creation_phase.HG_LENGTH import (
+    apply_armature,
+    apply_length_to_rig)
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
-    """
-    Removes the corresponding shapekey
+    """Removes the corresponding shapekey
+    
+    Operator type
+        Shapekeys
+    
+    Prereq:
+        shapekey str passed
+        active object is part of HumGen human
+    
+    Args:
+        shapekey (str): name of shapekey to remove
     """
     bl_idname      = "hg3d.removesk"
     bl_label       = "Remove this shapekey"
@@ -19,6 +35,9 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
     bl_options     = {"UNDO"}
 
     shapekey: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
 
     def execute(self,context):        
         hg_rig = find_human(context.active_object)
@@ -29,13 +48,8 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
 
         return {'FINISHED'}
     
-    def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
-
-
 def load_expression(self, context):
-    """
-    loads the active expression in the preview collection
+    """Loads the active expression in the preview collection
     """
     
     pref = get_prefs()
@@ -53,13 +67,15 @@ def load_expression(self, context):
 
     hg_rig = find_human(context.active_object)
     hg_body = hg_rig.HG.body_obj
-    if 'expr_{}'.format(sk_name) in [sk.name for sk in hg_body.data.shape_keys.key_blocks]:
+    sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
+    if 'expr_{}'.format(sk_name) in sk_names:
         new_key = hg_body.data.shape_keys.key_blocks['expr_{}'.format(sk_name)]
         exists  = True
     else:
         backup_rig  = hg_rig.HG.backup
-        backup_body = [child for child in backup_rig.children if 'hg_body' in child]
-        transfer_as_one_shapekey(context, backup_body[0], hg_body, sett_dict, backup_rig)
+        backup_body = next(child for child in backup_rig.children 
+                           if 'hg_body' in child)
+        transfer_as_one_shapekey(context, backup_body, hg_body, sett_dict, backup_rig)
 
         exists = False
         new_key = None
@@ -77,12 +93,19 @@ def load_expression(self, context):
 
 
 def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
-    """
-    transfers a shapekey 
+    """Transfers multiple shapekeys as one shapekey
+
+    Args:
+        context ([type]): [description]
+        source (Object): object to copy shapekeys from
+        target (Object): Object to copy shapekeys to
+        sk_dict (dict): dict containing values to copy the shapekeys at
+        backup_rig (Object): Armature of backup human
     """
     backup_rig_copy      = backup_rig.copy()
     backup_rig_copy.data = backup_rig_copy.data.copy()
     context.scene.collection.objects.link(backup_rig_copy)
+    
     source_copy      = source.copy()
     source_copy.data = source_copy.data.copy()
     context.scene.collection.objects.link(source_copy)
@@ -102,9 +125,9 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     backup_rig_copy.hide_viewport     = False
     source_copy.hide_viewport         = False
     backup_rig_copy.HG.body_obj       = source_copy
+    
     apply_armature(backup_rig_copy, source_copy)
     apply_length_to_rig(backup_rig_copy)
-
 
     for obj in context.selected_objects:
         obj.select_set(False)
@@ -118,7 +141,7 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     bpy.data.objects.remove(source_copy)
     bpy.data.objects.remove(backup_rig_copy)
 
-class FRIG_DATA:
+class FRIG_DATA: #TODO this is a bit weird
     def get_frig_bones(self):
         return [
             "brow_inner_up",
@@ -153,8 +176,15 @@ class FRIG_DATA:
         ]
 
 class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
-    """
-    Removes the corresponding shapekey
+    """Adds the facial rig to this human, importing the necessary shapekeys
+    
+    Operator type:
+        Facial rig
+        Shapekeys
+    
+    Prereq:
+        Active object is part of HumGen human
+        Human doesn't already have a facial rig
     """
     bl_idname      = "hg3d.addfrig"
     bl_label       = "Add facial rig"
@@ -170,12 +200,17 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
             b = hg_rig.pose.bones[b_name]
             b.bone.hide= False
         
-        self.load_FACS_sks(context, hg_body)
+        self._load_FACS_sks(context, hg_body)
 
         hg_body['facial_rig'] = 1
         return {'FINISHED'}
 
-    def load_FACS_sks(self, context, hg_body):
+    def _load_FACS_sks(self, context, hg_body):
+        """Imports the needed FACS shapekeys to be used by the rig
+
+        Args:
+            hg_body (Object): HumGen body object to import shapekeys on
+        """
         pref = get_prefs()
         context.view_layer.objects.active = hg_body
 
@@ -210,16 +245,24 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
         bpy.data.objects.remove(hg_facs)
         hg_body.show_only_shape_key = False
         
-
-
 class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
-    """
-    Removes the corresponding shapekey
+    """Removes the facial rig, including its shapekeys
+    
+    Operator type:
+        Facial rig
+        Shapekeys
+        
+    Prereq:
+        Active object is part of HumGen human
+        Human has a facial rig loaded
     """
     bl_idname      = "hg3d.removefrig"
     bl_label       = "Remove facial rig"
     bl_description = "Remove facial rig"
     bl_options     = {"UNDO"}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
 
     def execute(self,context):        
         hg_rig = find_human(context.active_object)
@@ -231,12 +274,10 @@ class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
             b.bone.hide= True
         
         #TODO make it only delete Frig sks instead of all outside naming scheme
-        for sk in [sk for sk in hg_body.data.shape_keys.key_blocks if not sk.name.startswith(('Basis', 'cor_', 'expr_'))]:
+        for sk in [sk for sk in hg_body.data.shape_keys.key_blocks 
+                   if not sk.name.startswith(('Basis', 'cor_', 'expr_'))]:
             hg_body.shape_key_remove(sk)
 
         del hg_body["facial_rig"]
 
         return {'FINISHED'}
-    
-    def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)

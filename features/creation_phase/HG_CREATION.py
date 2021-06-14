@@ -215,7 +215,7 @@ class HG_START_CREATION(bpy.types.Operator):
 
         for root, _, filenames in walker:
             for fn in filenames:
-                if pref.diagnostics:
+                if pref.debug_mode:
                     print(f'EXT SKS: Found {fn} in {root}')
                 if not os.path.splitext(fn)[1] == '.blend':
                     continue
@@ -245,7 +245,7 @@ class HG_START_CREATION(bpy.types.Operator):
         blendfile = root + str(Path(f'/{fn}'))
         with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
             data_to.objects = data_from.objects
-        if pref.diagnostics:
+        if pref.debug_mode:
             print('EXT SK imported:', data_to.objects)
         imported_body = [obj for obj in data_to.objects
                          if obj.name.lower() == 'hg_shapekey'][0] 
@@ -306,8 +306,8 @@ class HG_START_CREATION(bpy.types.Operator):
         }
         #TODO make into common func
         for ps_name in ps_delete_dict[gender]:
-            ps_idx = next([i for i, ps in enumerate(hg_body.particle_systems)
-                          if ps.name == ps_name]
+            ps_idx = next(i for i, ps in enumerate(hg_body.particle_systems)
+                          if ps.name == ps_name
                      )
             hg_body.particle_systems.active_index = ps_idx
             

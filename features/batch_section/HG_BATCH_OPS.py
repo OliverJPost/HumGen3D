@@ -9,7 +9,7 @@ import threading
 
 from .. creation_phase.HG_CREATION import load_human, give_name
 from .. common.HG_RANDOM import set_random_active_in_pcoll, random_body_type, random_length
-from .. creation_phase.HG_FINISH_CREATION_PHASE import _extract_corrective_shapekeys, reapply_shapekeys, _create_backup_human, finish_creation_phase
+from .. creation_phase.HG_FINISH_CREATION_PHASE import extract_corrective_shapekeys, reapply_shapekeys, _create_backup_human, finish_creation_phase
 from .. creation_phase.HG_LENGTH import random_length
 from .. common.HG_COMMON_FUNC import apply_shapekeys
 

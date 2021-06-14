@@ -17,7 +17,7 @@ from .. common.HG_RANDOM import (
     random_length
 )
 from .. creation_phase.HG_FINISH_CREATION_PHASE import (
-    _extract_corrective_shapekeys,
+    extract_corrective_shapekeys,
     reapply_shapekeys,
     _create_backup_human,
     finish_creation_phase

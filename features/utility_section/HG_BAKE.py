@@ -1,3 +1,5 @@
+#TODO document
+
 '''
 Texture baking operators
 '''
@@ -10,8 +12,7 @@ import os
 
 #TODO progress bar
 class HG_BAKE(bpy.types.Operator):
-    """
-    bake all textures
+    """Bake all textures
     """
     bl_idname      = "hg3d.bake"
     bl_label       = "Bake"
@@ -83,13 +84,18 @@ class HG_BAKE(bpy.types.Operator):
                 'tex_types': ['Base Color', 'Specular', 'Roughness', 'Normal'],
                 },
             'eyes': {
-                'obj'      : [child for child in hg_rig.children if 'hg_eyes' in child][0],
+                'obj'      : next(child for child in hg_rig.children if 'hg_eyes' in child),
                 'slot'     : 1,
                 'tex_types': ['Base Color'],
                 },
         }
 
-        for cloth in [child for child in hg_rig.children if 'cloth' in child or 'shoe' in child]:
+
+        cloth_objs = [child for child in hg_rig.children 
+                      if 'cloth' in child
+                      or 'shoe' in child]
+        
+        for cloth in cloth_objs:
             bake_dict[cloth.name] = {
                 'obj'      : cloth,
                 'slot'     : 0,
@@ -97,8 +103,8 @@ class HG_BAKE(bpy.types.Operator):
                 }
         
         return bake_dict
-    def bake_texture(self, context, mat, bake_type, naming, obj_type, hg_rig):
-        
+    
+    def bake_texture(self, context, mat, bake_type, naming, obj_type, hg_rig):   
         pref  = get_prefs()
         sett  = context.scene.HG3D
         nodes = mat.node_tree.nodes
@@ -161,8 +167,6 @@ class HG_BAKE(bpy.types.Operator):
         return mat
 
     def add_image_node(self, image, input_type, mat):
-        tex_type_dict = {'DIFFUSE': 'Base Color', 'SPECULAR': 'Specular', 'NORMAL': 'Normal', 'ROUGHNESS': 'Roughness'}
-        #input_type = tex_type_dict[tex_type]
         nodes      = mat.node_tree.nodes
         links      = mat.node_tree.links
         principled = nodes['Principled BSDF']
@@ -171,7 +175,13 @@ class HG_BAKE(bpy.types.Operator):
         img_node.image = image
         img_node.name  = input_type
         
-        node_locs = {'Base Color': (-600, 400), 'Normal': (-600, -200), 'Roughness': (-600, 100), 'Metallic': (-1000, 300), 'Specular': (-1000, -100)}
+        node_locs = {
+            'Base Color': (-600, 400),
+            'Normal': (-600, -200),
+            'Roughness': (-600, 100),
+            'Metallic': (-1000, 300),
+            'Specular': (-1000, -100)
+        }
         img_node.location = node_locs[input_type]
 
         if input_type in ['Normal']:
@@ -191,7 +201,9 @@ class HG_BAKE(bpy.types.Operator):
         """    
 
         try:
-            source_socket = [node_links.from_socket for node_links in target_node.inputs[target_socket].links][0]
+            source_socket = next(node_links.from_socket 
+                                 for node_links 
+                                 in target_node.inputs[target_socket].links)
         except:
             source_socket = None
 

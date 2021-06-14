@@ -112,8 +112,8 @@ def _set_subsurface_scattering(hg_rig, sett):
     sett.update_exception = True
     try:
         nodes = hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
-        principled_bsdf = next([node for node in nodes 
-                                if node.type == 'BSDF_PRINCIPLED'])
+        principled_bsdf = next(node for node in nodes 
+                                if node.type == 'BSDF_PRINCIPLED')
         sett.skin_sss = ('off' 
                          if principled_bsdf.inputs['Subsurface'].default_value == 0 
                          else 'on')

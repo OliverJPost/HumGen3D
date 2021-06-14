@@ -29,8 +29,8 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
         context.view_layer.objects.active = hg_body
 
         ps_idx = next(
-            [i for i, ps in enumerate(hg_body.particle_systems)
-            if ps.name == self.hair_system]
+            i for i, ps in enumerate(hg_body.particle_systems)
+            if ps.name == self.hair_system
         )
         hg_body.particle_systems.active_index = ps_idx
         bpy.ops.object.particle_system_remove()  

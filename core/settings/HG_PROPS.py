@@ -19,7 +19,7 @@ from . HG_PROP_FUNCTIONS import (
 from ... core.HG_PCOLL import (
     refresh_pcoll,
     get_pcoll_enum_items)
-from ... features.finalize_phase.HG_POSE import apply_pose
+from ... features.finalize_phase.HG_POSE import load_pose
 from ... features.finalize_phase.HG_CLOTHING import load_pattern 
 from ... features.finalize_phase.HG_CLOTHING_LOAD import load_outfit
 from ... features.finalize_phase.HG_EXPRESSION import load_expression
@@ -37,9 +37,6 @@ from ... features.utility_section.HG_UTILITY_FUNC import (
 
 class HG_SETTINGS(bpy.types.PropertyGroup):   
     ######### back end #########
-    diagnostics : BoolProperty(
-        name="Diagnostic boolean",
-        default=False)
     load_exception  : BoolProperty(
         name="load_exception",
         default=False)
@@ -260,7 +257,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     #posing
     pcoll_poses: EnumProperty(
         items  = lambda a,b: get_pcoll_enum_items(a,b,"poses"),
-        update = apply_pose
+        update = load_pose
         )   
     pose_sub : EnumProperty(
         name="Pose Library",

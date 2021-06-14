@@ -25,10 +25,11 @@ def refresh_modapply(self, context):
             else:
                 build_summary_list(col, mod)
 
-def build_object_list(context, sett):
+def build_object_list(context, sett) -> list:
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
     if sett.modapply_search_objects != 'selected':
-        humans = [find_human(context.object),] if sett.modapply_search_objects == 'full' else [obj for obj in bpy.data.objects if obj.HG.ishuman]
+        humans = ([find_human(context.object),] if sett.modapply_search_objects == 'full' 
+                  else [obj for obj in bpy.data.objects if obj.HG.ishuman])
         for human in humans:
             objs.extend([child for child in human.children])
     return list(set(objs))
@@ -63,7 +64,7 @@ def build_summary_list(col, mod):
         else:
             item.enabled = True
 
-def get_preset_thumbnail(self, context):
+def get_preset_thumbnail(self, context) -> list:
     sett = context.scene.HG3D
     img = sett.preset_thumbnail
     return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []    
@@ -137,7 +138,14 @@ def refresh_outfit_ul(self, context):
         item.obj_name = obj.name
         
         if obj.data.shape_keys:
-            item.cor_sks_present = next((True for sk in obj.data.shape_keys.key_blocks if sk.name.startswith('cor')), False)
+            item.cor_sks_present = next((True for sk in obj.data.shape_keys.key_blocks 
+                                         if sk.name.startswith('cor')),
+                                        False)
         
         item.weight_paint_present = 'spine' in [vg.name for vg in obj.vertex_groups] 
+        
+def show_message(self, msg):
+    print(msg)
+    self.report({'WARNING'}, msg)
+    ShowMessageBox(message = msg)
 

@@ -160,7 +160,7 @@ def _list_pcoll_files_in_dir(dir, pcoll_type) -> list:
             full_path = os.path.join(root, fn)
             file_paths.append(full_path)          
                
-    if sett.diagnostics:
+    if get_prefs().debug_mode:
         print('getting files for {} in {}'.format(pcoll_type, dir))
         print('found files {}'.format(file_paths))
 
