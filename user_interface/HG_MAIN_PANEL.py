@@ -1366,9 +1366,10 @@ class HG_PT_PANEL(bpy.types.Panel):
                   icon_value = hg_icons['hair'].icon_id
                   )
         
-        self._draw_hair_children_switch(hair_systems, boxbox)
-        self._draw_hair_length_ui(hair_systems, boxbox)
-        self._draw_hair_material_ui(hair_systems, boxbox)
+        if hair_systems:
+            self._draw_hair_children_switch(hair_systems, boxbox)
+            self._draw_hair_length_ui(hair_systems, boxbox)
+            self._draw_hair_material_ui(hair_systems, boxbox)
           
 
     #   ______  __        ______   .___________. __    __   __  .__   __.   _______ 
