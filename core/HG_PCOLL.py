@@ -28,7 +28,7 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     
     return pcoll['pcoll_{}'.format(pcoll_type)]  
 
-def refresh_pcoll(self, context, pcoll_name):
+def refresh_pcoll(self, context, pcoll_name, ignore_genders = False):
     """Refresh the items of this preview
 
     Args:
@@ -38,13 +38,13 @@ def refresh_pcoll(self, context, pcoll_name):
 
     sett.load_exception = False if pcoll_name == 'poses' else True
         
-    _populate_pcoll(self, context, pcoll_name)
+    _populate_pcoll(self, context, pcoll_name, ignore_genders)
     sett['pcoll_{}'.format(pcoll_name)] = 'none' #set the preview collection to
                                                 #the 'click here to select' item    
     
     sett.load_exception = False
 
-def _populate_pcoll(self, context, pcoll_categ):
+def _populate_pcoll(self, context, pcoll_categ, ignore_genders):
     """Populates the preview collection enum list with blend file filepaths and 
     icons
 
@@ -62,15 +62,16 @@ def _populate_pcoll(self, context, pcoll_categ):
     
     # find category and subcategory in order to determine the dir to search
     hg_rig = find_human(context.active_object)
-    gender = None if pcoll_categ == 'humans' else hg_rig.HG.gender
-
+    gender = ('' if ignore_genders
+              else sett.gender if pcoll_categ == 'humans' 
+              else hg_rig.HG.gender)
     categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender)
     
     pcoll_full_dir = str(pref.filepath) + str(Path('/{}/'.format(categ_dir)))
     if subcateg_dir != 'All':
         pcoll_full_dir = pcoll_full_dir + str(Path('/{}/'.format(subcateg_dir)))
    
-    file_paths = _list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)    
+    file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)    
     
     path_list = []  
     pcoll = preview_collections["pcoll_{}".format(pcoll_categ)]
@@ -108,7 +109,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> tuple[str, str]:
         'hair'       : 'hair/head/{}'.format(gender),
         'face_hair'  : 'hair/face_hair',
         'expressions': 'expressions',
-        'humans'     : 'models',
+        'humans'     : 'models/{}'.format(gender),
         'footwear'   : 'footwear/{}'.format(gender),
         'patterns'   : 'patterns',
         'textures'   : 'textures/{}'.format(gender)
@@ -120,7 +121,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> tuple[str, str]:
         'hair'       : sett.hair_sub,
         'face_hair'  : sett.face_hair_sub,
         'expressions': sett.expressions_sub,
-        'humans'     : sett.gender,
+        'humans'     : 'All',
         'footwear'   : sett.footwear_sub,
         'patterns'   : sett.patterns_sub,
         'textures'   : sett.texture_library
@@ -129,7 +130,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> tuple[str, str]:
     
     return categ_dir, subcateg_dir
 
-def _list_pcoll_files_in_dir(dir, pcoll_type) -> list:    
+def list_pcoll_files_in_dir(dir, pcoll_type) -> list:    
     """Gets a list of files in dir with certain extension. Extension depends on
     the passed pcoll_type. Also handles search terms the users entered in a
     searchbox

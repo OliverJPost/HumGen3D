@@ -1,4 +1,0 @@
-import bpy #type: ignore
-
-
-

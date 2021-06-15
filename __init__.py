@@ -28,6 +28,7 @@ bl_info = {
     "category" : ""
 }
 
+
 import bpy #type: ignore
 import sys, os
 from bpy.app.handlers import persistent #type: ignore
@@ -41,6 +42,7 @@ from . core.content.HG_CONTENT_PACKS import (
     cpacks_refresh)
 from . core.content.HG_UPDATE import check_update
 from . user_interface import HG_UTILITY_UILISTS
+from . core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
 
 if __name__ != "HG3D":
     sys.modules['HG3D'] = sys.modules[__name__]
@@ -129,6 +131,9 @@ def _initiate_ui_lists():
     sc.savehair_col_index = bpy.props.IntProperty(name = "Index", default = 0)  
     sc.saveoutfit_col = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM) 
     sc.saveoutfit_col_index = bpy.props.IntProperty(name = "Index", default = 0)
+    sc.custom_content_col = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
+    sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
+
 
 from . HG_CLASSES import hg_classes
 

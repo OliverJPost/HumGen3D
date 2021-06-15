@@ -1,5 +1,6 @@
 """ HumGen add-on preferences and associated functions"""
 
+from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_list
 from ... features.common.HG_COMMON_FUNC import get_prefs
 import bpy #type: ignore
 from ... import bl_info
@@ -7,7 +8,7 @@ import os
 from pathlib import Path
 from bpy_extras.io_utils import ImportHelper #type: ignore
 from ... core.content.HG_CONTENT_PACKS import cpacks_refresh
-from ... core.HG_PCOLL import preview_collections
+from ... core.HG_PCOLL import preview_collections, refresh_pcoll
 
 class HG_PREF(bpy.types.AddonPreferences):
     """ HumGen user preferences """   
@@ -16,12 +17,14 @@ class HG_PREF(bpy.types.AddonPreferences):
     #RELEASE remove default path
     filepath    : bpy.props.StringProperty(
         name= 'Install Filepath',
-        default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\2nd_test_install_cpacks\\'
+        default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\\'
         )
 
     latest_version        : bpy.props.IntVectorProperty(default = (0,0,0))
     cpack_update_available: bpy.props.BoolProperty(default = False)
     cpack_update_required : bpy.props.BoolProperty(default = False)
+
+    editing_cpack: bpy.props.StringProperty()
 
     pref_tabs : bpy.props.EnumProperty(
         name="tabs",
@@ -33,6 +36,28 @@ class HG_PREF(bpy.types.AddonPreferences):
         default = "settings",
         update = cpacks_refresh
         )   
+
+    custom_content_categ : bpy.props.EnumProperty(
+        name="Content type",
+        description="",
+        items = [
+                ("starting_humans", "Starting Humans",  "", 0),
+                ("texture_sets",    "Texture sets",     "", 1),
+                ("shapekeys",       "Shapekeys",        "", 2),
+                ("hairstyles",      "Hairstyles",       "", 3),
+                ("poses",           "Poses",            "", 4),
+                ("outfits",         "Outfits",          "", 5),
+                ("footwear",        "Footwear",         "", 6)    
+            ],
+        default = "starting_humans",
+        update = build_content_list
+        )  
+
+    cpack_name: bpy.props.StringProperty()
+    cpack_creator: bpy.props.StringProperty()
+    cpack_version: bpy.props.IntProperty(min = 0)
+    cpack_subversion: bpy.props.IntProperty(min = 0)
+    cpack_weblink: bpy.props.StringProperty()
 
     units : bpy.props.EnumProperty(
         name="units",
@@ -86,9 +111,14 @@ class HG_PREF(bpy.types.AddonPreferences):
         if not base_content_found:
             self.first_time_ui(context)
             return
-
+        
         layout = self.layout
         col = layout.column()
+        
+        if self.editing_cpack:
+            self._draw_cpack_editing_ui(layout, context)
+            return
+                    
         update_statuscode = (
             'cpack_required' if self.cpack_update_required
             else 'addon' if tuple(bl_info['version']) < tuple(self.latest_version) 
@@ -296,6 +326,13 @@ class HG_PREF(bpy.types.AddonPreferences):
                          icon = 'PACKAGE'
                          )
 
+        box = layout.box()
+        box.scale_y = 1.5
+        box.label(text = 'Create your own content pack:')
+        row = box.row()
+        row.prop(self, "cpack_name", text = 'Pack name')
+        row.operator('hg3d.create_cpack', text = 'Create pack', depress = True)
+
     def first_time_ui(self, context):
         """UI for when no base humans can be found, promting the user to install
         the content packs"""
@@ -372,21 +409,74 @@ class HG_PREF(bpy.types.AddonPreferences):
             icon = 'INFO'
             )
 
-        if not selected_packs:
-            return
+        if selected_packs:
+            #install button section
+            box = layout.box()
+            box.scale_y = 1.5
+            box.label(text = 'STEP 4: Install all your content packs')
+            box.operator('hg3d.cpackinstall',
+                        text = 'Install All Content Packs',
+                        depress =True,
+                        icon = 'PACKAGE')
+            box.label(
+                text = 'Installation time depends on your hardware and the selected packs',
+                icon = 'INFO')
+    
 
-        #install button section
-        box = layout.box()
-        box.scale_y = 1.5
-        box.label(text = 'STEP 4: Install all your content packs')
-        box.operator('hg3d.cpackinstall',
-                     text = 'Install All Content Packs',
-                     depress =True,
-                     icon = 'PACKAGE')
-        box.label(
-            text = 'Installation time depends on your hardware and the selected packs',
-            icon = 'INFO')
+    def _draw_cpack_editing_ui(self, layout, context):
+        split = layout.row(align = True).split(factor=0.3, align = True)
+        sidebar = split.box().column()
+        col = split.column()
+        self._draw_sidebar(sidebar)
+        
+        row = col.box().row(align = True)
+        row.scale_y = 2
+        row.prop(self, 'custom_content_categ', expand = True)
+        self._draw_content_grid(col, context)
 
+    def _draw_sidebar(self, sidebar):
+        titlebar = sidebar.box().row()
+        titlebar.alignment = 'CENTER'
+        titlebar.scale_y = 2
+        titlebar.label(text = 'Metadata', icon = "ASSET_MANAGER")
+        
+        sidebar.use_property_split = True
+        sidebar.use_property_decorate = False
+        sidebar.scale_y = 1.5
+        
+        sidebar.prop(self, "cpack_name", text = 'Pack name')
+        sidebar.prop(self, "cpack_creator", text = 'Creator')
+          
+        sidebar.prop(self, "cpack_weblink",text = 'Weblink')        
+        row = sidebar.row()
+        row.prop(self, "cpack_version", text = 'Version')
+        row.prop(self, "cpack_subversion", text = '')
+        
+        sidebar.separator()
+        
+        a_sidebar = sidebar.column()
+        a_sidebar.alert = True
+        a_sidebar.operator(
+            'hg3d.exit_cpack_edit',
+            text='Exit without saving',
+            depress=True
+        )
+
+    def _draw_content_grid(self, col, context):
+        flow = col.grid_flow()
+        for item in context.scene.custom_content_col:
+            box = flow.box()
+            box.label(text = item.name)
+            hg_icons = preview_collections['hg_icons']
+            gender = item.gender
+            if gender != 'none':
+                box.label(text = gender.capitalize(), icon_value = hg_icons[f'{gender}_true'].icon_id)
+            try:
+                box.template_icon(item.icon_value, scale = 5)
+            except:
+                pass
+            incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
+            box.prop(item, 'include', text = 'Include', icon = incl_icon, toggle = True)
 
 #TODO build in preventive system for filepaths instead of dirpaths
 class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):

@@ -18,6 +18,12 @@ from . core.content.HG_CONTENT_PACKS import (
     HG_UL_CONTENTPACKS,
     HG_UL_INSTALLPACKS,
     cpacks_refresh)
+from . core.content.HG_CUSTOM_CONTENT_PACKS import (
+    CUSTOM_CONTENT_ITEM,
+    HG_OT_CREATE_CPACK,
+    HG_OT_EDIT_CPACK,
+    HG_OT_EXIT_CPACK_EDIT
+)
 from . core.content.HG_UPDATE import check_update
 #features
     #common
@@ -101,6 +107,12 @@ hg_classes = (
     HG_SELECT_CPACK,
     HG_UL_INSTALLPACKS,
     HG_DELETE_INSTALLPACK,
+    
+    #Custom content packs
+    HG_OT_EXIT_CPACK_EDIT,
+    HG_OT_EDIT_CPACK,
+    CUSTOM_CONTENT_ITEM,
+    HG_OT_CREATE_CPACK,
     
     #Panels
     HG_MAIN_PANEL.HG_PT_PANEL, 

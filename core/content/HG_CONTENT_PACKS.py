@@ -11,7 +11,6 @@ cpack = Abbreviation of content pack. Represents a collection of items
     .json file
 """  
 
-
 import  bpy #type: ignore
 from    bpy_extras.io_utils import ImportHelper #type: ignore
 
@@ -76,16 +75,30 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
         subrow.separator()
 
-        self._draw_weblink_and_delete(item, header, subrow)
+        self._draw_operator_buttons(item, header, subrow)
 
-    def _draw_weblink_and_delete(self, item, header, subrow):
-        """Draws buttons to go to cpack weblink and button to delete cpack"""
+    def _draw_operator_buttons(self, item, header, subrow):
+        """Draws buttons to go to edit cpack, to cpack weblink and button to 
+        delete cpack"""
         if header:
-            for i in range(2):
+            for i in range(3):
                 subrow.label(text = '', icon = 'BLANK1')
+            return
+
+        #Edit pack button
+        if item.creator != 'HumGen':
+            subrow.operator("hg3d.edit_cpack",
+                            text="",
+                            icon='GREASEPENCIL',
+                            emboss=False).item_name = item.name
         else:
-            subrow.operator("wm.url_open", text="", icon = 'URL').url = item.weblink
-            subrow.operator("hg3d.cpackdel", text="", icon = 'TRASH').item_name = item.name
+            subrow.label(text = '', icon = 'BLANK1')
+        
+        #weblink button
+        subrow.operator("wm.url_open", text="", icon = 'URL').url = item.weblink
+        #delete button
+        subrow.operator("hg3d.cpackdel", text="", icon = 'TRASH').item_name = item.name
+
 
     def _get_icon_dict(self) -> dict:
         """Dictionary with custom icon names for each category
@@ -115,6 +128,10 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             if header:
                 subrow.label(text = '', icon_value = hg_icons[icon].icon_id)
             else:
+                if categ not in item:
+                    subrow.label(text = '', icon = 'LAYER_USED')
+                    continue
+                
                 subrow.label(text = '', icon = "LAYER_ACTIVE" if item[categ] else 'LAYER_USED')
 
     def _draw_creator_column(self, item, hg_icons, header, subrow):
@@ -466,6 +483,9 @@ def _add_cpack_to_coll(coll, json_folder, fn):
         
     item.json_path = filepath
     
+    if 'categs' not in data:
+        return
+    
     categs = data['categs']
     for categ_name, includes_items_from_categ in categs.items(): 
         item[categ_name] = includes_items_from_categ #bool
@@ -512,6 +532,9 @@ class HG_DELETE_CPACK(bpy.types.Operator):
                 os.remove(filepath)
             except PermissionError:
                 print('Could not remove ',filepath)
+            except FileNotFoundError as e:
+                print('Could not remove ', filepath)
+                print(e)
 
         #remove item from collection
         col.remove(index)

@@ -1,4 +1,5 @@
 
+from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_list
 import bpy  #type: ignore
 from bpy.props import (         #type: ignore
     BoolProperty,
@@ -37,10 +38,10 @@ from ... features.utility_section.HG_UTILITY_FUNC import (
 
 class HG_SETTINGS(bpy.types.PropertyGroup):   
     ######### back end #########
-    load_exception  : BoolProperty(
+    load_exception: BoolProperty(
         name="load_exception",
         default=False)
-    subscribed : BoolProperty(
+    subscribed: BoolProperty(
         name="subscribed",
         default=False)
     update_exception: BoolProperty(default = False)
@@ -642,6 +643,22 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                           poll = poll_mtc_armature)
     mtc_add_armature_mod: BoolProperty(default = True)
     mtc_parent          : BoolProperty(default = True)
+
+    custom_content_categ : bpy.props.EnumProperty(
+        name="Content type",
+        description="",
+        items = [
+                ("starting_humans", "Starting Humans",  "", 0),
+                ("texture_sets",    "Texture sets",     "", 1),
+                ("shapekeys",       "Shapekeys",        "", 2),
+                ("hairstyles",      "Hairstyles",       "", 3),
+                ("poses",           "Poses",            "", 4),
+                ("outfits",         "Outfits",          "", 5),
+                ("footwear",        "Footwear",         "", 6)    
+            ],
+        default = "starting_humans",
+        update = build_content_list
+        )  
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)

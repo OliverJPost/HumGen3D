@@ -793,7 +793,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                  slider = True
                  )
 
-    def _draw_freckles_section_subsection(self, sett, box, nodes):
+    def _draw_freckles_subsection(self, sett, box, nodes):
         """Collapsable section with sliders for freckles
 
         Args:
