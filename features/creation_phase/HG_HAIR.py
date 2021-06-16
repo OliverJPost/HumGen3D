@@ -300,7 +300,7 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     context.scene.collection.objects.link(body_copy)
 
     apply_shapekeys(body_copy)
-    apply_armature(None, body_copy)
+    apply_armature(body_copy)
 
     for obj in context.selected_objects:
         obj.select_set(False)

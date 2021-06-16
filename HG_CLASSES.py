@@ -22,7 +22,8 @@ from . core.content.HG_CUSTOM_CONTENT_PACKS import (
     CUSTOM_CONTENT_ITEM,
     HG_OT_CREATE_CPACK,
     HG_OT_EDIT_CPACK,
-    HG_OT_EXIT_CPACK_EDIT
+    HG_OT_SAVE_CPACK,
+    HG_OT_EXIT_CPACK_EDIT,
 )
 from . core.content.HG_UPDATE import check_update
 #features
@@ -109,8 +110,9 @@ hg_classes = (
     HG_DELETE_INSTALLPACK,
     
     #Custom content packs
-    HG_OT_EXIT_CPACK_EDIT,
+    HG_OT_SAVE_CPACK,
     HG_OT_EDIT_CPACK,
+    HG_OT_EXIT_CPACK_EDIT,
     CUSTOM_CONTENT_ITEM,
     HG_OT_CREATE_CPACK,
     

@@ -84,9 +84,14 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             for i in range(3):
                 subrow.label(text = '', icon = 'BLANK1')
             return
+        
+        #weblink button
+        subrow.operator("wm.url_open", text="", icon = 'URL').url = item.weblink
+        #delete button
+        subrow.operator("hg3d.cpackdel", text="", icon = 'TRASH').item_name = item.name
 
         #Edit pack button
-        if item.creator != 'HumGen':
+        if True: #item.creator != 'HumGen':
             subrow.operator("hg3d.edit_cpack",
                             text="",
                             icon='GREASEPENCIL',
@@ -94,12 +99,6 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         else:
             subrow.label(text = '', icon = 'BLANK1')
         
-        #weblink button
-        subrow.operator("wm.url_open", text="", icon = 'URL').url = item.weblink
-        #delete button
-        subrow.operator("hg3d.cpackdel", text="", icon = 'TRASH').item_name = item.name
-
-
     def _get_icon_dict(self) -> dict:
         """Dictionary with custom icon names for each category
 

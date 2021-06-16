@@ -49,8 +49,7 @@ class HG_PREF(bpy.types.AddonPreferences):
                 ("outfits",         "Outfits",          "", 5),
                 ("footwear",        "Footwear",         "", 6)    
             ],
-        default = "starting_humans",
-        update = build_content_list
+        default = "starting_humans"
         )  
 
     cpack_name: bpy.props.StringProperty()
@@ -58,6 +57,8 @@ class HG_PREF(bpy.types.AddonPreferences):
     cpack_version: bpy.props.IntProperty(min = 0)
     cpack_subversion: bpy.props.IntProperty(min = 0)
     cpack_weblink: bpy.props.StringProperty()
+
+    hide_other_packs: bpy.props.BoolProperty(default = True)
 
     units : bpy.props.EnumProperty(
         name="units",
@@ -429,9 +430,12 @@ class HG_PREF(bpy.types.AddonPreferences):
         col = split.column()
         self._draw_sidebar(sidebar)
         
-        row = col.box().row(align = True)
+        box = col.box()
+        row = box.row(align = True)
         row.scale_y = 2
         row.prop(self, 'custom_content_categ', expand = True)
+        subrow = box.row()
+        subrow.prop(self, "hide_other_packs", text = 'Hide content from other packs')
         self._draw_content_grid(col, context)
 
     def _draw_sidebar(self, sidebar):
@@ -461,10 +465,20 @@ class HG_PREF(bpy.types.AddonPreferences):
             text='Exit without saving',
             depress=True
         )
+        sidebar.operator(
+            'hg3d.save_cpack',
+            text='Save and export',
+            depress=True
+        ).export = True
 
     def _draw_content_grid(self, col, context):
         flow = col.grid_flow()
-        for item in context.scene.custom_content_col:
+        pref = get_prefs()
+        
+        categ = self.custom_content_categ
+        for item in filter(lambda i: i.categ == categ, context.scene.custom_content_col):
+            if pref.hide_other_packs and item.existing_content:
+                continue
             box = flow.box()
             box.label(text = item.name)
             hg_icons = preview_collections['hg_icons']

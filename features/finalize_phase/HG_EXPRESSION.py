@@ -126,7 +126,7 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     source_copy.hide_viewport         = False
     backup_rig_copy.HG.body_obj       = source_copy
     
-    apply_armature(backup_rig_copy, source_copy)
+    apply_armature(source_copy)
     apply_length_to_rig(backup_rig_copy)
 
     for obj in context.selected_objects:

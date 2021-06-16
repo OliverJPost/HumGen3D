@@ -621,7 +621,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         body_copy.data = body_copy.data.copy()
         context.collection.objects.link(body_copy)
         apply_shapekeys(body_copy)
-        apply_armature(self.hg_rig, body_copy)
+        apply_armature(body_copy)
         
         self.save_material_textures(objs)
         obj_distance_dict = {}

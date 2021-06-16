@@ -133,7 +133,7 @@ def _initiate_ui_lists():
     sc.saveoutfit_col_index = bpy.props.IntProperty(name = "Index", default = 0)
     sc.custom_content_col = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
     sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
-
+    
 
 from . HG_CLASSES import hg_classes
 
