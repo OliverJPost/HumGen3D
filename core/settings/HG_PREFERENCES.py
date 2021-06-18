@@ -90,7 +90,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     dev_tools : bpy.props.BoolProperty(
         name="Show Dev Tools",
         description="",
-        default=True)
+        default=True) #RELEASE set to False
     
     auto_hide_hair_switch: bpy.props.BoolProperty(default = True)
     auto_hide_popup : bpy.props.BoolProperty(default = True)

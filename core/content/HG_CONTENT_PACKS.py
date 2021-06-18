@@ -91,7 +91,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         subrow.operator("hg3d.cpackdel", text="", icon = 'TRASH').item_name = item.name
 
         #Edit pack button
-        if True: #item.creator != 'HumGen':
+        if item.creator != 'HumGen' or get_prefs().dev_tools:
             subrow.operator("hg3d.edit_cpack",
                             text="",
                             icon='GREASEPENCIL',
