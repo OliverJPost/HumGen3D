@@ -714,6 +714,12 @@ class HG_PT_PANEL(bpy.types.Panel):
                  expand = True
                  )
 
+        col.label(text = 'Underwear:')
+        row = col.row(align = True)
+        row.prop(sett, 'underwear_switch',
+                 expand = True
+                 )
+
     def _draw_texture_subsection(self, sett, box):
         """Shows a template_icon_view for different texture options
 

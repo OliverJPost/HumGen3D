@@ -21,3 +21,20 @@ def toggle_sss(self, context):
                                                           else 0)
 
 
+def toggle_underwear(self, context):
+    '''
+    Turns underwear on and off
+    '''
+    print('gege')
+    if context.scene.HG3D.update_exception:
+        return
+   
+    toggle  = context.scene.HG3D.underwear_switch
+    hg_rig  = find_human(context.object)
+    hg_body = hg_rig.HG.body_obj
+    mat     = hg_body.data.materials[0]
+    
+    underwear_node = mat.node_tree.nodes.get('Underwear_Opacity')
+    
+    print('updating UW to ', 1 if toggle == 'on' else 0   )
+    underwear_node.inputs[1].default_value = 1 if toggle == 'on' else 0   

@@ -16,7 +16,7 @@ from ... features.common.HG_COMMON_FUNC import (
     get_prefs
 )
 from ... core.HG_PCOLL import refresh_pcoll
-from .   HG_MATERIAL import male_specific_shader
+from .   HG_MATERIAL import set_gender_specific_shader
 
 class HG_START_CREATION(bpy.types.Operator):
     """Imports human, setting the correct custom properties. 
@@ -115,8 +115,7 @@ class HG_START_CREATION(bpy.types.Operator):
                       )
 
         #set correct gender specific node group
-        if gender == 'male':
-            male_specific_shader(hg_body)
+        set_gender_specific_shader(hg_body, gender)
             
         mat   = hg_body.data.materials[0]
         nodes = mat.node_tree.nodes

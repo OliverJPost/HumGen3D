@@ -97,7 +97,7 @@ class Content_Saving_Operator:
         bpy.data.libraries.write(blend_filepath, {new_scene})
         
         #CHECK if still works
-        python_file = Path(__file__).parent.absolute() + str(Path('/scripts/hg_purge.py'))
+        python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/hg_purge.py'))
         if run_in_background:
             subprocess.Popen([bpy.app.binary_path,
                               blend_filepath,
@@ -199,7 +199,8 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
     bl_idname = "hg3d.saveshapekey"
     bl_label = "Save shapekeys"
     bl_description = "Save shapekeys"
-
+    bl_options = {'UNDO'}
+    
     name: bpy.props.StringProperty()
 
     def invoke(self, context, event):
@@ -247,7 +248,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         
         self.save_objects_optimized(
             context,
-            sk_obj,
+            [sk_obj,],
             self.folder,
             self.name,
             clear_sk=False

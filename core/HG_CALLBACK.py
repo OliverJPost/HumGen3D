@@ -75,7 +75,7 @@ def HG_Callback(self):
     sett = bpy.context.scene.HG3D
     ui_phase = sett.ui_phase
 
-    _set_subsurface_scattering(hg_rig, sett)
+    _set_shader_switches(hg_rig, sett)
 
     _context_specific_updates(self, sett, hg_rig, ui_phase)
 
@@ -101,7 +101,7 @@ def _check_body_object(hg_rig):
         if 'no_body' in hg_rig:
             del hg_rig['no_body']
 
-def _set_subsurface_scattering(hg_rig, sett):
+def _set_shader_switches(hg_rig, sett):
     """Sets the subsurface toggle to the correct position. Update_exception is 
     used to prevent an endless loop of setting the toggle
 
@@ -110,15 +110,20 @@ def _set_subsurface_scattering(hg_rig, sett):
         sett (PropertyGroup): HumGen props
     """
     sett.update_exception = True
-    try:
-        nodes = hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
-        principled_bsdf = next(node for node in nodes 
-                                if node.type == 'BSDF_PRINCIPLED')
-        sett.skin_sss = ('off' 
-                         if principled_bsdf.inputs['Subsurface'].default_value == 0 
-                         else 'on')
-    except Exception as e:
-        print('Could not set subsurface toggle, with error: ', e)
+    
+    nodes = hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
+    principled_bsdf = next(node for node in nodes 
+                            if node.type == 'BSDF_PRINCIPLED')
+    sett.skin_sss = ('off' 
+                    if principled_bsdf.inputs['Subsurface'].default_value == 0 
+                    else 'on')
+    
+    uw_node = nodes.get('Underwear_Opacity')
+    if uw_node:
+        sett.underwear_toggle = ('on' if uw_node.inputs[1].default_value == 1
+                                 else 'off')
+    
+    sett.update_exception = False
 
 def _context_specific_updates(self, sett, hg_rig, ui_phase):    
     """Does all updates that are only necessary for a certain UI context. I.e.

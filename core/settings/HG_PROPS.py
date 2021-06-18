@@ -28,7 +28,7 @@ from ... features.creation_phase.HG_HAIR import load_hair
 from ... features.creation_phase.HG_MATERIAL import load_textures
 from ... features.creation_phase.HG_BODY import scale_bones
 from ... user_interface import HG_BATCH_UILIST
-from ... features.creation_phase.HG_SKIN import toggle_sss
+from ... features.creation_phase.HG_SKIN import toggle_sss, toggle_underwear
 from ... core.HG_CALLBACK import tab_change_update
 from ... features.creation_phase.HG_LENGTH import update_length
 from ... features.utility_section.HG_UTILITY_FUNC import (
@@ -382,6 +382,16 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update = toggle_sss
         )  
 
+    underwear_switch: EnumProperty(
+        description="Turns on/off underwear layer",
+        items = [
+                ("on",  "On ", "", 0),
+                ("off", "Off", "", 1),
+            ],
+        default = "on",
+        update = toggle_underwear
+        )          
+
     ####### batch mode ###########
     generate_amount:IntProperty(name='Amount',
                                 default=10,
@@ -584,16 +594,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     modapply_apply_hidden  : BoolProperty(default = False)
     modapply_keep_shapekeys: BoolProperty(default = True)
-    save_shapekeys_as      : EnumProperty(
-        name = 'Save as',
-        items = [
-                ("ff", "Facial features", "", 0),
-                ("bp", "Body Proportions", "", 1),
-                ("pr", "Ethnicity/Preset", "", 1),
-            ],
-        default = "ff",
-        )  
-    
+
     preset_thumbnail: PointerProperty(
         type=bpy.types.Image,
         description='Thumbnail image for starting human')

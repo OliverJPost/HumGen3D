@@ -372,10 +372,6 @@ class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
         
         col.separator()
         
-        col.prop(sett, 'save_shapkeys_as', text = 'Save as')
-        
-        col.separator()
-        
         row = col.row(align = True)
         row.scale_y = 1.5
         row.operator('hg3d.saveshapekey',

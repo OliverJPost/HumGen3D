@@ -50,12 +50,11 @@ def add_texture(node, sub_path, tx_type):
     if tx_type == 'Color':
         image_path = filepath
     else:
-        print('searching', filepath)
         for fn in os.listdir(filepath):
             print(f'found {fn} in {filepath}')
             if tx_type[:4].lower() in fn.lower():
                 image_path = filepath + str(Path('/{}'.format(fn)))
-    print('adding', image_path)
+
     image = bpy.data.images.load(image_path, check_existing=True)
     node.image = image
     if tx_type != 'Color':
@@ -73,7 +72,7 @@ def add_texture(node, sub_path, tx_type):
         if not found:
             ShowMessageBox(message = 'Could not find colorspace alternative for non-color data, default colorspace used')
 
-def male_specific_shader(hg_body):
+def set_gender_specific_shader(hg_body, gender):
     """Male and female humans of HumGen use the same shader, but one node 
     group is different. This function ensures the right nodegroup is connected
     
@@ -83,6 +82,11 @@ def male_specific_shader(hg_body):
     mat = hg_body.data.materials[0]
     nodes = mat.node_tree.nodes
 
-    gender_specific_node = nodes['Gender_Group']
-    male_node_group = [ng for ng in bpy.data.node_groups if '.HG_Beard_Shadow' in ng.name][0]
-    gender_specific_node.node_tree = male_node_group
+    uw_node = nodes.get('Underwear_Switch')
+    if uw_node:
+        uw_node.inputs[0].default_value = 1 if gender == 'female'else 0
+        
+    if gender == 'male':
+        gender_specific_node = nodes['Gender_Group']
+        male_node_group = [ng for ng in bpy.data.node_groups if '.HG_Beard_Shadow' in ng.name][0]
+        gender_specific_node.node_tree = male_node_group

@@ -200,7 +200,7 @@ def _load_thumbnail(thumb_name, pcoll) -> list:
     """
 
     filepath_thumb = (
-        str(os.path.dirname(__file__)) 
+        str(Path(os.path.dirname(__file__)).parent) 
         + str(Path(f'/icons/{thumb_name}.jpg'))
     )
     if not pcoll.get(filepath_thumb):
