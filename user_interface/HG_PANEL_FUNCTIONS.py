@@ -160,5 +160,5 @@ def searchbox(sett, name, layout):
         row.operator('hg3d.clear_searchbox',
                      text = '',
                      icon = 'X'
-                     ).pcoll_type = name
+                     ).searchbox_name = name
 

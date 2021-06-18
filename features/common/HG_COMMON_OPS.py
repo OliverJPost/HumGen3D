@@ -261,13 +261,15 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
     bl_label       = "Clear search"
     bl_description = "Clears the searchbox"
 
-    pcoll_type: bpy.props.StringProperty()
+    searchbox_name: bpy.props.StringProperty()
 
     def execute(self,context):
         sett = context.scene.HG3D
-        
-        sett['search_term_{}'.format(self.pcoll_type)] = ''
-        refresh_pcoll(self, context, self.pcoll_type)
+        if self.searchbox_name == 'cpack_creator':
+            get_prefs().cpack_content_search = ''
+        else:
+            sett['search_term_{}'.format(self.searchbox_name)] = ''
+            refresh_pcoll(self, context, self.searchbox_name)
 
         return {'FINISHED'}
 

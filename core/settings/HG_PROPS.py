@@ -1,5 +1,5 @@
 
-from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_list
+from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_collection
 import bpy  #type: ignore
 from bpy.props import (         #type: ignore
     BoolProperty,
@@ -657,8 +657,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                 ("footwear",        "Footwear",         "", 6)    
             ],
         default = "starting_humans",
-        update = build_content_list
+        update = build_content_collection
         )  
+
+
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)

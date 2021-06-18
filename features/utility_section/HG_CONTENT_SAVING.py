@@ -9,12 +9,12 @@ from ... features.common.HG_COMMON_FUNC import (
     ShowMessageBox,
     apply_shapekeys,
     find_human,
-    get_prefs)
+    get_prefs,
+    show_message)
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
 from ... features.creation_phase.HG_LENGTH import apply_armature
-from .   HG_UTILITY_FUNC import show_message
 
 class Content_Saving_Operator:
     def overwrite_warning(self):

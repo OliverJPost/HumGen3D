@@ -1,11 +1,10 @@
 from pathlib import Path
 import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import get_prefs
+from ... features.common.HG_COMMON_FUNC import get_prefs, show_message
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
 from ... features.finalize_phase.HG_CLOTHING_LOAD import set_cloth_corrective_drivers
-from .   HG_UTILITY_FUNC import show_message
 
 class MESH_TO_CLOTH_TOOLS():
     def invoke(self, context, event):

@@ -1,6 +1,6 @@
 """ HumGen add-on preferences and associated functions"""
 
-from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_list
+from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_collection
 from ... features.common.HG_COMMON_FUNC import get_prefs
 import bpy #type: ignore
 from ... import bl_info
@@ -20,12 +20,12 @@ class HG_PREF(bpy.types.AddonPreferences):
         default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\\'
         )
 
+    #update props
     latest_version        : bpy.props.IntVectorProperty(default = (0,0,0))
     cpack_update_available: bpy.props.BoolProperty(default = False)
     cpack_update_required : bpy.props.BoolProperty(default = False)
 
-    editing_cpack: bpy.props.StringProperty()
-
+    #main prefs UI props
     pref_tabs : bpy.props.EnumProperty(
         name="tabs",
         description="",
@@ -37,29 +37,35 @@ class HG_PREF(bpy.types.AddonPreferences):
         update = cpacks_refresh
         )   
 
-    custom_content_categ : bpy.props.EnumProperty(
+    #cpack editing props
+    editing_cpack       : bpy.props.StringProperty()
+    cpack_content_search: bpy.props.StringProperty()
+    newly_added_ui      : bpy.props.BoolProperty(default = False)
+    removed_ui          : bpy.props.BoolProperty(default = False)
+    custom_content_categ: bpy.props.EnumProperty(
         name="Content type",
         description="",
         items = [
                 ("starting_humans", "Starting Humans",  "", 0),
-                ("texture_sets",    "Texture sets",     "", 1),
+               #("texture_sets",    "Texture sets",     "", 1),
                 ("shapekeys",       "Shapekeys",        "", 2),
                 ("hairstyles",      "Hairstyles",       "", 3),
-                ("poses",           "Poses",            "", 4),
-                ("outfits",         "Outfits",          "", 5),
-                ("footwear",        "Footwear",         "", 6)    
+                ("face_hair",       "Facial hair",      "", 4),
+                ("poses",           "Poses",            "", 5),
+                ("outfits",         "Outfits",          "", 6),
+                ("footwear",        "Footwear",         "", 7)    
             ],
         default = "starting_humans"
         )  
+    cpack_name         : bpy.props.StringProperty()
+    cpack_creator      : bpy.props.StringProperty()
+    cpack_version      : bpy.props.IntProperty(min = 0)
+    cpack_subversion   : bpy.props.IntProperty(min = 0)
+    cpack_weblink      : bpy.props.StringProperty()
+    cpack_export_folder: bpy.props.StringProperty(subtype = 'DIR_PATH')
+    hide_other_packs   : bpy.props.BoolProperty(default = True)
 
-    cpack_name: bpy.props.StringProperty()
-    cpack_creator: bpy.props.StringProperty()
-    cpack_version: bpy.props.IntProperty(min = 0)
-    cpack_subversion: bpy.props.IntProperty(min = 0)
-    cpack_weblink: bpy.props.StringProperty()
-
-    hide_other_packs: bpy.props.BoolProperty(default = True)
-
+    #cpack user preferences
     units : bpy.props.EnumProperty(
         name="units",
         description="",
@@ -100,17 +106,12 @@ class HG_PREF(bpy.types.AddonPreferences):
     nc_colorspace_name: bpy.props.StringProperty(default = '')
     debug_mode: bpy.props.BoolProperty(default = False)
 
+
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
-        base_content_found = (
-            os.path.exists(
-                self.filepath + str(Path('content_packs/Base_Humans.json'))
-                ) 
-            if self.filepath 
-            else False
-            )
+        base_content_found = self._check_if_basecontent_is_installed()
         if not base_content_found:
-            self.first_time_ui(context)
+            self._draw_first_time_ui(context)
             return
         
         layout = self.layout
@@ -120,12 +121,7 @@ class HG_PREF(bpy.types.AddonPreferences):
             self._draw_cpack_editing_ui(layout, context)
             return
                     
-        update_statuscode = (
-            'cpack_required' if self.cpack_update_required
-            else 'addon' if tuple(bl_info['version']) < tuple(self.latest_version) 
-            else 'cpack_available' if self.cpack_update_available 
-            else None
-            ) 
+        update_statuscode = self._get_update_statuscode() 
         
         if update_statuscode:
             self._draw_update_notification(col, update_statuscode)
@@ -138,6 +134,38 @@ class HG_PREF(bpy.types.AddonPreferences):
             self._draw_settings_ui()
         elif self.pref_tabs == 'cpacks':
             self._draw_cpack_ui(context)
+
+    def _check_if_basecontent_is_installed(self) -> bool:
+        """Determines if this is the first time loading Human Generator by 
+        checking if the base content is installed
+
+        Returns:
+            bool: True if base content is installed
+        """
+        base_content_found = (
+            os.path.exists(
+                self.filepath + str(Path('content_packs/Base_Humans.json'))
+                ) 
+            if self.filepath 
+            else False
+            )
+            
+        return base_content_found
+
+    def _get_update_statuscode(self) -> str:
+        """Gets update code from check that was done when Blender was opened
+
+        Returns:
+            str: Code determining what kind of update is available, if any
+        """
+        update_statuscode = (
+            'cpack_required' if self.cpack_update_required
+            else 'addon' if tuple(bl_info['version']) < tuple(self.latest_version) 
+            else 'cpack_available' if self.cpack_update_available 
+            else None
+            )
+            
+        return update_statuscode
 
     def _draw_update_notification(self, col, update_statuscode):
         """Draws notification if there is an update available
@@ -334,7 +362,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         row.prop(self, "cpack_name", text = 'Pack name')
         row.operator('hg3d.create_cpack', text = 'Create pack', depress = True)
 
-    def first_time_ui(self, context):
+    def _draw_first_time_ui(self, context):
         """UI for when no base humans can be found, promting the user to install
         the content packs"""
         layout = self.layout
@@ -423,40 +451,46 @@ class HG_PREF(bpy.types.AddonPreferences):
                 text = 'Installation time depends on your hardware and the selected packs',
                 icon = 'INFO')
     
-
     def _draw_cpack_editing_ui(self, layout, context):
-        split = layout.row(align = True).split(factor=0.3, align = True)
-        sidebar = split.box().column()
-        col = split.column()
-        self._draw_sidebar(sidebar)
-        
-        box = col.box()
-        row = box.row(align = True)
-        row.scale_y = 2
-        row.prop(self, 'custom_content_categ', expand = True)
-        subrow = box.row()
-        subrow.prop(self, "hide_other_packs", text = 'Hide content from other packs')
-        self._draw_content_grid(col, context)
+        """Draws the UI for editing content packs, this is an exclusive UI, no
+        other items of the preferences are shown while this is active
 
-    def _draw_sidebar(self, sidebar):
+        Args:
+            layout (UILayout): layout to draw in
+        """
+        split = layout.row(align = True).split(factor=0.3, align = True)
+        
+        sidebar = split.box().column() #the bar on the left of the editing UI
+        self._draw_sidebar(context, sidebar)
+        
+        main = split.column() #the main body of the editing UI
+           
+        self._draw_main_topbar(main)
+        self._draw_content_grid(main, context)
+
+    def _draw_sidebar(self, context, sidebar):
+        sidebar.scale_y = 1.5
+        
+        #Metadata header
         titlebar = sidebar.box().row()
         titlebar.alignment = 'CENTER'
         titlebar.scale_y = 2
         titlebar.label(text = 'Metadata', icon = "ASSET_MANAGER")
-        
-        sidebar.use_property_split = True
-        sidebar.use_property_decorate = False
-        sidebar.scale_y = 1.5
-        
-        sidebar.prop(self, "cpack_name", text = 'Pack name')
-        sidebar.prop(self, "cpack_creator", text = 'Creator')
-          
-        sidebar.prop(self, "cpack_weblink",text = 'Weblink')        
-        row = sidebar.row()
+    
+        #Metadata body
+        col = sidebar.column()
+        col.use_property_split = True
+        col.use_property_decorate = False        
+        col.prop(self, "cpack_name", text = 'Pack name')
+        col.prop(self, "cpack_creator", text = 'Creator')
+        col.prop(self, "cpack_weblink",text = 'Weblink')        
+        row = col.row()
         row.prop(self, "cpack_version", text = 'Version')
         row.prop(self, "cpack_subversion", text = '')
         
         sidebar.separator()
+        
+        self._draw_total_added_removed_counters(context, sidebar)
         
         a_sidebar = sidebar.column()
         a_sidebar.alert = True
@@ -467,23 +501,116 @@ class HG_PREF(bpy.types.AddonPreferences):
         )
         sidebar.operator(
             'hg3d.save_cpack',
+            text='Save',
+            depress=True
+        ).export = False
+        sidebar.prop(self, "cpack_export_folder", text = 'Export folder')
+        sidebar.operator(
+            'hg3d.save_cpack',
             text='Save and export',
             depress=True
         ).export = True
 
+    def _draw_total_added_removed_counters(self, context, sidebar):
+        """Draws the three counters in the sidebar: Total items, added items and
+        removed items. Both added and removed have a dropdown showing all of 
+        those items in a list
+
+        Args:
+            sidebar (UILayout): layout to draw in
+        """
+        coll = context.scene.custom_content_col
+        hg_icons = preview_collections['hg_icons']
+        
+        # Total
+        sidebar.label(text = f'Total items: {len([c for c in coll if c.include])}')
+        
+        
+        kwargs = lambda c: {'icon': 'BLANK1'} if c.gender == 'none' else {'icon_value': hg_icons[f'{c.gender}_true'].icon_id}
+        #TODO these two can be joined into one function
+        # Added
+        box = sidebar.box()
+        newly_added_list = [c for c in coll if c.newly_added]
+        box.prop(
+            self,
+            'newly_added_ui',
+            text=f'Added items: {len(newly_added_list)}',
+            icon='TRIA_RIGHT',
+            toggle=True,
+            emboss=False
+        )
+        if self.newly_added_ui:
+            col = box.column()
+            col.scale_y = 0.5
+            for c in newly_added_list:
+                row = col.row()
+                row.label(text = c.name, **kwargs(c))
+                row.prop(c, "include", text = '')
+                
+        # Removed        
+        box = sidebar.box()
+        removed_ist = [c for c in coll if c.removed]
+        box.prop(
+            self,
+            'removed_ui',
+            text=f'Removed items: {len(removed_ist)}',
+            icon='TRIA_RIGHT',
+            toggle=True,
+            emboss=False
+        )
+        if self.removed_ui:
+            col = box.column()
+            col.scale_y = 0.5
+            for c in removed_ist:
+                row = col.row()
+                row.label(text = c.name, **kwargs(c))
+                row.prop(c, "include", text = '')
+
+    def _draw_main_topbar(self, main):
+        """Draws the top bar of the main section of the editing UI. This 
+        contains the enum to swith categories and the filter items (search and
+        hide others)
+
+        Args:
+            main (UILayout): layout to draw in
+        """
+        box = main.box()
+        
+        row = box.row(align = True)
+        row.scale_y = 2
+        row.prop(self, 'custom_content_categ', expand = True)
+        
+        subrow = box.row(align = True)
+        subrow.prop(self, "cpack_content_search", text = 'Filter', icon = 'VIEWZOOM')
+        
+        if self.cpack_content_search:
+            row = subrow.row(align = True)
+            row.alert = True
+            row.operator('hg3d.clear_searchbox',
+                         text='',
+                         icon='X',
+                         depress=True).searchbox_name = 'cpack_creator'
+            
+        subrow.separator()
+        subrow.prop(self, "hide_other_packs", text = 'Hide content from other packs')
+
+
     def _draw_content_grid(self, col, context):
-        flow = col.grid_flow()
+        flow = col.grid_flow(row_major = True, even_columns=True, even_rows=True)
         pref = get_prefs()
         
         categ = self.custom_content_categ
-        for item in filter(lambda i: i.categ == categ, context.scene.custom_content_col):
+        condition = lambda i: i.categ == categ and self.cpack_content_search in i.name
+        for item in filter(condition, context.scene.custom_content_col):
             if pref.hide_other_packs and item.existing_content:
                 continue
             box = flow.box()
             box.label(text = item.name)
             hg_icons = preview_collections['hg_icons']
             gender = item.gender
-            if gender != 'none':
+            if gender == 'none':
+                box.label(icon = 'BLANK1')
+            else:
                 box.label(text = gender.capitalize(), icon_value = hg_icons[f'{gender}_true'].icon_id)
             try:
                 box.template_icon(item.icon_value, scale = 5)
@@ -492,7 +619,7 @@ class HG_PREF(bpy.types.AddonPreferences):
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(item, 'include', text = 'Include', icon = incl_icon, toggle = True)
 
-#TODO build in preventive system for filepaths instead of dirpaths
+#FIXME build in preventive system for filepaths instead of dirpaths
 class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     '''
     Changes the path via file browser popup
@@ -547,3 +674,4 @@ class HG_ICON_LEGEND(bpy.types.Panel):
             layout.label(text = icon_desc,
                          icon_value = hg_icons[icon].icon_id
                          )
+

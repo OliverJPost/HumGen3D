@@ -144,8 +144,3 @@ def refresh_outfit_ul(self, context):
         
         item.weight_paint_present = 'spine' in [vg.name for vg in obj.vertex_groups] 
         
-def show_message(self, msg):
-    print(msg)
-    self.report({'WARNING'}, msg)
-    ShowMessageBox(message = msg)
-

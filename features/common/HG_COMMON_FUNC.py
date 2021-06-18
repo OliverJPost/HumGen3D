@@ -130,6 +130,13 @@ def make_path_absolute(key):
     if key in props and props[key].startswith('//'):
         props[key] = sane_path(props[key])
 
+def show_message(self, msg):
+    print(msg)
+    self.report({'WARNING'}, msg)
+    ShowMessageBox(message = msg)
+
+
+
 
 #TODO make deepclean data removal, using:
 
