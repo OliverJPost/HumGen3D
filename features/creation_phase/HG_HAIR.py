@@ -276,11 +276,13 @@ def _remove_old_hair(hg_body, remove_face_hair):
     remove_list = []
     for ps in hg_body.particle_systems:
         if ps.name.lower().startswith('fh') and remove_face_hair:
+            print(f'Adding because {ps.name} startswith fh and ', remove_face_hair)
             remove_list.append(ps.name)
-        elif not (ps.name.lower().startswith(('fh', 'eye')) 
-                  and remove_face_hair):
+        elif (not ps.name.lower().startswith(('fh', 'eye')) 
+                  and not remove_face_hair):
             remove_list.append(ps.name)
-
+            print(f'Adding because {ps.name} not startswith fh and eye and ', remove_face_hair)
+            
     for ps_name in remove_list:    
         ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) 
                   if ps.name == ps_name]

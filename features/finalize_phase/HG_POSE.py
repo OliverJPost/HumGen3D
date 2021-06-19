@@ -142,7 +142,7 @@ def load_pose(self, context):
     hg_rig = find_human(context.active_object)
     hg_pose = _import_pose(context)
     
-    _match_roll(hg_rig, hg_pose)
+    _match_roll(hg_rig, hg_pose, context)
     
     _copy_pose(context, hg_pose)
 
@@ -183,7 +183,7 @@ def _import_pose(context) -> bpy.types.Object:
     
     return hg_pose
 
-def _match_roll(hg_rig, hg_pose):
+def _match_roll(hg_rig, hg_pose, context):
     """Some weird issue caused changed to the rig to change the roll values on
     bones. This caused imported poses that still use the original armature to
     not copy properly to the human
@@ -192,8 +192,14 @@ def _match_roll(hg_rig, hg_pose):
         hg_rig (Object): HumGen human armature
         hg_pose (Object): imported armature set to a certain pose
     """
-    for bone in hg_pose.data.edit_bones:
-        bone.roll = hg_rig.data.edit_bones[bone.name].roll
+    context.view_layer.objects.active = hg_pose
+    hg_rig.select_set(True)
+    bpy.ops.object.mode_set(mode='EDIT')
+    for bone in hg_rig.data.edit_bones:
+        b_name = bone.name if bone.name != 'neck' else 'spine.004'
+        if b_name in hg_pose.data.edit_bones:
+            bone.roll = hg_pose.data.edit_bones[b_name].roll
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 def _copy_pose(context, pose):
     """Copies pose from one human to the other

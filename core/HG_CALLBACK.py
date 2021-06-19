@@ -74,7 +74,7 @@ def HG_Callback(self):
 
     sett = bpy.context.scene.HG3D
     ui_phase = sett.ui_phase
-
+    
     _set_shader_switches(hg_rig, sett)
 
     _context_specific_updates(self, sett, hg_rig, ui_phase)
@@ -110,8 +110,11 @@ def _set_shader_switches(hg_rig, sett):
         sett (PropertyGroup): HumGen props
     """
     sett.update_exception = True
+    body_obj = nodes = hg_rig.HG.body_obj
+    if not body_obj:
+        return
     
-    nodes = hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
+    body_obj.data.materials[0].node_tree.nodes
     principled_bsdf = next(node for node in nodes 
                             if node.type == 'BSDF_PRINCIPLED')
     sett.skin_sss = ('off' 

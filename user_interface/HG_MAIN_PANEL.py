@@ -75,12 +75,12 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._draw_pose_section() 
             self._draw_expression_section() 
 
-#  __    __   _______     ___       _______   _______ .______      
-# |  |  |  | |   ____|   /   \     |       \ |   ____||   _  \     
-# |  |__|  | |  |__     /  ^  \    |  .--.  ||  |__   |  |_)  |    
-# |   __   | |   __|   /  /_\  \   |  |  |  ||   __|  |      /     
-# |  |  |  | |  |____ /  _____  \  |  '--'  ||  |____ |  |\  \----.
-# |__|  |__| |_______/__/     \__\ |_______/ |_______|| _| `._____|
+    #  __    __   _______     ___       _______   _______ .______      
+    # |  |  |  | |   ____|   /   \     |       \ |   ____||   _  \     
+    # |  |__|  | |  |__     /  ^  \    |  .--.  ||  |__   |  |_)  |    
+    # |   __   | |   __|   /  /_\  \   |  |  |  ||   __|  |      /     
+    # |  |  |  | |  |____ /  _____  \  |  '--'  ||  |____ |  |\  \----.
+    # |__|  |__| |_______/__/     \__\ |_______/ |_______|| _| `._____|
 
     def _draw_info_and_warning_labels(self, context, layout) -> bool:
         """Collection of all info and warning labels of HumGen
@@ -974,12 +974,12 @@ class HG_PT_PANEL(bpy.types.Panel):
                   slider = True
                   )   
 
-#  ___________    ____  _______     _______.
-# |   ____\   \  /   / |   ____|   /       |
-# |  |__   \   \/   /  |  |__     |   (----`
-# |   __|   \_    _/   |   __|     \   \    
-# |  |____    |  |     |  |____.----)   |   
-# |_______|   |__|     |_______|_______/
+    #  ___________    ____  _______     _______.
+    # |   ____\   \  /   / |   ____|   /       |
+    # |  |__   \   \/   /  |  |__     |   (----`
+    # |   __|   \_    _/   |   __|     \   \    
+    # |  |____    |  |     |  |____.----)   |   
+    # |_______|   |__|     |_______|_______/
 
     def _draw_eyes_section(self):
         """Options for changing eyebrows and eye shader
@@ -1114,12 +1114,13 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): box of hair section
             sett (PropertyGroup): HumGen props
         """
-        col=box.column(align=True)
+        
         
         is_open, boxbox = draw_sub_spoiler(
             box, sett, 'face_hair_ui', 'Face Hair')
         if not is_open:
             return 
+        col=box.column(align=True)
         
         col.template_icon_view(
             sett, "pcoll_face_hair",
@@ -1140,6 +1141,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of hair section
         """
         row = box.row()
+        if not hair_systems:
+            row.label(text = 'No hair systems found')
+            return
+        
         row.label(text = ('Children are hidden' 
                           if hair_systems[0].settings.child_nbr <= 1 
                           else 'Children are visible')
@@ -1302,7 +1307,6 @@ class HG_PT_PANEL(bpy.types.Panel):
                 hair_systems.append(mod.particle_system)
         
         return hair_systems
-
 
     def _draw_finish_creation_button(self, layout):
         """pink button to finish creation phase

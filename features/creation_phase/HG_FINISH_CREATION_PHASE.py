@@ -113,12 +113,7 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
     for obj in child_list: 
         apply_armature(obj)
 
-    apply_length_to_rig(hg_rig)
-
-    #TODO why is this outside apply_length_to_rig
-    context.view_layer.objects.active = hg_rig
-    hg_rig.select_set(True)
-    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+    apply_length_to_rig(hg_rig, context)
 
     for obj in context.selected_objects:
         obj.select_set(False)

@@ -25,7 +25,6 @@ def toggle_underwear(self, context):
     '''
     Turns underwear on and off
     '''
-    print('gege')
     if context.scene.HG3D.update_exception:
         return
    
@@ -36,5 +35,4 @@ def toggle_underwear(self, context):
     
     underwear_node = mat.node_tree.nodes.get('Underwear_Opacity')
     
-    print('updating UW to ', 1 if toggle == 'on' else 0   )
     underwear_node.inputs[1].default_value = 1 if toggle == 'on' else 0   

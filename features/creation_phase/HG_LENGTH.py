@@ -49,10 +49,10 @@ def update_length(self, context):
     for stretch_bone, bone_data in stretch_bone_dict.items():
         _set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
 
-    #FIXME
-    #new_length =  sett.human_length/100
-    #c_global = hg_body.matrix_world @ hg_body.data.vertices[21085].co
-    #hg_rig.location[2] += origin_correction(new_length) - c_global[2]# - origin_correction(new_length)
+    context.view_layer.update() #Requires update to get new length of rig
+    hg_rig  = find_human(context.active_object)
+    new_length = hg_rig.dimensions[2]
+    hg_rig.location[2] += origin_correction(old_length) - origin_correction(new_length)
 
 def _get_stretch_bone_dict() -> dict:
     """Dictionary to base stretch bone position on.
@@ -131,7 +131,7 @@ def apply_armature(obj):
     for mod_name in armature_mods:
         bpy.ops.object.modifier_apply(modifier=mod_name)    
 
-def apply_length_to_rig(hg_rig):
+def apply_length_to_rig(hg_rig, context):
     '''
     Applies the pose to the rig, Also sets the correct origin position
     
@@ -152,20 +152,27 @@ def apply_length_to_rig(hg_rig):
 
     for obj in bpy.context.selected_objects:
         obj.select_set(False)
-    bpy.context.scene.cursor.location = hg_rig.location
+    
 
-    _correct_origin(rig_length)
+    _correct_origin(rig_length, hg_rig, context)
     
     bpy.context.view_layer.objects.active = hg_rig
 
 #FIXME does absolutely nothing
-def _correct_origin(rig_length):
+def _correct_origin(rig_length, hg_rig, context):
     """Uses a formula to comensate the origina position for legnth changes
 
     Args:
         rig_length ([type]): [description]
     """
-    new_origin_loc = (bpy.context.scene.cursor.location[2] 
-                      - (rig_length*0.5473) - 1.0026) #formula for compensating length changes
-    bpy.context.scene.cursor.location[2] = new_origin_loc
+    context.scene.cursor.location = hg_rig.location
+    
+    hg_body = hg_rig.HG.body_obj
+    bottom_vertex_loc = hg_body.matrix_world @ hg_body.data.vertices[21085].co #RELEASE check if this is still the bottom vertex
 
+
+    context.scene.cursor.location[2] = bottom_vertex_loc[2]
+
+    context.view_layer.objects.active = hg_rig
+    hg_rig.select_set(True)
+    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')

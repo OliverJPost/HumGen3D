@@ -51,12 +51,16 @@ def load_outfit(self,context, footwear = False):
         
         for mod in obj.modifiers:
             mod.show_expanded = False #collapse modifiers
-
+         
+        set_cloth_corrective_drivers(hg_body, obj.data.shape_keys.key_blocks)
+         
     #remove collection that was imported along with the cloth objects
     for col in collections:
         bpy.data.collections.remove(col)
 
     _set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
+
+   
 
     #refresh pcoll for consistent 'click here to select' icon
     refresh_pcoll(self, context, 'outfit')
@@ -88,16 +92,17 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
         apply=False
     )
     
-    obj.parent    = hg_rig
+    obj.parent = hg_rig
 
     deform_obj_from_difference(
-        '',
+        'Body Proportions',
         distance_dict,
         hg_body,
         obj,
-        as_shapekey=False
+        as_shapekey=True
     )
-        
+    obj.data.shape_keys.key_blocks['Body Proportions'].value = 1
+    
     context.view_layer.objects.active = obj
     _set_armature(context, obj, hg_rig)
     context.view_layer.objects.active = hg_rig
@@ -275,7 +280,7 @@ def set_cloth_corrective_drivers(hg_body, sk):
     
     Args:
         hg_body (Object): HumGen body object
-        sk (list): List of shapekeys on hg_body #CHECK
+        sk (list): List of cloth object shapekeys #CHECK
     """  
     for driver in hg_body.data.shape_keys.animation_data.drivers:
         target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '') #TODO this is horrible
