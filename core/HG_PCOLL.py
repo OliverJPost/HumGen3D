@@ -24,7 +24,7 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     """
     pcoll = preview_collections.get('pcoll_{}'.format(pcoll_type))
     if not pcoll:
-        return []
+        return [('none', 'Please reload category below', '', 0),]
     
     return pcoll['pcoll_{}'.format(pcoll_type)]  
 
@@ -74,7 +74,7 @@ def _populate_pcoll(self, context, pcoll_categ, ignore_genders):
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)    
     
     path_list = []  
-    pcoll = preview_collections["pcoll_{}".format(pcoll_categ)]
+    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
     none_thumb = _load_thumbnail('pcoll_placeholder', pcoll)
     pcoll_enum = [('none', '', '', none_thumb.icon_id, 0)]
     for i, full_path in enumerate(file_paths):            
