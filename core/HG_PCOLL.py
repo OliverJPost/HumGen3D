@@ -24,7 +24,7 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     """
     pcoll = preview_collections.get('pcoll_{}'.format(pcoll_type))
     if not pcoll:
-        return [('none', 'Please reload category below', '', 0),]
+        return [('none', 'Reload category below', '', 0),]
     
     return pcoll['pcoll_{}'.format(pcoll_type)]  
 

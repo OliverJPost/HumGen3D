@@ -395,7 +395,7 @@ def _get_other_content_set(context, pref):
                 json_data = json.load(f)       
                 other_cpacks_content.extend(json_data['files'])    
         except (KeyError, FileNotFoundError):
-            print('failed', item.pack_name, item.json_path)
+            pass
       
     other_cpacks_content_set = set(map(os.path.normpath, other_cpacks_content))
     return other_cpacks_content_set

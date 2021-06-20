@@ -24,7 +24,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     latest_version        : bpy.props.IntVectorProperty(default = (0,0,0))
     cpack_update_available: bpy.props.BoolProperty(default = False)
     cpack_update_required : bpy.props.BoolProperty(default = False)
-
+    update_info_ui        : bpy.props.BoolProperty(default = True)
     #main prefs UI props
     pref_tabs : bpy.props.EnumProperty(
         name="tabs",
@@ -124,7 +124,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         update_statuscode = self._get_update_statuscode() 
         
         if update_statuscode:
-            self._draw_update_notification(col, update_statuscode)
+            self._draw_update_notification(context, col, update_statuscode)
             
         row = col.box().row(align = True)
         row.scale_y = 2
@@ -167,7 +167,7 @@ class HG_PREF(bpy.types.AddonPreferences):
             
         return update_statuscode
 
-    def _draw_update_notification(self, col, update_statuscode):
+    def _draw_update_notification(self, context, col, update_statuscode):
         """Draws notification if there is an update available
 
         Args:
@@ -201,6 +201,39 @@ class HG_PREF(bpy.types.AddonPreferences):
         row = box.row()
         row.alignment = 'CENTER'
         row.label(text = '*****************************************')
+        box.separator()
+        boxbox = box.box()
+        boxbox.prop(self, 'update_info_ui', text = 'Update information:', icon = 'TRIA_RIGHT', emboss = False)
+        if not self.update_info_ui:
+            return
+        
+        update_info_dict = self._build_update_info_dict(context)
+        hg_icons = preview_collections['hg_icons']
+        for version, update_types in update_info_dict.items():
+            version_label = "Human Generator V" + str(version)[1:-1].replace(', ', '.')
+            boxbox.label(text = version_label, icon_value = hg_icons['HG_icon'].icon_id)
+            col = boxbox.column(align = True)
+            for update_type, lines in update_types.items():
+                col.label(text = update_type)
+                for line in lines:
+                    col.label(text = line, icon = 'DOT')
+
+    def _build_update_info_dict(self, context) -> dict:
+        update_col = context.scene.hg_update_col
+        update_info_dict = {}
+        
+
+        update_info_dict = {tuple(i.version): {'Features': [], 'Bugfixes': []} for i in update_col}
+        print(update_info_dict) 
+        for i in update_col:
+            print(i)
+            update_info_dict[tuple(i.version)][i.categ].append(i.line)
+            
+        print(update_info_dict)    
+        
+        return update_info_dict
+        
+            
 
     def _get_alert_dict(self) -> dict:
         """Dictionary for alert messages and icons for different update status

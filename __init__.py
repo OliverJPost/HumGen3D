@@ -20,7 +20,7 @@ bl_info = {
     "author" : "OliverJPost",
     "description" : "Human Generator allows you to generate humans including clothing, poses and emotions",
     "blender" : (2, 83, 0),
-    "version" : (2, 0, 4), #RELEASE update version number
+    "version" : (2, 0, 3), #RELEASE update version number
     "location" : "Add-On Sidepanel > HumGen",
     "wiki_url": "http://humgen3d.com",
     "tracker_url": "http://humgen3d.com",
@@ -40,7 +40,7 @@ from . core.content.HG_CONTENT_PACKS import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
     cpacks_refresh)
-from . core.content.HG_UPDATE import check_update
+from . core.content.HG_UPDATE import check_update, UPDATE_INFO_ITEM
 from . user_interface import HG_UTILITY_UILISTS
 from . core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
 
@@ -133,7 +133,8 @@ def _initiate_ui_lists():
     sc.saveoutfit_col_index = bpy.props.IntProperty(name = "Index", default = 0)
     sc.custom_content_col = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
     sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
-    
+    sc.hg_update_col = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
+    sc.hg_update_col_index = bpy.props.IntProperty(name = "Index", default = 0)       
 
 from . HG_CLASSES import hg_classes
 

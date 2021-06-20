@@ -25,7 +25,10 @@ from . core.content.HG_CUSTOM_CONTENT_PACKS import (
     HG_OT_SAVE_CPACK,
     HG_OT_EXIT_CPACK_EDIT,
 )
-from . core.content.HG_UPDATE import check_update
+from . core.content.HG_UPDATE import (
+    check_update,
+    UPDATE_INFO_ITEM
+)
 #features
     #common
 from . features.common.HG_INFO_POPUPS import HG_OT_INFO
@@ -218,5 +221,8 @@ hg_classes = (
     #Devtools
     HG_DELETE_STRETCH,
     HG_MASK_PROP,
-    HG_TESTOP
+    HG_TESTOP,
+    
+    #Update
+    UPDATE_INFO_ITEM
     )

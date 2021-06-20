@@ -1,6 +1,7 @@
 """Contains the check_update function for online checking for cpack and 
 code updates"""
 
+from sys import version_info
 import bpy #type: ignore
 import requests #type: ignore
 import json
@@ -31,8 +32,20 @@ def check_update():
         
         pref.latest_version = tuple(update_data['latest_addon'])
         
+        update_col = bpy.context.scene.hg_update_col
+        update_col.clear()
+        for version, update_types in update_data['addon_updates'].items():
+            if tuple([int(i) for i in version.split(',')]) <=bl_info['version']:
+                continue
+            for update_type, lines in update_types.items():
+                for line in lines:
+                    item = update_col.add()
+                    item.version = tuple([int(i) for i in version.split(',')])
+                    item.categ = update_type
+                    item.line = line
+        
         cpack_col = bpy.context.scene.contentpacks_col 
-        req_cpacks = update_data['required_cpacks'][current_main_version]
+        req_cpacks = update_data['required_cpacks'][current_main_version] #TODO this is bound to break
         latest_cpacks = update_data['latest_cpacks']
         
         for cp in cpack_col:
@@ -40,7 +53,12 @@ def check_update():
     except Exception as e:
         print('Failed to compute HumGen update numbering, with error:')
         print(e)
-        return
+        
+
+class UPDATE_INFO_ITEM(bpy.types.PropertyGroup):
+    categ: bpy.props.StringProperty()
+    version: bpy.props.IntVectorProperty(default = (0,0,0))
+    line: bpy.props.StringProperty()
 
 def _check_cpack_update(cp, req_cpacks, latest_cpacks):
     """checks for updates of the passed cpack
