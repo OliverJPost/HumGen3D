@@ -23,7 +23,6 @@ from . HG_UTILITY_FUNC import (
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
-from ... features.finalize_phase.HG_CLOTHING_LOAD import set_cloth_corrective_drivers
 from ... features.common.HG_INFO_POPUPS import HG_OT_INFO
 from ... features.creation_phase.HG_LENGTH import apply_armature
 from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (

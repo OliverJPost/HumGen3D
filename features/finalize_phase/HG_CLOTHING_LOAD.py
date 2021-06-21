@@ -52,15 +52,13 @@ def load_outfit(self,context, footwear = False):
         for mod in obj.modifiers:
             mod.show_expanded = False #collapse modifiers
          
-        set_cloth_corrective_drivers(hg_body, obj.data.shape_keys.key_blocks)
+        set_cloth_corrective_drivers(hg_body, obj, obj.data.shape_keys.key_blocks)
          
     #remove collection that was imported along with the cloth objects
     for col in collections:
         bpy.data.collections.remove(col)
 
     _set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
-
-   
 
     #refresh pcoll for consistent 'click here to select' icon
     refresh_pcoll(self, context, 'outfit')
@@ -275,13 +273,17 @@ def remove_old_outfits(pref, hg_rig, tag) -> list:
 
     return mask_remove_list
 
-def set_cloth_corrective_drivers(hg_body, sk):
+def set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
     """Sets up the drivers of the corrective shapekeys on the clothes
     
     Args:
         hg_body (Object): HumGen body object
         sk (list): List of cloth object shapekeys #CHECK
     """  
+
+    for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
+        hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
+
     for driver in hg_body.data.shape_keys.animation_data.drivers:
         target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '') #TODO this is horrible
         

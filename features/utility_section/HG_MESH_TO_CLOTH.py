@@ -113,7 +113,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             deform_obj_from_difference(sk, distance_dict, body_copy, cloth_obj, as_shapekey=True)
             sks[sk].value = 0
         
-        set_cloth_corrective_drivers(hg_rig.HG.body_obj, cloth_obj.data.shape_keys.key_blocks)
+        set_cloth_corrective_drivers(hg_rig.HG.body_obj, cloth_obj, cloth_obj.data.shape_keys.key_blocks)
         
         bpy.data.objects.remove(body_copy)
         cloth_obj.select_set(True)

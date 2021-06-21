@@ -110,7 +110,8 @@ def _set_shader_switches(hg_rig, sett):
         sett (PropertyGroup): HumGen props
     """
     sett.update_exception = True
-    body_obj = nodes = hg_rig.HG.body_obj
+    body_obj = hg_rig.HG.body_obj
+    nodes = body_obj.data.materials[0].node_tree.nodes
     if not body_obj:
         return
     
