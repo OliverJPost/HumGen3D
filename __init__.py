@@ -113,28 +113,36 @@ def _initiate_custom_icons():
 
 def _initiate_ui_lists():
     sc = bpy.types.Scene
-    # sc.outfits_col_m = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.CLOTHING_ITEM_M) 
-    # sc.outfits_col_m_index = bpy.props.IntProperty(name = "Index", default = 0)
-    # sc.pose_col = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.POSE_ITEM) 
-    # sc.pose_col_index = bpy.props.IntProperty(name = "Index", default = 0)        
-    # sc.expressions_col = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.EXPRESSION_ITEM) 
-    # sc.expressions_col_index = bpy.props.IntProperty(name = "Index", default = 0)      
-    sc.contentpacks_col = bpy.props.CollectionProperty(type = HG_CONTENT_PACK) 
-    sc.contentpacks_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
-    sc.installpacks_col = bpy.props.CollectionProperty(type = HG_INSTALLPACK) 
-    sc.installpacks_col_index = bpy.props.IntProperty(name = "Index", default = 0)    
-    sc.modapply_col = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.MODAPPLY_ITEM) 
-    sc.modapply_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
-    sc.shapekeys_col = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SHAPEKEY_ITEM) 
-    sc.shapekeys_col_index = bpy.props.IntProperty(name = "Index", default = 0)   
-    sc.savehair_col = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEHAIR_ITEM) 
-    sc.savehair_col_index = bpy.props.IntProperty(name = "Index", default = 0)  
-    sc.saveoutfit_col = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM) 
-    sc.saveoutfit_col_index = bpy.props.IntProperty(name = "Index", default = 0)
-    sc.custom_content_col = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
-    sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)     
-    sc.hg_update_col = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
-    sc.hg_update_col_index = bpy.props.IntProperty(name = "Index", default = 0)       
+    # sc.outfits_col_m            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.CLOTHING_ITEM_M)
+    # sc.outfits_col_m_index      = bpy.props.IntProperty(name = "Index", default = 0)
+    # sc.pose_col                 = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.POSE_ITEM)
+    # sc.pose_col_index           = bpy.props.IntProperty(name = "Index", default = 0)
+    # sc.expressions_col          = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.EXPRESSION_ITEM)
+    # sc.expressions_col_index    = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.contentpacks_col         = bpy.props.CollectionProperty(type = HG_CONTENT_PACK)
+    sc.contentpacks_col_index   = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.installpacks_col         = bpy.props.CollectionProperty(type = HG_INSTALLPACK)
+    sc.installpacks_col_index   = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.modapply_col             = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.MODAPPLY_ITEM)
+    sc.modapply_col_index       = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.shapekeys_col            = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SHAPEKEY_ITEM)
+    sc.shapekeys_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.savehair_col             = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEHAIR_ITEM)
+    sc.savehair_col_index       = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.saveoutfit_col           = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM)
+    sc.saveoutfit_col_index     = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.custom_content_col       = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
+    sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.hg_update_col            = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
+    sc.hg_update_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
 
 from . HG_CLASSES import hg_classes
 
