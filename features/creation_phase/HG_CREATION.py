@@ -13,7 +13,8 @@ from ... features.common.HG_COMMON_FUNC import (
     ShowMessageBox,
     add_to_collection,
     find_human,
-    get_prefs
+    get_prefs,
+    show_message
 )
 from ... core.HG_PCOLL import refresh_pcoll
 from .   HG_MATERIAL import set_gender_specific_shader
@@ -221,6 +222,9 @@ class HG_START_CREATION(bpy.types.Operator):
 
                 imported_body = self._import_external_sk_human(context, pref,
                                                                root, fn)
+                if not imported_body:
+                    continue
+                
                 self._transfer_shapekeys(context, hg_body, imported_body)
                 
                 imported_body.select_set(False)
@@ -242,8 +246,13 @@ class HG_START_CREATION(bpy.types.Operator):
             Object: Imported body object
         """
         blendfile = root + str(Path(f'/{fn}'))
-        with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
-            data_to.objects = data_from.objects
+        try:
+            with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
+                data_to.objects = data_from.objects
+        except OSError as e:
+            show_message(self, 'Could not import '+blendfile)
+            print(e)
+            return None
         if pref.debug_mode:
             print('EXT SK imported:', data_to.objects)
         imported_body = [obj for obj in data_to.objects
