@@ -127,7 +127,7 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
     backup_rig_copy.HG.body_obj       = source_copy
     
     apply_armature(source_copy)
-    apply_length_to_rig(backup_rig_copy)
+    apply_length_to_rig(backup_rig_copy, context)
 
     for obj in context.selected_objects:
         obj.select_set(False)
@@ -144,7 +144,6 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
 class FRIG_DATA: #TODO this is a bit weird
     def get_frig_bones(self):
         return [
-            "facs_control",
             "brow_inner_up",
             "pucker_cheekPuf",
             "jaw_dwn_mouth_clsd",
