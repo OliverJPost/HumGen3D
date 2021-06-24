@@ -1598,6 +1598,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         expr_sks = [sk for sk in filtered_obj_sks.key_blocks
             if sk.name != 'Basis' 
             and not sk.name.startswith('cor')
+            and not sk.name.startswith('eyeLook')
             ]
         if not expr_sks:
             return
@@ -1608,7 +1609,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return 
         
         flow = get_flow(sett, box, animation = True)
-        for sk in [sk for sk in filtered_obj_sks.key_blocks if not sk.mute]:
+        for sk in [sk for sk in expr_sks if not sk.mute]:
             display_name = sk.name.replace('expr_', '').replace('_', ' ') +':'
             
             row = flow.row(align = True)
