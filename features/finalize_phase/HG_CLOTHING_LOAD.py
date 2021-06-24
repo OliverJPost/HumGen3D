@@ -280,10 +280,12 @@ def set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
         hg_body (Object): HumGen body object
         sk (list): List of cloth object shapekeys #CHECK
     """  
-
-    for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
-        hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
-
+    try:
+        for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
+            hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
+    except AttributeError:
+        pass
+    
     for driver in hg_body.data.shape_keys.animation_data.drivers:
         target_sk = driver.data_path.replace('key_blocks["', '').replace('"].value', '') #TODO this is horrible
         
