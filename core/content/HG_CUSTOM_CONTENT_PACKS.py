@@ -43,7 +43,7 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
     
     def execute(self, context):
         pref = get_prefs()
-        cpack_name = pref.name
+        cpack_name = pref.cpack_name
         
         cpack_folder = os.path.join(pref.filepath, 'content_packs')
 
@@ -335,7 +335,8 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         path = path.replace('/', '\\') #unifies slashes
         path_split = path.split('\\') #splits path into list
         path_split = list(filter(lambda x: x != '..', path_split)) #removes double dots in list
-        path_split.insert(0, categ) #adds the category name to the start of the path
+        if categ != 'hairstyles':
+            path_split.insert(0, categ) #adds the category name to the start of the path
         path = os.path.join(*path_split) #rebuilds the path from the path_split
 
         return path
