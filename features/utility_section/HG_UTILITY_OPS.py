@@ -26,7 +26,7 @@ from ... core.HG_SHAPEKEY_CALCULATOR import (
 from ... features.common.HG_INFO_POPUPS import HG_OT_INFO
 from ... features.creation_phase.HG_LENGTH import apply_armature
 from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (
-    extract_corrective_shapekeys,
+    extract_shapekeys_to_keep,
     reapply_shapekeys)
 
 class HG_MAKE_EXPERIMENTAL(bpy.types.Operator):
@@ -108,7 +108,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         for item in col:
             if item.mod_type == 'ARMATURE' and (item.count or item.object == obj) and item.enabled:
                 apply = True
-        sk_dict[obj.name], driver_dict[obj.name] = extract_corrective_shapekeys(context, obj, apply_armature = apply)
+        sk_dict[obj.name], driver_dict[obj.name] = extract_shapekeys_to_keep(context, obj, apply_armature = apply)
         return sk_dict, driver_dict
 
     def apply_modifiers(self, context, sett, col, sk_dict, objs_to_apply):

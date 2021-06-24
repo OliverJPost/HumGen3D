@@ -144,8 +144,29 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
 class FRIG_DATA: #TODO this is a bit weird
     def get_frig_bones(self):
         return [
+            "facs_control",
             "brow_inner_up",
-            "pucker",
+            "pucker_cheekPuf",
+            "jaw_dwn_mouth_clsd",
+            "jaw_open_lt_rt_frwd",
+            "brow_dwn_L",
+            "eye_blink_open_L",
+            "eye_squint_L",
+            "brow_outer_up_L",
+            "nose_sneer_L",
+            "cheek_squint_L",
+            "mouth_smile_frown_L",
+            "mouth_stretch_L",
+            "brow_dwn_R",
+            "brow_outer_up_R",
+            "eye_blink_open_R",
+            "eye_squint_R",
+            "cheek_squint_R",
+            "mouth_smile_frown_R",
+            "mouth_stretch_R",
+            "nose_sneer_R",
+            "brow_inner_up",
+            "pucker_cheekPuf",
             "mouth_shrug_roll_upper",
             "mouth_lt_rt_funnel",
             "mouth_roll_lower",
@@ -172,7 +193,8 @@ class FRIG_DATA: #TODO this is a bit weird
             "mouth_upper_up_R",
             "mouth_smile_frown_R",
             "mouth_stretch_R",
-            "nose_sneer_R"
+            "nose_sneer_R",
+            "tongue_out_lt_rt_up_dwn",
         ]
 
 class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
@@ -200,50 +222,60 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
             b = hg_rig.pose.bones[b_name]
             b.bone.hide= False
         
-        self._load_FACS_sks(context, hg_body)
+        self._load_FACS_sks(context, hg_rig)
 
         hg_body['facial_rig'] = 1
         return {'FINISHED'}
 
-    def _load_FACS_sks(self, context, hg_body):
+    def _load_FACS_sks(self, context, hg_rig):
         """Imports the needed FACS shapekeys to be used by the rig
 
         Args:
             hg_body (Object): HumGen body object to import shapekeys on
         """
         pref = get_prefs()
-        context.view_layer.objects.active = hg_body
 
         blendfile = pref.filepath + str(Path('/models/FACS/HG_FACS.blend'))
         with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
             data_to.objects = data_from.objects
         
-        print('objects', data_to.objects)
-        hg_facs = next(obj for obj in data_to.objects if obj.type == 'MESH')
-        context.scene.collection.objects.link(hg_facs)
+        hg_lower_teeth = next(c for c in hg_rig.children if 'hg_teeth' in c and 'lower' in c.name.lower())
+        hg_lower_teeth.data = bpy.data.objects['HG_FACS_TEETH'].data
+        for driver in hg_lower_teeth.data.shape_keys.animation_data.drivers:
+            var    = driver.driver.variables[0]
+            var.targets[0].id = hg_rig
+        
+        hg_body = hg_rig.HG.body_obj
 
+        from_obj = bpy.data.objects['HG_FACS_BODY']
+        context.scene.collection.objects.link(from_obj) 
+        context.view_layer.objects.active = hg_body
+        self._transfer_sk(context, hg_body, from_obj)
+
+    def _transfer_sk(self, context, to_obj, from_obj):
         #normalize objects
-        driver_dict = build_driver_dict(hg_facs, remove = False)
+        driver_dict = build_driver_dict(from_obj, remove = False)
 
         for obj in context.selected_objects:
             obj.select_set(False)
-        hg_body.select_set(True)
-        hg_facs.select_set(True)
-        for idx, sk in enumerate(hg_facs.data.shape_keys.key_blocks):
+            
+        to_obj.select_set(True)
+        from_obj.select_set(True)
+        for idx, sk in enumerate(from_obj.data.shape_keys.key_blocks):
             if sk.name in ['Basis', 'Male']:
                 continue
-            hg_facs.active_shape_key_index = idx
+            from_obj.active_shape_key_index = idx
             bpy.ops.object.shape_key_transfer()
 
-        body_sks = hg_body.data.shape_keys.key_blocks
+        sks_on_target = to_obj.data.shape_keys.key_blocks
         for driver_shapekey in driver_dict:
-            if driver_shapekey in body_sks:
-                sk = hg_body.data.shape_keys.key_blocks[driver_shapekey]
-                add_driver(hg_body, sk, driver_dict[driver_shapekey])
+            if driver_shapekey in sks_on_target:
+                sk = to_obj.data.shape_keys.key_blocks[driver_shapekey]
+                add_driver(to_obj, sk, driver_dict[driver_shapekey])
 
-        hg_facs.select_set(False)
-        bpy.data.objects.remove(hg_facs)
-        hg_body.show_only_shape_key = False
+        from_obj.select_set(False)
+        bpy.data.objects.remove(from_obj)
+        to_obj.show_only_shape_key = False
         
 class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
     """Removes the facial rig, including its shapekeys

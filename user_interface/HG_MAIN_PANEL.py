@@ -321,7 +321,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         box = layout.box()
         
         col = box.column(align = True)
-        col.label(text='Select a body type')
+        col.label(text='Select a starting human')
         col.template_icon_view(self.sett, "pcoll_humans",
                                show_labels=True,
                                scale=10,

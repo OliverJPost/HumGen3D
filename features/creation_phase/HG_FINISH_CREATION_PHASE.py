@@ -101,9 +101,10 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
     _create_backup_human(context, hg_rig)   
 
     context.view_layer.objects.active = hg_rig
-    sk_dict, driver_dict = extract_corrective_shapekeys(context, hg_body)
+    sk_dict, driver_dict = extract_shapekeys_to_keep(context, hg_body)
 
     apply_shapekeys(hg_body)
+    apply_shapekeys(next(c for c in hg_rig.children if 'hg_eyes' in c))
 
     context.view_layer.objects.active = hg_rig
     hg_eyes  = next(child for child in hg_rig.children if 'hg_eyes'  in child)
@@ -207,7 +208,7 @@ def _create_backup_human(context, hg_rig):
     hg_backup.matrix_parent_inverse = hg_rig.matrix_world.inverted()
     hg_backup.select_set(False)
 
-def extract_corrective_shapekeys(context, hg_body, apply_armature = True
+def extract_shapekeys_to_keep(context, hg_body, apply_armature = True
                                   ) -> tuple[list, dict]:
     """All shapekeys need to be removed in order to apply the armature. To keep
     certain shapekeys, this function extracts them as separate objects to be 
@@ -225,6 +226,7 @@ def extract_corrective_shapekeys(context, hg_body, apply_armature = True
     """
     pref = get_prefs()
     
+    #TODO what does this do
     try:
         test = hg_body.data.shape_keys.animation_data.drivers
     except Exception as e:
@@ -236,7 +238,7 @@ def extract_corrective_shapekeys(context, hg_body, apply_armature = True
     sk = hg_body.data.shape_keys.key_blocks if hg_body.data.shape_keys else []
     obj_list = []
     for shapekey in sk:
-        if (not shapekey.name.startswith('cor_')
+        if (not shapekey.name.startswith(('cor_', 'eyeLook'))
             and not pref.keep_all_shapekeys):
             continue
         ob = hg_body.copy()
