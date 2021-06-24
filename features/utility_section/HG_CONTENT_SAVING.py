@@ -523,7 +523,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             
         self.save_objects_optimized(
             context,
-            hair_obj,
+            [hair_obj,],
             self.folder,
             self.name,
             clear_ps=False,
