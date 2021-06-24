@@ -142,6 +142,7 @@ def load_pose(self, context):
     hg_rig = find_human(context.active_object)
     hg_pose = _import_pose(context)
     
+    _match_rotation_mode(hg_rig, hg_pose, context)
     _match_roll(hg_rig, hg_pose, context)
     
     _copy_pose(context, hg_pose)
@@ -201,6 +202,17 @@ def _match_roll(hg_rig, hg_pose, context):
             bone.roll = hg_pose.data.edit_bones[b_name].roll
     bpy.ops.object.mode_set(mode='OBJECT')
 
+def _match_rotation_mode(hg_rig, hg_pose, context):
+    context.view_layer.objects.active = hg_pose
+    hg_rig.select_set(True)
+    bpy.ops.object.mode_set(mode='POSE')
+    for bone in hg_rig.pose.bones:
+        b_name = bone.name if bone.name != 'neck' else 'spine.004'
+        if b_name in hg_pose.pose.bones:
+            print(f'changing {b_name}')
+            bone.rotation_mode = hg_pose.pose.bones[b_name].rotation_mode = 'QUATERNION'
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
 def _copy_pose(context, pose):
     """Copies pose from one human to the other
 
