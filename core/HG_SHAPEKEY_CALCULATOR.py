@@ -52,6 +52,10 @@ def deform_obj_from_difference(name, distance_dict, source, target, as_shapekey 
     source_copy      = source.copy()
     source_copy.data = source_copy.data.copy()
     bpy.context.scene.collection.objects.link(source_copy)
+    
+    for sk in [sk for sk in source_copy.data.shape_keys.key_blocks if sk.name.startswith('cor_')]:
+        source_copy.shape_key_remove(sk)
+        
     apply_shapekeys(source_copy)
     hg_rig = find_human(bpy.context.object)
     #apply_armature(source_copy)
