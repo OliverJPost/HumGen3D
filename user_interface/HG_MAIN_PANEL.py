@@ -1484,6 +1484,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box.label(text = 'Rigify rig active')
             box.label(text = 'Use Rigify add-on to adjust', icon = 'INFO')
         elif addon_utils.check("rigify"):
+            box.label(text = 'Load facial rig first', icon = 'INFO')
             col = box.column()
             col.scale_y = 1.5
             col.alert = True

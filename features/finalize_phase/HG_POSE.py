@@ -5,7 +5,7 @@ Operators and functions relating to the posing of the human
 import bpy #type: ignore
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs
-
+from ... features.creation_phase.HG_FINISH_CREATION_PHASE import build_driver_dict, add_driver
 class HG_RIGIFY(bpy.types.Operator):
     """Changes the rig to make it compatible with Rigify, then generates the rig
     
@@ -33,6 +33,7 @@ class HG_RIGIFY(bpy.types.Operator):
         
         bpy.ops.pose.transforms_clear()
         bpy.ops.object.mode_set(mode='OBJECT')
+        driver_dict = build_driver_dict(hg_body, remove = True)
 
         try:
             bpy.ops.pose.rigify_generate()
@@ -52,6 +53,10 @@ class HG_RIGIFY(bpy.types.Operator):
         armature_mod = next(mod for mod in hg_body.modifiers 
                             if mod.type == 'ARMATURE')
         armature_mod.object = rigify_rig
+
+        sks= hg_body.data.shape_keys.key_blocks
+        for target_sk_name, sett_dict in driver_dict.items():
+            add_driver(hg_body, sks[target_sk_name], sett_dict)
 
         bpy.data.objects.remove(hg_rig)
         return {'FINISHED'}
