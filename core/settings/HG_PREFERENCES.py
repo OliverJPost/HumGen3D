@@ -672,7 +672,7 @@ class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     def execute(self,context):
         pref = get_prefs()
 
-        pref.filepath  = os.path.dirname(self.filepath)
+        pref.filepath  = os.path.join(os.path.dirname(self.filepath), '') #use join to get slash at the end
         pref.pref_tabs = 'cpacks'
         pref.pref_tabs = 'settings'
 
