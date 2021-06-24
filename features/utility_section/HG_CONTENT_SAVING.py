@@ -660,7 +660,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     distance_dict,
                     backup_human,
                     obj_copy,
-                    as_shapekey=False
+                    as_shapekey = False,
+                    apply_source_sks = False
                 )
                 export_list.append(obj_copy)
             
