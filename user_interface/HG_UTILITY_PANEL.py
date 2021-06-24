@@ -512,6 +512,9 @@ class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         col= layout.column(align = True)
 
+        scol = col.column()
+        scol.alert = True
+        scol.label(text='Still under construction', icon = 'ERROR')
         self.draw_thumbnail_selector(col, sett)
 
         col.separator()
