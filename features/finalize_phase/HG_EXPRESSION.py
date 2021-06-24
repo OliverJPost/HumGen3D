@@ -240,17 +240,21 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
             data_to.objects = data_from.objects
         
         hg_lower_teeth = next(c for c in hg_rig.children if 'hg_teeth' in c and 'lower' in c.name.lower())
-        hg_lower_teeth.data = bpy.data.objects['HG_FACS_TEETH'].data
-        for driver in hg_lower_teeth.data.shape_keys.animation_data.drivers:
-            var    = driver.driver.variables[0]
-            var.targets[0].id = hg_rig
+        # hg_lower_teeth.data = bpy.data.objects['HG_FACS_TEETH'].data
+        # for driver in hg_lower_teeth.data.shape_keys.animation_data.drivers:
+        #     var    = driver.driver.variables[0]
+        #     var.targets[0].id = hg_rig
         
         hg_body = hg_rig.HG.body_obj
-
         from_obj = bpy.data.objects['HG_FACS_BODY']
         context.scene.collection.objects.link(from_obj) 
         context.view_layer.objects.active = hg_body
         self._transfer_sk(context, hg_body, from_obj)
+
+        from_obj = bpy.data.objects['HG_FACS_TEETH']
+        context.scene.collection.objects.link(from_obj) 
+        context.view_layer.objects.active = hg_lower_teeth
+        self._transfer_sk(context, hg_lower_teeth, from_obj)
 
     def _transfer_sk(self, context, to_obj, from_obj):
         #normalize objects
