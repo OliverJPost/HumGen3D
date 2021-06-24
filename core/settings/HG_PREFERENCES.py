@@ -17,7 +17,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     #RELEASE remove default path
     filepath    : bpy.props.StringProperty(
         name= 'Install Filepath',
-        default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\\'
+        default = ''
         )
 
     #update props
@@ -90,7 +90,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     dev_tools : bpy.props.BoolProperty(
         name="Show Dev Tools",
         description="",
-        default=True) #RELEASE set to False
+        default=False) #RELEASE set to False
     
     auto_hide_hair_switch: bpy.props.BoolProperty(default = True)
     auto_hide_popup : bpy.props.BoolProperty(default = True)
@@ -652,7 +652,6 @@ class HG_PREF(bpy.types.AddonPreferences):
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(item, 'include', text = 'Include', icon = incl_icon, toggle = True)
 
-#FIXME build in preventive system for filepaths instead of dirpaths
 class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     '''
     Changes the path via file browser popup
