@@ -672,7 +672,7 @@ class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
     def execute(self,context):
         pref = get_prefs()
 
-        pref.filepath  = self.filepath
+        pref.filepath  = os.path.dirname(self.filepath)
         pref.pref_tabs = 'cpacks'
         pref.pref_tabs = 'settings'
 
