@@ -191,6 +191,22 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     bl_idname      = "hg3d.prepare_for_arkit"
     bl_label       = "Prepare for ARKit"
     bl_description = "Removes drivers and adds single keyframe to all FACS shapekeys"
+    bl_options     = {"UNDO"}
+
+    suffix: bpy.props.EnumProperty(
+        name = 'Shapekey suffix',
+        items = [
+            ('short', '_L and _R (most programs)', '', 0),
+            ('long', '_Left and _Right (FaceApp)', '', 1)
+        ]
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "suffix", text = 'Suffix')
 
     def execute(self,context):        
         hg_rig = find_human(context.object)
@@ -202,6 +218,8 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
             print('iterating over ', sk.name)
             sk.driver_remove("value")
             sk.keyframe_insert("value", frame=0)
+            if self.suffix == 'long' and sk.name.endswith(('_L', '_R')):
+                sk.name = sk.name.replace('_L', '_Left').replace('_R', '_Right')
         
         show_message(self, 'Succesfully removed drivers and added keyframes')
         return {'FINISHED'}

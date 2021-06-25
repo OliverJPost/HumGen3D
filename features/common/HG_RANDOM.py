@@ -46,7 +46,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
         
         return {'FINISHED'}
 
-    def _hex_to_rgba(self, color_hex) -> tuple[float, float, float, 1]:
+    def _hex_to_rgba(self, color_hex) -> 'tuple[float, float, float, 1]':
         """Build rgb color from this hex code
 
         Args:

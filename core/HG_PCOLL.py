@@ -89,7 +89,7 @@ def _populate_pcoll(self, context, pcoll_categ, ignore_genders):
     sett['previews_list_{}'.format(pcoll_categ)] = path_list    
     pcoll['previews_dir_{}'.format(pcoll_categ)] = pcoll_full_dir
 
-def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> tuple[str, str]:
+def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> 'tuple[str, str]':
     """Gets the directory name of the preview collection category and of the 
     user selected subcategory
 

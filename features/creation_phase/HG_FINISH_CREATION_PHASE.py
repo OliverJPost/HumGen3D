@@ -209,7 +209,7 @@ def _create_backup_human(context, hg_rig):
     hg_backup.select_set(False)
 
 def extract_shapekeys_to_keep(context, hg_body, apply_armature = True
-                                  ) -> tuple[list, dict]:
+                                  ) -> 'tuple[list, dict]':
     """All shapekeys need to be removed in order to apply the armature. To keep
     certain shapekeys, this function extracts them as separate objects to be 
     added to hg_body again after armature apply

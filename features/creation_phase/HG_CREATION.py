@@ -84,7 +84,7 @@ class HG_START_CREATION(bpy.types.Operator):
         return name
  
 
-    def create_human(self, context) -> tuple [bpy.types.Object, bpy.types.Object]:
+    def create_human(self, context) -> 'tuple [bpy.types.Object, bpy.types.Object]':
         """Creates a new human based on the selected gender and starting human
 
         Returns:
@@ -136,10 +136,8 @@ class HG_START_CREATION(bpy.types.Operator):
 
         return hg_rig, hg_body
 
-    def _import_human(self, context, sett, pref) -> tuple[str,
-                                                          bpy.types.Object,
-                                                          bpy.types.Object,
-                                                          bpy.types.Object]:
+    def _import_human(self, context, sett, pref
+                      ) -> 'tuple[str, bpy.types.Object, bpy.types.Object, bpy.types.Object]':
         """Import human from HG_HUMAN.blend and add it to scene
         Also adds some identifiers to the objects to find them later
 

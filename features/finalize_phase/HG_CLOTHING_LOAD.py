@@ -203,7 +203,7 @@ def _move_armature_to_top(context, obj, armature_mods):
         else:
             bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
 
-def _import_cloth_items(context, sett, pref, hg_rig, footwear) -> tuple[list, list]:
+def _import_cloth_items(context, sett, pref, hg_rig, footwear) -> 'tuple[list, list]':
     """Imports the cloth objects from an external file
 
     Args:
