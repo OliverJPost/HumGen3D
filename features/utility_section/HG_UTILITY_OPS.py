@@ -2,6 +2,7 @@
 Operators and functions for experimental features and QoL automations
 """
 
+
 import re
 import json
 from pathlib import Path
@@ -9,11 +10,13 @@ import platform
 import subprocess
 import bpy #type: ignore
 import os
+from ... features.finalize_phase.HG_EXPRESSION import FRIG_DATA
 from ... features.common.HG_COMMON_FUNC import (
     ShowMessageBox,
     apply_shapekeys,
     find_human,
-    get_prefs)
+    get_prefs,
+    show_message)
 from . HG_UTILITY_FUNC import (
     build_object_list,
     refresh_outfit_ul,
@@ -184,7 +187,23 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
+    bl_idname      = "hg3d.prepare_for_arkit"
+    bl_label       = "Prepare for ARKit"
+    bl_description = "Removes drivers and adds single keyframe to all FACS shapekeys"
 
-
+    def execute(self,context):        
+        hg_rig = find_human(context.object)
+        hg_body = hg_rig.HG.body_obj
+        
+        for sk in hg_body.data.shape_keys.key_blocks[:]:
+            if sk.name == 'Basis' or sk.name.startswith('cor_'):
+                continue
+            print('iterating over ', sk.name)
+            sk.driver_remove("value")
+            sk.keyframe_insert("value", frame=0)
+        
+        show_message(self, 'Succesfully removed drivers and added keyframes')
+        return {'FINISHED'}
         
 

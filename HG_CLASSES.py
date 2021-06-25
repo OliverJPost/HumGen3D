@@ -69,6 +69,7 @@ from . features.utility_section.HG_DEVTOOLS import *
 from . features.utility_section.HG_UTILITY_OPS import (
     HG_MAKE_EXPERIMENTAL,
     HG_OT_MODAPPLY,
+    HG_OT_PREPARE_FOR_ARKIT,
     HG_OT_REFRESH_UL,
     HG_OT_SELECTMODAPPLY)
 from . features.utility_section.HG_CONTENT_SAVING import (
@@ -222,6 +223,7 @@ hg_classes = (
     HG_DELETE_STRETCH,
     HG_MASK_PROP,
     HG_TESTOP,
+    HG_OT_PREPARE_FOR_ARKIT,
     
     #Update
     UPDATE_INFO_ITEM

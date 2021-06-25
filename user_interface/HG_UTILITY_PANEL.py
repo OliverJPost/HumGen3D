@@ -778,5 +778,6 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         
         col = layout.column()
-        col.operator('hg3d.testop', text = 'test operator')
+        col.operator('hg3d.testop', text = 'Test Operator')
         col.operator('hg3d.delstretch')
+        col.operator('hg3d.prepare_for_arkit')
