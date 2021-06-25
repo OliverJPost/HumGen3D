@@ -166,7 +166,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             show_message(self, "Succesfully saved content pack")
         return {"FINISHED"}
 
-    def _build_export_set(self, pref, items_to_export) -> tuple[set, set]:
+    def _build_export_set(self, pref, items_to_export) -> 'tuple[set, set]':
         """Returns two sets with the filepaths of the items to export and the
         categories of the items that will be exported
 

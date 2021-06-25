@@ -2,7 +2,7 @@ import bpy #type: ignore
 from .. core.HG_PCOLL import preview_collections
 
 def draw_sub_spoiler(
-    layout, sett, prop_name, label) -> tuple[bool, bpy.types.UILayout]:
+    layout, sett, prop_name, label) -> 'tuple[bool, bpy.types.UILayout]':
     """Draws a ciollapsable box, with title and arrow symbol
 
     Args:
@@ -79,7 +79,7 @@ def in_creation_phase(hg_rig) -> bool:
     return hg_rig.HG.phase in ['body', 'face', 'skin', 'length']
 
 
-def draw_spoiler_box(self, ui_name) -> tuple[bool, bpy.types.UILayout]:
+def draw_spoiler_box(self, ui_name) -> 'tuple[bool, bpy.types.UILayout]':
     """Draws the spoiler box of the main sections (i.e. body, hair, face)
 
     Args:

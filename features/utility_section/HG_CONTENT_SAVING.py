@@ -745,7 +745,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             img_node.image = new_img
             new_img.colorspace_settings.name = colorspace
     
-    def _save_img(self, img, saved_images) -> tuple[str, list]:
+    def _save_img(self, img, saved_images) -> 'tuple[str, list]':
         img_name = self.remove_number_suffix(img.name)
         print('img_name', img_name)
         if img_name in saved_images:
