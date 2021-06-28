@@ -32,6 +32,8 @@ bl_info = {
 import bpy #type: ignore
 import sys, os
 from bpy.app.handlers import persistent #type: ignore
+import bpy.utils.previews #type: ignore #has to be imported like this, otherwise
+                                        #returns error for some users
 
 from . core.settings.HG_PROPS import (
     HG_OBJECT_PROPS,
