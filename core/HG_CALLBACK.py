@@ -9,6 +9,7 @@ This callback has the following usages:
     a human is duplicated by the user
 '''
 
+from .. features.creation_phase.HG_BODY import get_scaling_data
 from .. features.utility_section.HG_UTILITY_FUNC import (
     refresh_hair_ul,
     refresh_modapply,
@@ -147,7 +148,7 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
         refresh_outfit_ul(self, context)
         return
     elif ui_phase == 'body':
-        _refresh_body_scaling(self, sett, hg_rig.HG.body_obj)
+        _refresh_body_scaling(self, sett, hg_rig)
     elif ui_phase == 'skin':
         refresh_pcoll(self, context, 'textures')
         return      
@@ -164,11 +165,28 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
         refresh_pcoll(self, context, 'expressions')
         return
 
-#FIXME add callback for body scaling
-def _refresh_body_scaling(self, sett, hg_body):
-    pass
+def _refresh_body_scaling(self, sett, hg_rig):
+    """This callback makes sure the sliders of scaling the bones are at the 
+    correct values of the selected human
 
-
+    Args:
+        sett (PropertyGroup): HumGen props
+        hg_rig (Object): Armature object of HumGen human
+    """
+    bones = hg_rig.pose.bones
+    sd = get_scaling_data('head', sett, return_whole_dict = True).items()
+    
+    bone_groups = {group_name: scaling_data['bones'] 
+                   for group_name, scaling_data in sd}
+    
+    for group_name, bone_group in bone_groups.items():
+        if 'head' in bone_group:
+            slider_value = (bones['head'].scale[0] - 0.9)*5
+        else:
+            slider_value = bones[bone_group[0]].scale[0] * 3 - 2.5
+            
+        setattr(sett, f"{group_name}_size", slider_value)
+        
 def tab_change_update(self, context):
     """Update function for when the user switches between the main tabs (Main UI,
     Batch tab and Utility tab)"""
