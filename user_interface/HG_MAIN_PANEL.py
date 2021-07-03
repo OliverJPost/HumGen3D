@@ -223,11 +223,14 @@ class HG_PT_PANEL(bpy.types.Panel):
         col_h.scale_y = .5
         col_h.alert = True
 
-        col_h.operator('hg3d.drawtutorial',
-                       text = 'Get Started!',
-                       depress = True,
-                       icon = 'FAKE_USER_ON'
-                       ).first_time = True
+        tutorial_op = col_h.operator(
+            'hg3d.draw_tutorial',
+            text='Get Started!',
+            depress=True,
+            icon='FAKE_USER_ON'
+        )
+        tutorial_op.first_time = True
+        tutorial_op.tutorial_name = 'get_started_tutorial'
 
     def _warning_header(self, context, layout) -> bool:
         """Checks if context is in object mode and if a body object can be
@@ -1629,6 +1632,15 @@ class HG_PT_PANEL(bpy.types.Panel):
         if 'facial_rig' in self.hg_rig.HG.body_obj:
             col.label(text = 'Facial rig added')
             col.label(text = 'Use pose mode to adjust', icon = 'INFO')
+            col_h = col.column()
+            col_h.scale_y = 1.5
+            tutorial_op = col_h.operator(
+                'hg3d.draw_tutorial',
+                text='ARKit tutorial',
+                icon='HELP'
+            )
+            tutorial_op.first_time = False
+            tutorial_op.tutorial_name = 'arkit_tutorial'
         else:
             col.scale_y = 2
             col.alert = True
