@@ -98,7 +98,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
 
         col_h = layout.column()
         col_h.scale_y = 1.5
-        col_h.operator('hg3d.drawtutorial',
+        col_h.operator('hg3d.draw_tutorial',
                        text = 'Open Tutorial Again',
                        icon = 'WINDOW'
                        ).first_time = False

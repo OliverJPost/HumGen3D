@@ -17,13 +17,14 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
     a tutorial based on images of 1200*600 pixels.
     Credits to Jayanam for the code base for custom ui
     '''    
-    bl_idname = "hg3d.drawtutorial"
+    bl_idname = "hg3d.draw_tutorial"
     bl_label = "bl ui widgets custom operator"
     bl_description = "Demo operator for bl ui widgets" 
     bl_options = {'REGISTER'}
     	
-    first_time: bpy.props.BoolProperty()    
-
+    first_time: bpy.props.BoolProperty(default = False)    
+    tutorial_name: bpy.props.StringProperty()
+    
     def __init__(self):
         
         super().__init__()
@@ -35,7 +36,9 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
         highlight_color = (0.598, 0.297, 0.453, 1.0)
         highlight_color_hover = (0.598, 0.297, 0.453, .5)
 
-        self.image_list = self.get_dir_images(os.path.dirname(__file__) + str(Path('/images')))
+        self.image_list = self.get_dir_images(os.path.dirname(__file__) 
+                                              + str(Path(f'/images/{self.tutorial_name}'))
+                                              )
         
         self.sorted_image_list = sorted(self.image_list)
 
