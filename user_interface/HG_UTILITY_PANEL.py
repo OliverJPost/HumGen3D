@@ -94,14 +94,14 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
         hg_rig = find_human(context.object)
         if not hg_rig:
             layout.label(text='No human selected')
-            return
+            
 
         col_h = layout.column()
         col_h.scale_y = 1.5
         col_h.operator('hg3d.draw_tutorial',
                        text = 'Open Tutorial Again',
                        icon = 'WINDOW'
-                       ).first_time = False
+                       ).tutorial_name = 'get_started_tutorial'
 
  
 class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
@@ -288,7 +288,16 @@ class HG_PT_T_PRESET(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
             return
         
         col= layout.column(align = True)
+        col.operator(
+            'hg3d.draw_tutorial',
+            text='Tutorial',
+            icon='HELP'
+        ).tutorial_name = 'starting_human_tutorial'
+        
+        col.separator()
+
         self.draw_thumbnail_selector(col, sett)
+
 
         col.separator()
         
@@ -341,6 +350,14 @@ class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 
         if self.warning_if_not_creation_phase(hg_rig, layout):
             return
+
+        col.operator(
+            'hg3d.draw_tutorial',
+            text='Tutorial',
+            icon='HELP'
+        ).tutorial_name = 'shapekeys_tutorial'
+        
+        col.separator()
 
         self._draw_prefix_info(col)
 
@@ -425,6 +442,14 @@ class HG_PT_T_HAIR(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 
         if self.warning_if_not_creation_phase(hg_rig, layout):
             return
+
+        col.operator(
+            'hg3d.draw_tutorial',
+            text='Tutorial',
+            icon='HELP'
+        ).tutorial_name = 'hairstyles_tutorial'
+        
+        col.separator()
 
         self.draw_thumbnail_selector(col, sett)
  
