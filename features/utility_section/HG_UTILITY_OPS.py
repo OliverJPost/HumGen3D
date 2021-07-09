@@ -194,8 +194,8 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     suffix: bpy.props.EnumProperty(
         name = 'Shapekey suffix',
         items = [
-            ('short', '_L and _R (most programs)', '', 0),
-            ('long', '_Left and _Right (FaceApp)', '', 1)
+            ('long', 'Left and Right (Default ARKit)', '', 0)
+            ('short', '_L and _R (FaceApp)', '', 1),
         ]
     )
 
@@ -216,7 +216,7 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
             sk.driver_remove("value")
             sk.keyframe_insert("value", frame=0)
             if self.suffix == 'long' and sk.name.endswith(('_L', '_R')):
-                sk.name = sk.name.replace('_L', '_Left').replace('_R', '_Right')
+                sk.name = sk.name.replace('_L', 'Left').replace('_R', 'Right')
         
         show_message(self, 'Succesfully removed drivers and added keyframes')
         return {'FINISHED'}
