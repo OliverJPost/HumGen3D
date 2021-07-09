@@ -194,8 +194,8 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     suffix: bpy.props.EnumProperty(
         name = 'Shapekey suffix',
         items = [
-            ('long', 'Left and Right (Default ARKit)', '', 0)
-            ('short', '_L and _R (FaceApp)', '', 1),
+            ('long', 'Left and Right (Default ARKit)', '', 0),
+            ('short', '_L and _R (FaceApp)', '', 1)
         ]
     )
 
