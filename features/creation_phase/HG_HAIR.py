@@ -115,14 +115,10 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
              if mod.show_viewport or mod.show_render),
              0
             )
-        print(idx, current_ps, current_ps.particle_system.name)
 
         next_idx = idx + 1 if self.forward else idx - 1
-        print('next_idx1', next_idx)
         if next_idx >= len(eyebrows) or next_idx < 0:
             next_idx = 0
-
-        print('next_idx2', next_idx)
 
         next_ps = eyebrows[next_idx]
         next_ps.show_viewport = next_ps.show_render = True

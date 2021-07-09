@@ -371,7 +371,6 @@ def reapply_shapekeys(context, sk_objects, hg_body, driver_dict):
             add_driver(hg_body, target_sk, driver_dict[ob.name])
 
     for ob in sk_objects:
-        print('deleting', ob.name)
         bpy.data.objects.remove(ob)
 
 def add_driver(hg_body, target_sk, sett_dict):

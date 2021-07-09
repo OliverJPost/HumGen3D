@@ -224,12 +224,8 @@ class HG_PREF(bpy.types.AddonPreferences):
         
 
         update_info_dict = {tuple(i.version): {'Features': [], 'Bugfixes': []} for i in update_col}
-        print(update_info_dict) 
         for i in update_col:
-            print(i)
-            update_info_dict[tuple(i.version)][i.categ].append(i.line)
-            
-        print(update_info_dict)    
+            update_info_dict[tuple(i.version)][i.categ].append(i.line)          
         
         return update_info_dict
         

@@ -1,10 +1,10 @@
 from pathlib import Path
 import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import get_prefs, show_message
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs, show_message
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
-from ... features.finalize_phase.HG_CLOTHING_LOAD import set_cloth_corrective_drivers
+from ... features.finalize_phase.HG_CLOTHING_LOAD import find_masks, set_cloth_corrective_drivers
 
 class MESH_TO_CLOTH_TOOLS():
     def invoke(self, context, event):
@@ -101,7 +101,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             sk = cloth_obj.shape_key_add(name = 'Basis')
             sk.interpolation = 'KEY_LINEAR'
         
-        shapekey_list = self._build_cor_shapkey_list(sett)
+        shapekey_list = self._build_cor_shapekey_list(sett)
         
         sks = body_copy.data.shape_keys.key_blocks
         for sk in sks:
@@ -119,7 +119,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
         cloth_obj.select_set(True)
         return {'FINISHED'}
 
-    def _build_cor_shapkey_list(self, sett) -> list:
+    def _build_cor_shapekey_list(self, sett) -> list:
         shapekey_list = []
         if sett.shapekey_calc_type == 'pants':
             shapekey_list.extend(['cor_LegFrontRaise_Rt',
@@ -171,8 +171,8 @@ class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         mat_file = pref.filepath + str(Path('/outfits/HG_CLOTHING_MAT.blend'))
         
         with bpy.data.libraries.load(mat_file, link = False) as (data_from ,data_to):
-            data_to.materials = data_from.materials['HG_CLOTHING']
-            
+            data_to.materials = data_from.materials
+        
         mat = data_to.materials[0]
 
         ob = context.object
@@ -183,4 +183,54 @@ class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         
         ob['cloth'] = 1
         
+        return {'FINISHED'}
+
+class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
+    bl_idname      = "hg3d.add_masks"
+    bl_label       = "Add geometry masks"
+    bl_description = "Adds masks to hide human body behind cloth"
+    bl_options     = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return context.scene.HG3D.mtc_armature
+
+    def execute(self,context): 
+        sett = context.scene.HG3D
+        
+        hg_rig = sett.mtc_armature
+        hg_body = hg_rig.HG.body_obj
+        
+        cloth_obj = context.object
+        
+        if cloth_obj == hg_body:
+            show_message(self, 'It looks like you have the body selected, please select the clothing object')
+            return {'FINISHED'}
+        
+        old_masks = find_masks(cloth_obj)
+        
+        for mask in old_masks:
+            try:
+                hg_body.modifiers.remove(hg_body.modifiers.get(mask))
+            except:
+                pass
+        
+        for i in range(10):
+            if f"mask_{i}" in cloth_obj:
+                del cloth_obj[f'mask_{i}']
+        
+        mask_dict = {
+            "mask_arms_long": sett.mask_long_arms,
+            "mask_arms_short": sett.mask_short_arms,
+            "mask_lower_long": sett.mask_long_legs,
+            "mask_lower_short": sett.mask_short_legs,
+            "mask_torso": sett.mask_torso,
+            "mask_foot": sett.mask_foot
+        }
+        for i, mask_name in enumerate([k for k,v in mask_dict.items() if v]):
+            cloth_obj[f'mask_{i}'] = mask_name
+            mod = hg_body.modifiers.new(mask_name, 'MASK')
+            mod.vertex_group = mask_name
+            mod.invert_vertex_group = True            
+      
         return {'FINISHED'}

@@ -222,7 +222,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         
         with open(cpack.json_path, 'w') as f:       
             json.dump(data, f, indent = 4)
-            print('json data', data)
 
     def _build_categ_dict(self, categ_set, pack_name) -> dict:
         """Builds a dictionary of what kind of category content items are 
@@ -237,7 +236,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 key (str): name of content category
                 value (bool): True if included in this cpack 
         """
-        print('categ set', categ_set)
         categ_dict = {
             'humans': 'starting_humans' in categ_set,
             'human_textures': 'texture_sets' in categ_set,
@@ -311,7 +309,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 blendfile = data['blend_file']
                 folder = 'head' if categ == 'hairstyles' else 'facial_hair'
                 associated_files.append(str(Path(f'/hair/{folder}/{blendfile}')))
-                print('appending bf', str(Path(f'/hair/{folder}/{blendfile}')))
         
         associated_files = map(lambda x: self._correct_relative_path(x, categ), associated_files)
         

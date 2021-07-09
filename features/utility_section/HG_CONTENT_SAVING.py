@@ -47,7 +47,7 @@ class Content_Saving_Operator:
                 print(e)
         else:
             try:
-                img.save_render(str(Path(f'{self.folder}/{self.name}.jpg')))
+                img.save_render(str(Path(f'{folder}/{self.name}.jpg')))
             except RuntimeError:
                 show_message(self, 
                     "[Cancelled] Saving render as thumbnail, but render is empty")
@@ -589,10 +589,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         with open(full_path, 'w') as f:
             json.dump(json_data, f, indent = 4)
 
-#FIXME male to female not working, other way?
-#FIXME texture saving
 #FIXME origin to model origin? Correction?
-#FIXME shoes corrective shapekeys
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
     bl_idname      = "hg3d.saveoutfit"
     bl_label       = "Save as outfit"
@@ -661,7 +658,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     backup_human,
                     obj_copy,
                     as_shapekey = False,
-                    apply_source_sks = False
+                    apply_source_sks = False,
+                    ignore_cor_sk = True
                 )
                 export_list.append(obj_copy)
             
@@ -732,7 +730,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             for mat in obj.data.materials:
                 nodes= mat.node_tree.nodes
                 for img_node in [n for n in nodes if n.bl_idname == 'ShaderNodeTexImage']:
-                    return self._process_image(saved_images, img_node)
+                    self._process_image(saved_images, img_node)
 
     def _process_image(self, saved_images, img_node):
         img = img_node.image
@@ -747,7 +745,6 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
     
     def _save_img(self, img, saved_images) -> 'tuple[str, list]':
         img_name = self.remove_number_suffix(img.name)
-        print('img_name', img_name)
         if img_name in saved_images:
             return saved_images[img_name], saved_images
         

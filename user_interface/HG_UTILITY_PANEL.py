@@ -1,6 +1,6 @@
 import bpy #type: ignore
 import os
-from .. features.common.HG_COMMON_FUNC import find_human
+from .. features.common.HG_COMMON_FUNC import find_human, get_prefs
 from .. core.HG_PCOLL import preview_collections
 from . HG_PANEL_FUNCTIONS import draw_panel_switch_header, draw_sub_spoiler, get_flow, in_creation_phase
 
@@ -90,6 +90,11 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
 
     def draw(self,context):
         layout = self.layout
+
+        if not get_prefs().filepath:
+            layout.alert = True
+            layout.label(text = 'No filepath selected', icon = 'ERROR')
+            return
         
         hg_rig = find_human(context.object)
         if not hg_rig:
@@ -642,10 +647,6 @@ class HG_PT_T_MASKS(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_T_CLOTH"
     bl_label = "Geometry masks"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return False
     
     def draw(self, context):   
         hg_rig = find_human(context.object)
@@ -655,14 +656,14 @@ class HG_PT_T_MASKS(Tools_PT_Base, bpy.types.Panel):
         col.use_property_split = True
         col.use_property_decorate = False
         
-        col.prop(sett, 'ui_custom', text = 'Short legs')
-        col.prop(sett, 'ui_custom', text = 'Long legs')
-        col.prop(sett, 'ui_custom', text = 'Short Arms')
-        col.prop(sett, 'ui_custom', text = 'Long Arms')
-        col.prop(sett, 'ui_custom', text = 'Torso')
-        col.prop(sett, 'ui_custom', text = 'Foot')
+        col.prop(sett, 'mask_short_legs', text = 'Short legs')
+        col.prop(sett, 'mask_long_legs', text = 'Long legs')
+        col.prop(sett, 'mask_short_arms', text = 'Short Arms')
+        col.prop(sett, 'mask_long_arms', text = 'Long Arms')
+        col.prop(sett, 'mask_torso', text = 'Torso')
+        col.prop(sett, 'mask_foot', text = 'Foot')
         col.separator()
-        col.operator('hg3d.showinfo', text = 'Add masks')
+        col.operator('hg3d.add_masks', text = 'Add masks')
         
         mask_options = [
                 "mask_lower_short",
@@ -725,7 +726,10 @@ class HG_PT_T_CLOTHSK(Tools_PT_Base, bpy.types.Panel):
         hg_rig = find_human(context.object)
         sett = context.scene.HG3D
         layout = self.layout
-  
+
+        if context.object and not context.object.type == 'MESH':
+            return
+
         if hg_rig and context.object.data.shape_keys:
             has_corrective_sks = next(
                 (True for sk in context.object.data.shape_keys.key_blocks

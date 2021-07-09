@@ -43,7 +43,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.pref   = get_prefs()
 
         self.hg_rig = find_human(context.active_object)
-        found_problem = self._draw_info_and_warning_labels(context, layout) 
+        found_problem = self.draw_info_and_warning_labels(context, layout) 
         if found_problem:
             return
         
@@ -82,7 +82,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |  |  |  | |  |____ /  _____  \  |  '--'  ||  |____ |  |\  \----.
     # |__|  |__| |_______/__/     \__\ |_______/ |_______|| _| `._____|
 
-    def _draw_info_and_warning_labels(self, context, layout) -> bool:
+    def draw_info_and_warning_labels(self, context, layout) -> bool:
         """Collection of all info and warning labels of HumGen
 
         Args:

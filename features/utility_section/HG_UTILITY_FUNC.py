@@ -6,7 +6,6 @@ import bpy #type: ignore
 from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
 
 def refresh_modapply(self, context):
-    print('refreshing modapply')
     sett = context.scene.HG3D
     col  = context.scene.modapply_col
     col.clear()

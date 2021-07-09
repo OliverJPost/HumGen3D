@@ -81,6 +81,7 @@ from . features.utility_section.HG_CONTENT_SAVING import (
 from . features.utility_section.HG_MESH_TO_CLOTH import (
     HG_OT_ADDCLOTHMATH,
     HG_OT_ADDCORRECTIVE,
+    HG_OT_ADDMASKS,
     HG_OT_AUTOWEIGHT
 )
 #user interface
@@ -218,6 +219,7 @@ hg_classes = (
     HG_OT_AUTOWEIGHT,
     HG_OT_ADDCORRECTIVE,
     HG_OT_ADDCLOTHMATH,
+    HG_OT_ADDMASKS,
     
     #Devtools
     HG_DELETE_STRETCH,

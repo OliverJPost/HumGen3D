@@ -57,7 +57,6 @@ def load_outfit(self,context, footwear = False):
     #remove collection that was imported along with the cloth objects
     for col in collections:
         bpy.data.collections.remove(col)
-
     _set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
 
     #refresh pcoll for consistent 'click here to select' icon
@@ -166,7 +165,7 @@ def _set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
     #add new masks used by new clothes
     for mask in new_mask_list:
         mod = hg_body.modifiers.new(mask, 'MASK')
-        mod.vertex_group        = mask
+        mod.vertex_group = mask
         mod.invert_vertex_group = True
 
 def _set_armature(context, obj, hg_rig):
@@ -321,5 +320,4 @@ def find_masks(obj) -> list:
             mask_list.append(obj['mask_{}'.format(i)])
         except:
             continue
-    
     return mask_list
