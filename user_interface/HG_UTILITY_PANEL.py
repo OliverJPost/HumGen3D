@@ -626,6 +626,11 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         sett     = context.scene.HG3D
         layout   = self.layout
         hg_icons = preview_collections['hg_icons']
+ 
+        layout.operator('hg3d.draw_tutorial',
+                    text = 'Tutorial',
+                    icon = 'HELP'
+                    ).tutorial_name = 'mtc_tutorial'
         
         box = layout.box().row()
         box.alignment = 'CENTER'
@@ -759,6 +764,12 @@ class HG_PT_T_CLOTHMAT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
   
         col = layout.column()
+        
+        col.operator('hg3d.draw_tutorial',
+                    text = 'Material tutorial',
+                    icon = 'HELP'
+                    ).tutorial_name = 'cloth_mat_tutorial'
+                
         mat = context.object.active_material
         if not (mat and 'HG_Control' in [n.name for n in mat.node_tree.nodes]):
             col.operator('hg3d.addclothmat',
