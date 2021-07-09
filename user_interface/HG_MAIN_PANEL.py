@@ -1806,7 +1806,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                      ).add = False if pattern else True
         
         if pattern:
-            row.popover(panel='HG_ROT_LOC_SCALE',
+            row.popover(panel='HG_PT_ROT_LOC_SCALE',
                         text='Transform',
                         icon='ORIENTATION_GLOBAL'
                         )
@@ -1885,7 +1885,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         return flow, box
 
 #TODO incorrect naming per Blender scheme
-class HG_ROT_LOC_SCALE(bpy.types.Panel):
+class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
     '''
     Popover for the rot, loc and scale of the pattern
     '''

@@ -74,7 +74,11 @@ def _populate_pcoll(self, context, pcoll_categ, ignore_genders):
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)    
     
     path_list = []  
+    # I don't know why, but putting this double fixes a recurring issue where
+    # pcoll equels None
     pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
+    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
+    
     none_thumb = _load_thumbnail('pcoll_placeholder', pcoll)
     pcoll_enum = [('none', '', '', none_thumb.icon_id, 0)]
     for i, full_path in enumerate(file_paths):            

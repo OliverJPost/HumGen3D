@@ -30,11 +30,13 @@ def build_object_list(context, sett) -> list:
         humans = ([find_human(context.object),] if sett.modapply_search_objects == 'full' 
                   else [obj for obj in bpy.data.objects if obj.HG.ishuman])
         for human in humans:
+            if not human:
+                continue
             objs.extend([child for child in human.children])
     return list(set(objs))
 
 def build_full_list(col, mod, obj):
-    item          = col.add()
+    item = col.add()
     item.mod_name = mod.name
     item.mod_type = mod.type
 

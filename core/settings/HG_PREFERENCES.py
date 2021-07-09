@@ -342,7 +342,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         col_side.operator('hg3d.cpacksrefresh',
                           icon = 'FILE_REFRESH',
                           text = '')
-        col_side.popover(panel='HG_ICON_LEGEND',
+        col_side.popover(panel='HG_PT_ICON_LEGEND',
                          text = '',
                          icon = 'PRESET')
 
@@ -674,7 +674,7 @@ class HG_PATHCHANGE(bpy.types.Operator, ImportHelper):
         bpy.ops.wm.save_userpref()
         return {'FINISHED'}
 
-class HG_ICON_LEGEND(bpy.types.Panel):
+class HG_PT_ICON_LEGEND(bpy.types.Panel):
     '''
     Legend popover for the icons used in the ui_list
     '''

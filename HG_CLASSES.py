@@ -1,7 +1,7 @@
 #core
 from . core.HG_CALLBACK import HG_ACTIVATE
 from . core.settings.HG_PREFERENCES import (
-    HG_ICON_LEGEND,
+    HG_PT_ICON_LEGEND,
     HG_PATHCHANGE,
     HG_PREF)
 from . core.settings.HG_PROPS import (
@@ -123,7 +123,7 @@ hg_classes = (
     
     #Panels
     HG_MAIN_PANEL.HG_PT_PANEL, 
-    HG_MAIN_PANEL.HG_ROT_LOC_SCALE,
+    HG_MAIN_PANEL.HG_PT_ROT_LOC_SCALE,
         #utility
     HG_UTILITY_PANEL.HG_PT_UTILITY,
     HG_UTILITY_PANEL.HG_PT_T_BAKE,
@@ -156,7 +156,7 @@ hg_classes = (
     HG_BATCH_PANEL.HG_PT_B_CLOTHING,
     HG_BATCH_PANEL.HG_PT_B_EXPRESSION,
         #pref
-    HG_ICON_LEGEND,
+    HG_PT_ICON_LEGEND,
     #custom ui
     HG_TUTORIAL_OP.HG_DRAW_PANEL,
 
