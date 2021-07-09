@@ -10,7 +10,8 @@ from ... features.common.HG_COMMON_FUNC import (
     find_human,
     apply_shapekeys,
     add_to_collection,
-    get_prefs
+    get_prefs,
+    hg_delete
 )
 from .   HG_LENGTH import (
     apply_armature,
@@ -371,7 +372,7 @@ def reapply_shapekeys(context, sk_objects, hg_body, driver_dict):
             add_driver(hg_body, target_sk, driver_dict[ob.name])
 
     for ob in sk_objects:
-        bpy.data.objects.remove(ob)
+        hg_delete(ob)
 
 def add_driver(hg_body, target_sk, sett_dict):
     """Adds a new driver to the passed shapekey, using the passed dict as settings

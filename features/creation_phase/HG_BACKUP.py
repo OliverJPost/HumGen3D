@@ -3,6 +3,7 @@ import bpy #type: ignore
 from ... features.common.HG_COMMON_FUNC import (
     add_to_collection,
     find_human,
+    hg_delete,
 )
 
 class HG_REVERT_TO_CREATION(bpy.types.Operator):
@@ -33,9 +34,9 @@ class HG_REVERT_TO_CREATION(bpy.types.Operator):
 
         #remove current human, including all children of the current human
         for child in children:
-            bpy.data.objects.remove(child)
-        bpy.data.objects.remove(hg_rig)
-
+            hg_delete(child)
+        hg_delete(hg_rig)
+        
         #backup human: rename, make visible, add to collection
         hg_backup.name          = hg_backup.name.replace('_Backup', '')
         hg_backup.hide_viewport = False

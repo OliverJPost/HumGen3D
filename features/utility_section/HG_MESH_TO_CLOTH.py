@@ -1,6 +1,6 @@
 from pathlib import Path
 import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs, show_message
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete, show_message
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
@@ -115,7 +115,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
         
         set_cloth_corrective_drivers(hg_rig.HG.body_obj, cloth_obj, cloth_obj.data.shape_keys.key_blocks)
         
-        bpy.data.objects.remove(body_copy)
+        hg_delete(body_copy)
         cloth_obj.select_set(True)
         return {'FINISHED'}
 

@@ -10,6 +10,7 @@ from ... features.common.HG_COMMON_FUNC import (
     apply_shapekeys,
     find_human,
     get_prefs,
+    hg_delete,
     show_message)
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
@@ -112,7 +113,7 @@ class Content_Saving_Operator:
             
         bpy.data.scenes.remove(new_scene)
         for obj in objs:
-            bpy.data.objects.remove(obj)
+            hg_delete(obj)
 
     def _remove_particle_systems(self, context, obj):
         """Remove particle systems from the passed object
@@ -664,7 +665,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                 export_list.append(obj_copy)
             
             if gender == 'male':
-                bpy.data.objects.remove(backup_human)    
+                hg_delete(backup_human)
                 
             gender_folder = self.folder + str(Path(f'/{gender}/Custom'))
             self.save_objects_optimized(
@@ -677,7 +678,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                 clear_vg=False,
                 run_in_background= not sett.open_exported_outfits
             )
-        bpy.data.objects.remove(body_copy)
+        hg_delete(body_copy)
 
         show_message(self, 'Succesfully exported outfits')
         return {'FINISHED'}

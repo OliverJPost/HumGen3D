@@ -135,12 +135,16 @@ def show_message(self, msg):
     self.report({'WARNING'}, msg)
     ShowMessageBox(message = msg)
 
+def hg_delete(obj):
+    me = obj.data if (obj and obj.type == 'MESH') else None
 
+    bpy.data.objects.remove(obj)
+
+    if me and not me.users:
+        bpy.data.meshes.remove(me)
 
 
 #TODO make deepclean data removal, using:
-
-#bpy.data.objects.remove(obj)
 
 # for block in bpy.data.meshes:
 #     if block.users == 0:

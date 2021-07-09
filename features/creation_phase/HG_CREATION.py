@@ -14,6 +14,7 @@ from ... features.common.HG_COMMON_FUNC import (
     add_to_collection,
     find_human,
     get_prefs,
+    hg_delete,
     show_message
 )
 from ... core.HG_PCOLL import refresh_pcoll
@@ -226,7 +227,7 @@ class HG_START_CREATION(bpy.types.Operator):
                 self._transfer_shapekeys(context, hg_body, imported_body)
                 
                 imported_body.select_set(False)
-                bpy.data.objects.remove(imported_body)
+                hg_delete(imported_body)
         
         hg_body.show_only_shape_key = False
 

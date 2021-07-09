@@ -11,7 +11,8 @@ from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (
 from ... features.common.HG_COMMON_FUNC import (
     find_human,
     apply_shapekeys,
-    get_prefs)
+    get_prefs,
+    hg_delete)
 from ... features.creation_phase.HG_LENGTH import (
     apply_armature,
     apply_length_to_rig)
@@ -138,8 +139,8 @@ def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
 
     bpy.ops.object.join_shapes()
 
-    bpy.data.objects.remove(source_copy)
-    bpy.data.objects.remove(backup_rig_copy)
+    hg_delete(source_copy)
+    hg_delete(backup_rig_copy)
 
 class FRIG_DATA: #TODO this is a bit weird
     def get_frig_bones(self):
@@ -277,7 +278,7 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
                 add_driver(to_obj, sk, driver_dict[driver_shapekey])
 
         from_obj.select_set(False)
-        bpy.data.objects.remove(from_obj)
+        hg_delete(from_obj)
         to_obj.show_only_shape_key = False
         
 class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):

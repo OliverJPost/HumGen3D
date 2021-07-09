@@ -5,7 +5,7 @@ Operators and functions used for clothing, outfits and footwear of the humans.
 from ... features.finalize_phase.HG_CLOTHING_LOAD import find_masks
 import bpy #type: ignore
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs 
+from ... features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete 
 from ... features.common.HG_RANDOM import set_random_active_in_pcoll
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
@@ -49,7 +49,7 @@ class HG_DELETE_CLOTH(bpy.types.Operator):
 
         cloth_obj = context.object
         remove_masks = find_masks(cloth_obj)
-        bpy.data.objects.remove(cloth_obj)
+        hg_delete(cloth_obj)
 
         remove_mods = [mod for mod in hg_body.modifiers if mod.type == 'MASK' and mod.name in remove_masks]
         

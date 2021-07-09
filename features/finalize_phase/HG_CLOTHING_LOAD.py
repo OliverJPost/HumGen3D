@@ -9,7 +9,8 @@ from ... features.common.HG_COMMON_FUNC import (
     add_to_collection,
     find_human,
     apply_shapekeys,
-    get_prefs
+    get_prefs,
+    hg_delete
 )
 from ... core.HG_PCOLL import refresh_pcoll
 from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict, deform_obj_from_difference
@@ -103,10 +104,9 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
     context.view_layer.objects.active = obj
     _set_armature(context, obj, hg_rig)
     context.view_layer.objects.active = hg_rig
-        
-    bpy.data.objects.remove(backup_body_copy)
+    
+    hg_delete(backup_body_copy)  
  
-
 def _copy_backup_with_gender_sk(backup_body) -> bpy.types.Object:
     """Creates a copy of the backup human with the correct gender settings
 
@@ -268,7 +268,7 @@ def remove_old_outfits(pref, hg_rig, tag) -> list:
         for child in [child for child in hg_rig.children]:
             if tag in child:
                 mask_remove_list.extend(find_masks(child))
-                bpy.data.objects.remove(child)
+                hg_delete(child)
 
     return mask_remove_list
 
