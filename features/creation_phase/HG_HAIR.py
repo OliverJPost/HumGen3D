@@ -1,6 +1,6 @@
 import bpy #type: ignore
 import json
-from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs
+from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs, hg_delete
 from . HG_LENGTH import apply_armature
 from pathlib import Path
 
@@ -198,7 +198,7 @@ def load_hair(self,context, type):
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = True
 
-    bpy.data.objects.remove(hair_obj)
+    hg_delete(hair_obj)
 
 def _get_hair_json(type, pref, sett) -> dict:
     """Loads the data from the json that belongs to the selected hair system
@@ -311,7 +311,7 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     sk = hair_obj.data.shape_keys.key_blocks
     sk[body_copy.name].value = 1
 
-    bpy.data.objects.remove(body_copy)
+    hg_delete(body_copy)
 
 def _transfer_hair_system(json_systems, hair_obj, ps):
     ps_mods = [mod for mod in hair_obj.modifiers 

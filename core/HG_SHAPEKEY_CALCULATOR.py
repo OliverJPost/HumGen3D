@@ -1,7 +1,7 @@
 import bpy #type: ignore
 import mathutils #type:ignore
 from mathutils import Vector #type: ignore
-from .. features.common.HG_COMMON_FUNC import apply_shapekeys, find_human
+from .. features.common.HG_COMMON_FUNC import apply_shapekeys, find_human, hg_delete
 from .. features.creation_phase.HG_LENGTH import apply_armature
 import numpy as np #type: ignore
 
@@ -41,7 +41,7 @@ def build_distance_dict(source_org, target, apply = True):
 
             distance_dict[vt.index] = (index, Vector(v_dist))  
 
-    bpy.data.objects.remove(source)
+    hg_delete(source)
     return distance_dict
 
 #TODO keep
@@ -83,4 +83,4 @@ def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform
         else:
             obj_to_deform.data.vertices[vertex_index].co = obj_to_deform.matrix_world.inverted() @ world_new_loc
 
-    bpy.data.objects.remove(deform_target_copy)
+    hg_delete(deform_target_copy)

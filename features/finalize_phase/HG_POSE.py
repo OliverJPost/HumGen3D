@@ -4,7 +4,7 @@ Operators and functions relating to the posing of the human
 
 import bpy #type: ignore
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs
+from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs, hg_delete
 from ... features.creation_phase.HG_FINISH_CREATION_PHASE import build_driver_dict, add_driver
 class HG_RIGIFY(bpy.types.Operator):
     """Changes the rig to make it compatible with Rigify, then generates the rig
@@ -58,7 +58,7 @@ class HG_RIGIFY(bpy.types.Operator):
         for target_sk_name, sett_dict in driver_dict.items():
             add_driver(hg_body, sks[target_sk_name], sett_dict)
 
-        bpy.data.objects.remove(hg_rig)
+        hg_delete(hg_rig)
         return {'FINISHED'}
 
     def _rename_vertex_groups(self, obj):
@@ -166,7 +166,7 @@ def load_pose(self, context):
     bpy.ops.object.mode_set(mode='OBJECT')
     
     if not pref.debug_mode:
-        bpy.data.objects.remove(hg_pose)
+        hg_delete(hg_pose)
 
 def _import_pose(context) -> bpy.types.Object:
     """Import selected pose object
