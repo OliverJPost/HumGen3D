@@ -50,7 +50,7 @@ class Content_Saving_Operator:
                 img.save_render(str(Path(f'{folder}/{self.name}.jpg')))
             except RuntimeError:
                 show_message(self, 
-                    "[Cancelled] Saving render as thumbnail, but render is empty")
+                    "Saving render as thumbnail, but render is empty")
 
     def save_objects_optimized(self, context, objs, folder, filename, 
                                clear_sk = True, clear_materials = True,
