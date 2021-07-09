@@ -522,19 +522,21 @@ class HG_DELETE_CPACK(bpy.types.Operator):
         #delete files from dict in json
         with open(item.json_path) as f:
             data = json.load(f)
-            
-        file_list = data['files']
         
-        for fn in file_list:
-            filepath = pref.filepath + str(Path(fn))
-            try:
-                os.remove(filepath)
-            except PermissionError:
-                print('Could not remove ',filepath)
-            except FileNotFoundError as e:
-                print('Could not remove ', filepath)
-                print(e)
-
+        os.remove(item.json_path)
+        if 'files' in data:    
+            file_list = data['files']
+            
+            for fn in file_list:
+                filepath = pref.filepath + str(Path(fn))
+                try:
+                    os.remove(filepath)
+                except PermissionError:
+                    print('Could not remove ',filepath)
+                except FileNotFoundError as e:
+                    print('Could not remove ', filepath)
+                    print(e)
+            
         #remove item from collection
         col.remove(index)
         context.scene.contentpacks_col_index = min(max(0, index - 1),
