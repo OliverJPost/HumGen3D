@@ -114,7 +114,6 @@ def _set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data):
         b.location = x_y_z_location
 
     
-#FIXME inaccurate, causing position shifting
 def origin_correction(length):
     #DOCUMENT
     return -0.553*length + 1.0114
@@ -158,7 +157,6 @@ def apply_length_to_rig(hg_rig, context):
     
     bpy.context.view_layer.objects.active = hg_rig
 
-#FIXME does absolutely nothing
 def _correct_origin(rig_length, hg_rig, context):
     """Uses a formula to comensate the origina position for legnth changes
 
