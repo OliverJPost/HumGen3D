@@ -500,6 +500,8 @@ class HG_PREF(bpy.types.AddonPreferences):
     def _draw_sidebar(self, context, sidebar):
         sidebar.scale_y = 1.5
         
+        sidebar.operator("wm.url_open", text="Tutorial", icon = 'URL').url = 'https://humgen3d.com/support/editor'
+        
         #Metadata header
         titlebar = sidebar.box().row()
         titlebar.alignment = 'CENTER'
@@ -510,7 +512,9 @@ class HG_PREF(bpy.types.AddonPreferences):
         col = sidebar.column()
         col.use_property_split = True
         col.use_property_decorate = False        
-        col.prop(self, "cpack_name", text = 'Pack name')
+        row = col.row()
+        row.enabled = False
+        row.prop(self, "cpack_name", text = 'Pack name')
         col.prop(self, "cpack_creator", text = 'Creator')
         col.prop(self, "cpack_weblink",text = 'Weblink')        
         row = col.row()

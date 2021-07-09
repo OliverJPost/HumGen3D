@@ -50,7 +50,10 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         self._create_cpack_json(cpack_name, cpack_folder)
         
         pref.editing_cpack = cpack_name
+             
         cpacks_refresh(self, context)
+        
+        build_content_collection(self, context)
         return {"FINISHED"}
 
     def _create_cpack_json(self, name, cpack_folder):
