@@ -647,6 +647,10 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         col.use_property_decorate = False
         
         col.prop(sett, 'mtc_armature', text = 'Armature:')
+        if sett.mtc_armature and in_creation_phase(sett.mtc_armature):
+            scol = col.column()
+            scol.alert = True
+            scol.label(text = 'Human in creation phase', icon = 'ERROR')
         col.prop(sett, 'shapekey_calc_type', text = 'Cloth type')
         
 #TODO make this panel work 
