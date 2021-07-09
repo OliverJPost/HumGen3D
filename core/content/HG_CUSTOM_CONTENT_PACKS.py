@@ -50,6 +50,7 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         self._create_cpack_json(cpack_name, cpack_folder)
         
         pref.editing_cpack = cpack_name
+        cpacks_refresh(self, context)
         return {"FINISHED"}
 
     def _create_cpack_json(self, name, cpack_folder):
@@ -151,6 +152,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                              if c.include]
         
         export_path_set, categ_set = self._build_export_set(pref, content_to_export)
+        print('Exporting: ', export_path_set)
         
         self._write_json_file(pref, cpack, export_path_set, categ_set)
             
@@ -191,10 +193,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 thumb_path = os.path.splitext(item_path)[0] + '.jpg'
                 if os.path.isfile(pref.filepath + thumb_path):
                     export_list.append(thumb_path)
-            
-            export_list.extend(
-                self._find_associated_files(pref.filepath + item_path, item_categ)
-                )
+    
+            associated_files = self._find_associated_files(pref.filepath + item_path, item_categ)        
+            export_list.extend(associated_files)
             categ_list.append(export_item.categ)
         
         return set(export_list), set(categ_list)
@@ -310,9 +311,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 folder = 'head' if categ == 'hairstyles' else 'facial_hair'
                 associated_files.append(str(Path(f'/hair/{folder}/{blendfile}')))
         
-        associated_files = map(lambda x: self._correct_relative_path(x, categ), associated_files)
-        
-        return list(associated_files)
+        mapped_associated_files = map(lambda x: self._correct_relative_path(x, categ), associated_files)
+        returnv = list(mapped_associated_files)
+        return returnv
     
     def _correct_relative_path(self, path, categ) -> str:
         """Deals with Blender //..\..\ relative paths and converts any absolute
@@ -327,7 +328,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         """
         if os.path.isfile(path):
             #return the filepath as relative if it's an absolute path
-            return os.path.relpath(get_prefs().filepath, path)
+            return os.path.relpath(path, get_prefs().filepath)
         
         path = path.replace('/', '\\') #unifies slashes
         path_split = path.split('\\') #splits path into list
