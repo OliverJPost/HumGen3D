@@ -542,9 +542,13 @@ class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         col= layout.column(align = True)
 
-        scol = col.column()
-        scol.alert = True
-        scol.label(text='Still under construction', icon = 'ERROR')
+        col.operator('hg3d.draw_tutorial',
+                    text = 'Tutorial',
+                    icon = 'HELP'
+                    ).tutorial_name = 'save_outfits_tutorial'
+
+        col.separator()
+
         self.draw_thumbnail_selector(col, sett)
 
         col.separator()
