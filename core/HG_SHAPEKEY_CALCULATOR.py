@@ -45,7 +45,7 @@ def build_distance_dict(source_org, target, apply = True):
     return distance_dict
 
 #TODO keep
-def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform, as_shapekey = True, apply_source_sks = True):
+def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform, as_shapekey = True, apply_source_sks = True, ignore_cor_sk = False):
     """
     Creates a shapekey from the difference between the distance_dict value and the current distance to that corresponding vertex
     """
@@ -53,7 +53,7 @@ def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform
     deform_target_copy.data = deform_target_copy.data.copy()
     bpy.context.scene.collection.objects.link(deform_target_copy)
     
-    if deform_target_copy.data.shape_keys:
+    if deform_target_copy.data.shape_keys and ignore_cor_sk:
         for sk in [sk for sk in deform_target_copy.data.shape_keys.key_blocks if sk.name.startswith('cor_')]:
             deform_target_copy.shape_key_remove(sk)
         
@@ -77,8 +77,6 @@ def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform
         source_new_vert_loc = deform_target_copy.matrix_world @ deform_target_copy.data.vertices[distance_dict[vertex_index][0]].co
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc    = source_new_vert_loc - distance_to_vert
-        if vertex_index == 24:
-            print('test', world_new_loc, distance_to_vert)
 
         if sk:
             sk.data[vertex_index].co = obj_to_deform.matrix_world.inverted() @ world_new_loc

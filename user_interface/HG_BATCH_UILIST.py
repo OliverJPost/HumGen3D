@@ -124,7 +124,6 @@ def uilist_refresh(self, context, categ):
             item.count = find_item_amount(context, categ, False, folder[0])
 
     if not gender:
-        #print(categ, [item for item in collection])
         return
 
     found_folders_female = find_folders(self, context, categ, 'female', include_all = False)

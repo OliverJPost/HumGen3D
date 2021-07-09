@@ -214,7 +214,6 @@ def _match_rotation_mode(hg_rig, hg_pose, context):
     for bone in hg_rig.pose.bones:
         b_name = bone.name if bone.name != 'neck' else 'spine.004'
         if b_name in hg_pose.pose.bones:
-            print(f'changing {b_name}')
             bone.rotation_mode = hg_pose.pose.bones[b_name].rotation_mode = 'QUATERNION'
     bpy.ops.object.mode_set(mode='OBJECT')
     

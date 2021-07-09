@@ -79,7 +79,6 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         col = context.scene.modapply_col
 
         objs = build_object_list(context, sett)
-        print('objs1', objs)
 
         sk_dict = {}
         driver_dict = {}
@@ -92,7 +91,6 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         objs_to_apply = objs.copy()
         for sk_list in sk_dict.values():
             if sk_list:
-                print('extending with', sk_list)
                 objs_to_apply.extend(sk_list)
 
         self.apply_modifiers(context, sett, col, sk_dict, objs_to_apply)
@@ -215,7 +213,6 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
         for sk in hg_body.data.shape_keys.key_blocks[:]:
             if sk.name == 'Basis' or sk.name.startswith('cor_'):
                 continue
-            print('iterating over ', sk.name)
             sk.driver_remove("value")
             sk.keyframe_insert("value", frame=0)
             if self.suffix == 'long' and sk.name.endswith(('_L', '_R')):

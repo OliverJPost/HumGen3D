@@ -152,7 +152,6 @@ def register():
     #RELEASE remove print statements
     #RELEASE TURN OFF SSS
     for cls in hg_classes:    
-        #print('registering', cls)
         bpy.utils.register_class(cls)
     
     bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS) #Main props

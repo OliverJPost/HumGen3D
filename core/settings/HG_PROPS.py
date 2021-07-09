@@ -462,7 +462,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                 ("pants", "Bottom",    "", 0),
                 ("top",   "Top",       "", 1),
                 ("shoe",  "Footwear",  "", 2),
-                ("full",  "Full Body", "", 2),
+                ("full",  "Full Body", "", 3),
             ],
         default = "top",
         )   
@@ -644,6 +644,13 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                           poll = poll_mtc_armature)
     mtc_add_armature_mod: BoolProperty(default = True)
     mtc_parent          : BoolProperty(default = True)
+
+    mask_long_arms : BoolProperty(default = False)
+    mask_short_arms: BoolProperty(default = False)
+    mask_long_legs : BoolProperty(default = False)
+    mask_short_legs: BoolProperty(default = False)
+    mask_torso     : BoolProperty(default = False)
+    mask_foot      : BoolProperty(default = False)
 
     custom_content_categ : bpy.props.EnumProperty(
         name="Content type",

@@ -51,7 +51,6 @@ def add_texture(node, sub_path, tx_type):
         image_path = filepath
     else:
         for fn in os.listdir(filepath):
-            print(f'found {fn} in {filepath}')
             if tx_type[:4].lower() in fn.lower():
                 image_path = filepath + str(Path('/{}'.format(fn)))
 
