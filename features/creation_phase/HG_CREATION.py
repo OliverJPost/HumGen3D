@@ -393,6 +393,8 @@ class HG_START_CREATION(bpy.types.Operator):
         """
         node = nodes[node_name]
         for input_name, value in input_dict.items():
+            if input_name.isnumeric():
+                input_name = int(input_name)
             node.inputs[input_name].default_value = value
 
     def _set_preset_eyebrows(self, hg_body, preset_data):

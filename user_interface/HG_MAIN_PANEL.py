@@ -690,7 +690,12 @@ class HG_PT_PANEL(bpy.types.Panel):
                  text = 'Redness',
                  slider = True
                  )
-        
+        if len(tone_node.inputs) > 3:
+            col.prop(tone_node.inputs[3], 'default_value',
+                    text = 'Saturation',
+                    slider = True
+                    )
+
         col.separator()
         
         normal_node = nodes['Normal Map']
