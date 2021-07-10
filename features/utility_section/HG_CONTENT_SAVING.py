@@ -422,7 +422,8 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
             'Bump': 'Strength',
             'Normal Map': 'Strength',
             'Darken_hsv': 'Value',
-            'Lighten_hsv': 'Value'
+            'Lighten_hsv': 'Value',
+            'R_Multiply': 1
         }
         
         for nodename, input_name in nodename_dict.items():
