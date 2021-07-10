@@ -173,7 +173,6 @@ def _get_mats_and_images(obj):
     except:
         raise
         pass
-    print('returning', images)
     return list(set(images)), materials
 
 
