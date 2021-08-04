@@ -109,7 +109,12 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         for item in col:
             if item.mod_type == 'ARMATURE' and (item.count or item.object == obj) and item.enabled:
                 apply = True
+        pref = get_prefs()
+        #TODO this is kind of weird
+        keep_sk_pref = pref.keep_all_shapekeys
+        pref.keep_all_shapekeys = True
         sk_dict[obj.name], driver_dict[obj.name] = extract_shapekeys_to_keep(context, obj, apply_armature = apply)
+        pref.keep_all_shapekeys = keep_sk_pref
         return sk_dict, driver_dict
 
     def apply_modifiers(self, context, sett, col, sk_dict, objs_to_apply):
