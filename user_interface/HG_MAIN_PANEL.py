@@ -1295,7 +1295,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         if self.sett.hair_cards_ui:
             box.operator('hg3d.haircards')
 
-    def _get_hair_systems(self, body_obj) -> list:
+    def _get_hair_systems(self, body_obj, eyesystems = False) -> list:
         """get a list of hair systems on this object
 
         Args:
@@ -1308,8 +1308,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         hair_systems = []
         for mod in body_obj.modifiers:
             if (mod.type == 'PARTICLE_SYSTEM'
-                and not mod.particle_system.name.startswith(
-                    ('Eyebrows', 'Eyelashes')
+                and (eyesystems
+                    or not mod.particle_system.name.startswith(
+                    ('Eyebrows', 'Eyelashes'))
                     )
                 ):
                 hair_systems.append(mod.particle_system)
@@ -1376,7 +1377,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         
         boxbox = box.box()
         
-        hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj)
+        hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj, eyesystems = True)
         
         row = boxbox.row()
         row.alignment = 'CENTER'
@@ -1384,10 +1385,10 @@ class HG_PT_PANEL(bpy.types.Panel):
                   icon_value = hg_icons['hair'].icon_id
                   )
         
-        if hair_systems:
-            self._draw_hair_children_switch(hair_systems, boxbox)
-            self._draw_hair_length_ui(hair_systems, boxbox)
-            self._draw_hair_material_ui(boxbox)
+        
+        self._draw_hair_children_switch(hair_systems, boxbox)
+        self._draw_hair_length_ui(hair_systems, boxbox)
+        self._draw_hair_material_ui(boxbox)
           
 
     #   ______  __        ______   .___________. __    __   __  .__   __.   _______ 
