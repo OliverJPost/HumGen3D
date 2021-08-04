@@ -106,6 +106,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     nc_colorspace_name: bpy.props.StringProperty(default = '')
     debug_mode: bpy.props.BoolProperty(default = False)
 
+    skip_url_request: bpy.props.BoolProperty(default = False)
 
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
@@ -303,6 +304,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         col.prop(self, 'debug_mode',
                  text = "Debug Mode")
         col.prop(self, 'dev_tools')
+        col.prop(self, 'skip_url_request', text = 'Skip URL request')
         
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned"""

@@ -12,6 +12,9 @@ def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack 
     updates available"""
     pref = get_prefs()
+    if pref.skip_url_request:
+        return
+    
     url  = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
     resp = requests.get(url)
 
