@@ -87,9 +87,11 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             show_message(self, 'Active object is not a mesh')
             return {'FINISHED'}
         
-        remove_list = [driver for driver in body_copy.data.shape_keys.animation_data.drivers]
-        for driver in remove_list:
-            body_copy.data.shape_keys.animation_data.drivers.remove(driver)
+        if body_copy.data.shape_keys:
+            remove_list = [driver for driver 
+                           in body_copy.data.shape_keys.animation_data.drivers]
+            for driver in remove_list:
+                body_copy.data.shape_keys.animation_data.drivers.remove(driver)
         
         distance_dict = build_distance_dict(body_copy, cloth_obj, apply = False) 
         
