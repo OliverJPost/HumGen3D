@@ -96,7 +96,8 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
         distance_dict = build_distance_dict(body_copy, cloth_obj, apply = False) 
         
         if cloth_obj.data.shape_keys:
-            for sk in [sk for sk in cloth_obj.data.shape_keys.key_blocks if sk.name.startswith('cor')]:
+            for sk in [sk for sk in cloth_obj.data.shape_keys.key_blocks 
+                       if sk.name.startswith('cor')]:
                 cloth_obj.shape_key_remove(sk)
         
         if not cloth_obj.data.shape_keys:
@@ -112,10 +113,12 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             
         for sk in shapekey_list:
             sks[sk].value = 1
-            deform_obj_from_difference(sk, distance_dict, body_copy, cloth_obj, as_shapekey=True)
+            deform_obj_from_difference(sk, distance_dict, body_copy, cloth_obj,
+                                       as_shapekey=True)
             sks[sk].value = 0
         
-        set_cloth_corrective_drivers(hg_rig.HG.body_obj, cloth_obj, cloth_obj.data.shape_keys.key_blocks)
+        set_cloth_corrective_drivers(hg_rig.HG.body_obj, cloth_obj, 
+                                     cloth_obj.data.shape_keys.key_blocks)
         
         hg_delete(body_copy)
         cloth_obj.select_set(True)
