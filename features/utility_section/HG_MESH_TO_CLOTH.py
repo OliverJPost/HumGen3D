@@ -37,7 +37,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         if self.sett.mtc_add_armature_mod:
             armature = next((mod for mod in cloth_obj.modifiers if mod.type == 'ARMATURE'), None) 
             if not armature:
-                cloth_obj.modifiers.new(name = 'Cloth Armature', type = 'ARMATURE')
+                armature = cloth_obj.modifiers.new(name = 'Cloth Armature', type = 'ARMATURE')
             armature.object = self.hg_rig
             if (2, 90, 0) > bpy.app.version: #use old method for versions older than 2.90
                 while cloth_obj.modifiers.find(armature.name) != 0:
