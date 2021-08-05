@@ -1220,14 +1220,9 @@ class HG_PT_PANEL(bpy.types.Panel):
             )        
         if not self.sett.hair_mat_ui:
             return
-        
-        gender = self.hg_rig.HG.gender
-        row = boxbox.row(align = True)
-        row.scale_y = 1.5
-        row.prop(self.sett, 'hair_mat_{}'.format(gender),
-                 expand = True
-                 )
 
+        gender = self.hg_rig.HG.gender
+   
         categ = (self.sett.hair_mat_male 
                  if gender == 'male' 
                  else self.sett.hair_mat_female
@@ -1242,9 +1237,25 @@ class HG_PT_PANEL(bpy.types.Panel):
             mat for mat in self.hg_rig.HG.body_obj.data.materials
             if mat.name.startswith(mat_names[categ])
             )
-        hair_node = hair_mat.node_tree.nodes['HG_Hair']
+        if 'HG_Hair_V2' in [n.name for n in hair_mat.node_tree.nodes]:
+            hair_node = hair_mat.node_tree.nodes['HG_Hair_V2']
+            new_hair_node = True
+        else:
+            hair_node = hair_mat.node_tree.nodes['HG_Hair']
+            new_hair_node = False   
+        
+        if new_hair_node:
+            boxbox.prop(self.sett, 'hair_shader_type', text = 'Shader')        
+        
+
+        row = boxbox.row(align = True)
+        row.scale_y = 1.5
+        row.prop(self.sett, 'hair_mat_{}'.format(gender),
+                 expand = True
+                 )
 
         col = boxbox.column()
+        
         col.prop(hair_node.inputs['Hair Lightness'], 'default_value',
                  text = 'Lightness',
                  slider = True

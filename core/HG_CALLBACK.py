@@ -128,6 +128,8 @@ def _set_shader_switches(hg_rig, sett):
         sett.underwear_toggle = ('on' if uw_node.inputs[1].default_value == 1
                                  else 'off')
     
+    _hair_shader_type_update(sett, body_obj)
+    
     sett.update_exception = False
 
 def _context_specific_updates(self, sett, hg_rig, ui_phase):    
@@ -196,4 +198,14 @@ def tab_change_update(self, context):
     refresh_hair_ul(self, context)
     refresh_outfit_ul(self, context)
 
-
+def _hair_shader_type_update(sett, hg_body):
+    mat= hg_body.data.materials[1]
+    hair_node = mat.node_tree.nodes.get('HG_Hair_V2')
+    
+    if not hair_node:
+        print('hair node not found')
+        return
+    
+    switch_value = hair_node.inputs['Fast/Accurate'].default_value
+    print('switch value is ', switch_value)
+    sett.hair_shader_type = 'fast' if switch_value == 0.0 else 'accurate'

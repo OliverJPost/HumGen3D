@@ -2,6 +2,7 @@
 Operators and functions to be used by the developer and content pack creators
 """
 
+from ... features.creation_phase.HG_HAIR import convert_to_new_hair_shader
 import bpy #type: ignore
 from ... features.common.HG_COMMON_FUNC import find_human
 from ... features.creation_phase.HG_FINISH_CREATION_PHASE import remove_stretch_bones
@@ -16,6 +17,28 @@ class HG_TESTOP(bpy.types.Operator):
     bl_options     = {"UNDO"}
 
     def execute(self,context):
+        hg_rig = find_human(context.object)
+        hg_body = hg_rig.HG.body_obj
+        convert_to_new_hair_shader(hg_body)
+        return {'FINISHED'}
+
+class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
+    """Operator for testing bits of code
+    """
+    bl_idname      = "hg3d.convert_hair_shader"
+    bl_label       = "Convert to new hair shader"
+    bl_description = "Convert human that still uses old hair to the new hair shader"
+    bl_options     = {"UNDO"}
+
+    def execute(self,context):
+        hg_rig = find_human(context.object)
+        hg_body = hg_rig.HG.body_obj
+        if hg_body.data.materials[1].node_tree.nodes.get('HG_Hair_V2'):
+            self.report({'INFO'}, 'This human already has the new hair shader')
+            return {'FINISHED'}
+        
+        convert_to_new_hair_shader(hg_body)
+        self.report({'INFO'}, 'Converted hair to new hair shader')
         return {'FINISHED'}
 
 

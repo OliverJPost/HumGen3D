@@ -3,6 +3,7 @@ import json
 from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs, hg_delete
 from . HG_LENGTH import apply_armature
 from pathlib import Path
+import os
 
 class HG_REMOVE_HAIR(bpy.types.Operator):
     """Removes the corresponding hair system
@@ -476,3 +477,43 @@ def _move_modifiers_above_masks(hg_body, new_systems):
             bpy.ops.object.modifier_move_to_index(modifier=mod.name,
                                                   index=lowest_mask_index)
 
+def convert_to_new_hair_shader(hg_body):
+    hair_mats = hg_body.data.materials[1:3]
+    
+    group_nodes = []
+    for mat in hair_mats:
+        group_nodes.append(next((n for n in mat.node_tree.nodes if n.name == 'HG_Hair'), None))
+    
+    #check if there is at least one 
+    if not any(group_nodes):
+        return    
+        
+    addon_folder = Path(Path(os.path.dirname(__file__)).parent).parent
+    blendfile = os.path.join(addon_folder, 'data', 'hair_shader_v2.blend')
+
+    if 'HG_Hair_V2' in [ng.name for ng in bpy.data.node_groups]:
+        new_hair_group = bpy.data.node_groups['HG_Hair_V2']
+    else:
+        with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
+            data_to.node_groups = data_from.node_groups
+            
+        new_hair_group = data_to.node_groups[0]
+    
+    for node in group_nodes:
+        node.node_tree = new_hair_group
+        node.name = 'HG_Hair_V2'
+        
+def update_hair_shader_type(self, context):
+    shader_type = self.hair_shader_type
+    value = 0 if shader_type == 'fast' else 1
+    
+    hg_rig = find_human(context.object)
+    hg_body = hg_rig.HG.body_obj
+    
+    for mat in hg_body.data.materials[1:3]:
+        hair_group = mat.node_tree.nodes.get('HG_Hair_V2')
+        if not hair_group:
+            continue
+        
+        hair_group.inputs['Fast/Accurate'].default_value = value
+    

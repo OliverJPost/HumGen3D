@@ -24,7 +24,7 @@ from ... features.finalize_phase.HG_POSE import load_pose
 from ... features.finalize_phase.HG_CLOTHING import load_pattern 
 from ... features.finalize_phase.HG_CLOTHING_LOAD import load_outfit
 from ... features.finalize_phase.HG_EXPRESSION import load_expression
-from ... features.creation_phase.HG_HAIR import load_hair
+from ... features.creation_phase.HG_HAIR import load_hair, update_hair_shader_type
 from ... features.creation_phase.HG_MATERIAL import load_textures
 from ... features.creation_phase.HG_BODY import scale_bones
 from ... user_interface import HG_BATCH_UILIST
@@ -505,7 +505,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     )
     dont_export_thumb: BoolProperty(default = False)
 
-    hair_mat_male : EnumProperty(
+    hair_mat_male: EnumProperty(
         name="posing",
         
         items = [
@@ -516,7 +516,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "eye",
         )   
 
-    hair_mat_female : EnumProperty(
+    hair_mat_female: EnumProperty(
         name="posing",
         
         items = [
@@ -526,6 +526,15 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "eye",
         )   
 
+    hair_shader_type: EnumProperty(
+        name="Hair shader type",
+        items = [
+                ("fast",  "Fast", "", 0),
+                ("accurate", "Accurate (Cycles only)", "", 1),
+            ],
+        default = "fast",
+        update = update_hair_shader_type
+        )   
 
     #baking
     bake_res_body: EnumProperty(

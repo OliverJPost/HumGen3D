@@ -2,6 +2,7 @@
 Operators and functions used for adding the base human and for reverting to creation phase
 """
 
+from . HG_HAIR import convert_to_new_hair_shader
 import json
 import bpy #type: ignore
 import os
@@ -130,6 +131,8 @@ class HG_START_CREATION(bpy.types.Operator):
         context.view_layer.objects.active = hg_rig
         self._configure_human_from_preset(context, sett, gender,
                                                    hg_body, hg_eyes, preset_data)
+
+        convert_to_new_hair_shader(hg_body)
 
         #collapse modifiers
         for mod in hg_body.modifiers:

@@ -225,6 +225,7 @@ hg_classes = (
     HG_DELETE_STRETCH,
     HG_MASK_PROP,
     HG_TESTOP,
+    HG_CONVERT_HAIR_SHADER,
     HG_OT_PREPARE_FOR_ARKIT,
     
     #Update
