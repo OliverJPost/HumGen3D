@@ -13,13 +13,10 @@ class HG_TESTOP(bpy.types.Operator):
     """
     bl_idname      = "hg3d.testop"
     bl_label       = "Test"
-    bl_description = ""
+    bl_description = "Empty operator used for internal testing"
     bl_options     = {"UNDO"}
 
     def execute(self,context):
-        hg_rig = find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
-        convert_to_new_hair_shader(hg_body)
         return {'FINISHED'}
 
 class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
