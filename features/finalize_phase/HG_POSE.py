@@ -61,7 +61,12 @@ class HG_RIGIFY(bpy.types.Operator):
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)
         
+        if 'facial_rig' in hg_body:
+            for bone in hg_rig.pose.bones:
+                self._relink_constraints(bone, rigify_rig)
+        
         hg_delete(hg_rig)
+        
         return {'FINISHED'}
 
     def _rename_vertex_groups(self, obj):
@@ -139,6 +144,52 @@ class HG_RIGIFY(bpy.types.Operator):
             target.id = rigify_rig    
             if target.bone_target.startswith(('forearm', 'upper_arm', 'thigh', 'foot')):  
                 target.bone_target = 'DEF-' + target.bone_target     
+
+    def _relink_constraints(self, bone, rigify_rig):
+        """Relinks the limit_location constraints, currently used on the facial
+        rig
+
+        Args:
+            bone (PoseBone): Bone on the old rig that may have a loc constraints
+            rigify_rig (Armature): New rig, which to add constraints on
+        """
+        new_bone = rigify_rig.pose.bones.get(bone.name)
+        if not new_bone or not bone.constraints:
+            return
+        
+        old_loc_constraint = next((c for c in bone.constraints 
+                                   if c.type == 'LIMIT_LOCATION'))
+        if not old_loc_constraint:
+            return
+        
+        new_loc_constraint = new_bone.constraints.new('LIMIT_LOCATION')
+        new_loc_constraint.owner_space = 'LOCAL'
+        
+        for limit in ['min', 'max']:
+            for axis in ['x', 'y', 'z']:
+                self._match_constraint_settings(old_loc_constraint, 
+                                                new_loc_constraint, limit, axis)
+
+    def _match_constraint_settings(self, old_loc_constraint, new_loc_constraint, 
+                                   limit, axis):
+        """Matches the settings between two limit location constraints
+
+        Args:
+            old_loc_constraint (Constraint): Constraint on old rig
+            new_loc_constraint (Constraint): Constraint on new rigify rig
+            limit (str): Min or max location to limiat
+            axis (str): Axis to limit locaiton on
+        """
+        if getattr(old_loc_constraint, f'use_{limit}_{axis}'):
+            setattr(new_loc_constraint,
+                            f'use_{limit}_{axis}',
+                            True)
+            setattr(new_loc_constraint,
+                            f'{limit}_{axis}',
+                            getattr(old_loc_constraint, f'{limit}_{axis}')
+                            )
+        
+
 
 def load_pose(self, context):
     """Gets called by pcoll_pose to add selected pose to human
