@@ -100,6 +100,8 @@ class HG_START_CREATION(bpy.types.Operator):
         gender, hg_rig, hg_body, hg_eyes = self._import_human(context, sett, pref)
         self._set_HG_object_props(sett, hg_rig, hg_body)
 
+        self._set_eevee_ao_and_strip(context)
+
         self._load_external_shapekeys(context, pref, hg_body)
 
         context.view_layer.objects.active = hg_rig
@@ -205,6 +207,13 @@ class HG_START_CREATION(bpy.types.Operator):
         HG.body_obj = hg_body
         HG.length   = hg_rig.dimensions[2]
 
+    def _set_eevee_ao_and_strip(self, context):
+        current_render_engine = str(context.scene.render.engine)
+        context.scene.render.engine = 'BLENDER_EEVEE'
+        context.scene.eevee.use_gtao = True
+        context.scene.render.hair_type = 'STRIP'
+        context.scene.render.engine = current_render_engine
+        
     def _load_external_shapekeys(self, context, pref, hg_body):
         """Imports external shapekeys from the models/shapekeys folder
 
