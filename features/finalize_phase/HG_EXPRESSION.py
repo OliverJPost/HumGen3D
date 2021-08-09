@@ -279,11 +279,17 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
         for driver_shapekey in driver_dict:
             if driver_shapekey in sks_on_target:
                 sk = to_obj.data.shape_keys.key_blocks[driver_shapekey]
-                add_driver(to_obj, sk, driver_dict[driver_shapekey])
-
+                driver = add_driver(to_obj, sk, driver_dict[driver_shapekey])
+                
+                #correction for mistake in expression
+                if driver_shapekey == 'mouthClose':
+                    driver.expression = 'var*100'
+                    
         from_obj.select_set(False)
         hg_delete(from_obj)
         to_obj.show_only_shape_key = False
+
+        
         
 class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
     """Removes the facial rig, including its shapekeys
