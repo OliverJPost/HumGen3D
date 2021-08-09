@@ -129,7 +129,6 @@ class HG_RIGIFY(bpy.types.Operator):
             obj (Object): HumGen body object?
             rigify_rig (Object): new Rigify rig
         """
-        print('XXXXXXXXXXXXXXXXXXXXXXXXXXX correcting drivers for ', obj)
         if not obj.data.shape_keys or not obj.data.shape_keys.animation_data:
             return
         
@@ -140,7 +139,6 @@ class HG_RIGIFY(bpy.types.Operator):
             target.id = rigify_rig    
             if target.bone_target.startswith(('forearm', 'upper_arm', 'thigh', 'foot')):  
                 target.bone_target = 'DEF-' + target.bone_target     
-                print('setting bone target to ', 'DEF-' + target.bone_target )   
 
 def load_pose(self, context):
     """Gets called by pcoll_pose to add selected pose to human
