@@ -392,6 +392,8 @@ def add_driver(hg_body, target_sk, sett_dict):
     target.bone_target     = sett_dict['target_bone']
     target.transform_type  = sett_dict['transform_type']
     target.transform_space = sett_dict['transform_space']
+    
+    return driver
 
 def _remove_teeth_constraint(hg_rig):
     """Remove child_of constraints from the teeth
