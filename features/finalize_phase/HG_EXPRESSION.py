@@ -222,6 +222,10 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
             b = hg_rig.pose.bones[b_name]
             b.bone.hide= False
         
+        for sk in hg_body.data.shape_keys.key_blocks:
+            if sk.name.startswith('expr'):
+                sk.mute = True
+        
         self._load_FACS_sks(context, hg_rig)
 
         hg_body['facial_rig'] = 1
