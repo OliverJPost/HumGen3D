@@ -57,7 +57,10 @@ class HG_RIGIFY(bpy.types.Operator):
         sks= hg_body.data.shape_keys.key_blocks
         for target_sk_name, sett_dict in driver_dict.items():
             add_driver(hg_body, sks[target_sk_name], sett_dict)
-
+        
+        for child in rigify_rig.children:
+            self._correct_drivers(child, rigify_rig)
+        
         hg_delete(hg_rig)
         return {'FINISHED'}
 
@@ -99,7 +102,6 @@ class HG_RIGIFY(bpy.types.Operator):
             if child_armature:
                 child_armature[0].object = rigify_rig
                 self._rename_vertex_groups(child)
-                self._correct_drivers(child, rigify_rig)
 
     def _find_created_rigify_rig(self, context) -> bpy.types.Object:
         """Finds the newly created Rigify rig
@@ -127,14 +129,18 @@ class HG_RIGIFY(bpy.types.Operator):
             obj (Object): HumGen body object?
             rigify_rig (Object): new Rigify rig
         """
+        print('XXXXXXXXXXXXXXXXXXXXXXXXXXX correcting drivers for ', obj)
         if not obj.data.shape_keys or not obj.data.shape_keys.animation_data:
             return
         
+        print(obj.name, obj.data.shape_keys.animation_data.drivers[:])
         for driver in obj.data.shape_keys.animation_data.drivers:            
             var = driver.driver.variables[0]
             target = var.targets[0]
             target.id = rigify_rig    
-            target.bone_target = 'DEF-' + target.bone_target        
+            if target.bone_target.startswith(('forearm', 'upper_arm', 'thigh', 'foot')):  
+                target.bone_target = 'DEF-' + target.bone_target     
+                print('setting bone target to ', 'DEF-' + target.bone_target )   
 
 def load_pose(self, context):
     """Gets called by pcoll_pose to add selected pose to human
