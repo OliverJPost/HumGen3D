@@ -17,7 +17,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     #RELEASE remove default path
     filepath    : bpy.props.StringProperty(
         name= 'Install Filepath',
-        default = ''
+        default = r'C:\Users\Ole\OneDrive\HumGen_Files_Main\\'
         )
 
     #update props
