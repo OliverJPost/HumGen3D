@@ -78,9 +78,6 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
     backup_rig.HG.body_obj.hide_viewport = False
     backup_body = [obj for obj in backup_rig.children 
                    if 'hg_body' in obj][0]
-    for sk in [sk for sk in backup_body.data.shape_keys.key_blocks 
-               if sk.name not in ['Basis', 'Male']]:
-        sk.value = 0
 
     backup_body_copy = _copy_backup_with_gender_sk(backup_body)
     
@@ -108,7 +105,8 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
     hg_delete(backup_body_copy)  
  
 def _copy_backup_with_gender_sk(backup_body) -> bpy.types.Object:
-    """Creates a copy of the backup human with the correct gender settings
+    """Creates a copy of the backup human with the correct gender settings and
+    all other shapekeys set to 0
 
     Args:
         backup_body (Object): body of the hidden backup human
@@ -119,6 +117,10 @@ def _copy_backup_with_gender_sk(backup_body) -> bpy.types.Object:
     copy      = backup_body.copy()
     copy.data = backup_body.data.copy()
     bpy.context.scene.collection.objects.link(copy)    
+
+    for sk in [sk for sk in copy.data.shape_keys.key_blocks 
+               if sk.name not in ['Basis', 'Male']]:
+        sk.value = 0
 
     gender = backup_body.parent.HG.gender
 
