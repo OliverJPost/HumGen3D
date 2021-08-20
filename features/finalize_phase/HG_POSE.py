@@ -137,7 +137,6 @@ class HG_RIGIFY(bpy.types.Operator):
         if not obj.data.shape_keys or not obj.data.shape_keys.animation_data:
             return
         
-        print(obj.name, obj.data.shape_keys.animation_data.drivers[:])
         for driver in obj.data.shape_keys.animation_data.drivers:            
             var = driver.driver.variables[0]
             target = var.targets[0]
