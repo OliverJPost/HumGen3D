@@ -80,7 +80,6 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
                    if 'hg_body' in obj][0]
 
     backup_body_copy = _copy_backup_with_gender_sk(backup_body)
-    print('XXXXXXXXXX location', obj.location)
     distance_dict = build_distance_dict(
         backup_body_copy,
         obj,
