@@ -36,13 +36,18 @@ def build_distance_dict(source_org, target, apply = True):
 
         co_find = source.matrix_world.inverted() @ vt_loc
 
-        for (co, index, _) in kd.find_n(co_find, 1):
+        for (co, index, _) in kd.find_n(co_find, 1): 
             v_dist = np.subtract(co, co_find)
 
             distance_dict[vt.index] = (index, Vector(v_dist))  
 
     hg_delete(source)
     return distance_dict
+
+def _add_empty(location):
+    o = bpy.data.objects.new("empty", None )
+    bpy.context.scene.collection.objects.link( o )
+    o.location = location
 
 #TODO keep
 def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform, as_shapekey = True, apply_source_sks = True, ignore_cor_sk = False):
@@ -70,6 +75,7 @@ def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform
     if as_shapekey:
         sk = obj_to_deform.shape_key_add(name = name)
         sk.interpolation = 'KEY_LINEAR'
+        sk.value = 1
     elif obj_to_deform.data.shape_keys:
         sk = obj_to_deform.data.shape_keys.key_blocks['Basis']
 
@@ -84,3 +90,4 @@ def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform
             obj_to_deform.data.vertices[vertex_index].co = obj_to_deform.matrix_world.inverted() @ world_new_loc
 
     hg_delete(deform_target_copy)
+    

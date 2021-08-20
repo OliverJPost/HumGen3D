@@ -348,7 +348,10 @@ class HG_START_CREATION(bpy.types.Operator):
         if preset_data['experimental']:
             bpy.ops.hg3d.experimental()
         
-        sett.human_length = preset_data['body_proportions']['length']*100
+        preset_length = preset_data['body_proportions']['length']*100
+        if preset_length > 181 and preset_length < 182:
+            preset_length = 183.15 #override for clothing creation
+        sett.human_length = preset_length
         sett.chest_size = preset_data['body_proportions']['chest']  
 
         sks = hg_body.data.shape_keys.key_blocks

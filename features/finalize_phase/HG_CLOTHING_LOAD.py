@@ -80,7 +80,7 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
                    if 'hg_body' in obj][0]
 
     backup_body_copy = _copy_backup_with_gender_sk(backup_body)
-    
+    print('XXXXXXXXXX location', obj.location)
     distance_dict = build_distance_dict(
         backup_body_copy,
         obj,
@@ -88,7 +88,7 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
     )
     
     obj.parent = hg_rig
-
+    
     deform_obj_from_difference(
         'Body Proportions',
         distance_dict,
@@ -96,6 +96,7 @@ def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
         obj,
         as_shapekey=True
     )
+    
     obj.data.shape_keys.key_blocks['Body Proportions'].value = 1
     
     context.view_layer.objects.active = obj
@@ -243,6 +244,7 @@ def _import_cloth_items(context, sett, pref, hg_rig, footwear) -> 'tuple[list, l
     # parent. This also makes sure their rotation and location is correct
     for obj in cloth_objs:
         add_to_collection(context, obj)
+        obj.location = (0,0,0)
         obj.parent = hg_rig
         obj.select_set(True)
 

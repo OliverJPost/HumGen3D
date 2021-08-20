@@ -153,24 +153,21 @@ def apply_length_to_rig(hg_rig, context):
         obj.select_set(False)
     
 
-    _correct_origin(rig_length, hg_rig, context)
+    correct_origin(context, hg_rig, hg_rig.HG.body_obj)
     
     bpy.context.view_layer.objects.active = hg_rig
 
-def _correct_origin(rig_length, hg_rig, context):
+def correct_origin(context, obj_to_correct, hg_body):
     """Uses a formula to comensate the origina position for legnth changes
 
-    Args:
-        rig_length ([type]): [description]
     """
-    context.scene.cursor.location = hg_rig.location
-    
-    hg_body = hg_rig.HG.body_obj
+    context.scene.cursor.location = obj_to_correct.location
+
     bottom_vertex_loc = hg_body.matrix_world @ hg_body.data.vertices[21085].co #RELEASE check if this is still the bottom vertex
 
 
     context.scene.cursor.location[2] = bottom_vertex_loc[2]
 
-    context.view_layer.objects.active = hg_rig
-    hg_rig.select_set(True)
+    context.view_layer.objects.active = obj_to_correct
+    obj_to_correct.select_set(True)
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')

@@ -2,6 +2,7 @@
 Operators and functions to be used by the developer and content pack creators
 """
 
+from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict
 from ... features.creation_phase.HG_HAIR import convert_to_new_hair_shader
 import bpy #type: ignore
 from ... features.common.HG_COMMON_FUNC import find_human
@@ -17,6 +18,7 @@ class HG_TESTOP(bpy.types.Operator):
     bl_options     = {"UNDO"}
 
     def execute(self,context):
+        build_distance_dict(next(obj for obj in context.selected_objects if obj != context.object), context.object)
         return {'FINISHED'}
 
 class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):

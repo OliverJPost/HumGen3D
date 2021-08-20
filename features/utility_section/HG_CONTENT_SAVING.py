@@ -5,6 +5,7 @@ import platform
 import subprocess
 import bpy #type: ignore
 import os
+import shutil
 from ... features.common.HG_COMMON_FUNC import (
     ShowMessageBox,
     apply_shapekeys,
@@ -15,7 +16,7 @@ from ... features.common.HG_COMMON_FUNC import (
 from ... core.HG_SHAPEKEY_CALCULATOR import (
     build_distance_dict,
     deform_obj_from_difference)
-from ... features.creation_phase.HG_LENGTH import apply_armature
+from ... features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 class Content_Saving_Operator:
     def overwrite_warning(self):
@@ -654,17 +655,25 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                 context.collection.objects.link(obj_copy)
                 distance_dict = obj_distance_dict[obj.name]
                 
+                if gender != self.hg_rig.HG.gender:
+                    name = 'Opposite gender'
+                    as_sk = True
+                else:
+                    name = ''
+                    as_sk = False
+                    
                 deform_obj_from_difference(
-                    '',
+                    name,
                     distance_dict,
                     backup_human,
                     obj_copy,
-                    as_shapekey = False,
+                    as_shapekey = as_sk,
                     apply_source_sks = False,
                     ignore_cor_sk = True
                 )
+                correct_origin(context, obj, backup_human)
                 export_list.append(obj_copy)
-            
+
             if gender == 'male':
                 hg_delete(backup_human)
                 
@@ -736,6 +745,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
     def _process_image(self, saved_images, img_node):
         img = img_node.image
+        if not img:
+            return
         colorspace = img.colorspace_settings.name 
         if not img:
             return
@@ -755,12 +766,15 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             os.makedirs(path)  
 
         full_path = os.path.join(path, img_name)
-        img.filepath_raw = full_path
         try:
-            img.save()
+            shutil.copy(bpy.path.abspath(img.filepath_raw), os.path.join(path, img_name))
             saved_images[img_name] = full_path
         except RuntimeError as e:
             print(f'failed to save {img.name} with error {e}')
+            self.report({'WARNING'}, 'One or more images failed to save. See the system console for specifics')
             return None, saved_images
+        except shutil.SameFileError:
+            saved_images[img_name] = full_path
+            return full_path, saved_images
             
         return full_path, saved_images
