@@ -165,12 +165,13 @@ def random_body_type(hg_rig):
     for sk in [sk for sk in sks if sk.name.startswith('bp_')]:
         sk.value = random.random()
 
-def set_random_active_in_pcoll(context, sett, pcoll_name):
+def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm = None):
     """Sets a random object in this preview colleciton as active
 
     Args:
         sett (PropertyGRoup): HumGen props
         pcoll_name (str): internal name of preview collection to pick random for
+        searchterm (str): filter to only look for items in the pcoll that include this string
     """
     
     refresh_pcoll(None, context, pcoll_name)
@@ -178,7 +179,7 @@ def set_random_active_in_pcoll(context, sett, pcoll_name):
     current_item = sett['pcoll_{}'.format(pcoll_name) ]
     
     pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
-    random_item = get_random_from_list(pcoll_list, current_item)
+    random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
     #TODO implement set_attr
     if pcoll_name == 'poses':
@@ -196,26 +197,32 @@ def set_random_active_in_pcoll(context, sett, pcoll_name):
     elif pcoll_name == 'patterns':
         sett.pcoll_patterns = random_item
     
-def get_random_from_list(list, current_item) -> Any:
+def get_random_from_list(list, current_item, searchterm) -> Any:
     """Gets a random item from passed list, trying max 6 times to prevent choosing
     the currently active item
 
     Args:
         list (list): list to choose item from
         current_item (AnyType): currently active item
+        searchterm (str): filter to only look for items in the pcoll that include this string
 
     Returns:
         Any: randomly chosen item
     """
     
+    corrected_list = [item for item in list if searchterm in item.lower()] if searchterm else list
+    if not corrected_list:
+        print('ERROR: Searchterm not found in pcoll: ', searchterm)
+        corrected_list = list
+    
     try:
-        random_item = random.choice(list)
+        random_item = random.choice(corrected_list)
     except IndexError:
         return None
     
     i = 0
     while random_item == current_item and i <5:
-        random_item = random.choice(list)
+        random_item = random.choice(corrected_list)
         i+=1
 
     return random_item

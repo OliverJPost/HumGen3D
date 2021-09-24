@@ -29,6 +29,7 @@ bl_info = {
 }
 
 
+from . user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
 import bpy #type: ignore
 import sys, os
 from bpy.app.handlers import persistent #type: ignore
@@ -43,7 +44,7 @@ from . core.content.HG_CONTENT_PACKS import (
     HG_INSTALLPACK,
     cpacks_refresh)
 from . core.content.HG_UPDATE import check_update, UPDATE_INFO_ITEM
-from . user_interface import HG_UTILITY_UILISTS
+from . user_interface import HG_UTILITY_UILISTS, HG_BATCH_UILIST
 from . core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
 
 if __name__ != "HG3D":
@@ -115,12 +116,15 @@ def _initiate_custom_icons():
 
 def _initiate_ui_lists():
     sc = bpy.types.Scene
-    # sc.outfits_col_m            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.CLOTHING_ITEM_M)
-    # sc.outfits_col_m_index      = bpy.props.IntProperty(name = "Index", default = 0)
-    # sc.pose_col                 = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.POSE_ITEM)
-    # sc.pose_col_index           = bpy.props.IntProperty(name = "Index", default = 0)
-    # sc.expressions_col          = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.EXPRESSION_ITEM)
-    # sc.expressions_col_index    = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.batch_outfits_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.CLOTHING_ITEM)
+    sc.batch_outfits_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.batch_pose_col               = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.POSE_ITEM)
+    sc.batch_pose_col_index         = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.batch_expressions_col        = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.EXPRESSION_ITEM)
+    sc.batch_expressions_col_index  = bpy.props.IntProperty(name = "Index", default = 0)
     
     sc.contentpacks_col         = bpy.props.CollectionProperty(type = HG_CONTENT_PACK)
     sc.contentpacks_col_index   = bpy.props.IntProperty(name = "Index", default = 0)
@@ -161,6 +165,8 @@ def register():
     _initiate_custom_icons()
     _initiate_ui_lists()  
 
+    bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
+
     #load handler
     if not HG_start in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(HG_start)
@@ -172,6 +178,8 @@ def unregister():
     #remove handler
     if HG_start in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(HG_start)
+
+    bpy.types.VIEW3D_MT_add.remove(add_hg_primitive_menu)
 
     #remove pcolls
     for pcoll in preview_collections.values():

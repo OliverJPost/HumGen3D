@@ -5,6 +5,8 @@ Contains functions that get used a lot by other operators
 import os
 import bpy #type: ignore
 
+from pathlib import Path
+
 #MODULE
 def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Collection:
     """Adds the giver object toa colleciton. By default added to HumGen collection
@@ -16,15 +18,20 @@ def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Col
     Returns:
         bpy.types.Collection: Collection the object was added to
     """
-    try: 
-        collection = bpy.data.collections[collection_name]
-    except:
+    collection = bpy.data.collections.get(collection_name)
+    
+    if not collection:
         collection = bpy.data.collections.new(name= collection_name)
         if collection_name == "HumGen_Backup [Don't Delete]":
             bpy.data.collections["HumGen"].children.link(collection)
-            #disable collection?
             context.view_layer.layer_collection.children['HumGen'].children[
                 collection_name].exclude = True
+        elif collection_name == 'HG Batch Markers':
+            hg_collection = bpy.data.collections.get('HumGen')
+            if not hg_collection:
+                hg_collection = bpy.data.collections.new(name = 'HumGen')
+                context.scene.collection.children.link(hg_collection)
+            hg_collection.children.link(collection)
         else:
             context.scene.collection.children.link(collection)
 
@@ -174,6 +181,17 @@ def _get_mats_and_images(obj):
         raise
         pass
     return list(set(images)), materials
+
+def get_addon_root()->str:
+    """Get the filepath of the addon root folder in the Blender addons directory
+
+    Returns:
+        str: path of the root directory of the add-on
+    """
+    
+    root_folder = Path(__file__).parent.parent.parent.absolute()
+    
+    return str(root_folder)
 
 
 #TODO make deepclean data removal, using:

@@ -73,9 +73,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         name = "ui_tab",
         items = [
                 ("CREATE", "Create", "", "OUTLINER_OB_ARMATURE", 0),
-                #("BATCH", "Batch", "","COMMUNITY", 1),
-                ("TOOLS", "Tools", "","SETTINGS", 1), #2
-            ],
+                ("BATCH", "Batch", "","COMMUNITY", 1),
+                ("TOOLS", "Tools", "","SETTINGS", 2),             ],
         default = "CREATE",
         update  = tab_change_update
         )   
@@ -397,10 +396,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                 default=10,
                                 min=1,
                                 max=100)
-    batch_progress: IntProperty(subtype='PERCENTAGE',
+    batch_progress: IntProperty(name = 'Progress',
+                                subtype='PERCENTAGE',
                                 min=0,
                                 max=100,
                                 default=0)
+    batch_idx: IntProperty(default = 0)
 
     male_chance:    IntProperty(name='Male',
                                 subtype="PERCENTAGE",
@@ -433,7 +434,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_pose      : BoolProperty(default = False)
     batch_clothing  : BoolProperty(default = True)
     batch_expression: BoolProperty(default = False)
-    batch_hair      : BoolProperty(default = True)
+    batch_hair      : BoolProperty(default = False)
 
     batch_hairtype: EnumProperty(
         name="Hair Type",   
@@ -455,6 +456,15 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update=lambda a, b: HG_BATCH_UILIST.uilist_refresh(a, b, "outfits")
     )
 
+    batch_marker_selection: EnumProperty(
+        name="Generate batch markers",   
+        items = [
+                ("all", "All markers", "", 0),
+                ("selected",  "Selected markers", "", 1),
+                ("empty",  "Empty markers",  "", 2),
+            ],
+        default = "all",
+        )    
     ######### Dev tools ######## 
     shapekey_calc_type: EnumProperty(
         name="calc type",   
