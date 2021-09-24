@@ -54,7 +54,7 @@ def uilist_layout(layout, context, item):
         subrow.label(text = str(item.count))
 
 
-class CLOTHING_ITEM_M(bpy.types.PropertyGroup):
+class CLOTHING_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
@@ -99,18 +99,17 @@ def uilist_refresh(self, context, categ):
     add_temp =[]
 
     if categ == 'outfits':
-        collection = context.scene.outfits_col_m
+        collection = context.scene.batch_outfits_col
         gender = True
     else:
         if categ == 'poses':
-            collection = context.scene.pose_col
+            collection = context.scene.batch_pose_col
         elif categ == 'expressions':
-            collection = context.scene.expressions_col
+            collection = context.scene.batch_expressions_col
         
         gender = False
 
-    found_folders_male = find_folders(self, context, categ, 'male' if gender else False, include_all = False)
-
+    found_folders_male = find_folders(self, context, categ, gender, include_all = False, gender_override= 'male')
     collection.clear()
 
     for folder in found_folders_male:
@@ -126,7 +125,7 @@ def uilist_refresh(self, context, categ):
     if not gender:
         return
 
-    found_folders_female = find_folders(self, context, categ, 'female', include_all = False)
+    found_folders_female = find_folders(self, context, categ, gender, include_all = False, gender_override= 'female')
 
     for folder in found_folders_female:
         if folder[0] in [item.library_name for item in collection]:
@@ -136,7 +135,6 @@ def uilist_refresh(self, context, categ):
             item.name = folder[0]
             item.library_name = folder[0]
         item.female_items = find_item_amount(context, categ, 'female', folder[0])
-
 
 
 class HG_REFRESH_UILISTS(bpy.types.Operator):

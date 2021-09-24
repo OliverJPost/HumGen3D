@@ -90,9 +90,11 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
         hg_body (Object): HumGen body object
     """
     HG= hg_rig.HG
-    old_shading = context.space_data.shading.type
-    context.space_data.shading.type = 'SOLID'
-
+    try:
+        old_shading = context.space_data.shading.type
+        context.space_data.shading.type = 'SOLID'
+    except:
+        pass
     context.view_layer.objects.active = hg_body
     _remove_unused_eyebrows(hg_body)
     context.view_layer.objects.active = hg_rig
@@ -139,9 +141,10 @@ def finish_creation_phase(self, context, hg_rig, hg_body):
     sk = hg_body.data.shape_keys.key_blocks
     sk['cor_ShoulderSideRaise_Lt'].mute = True
     sk['cor_ShoulderSideRaise_Lt'].mute = False
-
-    context.space_data.shading.type = old_shading
-
+    try:
+        context.space_data.shading.type = old_shading
+    except:
+        pass
 def _remove_unused_eyebrows(hg_body):
     """ Remove unused eyebrow particle systems
     

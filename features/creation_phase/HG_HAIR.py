@@ -361,7 +361,7 @@ def _transfer_vertexgroup(to_obj, from_obj, vg_name):
     for vert_idx, _ in enumerate(from_obj.data.vertices):
         try:
             vert_dict[vert_idx] = from_obj.vertex_groups[vg_name].weight(vert_idx)
-        except RuntimeError:
+        except:
             pass
 
     target_vg = to_obj.vertex_groups.new(name=vg_name)

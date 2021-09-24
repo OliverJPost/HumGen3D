@@ -1,4 +1,7 @@
 #core
+from . user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_hg_marker_add
+from . features.batch_section.HG_BATCH_PRIMITIVES import HG_OT_ADD_BATCH_MARKER
+from . features.batch_section.HG_BATCH_OPS import HG_BATCH_GENERATE, HG_BATCH_MAKE
 from . core.HG_CALLBACK import HG_ACTIVATE
 from . core.settings.HG_PREFERENCES import (
     HG_PT_ICON_LEGEND,
@@ -89,7 +92,8 @@ from . user_interface import (
     HG_MAIN_PANEL,
     HG_UTILITY_PANEL,
     HG_BATCH_PANEL,
-    HG_UTILITY_UILISTS)
+    HG_UTILITY_UILISTS,
+    HG_BATCH_UILIST)
 #tutorial operator
 from . tutorial_operator import HG_TUTORIAL_OP
 
@@ -155,6 +159,14 @@ hg_classes = (
     HG_BATCH_PANEL.HG_PT_B_POSING,
     HG_BATCH_PANEL.HG_PT_B_CLOTHING,
     HG_BATCH_PANEL.HG_PT_B_EXPRESSION,
+        #batch uilists
+    HG_BATCH_UILIST.HG_UL_CLOTHING,
+    HG_BATCH_UILIST.HG_UL_POSE,
+    HG_BATCH_UILIST.HG_UL_EXPRESSIONS,
+    HG_BATCH_UILIST.CLOTHING_ITEM,
+    HG_BATCH_UILIST.POSE_ITEM,
+    HG_BATCH_UILIST.EXPRESSION_ITEM,
+    HG_BATCH_UILIST.HG_REFRESH_UILISTS,
         #pref
     HG_PT_ICON_LEGEND,
     #custom ui
@@ -229,5 +241,11 @@ hg_classes = (
     HG_OT_PREPARE_FOR_ARKIT,
     
     #Update
-    UPDATE_INFO_ITEM
+    UPDATE_INFO_ITEM,
+    
+    #batch
+    HG_BATCH_GENERATE,
+    HG_BATCH_MAKE,
+    VIEW3D_MT_hg_marker_add,
+    HG_OT_ADD_BATCH_MARKER
     )

@@ -7,16 +7,21 @@ import os
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
 
-def find_folders(self, context, categ, gender_toggle, include_all = True) -> list:
+def find_folders(self, context, categ, gender_toggle, include_all = True, 
+                 gender_override = None) -> list:
     """Gets enum of folders found in a specific directory. T
     hese serve as categories for that specific pcoll
 
     Args:
         context (bpy.context): blender context
         categ (str): preview collection name
-        gender_toggle (AnyType): bit weird
+        gender_toggle (bool): Search for folders that are in respective male/female
+            folders. 
         include_all (bool, optional): include "All" as first item. 
             Defaults to True.
+        gender_override (str): Used by operations that are not linked to a single
+            human. Instead of getting the gender from hg_rig this allows for the
+            manual passing of the gender ('male' or 'female')
 
     Returns:
         list: enum of folders
@@ -24,33 +29,25 @@ def find_folders(self, context, categ, gender_toggle, include_all = True) -> lis
     hg_rig = find_human(context.active_object)
     pref = get_prefs()
 
-    if isinstance(gender_toggle, (bool)):
-        if hg_rig:
-            gender = hg_rig.HG.gender
-        else:
-            return []
+    if gender_override:
+        gender = gender_override
+    elif hg_rig:
+        gender = hg_rig.HG.gender
     else:
-        gender = gender_toggle
+        return []
+
 
     if gender_toggle == True:
-        categ_folder = (str(pref.filepath) 
-                        + str(Path('/{}/{}/'.format(categ, gender)))
-                        )
-    elif gender_toggle == False:
-        categ_folder = (str(pref.filepath) 
-                        + str(Path('/{}/'.format(categ)))
-                        )
+        categ_folder = os.path.join(pref.filepath, categ, gender)
     else:
-        categ_folder = (str(pref.filepath)
-                        + str(Path('/{}/{}/'.format(categ, gender_toggle)))
-                        )
-        
+        categ_folder = os.path.join(pref.filepath, categ)
+      
     dirlist = os.listdir(categ_folder)
     dirlist.sort()
     categ_list = []
     ext = ('.jpg', 'png', '.jpeg', '.blend')
     for item in dirlist:
-        if not item.endswith(ext):
+        if not item.endswith(ext) and item != '.DS_Store':
             categ_list.append(item)
     
     if not categ_list:
@@ -59,7 +56,7 @@ def find_folders(self, context, categ, gender_toggle, include_all = True) -> lis
     enum_list = [('All', 'All Categories', '', 0)] if include_all else []
     for i, name in enumerate(categ_list):
         enum_list.append((name, name, '', i+1))
-    
+
     return enum_list
 
 

@@ -18,8 +18,8 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
     Credits to Jayanam for the code base for custom ui
     '''    
     bl_idname = "hg3d.draw_tutorial"
-    bl_label = "bl ui widgets custom operator"
-    bl_description = "Demo operator for bl ui widgets" 
+    bl_label = "Tutorial"
+    bl_description = "Show this tutorial" 
     bl_options = {'REGISTER'}
     	
     first_time: bpy.props.BoolProperty(default = False)    

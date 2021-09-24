@@ -21,71 +21,7 @@ from ... features.common.HG_COMMON_FUNC import (
 from ... core.HG_PCOLL import refresh_pcoll
 from .   HG_MATERIAL import set_gender_specific_shader
 
-class HG_START_CREATION(bpy.types.Operator):
-    """Imports human, setting the correct custom properties. 
-    
-    Operator type:
-        Object importer
-        Prop setter
-        Material
-    
-    Prereq:
-        Starting human selected in humans preview collection
-    """
-    bl_idname = "hg3d.startcreation"
-    bl_label = "Generate New Human"
-    bl_description = "Generate a new human"
-    bl_options = {"UNDO"}
-
-    @classmethod
-    def poll (cls, context):
-        return context.scene.HG3D.pcoll_humans != 'none'
-
-    def execute(self,context):
-        sett = context.scene.HG3D
-        sett.ui_phase = 'body'
-
-        hg_rig, _ = self.create_human(context)
-        hg_rig.select_set(True)
-        context.view_layer.objects.active = hg_rig
-
-        name = self._get_random_name(sett.gender, hg_rig)
-
-        self.report({'INFO'}, "You've created: {}".format(name))
-        
-        return {'FINISHED'}
-
-    def _get_random_name(self, gender, hg_rig) -> str:
-        """Gets a random name for HG_NAMEGEN
-
-        Args:
-            gender (str): gender of this human
-            hg_rig (Object): armature object of this human
-
-        Returns:
-            str: capitalized given name
-        """
-        #get a list of names that are already taken in this scene
-        taken_names = []
-        for obj in bpy.data.objects:
-            if not obj.HG.ishuman:
-                continue
-            taken_names.append(obj.name[4:])
-        
-        #generate name
-        name = get_name(gender)
-
-        #get new name if it's already taken
-        i=0
-        while i<10 and name in taken_names:
-            name = get_name(gender)
-            i+=1
-        
-        hg_rig.name = 'HG_' + name
-
-        return name
- 
-
+class HG_CREATION_BASE():
     def create_human(self, context) -> 'tuple [bpy.types.Object, bpy.types.Object]':
         """Creates a new human based on the selected gender and starting human
 
@@ -141,6 +77,36 @@ class HG_START_CREATION(bpy.types.Operator):
             mod.show_expanded = False
 
         return hg_rig, hg_body
+
+    def _get_random_name(self, gender, hg_rig) -> str:
+        """Gets a random name for HG_NAMEGEN
+
+        Args:
+            gender (str): gender of this human
+            hg_rig (Object): armature object of this human
+
+        Returns:
+            str: capitalized given name
+        """
+        #get a list of names that are already taken in this scene
+        taken_names = []
+        for obj in bpy.data.objects:
+            if not obj.HG.ishuman:
+                continue
+            taken_names.append(obj.name[4:])
+        
+        #generate name
+        name = get_name(gender)
+
+        #get new name if it's already taken
+        i=0
+        while i<10 and name in taken_names:
+            name = get_name(gender)
+            i+=1
+        
+        hg_rig.name = 'HG_' + name
+
+        return name
 
     def _import_human(self, context, sett, pref
                       ) -> 'tuple[str, bpy.types.Object, bpy.types.Object, bpy.types.Object]':
@@ -444,7 +410,45 @@ class HG_START_CREATION(bpy.types.Operator):
             if mod.type == 'PARTICLE_SYSTEM':
                 ps_sett = mod.particle_system.settings
                 if ps_sett.child_nbr > 1:
-                    ps_sett.child_nbr = 1
+                    ps_sett.child_nbr = 1    
+
+
+class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
+    """Imports human, setting the correct custom properties. 
+    
+    Operator type:
+        Object importer
+        Prop setter
+        Material
+    
+    Prereq:
+        Starting human selected in humans preview collection
+    """
+    bl_idname = "hg3d.startcreation"
+    bl_label = "Generate New Human"
+    bl_description = "Generate a new human"
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll (cls, context):
+        return (context.scene.HG3D.pcoll_humans != 'none' 
+                or context.scene.HG3D.active_ui_tab == 'BATCH')
+
+    def execute(self,context):
+        sett = context.scene.HG3D
+        sett.ui_phase = 'body'
+
+        hg_rig, _ = self.create_human(context)
+        hg_rig.select_set(True)
+        context.view_layer.objects.active = hg_rig
+
+        name = self._get_random_name(sett.gender, hg_rig)
+
+        self.report({'INFO'}, "You've created: {}".format(name))
+        
+        return {'FINISHED'}
+
+
 
 
 
