@@ -193,7 +193,6 @@ def get_addon_root()->str:
     
     return str(root_folder)
 
-
 #TODO make deepclean data removal, using:
 
 # for block in bpy.data.meshes:

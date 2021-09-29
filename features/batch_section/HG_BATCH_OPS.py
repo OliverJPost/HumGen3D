@@ -3,6 +3,7 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
+from ... user_interface.HG_BATCH_UILIST import uilist_refresh
 from ... modules.humgen import get_pcoll_options
 from ... core.HG_PCOLL import refresh_pcoll
 import os
@@ -11,6 +12,7 @@ import random
 import time
 import subprocess
 import json 
+import numpy as np
 
 from pathlib import Path
 
@@ -28,6 +30,7 @@ from .. creation_phase.HG_FINISH_CREATION_PHASE import (
     finish_creation_phase
 )
 from .. common.HG_COMMON_FUNC import apply_shapekeys
+from . HG_BATCH_FUNC import length_from_bell_curve
 
 def status_text_callback(header, context):
     #INACTIVE
@@ -300,22 +303,31 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                                     
         sd['add_hair'] = sett.batch_hair
         sd['add_expression'] = sett.batch_expression
-        sd['expression_category'] = random.choice(
-            [i.library_name 
-            for i in context.scene.batch_expressions_col 
-            if i.enabled]
-            ) if sett.batch_expression else ''
+        if sett.batch_expression:
+            self._add_category_list(context, sd, 'expressions') 
         
         sd['add_clothing'] = sett.batch_clothing
-        sd['clothing_category'] = random.choice(
-            [i.library_name 
-            for i in context.scene.batch_outfits_col 
-            if i.enabled]
-            ) if sett.batch_clothing else ''
+        
+        self._add_category_list(context, sd, 'clothing') 
         
         sd['pose_type'] = pose_type
         
         return sd
+
+    def _add_category_list(self, context, sd, pcoll_name):
+        
+        #TODO fix naming inconsistency
+        label = 'expressions' if pcoll_name == 'expressions' else 'outfits'
+        
+        enabled_categories = [
+                i.library_name
+                for i in getattr(context.scene, f'batch_{label}_col')
+                if i.enabled]
+        if not enabled_categories:
+            uilist_refresh(self, context, label)
+            enabled_categories = getattr(context.scene, [i.library_name for i in f'batch_{label}_col'])
+            
+        sd[f'{pcoll_name}_category'] = random.choice(enabled_categories)
         
 
 def pick_library(context, categ, gender = None):
@@ -361,7 +373,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     clothing_category: StringProperty()
     
     add_expression: BoolProperty()
-    expression_category: StringProperty()
+    expressions_category: StringProperty()
 
     pose_type: StringProperty()
 
@@ -383,7 +395,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
         
-        sett.human_length = random.randrange(150, 200)
+        sett.human_length = int(length_from_bell_curve(sett, self.gender))
         
         start_time = time.time()
         finish_creation_phase(None, context, hg_rig, hg_body)

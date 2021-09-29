@@ -3,9 +3,11 @@ This file is currently inactive
 """
 
 from .. features.batch_section.HG_BATCH_OPS import get_batch_marker_list
+from .. features.batch_section.HG_BATCH_FUNC import length_from_bell_curve
 import bpy #type: ignore
-from .. core.HG_PCOLL import preview_collections
+from .. core.HG_PCOLL import get_hg_icon, preview_collections
 from . HG_PANEL_FUNCTIONS import get_flow, draw_panel_switch_header
+import numpy as np
 
 class Batch_PT_Base:
     bl_space_type = "VIEW_3D"
@@ -51,8 +53,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        if not self.Header(context):
-            return
+        self.layout.label(text = '', icon = 'MOD_TINT')
         
     def draw(self, context):
         layout = self.layout
@@ -69,6 +70,109 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         flow.prop(sett, 'caucasian_chance')
         flow.prop(sett, 'black_chance')
         flow.prop(sett, 'asian_chance')
+        
+class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
+    """Subpanel showing options for height variation in the generation of batch
+    humans.
+    """
+    bl_parent_id = "HG_PT_Batch_Panel"
+    bl_label = "Height variation"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        self.layout.label(text = '', icon_value = get_hg_icon('length'))
+        
+    def draw(self, context):
+        layout = self.layout      
+        sett = context.scene.HG3D
+        
+        row = layout.box().row(align = True)
+        row.scale_y = 1.5
+        row.prop(sett, 'batch_height_system', expand = True)
+        
+        layout.label(text = 'Average height:', icon = 'EMPTY_SINGLE_ARROW')
+        
+        self._draw_average_height_props(layout, sett)
+        
+        layout.separator()
+        layout.label(text = 'Bell curve settings:', icon = 'SMOOTHCURVE')
+        
+        col = layout.column(align = True)
+        col.prop(sett, 'batch_standard_deviation', slider = False)      
+        
+        split = layout.box().split()
+        for gender in ['male', 'female']:
+            col_l = split.column()
+            col_l.separator()
+            col_l.label(text = f'{gender.capitalize()} examples:')
+            
+            self._draw_examples_list(col_l, sett, gender) 
+
+    def _draw_average_height_props(self, layout, sett):
+        """Draws props for the user to select the average height in either 
+        metric or imperial system
+
+        Args:
+            layout (UILayout): layout to draw in
+            sett (PropertyGroup): addon props
+        """
+        col = layout.column(align=True)
+        if sett.batch_height_system == 'metric':
+            col.use_property_split = True
+            col.use_property_decorate = False
+            col.prop(sett, 'batch_average_height_cm_male')
+            col.prop(sett, 'batch_average_height_cm_female')
+        else:
+            for gender in ['male', 'female']:
+                row = col.row(align=True)
+                row.label(text=gender.capitalize())
+                row.prop(sett, f'batch_average_height_ft_{gender}')
+                row.prop(sett, f'batch_average_height_in_{gender}')
+
+    def _draw_examples_list(self, layout, sett, gender):
+        """Draws a list of example heights based on the settings the user selected.
+
+        Args:
+            layout (UILayout): layout to draw in
+            sett (PropertyGroup): Add-on preferences
+            gender (str): 'male' or 'female', determines which average height to
+                sample from.
+        """
+        length_list = length_from_bell_curve(
+            sett,
+            gender,
+            random_seed=False,
+            samples=10
+        )
+        
+        col = layout.column(align = True)
+        col.scale_y = 0.8
+        
+        for i in length_list:
+            length_m = round(i/100, 2)
+            
+            length_label = self._unit_conversion(sett, length_m)
+            
+            row = col.row(align = True)
+            row.alert = i > 200 or i < 150
+            row.label(text = length_label) 
+
+    def _unit_conversion(self, sett, length_m):
+        if sett.batch_height_system == 'imperial':
+            length_feet   = length_m / 0.3048
+            length_inches = int(length_feet*12.0 - int(length_feet)*12.0)
+            length_label  = (str(int(length_feet))
+                                + "' "
+                                + str(length_inches)
+                                + '"'
+                                )
+        else:
+            alignment = '0 ' if len(str(length_m)) == 3 else ' '
+            length_label = str(length_m) + alignment + 'm'
+        
+        return length_label
+
+
 
 class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -76,8 +180,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        if not self.Header(context):
-            return
+        self.layout.label(text = '', icon = 'OPTIONS')
         
     def draw(self, context):
         layout = self.layout
@@ -95,6 +198,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         header(self,context, 'hair')
+        self.layout.label(text = '', icon_value = get_hg_icon('hair'))
         
     def draw(self, context):
         layout = self.layout
@@ -112,6 +216,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         header(self, context,'clothing')
+        self.layout.label(text = '', icon_value = get_hg_icon('clothing'))
 
     def draw(self, context):
         layout = self.layout
@@ -129,7 +234,11 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         row.template_list("HG_UL_BATCH_CLOTHING", "", context.scene, "batch_outfits_col", context.scene, "batch_outfits_col_index")
         
         col = layout.column()
-        count = sum([(item.male_items + item.female_items) for item in context.scene.batch_outfits_col])
+        count = sum([(item.male_items + item.female_items) for item in context.scene.batch_outfits_col if item.enabled])
+        
+        if count == 0:
+            col.alert = True
+        
         col.label(text = 'Total: {} Outfits'.format(count))
         
 
@@ -141,7 +250,8 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         header(self, context, 'expression')
-
+        self.layout.label(text = '', icon_value = get_hg_icon('expression'))
+        
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -154,7 +264,9 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         col = col.column()
         col.template_list("HG_UL_BATCH_EXPRESSIONS", "", context.scene, "batch_expressions_col", context.scene, "batch_expressions_col_index")
 
-        count = sum([item.count for item in context.scene.batch_expressions_col])
+        count = sum([item.count for item in context.scene.batch_expressions_col if item.enabled])
+        if count == 0:
+            col.alert = True
         col.label(text = 'Total: {} Expressions'.format(count))
 
 def header(self, context, categ):

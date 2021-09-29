@@ -286,3 +286,8 @@ def _get_search_term(pcoll_type, sett) -> str:
                    )
                    
     return search_term
+
+def get_hg_icon(icon_name) -> int:
+    icon_list = preview_collections['hg_icons']
+    
+    return icon_list[icon_name].icon_id

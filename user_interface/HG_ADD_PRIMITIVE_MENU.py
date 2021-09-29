@@ -1,3 +1,4 @@
+from .. core.HG_PCOLL import get_hg_icon
 import bpy #type:ignore
 
 class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
@@ -20,8 +21,9 @@ class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
         for primitive in ['a_pose', 't_pose', 'standing_around', 'sitting', 'socializing', 'walking', 'running']:
             layout.operator("hg3d.add_batch_marker",
                             text=primitive.capitalize().replace('_', ' '),
-                            icon = 'ARMATURE_DATA'
-                            ).marker_type = primitive
+                            icon_value = get_hg_icon(primitive)
+                            ).marker_type = primitive                
+
 
 def add_hg_primitive_menu(self, context):
     layout = self.layout
