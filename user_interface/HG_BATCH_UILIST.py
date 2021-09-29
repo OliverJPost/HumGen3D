@@ -6,7 +6,7 @@ import bpy #type: ignore
 from .. core.settings.HG_PROP_FUNCTIONS import find_folders, find_item_amount
 from .. core.HG_PCOLL import preview_collections
 
-class HG_UL_CLOTHING(bpy.types.UIList):
+class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
     """
     UIList showing clothing libraries
     """   
@@ -14,15 +14,7 @@ class HG_UL_CLOTHING(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         uilist_layout(layout, context, item)
 
-class HG_UL_POSE(bpy.types.UIList):
-    """
-    UIList showing clothing libraries
-    """   
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        uilist_layout(layout, context, item)
-
-class HG_UL_EXPRESSIONS(bpy.types.UIList):
+class HG_UL_BATCH_EXPRESSIONS(bpy.types.UIList):
     """
     UIList showing clothing libraries
     """   
@@ -54,7 +46,7 @@ def uilist_layout(layout, context, item):
         subrow.label(text = str(item.count))
 
 
-class CLOTHING_ITEM(bpy.types.PropertyGroup):
+class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
@@ -67,19 +59,7 @@ class CLOTHING_ITEM(bpy.types.PropertyGroup):
     male_items : bpy.props.IntProperty(default = 0)
     female_items : bpy.props.IntProperty(default = 0)
 
-class POSE_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
-    library_name: bpy.props.StringProperty(
-        name='Library Name',
-        description="",
-        default= '',
-        )  
-    enabled: bpy.props.BoolProperty(default = True)
-    count : bpy.props.IntProperty(default = 0)
-
-class EXPRESSION_ITEM(bpy.types.PropertyGroup):
+class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
@@ -148,7 +128,6 @@ class HG_REFRESH_UILISTS(bpy.types.Operator):
 
     def execute(self,context):
         uilist_refresh(self, context, 'outfits')
-        uilist_refresh(self, context, 'poses')
         uilist_refresh(self, context, 'expressions')
 
         return {'FINISHED'}
