@@ -3,6 +3,9 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
+from ... modules.humgen import get_pcoll_options
+from ... core.HG_PCOLL import refresh_pcoll
+import os
 import bpy #type: ignore
 import random
 import time
@@ -80,10 +83,14 @@ def has_associated_human(marker) -> bool:
     Returns:
         bool: True if associated human was found, False if not
     """
-    return all((
-        'asociated_human' in marker,
-        bpy.data.objects.get(marker['associated_human'].name)
-    ))
+    
+    return (
+        'associated_human' in marker
+        and bpy.data.objects.get(marker['associated_human'].name)
+        and marker.location == marker['associated_human'].location
+        and bpy.context.scene.objects.get(marker['associated_human'].name)
+    )
+    
 class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     """
     clears searchfield INACTIVE
@@ -146,7 +153,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             print('timer event')
             if self.human_idx < len(self.generate_queue):    
                 marker = self.generate_queue[self.human_idx]
-                hg_rig = self.generate_human_in_background(context)
+                hg_rig = self.generate_human_in_background(context, marker)
                 hg_rig.location = marker.location
                 hg_rig.rotation_euler = marker.rotation_euler
                 marker['associated_human'] = hg_rig
@@ -170,11 +177,11 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        #INACTIVE
-
         sett = context.scene.HG3D
+        
+        markers_with_associated_human = list(filter(has_associated_human, self.generate_queue))
           
-        if True:#self.run_immediately:
+        if self.run_immediately or not markers_with_associated_human:
             wm = context.window_manager
             wm.modal_handler_add(self)
 
@@ -188,15 +195,31 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
             return {'RUNNING_MODAL'}
         else:
+            generate_queue = self.generate_queue
+            
             def draw(self, context):
                 layout = self.layout
-    
-                layout.operator("hg3d.generate", text="Run anyway").run_immediately = True
+                
+                nonlocal generate_queue
+                
+                i = 0
+                for marker in filter(has_associated_human, generate_queue):
+                    layout.label(text = marker['associated_human'].name)
+                    i += 1
+                    
+                    if i > 9:
+                        layout.label(text = f'+ {len(generate_queue) - 10} more')
+                        break
+                    
+                layout.separator()
+                
+                layout.operator_context = 'INVOKE_DEFAULT'    
+                layout.operator("hg3d.generate", text="Generate anyway").run_immediately = True
                 return 
 
-            context.window_manager.popup_menu(draw, title="Test title")
+            context.window_manager.popup_menu(draw, title="This will delete these humans:")
             
-            return {'FINISHED'}
+            return {'CANCELLED'}
 
     def draw(self, context):
         layout = self.layout
@@ -208,7 +231,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.workspace.status_text_set(text=None)
         return {'CANCELLED'}
 
-    def generate_human_in_background(self, context) -> bpy.types.Object:
+    def generate_human_in_background(self, context, marker) -> bpy.types.Object:
         sett = context.scene.HG3D
         total_start = time.time()
 
@@ -220,14 +243,29 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/batch_generate.py'))
 
-        settings_dict = self._build_settings_dict(sett)
+
+        pose_type = marker['hg_batch_marker']
+        settings_dict = self._build_settings_dict(context, sett, pose_type)
 
         start_time = time.time()
+        
+        print('###########################################################')
+        print('############### STARTING BACKGROUND PROCESS ###############')
+        print('###########################################################')
+        
         subprocess.run([bpy.app.binary_path,
                             "--background",
                             "--python",
                             python_file,
                             json.dumps(settings_dict)])
+        
+        print('###########################################################')
+        print('################ END OF BACKGROUND PROCESS ################')
+        print('###########################################################')
+
+        print(f'Background Proces for marker {marker.name} took: ',
+              time.time() - start_time
+              )
         
         with bpy.data.libraries.load('/Users/olepost/Documents/Humgen_Files_Main/batch_result.blend', link = False) as (data_from ,data_to):
             data_to.objects = data_from.objects
@@ -235,29 +273,49 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         for obj in data_to.objects:
             bpy.context.scene.collection.objects.link(obj)
         
-        print('end time', time.time() - start_time)
+
         
         return next(obj for obj in data_to.objects if obj.HG.ishuman)
 
-    def _build_settings_dict(self, sett) -> dict:
-        settings_dict = {
+    def _build_settings_dict(self, context, sett, pose_type) -> dict:
+        sd = {
             'keep_backup': False,
             'clothing_subdiv': False,
-            
-            'male_chance': sett.male_chance,
-            'female_chance': sett.female_chance,
-            
-            'caucasian_chance': sett.caucasian_chance,
-            'black_chance': sett.black_chance,
-            'asian_chance': sett.asian_chance,
-            
-            'add_hair': sett.batch_hair,
-            'add_expression': sett.batch_expression,
-            'add_clothing': sett.batch_clothing,
-            'add_pose': sett.batch_pose
         }
         
-        return settings_dict
+        sd['gender'] = str(random.choices(
+            ('male', 'female'),
+            weights = (sett.male_chance, sett.female_chance),
+            k=1)[0])
+        
+        sd['ethnicity'] = str(random.choices(
+            ('caucasian', 'black', 'asian'),
+            weights = (
+                sett.caucasian_chance,
+                sett.black_chance,
+                sett.asian_chance
+                ),
+            k=1
+            )[0])
+                                    
+        sd['add_hair'] = sett.batch_hair
+        sd['add_expression'] = sett.batch_expression
+        sd['expression_category'] = random.choice(
+            [i.library_name 
+            for i in context.scene.batch_expressions_col 
+            if i.enabled]
+            ) if sett.batch_expression else ''
+        
+        sd['add_clothing'] = sett.batch_clothing
+        sd['clothing_category'] = random.choice(
+            [i.library_name 
+            for i in context.scene.batch_outfits_col 
+            if i.enabled]
+            ) if sett.batch_clothing else ''
+        
+        sd['pose_type'] = pose_type
+        
+        return sd
         
 
 def pick_library(context, categ, gender = None):
@@ -282,56 +340,43 @@ def pick_library(context, categ, gender = None):
         print('library list ', library_list)
         sett.expressions_sub = random.choice(library_list)
 
-class HG_BATCH_MAKE(bpy.types.Operator, HG_CREATION_BASE):
+class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     """
     clears searchfield INACTIVE
     """
-    bl_idname = "hg3d.batch_make"
-    bl_label = "Batch make"
-    bl_description = "Generates humans"
+    bl_idname = "hg3d.quick_generate"
+    bl_label = "Quick Generate"
+    bl_description = "Generates a full human from a list of arguments"
     bl_options = {"REGISTER", "UNDO"}
 
     keep_backup: BoolProperty()
     clothing_subdiv: BoolProperty()
 
-    male_chance  : IntProperty()
-    female_chance: IntProperty()
+    gender: StringProperty()
 
-    caucasian_chance: IntProperty()
-    asian_chance    : IntProperty()
-    black_chance    : IntProperty()
+    ethnicity: StringProperty()
     
     add_hair: BoolProperty()
     add_clothing: BoolProperty()
-    add_expression: BoolProperty()
-    add_pose: BoolProperty()
+    clothing_category: StringProperty()
     
+    add_expression: BoolProperty()
+    expression_category: StringProperty()
+
+    pose_type: StringProperty()
 
     def execute(self, context):
         sett = context.scene.HG3D
 
-        gender = random.choices(('male', 'female'), weights = (self.male_chance, self.female_chance), k=1)[0]
-        sett.gender = gender
+        sett.gender = self.gender
         
-        ethnicity_search = random.choices(
-            ('caucasian',
-             'black',
-             'asian'
-             ),
-            weights = (
-                self.caucasian_chance,
-                self.black_chance,
-                self.asian_chance
-                ),
-            k=1
-            )[0]
         
-        set_random_active_in_pcoll(context, sett, 'humans', searchterm = ethnicity_search)
+        set_random_active_in_pcoll(context, sett, 'humans', searchterm = self.ethnicity)
         #ethnicity
         hg_rig, hg_body = self.create_human(context) #inherited
 
         context.view_layer.objects.active = hg_rig
-        name = self._get_random_name(gender, hg_rig) #inherited        
+        name = self._get_random_name(self.gender, hg_rig) #inherited        
         
         random_body_type(hg_rig)
 
@@ -349,18 +394,21 @@ class HG_BATCH_MAKE(bpy.types.Operator, HG_CREATION_BASE):
         if self.add_clothing:
             set_random_active_in_pcoll(context, sett, 'outfit')
 
-
-        if self.add_pose:
-            set_random_active_in_pcoll(context, sett, 'poses')
+        if self.pose_type != 'a_pose':
+            self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
             #pick_library(context, 'expressions')
             set_random_active_in_pcoll(context, sett, 'expressions')
 
-
         hg_rig.HG.phase = 'clothing'        
         return {'FINISHED'}
 
-
-
+    def _set_pose(self, context, sett, pose_type):
+        if pose_type == 't_pose':
+            refresh_pcoll(None, context, 'poses')
+            sett.pcoll_poses = str(Path('/poses/Base Poses/HG_T_Pose.blend'))
+        else:          
+            sett.pose_sub = pose_type.capitalize().replace('_', ' ')
+            set_random_active_in_pcoll(context, sett, 'poses')
   

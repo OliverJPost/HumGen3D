@@ -17,9 +17,11 @@ class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
         
         layout.separator()
         
-        for primitive in ['test_marker', 'test_marker2']:#['standing', 'sitting', 'socializing', 'walking', 'running']:
+        for primitive in ['a_pose', 't_pose', 'standing_around', 'sitting', 'socializing', 'walking', 'running']:
             layout.operator("hg3d.add_batch_marker",
-                            text=primitive.capitalize()).marker_type = primitive
+                            text=primitive.capitalize().replace('_', ' '),
+                            icon = 'ARMATURE_DATA'
+                            ).marker_type = primitive
 
 def add_hg_primitive_menu(self, context):
     layout = self.layout
@@ -27,4 +29,4 @@ def add_hg_primitive_menu(self, context):
 
     layout.separator()
     layout.menu("VIEW3D_MT_hg_marker_add",
-                text="Human Generator", icon="DECORATE")
+                text="Human Generator Markers", icon="COMMUNITY")

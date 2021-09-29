@@ -35,20 +35,19 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         col.prop(sett, 'batch_marker_selection', text = '')
         
         marker_total = len(get_batch_marker_list(context))
-        print(marker_total)
         
         col = col.column(align = True)
         col.alert = True
-        col.operator('hg3d.generate', text = f'Generate {marker_total} humans', depress = True, icon  = 'TIME')
+        col.operator('hg3d.generate', text = f'Generate {marker_total} humans', depress = True, icon  = 'TIME').run_immediately = False
 
         if sett.batch_idx:
             col = layout.column(align = True)
             col.scale_y = 2
             col.prop(sett, 'batch_progress')
 
-class HG_PT_B_HUMAN(Batch_PT_Base, bpy.types.Panel):
+class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
-    bl_label = "Base Human"
+    bl_label = "Generation Probability"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
@@ -60,7 +59,6 @@ class HG_PT_B_HUMAN(Batch_PT_Base, bpy.types.Panel):
         sett = context.scene.HG3D
 
         col = layout.column(align = True)
-        col.label(text= 'Generation Probability:')
 
         flow = get_flow(sett, col)
         flow.separator() 
@@ -106,30 +104,6 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
         row = layout.row(align = True)
         row.scale_y = 1.5
         row.prop(sett, 'batch_hairtype', expand = True)
-        
-class HG_PT_B_POSING(Batch_PT_Base, bpy.types.Panel):
-    bl_parent_id = "HG_PT_Batch_Panel"
-    bl_label = " Pose"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw_header(self, context):
-        header(self,context, 'pose')
-
-    def draw(self, context):
-        layout = self.layout
-        sett = context.scene.HG3D
-        layout.enabled = sett.batch_pose
-
-        col = layout.column(align = True)
-        box =col.box().row()
-        box.label(text = 'Select libraries:')
-        box.operator('hg3d.uilists', text = '', icon = 'FILE_REFRESH')
-
-        col = col.column()
-        col.template_list("HG_UL_POSE", "", context.scene, "batch_pose_col", context.scene, "batch_pose_col_index")
-
-        count = sum([item.count for item in context.scene.batch_pose_col])
-        col.label(text = 'Total: {} Poses'.format(count))
 
 class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -138,8 +112,6 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         header(self, context,'clothing')
-
-
 
     def draw(self, context):
         layout = self.layout
@@ -154,22 +126,13 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
         #col.scale_y = 1.5
         row=col.row(align = False)
-        row.template_list("HG_UL_CLOTHING", "", context.scene, "batch_outfits_col", context.scene, "batch_outfits_col_index")
+        row.template_list("HG_UL_BATCH_CLOTHING", "", context.scene, "batch_outfits_col", context.scene, "batch_outfits_col_index")
+        
         col = layout.column()
-        row = col.row(align = True)
-        row.prop(sett, 'batch_clothing_inside', toggle = True, icon_value = hg_icons['inside'].icon_id)
-        row.prop(sett, 'batch_clothing_outside', toggle = True, icon_value = hg_icons['outside'].icon_id)
-
         count = sum([(item.male_items + item.female_items) for item in context.scene.batch_outfits_col])
         col.label(text = 'Total: {} Outfits'.format(count))
         
-        #sidebar = row.column(align = True)
 
-        #sidebar.menu("MATERIAL_MT_context_menu", icon='DOWNARROW_HLT', text="")
-        #sidebar.operator('hg3d.uilists', text = '', icon = 'CHECKBOX_DEHLT')
-        #sidebar.operator('hg3d.uilists', text = '', icon = 'CHECKBOX_HLT')
-
-        #col.prop(sett, 'outfit_sub', text = '')
 
 class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -189,7 +152,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         box.label(text = 'Select libraries:')
         box.operator('hg3d.uilists', text = '', icon = 'FILE_REFRESH')
         col = col.column()
-        col.template_list("HG_UL_EXPRESSIONS", "", context.scene, "batch_expressions_col", context.scene, "batch_expressions_col_index")
+        col.template_list("HG_UL_BATCH_EXPRESSIONS", "", context.scene, "batch_expressions_col", context.scene, "batch_expressions_col_index")
 
         count = sum([item.count for item in context.scene.batch_expressions_col])
         col.label(text = 'Total: {} Expressions'.format(count))

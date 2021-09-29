@@ -6,6 +6,7 @@ import bpy #type: ignore
 from pathlib import Path
 from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs, hg_delete
 from ... features.creation_phase.HG_FINISH_CREATION_PHASE import build_driver_dict, add_driver
+
 class HG_RIGIFY(bpy.types.Operator):
     """Changes the rig to make it compatible with Rigify, then generates the rig
     
@@ -195,6 +196,8 @@ def load_pose(self, context):
     """
     sett = context.scene.HG3D
     pref = get_prefs()
+    
+    print('setting pose from update')
     
     if sett.load_exception:
         return

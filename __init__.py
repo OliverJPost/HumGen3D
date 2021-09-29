@@ -117,13 +117,10 @@ def _initiate_custom_icons():
 def _initiate_ui_lists():
     sc = bpy.types.Scene
     
-    sc.batch_outfits_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.CLOTHING_ITEM)
+    sc.batch_outfits_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_CLOTHING_ITEM)
     sc.batch_outfits_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
     
-    sc.batch_pose_col               = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.POSE_ITEM)
-    sc.batch_pose_col_index         = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.batch_expressions_col        = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.EXPRESSION_ITEM)
+    sc.batch_expressions_col        = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM)
     sc.batch_expressions_col_index  = bpy.props.IntProperty(name = "Index", default = 0)
     
     sc.contentpacks_col         = bpy.props.CollectionProperty(type = HG_CONTENT_PACK)

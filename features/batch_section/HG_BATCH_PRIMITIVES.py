@@ -15,7 +15,7 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
         blendfile = os.path.join(get_addon_root(), 'data', 'hg_batch_markers.blend')
         
         with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
-            data_to.objects = [self.marker_type,]
+            data_to.objects = [f'HG_MARKER_{self.marker_type.upper()}',]
 
         #link to scene
         marker = data_to.objects[0]
