@@ -451,7 +451,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         length_label  = (str(round(length_m, 2))
                          + ' m   |   '
                          + str(int(length_feet))
-                         + '"'
+                         + "'"
                          + str(length_inches)
                          +'"'
                          ) #example: 1.83m   |   5'11"

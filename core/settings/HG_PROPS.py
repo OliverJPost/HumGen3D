@@ -465,6 +465,25 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ],
         default = "all",
         )    
+    
+    batch_height_system: EnumProperty(
+        name="System",   
+        items = [
+                ("metric", "Metric", "", 0),
+                ("imperial",  "Imperial", "", 1)
+            ],
+        default = "metric",
+        )        
+    batch_average_height_cm_male: IntProperty(name = 'Male [cm]', default = 175, min = 160, max = 190)
+    batch_average_height_cm_female: IntProperty(name = 'Female [cm]', default = 170, min = 160, max = 190)
+    
+    batch_average_height_ft_male: IntProperty(name = 'ft', default = 5, min = 4, max = 6)
+    batch_average_height_ft_female: IntProperty(name = 'ft', default = 5, min = 4, max = 6)
+    batch_average_height_in_male: IntProperty(name = 'in', default = 10, min = 0, max = 12)
+    batch_average_height_in_female: IntProperty(name = 'in', default = 10, min = 0, max = 12)
+    
+    batch_standard_deviation: IntProperty(name = 'Standard deviation', default = 5, subtype = 'PERCENTAGE', min = 0, max = 10)
+    
     ######### Dev tools ######## 
     shapekey_calc_type: EnumProperty(
         name="calc type",   

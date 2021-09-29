@@ -84,41 +84,16 @@ def _initiate_custom_icons():
     #load custom icons
     hg_icons = preview_collections.setdefault("hg_icons", bpy.utils.previews.new())
     hg_dir = os.path.join(os.path.dirname(__file__), 'icons') 
-    icons = [
-        'hair',
-        'body',
-        'face',
-        'skin',
-        'clothing',
-        'footwear',
-        'expression',
-        'finalize',
-        'simulation',
-        'pose',
-        'length',
-        'cold',
-        'warm',
-        'normal',
-        'inside',
-        'outside',
-        'male_true', 
-        'male_false',
-        'female_true',
-        'female_false',
-        'HG_icon',
-        'humans',
-        'textures',
-        'eyes'
-        ]
-    for icon in icons:
-        hg_icons.load(icon, os.path.join(hg_dir, icon + '.png'), 'IMAGE')
+    for root, dir, fns in os.walk(hg_dir):
+        for fn in [f for f in fns if f.endswith('.png')]:
+            hg_icons.load(os.path.splitext(fn)[0], os.path.join(hg_dir, fn), 'IMAGE')
     preview_collections["hg_icons"] = hg_icons
 
 def _initiate_ui_lists():
     sc = bpy.types.Scene
     
-    sc.batch_outfits_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_CLOTHING_ITEM)
-    sc.batch_outfits_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
+    sc.batch_clothing_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_CLOTHING_ITEM)
+    sc.batch_clothing_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
     
     sc.batch_expressions_col        = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM)
     sc.batch_expressions_col_index  = bpy.props.IntProperty(name = "Index", default = 0)
