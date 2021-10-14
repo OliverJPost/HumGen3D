@@ -526,3 +526,32 @@ def update_hair_shader_type(self, context):
         
         hair_group.inputs['Fast/Accurate'].default_value = value
 
+def set_hair_quality(context, hair_type, hair_quality):
+    hg_body = find_human(context.object).HG.body_obj
+    
+    for mod in [m for m in hg_body.modifiers if m.type == 'PARTICLE_SYSTEM']:
+        ps = mod.particle_system.settings
+        print(mod.particle_system.name)
+        max_steps = ps['steps']
+        max_children = ps['children']
+        max_root = ps['root']
+        max_tip = ps['tip']
+        
+        ps.render_step = ps.display_step = _get_steps_amount(hair_quality, max_steps)
+
+def _get_steps_amount(hair_quality, max_steps):
+    min_steps = 1 if max_steps <= 2 else 2 if max_steps <= 4 else 3
+    deduction_dict = {
+            'high': 0,
+            'medium': 1,
+            'low': 2,
+            'ultralow': 3
+        }
+    new_steps = max_steps - deduction_dict[hair_quality]
+    if new_steps < min_steps:
+        new_steps = min_steps
+        
+    return new_steps
+
+        
+
