@@ -538,6 +538,7 @@ def set_hair_quality(context, hair_type, hair_quality):
         max_tip = ps['tip']
         
         ps.render_step = ps.display_step = _get_steps_amount(hair_quality, max_steps)
+        ps.rendered_child_count = ps.child_nbr = _get_child_amount(hair_quality, max_children)
 
 def _get_steps_amount(hair_quality, max_steps):
     min_steps = 1 if max_steps <= 2 else 2 if max_steps <= 4 else 3
@@ -553,5 +554,14 @@ def _get_steps_amount(hair_quality, max_steps):
         
     return new_steps
 
-        
+def _get_child_amount(hair_quality, max_children):
+    division_dict = {
+        'high': 1,
+        'medium': 2,
+        'low': 4,
+        'ultralow': 10
+    }        
+    new_children = max_children / division_dict[hair_quality]
+    
+    return new_children
 
