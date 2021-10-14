@@ -2,7 +2,7 @@
 Operators and functions used for adding the base human and for reverting to creation phase
 """
 
-from . HG_HAIR import convert_to_new_hair_shader
+from . HG_HAIR import add_quality_props_to_hair_system, convert_to_new_hair_shader
 import json
 import bpy #type: ignore
 import os
@@ -392,6 +392,7 @@ class HG_CREATION_BASE():
                     ]
         for mod in eyebrows:
             mod.show_viewport = mod.show_render = False
+            add_quality_props_to_hair_system(mod)
 
         preset_eyebrows = next(
             (mod for mod in eyebrows 
