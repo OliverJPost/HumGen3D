@@ -36,7 +36,7 @@ class HG_CREATION_BASE():
         gender, hg_rig, hg_body, hg_eyes = self._import_human(context, sett, pref)
         self._set_HG_object_props(sett, hg_rig, hg_body)
 
-        self._set_eevee_ao_and_strip(context)
+        set_eevee_ao_and_strip(context)
 
         self._load_external_shapekeys(context, pref, hg_body)
 
@@ -174,13 +174,6 @@ class HG_CREATION_BASE():
         HG.phase    = 'body'
         HG.body_obj = hg_body
         HG.length   = hg_rig.dimensions[2]
-
-    def _set_eevee_ao_and_strip(self, context):
-        current_render_engine = str(context.scene.render.engine)
-        context.scene.render.engine = 'BLENDER_EEVEE'
-        context.scene.eevee.use_gtao = True
-        context.scene.render.hair_type = 'STRIP'
-        context.scene.render.engine = current_render_engine
         
     def _load_external_shapekeys(self, context, pref, hg_body):
         """Imports external shapekeys from the models/shapekeys folder
@@ -414,6 +407,13 @@ class HG_CREATION_BASE():
                 if ps_sett.child_nbr > 1:
                     ps_sett.child_nbr = 1    
 
+
+def set_eevee_ao_and_strip(context):
+    current_render_engine = str(context.scene.render.engine)
+    context.scene.render.engine = 'BLENDER_EEVEE'
+    context.scene.eevee.use_gtao = True
+    context.scene.render.hair_type = 'STRIP'
+    context.scene.render.engine = current_render_engine
 
 class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
     """Imports human, setting the correct custom properties. 

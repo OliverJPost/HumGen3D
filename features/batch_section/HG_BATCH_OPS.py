@@ -3,6 +3,7 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
+from ... features.creation_phase.HG_HAIR import set_hair_quality
 from ... user_interface.HG_BATCH_UILIST import uilist_refresh
 from ... modules.humgen import get_pcoll_options
 from ... core.HG_PCOLL import refresh_pcoll
@@ -18,7 +19,7 @@ from pathlib import Path
 
 from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty #type:ignore
 
-from .. creation_phase.HG_CREATION import (HG_CREATION_BASE)
+from .. creation_phase.HG_CREATION import (HG_CREATION_BASE, set_eevee_ao_and_strip)
 from .. common.HG_RANDOM import (
     set_random_active_in_pcoll,
     random_body_type,
@@ -203,7 +204,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
             sett.batch_idx = 1
             context.workspace.status_text_set(status_text_callback)
-        
+            set_eevee_ao_and_strip(context)
+            
             return {'RUNNING_MODAL'}
         else:
             generate_queue = self.generate_queue
@@ -308,6 +310,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             )[0])
                                     
         sd['add_hair'] = sett.batch_hair
+        sd['hair_type'] = sett.batch_hairtype
+        sd['hair_quality'] = getattr(sett, f'batch_hair_quality_{sett.batch_hairtype}')
+        
         sd['add_expression'] = sett.batch_expression
         if sett.batch_expression:
             self._add_category_list(context, sd, 'expressions') 
@@ -415,6 +420,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     ethnicity: StringProperty()
     
     add_hair: BoolProperty()
+    hair_type: StringProperty()
+    hair_quality: StringProperty()
+    
     add_clothing: BoolProperty()
     clothing_category: StringProperty()
     
@@ -450,6 +458,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
+        set_hair_quality(context, self.hair_type, self.hair_quality)
         
         sett.human_length = int(length_from_bell_curve(sett, self.gender))
         
