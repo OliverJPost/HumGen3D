@@ -3,7 +3,7 @@ This file is currently inactive
 """
 
 from .. features.batch_section.HG_BATCH_OPS import get_batch_marker_list
-from .. features.batch_section.HG_BATCH_FUNC import length_from_bell_curve
+from .. features.batch_section.HG_BATCH_FUNC import calculate_weight, length_from_bell_curve
 import bpy #type: ignore
 from .. core.HG_PCOLL import get_hg_icon, preview_collections
 from . HG_PANEL_FUNCTIONS import get_flow, draw_panel_switch_header
@@ -46,6 +46,28 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             col = layout.column(align = True)
             col.scale_y = 2
             col.prop(sett, 'batch_progress')
+            
+        box = layout.box().column(align = True)
+        box.prop(
+            sett,
+            'batch_performance_statistics',
+            text='Performance statistics:',
+            emboss = False,
+            icon="TRIA_DOWN" if sett.batch_performance_statistics else "TRIA_RIGHT"
+        )
+        if sett.batch_performance_statistics:
+            split = box.split(factor = 0.3)
+            col_l = split.column(align = True)
+            col_r = split.column(align = True)
+            col_l.label(text = 'Cycles:')
+            col_r.label(text = calculate_weight(sett)[0], icon = 'RENDER_STILL')
+            col_l.label(text = 'Eevee:')
+            col_r.label(text = calculate_weight(sett)[1], icon = 'RENDER_STILL')
+            col_l.label(text = 'Memory:')
+            col_r.label(text = calculate_weight(sett)[2], icon = 'MEMORY')
+            col_l.label(text = 'Storage:')
+            col_r.label(text = calculate_weight(sett)[3], icon = 'DISK_DRIVE')
+            col_r.label(text = '* Excluding textures')
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -200,7 +222,10 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         
         layout.prop(sett, 'batch_texture_resolution')
         layout.prop(sett, 'batch_poly_reduction')
-        layout.prop(sett, 'batch_apply_poly_reduction')
+        
+        col = layout.column()
+        col.enabled = sett.batch_apply_shapekeys        
+        col.prop(sett, 'batch_apply_poly_reduction')
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"

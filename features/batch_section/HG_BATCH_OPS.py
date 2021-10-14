@@ -115,6 +115,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         self.done  = False
         self.timer = None
         self.x_loc = 0
+        self.start_time = time.time()
 
     def modal(self, context, event):
         """ Event handling. """
@@ -130,6 +131,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             context.area.tag_redraw()
 
             context.workspace.status_text_set(text=None)
+            print('ENDING TIME: ', time.time()-self.start_time)
             return {'FINISHED'}
 
         elif self.finish_step:
@@ -285,8 +287,10 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
         for obj in data_to.objects:
             bpy.context.scene.collection.objects.link(obj)
+        
            
-        return next(obj for obj in data_to.objects if obj.HG.ishuman)
+        return next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
+                    [obj for obj in data_to.objects if obj.HG.ishuman][0])
 
     def _build_settings_dict(self, context, sett, pose_type) -> dict:
         sd = {}
@@ -496,10 +500,10 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         bpy.ops.particle.disconnect_hair(all=True) 
         
         for obj in hg_objects:
-            if self.apply_clothing_geometry_masks:
+            if self.apply_clothing_geometry_masks and self.apply_shapekeys:
                 self._apply_modifier_by_type(context, obj, 'MASK')
-                for vg in [vg for vg in obj.vertex_groups if vg.name.startswith('mask')]:
-                    obj.vertex_groups.remove(vg)
+                #for vg in [vg for vg in obj.vertex_groups if vg.name.startswith('mask')]:
+                #    obj.vertex_groups.remove(vg)
             if self.remove_clothing_solidify:
                 self._remove_modifier_by_type(obj, 'SOLIDIFY')   
             if self.remove_clothing_subdiv:
@@ -514,7 +518,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         if self.poly_reduction != 'none':
             for obj in hg_objects:
                 pr_mod = self._add_poly_reduction_modifier(obj)
-                if self.apply_poly_reduction and pr_mod:
+                if self.apply_poly_reduction and pr_mod and self.apply_shapekeys:
                     self._apply_modifier(context, obj, pr_mod)      
 
         context.view_layer.objects.active = hg_body

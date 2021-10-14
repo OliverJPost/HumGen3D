@@ -41,3 +41,50 @@ def length_from_bell_curve(sett, gender, random_seed = True, samples = 1) -> lis
     
     print('returning', length_list)
     return length_list 
+
+def calculate_weight(sett):
+    eevee_weight = 14.5
+    storage_weight = 59
+    
+    if sett.batch_hair:
+        storage_weight += 10
+        p_quality = sett.batch_hair_quality_particle
+        if p_quality == 'high':
+            eevee_weight += 2.8
+        elif p_quality == 'medium':
+            eevee_weight += 1
+        elif p_quality == 'low':
+            eevee_weight += 0.8
+        else:
+            eevee_weight += 0.2   
+        
+    if sett.batch_clothing:
+        storage_weight += 8
+        if sett.batch_apply_clothing_geometry_masks:
+            storage_weight -= 1
+           
+    if sett.batch_delete_backup:
+        storage_weight -= 42 
+        
+    if sett.batch_apply_shapekeys:
+        storage_weight -= 6      
+        if sett.batch_apply_armature_modifier:
+            storage_weight -= 2
+            
+        if sett.batch_apply_poly_reduction:
+            if sett.batch_poly_reduction == 'medium':
+                storage_weight -= 5
+            elif sett.batch_poly_reduction == 'high':
+                storage_weight -= 6
+            elif sett.batch_poly_reduction == 'ultra':
+                storage_weight -= 7 
+
+    cycles_weight = '10 (Very Fast)'
+    eevee_weight = f'{eevee_weight} (Fast)'
+    memory_weight = '100 (Heavy)'
+    storage_weight = f'~{storage_weight} MB/human*'
+    
+    return cycles_weight, eevee_weight, memory_weight, storage_weight
+
+
+    
