@@ -71,6 +71,8 @@ class HG_CREATION_BASE():
                                                    hg_body, hg_eyes, preset_data)
 
         convert_to_new_hair_shader(hg_body)
+        for mod in [m for m in hg_body.modifiers if m.type == 'PARTICLE_SYSTEM']:
+            add_quality_props_to_hair_system(mod)
 
         #collapse modifiers
         for mod in hg_body.modifiers:
@@ -392,7 +394,6 @@ class HG_CREATION_BASE():
                     ]
         for mod in eyebrows:
             mod.show_viewport = mod.show_render = False
-            add_quality_props_to_hair_system(mod)
 
         preset_eyebrows = next(
             (mod for mod in eyebrows 
