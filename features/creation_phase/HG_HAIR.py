@@ -188,6 +188,11 @@ def load_hair(self,context, type):
     context.view_layer.objects.active = hg_body
     for mod in new_hair_systems:
         _reconnect_hair(hg_body, mod)
+        ps = mod.particle_system.settings
+        ps['steps'] = ps.render_step
+        ps['children'] = ps.rendered_child_count
+        ps['root'] = ps.root_radius
+        ps['tip'] = ps.tip_radius
 
     _set_correct_particle_vertexgroups(new_hair_systems, hair_obj, hg_body)
     _set_correct_hair_material(new_hair_systems, hg_body, type)
@@ -198,6 +203,9 @@ def load_hair(self,context, type):
     _move_modifiers_above_masks(hg_body, new_hair_systems)
     for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
         mod.show_viewport = True
+
+    
+    
 
     hg_delete(hair_obj)
 
@@ -514,4 +522,4 @@ def update_hair_shader_type(self, context):
             continue
         
         hair_group.inputs['Fast/Accurate'].default_value = value
-    
+
