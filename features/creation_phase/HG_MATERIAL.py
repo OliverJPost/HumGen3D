@@ -32,7 +32,37 @@ def load_textures(self, context):
             if tx_type in node.name and node.bl_idname == 'ShaderNodeTexImage':
                 add_texture(node, f'textures/{gender}/{library}/PBR/', tx_type)
     
+    if library in ['Default 1K', 'Default 512px']:
+        resolution_folder = 'MEDIUM_RES' if library == 'Default 1K' else 'LOW_RES'
+        _change_peripheral_texture_resolution(resolution_folder, hg_rig, hg_body)
+    
     mat['texture_library'] = library
+
+def _change_peripheral_texture_resolution(resolution_folder, hg_rig, hg_body):
+    for obj in hg_rig.children:
+        for mat in obj.data.materials:
+            for node in [node for node in mat.node_tree.nodes if node.bl_idname == 'ShaderNodeTexImage']:
+                if node.name.startswith(('skin_rough_spec', 'Normal', 'Color')) and obj == hg_body:
+                    continue
+                current_image = node.image
+                current_path = current_image.filepath
+                
+                if 'MEDIUM_RES' in current_path or 'LOW_RES' in current_path:
+                    current_dir = Path(os.path.dirname(current_path)).parent
+                else:
+                    current_dir = os.path.dirname(current_path)
+                    
+                dir = os.path.join(current_dir, resolution_folder)
+                fn, ext = os.path.splitext(os.path.basename(current_path))
+                resolution_tag = resolution_folder.replace('_RES', '')
+                corrected_fn = fn.replace('_4K', '').replace('_MEDIUM', '').replace('_LOW', '')
+                new_fn = corrected_fn+f'_{resolution_tag}'+ext
+                new_path = os.path.join(dir, new_fn)
+                
+                old_color_mode = current_image.colorspace_settings.name
+                node.image = bpy.data.images.load(new_path, check_existing=True)
+                node.image.colorspace_settings.name = old_color_mode
+    
 
 def add_texture(node, sub_path, tx_type):
     """Adds correct image to the teximage node

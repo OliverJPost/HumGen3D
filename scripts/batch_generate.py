@@ -16,10 +16,4 @@ bpy.ops.hg3d.quick_generate(**settings_dict)
 
 hg_rig = next(obj for obj in bpy.data.objects if obj.HG.ishuman)
 
-backup_rig = hg_rig.HG.backup
-for obj in backup_rig.children[:]:
-    bpy.data.objects.remove(obj)
-    
-bpy.data.objects.remove(backup_rig)
-
 bpy.ops.wm.save_as_mainfile(filepath = '/Users/olepost/Documents/Humgen_Files_Main/batch_result.blend')

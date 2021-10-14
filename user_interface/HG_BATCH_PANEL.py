@@ -184,12 +184,23 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         
     def draw(self, context):
         layout = self.layout
-        layout.label(text = 'Delete backup model')
-        layout.label(text = 'Texture Resolution')
-        layout.label(text = 'No Subdivision')
-        layout.label(text = 'Decimate Clothing')
-        layout.label(text = 'Decimate Human')
-        layout.label(text ='Hair Quality')
+        sett = context.scene.HG3D
+        
+        layout.prop(sett, 'batch_delete_backup')
+        layout.prop(sett, 'batch_apply_shapekeys')
+        
+        col = layout.column()
+        col.enabled = sett.batch_apply_shapekeys
+        col.prop(sett, 'batch_apply_armature_modifier')
+        col.prop(sett, 'batch_apply_clothing_geometry_masks')
+        
+        layout.prop(sett, 'batch_remove_clothing_subdiv')
+        layout.prop(sett, 'batch_remove_clothing_solidify')
+        
+        
+        layout.prop(sett, 'batch_texture_resolution')
+        layout.prop(sett, 'batch_poly_reduction')
+        layout.prop(sett, 'batch_apply_poly_reduction')
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -208,6 +219,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
         row = layout.row(align = True)
         row.scale_y = 1.5
         row.prop(sett, 'batch_hairtype', expand = True)
+        layout.prop(sett, 'batch_hair_quality_{}'.format(sett.batch_hairtype), text = 'Quality')
 
 class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
@@ -231,10 +243,10 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
         #col.scale_y = 1.5
         row=col.row(align = False)
-        row.template_list("HG_UL_BATCH_CLOTHING", "", context.scene, "batch_outfits_col", context.scene, "batch_outfits_col_index")
+        row.template_list("HG_UL_BATCH_CLOTHING", "", context.scene, "batch_clothing_col", context.scene, "batch_clothing_col_index")
         
         col = layout.column()
-        count = sum([(item.male_items + item.female_items) for item in context.scene.batch_outfits_col if item.enabled])
+        count = sum([(item.male_items + item.female_items) for item in context.scene.batch_clothing_col if item.enabled])
         
         if count == 0:
             col.alert = True

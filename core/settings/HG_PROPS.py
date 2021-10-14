@@ -439,10 +439,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_hairtype: EnumProperty(
         name="Hair Type",   
         items = [
-                ("system", "Hair Systems", "", 0),
-                ("cards",  "Hair Cards",   "", 1),
+                ("particle", "Particle hair", "", 0),
+                ("haircards",  "Haircards",   "", 1),
             ],
-        default = "system",
+        default = "particle",
         )    
 
     batch_clothing_inside: BoolProperty(
@@ -483,6 +483,60 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_average_height_in_female: IntProperty(name = 'in', default = 10, min = 0, max = 12)
     
     batch_standard_deviation: IntProperty(name = 'Standard deviation', default = 5, subtype = 'PERCENTAGE', min = 0, max = 10)
+    
+    
+    
+    batch_delete_backup: BoolProperty(name = 'Delete backup human', default = True)
+    batch_apply_shapekeys: BoolProperty(name = 'Apply shape keys', default = True)
+    batch_apply_armature_modifier: BoolProperty(name = 'Apply armature modifier', default = True)
+    batch_remove_clothing_solidify : BoolProperty(name = 'Remove clothing solidify', default = True)
+    batch_remove_clothing_subdiv: BoolProperty(name = 'Remove clothing subdiv', default = True)
+    batch_apply_clothing_geometry_masks: BoolProperty(name = 'Apply geometry masks', default = True)
+
+    batch_texture_resolution: EnumProperty(
+        name="Texture Resolution",   
+        items = [
+                ("high", "High (~4K)",    "", 0),
+                ("optimised", "Optimised (~1K)",       "", 1),
+                ("performance", "Performance (~0.5K)",  "", 2),
+            ],
+        default = "optimised",
+        )
+
+    batch_poly_reduction: EnumProperty(
+        name="Polygon reduction",   
+        items = [
+                ("none", "Disabled (original topology)",    "", 0),
+                ("medium", "Medium (33% polycount)", "", 1), #2x unsubdivide
+                ("high", "High (15% polycount)",  "", 2), # 0.08 collapse
+                ("ultra", "Ultra (5% polycount)",  "", 3), # 0.025 collapse
+            ],
+        default = "medium",
+        )
+    batch_apply_poly_reduction: BoolProperty(name = 'Apply poly reduction', default = True)
+
+
+    batch_hair_quality_particle: EnumProperty(
+        name="Particle hair quality",   
+        items = [
+                ("high", "High",    "", 0),
+                ("medium", "Medium", "", 1), 
+                ("low", "Low",  "", 2), 
+                ("ultralow", "Ultra Low",  "", 3),    
+            ],
+        default = "low",
+        )
+    batch_hair_quality_haircards: EnumProperty(
+        name="Haircard quality",   
+        items = [
+                ("low", "Low",  "", 1), 
+                ("ultralow", "Ultra Low",  "", 2),    
+            ],
+        default = "low",
+        )
+        
+
+
     
     ######### Dev tools ######## 
     shapekey_calc_type: EnumProperty(
