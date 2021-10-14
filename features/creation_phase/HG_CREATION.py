@@ -448,13 +448,3 @@ class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
         
         return {'FINISHED'}
 
-
-
-
-
-    
-
-
-
-
-

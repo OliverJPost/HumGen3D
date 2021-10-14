@@ -79,7 +79,7 @@ def uilist_refresh(self, context, categ):
     add_temp =[]
 
     if categ == 'outfits':
-        collection = context.scene.batch_outfits_col
+        collection = context.scene.batch_clothing_col
         gender = True
     else:
         if categ == 'poses':
