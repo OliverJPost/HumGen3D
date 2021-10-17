@@ -2,6 +2,7 @@
 Operators and functions to be used by the developer and content pack creators
 """
 
+from ... features.finalize_phase.HG_CLOTHING_LOAD import set_clothing_texture_resolution
 from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict
 from ... features.creation_phase.HG_HAIR import convert_to_new_hair_shader, set_hair_quality
 import bpy #type: ignore
@@ -18,7 +19,7 @@ class HG_TESTOP(bpy.types.Operator):
     bl_options     = {"UNDO"}
 
     def execute(self,context):
-        set_hair_quality(context, 'particle', context.scene.HG3D.batch_hair_quality_particle)
+            
         return {'FINISHED'}
 
 class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
