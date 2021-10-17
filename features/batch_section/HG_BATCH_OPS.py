@@ -3,6 +3,7 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
+from ... features.finalize_phase.HG_CLOTHING_LOAD import set_clothing_texture_resolution
 from ... features.creation_phase.HG_HAIR import set_hair_quality
 from ... user_interface.HG_BATCH_UILIST import uilist_refresh
 from ... modules.humgen import get_pcoll_options
@@ -456,8 +457,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             nodes = hg_body.data.materials[0].node_tree.nodes
             old_image = next(n.image.name for n in nodes if n.name == 'Color')
             pcoll_options = get_pcoll_options('textures')
-            print(pcoll_options, old_image[:-3])
-            searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '')
+            searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '').replace('1K', '').replace('512px', '')
             sett.pcoll_textures = next(p for p in pcoll_options if searchword in p) 
 
         if self.add_hair:
@@ -474,6 +474,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         if self.add_clothing:
             set_random_active_in_pcoll(context, sett, 'outfit')
+       
+            for child in [c for c in hg_rig.children if 'cloth' in c or 'shoe' in c]:
+                set_clothing_texture_resolution(child, self.texture_resolution)
 
         if self.pose_type != 'a_pose':
             self._set_pose(context, sett, self.pose_type)
@@ -542,12 +545,13 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             
         decimate_mod = obj.modifiers.new('HG_POLY_REDUCTION', 'DECIMATE')
             
-        if self.poly_reduction == 'medium':
-            decimate_mod.decimate_type = 'UNSUBDIV'
-            decimate_mod.iterations = 2
+        # if self.poly_reduction == 'medium':
+        #     decimate_mod.decimate_type = 'UNSUBDIV'
+        #     decimate_mod.iterations = 2
             
-        else:
-            decimate_mod.ratio = 0.08 if self.poly_reduction == 'high' else 0.025
+        # else:
+        
+        decimate_mod.ratio = 0.16 if self.poly_reduction == 'medium' else 0.08 if self.poly_reduction == 'high' else 0.025
         
         return decimate_mod
 

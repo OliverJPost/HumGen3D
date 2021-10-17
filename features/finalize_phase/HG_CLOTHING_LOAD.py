@@ -14,6 +14,7 @@ from ... features.common.HG_COMMON_FUNC import (
 )
 from ... core.HG_PCOLL import refresh_pcoll
 from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict, deform_obj_from_difference
+import os
 
 #FIXME make sure new textures are not duplicated
 #TODO make new outfit color random
@@ -324,3 +325,43 @@ def find_masks(obj) -> list:
         except:
             continue
     return mask_list
+
+def set_clothing_texture_resolution(clothing_item, resolution_category):
+    if resolution_category == 'performance':
+        resolution_tag = 'low'
+    elif resolution_category == 'optimised':
+        resolution_tag = 'medium'
+    
+    mat = clothing_item.data.materials[0]
+    nodes = mat.node_tree.nodes
+    
+    for node in [n for n in nodes if n.bl_idname == 'ShaderNodeTexImage']:
+        image = node.image
+        old_color_setting = image.colorspace_settings.name
+        
+        if not image:
+            continue
+        
+        dir = os.path.dirname(image.filepath)
+        filename, ext = os.path.splitext(os.path.basename(image.filepath))
+        
+        if filename.endswith('_MEDIUM'):
+            filename = filename[:-7]
+        elif filename.endswith('_LOW'):
+            filename = filename[:-4]
+            
+        if resolution_category == 'high':
+            new_filename = filename+ext
+        else:
+            new_filename = filename + f'_{resolution_tag.upper()}' + ext
+        
+        new_path = os.path.join(dir, new_filename)    
+            
+        if not os.path.isfile(new_path):
+            print("Could not find other resolution for outfit texture: ", new_path)
+            
+        new_image = bpy.data.images.load(new_path, check_existing = True)
+        node.image = new_image
+        new_image.colorspace_settings.name = old_color_setting
+        
+    
