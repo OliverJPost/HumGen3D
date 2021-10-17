@@ -827,7 +827,7 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         
         col = layout.column()
         col.operator('hg3d.testop', text = 'Test Operator')
-        col.prop(context.scene.HG3D, 'batch_hair_quality_particle')
+        col.prop(context.scene.HG3D, 'batch_texture_resolution')
         col.operator('hg3d.delstretch')
         col.operator('hg3d.prepare_for_arkit')
         col.operator('hg3d.convert_hair_shader')
