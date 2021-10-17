@@ -80,8 +80,10 @@ def add_texture(node, sub_path, tx_type):
     if tx_type == 'Color':
         image_path = filepath
     else:
+        if tx_type == 'Normal':
+            tx_type = 'norm'
         for fn in os.listdir(filepath):
-            if tx_type[:4].lower() in fn.lower():
+            if tx_type.lower() in fn.lower():
                 image_path = filepath + str(Path('/{}'.format(fn)))
 
     image = bpy.data.images.load(image_path, check_existing=True)
