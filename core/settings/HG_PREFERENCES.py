@@ -9,6 +9,7 @@ from bpy_extras.io_utils import ImportHelper  # type: ignore
 from ... import bl_info
 from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
 from ...features.common.HG_COMMON_FUNC import get_prefs
+from ... core.HG_PCOLL import preview_collections
 
 
 class HG_PREF(bpy.types.AddonPreferences):
