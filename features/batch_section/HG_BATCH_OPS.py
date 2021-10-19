@@ -3,6 +3,7 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
+from ... features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
 from ... user_interface.HG_BATCH_UILIST import uilist_refresh
 import bpy #type: ignore
 import random
@@ -12,9 +13,8 @@ import json
 
 from pathlib import Path
 
-
 from .. creation_phase.HG_CREATION import (HG_CREATION_BASE, set_eevee_ao_and_strip)
-from .. common.HG_COMMON_FUNC import hg_delete
+from .. common.HG_COMMON_FUNC import hg_delete, show_message
 
 def status_text_callback(header, context):
     #INACTIVE
@@ -130,12 +130,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             return {'RUNNING_MODAL'}
         
         elif event.type in ['ESC']:
-            print('modal is cancelling')
-            sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
-
-            print('finishing because escape')
-            self.finish_step = True
-            context.workspace.status_text_set(status_text_callback)
+            
+            self._cancel(sett, context)
             
             return {'RUNNING_MODAL'}
         
@@ -145,7 +141,14 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 marker = self.generate_queue[self.human_idx]
                 if has_associated_human(marker):
                     self._delete_old_associated_human(marker)
-                hg_rig = self.generate_human_in_background(context, marker)
+                result = self.generate_human_in_background(context, marker)
+                
+                if not result:
+                    self._cancel(sett, context)
+                    return {'RUNNING_MODAL'}
+                else:
+                    hg_rig = result
+                
                 hg_rig.location = marker.location
                 hg_rig.rotation_euler = marker.rotation_euler
                 marker['associated_human'] = hg_rig
@@ -224,9 +227,13 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
         layout.label(text = 'Test label')
 
-    def cancel(self, context):
-        #context.window.cursor_modal_restore()
-        context.workspace.status_text_set(text=None)
+    def _cancel(self, sett, context):
+        print('modal is cancelling')
+        sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
+
+        print('finishing because escape')
+        self.finish_step = True
+        context.workspace.status_text_set(status_text_callback)
         return {'CANCELLED'}
 
     def generate_human_in_background(self, context, marker) -> bpy.types.Object:
@@ -249,27 +256,41 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
         print('###########################################################')
         print('############### STARTING BACKGROUND PROCESS ###############')
-        print('###########################################################')
         
-        subprocess.run([bpy.app.binary_path,
-                            "--background",
-                            "--python",
-                            python_file,
-                            json.dumps(settings_dict)])
-        
-        print('###########################################################')
+        try:
+            background_blender = subprocess.run(
+                [
+                    bpy.app.binary_path,
+                    "--background",
+                    "--python",
+                    python_file,
+                    json.dumps(settings_dict)
+                ],
+                stdout= subprocess.DEVNULL,
+                stderr= subprocess.PIPE)
+        except SystemError:
+            print('Background SystemError')
+        else:     
+            if background_blender.stderr:
+                print(background_blender.stderr.decode("utf-8"))
+                show_message(self, f'An error occured while generating human {self.human_idx}, check the console for error details')
+                return None #Cancel modal 
+ 
         print('################ END OF BACKGROUND PROCESS ################')
-        print('###########################################################')
 
-        print(f'Background Proces for marker {marker.name} took: ',
-              time.time() - start_time
+        print(f'Background Proces succesful for marker {marker.name}, took: ',
+              round(time.time() - start_time, 2),
+              's'
               )
+
         
         with bpy.data.libraries.load('/Users/olepost/Documents/Humgen_Files_Main/batch_result.blend', link = False) as (data_from ,data_to):
             data_to.objects = data_from.objects
         
         for obj in data_to.objects:
             bpy.context.scene.collection.objects.link(obj)
+            toggle_hair_visibility(obj, show = True)
+        
         
            
         return next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
