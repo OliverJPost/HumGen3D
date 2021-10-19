@@ -9,7 +9,7 @@ from ...features.creation_phase.HG_HAIR import set_hair_quality
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
 from ...modules.humgen import get_pcoll_options
-from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete
+from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete, toggle_hair_visibility
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
 from ..creation_phase.HG_CREATION import HG_CREATION_BASE
 from ..creation_phase.HG_FINISH_CREATION_PHASE import finish_creation_phase
@@ -17,8 +17,13 @@ from .HG_BATCH_FUNC import length_from_bell_curve
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
-    """
-    clears searchfield INACTIVE
+    """Operator to create a human from start to finish in one go. Includes 
+    properties to determine the quality of the human, as well as properties that
+    determine what the human should look like, wear, expression etc.
+
+    Args:
+        HG_CREATION_BASE (bpy.types.Operator): For inheriting the methods for
+        creating a new human
     """
     bl_idname = "hg3d.quick_generate"
     bl_label = "Quick Generate"
@@ -46,7 +51,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         name="Polygon reduction",   
         items = [
                 ("none", "Disabled (original topology)",    "", 0),
-                ("medium", "Medium (33% polycount)", "", 1), #2x unsubdivide
+                ("medium", "Medium (33% polycount)", "", 1), #0.16 collapse
                 ("high", "High (15% polycount)",  "", 2), # 0.08 collapse
                 ("ultra", "Ultra (5% polycount)",  "", 3), # 0.025 collapse
             ],
@@ -74,29 +79,18 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     def execute(self, context):
         sett = context.scene.HG3D
 
+        #### Creation Phase ####
+
         sett.gender = self.gender
         set_random_active_in_pcoll(context, sett, 'humans', searchterm = self.ethnicity)
-        #ethnicity
         hg_rig, hg_body = self.create_human(context) #inherited
         
-
         context.view_layer.objects.active = hg_rig
-        name = self._get_random_name(self.gender, hg_rig) #inherited        
-        
+    
         random_body_type(hg_rig)
         
-
-
         if self.texture_resolution in ('optimised', 'performance'):
-            resolution_tag = '1K' if self.texture_resolution == 'optimised' else '512px'
-            sett.texture_library = f'Default {resolution_tag}' 
-            
-            nodes = hg_body.data.materials[0].node_tree.nodes
-            old_image = next(n.image.name for n in nodes if n.name == 'Color')
-            pcoll_options = get_pcoll_options('textures')
-            searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '').replace('1K', '').replace('512px', '').replace('4k', '')
-            print(pcoll_options, searchword)
-            sett.pcoll_textures = next(p for p in pcoll_options if searchword in p) 
+            self._set_body_texture_resolution(sett, hg_body) 
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
@@ -106,15 +100,15 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         sett.human_length = int(length_from_bell_curve(sett, self.gender))
 
-
         finish_creation_phase(None, context, hg_rig, hg_body)
 
+        #### Finalize Phase #####
         
         context.view_layer.objects.active = hg_rig
 
         if self.add_clothing:
+            #TODO clothing category
             set_random_active_in_pcoll(context, sett, 'outfit')
-
             for child in [c for c in hg_rig.children if 'cloth' in c or 'shoe' in c]:
                 set_clothing_texture_resolution(child, self.texture_resolution)
 
@@ -122,10 +116,18 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
-            #pick_library(context, 'expressions')
+            #TODO expression category
             set_random_active_in_pcoll(context, sett, 'expressions')
 
-        hg_rig.HG.phase = 'clothing'  
+        hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
+        
+        #### Quality settings #####
+        
+        self._set_quality_settings(context, hg_rig, hg_body)
+        
+        return {'FINISHED'}
+
+    def _set_quality_settings(self, context, hg_rig, hg_body):
         
         if self.delete_backup:
             self._delete_backup_human(hg_rig)
@@ -134,20 +136,18 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         hg_objects.extend([obj for obj in hg_rig.children])
         
         if self.apply_shapekeys:
-            for obj in hg_objects:
-                if obj.type != 'MESH':
-                    continue
+            for obj in [o for o in hg_objects if o.type == 'MESH']:
                 apply_shapekeys(obj)  
 
+        #Disconnect hair to prevent it shifting during mesh modification
         context.view_layer.objects.active = hg_body
         toggle_hair_visibility(hg_body, True)
         bpy.ops.particle.disconnect_hair(all=True) 
         toggle_hair_visibility(hg_body, False)
+        
         for obj in hg_objects:
             if self.apply_clothing_geometry_masks and self.apply_shapekeys:
                 self._apply_modifier_by_type(context, obj, 'MASK')
-                #for vg in [vg for vg in obj.vertex_groups if vg.name.startswith('mask')]:
-                #    obj.vertex_groups.remove(vg)
             if self.remove_clothing_solidify:
                 self._remove_modifier_by_type(obj, 'SOLIDIFY')   
             if self.remove_clothing_subdiv:
@@ -156,8 +156,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         if self.apply_armature_modifier and self.apply_shapekeys:
             for obj in hg_objects:
                 self._apply_modifier_by_type(context, obj, 'ARMATURE')
-                for vg in [vg for vg in obj.vertex_groups if not vg.name.lower().startswith(('mask', 'fh', 'hair'))]:
-                    obj.vertex_groups.remove(vg)               
+                self._remove_redundant_vertex_groups(obj)               
             
         if self.poly_reduction != 'none':
             for obj in hg_objects:
@@ -165,11 +164,33 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 if self.apply_poly_reduction and pr_mod and self.apply_shapekeys:
                     self._apply_modifier(context, obj, pr_mod)      
             
+        #Reconnect hair, so it follows the body again
         context.view_layer.objects.active = hg_body
         toggle_hair_visibility(hg_body, True)
         bpy.ops.particle.connect_hair(all=True)     
         toggle_hair_visibility(hg_body, False)
-        return {'FINISHED'}
+
+    def _remove_redundant_vertex_groups(self, obj):
+        vg_remove_list = [
+                    vg for vg in obj.vertex_groups 
+                    if not vg.name.lower().startswith(('mask',
+                                                       'fh',
+                                                       'hair'))
+                ]
+                
+        for vg in vg_remove_list:
+            obj.vertex_groups.remove(vg)
+
+    def _set_body_texture_resolution(self, sett, hg_body):
+        resolution_tag = '1K' if self.texture_resolution == 'optimised' else '512px'
+        sett.texture_library = f'Default {resolution_tag}' 
+            
+        nodes = hg_body.data.materials[0].node_tree.nodes
+        old_image = next(n.image.name for n in nodes if n.name == 'Color')
+        pcoll_options = get_pcoll_options('textures')
+        searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '').replace('1K', '').replace('512px', '').replace('4k', '')
+        print(pcoll_options, searchword)
+        sett.pcoll_textures = next(p for p in pcoll_options if searchword in p)
 
     def _apply_modifier(self, context, obj, modifier):
         old_active_obj = context.view_layer.objects.active
@@ -181,7 +202,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = old_active_obj
 
     def _add_poly_reduction_modifier(self, obj) -> bpy.types.Modifier:
-        
+        #TODO optimise polygon reduction, UV layout
         if obj.type != 'MESH':
             print('contuing because not mesh', obj, obj.type)
             return None      
@@ -191,9 +212,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         # if self.poly_reduction == 'medium':
         #     decimate_mod.decimate_type = 'UNSUBDIV'
         #     decimate_mod.iterations = 2
-            
-        # else:
-        
         decimate_mod.ratio = 0.16 if self.poly_reduction == 'medium' else 0.08 if self.poly_reduction == 'high' else 0.025
         
         return decimate_mod
@@ -224,8 +242,4 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             set_random_active_in_pcoll(context, sett, 'poses')
   
 
-def toggle_hair_visibility(obj, show = True):
-    for mod in obj.modifiers:
-        print('modcheck', mod.name, mod.type)
-        if mod.type == 'PARTICLE_SYSTEM':
-            mod.show_viewport = show
+

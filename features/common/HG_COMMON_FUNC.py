@@ -199,6 +199,11 @@ def time_update(label, prev_time) -> int:
     print(label, round(time.time()-prev_time, 2))
     return time.time()
     
+def toggle_hair_visibility(obj, show = True):
+    for mod in obj.modifiers:
+        print('modcheck', mod.name, mod.type)
+        if mod.type == 'PARTICLE_SYSTEM':
+            mod.show_viewport = show
 
 #TODO make deepclean data removal, using:
 

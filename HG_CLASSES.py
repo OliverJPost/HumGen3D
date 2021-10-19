@@ -1,7 +1,7 @@
 #core
 from . user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_hg_marker_add
 from . features.batch_section.HG_BATCH_PRIMITIVES import HG_OT_ADD_BATCH_MARKER
-from . features.batch_section.HG_BATCH_OPS import HG_BATCH_GENERATE
+from . features.batch_section.HG_BATCH_MODAL_OPERATOR import HG_BATCH_GENERATE
 from . features.batch_section.HG_QUICK_GENERATOR import HG_QUICK_GENERATE
 from . core.HG_CALLBACK import HG_ACTIVATE
 from . core.settings.HG_PREFERENCES import (

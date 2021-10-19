@@ -9,25 +9,24 @@ import subprocess
 import time
 from pathlib import Path
 
-import bpy  # type: ignore
+import bpy #type:ignore
 
+from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
+                                                     has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
 from ...user_interface.HG_BATCH_UILIST import uilist_refresh
 from ..common.HG_COMMON_FUNC import hg_delete, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
                                           set_eevee_ao_and_strip)
 
-
-def status_text_callback(header, context):
-    #INACTIVE
-    
+def status_text_callback(header, context):  
     sett   = context.scene.HG3D
     layout = header.layout
 
     layout.separator_spacer()
     layout.alignment = 'EXPAND'
     
-    row           = layout.row(align=False)
+    row = layout.row(align=False)
     row.alignment = 'CENTER'
     
     layout.label(text=f'Building Human {sett.batch_idx}', icon='TIME')
@@ -36,50 +35,9 @@ def status_text_callback(header, context):
     col.scale_x = 1.6
     col.prop(sett, "batch_progress")
 
-    # if not sett.building:
-    layout.label(text='', icon='EVENT_ESC')
+    layout.label(text='Press ESC to cancel', icon='EVENT_ESC')
     
     layout.separator_spacer()
-
-def get_batch_marker_list(context) -> list:
-    sett = context.scene.HG3D
-    
-    marker_selection = sett.batch_marker_selection
-
-    all_markers = [obj for obj in bpy.data.objects if 'hg_batch_marker' in obj]
-    
-    if marker_selection == 'all':
-        return all_markers
-    
-    elif marker_selection == 'selected':
-        selected_markers = [
-            o for o in all_markers 
-            if o in context.selected_objects
-            ]
-        return selected_markers
-    
-    else:
-        empty_markers = [o for o in all_markers if not has_associated_human(o)]
-        return empty_markers
-
-def has_associated_human(marker) -> bool:
-    """Check if this marker has an associated human and if that object still 
-    exists
-
-    Args:
-        marker (Object): marker object to check for associated human
-
-    Returns:
-        bool: True if associated human was found, False if not
-    """
-    
-    return (
-        'associated_human' in marker #does it have the prop
-        and marker['associated_human'] #is the prop not empty
-        and bpy.data.objects.get(marker['associated_human'].name) #does the object still exist
-        and marker.location == marker['associated_human'].location #is the object at the same spot as the marker
-        and bpy.context.scene.objects.get(marker['associated_human'].name) #is the object in the current scene
-    )
     
 class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     """
@@ -259,24 +217,22 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         print('###########################################################')
         print('############### STARTING BACKGROUND PROCESS ###############')
         
-        try:
-            background_blender = subprocess.run(
-                [
-                    bpy.app.binary_path,
-                    "--background",
-                    "--python",
-                    python_file,
-                    json.dumps(settings_dict)
-                ],
-                stdout= subprocess.DEVNULL,
-                stderr= subprocess.PIPE)
-        except SystemError:
-            print('Background SystemError')
-        else:     
-            if background_blender.stderr:
-                print(background_blender.stderr.decode("utf-8"))
-                show_message(self, f'An error occured while generating human {self.human_idx}, check the console for error details')
-                return None #Cancel modal 
+
+        background_blender = subprocess.run(
+            [
+                bpy.app.binary_path,
+                "--background",
+                "--python",
+                python_file,
+                json.dumps(settings_dict)
+            ],
+            stdout= subprocess.DEVNULL,
+            stderr= subprocess.PIPE)
+
+        if background_blender.stderr:
+            print(background_blender.stderr.decode("utf-8"))
+            show_message(self, f'An error occured while generating human {self.human_idx}, check the console for error details')
+            return None #Cancel modal 
  
         print('################ END OF BACKGROUND PROCESS ################')
 

@@ -8,7 +8,7 @@ import numpy as np #type:ignore
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.batch_section.HG_BATCH_FUNC import (calculate_weight,
                                                     length_from_bell_curve)
-from ..features.batch_section.HG_BATCH_OPS import get_batch_marker_list
+from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import get_batch_marker_list
 from .HG_PANEL_FUNCTIONS import draw_panel_switch_header, get_flow
 
 
