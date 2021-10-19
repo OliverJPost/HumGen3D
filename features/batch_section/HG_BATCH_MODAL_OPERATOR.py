@@ -4,18 +4,20 @@ humans at once
 '''
 
 import json
+import os
 import random
 import subprocess
 import time
 from pathlib import Path
 
-import bpy #type:ignore
+import bpy
+from ... modules import humgen
 
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
 from ...user_interface.HG_BATCH_UILIST import uilist_refresh
-from ..common.HG_COMMON_FUNC import hg_delete, show_message
+from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
                                           set_eevee_ao_and_strip)
 
@@ -52,81 +54,116 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
     def __init__(self):
         self.human_idx = 0
-        self.generate_amount = bpy.context.scene.HG3D.generate_amount
         self.generate_queue = get_batch_marker_list(bpy.context)
-        self.finish_step = False
-        self.done  = False
+        self.finish_modal = False
         self.timer = None
-        self.x_loc = 0
         self.start_time = time.time()
+
+    def invoke(self, context, event):
+        sett = context.scene.HG3D
+        
+        markers_with_associated_human = list(filter(has_associated_human, self.generate_queue))
+          
+        if self.run_immediately or not markers_with_associated_human:
+            self._initiate_modal(context, sett)
+            set_eevee_ao_and_strip(context)
+            
+            return {'RUNNING_MODAL'}
+        else:
+            self._show_dialog_to_confirm_deleting_humans(context)
+            return {'CANCELLED'}
+
+    def _initiate_modal(self, context, sett):
+        wm = context.window_manager
+        wm.modal_handler_add(self)
+
+        sett.batch_progress = 0
+
+        self.human_idx = 0
+        self.timer = wm.event_timer_add(0.01, window=context.window)
+
+        sett.batch_idx = 1
+        context.workspace.status_text_set(status_text_callback)
+
+    def _show_dialog_to_confirm_deleting_humans(self, context):
+        generate_queue = self.generate_queue
+            
+        def draw(self, context):
+            layout = self.layout
+                
+            nonlocal generate_queue
+                
+            i = 0
+            for marker in filter(has_associated_human, generate_queue):
+                layout.label(text = marker['associated_human'].name)
+                i += 1
+                    
+                if i > 9:
+                    layout.label(text = f'+ {len(generate_queue) - 10} more')
+                    break
+                    
+            layout.separator()
+                
+            layout.operator_context = 'INVOKE_DEFAULT'    
+            layout.operator("hg3d.generate", text="Generate anyway").run_immediately = True
+            return 
+
+        context.window_manager.popup_menu(draw, title="This will delete these humans:")
 
     def modal(self, context, event):
         """ Event handling. """
         
-        sett = context.scene.HG3D
-        wm = context.window_manager
-        
-        if self.done:
-            sett.batch_progress = 100
-            
-            wm.event_timer_remove(self.timer)
-            #context.window.cursor_modal_restore()
-            context.area.tag_redraw()
+        sett = context.scene.HG3D      
 
+        if self.finish_modal:
+            context.area.tag_redraw()
             context.workspace.status_text_set(text=None)
-            print('ENDING TIME: ', time.time()-self.start_time)
-            return {'FINISHED'}
 
-        elif self.finish_step:
-            sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
-            
-            sett.batch_progress = 100
-            context.workspace.status_text_set(status_text_callback)
-            context.area.tag_redraw()
-
-            self.done = True
             sett.batch_idx = 0
             
-            return {'RUNNING_MODAL'}
+            print('ENDING TIME: ', time.time()-self.start_time)
+            return {'FINISHED'}
         
         elif event.type in ['ESC']:
-            
             self._cancel(sett, context)
             
             return {'RUNNING_MODAL'}
         
         elif event.type == 'TIMER':
-            print('timer event')
-            if self.human_idx < len(self.generate_queue):    
-                marker = self.generate_queue[self.human_idx]
-                if has_associated_human(marker):
-                    self._delete_old_associated_human(marker)
-                result = self.generate_human_in_background(context, marker)
-                
-                if not result:
-                    self._cancel(sett, context)
-                    return {'RUNNING_MODAL'}
-                else:
-                    hg_rig = result
-                
-                hg_rig.location = marker.location
-                hg_rig.rotation_euler = marker.rotation_euler
-                marker['associated_human'] = hg_rig
-                
-                self.human_idx += 1
-                
-                if self.human_idx > 0:
-                    progress = self.human_idx / (len(self.generate_queue))
-                    sett.batch_progress =  int(progress * 100)
-                
-            else:
-                print('finishing because human_idx is generate amount', self.human_idx, self.generate_amount)
-                self.finish_step = True
+            #Check if all humans in the list are already generated
+            if self.human_idx == len(self.generate_queue):   
+                self.finish_modal = True
+                return {'RUNNING_MODAL'}
             
+            current_marker = self.generate_queue[self.human_idx]
+            if has_associated_human(current_marker):
+                self._delete_old_associated_human(current_marker)
+                
+            pose_type = current_marker['hg_batch_marker']
+            settings_dict = self._build_settings_dict(context, sett, pose_type)    
+            result = humgen.generate_human_in_background(context, settings_dict)
+            
+            if not result:
+                self._cancel(sett, context)
+                return {'RUNNING_MODAL'}
+            else:
+                hg_rig = result
+            
+            hg_rig.location = current_marker.location
+            hg_rig.rotation_euler = current_marker.rotation_euler
+            current_marker['associated_human'] = hg_rig
+            
+            self.human_idx += 1
+            
+            if self.human_idx > 0:
+                progress = self.human_idx / (len(self.generate_queue))
+                sett.batch_progress =  int(progress * 100)
+                 
             sett.batch_idx += 1
             context.workspace.status_text_set(status_text_callback)
          
             return {'RUNNING_MODAL'}
+        
         else:
             return {'RUNNING_MODAL'}
 
@@ -136,123 +173,14 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             hg_delete(child)
         hg_delete(associated_human)
 
-    def invoke(self, context, event):
-        sett = context.scene.HG3D
-        
-        markers_with_associated_human = list(filter(has_associated_human, self.generate_queue))
-          
-        if self.run_immediately or not markers_with_associated_human:
-            wm = context.window_manager
-            wm.modal_handler_add(self)
-
-            sett.batch_progress = 0
-
-            self.human_idx = 0
-            self.timer = wm.event_timer_add(0.01, window=context.window)
-
-            sett.batch_idx = 1
-            context.workspace.status_text_set(status_text_callback)
-            set_eevee_ao_and_strip(context)
-            
-            return {'RUNNING_MODAL'}
-        else:
-            generate_queue = self.generate_queue
-            
-            def draw(self, context):
-                layout = self.layout
-                
-                nonlocal generate_queue
-                
-                i = 0
-                for marker in filter(has_associated_human, generate_queue):
-                    layout.label(text = marker['associated_human'].name)
-                    i += 1
-                    
-                    if i > 9:
-                        layout.label(text = f'+ {len(generate_queue) - 10} more')
-                        break
-                    
-                layout.separator()
-                
-                layout.operator_context = 'INVOKE_DEFAULT'    
-                layout.operator("hg3d.generate", text="Generate anyway").run_immediately = True
-                return 
-
-            context.window_manager.popup_menu(draw, title="This will delete these humans:")
-            
-            return {'CANCELLED'}
-
-    def draw(self, context):
-        layout = self.layout
-        
-        layout.label(text = 'Test label')
-
     def _cancel(self, sett, context):
         print('modal is cancelling')
         sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
 
         print('finishing because escape')
-        self.finish_step = True
+        self.finish_modal = True
         context.workspace.status_text_set(status_text_callback)
         return {'CANCELLED'}
-
-    def generate_human_in_background(self, context, marker) -> bpy.types.Object:
-        sett = context.scene.HG3D
-        total_start = time.time()
-
-        print('starting human', self.human_idx)
-
-        for obj in context.selected_objects:
-            obj.select_set(False)
-        #print('running {}'.format(idx))
-
-        python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/batch_generate.py'))
-
-
-        pose_type = marker['hg_batch_marker']
-        settings_dict = self._build_settings_dict(context, sett, pose_type)
-
-        start_time = time.time()
-        
-        print('###########################################################')
-        print('############### STARTING BACKGROUND PROCESS ###############')
-        
-
-        background_blender = subprocess.run(
-            [
-                bpy.app.binary_path,
-                "--background",
-                "--python",
-                python_file,
-                json.dumps(settings_dict)
-            ],
-            stdout= subprocess.DEVNULL,
-            stderr= subprocess.PIPE)
-
-        if background_blender.stderr:
-            print(background_blender.stderr.decode("utf-8"))
-            show_message(self, f'An error occured while generating human {self.human_idx}, check the console for error details')
-            return None #Cancel modal 
- 
-        print('################ END OF BACKGROUND PROCESS ################')
-
-        print(f'Background Proces succesful for marker {marker.name}, took: ',
-              round(time.time() - start_time, 2),
-              's'
-              )
-
-        
-        with bpy.data.libraries.load('/Users/olepost/Documents/Humgen_Files_Main/batch_result.blend', link = False) as (data_from ,data_to):
-            data_to.objects = data_from.objects
-        
-        for obj in data_to.objects:
-            bpy.context.scene.collection.objects.link(obj)
-            toggle_hair_visibility(obj, show = True)
-        
-        
-           
-        return next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
-                    [obj for obj in data_to.objects if obj.HG.ishuman][0])
 
     def _build_settings_dict(self, context, sett, pose_type) -> dict:
         sd = {}
@@ -320,25 +248,25 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         ]
         
 
-def pick_library(context, categ, gender = None):
-    #INACTIVE
-    sett = context.scene.HG3D
+    def pick_library(self, context, categ, gender = None):
+        #INACTIVE
+        sett = context.scene.HG3D
 
-    if categ == 'expressions':
-        collection = context.scene.batch_expressions_col
-        if gender:
-            library_list = []
-            for item in collection:
-                if not item.enabled:
-                    continue
-                elif gender:
-                    if gender == 'male' and item.male_items >=0:
-                        library_list.append(item.library_name)
-                    elif gender == 'female' and item.female_items >= 0:
-                        library_list.append(item.library_name)
-        else:
-            library_list = [item.library_name for item in collection if item.count != 0 and item.enabled]
+        if categ == 'expressions':
+            collection = context.scene.batch_expressions_col
+            if gender:
+                library_list = []
+                for item in collection:
+                    if not item.enabled:
+                        continue
+                    elif gender:
+                        if gender == 'male' and item.male_items >=0:
+                            library_list.append(item.library_name)
+                        elif gender == 'female' and item.female_items >= 0:
+                            library_list.append(item.library_name)
+            else:
+                library_list = [item.library_name for item in collection if item.count != 0 and item.enabled]
 
-        print('library list ', library_list)
-        sett.expressions_sub = random.choice(library_list)
+            print('library list ', library_list)
+            sett.expressions_sub = random.choice(library_list)
 
