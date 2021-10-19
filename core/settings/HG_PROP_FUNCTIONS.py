@@ -2,10 +2,11 @@
 functions used by properties
 '''
 
-import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
+
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+
 
 def find_folders(self, context, categ, gender_toggle, include_all = True, 
                  gender_override = None) -> list:

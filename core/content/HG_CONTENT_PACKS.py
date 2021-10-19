@@ -11,17 +11,18 @@ cpack = Abbreviation of content pack. Represents a collection of items
     .json file
 """  
 
-import  bpy #type: ignore
-from    bpy_extras.io_utils import ImportHelper #type: ignore
+import json
+import os
+import zipfile
+from pathlib import Path
 
-import  os
-import  json
-import  zipfile
-from    pathlib     import Path
+import bpy  # type: ignore
+from bpy_extras.io_utils import ImportHelper  # type: ignore
 
-from .. HG_PCOLL  import preview_collections
 from ...features.common.HG_COMMON_FUNC import ShowMessageBox, get_prefs
-from .  HG_UPDATE import check_update
+from ..HG_PCOLL import preview_collections
+from .HG_UPDATE import check_update
+
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):
     """

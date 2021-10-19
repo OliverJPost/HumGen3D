@@ -1,13 +1,12 @@
 """Based on auto_load.py from Jacques Lucke
 """
-import os
-import bpy #type:ignore
-import sys
-import typing
+import importlib
 import inspect
 import pkgutil
-import importlib
+import typing
 from pathlib import Path
+
+import bpy  # type:ignore
 
 __all__ = (
     "init",

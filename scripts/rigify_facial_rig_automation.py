@@ -1,4 +1,5 @@
-import bpy #type:ignore
+import bpy  # type:ignore
+
 
 def add_driver(hg_body, target_sk, sett_dict):
     driver    = target_sk.driver_add('value').driver

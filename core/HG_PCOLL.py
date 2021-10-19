@@ -3,13 +3,12 @@ Functions related to the preview_collections of human generator, including
 population of them
 """
 
-import bpy #type: ignore
 import os
 from pathlib import Path
-from .. features.common.HG_COMMON_FUNC import (
-    find_human,
-    get_prefs
-)
+
+import bpy  # type: ignore
+
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
 
 preview_collections = {} #global dictionary of all pcolls
 

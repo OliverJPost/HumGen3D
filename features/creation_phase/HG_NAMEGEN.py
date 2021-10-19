@@ -4,6 +4,7 @@ function that returns a random name for the given gender
 
 import random
 
+
 def get_name(gender) -> str:
     """Chooses a random name from the Human Generator NameGen
 

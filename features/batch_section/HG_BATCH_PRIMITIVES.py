@@ -1,7 +1,11 @@
-from ... features.common.HG_COMMON_FUNC import add_to_collection, get_addon_root, get_prefs
-import bpy #type:ignore
-import os 
+import os
 from pathlib import Path
+
+import bpy  # type:ignore
+
+from ...features.common.HG_COMMON_FUNC import (add_to_collection,
+                                               get_addon_root, get_prefs)
+
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
     bl_idname = "hg3d.add_batch_marker"

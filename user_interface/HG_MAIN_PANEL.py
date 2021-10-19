@@ -1,20 +1,17 @@
-import bpy #type: ignore
-from .. import bl_info
-from sys import platform
-from .. core.HG_PCOLL import preview_collections
-from .. features.common.HG_COMMON_FUNC import find_human, get_prefs
-from .. data.HG_COLORS import color_dict
-from . HG_PANEL_FUNCTIONS import (
-    draw_sub_spoiler,
-    in_creation_phase,
-    draw_spoiler_box,
-    get_flow,
-    searchbox,
-    draw_panel_switch_header
-    )
-from pathlib import Path
-import addon_utils #type: ignore
 import os
+from pathlib import Path
+from sys import platform
+
+import addon_utils  # type: ignore
+import bpy  # type: ignore
+
+from .. import bl_info
+from ..core.HG_PCOLL import preview_collections
+from ..data.HG_COLORS import color_dict
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_spoiler_box,
+                                 draw_sub_spoiler, get_flow, in_creation_phase,
+                                 searchbox)
 
 
 class HG_PT_PANEL(bpy.types.Panel):

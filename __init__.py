@@ -29,23 +29,20 @@ bl_info = {
 }
 
 
-from . user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
-import bpy #type: ignore
-import sys, os
-from bpy.app.handlers import persistent #type: ignore
-import bpy.utils.previews #type: ignore #has to be imported like this, otherwise
-                                        #returns error for some users
+import os
+import sys
 
-from . core.settings.HG_PROPS import (
-    HG_OBJECT_PROPS,
-    HG_SETTINGS)
-from . core.content.HG_CONTENT_PACKS import (
-    HG_CONTENT_PACK,
-    HG_INSTALLPACK,
-    cpacks_refresh)
-from . core.content.HG_UPDATE import check_update, UPDATE_INFO_ITEM
-from . user_interface import HG_UTILITY_UILISTS, HG_BATCH_UILIST
-from . core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
+import bpy  # type: ignore
+import bpy.utils.previews  # type: ignore # Has to be imported like this, otherwise returns error for some users
+from bpy.app.handlers import persistent  # type: ignore
+
+from .core.content.HG_CONTENT_PACKS import (HG_CONTENT_PACK, HG_INSTALLPACK,
+                                            cpacks_refresh)
+from .core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
+from .core.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
+from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
+from .user_interface import HG_BATCH_UILIST, HG_UTILITY_UILISTS
+from .user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
 
 if __name__ != "HG3D":
     sys.modules['HG3D'] = sys.modules[__name__]
@@ -59,7 +56,8 @@ def HG_start(dummy):
     cpacks_refresh(None, bpy.context)
     check_update()
 
-from . core.HG_PCOLL import  preview_collections
+from .core.HG_PCOLL import preview_collections
+
 
 def _initiate_preview_collections():
     #initiate preview collections
@@ -122,7 +120,8 @@ def _initiate_ui_lists():
     sc.hg_update_col            = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
     sc.hg_update_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
 
-from . HG_CLASSES import hg_classes
+from .HG_CLASSES import hg_classes
+
 
 def register():
     #RELEASE remove print statements

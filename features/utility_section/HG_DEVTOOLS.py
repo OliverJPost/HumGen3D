@@ -2,12 +2,13 @@
 Operators and functions to be used by the developer and content pack creators
 """
 
-from ... features.finalize_phase.HG_CLOTHING_LOAD import set_clothing_texture_resolution
-from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict
-from ... features.creation_phase.HG_HAIR import convert_to_new_hair_shader, set_hair_quality
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
-from ... features.creation_phase.HG_FINISH_CREATION_PHASE import remove_stretch_bones
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human
+from ...features.creation_phase.HG_FINISH_CREATION_PHASE import \
+    remove_stretch_bones
+from ...features.creation_phase.HG_HAIR import convert_to_new_hair_shader
+
 
 #REMOVE
 class HG_TESTOP(bpy.types.Operator):

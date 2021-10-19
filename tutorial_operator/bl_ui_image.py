@@ -1,7 +1,8 @@
-from . bl_ui_widget import *
+import blf  # type: ignore
+import bpy  # type: ignore
 
-import blf #type: ignore
-import bpy #type: ignore
+from .bl_ui_widget import *
+
 
 class BL_UI_Image(BL_UI_Widget):
     

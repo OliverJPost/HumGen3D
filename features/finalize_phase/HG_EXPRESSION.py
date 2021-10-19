@@ -2,20 +2,18 @@
 Operators and functions for adding and managing expressions
 """
 
-import bpy #type: ignore
 import os
 from pathlib import Path
-from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (
-    add_driver,
-    build_driver_dict)
-from ... features.common.HG_COMMON_FUNC import (
-    find_human,
-    apply_shapekeys,
-    get_prefs,
-    hg_delete)
-from ... features.creation_phase.HG_LENGTH import (
-    apply_armature,
-    apply_length_to_rig)
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
+                                               get_prefs, hg_delete)
+from ...features.creation_phase.HG_FINISH_CREATION_PHASE import (
+    add_driver, build_driver_dict)
+from ...features.creation_phase.HG_LENGTH import (apply_armature,
+                                                  apply_length_to_rig)
+
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
     """Removes the corresponding shapekey

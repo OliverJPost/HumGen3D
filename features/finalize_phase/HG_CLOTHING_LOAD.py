@@ -3,18 +3,18 @@ Operators and functions used for clothing, outfits and footwear of the humans.
 """ 
 
 
-import bpy #type: ignore
-from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import (
-    add_to_collection,
-    find_human,
-    apply_shapekeys,
-    get_prefs,
-    hg_delete
-)
-from ... core.HG_PCOLL import refresh_pcoll
-from ... core.HG_SHAPEKEY_CALCULATOR import build_distance_dict, deform_obj_from_difference
 import os
+from pathlib import Path
+
+import bpy  # type: ignore
+
+from ...core.HG_PCOLL import refresh_pcoll
+from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
+                                            deform_obj_from_difference)
+from ...features.common.HG_COMMON_FUNC import (add_to_collection,
+                                               apply_shapekeys, find_human,
+                                               get_prefs, hg_delete)
+
 
 #FIXME make sure new textures are not duplicated
 #TODO make new outfit color random

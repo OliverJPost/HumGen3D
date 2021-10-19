@@ -1,9 +1,12 @@
 """UNDER CONSTRUCTION"""
 
-import bpy #type: ignore
-import bmesh #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
 from pathlib import Path
+
+import bmesh  # type: ignore
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     """

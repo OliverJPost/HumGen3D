@@ -9,19 +9,19 @@ When saving/exporting the cpack, each item that has include = True will
 be saved/exported
 """
 
-import bpy #type: ignore
-from pathlib import Path
-import os
 import json
+import os
+from pathlib import Path
 from zipfile import ZipFile
-from ... core.content.HG_CONTENT_PACKS import cpacks_refresh
-from ... core.HG_PCOLL import get_pcoll_enum_items, refresh_pcoll
-from ... extern.blendfile import open_blend
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    get_prefs,
-    show_message
-)
+
+import bpy  # type: ignore
+
+from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
+from ...core.HG_PCOLL import get_pcoll_enum_items, refresh_pcoll
+from ...extern.blendfile import open_blend
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs,
+                                               show_message)
+
 
 class HG_OT_CREATE_CPACK(bpy.types.Operator):
     """Adds a new json file it the content_packs folder and opens the cpack

@@ -2,11 +2,14 @@
 Operators and functions used for clothing, outfits and footwear of the humans.
 """ 
 
-from ... features.finalize_phase.HG_CLOTHING_LOAD import find_masks
-import bpy #type: ignore
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete 
-from ... features.common.HG_RANDOM import set_random_active_in_pcoll
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete
+from ...features.common.HG_RANDOM import set_random_active_in_pcoll
+from ...features.finalize_phase.HG_CLOTHING_LOAD import find_masks
+
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
     """Makes the rig the active object, changing the ui back to the default state

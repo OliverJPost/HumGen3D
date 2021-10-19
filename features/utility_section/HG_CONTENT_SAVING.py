@@ -1,22 +1,20 @@
-import re
 import json
-from pathlib import Path
-import platform
-import subprocess
-import bpy #type: ignore
 import os
+import platform
+import re
 import shutil
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    apply_shapekeys,
-    find_human,
-    get_prefs,
-    hg_delete,
-    show_message)
-from ... core.HG_SHAPEKEY_CALCULATOR import (
-    build_distance_dict,
-    deform_obj_from_difference)
-from ... features.creation_phase.HG_LENGTH import apply_armature, correct_origin
+import subprocess
+from pathlib import Path
+
+import bpy  # type: ignore
+
+from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
+                                            deform_obj_from_difference)
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
+                                               find_human, get_prefs,
+                                               hg_delete, show_message)
+from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
+
 
 class Content_Saving_Operator:
     def overwrite_warning(self):

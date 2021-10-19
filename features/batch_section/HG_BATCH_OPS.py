@@ -3,18 +3,20 @@ Inactive file to be implemented later, batch mode for generating multiple
 humans at once
 '''
 
-from ... features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
-from ... user_interface.HG_BATCH_UILIST import uilist_refresh
-import bpy #type: ignore
+import json
 import random
-import time
 import subprocess
-import json 
-
+import time
 from pathlib import Path
 
-from .. creation_phase.HG_CREATION import (HG_CREATION_BASE, set_eevee_ao_and_strip)
-from .. common.HG_COMMON_FUNC import hg_delete, show_message
+import bpy  # type: ignore
+
+from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
+from ...user_interface.HG_BATCH_UILIST import uilist_refresh
+from ..common.HG_COMMON_FUNC import hg_delete, show_message
+from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
+                                          set_eevee_ao_and_strip)
+
 
 def status_text_callback(header, context):
     #INACTIVE

@@ -2,24 +2,22 @@
 Operators and functions used for adding the base human and for reverting to creation phase
 """
 
-from . HG_HAIR import add_quality_props_to_hair_system, convert_to_new_hair_shader
 import json
-import bpy #type: ignore
 import os
 from pathlib import Path
 from sys import platform
 
-from .   HG_NAMEGEN import get_name
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    add_to_collection,
-    find_human,
-    get_prefs,
-    hg_delete,
-    show_message
-)
-from ... core.HG_PCOLL import refresh_pcoll
-from .   HG_MATERIAL import set_gender_specific_shader
+import bpy  # type: ignore
+
+from ...core.HG_PCOLL import refresh_pcoll
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox,
+                                               add_to_collection, get_prefs,
+                                               hg_delete, show_message)
+from .HG_HAIR import (add_quality_props_to_hair_system,
+                      convert_to_new_hair_shader)
+from .HG_MATERIAL import set_gender_specific_shader
+from .HG_NAMEGEN import get_name
+
 
 class HG_CREATION_BASE():
     def create_human(self, context) -> 'tuple [bpy.types.Object, bpy.types.Object]':

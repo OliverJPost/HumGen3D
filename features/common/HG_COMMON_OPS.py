@@ -2,14 +2,12 @@
 Operators not related to any particular section
 """
 
-import bpy #type: ignore
-from . HG_COMMON_FUNC import (
-    find_human,
-    get_prefs,
-    hg_delete
-)
-from ... core.HG_PCOLL import refresh_pcoll
-from . HG_INFO_POPUPS import HG_OT_INFO
+import bpy  # type: ignore
+
+from ...core.HG_PCOLL import refresh_pcoll
+from .HG_COMMON_FUNC import find_human, get_prefs, hg_delete
+from .HG_INFO_POPUPS import HG_OT_INFO
+
 
 class HG_DESELECT(bpy.types.Operator):
     """

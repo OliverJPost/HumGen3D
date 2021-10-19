@@ -1,5 +1,7 @@
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human
+
 
 def toggle_sss(self, context):
     '''

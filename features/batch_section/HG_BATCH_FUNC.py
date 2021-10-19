@@ -1,5 +1,6 @@
-import numpy as np
-import bpy #type:ignore
+import bpy  # type:ignore
+import numpy as np #type:ignore
+
 
 def length_from_bell_curve(sett, gender, random_seed = True, samples = 1) -> list:
     """Returns one or multiple samples from a bell curve generated from the 

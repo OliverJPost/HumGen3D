@@ -1,4 +1,5 @@
-import bpy #type: ignore
+import bpy  # type: ignore
+
 
 class HG_OT_INFO(bpy.types.Operator):
     """

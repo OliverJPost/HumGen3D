@@ -1,8 +1,7 @@
-import bpy #type:ignore
-import random
-import os 
-import sys
 import json
+import sys
+
+import bpy  # type:ignore
 
 print('################ IGNORE ERRORS ABOVE THIS LINE ####################')
 

@@ -1,5 +1,6 @@
 import os
-import bpy #type: ignore
+
+import bpy  # type: ignore
 
 override = bpy.context.copy()
 override["area.type"]    = ['OUTLINER']

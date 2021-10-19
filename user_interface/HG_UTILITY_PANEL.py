@@ -1,8 +1,10 @@
-import bpy #type: ignore
-import os
-from .. features.common.HG_COMMON_FUNC import find_human, get_prefs
-from .. core.HG_PCOLL import preview_collections
-from . HG_PANEL_FUNCTIONS import draw_panel_switch_header, draw_sub_spoiler, get_flow, in_creation_phase
+import bpy  # type: ignore
+
+from ..core.HG_PCOLL import preview_collections
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_sub_spoiler,
+                                 get_flow, in_creation_phase)
+
 
 class Tools_PT_Base:
     """Bl_info and commonly used tools for Utility panels

@@ -1,24 +1,19 @@
-from ... features.finalize_phase.HG_CLOTHING_LOAD import set_clothing_texture_resolution
-from ... features.creation_phase.HG_HAIR import set_hair_quality
-from ... modules.humgen import get_pcoll_options
-from ... core.HG_PCOLL import refresh_pcoll
 import os
-import bpy #type: ignore
-import time
 from pathlib import Path
 
-from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty #type:ignore
+import bpy  # type: ignore
+from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 
-from .. creation_phase.HG_CREATION import (HG_CREATION_BASE)
-from .. common.HG_RANDOM import (
-    set_random_active_in_pcoll,
-    random_body_type,
-)
-from .. creation_phase.HG_FINISH_CREATION_PHASE import (
-    finish_creation_phase
-)
-from .. common.HG_COMMON_FUNC import apply_shapekeys, hg_delete, time_update
-from . HG_BATCH_FUNC import length_from_bell_curve
+from ...core.HG_PCOLL import refresh_pcoll
+from ...features.creation_phase.HG_HAIR import set_hair_quality
+from ...features.finalize_phase.HG_CLOTHING_LOAD import \
+    set_clothing_texture_resolution
+from ...modules.humgen import get_pcoll_options
+from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete
+from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
+from ..creation_phase.HG_CREATION import HG_CREATION_BASE
+from ..creation_phase.HG_FINISH_CREATION_PHASE import finish_creation_phase
+from .HG_BATCH_FUNC import length_from_bell_curve
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):

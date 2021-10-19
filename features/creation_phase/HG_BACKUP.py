@@ -1,10 +1,8 @@
-import bpy #type: ignore
+import bpy  # type: ignore
 
-from ... features.common.HG_COMMON_FUNC import (
-    add_to_collection,
-    find_human,
-    hg_delete,
-)
+from ...features.common.HG_COMMON_FUNC import (add_to_collection, find_human,
+                                               hg_delete)
+
 
 class HG_REVERT_TO_CREATION(bpy.types.Operator):
     """
