@@ -2,9 +2,11 @@
 This file is currently inactive
 """
 
-import bpy #type: ignore
-from .. core.settings.HG_PROP_FUNCTIONS import find_folders, find_item_amount
-from .. core.HG_PCOLL import preview_collections
+import bpy  # type: ignore
+
+from ..core.HG_PCOLL import preview_collections
+from ..core.settings.HG_PROP_FUNCTIONS import find_folders, find_item_amount
+
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
     """

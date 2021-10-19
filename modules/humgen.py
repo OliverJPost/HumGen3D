@@ -1,4 +1,5 @@
-import bpy #type:ignore
+import bpy  # type:ignore
+
 
 def generate_human() -> bpy.types.Object:
     

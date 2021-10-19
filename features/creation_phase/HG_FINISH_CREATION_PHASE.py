@@ -2,22 +2,16 @@
 Operator and corresponding functions for finishing the cration phase
 '''
 
-import bpy #type: ignore
+import bpy  # type: ignore
 
-from ... features.common.HG_INFO_POPUPS import HG_OT_INFO
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    find_human,
-    apply_shapekeys,
-    add_to_collection,
-    get_prefs,
-    hg_delete
-)
-from .   HG_LENGTH import (
-    apply_armature,
-    apply_length_to_rig
-)
-from ... core.HG_PCOLL import refresh_pcoll
+from ...core.HG_PCOLL import refresh_pcoll
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox,
+                                               add_to_collection,
+                                               apply_shapekeys, find_human,
+                                               get_prefs, hg_delete)
+from ...features.common.HG_INFO_POPUPS import HG_OT_INFO
+from .HG_LENGTH import apply_armature, apply_length_to_rig
+
 
 class HG_FINISH_CREATION(bpy.types.Operator):
     """Finish the creation phase, going over:

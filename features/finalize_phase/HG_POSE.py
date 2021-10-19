@@ -2,10 +2,15 @@
 Operators and functions relating to the posing of the human
 """
 
-import bpy #type: ignore
 from pathlib import Path
-from ... features.common.HG_COMMON_FUNC import add_to_collection, find_human, get_prefs, hg_delete
-from ... features.creation_phase.HG_FINISH_CREATION_PHASE import build_driver_dict, add_driver
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import (add_to_collection, find_human,
+                                               get_prefs, hg_delete)
+from ...features.creation_phase.HG_FINISH_CREATION_PHASE import (
+    add_driver, build_driver_dict)
+
 
 class HG_RIGIFY(bpy.types.Operator):
     """Changes the rig to make it compatible with Rigify, then generates the rig

@@ -1,5 +1,6 @@
-import bpy #type:ignore
 import os
+
+import bpy  # type:ignore
 
 for obj in bpy.data.objects:
     try:

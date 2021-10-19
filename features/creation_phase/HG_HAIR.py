@@ -1,9 +1,13 @@
-import bpy #type: ignore
 import json
-from ... features.common.HG_COMMON_FUNC import find_human, apply_shapekeys, get_prefs, hg_delete
-from . HG_LENGTH import apply_armature
-from pathlib import Path
 import os
+from pathlib import Path
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
+                                               get_prefs, hg_delete)
+from .HG_LENGTH import apply_armature
+
 
 class HG_REMOVE_HAIR(bpy.types.Operator):
     """Removes the corresponding hair system

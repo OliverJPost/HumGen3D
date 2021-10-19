@@ -2,11 +2,13 @@
 Randomize operator for sliders and pcolls
 '''
 
-from typing import Any
-import bpy #type: ignore
 import random
-from .   HG_COMMON_FUNC import find_human
-from ... core.HG_PCOLL import refresh_pcoll
+from typing import Any
+
+import bpy  # type: ignore
+
+from ...core.HG_PCOLL import refresh_pcoll
+from .HG_COMMON_FUNC import find_human
 
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
@@ -34,7 +36,8 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
     color_group: bpy.props.StringProperty()
 
     def execute(self,context):
-        from ... data.HG_COLORS import color_dict #TODO make color dict into json?
+        from ...data.HG_COLORS import \
+            color_dict  # TODO make color dict into json?
         
         color_hex       = random.choice(color_dict[self.color_group])
         color_rgba = self._hex_to_rgba(color_hex)

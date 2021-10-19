@@ -1,12 +1,11 @@
-import bpy #type: ignore
 import os
 from pathlib import Path
 
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    find_human,
-    get_prefs
-)
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, find_human,
+                                               get_prefs)
+
 
 def load_textures(self, context):
     """Called by prop update. Loads selected texture set on human"""

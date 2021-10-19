@@ -9,16 +9,16 @@ This callback has the following usages:
     a human is duplicated by the user
 '''
 
-from .. features.creation_phase.HG_BODY import get_scaling_data
-from .. features.utility_section.HG_UTILITY_FUNC import (
-    refresh_hair_ul,
-    refresh_modapply,
-    refresh_outfit_ul,
-    refresh_shapekeys_ul
-)
-import bpy #type: ignore
-from . HG_PCOLL import refresh_pcoll
-from .. features.common.HG_COMMON_FUNC import find_human
+import bpy  # type: ignore
+
+from ..features.common.HG_COMMON_FUNC import find_human
+from ..features.creation_phase.HG_BODY import get_scaling_data
+from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
+                                                        refresh_modapply,
+                                                        refresh_outfit_ul,
+                                                        refresh_shapekeys_ul)
+from .HG_PCOLL import refresh_pcoll
+
 
 class HG_ACTIVATE(bpy.types.Operator):
     """

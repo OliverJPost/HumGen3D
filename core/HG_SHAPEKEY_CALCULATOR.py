@@ -1,9 +1,11 @@
-import bpy #type: ignore
-import mathutils #type:ignore
-from mathutils import Vector #type: ignore
-from .. features.common.HG_COMMON_FUNC import apply_shapekeys, find_human, hg_delete
-from .. features.creation_phase.HG_LENGTH import apply_armature
-import numpy as np #type: ignore
+import bpy  # type: ignore
+import mathutils  # type:ignore
+import numpy as np  # type: ignore
+from mathutils import Vector  # type: ignore
+
+from ..features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
+                                              hg_delete)
+from ..features.creation_phase.HG_LENGTH import apply_armature
 
 
 #TODO keep

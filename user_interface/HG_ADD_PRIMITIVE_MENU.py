@@ -1,5 +1,7 @@
-from .. core.HG_PCOLL import get_hg_icon
-import bpy #type:ignore
+import bpy  # type:ignore
+
+from ..core.HG_PCOLL import get_hg_icon
+
 
 class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
     # Define the "Single Vert" menu

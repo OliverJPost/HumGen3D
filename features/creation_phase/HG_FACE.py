@@ -1,5 +1,7 @@
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human
+
 
 class HG_RESET_FACE(bpy.types.Operator):
     """Resets all face deformation values to 0

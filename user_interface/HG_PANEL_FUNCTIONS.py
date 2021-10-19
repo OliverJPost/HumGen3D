@@ -1,5 +1,7 @@
-import bpy #type: ignore
-from .. core.HG_PCOLL import preview_collections
+import bpy  # type: ignore
+
+from ..core.HG_PCOLL import preview_collections
+
 
 def draw_sub_spoiler(
     layout, sett, prop_name, label) -> 'tuple[bool, bpy.types.UILayout]':

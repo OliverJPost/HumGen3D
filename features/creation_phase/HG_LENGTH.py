@@ -2,12 +2,13 @@
 Operators and functions for changing the length of the human
 '''
 
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human
 import random
-import time
-import mathutils #type: ignore
-import numpy #type: ignore
+
+import bpy  # type: ignore
+import numpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human
+
 
 class HG_RANDOM_LENGTH(bpy.types.Operator):
     """Randomizes the length of the human between an even range of 150-200

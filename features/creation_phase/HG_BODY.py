@@ -1,4 +1,5 @@
-from ... features.common.HG_COMMON_FUNC import find_human
+from ...features.common.HG_COMMON_FUNC import find_human
+
 
 #RELEASE new human file make scale independent of parent
 def scale_bones(self, context, bone_type):

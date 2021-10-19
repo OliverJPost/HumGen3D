@@ -1,14 +1,15 @@
 """ HumGen add-on preferences and associated functions"""
 
-from ... core.content.HG_CUSTOM_CONTENT_PACKS import build_content_collection
-from ... features.common.HG_COMMON_FUNC import get_prefs
-import bpy #type: ignore
-from ... import bl_info
 import os
 from pathlib import Path
-from bpy_extras.io_utils import ImportHelper #type: ignore
-from ... core.content.HG_CONTENT_PACKS import cpacks_refresh
-from ... core.HG_PCOLL import preview_collections, refresh_pcoll
+
+import bpy  # type: ignore
+from bpy_extras.io_utils import ImportHelper  # type: ignore
+
+from ... import bl_info
+from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
+from ...features.common.HG_COMMON_FUNC import get_prefs
+
 
 class HG_PREF(bpy.types.AddonPreferences):
     """ HumGen user preferences """   

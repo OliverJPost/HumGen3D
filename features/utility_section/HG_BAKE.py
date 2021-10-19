@@ -4,11 +4,13 @@
 Texture baking operators
 '''
 
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import find_human, get_prefs
-import datetime
-from pathlib import Path
 import os
+from pathlib import Path
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+
 
 #TODO progress bar
 class HG_BAKE(bpy.types.Operator):

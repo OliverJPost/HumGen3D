@@ -2,35 +2,19 @@
 Operators and functions for experimental features and QoL automations
 """
 
-
-import re
-import json
 from pathlib import Path
-import platform
-import subprocess
-import bpy #type: ignore
-import os
-from ... features.finalize_phase.HG_EXPRESSION import FRIG_DATA
-from ... features.common.HG_COMMON_FUNC import (
-    ShowMessageBox,
-    apply_shapekeys,
-    find_human,
-    get_prefs,
-    show_message)
-from . HG_UTILITY_FUNC import (
-    build_object_list,
-    refresh_outfit_ul,
-    refresh_shapekeys_ul,
-    refresh_modapply,
-    refresh_hair_ul)
-from ... core.HG_SHAPEKEY_CALCULATOR import (
-    build_distance_dict,
-    deform_obj_from_difference)
-from ... features.common.HG_INFO_POPUPS import HG_OT_INFO
-from ... features.creation_phase.HG_LENGTH import apply_armature
-from ... features.creation_phase.HG_FINISH_CREATION_PHASE import (
-    extract_shapekeys_to_keep,
-    reapply_shapekeys)
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
+                                               get_prefs, show_message)
+from ...features.common.HG_INFO_POPUPS import HG_OT_INFO
+from ...features.creation_phase.HG_FINISH_CREATION_PHASE import (
+    extract_shapekeys_to_keep, reapply_shapekeys)
+from .HG_UTILITY_FUNC import (build_object_list, refresh_hair_ul,
+                              refresh_modapply, refresh_outfit_ul,
+                              refresh_shapekeys_ul)
+
 
 class HG_MAKE_EXPERIMENTAL(bpy.types.Operator):
     """

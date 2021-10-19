@@ -1,12 +1,15 @@
 """Contains the check_update function for online checking for cpack and 
 code updates"""
 
-from sys import version_info
-import bpy #type: ignore
-import requests #type: ignore
 import json
+from sys import version_info
+
+import bpy  # type: ignore
+import requests  # type: ignore
+
 from ... import bl_info
-from ... features.common.HG_COMMON_FUNC import get_prefs
+from ...features.common.HG_COMMON_FUNC import get_prefs
+
 
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack 

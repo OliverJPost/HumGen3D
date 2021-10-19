@@ -1,15 +1,17 @@
-from .. core.content.HG_UPDATE import check_update
-import bpy #type: ignore
-import os 
+import os
 from pathlib import Path
-from bpy.types import Operator #type: ignore
-from . bl_ui_button import *
-from . bl_ui_drag_panel import *
-from . bl_ui_draw_op import *
-from . bl_ui_image import *
 
-from .. core.HG_CALLBACK import msgbus    
-from .. core.HG_PCOLL import refresh_pcoll
+import bpy  # type: ignore
+from bpy.types import Operator  # type: ignore
+
+from ..core.content.HG_UPDATE import check_update
+from ..core.HG_CALLBACK import msgbus
+from ..core.HG_PCOLL import refresh_pcoll
+from .bl_ui_button import *
+from .bl_ui_drag_panel import *
+from .bl_ui_draw_op import *
+from .bl_ui_image import *
+
 
 class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
     '''

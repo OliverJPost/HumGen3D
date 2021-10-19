@@ -4,9 +4,10 @@ Contains functions that get used a lot by other operators
 
 import os
 import time
-import bpy #type: ignore
-
 from pathlib import Path
+
+import bpy  # type: ignore
+
 
 #MODULE
 def add_to_collection(context, obj, collection_name = 'HumGen') -> bpy.types.Collection:

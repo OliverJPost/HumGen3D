@@ -1,4 +1,5 @@
-import bpy #type: ignore
+import bpy  # type: ignore
+
 
 class HG_UL_MODAPPLY(bpy.types.UIList):
     """

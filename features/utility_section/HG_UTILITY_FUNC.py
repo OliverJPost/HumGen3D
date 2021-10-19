@@ -1,9 +1,11 @@
 import json
 import os
 from pathlib import Path
-import subprocess
-import bpy #type: ignore
-from ... features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
+
+import bpy  # type: ignore
+
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+
 
 def refresh_modapply(self, context):
     sett = context.scene.HG3D
