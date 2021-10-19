@@ -3,6 +3,7 @@ Contains functions that get used a lot by other operators
 """  
 
 import os
+import time
 import bpy #type: ignore
 
 from pathlib import Path
@@ -192,6 +193,11 @@ def get_addon_root()->str:
     root_folder = Path(__file__).parent.parent.parent.absolute()
     
     return str(root_folder)
+
+def time_update(label, prev_time) -> int:
+    print(label, round(time.time()-prev_time, 2))
+    return time.time()
+    
 
 #TODO make deepclean data removal, using:
 
