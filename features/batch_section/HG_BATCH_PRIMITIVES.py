@@ -4,7 +4,7 @@ from pathlib import Path
 import bpy  # type:ignore
 
 from ...features.common.HG_COMMON_FUNC import (add_to_collection,
-                                               get_addon_root, get_prefs)
+                                               get_addon_root)
 
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
@@ -18,7 +18,7 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
     def execute(self, context):
         blendfile = os.path.join(get_addon_root(), 'data', 'hg_batch_markers.blend')
         
-        with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
+        with bpy.data.libraries.load(blendfile, link = False) as (data_from, data_to):
             data_to.objects = [f'HG_MARKER_{self.marker_type.upper()}',]
 
         #link to scene
