@@ -10,8 +10,8 @@ import subprocess
 import time
 from pathlib import Path
 
-import bpy
-from ... modules import humgen
+import bpy #type:ignore
+from ... API import humgen
 
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
@@ -247,26 +247,3 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             'apply_poly_reduction'
         ]
         
-
-    def pick_library(self, context, categ, gender = None):
-        #INACTIVE
-        sett = context.scene.HG3D
-
-        if categ == 'expressions':
-            collection = context.scene.batch_expressions_col
-            if gender:
-                library_list = []
-                for item in collection:
-                    if not item.enabled:
-                        continue
-                    elif gender:
-                        if gender == 'male' and item.male_items >=0:
-                            library_list.append(item.library_name)
-                        elif gender == 'female' and item.female_items >= 0:
-                            library_list.append(item.library_name)
-            else:
-                library_list = [item.library_name for item in collection if item.count != 0 and item.enabled]
-
-            print('library list ', library_list)
-            sett.expressions_sub = random.choice(library_list)
-
