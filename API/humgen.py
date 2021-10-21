@@ -4,21 +4,9 @@ from pathlib import Path
 import subprocess
 import time
 import bpy #type:ignore
-import sys
-from .. features.common.HG_COMMON_FUNC import ShowMessageBox, get_prefs, show_message, toggle_hair_visibility  # type:ignore
+from .. features.common.HG_COMMON_FUNC import get_addon_root, get_prefs, toggle_hair_visibility  # type:ignore
 
-
-def get_humgen_folder(context):
-    try:
-        humgen_name = next((addon for addon in context.preferences.addons 
-                            if 'humgen' in addon.module.lower()))
-    except StopIteration:
-        return None
-    
-    print(bpy.app.binary_path)
-    
-    
-
+  
 def get_pcoll_options(pcoll_name) -> list:
     sett = bpy.context.scene.HG3D
     pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
@@ -30,8 +18,7 @@ def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
     for obj in context.selected_objects:
         obj.select_set(False)
 
-    #TODO make absolute
-    python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/batch_generate.py'))
+    python_file = os.path.join(get_addon_root(), 'scripts', 'batch_generate.py')
     
     start_time_background_process = time.time()
     
