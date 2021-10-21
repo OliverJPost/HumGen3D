@@ -4,14 +4,19 @@ from pathlib import Path
 import subprocess
 import time
 import bpy #type:ignore
-from .. features.common.HG_COMMON_FUNC import get_prefs, show_message, toggle_hair_visibility  # type:ignore
+import sys
+from .. features.common.HG_COMMON_FUNC import ShowMessageBox, get_prefs, show_message, toggle_hair_visibility  # type:ignore
 
 
-def generate_human() -> bpy.types.Object:
+def get_humgen_folder(context):
+    try:
+        humgen_name = next((addon for addon in context.preferences.addons 
+                            if 'humgen' in addon.module.lower()))
+    except StopIteration:
+        return None
     
+    print(bpy.app.binary_path)
     
-    kwargs = {}
-    bpy.ops.hg3d.quick_generate(**kwargs)
     
 
 def get_pcoll_options(pcoll_name) -> list:
@@ -21,7 +26,7 @@ def get_pcoll_options(pcoll_name) -> list:
     return pcoll_list
 
 
-def generate_human_in_background(self, context, settings_dict) -> bpy.types.Object:
+def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
     for obj in context.selected_objects:
         obj.select_set(False)
 
@@ -33,7 +38,7 @@ def generate_human_in_background(self, context, settings_dict) -> bpy.types.Obje
     print('###########################################################')
     print('############### STARTING BACKGROUND PROCESS ###############')
     
-    self._run_hg_subprocess(settings_dict, python_file)
+    _run_hg_subprocess(settings_dict, python_file)
 
     print('################ END OF BACKGROUND PROCESS ################')
 
@@ -42,11 +47,11 @@ def generate_human_in_background(self, context, settings_dict) -> bpy.types.Obje
             's'
             )
 
-    hg_rig = self._import_generated_human()
+    hg_rig = _import_generated_human()
     
     return hg_rig
 
-def _run_hg_subprocess(self, settings_dict, python_file):
+def _run_hg_subprocess(settings_dict, python_file):
     background_blender = subprocess.run(
         [
             bpy.app.binary_path,
@@ -60,13 +65,10 @@ def _run_hg_subprocess(self, settings_dict, python_file):
 
     if background_blender.stderr:
         print(background_blender.stderr.decode("utf-8"))
-        show_message(
-            self, 
-            f'''An error occured while generating human,
-            check the console for error details'''
-            )
+        #ShowMessageBox(message = 
+        #    f'''An error occured while generating human, check the console for error details''')
 
-def _import_generated_human(self):
+def _import_generated_human():
     start_time_import = time.time()
     batch_result_path = os.path.join(get_prefs().filepath, 'batch_result.blend')
     with bpy.data.libraries.load(batch_result_path, link = False) as (data_from ,data_to):
