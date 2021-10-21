@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import random
 
 import bpy  # type: ignore
 
@@ -103,37 +104,42 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
         hg_rig  = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
-        eyebrows = [mod for mod in hg_body.modifiers 
-                    if mod.type == 'PARTICLE_SYSTEM' 
-                    and mod.particle_system.name.startswith('Eyebrows')
-                    ]
-        
-        if not eyebrows:
-            self.report({'WARNING'}, 'No eyebrow particle systems found')
-            return {'FINISHED'}
-        if len(eyebrows) == 1:
-            self.report({'WARNING'}, 'Only one eyebrow system found')
-            return {'FINISHED'}            
-        
-        idx, current_ps = next(
-            ((i, mod) for i, mod in enumerate(eyebrows)
-             if mod.show_viewport or mod.show_render),
-             0
-            )
-
-        next_idx = idx + 1 if self.forward else idx - 1
-        if next_idx >= len(eyebrows) or next_idx < 0:
-            next_idx = 0
-
-        next_ps = eyebrows[next_idx]
-        next_ps.show_viewport = next_ps.show_render = True
-        
-        for ps in eyebrows:
-            if ps != next_ps:
-                ps.show_viewport = ps.show_render = False
-        
+        _switch_eyebrows(self, hg_body, forward = self.forward)
 
         return {'FINISHED'}
+
+def _switch_eyebrows(self, hg_body, forward = True, report = False):
+    eyebrows = [mod for mod in hg_body.modifiers 
+                if mod.type == 'PARTICLE_SYSTEM' 
+                and mod.particle_system.name.startswith('Eyebrows')
+                ]
+    
+    if not eyebrows:
+        if report:
+            self.report({'WARNING'}, 'No eyebrow particle systems found')
+        return
+    if len(eyebrows) == 1:
+        if report:
+            self.report({'WARNING'}, 'Only one eyebrow system found')
+        return          
+    
+    idx, current_ps = next(
+        ((i, mod) for i, mod in enumerate(eyebrows)
+            if mod.show_viewport or mod.show_render),
+            0
+        )
+
+    next_idx = idx + 1 if forward else idx - 1
+    if next_idx >= len(eyebrows) or next_idx < 0:
+        next_idx = 0
+
+    next_ps = eyebrows[next_idx]
+    next_ps.show_viewport = next_ps.show_render = True
+    
+    for ps in eyebrows:
+        if ps != next_ps:
+            ps.show_viewport = ps.show_render = False    
+
 
 def load_hair(self,context, type):
     """Loads hair system the user selected by reading the json that belongs to
@@ -584,3 +590,6 @@ def _get_root_and_tip(hair_quality, max_root, max_tip):
     
     return new_root, new_tip
 
+def randomize_eyebrows(hg_body):
+    for i in random.randrange(0, 8):
+        _switch_eyebrows(None, hg_body, forward = True)
