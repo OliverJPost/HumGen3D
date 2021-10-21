@@ -5,8 +5,8 @@ Randomize operator for sliders and pcolls
 import random
 from typing import Any
 
-import bpy
-from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  # type: ignore
+import bpy # type: ignore
+from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  
 
 from ...core.HG_PCOLL import refresh_pcoll
 from .HG_COMMON_FUNC import find_human
