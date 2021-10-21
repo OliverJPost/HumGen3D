@@ -678,6 +678,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = boxbox.column(align = True)
         col.scale_y = 1.2
         
+        col.operator('hg3d.random',
+                       text = 'Randomize skin',
+                       icon = 'FILE_REFRESH'
+                       ).random_type = 'skin'
+        
+        col.separator()
+        
         tone_node = nodes['Skin_tone']
         col.prop(tone_node.inputs[1], 'default_value',
                  text = 'Tone',

@@ -3,8 +3,9 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
+from bpy.props import BoolProperty, EnumProperty, StringProperty # type:ignore
 
+from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  
 from ...core.HG_PCOLL import refresh_pcoll
 from ...features.creation_phase.HG_HAIR import set_hair_quality
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
@@ -14,7 +15,7 @@ from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete, toggle_hair_visi
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
 from ..creation_phase.HG_CREATION import HG_CREATION_BASE
 from ..creation_phase.HG_FINISH_CREATION_PHASE import finish_creation_phase
-from .HG_BATCH_FUNC import length_from_bell_curve
+from . HG_BATCH_FUNC import length_from_bell_curve
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
@@ -94,6 +95,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
         if self.texture_resolution in ('optimised', 'performance'):
             self._set_body_texture_resolution(sett, hg_body) 
+
+        randomize_skin_shader(hg_body, self.gender)
+        #randomize_eyes(self.ethnicity)
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
