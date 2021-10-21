@@ -1,4 +1,5 @@
 import os
+import random
 from pathlib import Path
 
 import bpy  # type: ignore
@@ -8,7 +9,7 @@ from ...core.HG_PCOLL import refresh_pcoll
 from ...features.creation_phase.HG_HAIR import set_hair_quality
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
-from ...modules.humgen import get_pcoll_options
+from ...API.humgen import get_pcoll_options
 from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete, toggle_hair_visibility
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
 from ..creation_phase.HG_CREATION import HG_CREATION_BASE
@@ -85,6 +86,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         set_random_active_in_pcoll(context, sett, 'humans', searchterm = self.ethnicity)
         hg_rig, hg_body = self.create_human(context) #inherited
         
+        self._give_random_name_to_human(self.gender, hg_rig)
+        
         context.view_layer.objects.active = hg_rig
     
         random_body_type(hg_rig)
@@ -107,7 +110,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = hg_rig
 
         if self.add_clothing:
-            #TODO clothing category
+            self.pick_library(context, 'clothing', gender = self.gender)
             set_random_active_in_pcoll(context, sett, 'outfit')
             for child in [c for c in hg_rig.children if 'cloth' in c or 'shoe' in c]:
                 set_clothing_texture_resolution(child, self.texture_resolution)
@@ -116,7 +119,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
-            #TODO expression category
+            self.pick_library(context, 'expressions', gender = None)
             set_random_active_in_pcoll(context, sett, 'expressions')
 
         hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
@@ -241,5 +244,26 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             sett.pose_sub = pose_type.capitalize().replace('_', ' ')
             set_random_active_in_pcoll(context, sett, 'poses')
   
+    def pick_library(self, context, categ, gender = None):
+        sett = context.scene.HG3D
+
+        collection = getattr(context.scene, f'batch_{categ}_col')    
+            
+        if gender:
+            library_list = [
+                i for i in collection 
+                if i.enabled 
+                and getattr(i, f'{gender}_items')
+                ]
+        else:
+            library_list = [
+                item.library_name for item in collection 
+                if item.count != 0 
+                and item.enabled
+            ]
+
+        categ_tag = 'outfit' if categ == 'clothing' else categ
+        setattr(sett, f'{categ_tag}_sub', random.choice(library_list))
+
 
 
