@@ -1017,9 +1017,11 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = boxbox.column(align = True)
         col.use_property_split = True
         col.use_property_decorate = False
-        col.prop(nodes['HG_Eye_Color'].inputs[2], 'default_value',
+        row = col.row(align = True)
+        row.prop(nodes['HG_Eye_Color'].inputs[2], 'default_value',
                  text = 'Iris Color'
                  )
+        row.operator('hg3d.random', text = '', icon = 'FILE_REFRESH').random_type = 'iris_color'
         col.prop(nodes['HG_Scelera_Color'].inputs[2],
                  'default_value', text = 'Sclera Color'
                  )

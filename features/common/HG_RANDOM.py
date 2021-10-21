@@ -6,7 +6,7 @@ import random
 from typing import Any
 
 import bpy # type: ignore
-from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  
+from ...features.creation_phase.HG_MATERIAL import randomize_iris_color, randomize_skin_shader  
 
 from ...core.HG_PCOLL import refresh_pcoll
 from .HG_COMMON_FUNC import find_human
@@ -104,7 +104,8 @@ class HG_RANDOM(bpy.types.Operator):
                                 #where face_all does all facial features
             hg_body = hg_rig.HG.body_obj
             self.randomize_facial_feature_categ(hg_body, ff_subcateg)
-
+        elif random_type == 'iris_color':
+            randomize_iris_color(hg_rig)
         
         return {'FINISHED'}
 

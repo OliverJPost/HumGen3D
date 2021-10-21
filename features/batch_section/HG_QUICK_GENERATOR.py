@@ -97,7 +97,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._set_body_texture_resolution(sett, hg_body) 
 
         randomize_skin_shader(hg_body, self.gender)
-        #randomize_eyes(self.ethnicity)
+        randomize_eyes(hg_rig, self.ethnicity)
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
