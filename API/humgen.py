@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 import subprocess
 import time
 import bpy #type:ignore
