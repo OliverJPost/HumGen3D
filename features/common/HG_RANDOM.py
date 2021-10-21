@@ -5,7 +5,8 @@ Randomize operator for sliders and pcolls
 import random
 from typing import Any
 
-import bpy  # type: ignore
+import bpy
+from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  # type: ignore
 
 from ...core.HG_PCOLL import refresh_pcoll
 from .HG_COMMON_FUNC import find_human
@@ -88,21 +89,22 @@ class HG_RANDOM(bpy.types.Operator):
     random_type : bpy.props.StringProperty()
 
     def execute(self,context):
-        r_type = self.random_type
+        random_type = self.random_type
         sett = context.scene.HG3D
         hg_rig = find_human(context.active_object)
 
-        if r_type == 'body_type':
+        if random_type == 'body_type':
             random_body_type(hg_rig)
-        elif r_type in ('poses', 'expressions', 'outfit', 'patterns', 'footwear', 'hair'):
-            set_random_active_in_pcoll(context, sett, r_type)
-        elif r_type == 'skin':
-            randomize_skin(context, hg_rig.HG.body_obj)
-        elif r_type.startswith('face'):
-            ff_subcateg = r_type[5:] #facial subcategories follow the pattern face_{category}
+        elif random_type in ('poses', 'expressions', 'outfit', 'patterns', 'footwear', 'hair'):
+            set_random_active_in_pcoll(context, sett, random_type)
+        elif random_type == 'skin':
+            randomize_skin_shader(hg_rig.HG.body_obj, hg_rig.HG.gender)
+        elif random_type.startswith('face'):
+            ff_subcateg = random_type[5:] #facial subcategories follow the pattern face_{category}
                                 #where face_all does all facial features
             hg_body = hg_rig.HG.body_obj
             self.randomize_facial_feature_categ(hg_body, ff_subcateg)
+
         
         return {'FINISHED'}
 
@@ -144,17 +146,6 @@ class HG_RANDOM(bpy.types.Operator):
             
         return prefix_dict
 
-def randomize_skin(context, hg_body):
-    """INACTIVE"""
-    mat = hg_body.data.materials[0]
-    nodes = mat.node_tree.nodes
-    node_randomize_dict= {
-        nodes['Lighten_hsv'].inputs['Value']     : (0,2),
-        nodes['Darken_hsv'].inputs['Value']      : (0,2),
-        nodes['Skin_tone'].inputs[1]             : (.1, 3),
-        nodes['Skin_tone'].inputs[2]             : (-1, 1),
-        nodes['Freckles_control'].inputs['Pos2'] : None
-    }
 
 def random_body_type(hg_rig):
     """Randomizes the body type sliders of the active human
