@@ -78,7 +78,7 @@ class HG_CREATION_BASE():
 
         return hg_rig, hg_body
 
-    def _get_random_name(self, gender, hg_rig) -> str:
+    def _give_random_name_to_human(self, gender, hg_rig) -> str:
         """Gets a random name for HG_NAMEGEN
 
         Args:
@@ -442,7 +442,7 @@ class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
         hg_rig.select_set(True)
         context.view_layer.objects.active = hg_rig
 
-        name = self._get_random_name(sett.gender, hg_rig)
+        name = self._give_random_name_to_human(sett.gender, hg_rig)
 
         self.report({'INFO'}, "You've created: {}".format(name))
         
