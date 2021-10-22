@@ -1274,6 +1274,11 @@ class HG_PT_PANEL(bpy.types.Panel):
                  text = 'Roughness'
                  )
         
+        if 'Hue' in hair_node.inputs:
+            col.prop(hair_node.inputs['Hue'], 'default_value',
+                    text = 'Hue (For dyed hair)'
+                    )            
+        
         if categ == 'eye':
             return
         
@@ -1295,6 +1300,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             col.prop(hair_node.inputs['Root Redness'], 'default_value',
                      text = 'Root Redness'
                      )
+            if 'Roots Hue' in hair_node.inputs:
+                col.prop(hair_node.inputs['Roots Hue'], 'default_value',
+                        text = 'Root Hue'
+                        )   
 
     def _draw_hair_cards_ui(self, box):
         """draws button for adding hair cards
