@@ -593,3 +593,25 @@ def _get_root_and_tip(hair_quality, max_root, max_tip):
 def randomize_eyebrows(hg_body):
     for i in random.randrange(0, 8):
         _switch_eyebrows(None, hg_body, forward = True)
+        
+def random_hair_color(hg_body):
+    #TODO make system more elaborate
+    hair_color_dict= {
+        'blonde' : (4.0, 0.8, 0.0),
+        'black' : (0.0, 1.0, 0.0),
+        'dark_brown' : (0.5, 1.0, 0.0),
+        'brown' : (1.0, 1.0, 0.0),
+        'grey' : (4.0,  0.0, 0.0),
+        'greying' : (1.0, 0.0, 1.0),
+        'red' : (3.0, 1.0, 0.0)
+    }
+    
+    hair_color = hair_color_dict[random.choice([name for name in hair_color_dict])]
+    
+    for mat in hg_body.data.materials[1:]:
+        nodes = mat.node_tree.nodes
+        hair_node = next(n for n in nodes if n.name.startswith('HG_Hair'))
+        hair_node.inputs['Hair Lightness'].default_value = hair_color[0]
+        hair_node.inputs['Hair Redness'].default_value = hair_color[1]
+        hair_node.inputs['Pepper & Salt'].default_value = hair_color[2]
+    

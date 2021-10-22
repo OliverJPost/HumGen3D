@@ -5,9 +5,9 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, StringProperty # type:ignore
 
-from ...features.creation_phase.HG_MATERIAL import randomize_skin_shader  
+from ...features.creation_phase.HG_MATERIAL import randomize_iris_color, randomize_skin_shader  
 from ...core.HG_PCOLL import refresh_pcoll
-from ...features.creation_phase.HG_HAIR import set_hair_quality
+from ...features.creation_phase.HG_HAIR import random_hair_color, set_hair_quality
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
 from ...API.humgen import get_pcoll_options
@@ -97,11 +97,12 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._set_body_texture_resolution(sett, hg_body) 
 
         randomize_skin_shader(hg_body, self.gender)
-        randomize_eyes(hg_rig, self.ethnicity)
+        randomize_iris_color(hg_rig)
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, 'hair')
         set_hair_quality(context, self.hair_type, self.hair_quality)
+        random_hair_color(hg_body)
 
         toggle_hair_visibility(hg_body, show = False)
 
