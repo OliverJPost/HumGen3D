@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty #type:ignore
 
 from ...API.humgen import get_pcoll_options
 from ...core.HG_PCOLL import refresh_pcoll
