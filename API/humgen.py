@@ -2,10 +2,13 @@ import json
 import os
 import subprocess
 import time
-import bpy #type:ignore
-from .. features.common.HG_COMMON_FUNC import get_addon_root, get_prefs, toggle_hair_visibility  # type:ignore
 
-  
+import bpy  # type:ignore
+
+from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
+from ..features.common.HG_COMMON_FUNC import get_prefs, toggle_hair_visibility
+
+
 def get_pcoll_options(pcoll_name) -> list:
     sett = bpy.context.scene.HG3D
     pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
