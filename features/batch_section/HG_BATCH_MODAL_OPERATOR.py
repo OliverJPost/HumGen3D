@@ -10,9 +10,9 @@ import subprocess
 import time
 from pathlib import Path
 
-import bpy #type:ignore
-from ... API import humgen
+import bpy  # type:ignore
 
+from ...API import humgen
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
@@ -20,6 +20,7 @@ from ...user_interface.HG_BATCH_UILIST import uilist_refresh
 from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
                                           set_eevee_ao_and_strip)
+
 
 def status_text_callback(header, context):  
     sett   = context.scene.HG3D
@@ -212,8 +213,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._add_category_list(context, sd, 'expressions') 
         
         sd['add_clothing'] = sett.batch_clothing
-        
-        self._add_category_list(context, sd, 'clothing') 
+        if sett.batch_clothing:
+            self._add_category_list(context, sd, 'clothing') 
         
         sd['pose_type'] = pose_type
         
