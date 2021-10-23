@@ -211,25 +211,45 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
-        
-        layout.prop(sett, 'batch_delete_backup')
-        layout.prop(sett, 'batch_apply_shapekeys')
-        
+
         col = layout.column()
-        col.enabled = sett.batch_apply_shapekeys
-        col.prop(sett, 'batch_apply_armature_modifier')
-        col.prop(sett, 'batch_apply_clothing_geometry_masks')
+        col.use_property_split = True
+        col.use_property_decorate = False
         
-        layout.prop(sett, 'batch_remove_clothing_subdiv')
-        layout.prop(sett, 'batch_remove_clothing_solidify')
+        col.label(text = 'Texture resolution:', icon = 'IMAGE_PLANE')
+        col.prop(sett, 'batch_texture_resolution', text = '')
+        
+        col.separator()
+        
+        col.label(text = 'Polygon reduction:', icon = 'MOD_DECIM')
+        col.prop(sett, 'batch_poly_reduction', text = '')
+        
+        col.separator()
+
+        col.label(text = 'Objects:', icon = 'MESH_CUBE')
+        col_header = col.column(heading = 'Delete')
+        col_header.prop(sett, 'batch_delete_backup', text = 'Backup human')
+        
+        col.separator()
+        
+        col.label(text = 'Modifiers/effects:', icon = 'MODIFIER')
+        col_header = col.column(heading = 'Apply')
+        col_header.prop(sett, 'batch_apply_shapekeys', text = 'Shape keys')
+        col_e = col_header.column()
+        col.enabled = sett.batch_apply_shapekeys       
+        col_e.prop(sett, 'batch_apply_armature_modifier', text = 'Armature')
+        col_e.prop(sett, 'batch_apply_clothing_geometry_masks', text = 'Geometry masks') 
+        col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
+        
+        col.separator()
+
+        col.label(text = 'Clothing:', icon = 'MOD_CLOTH')
+        col_header = col.column(heading = 'Remove')
+        col_header.prop(sett, 'batch_remove_clothing_subdiv', text = 'Subdivisions')
+        col_header.prop(sett, 'batch_remove_clothing_solidify', text = 'Solidify')
         
         
-        layout.prop(sett, 'batch_texture_resolution')
-        layout.prop(sett, 'batch_poly_reduction')
-        
-        col = layout.column()
-        col.enabled = sett.batch_apply_shapekeys        
-        col.prop(sett, 'batch_apply_poly_reduction')
+
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
