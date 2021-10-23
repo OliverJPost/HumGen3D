@@ -359,7 +359,8 @@ def set_clothing_texture_resolution(clothing_item, resolution_category):
             
         if not os.path.isfile(new_path):
             print("Could not find other resolution for outfit texture: ", new_path)
-            
+            return
+        
         new_image = bpy.data.images.load(new_path, check_existing = True)
         node.image = new_image
         new_image.colorspace_settings.name = old_color_setting
