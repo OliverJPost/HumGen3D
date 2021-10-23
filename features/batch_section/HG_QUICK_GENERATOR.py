@@ -3,19 +3,26 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, StringProperty # type:ignore
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 
-from ...features.creation_phase.HG_MATERIAL import randomize_iris_color, randomize_skin_shader  
+from ...API.humgen import get_pcoll_options
 from ...core.HG_PCOLL import refresh_pcoll
-from ...features.creation_phase.HG_HAIR import random_hair_color, set_hair_quality
+from ...features.creation_phase.HG_FACE import \
+    randomize_facial_feature_categ  # type:ignore
+from ...features.creation_phase.HG_HAIR import (random_hair_color,
+                                                set_hair_quality)
+from ...features.creation_phase.HG_MATERIAL import (randomize_iris_color,
+                                                    randomize_skin_shader)
+from ...features.finalize_phase.HG_CLOTHING import \
+    randomize_clothing_colors  # type:ignore
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
-from ...API.humgen import get_pcoll_options
-from ..common.HG_COMMON_FUNC import apply_shapekeys, hg_delete, toggle_hair_visibility
+from ..common.HG_COMMON_FUNC import (apply_shapekeys, hg_delete,
+                                     toggle_hair_visibility)
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
 from ..creation_phase.HG_CREATION import HG_CREATION_BASE
 from ..creation_phase.HG_FINISH_CREATION_PHASE import finish_creation_phase
-from . HG_BATCH_FUNC import length_from_bell_curve
+from .HG_BATCH_FUNC import length_from_bell_curve
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
@@ -92,6 +99,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = hg_rig
     
         random_body_type(hg_rig)
+        randomize_facial_feature_categ(hg_body, 'all', use_bell_curve = self.gender == 'female')
         
         if self.texture_resolution in ('optimised', 'performance'):
             self._set_body_texture_resolution(sett, hg_body) 
@@ -115,17 +123,22 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = hg_rig
 
         if self.add_clothing:
-            self.pick_library(context, 'clothing', gender = self.gender)
+            sett.outfit_sub = self.clothing_category
             set_random_active_in_pcoll(context, sett, 'outfit')
+            sett.footwear_sub = 'All'
+            set_random_active_in_pcoll(context, sett, 'footwear')
             for child in [c for c in hg_rig.children if 'cloth' in c or 'shoe' in c]:
+                randomize_clothing_colors(context, child)
                 set_clothing_texture_resolution(child, self.texture_resolution)
 
         if self.pose_type != 'a_pose':
             self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
-            self.pick_library(context, 'expressions', gender = None)
+            sett.expressions_sub = self.expressions_category
             set_random_active_in_pcoll(context, sett, 'expressions')
+            expr_sk = next(sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith('expr_'))
+            expr_sk.value = random.choice([.5,.7,.8,1,1,1])
 
         hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
         
