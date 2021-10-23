@@ -439,12 +439,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_clothing_inside: BoolProperty(
         name="Inside",
         default=True,
-        update=lambda a, b: HG_BATCH_UILIST.uilist_refresh(a, b, "outfits")
+        update=lambda a, b: HG_BATCH_UILIST.batch_uilist_refresh(a, b, "outfits")
     )
     batch_clothing_outside: BoolProperty(
         name="Outside",
         default=True,
-        update=lambda a, b: HG_BATCH_UILIST.uilist_refresh(a, b, "outfits")
+        update=lambda a, b: HG_BATCH_UILIST.batch_uilist_refresh(a, b, "outfits")
     )
 
     batch_marker_selection: EnumProperty(

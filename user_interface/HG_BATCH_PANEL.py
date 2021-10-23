@@ -3,12 +3,13 @@ This file is currently inactive
 """
 
 import bpy  # type: ignore
-import numpy as np #type:ignore
+import numpy as np  # type:ignore
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.batch_section.HG_BATCH_FUNC import (calculate_weight,
                                                     length_from_bell_curve)
-from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import get_batch_marker_list
+from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import \
+    get_batch_marker_list
 from .HG_PANEL_FUNCTIONS import draw_panel_switch_header, get_flow
 
 
@@ -267,7 +268,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align = True)
         box =col.box().row()
         box.label(text = 'Select libraries:')
-        box.operator('hg3d.uilists', text = '', icon = 'FILE_REFRESH')
+        box.operator('hg3d.refresh_batch_uilists', text = '', icon = 'FILE_REFRESH')
 
         #col.scale_y = 1.5
         row=col.row(align = False)
@@ -300,7 +301,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align = True)
         box =col.box().row()
         box.label(text = 'Select libraries:')
-        box.operator('hg3d.uilists', text = '', icon = 'FILE_REFRESH')
+        box.operator('hg3d.refresh_batch_uilists', text = '', icon = 'FILE_REFRESH')
         col = col.column()
         col.template_list("HG_UL_BATCH_EXPRESSIONS", "", context.scene, "batch_expressions_col", context.scene, "batch_expressions_col_index")
 

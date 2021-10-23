@@ -16,7 +16,7 @@ from ...API import humgen
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
-from ...user_interface.HG_BATCH_UILIST import uilist_refresh
+from ...user_interface.HG_BATCH_UILIST import batch_uilist_refresh
 from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
                                           set_eevee_ao_and_strip)
@@ -230,7 +230,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 for i in getattr(context.scene, f'batch_{label}_col')
                 if i.enabled]
         if not enabled_categories:
-            uilist_refresh(self, context, label)
+            batch_uilist_refresh(self, context, label)
             enabled_categories = getattr(context.scene, [i.library_name for i in f'batch_{label}_col'])
             
         sd[f'{pcoll_name}_category'] = random.choice(enabled_categories)
