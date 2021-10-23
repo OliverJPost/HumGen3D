@@ -3,8 +3,7 @@ from pathlib import Path
 
 import bpy  # type:ignore
 
-from ...features.common.HG_COMMON_FUNC import (add_to_collection,
-                                               get_addon_root)
+from ...features.common.HG_COMMON_FUNC import add_to_collection, get_addon_root
 
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
