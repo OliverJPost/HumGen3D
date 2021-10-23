@@ -9,7 +9,7 @@ This callback has the following usages:
     a human is duplicated by the user
 '''
 
-import bpy
+import bpy  # type:ignore
 
 from ..features.common.HG_COMMON_FUNC import find_human
 from ..features.creation_phase.HG_BODY import get_scaling_data
