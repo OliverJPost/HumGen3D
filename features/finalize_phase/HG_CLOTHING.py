@@ -6,6 +6,7 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
+from ...data.HG_COLORS import color_dict
 from ...features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete
 from ...features.common.HG_RANDOM import set_random_active_in_pcoll
 from ...features.finalize_phase.HG_CLOTHING_LOAD import find_masks
@@ -146,5 +147,33 @@ def load_pattern(self,context):
     
     img_node.image = pattern
 
+def randomize_clothing_colors(context, cloth_obj):
+    mat = cloth_obj.data.materials[0]
+    if not mat:
+        return
+    nodes = mat.node_tree.nodes
+    
+    control_node = nodes.get('HG_Control')
+    if not control_node:
+        print(f'Could not set random color for {cloth_obj.name}, control node not found')
+        return
+    
+    #TODO Rewrite color_random so it doesn't need to be called as operator
+    old_active = context.view_layer.objects.active 
+    
+    for input in control_node.inputs:
+        color_groups = tuple(['_{}'.format(name) for name in color_dict])     
+        color_group = (
+            input.name[-2:] 
+            if input.name.endswith(color_groups) 
+            else None
+            )
 
+        if not color_group:
+            continue
+        
+        context.view_layer.objects.active = cloth_obj
 
+        bpy.ops.hg3d.color_random(input_name = input.name, color_group = color_group)
+    
+    context.view_layer.objects.active = old_active
