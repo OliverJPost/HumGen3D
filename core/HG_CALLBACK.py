@@ -9,7 +9,7 @@ This callback has the following usages:
     a human is duplicated by the user
 '''
 
-import bpy  # type: ignore
+import bpy
 
 from ..features.common.HG_COMMON_FUNC import find_human
 from ..features.creation_phase.HG_BODY import get_scaling_data
@@ -17,6 +17,8 @@ from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
                                                         refresh_modapply,
                                                         refresh_outfit_ul,
                                                         refresh_shapekeys_ul)
+from ..user_interface.HG_BATCH_UILIST import \
+    batch_uilist_refresh  # type: ignore
 from .HG_PCOLL import refresh_pcoll
 
 
@@ -196,6 +198,9 @@ def tab_change_update(self, context):
     refresh_shapekeys_ul(self, context)
     refresh_hair_ul(self, context)
     refresh_outfit_ul(self, context)
+    
+    batch_uilist_refresh(self, context, 'outfits')
+    batch_uilist_refresh(self, context, 'expressions')
 
 def _hair_shader_type_update(sett, hg_body):
     mat= hg_body.data.materials[1]

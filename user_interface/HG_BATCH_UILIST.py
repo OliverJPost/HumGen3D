@@ -74,7 +74,7 @@ class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
     count : bpy.props.IntProperty(default = 0)
 
 
-def uilist_refresh(self, context, categ):
+def batch_uilist_refresh(self, context, categ):
     """
     Refreshes uilist
     """
@@ -91,6 +91,8 @@ def uilist_refresh(self, context, categ):
         
         gender = False
 
+    enabled_dict = {i.name: i.enabled for i in collection}
+
     found_folders_male = find_folders(self, context, categ, gender, include_all = False, gender_override= 'male')
     collection.clear()
 
@@ -99,6 +101,8 @@ def uilist_refresh(self, context, categ):
         #['{}_col{}'.format(categ, '' if not gender else '_{}'.format(gender[0]))]
         item.name = folder[0]
         item.library_name = folder[0]
+        if folder[0] in [n for n in enabled_dict]:
+            item.enabled = enabled_dict[folder[0]]
         if gender:
             item.male_items = find_item_amount(context, categ, 'male', folder[0])
         else:
@@ -123,13 +127,13 @@ class HG_REFRESH_UILISTS(bpy.types.Operator):
     """
     clears searchfield
     """
-    bl_idname = "hg3d.uilists"
+    bl_idname = "hg3d.refresh_batch_uilists"
     bl_label = "Refresh"
     bl_description = "Refresh the library list"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self,context):
-        uilist_refresh(self, context, 'outfits')
-        uilist_refresh(self, context, 'expressions')
+        batch_uilist_refresh(self, context, 'outfits')
+        batch_uilist_refresh(self, context, 'expressions')
 
         return {'FINISHED'}
