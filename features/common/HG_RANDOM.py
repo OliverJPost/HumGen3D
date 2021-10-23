@@ -5,10 +5,11 @@ Randomize operator for sliders and pcolls
 import random
 from typing import Any
 
-import bpy # type: ignore
-from ...features.creation_phase.HG_MATERIAL import randomize_iris_color, randomize_skin_shader  
+import bpy  # type: ignore
 
 from ...core.HG_PCOLL import refresh_pcoll
+from ...features.creation_phase.HG_MATERIAL import (randomize_iris_color,
+                                                    randomize_skin_shader)
 from .HG_COMMON_FUNC import find_human
 
 
@@ -35,12 +36,13 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
 
     input_name : bpy.props.StringProperty()
     color_group: bpy.props.StringProperty()
+    
 
     def execute(self,context):
         from ...data.HG_COLORS import \
             color_dict  # TODO make color dict into json?
         
-        color_hex       = random.choice(color_dict[self.color_group])
+        color_hex = random.choice(color_dict[self.color_group])
         color_rgba = self._hex_to_rgba(color_hex)
         
         nodes = context.object.active_material.node_tree.nodes
@@ -109,43 +111,7 @@ class HG_RANDOM(bpy.types.Operator):
         
         return {'FINISHED'}
 
-    def randomize_facial_feature_categ(self, hg_body, ff_subcateg):
-        """Randomizes the sliders of the passed facial features category
 
-        Args:
-            hg_body (Object): body object of a HumGen human
-            ff_subcateg (str): subcategory of facial features to randomize, 'all'
-                for randomizing all features
-        """
-        prefix_dict = self._get_ff_prefix_dict()
-        face_sk = [sk for sk in hg_body.data.shape_keys.key_blocks 
-                       if sk.name.startswith(prefix_dict[ff_subcateg])
-                       ] 
-        for sk in face_sk:
-            sk.value = random.uniform(sk.slider_min, sk.slider_max)
-
-    def _get_ff_prefix_dict(self) -> dict:
-        """Returns facial features prefix dict
-
-        Returns:
-            dict: key: internal naming of facial feature category
-                value: naming prefix of shapekeys that belong to that category
-        """
-        prefix_dict = {
-                'all'    : 'ff',
-                'u_skull': ('ff_a', 'ff_b'),
-                'eyes'   : 'ff_c',
-                'l_skull': 'ff_d',
-                'nose'   : 'ff_e',
-                'mouth'  : 'ff_f',
-                'chin'   : 'ff_g',
-                'cheeks' : 'ff_h',
-                'jaw'    : 'ff_i',
-                'ears'   : 'ff_j',
-                'custom' : 'ff_x'
-                }
-            
-        return prefix_dict
 
 
 def random_body_type(hg_rig):
@@ -158,7 +124,10 @@ def random_body_type(hg_rig):
     sks = hg_body.data.shape_keys.key_blocks
     
     for sk in [sk for sk in sks if sk.name.startswith('bp_')]:
-        sk.value = random.random()
+        if sk.name.startswith('bp_skinny'):
+            sk.value = random.uniform(0, 0.7)
+        else:
+            sk.value = random.uniform(0, 1.0)
 
 def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm = None):
     """Sets a random object in this preview colleciton as active
