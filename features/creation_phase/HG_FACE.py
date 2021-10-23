@@ -1,7 +1,7 @@
 import random
 
 import bpy  # type: ignore
-import numpy as np
+import numpy as np #type:ignore
 
 from ...features.common.HG_COMMON_FUNC import find_human
 
