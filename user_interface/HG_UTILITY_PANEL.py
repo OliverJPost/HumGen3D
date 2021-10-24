@@ -833,3 +833,4 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         col.operator('hg3d.delstretch')
         col.operator('hg3d.prepare_for_arkit')
         col.operator('hg3d.convert_hair_shader')
+        col.operator('hg3d.reset_batch_operator')
