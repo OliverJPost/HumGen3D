@@ -43,14 +43,12 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         marker_total = len(get_batch_marker_list(context))
         
         col = col.column(align = True)
-        col.alert = True
-        col.operator('hg3d.generate', text = f'Generate {marker_total} humans', depress = True, icon  = 'TIME').run_immediately = False
-
         if sett.batch_idx:
-            col = layout.column(align = True)
-            col.scale_y = 2
-            col.prop(sett, 'batch_progress')
-            
+            col.prop(sett, 'batch_progress', text=f'Building Human {sett.batch_idx}')
+        else: 
+            col.alert = True
+            col.operator('hg3d.generate', text = f'Generate {marker_total} humans', depress = True, icon  = 'TIME').run_immediately = False
+              
         box = layout.box().column(align = True)
         box.prop(
             sett,
