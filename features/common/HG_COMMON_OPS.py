@@ -76,7 +76,8 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         
         pref = get_prefs()
         if pref.auto_hide_hair_switch and not self.children_hide_exception:
-            self._hide_hair_children(context, pref)
+            if not self.section_name in ('hair', 'eyes'):
+                self._hide_hair_children(context, pref)
         return {'FINISHED'}
 
     def _hide_hair_children(self, context, pref):
