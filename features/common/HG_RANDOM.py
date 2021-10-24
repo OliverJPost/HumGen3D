@@ -144,23 +144,20 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm = None):
     
     pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
     random_item = get_random_from_list(pcoll_list, current_item, searchterm)
+    print(pcoll_name)
+    print('pcoll_list', [i for i in pcoll_list])
+    print('random item', random_item)
 
-    #TODO implement set_attr
-    if pcoll_name == 'poses':
-        sett.pcoll_poses = random_item
-    elif pcoll_name == 'expressions':
-        sett.pcoll_expressions = random_item
-    elif pcoll_name == 'outfit':
-        sett.pcoll_outfit = random_item
-    elif pcoll_name == 'humans':
-        sett.pcoll_humans = random_item
-    elif pcoll_name == 'hair':
-        sett.pcoll_hair = random_item
-    elif pcoll_name == 'footwear':
-        sett.pcoll_footwear = random_item
-    elif pcoll_name == 'patterns':
-        sett.pcoll_patterns = random_item
+    if not random_item:
+        setattr(sett, f'{pcoll_name}_sub', 'All')
+        refresh_pcoll(None, context, pcoll_name)
+        pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
+        print('pcoll_list 2', [i for i in pcoll_list])
+        random_item = get_random_from_list(pcoll_list, current_item, searchterm)
+        print('random item 2', random_item)
     
+    setattr(sett, f'pcoll_{pcoll_name}', random_item)
+
 def get_random_from_list(list, current_item, searchterm) -> Any:
     """Gets a random item from passed list, trying max 6 times to prevent choosing
     the currently active item

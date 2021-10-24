@@ -123,7 +123,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = hg_rig
 
         if self.add_clothing:
-            sett.outfit_sub = self.clothing_category
+            try:
+                sett.outfit_sub = self.clothing_category
+            except TypeError:
+                sett.outfit_sub = 'All'
+                
             set_random_active_in_pcoll(context, sett, 'outfit')
             sett.footwear_sub = 'All'
             set_random_active_in_pcoll(context, sett, 'footwear')
