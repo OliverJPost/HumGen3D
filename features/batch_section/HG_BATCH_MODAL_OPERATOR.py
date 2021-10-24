@@ -225,13 +225,16 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         #TODO fix naming inconsistency
         label = 'expressions' if pcoll_name == 'expressions' else 'clothing'
         
+        collection = getattr(context.scene, f'batch_{label}_col')
+        
         enabled_categories = [
                 i.library_name
-                for i in getattr(context.scene, f'batch_{label}_col')
+                for i in collection
                 if i.enabled]
         if not enabled_categories:
-            batch_uilist_refresh(self, context, label)
-            enabled_categories = getattr(context.scene, [i.library_name for i in f'batch_{label}_col'])
+            bpy.ops.hg3d.refresh_batch_uilists()
+            
+            enabled_categories = [i.library_name for i in collection]
             
         sd[f'{pcoll_name}_category'] = random.choice(enabled_categories)
 
