@@ -1,7 +1,7 @@
 import json
 import os
-from pathlib import Path
 import random
+from pathlib import Path
 
 import bpy  # type: ignore
 
@@ -207,11 +207,15 @@ def load_hair(self,context, type):
         mod.show_expanded = False
 
     _move_modifiers_above_masks(hg_body, new_hair_systems)
-    for mod in [mod for mod in hg_body.modifiers if mod.type == 'MASK']:
-        mod.show_viewport = True
-
-    
-    
+    for mod in [mod for mod in hg_body.modifiers]:
+        # Turn on masks again
+        if mod.type == 'MASK':
+            mod.show_viewport = True
+        
+        #Show all hair systems
+        elif mod.type == 'PARTICLE_SYSTEM':
+            ps_sett = mod.particle_system.settings
+            ps_sett.child_nbr = ps_sett.rendered_child_count
 
     hg_delete(hair_obj)
 
