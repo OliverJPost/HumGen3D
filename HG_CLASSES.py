@@ -246,5 +246,6 @@ hg_classes = (
     HG_BATCH_GENERATE,
     HG_QUICK_GENERATE,
     VIEW3D_MT_hg_marker_add,
-    HG_OT_ADD_BATCH_MARKER
+    HG_OT_ADD_BATCH_MARKER,
+    HG_RESET_BATCH_OPERATOR
     )
