@@ -282,6 +282,11 @@ class HG_PT_PANEL(bpy.types.Panel):
         row = col.row(align=True)
         row.operator('hg3d.deselect', icon = 'RESTRICT_SELECT_ON')
         row.operator('hg3d.delete', text = 'Delete', icon = 'TRASH')
+        
+        if hg_rig:
+            box = col.box()
+            hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj, eyesystems=True)     
+            self._draw_hair_children_switch(hair_systems, box)
 
     def _experimental_mode_button(self, hg_rig, row_h):
         subrow = row_h.row(align = True)
@@ -1029,7 +1034,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         boxbox = self._draw_eyebrow_switch(box)
 
         eye_systems = self._get_eye_systems(self.hg_rig.HG.body_obj)
-        self._draw_hair_children_switch(eye_systems, boxbox)
+        
         self._draw_hair_length_ui(eye_systems, box)
 
     def _draw_eyebrow_switch(self, box) -> bpy.types.UILayout:
@@ -1097,8 +1102,6 @@ class HG_PT_PANEL(bpy.types.Panel):
         body_obj = hg_rig.HG.body_obj
 
         hair_systems = self._get_hair_systems(body_obj)
-        if hair_systems:
-            self._draw_hair_children_switch(hair_systems, box)
 
         box.template_icon_view(
             sett, "pcoll_hair",
@@ -1147,21 +1150,23 @@ class HG_PT_PANEL(bpy.types.Panel):
         col_h.scale_y =1.5
         col_h.prop(sett, 'face_hair_sub', text = '')
 
-    def _draw_hair_children_switch(self, hair_systems, box):
-        """draws a switch for turning children to render amount or back to 1
+    def _draw_hair_children_switch(self, hair_systems, layout):
+        """ Draws a switch for turning children to render amount or back to 1
 
         Args:
             hair_systems (list): List of hair particle systems 
-            box (UILayout): layout.box of hair section
+            layout (UILayout): layout to draw switch in
         """
-        row = box.row()
+        
+        
+        row = layout.row(align = True)
         if not hair_systems:
             row.label(text = 'No hair systems found')
             return
         
-        row.label(text = ('Children are hidden' 
+        row.label(text = ('Hair children are hidden' 
                           if hair_systems[0].settings.child_nbr <= 1 
-                          else 'Children are visible')
+                          else 'Hair children are visible')
                   )
         row.operator('hg3d.togglechildren',
                      text = '',
@@ -1170,6 +1175,9 @@ class HG_PT_PANEL(bpy.types.Panel):
                            else 'HIDE_OFF'
                            )
                      )
+        
+        row.separator()
+        
         row.operator('hg3d.showinfo',
                      icon = 'QUESTION',
                      emboss = False
@@ -1412,7 +1420,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                   )
         
         
-        self._draw_hair_children_switch(hair_systems, boxbox)
+        
         self._draw_hair_length_ui(hair_systems, boxbox)
         self._draw_hair_material_ui(boxbox)
           
