@@ -3,8 +3,6 @@ import sys
 
 import bpy  # type:ignore
 
-print('################ IGNORE ERRORS ABOVE THIS LINE ####################')
-
 bpy.context.scene.HG3D.active_ui_tab = 'BATCH'
 settings_dict =  json.loads(sys.argv[4])
 

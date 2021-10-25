@@ -29,7 +29,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
                 continue
             ps_sett = ps.settings
             p_amount = len(ps.particles)
-            print(p_amount)
+
             ps_sett.child_nbr = 2
             if ps_sett.display_step == 3:
                 ps_sett.display_step = 4
@@ -38,7 +38,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             for mod in [mod for mod in hg_body.modifiers if mod.type == 'PARTICLE_SYSTEM']:
                 if mod.particle_system.name == ps.name:
                     bpy.ops.object.modifier_convert(modifier=mod.name)
-                    print(f'converting {mod.name}, {context.object}')
+
                     hc_obj = context.object
             for obj in [obj for obj in context.selected_objects if obj != hc_obj]:
                 obj.select_set(False)
@@ -65,7 +65,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all()
             uv_islands = self.get_uv_islands2(hc_obj, steps)
-            print(uv_islands)
+
             self.set_uvs(hc_obj, uv_islands)
             hc_obj.select_set(False)
         return {'FINISHED'}
@@ -118,7 +118,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     def set_uvs(self, hc_obj, islands):
         me = hc_obj.data
         uv_layer = me.uv_layers.active.data
-        print(f'uv_layer {uv_layer}')
+
         island = [me.polygons[i] for i in islands[0]]
         for poly in island:
             for loop_index in poly.loop_indices:

@@ -13,7 +13,7 @@ from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (add_to_collection,
                                                apply_shapekeys, find_human,
-                                               get_prefs, hg_delete)
+                                               get_prefs, hg_delete, hg_log)
 
 
 #FIXME make sure new textures are not duplicated
@@ -358,7 +358,7 @@ def set_clothing_texture_resolution(clothing_item, resolution_category):
         new_path = os.path.join(dir, new_filename)    
             
         if not os.path.isfile(new_path):
-            print("Could not find other resolution for outfit texture: ", new_path)
+            hg_log("Could not find other resolution for outfit texture: ", new_path, level = 'WARNING')
             return
         
         new_image = bpy.data.images.load(new_path, check_existing = True)

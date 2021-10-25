@@ -140,7 +140,7 @@ def make_path_absolute(key):
         props[key] = sane_path(props[key])
 
 def show_message(self, msg):
-    print(msg)
+    hg_log(msg)
     self.report({'WARNING'}, msg)
     ShowMessageBox(message = msg)
 
@@ -158,14 +158,14 @@ def hg_delete(obj):
         try:
             bpy.data.materials.remove(material)
         except Exception as e:
-            print('Error while deleting material: ', e)
+            hg_log('Error while deleting material: ', e)
             pass        
 
     for image in [i for i in images if i and not i.users]:
         try:
             bpy.data.images.remove(image)
         except Exception as e:
-            print('Error while deleting image: ', e)
+            hg_log('Error while deleting image: ', e)
             pass
 
 def _get_mats_and_images(obj):
@@ -196,12 +196,11 @@ def get_addon_root()->str:
     return str(root_folder)
 
 def time_update(label, prev_time) -> int:
-    print(label, round(time.time()-prev_time, 2))
+    hg_log(label, round(time.time()-prev_time, 2))
     return time.time()
     
 def toggle_hair_visibility(obj, show = True):
     for mod in obj.modifiers:
-        print('modcheck', mod.name, mod.type)
         if mod.type == 'PARTICLE_SYSTEM':
             mod.show_viewport = show
 

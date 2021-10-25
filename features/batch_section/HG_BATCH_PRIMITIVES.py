@@ -22,7 +22,6 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
 
         #link to scene
         marker = data_to.objects[0]
-        print(marker)
         context.scene.collection.objects.link(marker)
         add_to_collection(context, marker, collection_name = 'HG Batch Markers')        
         

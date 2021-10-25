@@ -11,7 +11,7 @@ This callback has the following usages:
 
 import bpy  # type:ignore
 
-from ..features.common.HG_COMMON_FUNC import find_human
+from ..features.common.HG_COMMON_FUNC import find_human, hg_log
 from ..features.creation_phase.HG_BODY import get_scaling_data
 from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
                                                         refresh_modapply,
@@ -43,7 +43,7 @@ class HG_ACTIVATE(bpy.types.Operator):
 
         msgbus(self, context)
         refresh_pcoll(self, context, 'humans')
-        print('activating HumGen')
+        hg_log('activating HumGen')
         return {'FINISHED'} 
 
 def msgbus(self, context):

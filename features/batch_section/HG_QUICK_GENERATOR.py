@@ -214,7 +214,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         old_image = next(n.image.name for n in nodes if n.name == 'Color')
         pcoll_options = get_pcoll_options('textures')
         searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '').replace('1K', '').replace('512px', '').replace('4k', '')
-        print(pcoll_options, searchword)
         sett.pcoll_textures = next(p for p in pcoll_options if searchword in p)
 
     def _apply_modifier(self, context, obj, modifier):
@@ -229,7 +228,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     def _add_poly_reduction_modifier(self, obj) -> bpy.types.Modifier:
         #TODO optimise polygon reduction, UV layout
         if obj.type != 'MESH':
-            print('contuing because not mesh', obj, obj.type)
             return None      
             
         decimate_mod = obj.modifiers.new('HG_POLY_REDUCTION', 'DECIMATE')

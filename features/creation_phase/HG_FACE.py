@@ -54,8 +54,6 @@ def randomize_facial_feature_categ(hg_body, ff_subcateg, use_bell_curve = False)
         all_v += new_value
         sk.value = new_value
 
-    print('Average', use_bell_curve, all_v/len(face_sk))
-
 def _get_ff_prefix_dict() -> dict:
     """Returns facial features prefix dict
 

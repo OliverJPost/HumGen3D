@@ -5,8 +5,9 @@ import time
 
 import bpy  # type:ignore
 
-from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
-from ..features.common.HG_COMMON_FUNC import get_prefs, toggle_hair_visibility
+from ..features.common.HG_COMMON_FUNC import (get_addon_root,  # type:ignore
+                                              get_prefs, hg_log,
+                                              toggle_hair_visibility)
 
 
 def get_pcoll_options(pcoll_name) -> list:
@@ -31,7 +32,7 @@ def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
 
     print('################ END OF BACKGROUND PROCESS ################')
 
-    print(f'Background Proces succesful, took: ',
+    hg_log(f'Background Proces succesful, took: ',
             round(time.time() - start_time_background_process, 2),
             's'
             )
@@ -57,6 +58,7 @@ def _run_hg_subprocess(settings_dict, python_file):
             print(line)
 
     if background_blender.stderr:
+        hg_log('Exception occured while in background process', level = 'WARNING')
         print(background_blender.stderr.decode("utf-8"))
         #ShowMessageBox(message = 
         #    f'''An error occured while generating human, check the console for error details''')
@@ -74,7 +76,7 @@ def _import_generated_human():
     hg_rig = next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
                     [obj for obj in data_to.objects if obj.HG.ishuman][0])
     
-    print(f'Import succesful for human {hg_rig.name}, import took: ',
+    hg_log(f'Import succesful for human {hg_rig.name}, import took: ',
             round(time.time() - start_time_import, 2),
             's'
             )

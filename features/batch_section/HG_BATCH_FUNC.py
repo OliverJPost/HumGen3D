@@ -40,7 +40,6 @@ def length_from_bell_curve(sett, gender, random_seed = True, samples = 1) -> lis
         size = samples
         )
     
-    print('returning', length_list)
     return length_list 
 
 def calculate_weight(sett):
