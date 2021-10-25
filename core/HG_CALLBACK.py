@@ -43,7 +43,7 @@ class HG_ACTIVATE(bpy.types.Operator):
 
         msgbus(self, context)
         refresh_pcoll(self, context, 'humans')
-        hg_log('activating HumGen')
+        hg_log('Activating HumGen')
         return {'FINISHED'} 
 
 def msgbus(self, context):
