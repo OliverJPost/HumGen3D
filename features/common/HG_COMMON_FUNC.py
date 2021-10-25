@@ -217,9 +217,12 @@ def hg_log(*message, level = 'INFO'):
         ValueError: Raised if level string is not in possible levels
     """
     
-    log_levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+    log_levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'BACKGROUND')
     if level not in log_levels:
         raise ValueError(f'{level} not found in {log_levels}')
+    
+    if get_prefs().silence_all_console_messages:
+        return
     
     if level == 'DEBUG' and not get_prefs().debug_mode:
         return
@@ -232,6 +235,7 @@ def hg_log(*message, level = 'INFO'):
         'WARNING': '\033[93m',
         'ERROR': '\033[91m',
         'CRITICAL': '\033[91m',
+        'BACKGROUND': '\033[94m',
         'ENDC': '\033[0m'
     }
     
