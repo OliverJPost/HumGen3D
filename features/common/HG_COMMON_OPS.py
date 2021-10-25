@@ -5,7 +5,7 @@ Operators not related to any particular section
 import bpy  # type: ignore
 
 from ...core.HG_PCOLL import refresh_pcoll
-from .HG_COMMON_FUNC import find_human, get_prefs, hg_delete
+from .HG_COMMON_FUNC import find_human, get_prefs, hg_delete, hg_log
 from .HG_INFO_POPUPS import HG_OT_INFO
 
 
@@ -238,7 +238,7 @@ class HG_DELETE(bpy.types.Operator):
             try:
                 hg_delete(obj)
             except:
-                print('could not remove', obj)
+                hg_log('could not remove', obj)
                 
         return {'FINISHED'}
 

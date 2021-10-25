@@ -19,7 +19,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
 
-from ...features.common.HG_COMMON_FUNC import ShowMessageBox, get_prefs
+from ...features.common.HG_COMMON_FUNC import ShowMessageBox, get_prefs, hg_log
 from ..HG_PCOLL import preview_collections
 from .HG_UPDATE import check_update
 
@@ -331,7 +331,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
         Returns:
             dict: directory of files that were installed, used for deleting cpack
         """
-        print('starting unzip', zipfile)
+        hg_log('Starting unzip, file:', zipfile)
         zf = zipfile.ZipFile(zip_path.name)
 
         file_list = [fn for fn in zf.namelist() if not fn.endswith('/')]
@@ -533,9 +533,9 @@ class HG_DELETE_CPACK(bpy.types.Operator):
                 try:
                     os.remove(filepath)
                 except PermissionError:
-                    print('Could not remove ',filepath)
+                    hg_log('Could not remove ', filepath, level = 'WARNING')
                 except FileNotFoundError as e:
-                    print('Could not remove ', filepath)
+                    hg_log('Could not remove ', filepath, level = 'WARNING')
                     print(e)
             
         #remove item from collection

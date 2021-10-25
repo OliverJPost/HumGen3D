@@ -17,7 +17,7 @@ from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
 from ...user_interface.HG_BATCH_UILIST import batch_uilist_refresh
-from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, show_message
+from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, hg_log, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
                                           set_eevee_ao_and_strip)
 
@@ -122,7 +122,10 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
             sett.batch_idx = 0
             
-            print('ENDING TIME: ', time.time()-self.start_time)
+            hg_log('Batch modal total running time: ', 
+                   round(time.time()-self.start_time, 2),
+                   's')
+            
             return {'FINISHED'}
         
         elif event.type in ['ESC']:
@@ -175,10 +178,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         hg_delete(associated_human)
 
     def _cancel(self, sett, context):
-        print('modal is cancelling')
+        hg_log('Batch modal is cancelling')
         sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
 
-        print('finishing because escape')
         self.finish_modal = True
         context.workspace.status_text_set(status_text_callback)
         return {'CANCELLED'}

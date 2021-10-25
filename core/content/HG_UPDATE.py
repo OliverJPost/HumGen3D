@@ -8,7 +8,7 @@ import bpy  # type: ignore
 import requests  # type: ignore
 
 from ... import bl_info
-from ...features.common.HG_COMMON_FUNC import get_prefs
+from ...features.common.HG_COMMON_FUNC import get_prefs, hg_log
 
 
 def check_update():
@@ -27,7 +27,7 @@ def check_update():
     try:
         update_data = json.loads(resp.text)
     except Exception as e:
-        print('Failed to load HumGen update data, with error:')
+        hg_log('Failed to load HumGen update data, with error:', level = 'WARNING')
         print(e)
         return
     
@@ -57,7 +57,7 @@ def check_update():
         for cp in cpack_col:
             _check_cpack_update(cp, req_cpacks, latest_cpacks)
     except Exception as e:
-        print('Failed to compute HumGen update numbering, with error:')
+        hg_log('Failed to compute HumGen update numbering, with error:', level = 'WARNING')
         print(e)
         
 
@@ -83,7 +83,7 @@ def _check_cpack_update(cp, req_cpacks, latest_cpacks):
         return
     current_version = tuple(cp.pack_version)
     if not current_version:
-        print('skipping cpack during update check, missing version number',
+        hg_log('Skipping cpack during update check, missing version number',
               cp.pack_name
               )
         return

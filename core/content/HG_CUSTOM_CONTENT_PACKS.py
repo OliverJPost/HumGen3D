@@ -19,7 +19,7 @@ import bpy  # type: ignore
 from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
 from ...core.HG_PCOLL import get_pcoll_enum_items, refresh_pcoll
 from ...extern.blendfile import open_blend
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs,
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs, hg_log,
                                                show_message)
 
 
@@ -155,7 +155,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                              if c.include]
         
         export_path_set, categ_set = self._build_export_set(pref, content_to_export)
-        print('Exporting: ', export_path_set)
+        hg_log('Exporting: ', export_path_set)
         
         self._write_json_file(pref, cpack, export_path_set, categ_set)
             
@@ -279,11 +279,11 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             try:
                 zip.write(full_path, relative_path)
             except FileNotFoundError:
-                print('Could not find file ', full_path)
+                hg_log('Could not find file ', full_path, level = 'WARNING')
                 failed_exports += 1
         zip.close()
         
-        print('Failed exports ', failed_exports)
+        hg_log('Failed exports ', failed_exports, level = 'WARNING')
           
     def _find_associated_files(self, filepath, categ) -> set:      
         """Create a set of relative paths of files that are associated with the

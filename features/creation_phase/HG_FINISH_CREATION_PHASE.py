@@ -8,7 +8,7 @@ from ...core.HG_PCOLL import refresh_pcoll
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox,
                                                add_to_collection,
                                                apply_shapekeys, find_human,
-                                               get_prefs, hg_delete)
+                                               get_prefs, hg_delete, hg_log)
 from ...features.common.HG_INFO_POPUPS import HG_OT_INFO
 from .HG_LENGTH import apply_armature, apply_length_to_rig
 
@@ -228,7 +228,7 @@ def extract_shapekeys_to_keep(context, hg_body, apply_armature = True
     try:
         test = hg_body.data.shape_keys.animation_data.drivers
     except Exception as e:
-        print('Returning None for ', hg_body, e)
+        hg_log('Returning None for ', hg_body, e, level = 'WARNING')
         return None, None
 
     driver_dict = build_driver_dict(hg_body)

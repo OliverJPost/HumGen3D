@@ -7,7 +7,7 @@ from pathlib import Path
 import bpy  # type: ignore
 
 from ...features.common.HG_COMMON_FUNC import (add_to_collection, find_human,
-                                               get_prefs, hg_delete)
+                                               get_prefs, hg_delete, hg_log)
 from ...features.creation_phase.HG_FINISH_CREATION_PHASE import (
     add_driver, build_driver_dict)
 
@@ -44,7 +44,7 @@ class HG_RIGIFY(bpy.types.Operator):
         try:
             bpy.ops.pose.rigify_generate()
         except Exception as e:
-            print('Rigify Error:', e)
+            hg_log('Rigify Error:', e, level = 'WARNING')
             self.report({'WARNING'}, 'Something went wrong, please check if Rigify is enabled')
             return {'FINISHED'}
                
@@ -201,9 +201,7 @@ def load_pose(self, context):
     """
     sett = context.scene.HG3D
     pref = get_prefs()
-    
-    print('setting pose from update')
-    
+        
     if sett.load_exception:
         return
     hg_rig = find_human(context.active_object)
@@ -244,7 +242,7 @@ def _import_pose(context) -> bpy.types.Object:
 
     hg_pose = data_to.objects[0]
     if not hg_pose:
-        print('could not load pose:', context.scene.HG3D.pcoll_poses)
+        hg_log('Could not load pose:', context.scene.HG3D.pcoll_poses, level = 'WARNING')
     
     scene = context.scene
     scene.collection.objects.link(hg_pose)

@@ -12,7 +12,7 @@ import bpy  # type: ignore
 from ...core.HG_PCOLL import refresh_pcoll
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox,
                                                add_to_collection, get_prefs,
-                                               hg_delete, show_message)
+                                               hg_delete, hg_log, show_message)
 from .HG_HAIR import (add_quality_props_to_hair_system,
                       convert_to_new_hair_shader)
 from .HG_MATERIAL import set_gender_specific_shader
@@ -185,8 +185,7 @@ class HG_CREATION_BASE():
 
         for root, _, filenames in walker:
             for fn in filenames:
-                if pref.debug_mode:
-                    print(f'EXT SKS: Found {fn} in {root}')
+                hg_log(f'Existing shapekeys, found {fn} in {root}', level = 'DEBUG')
                 if not os.path.splitext(fn)[1] == '.blend':
                     continue
 
@@ -223,8 +222,8 @@ class HG_CREATION_BASE():
             show_message(self, 'Could not import '+blendfile)
             print(e)
             return None
-        if pref.debug_mode:
-            print('EXT SK imported:', data_to.objects)
+        
+        hg_log('Existing shapekeys imported:', data_to.objects, level = 'DEBUG')
         imported_body = [obj for obj in data_to.objects
                          if obj.name.lower() == 'hg_shapekey'][0] 
         

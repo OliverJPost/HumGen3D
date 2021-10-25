@@ -12,7 +12,7 @@ from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
                                                find_human, get_prefs,
-                                               hg_delete, show_message)
+                                               hg_delete, hg_log, show_message)
 from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 
@@ -768,7 +768,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             shutil.copy(bpy.path.abspath(img.filepath_raw), os.path.join(path, img_name))
             saved_images[img_name] = full_path
         except RuntimeError as e:
-            print(f'failed to save {img.name} with error {e}')
+            hg_log(f'failed to save {img.name} with error {e}', level = 'WARNING')
             self.report({'WARNING'}, 'One or more images failed to save. See the system console for specifics')
             return None, saved_images
         except shutil.SameFileError:

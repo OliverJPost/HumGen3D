@@ -9,7 +9,7 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+from ...features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_log
 
 
 #TODO progress bar
@@ -50,13 +50,13 @@ class HG_BAKE(bpy.types.Operator):
             solidify_state = self.solidify_state(obj, False)
 
             #update big slider
-            print('baking', obj.name)
+            hg_log('Baking object:', obj.name)
             
             image_dict = {}
             current_mat = obj.material_slots[slot].material
             for tex_type in tex_types:
                 #update small slider
-                print('baking texture ', tex_type)
+                hg_log('Baking texture:', tex_type)
 
                 img_name = f'{hg_rig.name}_{naming}_{tex_type}'
                 img = self.bake_texture(context, current_mat, tex_type, img_name, naming, obj)

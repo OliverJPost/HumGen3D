@@ -8,7 +8,7 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_log
 
 preview_collections = {} #global dictionary of all pcolls
 
@@ -163,10 +163,9 @@ def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
         for fn in found_files:
             full_path = os.path.join(root, fn)
             file_paths.append(full_path)          
-               
-    if get_prefs().debug_mode:
-        print('getting files for {} in {}'.format(pcoll_type, dir))
-        print('found files {}'.format(file_paths))
+
+    hg_log('getting files for {} in {}'.format(pcoll_type, dir), level = 'DEBUG')
+    hg_log('found files {}'.format(file_paths), level = 'DEBUG')
 
     return file_paths
 

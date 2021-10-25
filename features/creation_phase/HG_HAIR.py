@@ -545,7 +545,6 @@ def set_hair_quality(context, hair_type, hair_quality):
     
     for mod in [m for m in hg_body.modifiers if m.type == 'PARTICLE_SYSTEM']:
         ps = mod.particle_system.settings
-        print(mod.particle_system.name)
         max_steps = ps['steps']
         max_children = ps['children']
         max_root = ps['root']

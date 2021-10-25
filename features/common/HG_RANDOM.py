@@ -144,17 +144,12 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm = None):
     
     pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
     random_item = get_random_from_list(pcoll_list, current_item, searchterm)
-    print(pcoll_name)
-    print('pcoll_list', [i for i in pcoll_list])
-    print('random item', random_item)
 
     if not random_item:
         setattr(sett, f'{pcoll_name}_sub', 'All')
         refresh_pcoll(None, context, pcoll_name)
         pcoll_list = sett['previews_list_{}'.format(pcoll_name)]
-        print('pcoll_list 2', [i for i in pcoll_list])
         random_item = get_random_from_list(pcoll_list, current_item, searchterm)
-        print('random item 2', random_item)
     
     setattr(sett, f'pcoll_{pcoll_name}', random_item)
 

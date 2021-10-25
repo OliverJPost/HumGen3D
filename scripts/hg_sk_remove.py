@@ -17,5 +17,3 @@ try:
     os.remove(blend1_file)
 except OSError:
     pass
-
-print('done with', bpy.data.filepath)

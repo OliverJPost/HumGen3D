@@ -7,7 +7,7 @@ from pathlib import Path
 import bpy  # type: ignore
 
 from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
-                                               get_prefs, show_message)
+                                               get_prefs, hg_log, show_message)
 from ...features.common.HG_INFO_POPUPS import HG_OT_INFO
 from ...features.creation_phase.HG_FINISH_CREATION_PHASE import (
     extract_shapekeys_to_keep, reapply_shapekeys)
@@ -118,7 +118,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                         for obj in sk_dict[obj.name]:
                             self.apply(context, sett, mod, obj)
                 except Exception as e: 
-                    print(f'Error while applying modifier {item.mod_name} on {item.object}, with error as {e}')
+                    hg_log(f'Error while applying modifier {item.mod_name} on {item.object}, with error as {e}', level = 'WARNING')
 
     def add_shapekeys_again(self, context, objs, sk_dict, driver_dict):
         for obj in objs:
@@ -136,7 +136,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
             try:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
             except Exception as e: 
-                print(f'Error while applying modifier {mod.name} on {obj.name}, with error as {e}')
+                hg_log(f'Error while applying modifier {mod.name} on {obj.name}, with error as {e}', level = 'WARNING')
 
 class HG_OT_REFRESH_UL(bpy.types.Operator):
     bl_idname      = "hg3d.ulrefresh"
