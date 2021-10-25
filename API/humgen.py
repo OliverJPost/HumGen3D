@@ -5,8 +5,8 @@ import time
 
 import bpy  # type:ignore
 
-from ..features.common.HG_COMMON_FUNC import (get_addon_root,  # type:ignore
-                                              get_prefs, hg_log,
+from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
+from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
                                               toggle_hair_visibility)
 
 

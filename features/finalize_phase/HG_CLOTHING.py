@@ -7,7 +7,8 @@ from pathlib import Path
 import bpy  # type: ignore
 
 from ...data.HG_COLORS import color_dict
-from ...features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_delete, hg_log
+from ...features.common.HG_COMMON_FUNC import (find_human, get_prefs,
+                                               hg_delete, hg_log)
 from ...features.common.HG_RANDOM import set_random_active_in_pcoll
 from ...features.finalize_phase.HG_CLOTHING_LOAD import find_masks
 
@@ -155,7 +156,7 @@ def randomize_clothing_colors(context, cloth_obj):
     
     control_node = nodes.get('HG_Control')
     if not control_node:
-        hg_log(f'Could not set random color for {cloth_obj.name}, control node not found')
+        hg_log(f'Could not set random color for {cloth_obj.name}, control node not found', level = 'WARNING')
         return
     
     #TODO Rewrite color_random so it doesn't need to be called as operator

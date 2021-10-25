@@ -221,7 +221,7 @@ def hg_log(*message, level = 'INFO'):
     if level not in log_levels:
         raise ValueError(f'{level} not found in {log_levels}')
     
-    if level == 'DEBUG' and not get_prefs().debug_mode():
+    if level == 'DEBUG' and not get_prefs().debug_mode:
         return
     
     level_tag = f'HG_{level.upper()}:\t'

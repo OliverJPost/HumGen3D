@@ -17,7 +17,7 @@ from ...features.finalize_phase.HG_CLOTHING import \
     randomize_clothing_colors  # type:ignore
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
-from ..common.HG_COMMON_FUNC import (apply_shapekeys, hg_delete,
+from ..common.HG_COMMON_FUNC import (apply_shapekeys, hg_delete, hg_log,
                                      toggle_hair_visibility)
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
 from ..creation_phase.HG_CREATION import HG_CREATION_BASE
@@ -94,7 +94,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         set_random_active_in_pcoll(context, sett, 'humans', searchterm = self.ethnicity)
         hg_rig, hg_body = self.create_human(context) #inherited
         
-        self._give_random_name_to_human(self.gender, hg_rig)
+        self._give_random_name_to_human(self.gender, hg_rig) #inherited
         
         context.view_layer.objects.active = hg_rig
     
@@ -126,6 +126,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             try:
                 sett.outfit_sub = self.clothing_category
             except TypeError:
+                hg_log(f'Reverting to "All" outfit category, because \
+                    {self.clothing_category} could not be resolved.',
+                    level = 'WARNING')
                 sett.outfit_sub = 'All'
                 
             set_random_active_in_pcoll(context, sett, 'outfit')
