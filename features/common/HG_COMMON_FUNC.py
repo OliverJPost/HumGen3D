@@ -205,6 +205,28 @@ def toggle_hair_visibility(obj, show = True):
         if mod.type == 'PARTICLE_SYSTEM':
             mod.show_viewport = show
 
+def hg_log(level, message):
+    log_levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+    if level not in log_levels:
+        raise ValueError(f'{level} not found in {log_levels}')
+    
+    if level == 'DEBUG' and not get_prefs().debug_mode():
+        return
+    
+    level_tag = f'HG_{level.upper()}:\t'
+    
+    bcolors = {
+        'DEBUG': '',
+        'INFO': '',
+        'WARNING': '\033[93m',
+        'ERROR': '\033[91m',
+        'CRITICAL': '\033[91m',
+        'ENDC': '\033[0m'
+    }
+    
+    if level in bcolors:
+        print(bcolors[level] + level_tag + bcolors['ENDC'], message)
+
 #TODO make deepclean data removal, using:
 
 # for block in bpy.data.meshes:

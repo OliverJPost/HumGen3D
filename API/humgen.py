@@ -49,8 +49,12 @@ def _run_hg_subprocess(settings_dict, python_file):
             python_file,
             json.dumps(settings_dict)
         ],
-        stdout= subprocess.DEVNULL,
+        stdout= subprocess.PIPE,
         stderr= subprocess.PIPE)
+
+    for line in background_blender.stdout.decode("utf-8").splitlines():
+        if line.startswith(('HG_', '\033')):
+            print(line)
 
     if background_blender.stderr:
         print(background_blender.stderr.decode("utf-8"))
