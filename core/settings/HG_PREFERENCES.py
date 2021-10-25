@@ -8,8 +8,8 @@ from bpy_extras.io_utils import ImportHelper  # type: ignore
 
 from ... import bl_info
 from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
+from ...core.HG_PCOLL import preview_collections
 from ...features.common.HG_COMMON_FUNC import get_prefs
-from ... core.HG_PCOLL import preview_collections
 
 
 class HG_PREF(bpy.types.AddonPreferences):
@@ -107,6 +107,7 @@ class HG_PREF(bpy.types.AddonPreferences):
 
     nc_colorspace_name: bpy.props.StringProperty(default = '')
     debug_mode: bpy.props.BoolProperty(default = False)
+    silence_all_console_messages: bpy.props.BoolProperty(default = False)
 
     skip_url_request: bpy.props.BoolProperty(default = False)
 
@@ -303,8 +304,8 @@ class HG_PREF(bpy.types.AddonPreferences):
         layout.separator()
         
         col = layout.column(heading="Advanced options:")
-        col.prop(self, 'debug_mode',
-                 text = "Debug Mode")
+        col.prop(self, 'debug_mode', text = "Debug Mode")
+        col.prop(self, 'silence_all_console_messages', text = 'Silence all console messages')
         col.prop(self, 'dev_tools')
         col.prop(self, 'skip_url_request', text = 'Skip URL request')
         

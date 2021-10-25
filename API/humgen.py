@@ -25,14 +25,11 @@ def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
     
     start_time_background_process = time.time()
     
-    print('###########################################################')
-    print('############### STARTING BACKGROUND PROCESS ###############')
-    
+    hg_log('STARTING HumGen background process', level = 'BACKGROUND')
     _run_hg_subprocess(settings_dict, python_file)
+    hg_log('^^^ HumGen background process ENDED', level = 'BACKGROUND')
 
-    print('################ END OF BACKGROUND PROCESS ################')
-
-    hg_log(f'Background Proces succesful, took: ',
+    hg_log(f'Background Process succesful, took: ',
             round(time.time() - start_time_background_process, 2),
             's'
             )
