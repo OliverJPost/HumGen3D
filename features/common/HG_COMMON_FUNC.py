@@ -206,6 +206,16 @@ def toggle_hair_visibility(obj, show = True):
             mod.show_viewport = show
 
 def hg_log(level, message):
+    """Writes a log message to the console. Warning, Error and Critical produce
+    a color coded message.
+
+    Args:
+        level (str): Level of log message in ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
+        message (str): Message to display in log
+
+    Raises:
+        ValueError: Raised if level string is not in possible levels
+    """
     log_levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
     if level not in log_levels:
         raise ValueError(f'{level} not found in {log_levels}')
