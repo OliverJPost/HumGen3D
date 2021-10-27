@@ -427,6 +427,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_clothing  : BoolProperty(default = True)
     batch_expression: BoolProperty(default = False)
     batch_hair      : BoolProperty(default = False)
+    batch_bake      : BoolProperty(default = False)
 
     batch_hairtype: EnumProperty(
         name="Hair Type",   
@@ -490,7 +491,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         items = [
                 ("high", "High (~4K)",    "", 0),
                 ("optimised", "Optimised (~1K)",       "", 1),
-                ("performance", "Performance (~0.5K)",  "", 2),
+                ("performance", "Performance (~512px)",  "", 2),
             ],
         default = "optimised",
         )
@@ -503,7 +504,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                 ("high", "High (15% polycount)",  "", 2), # 0.08 collapse
                 ("ultra", "Ultra (5% polycount)",  "", 3), # 0.025 collapse
             ],
-        default = "medium",
+        default = "none",
         )
     batch_apply_poly_reduction: BoolProperty(name = 'Apply poly reduction', default = True)
 
@@ -614,19 +615,19 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     #baking
     bake_res_body: EnumProperty(
         items   = get_resolutions(),
-        default = "4096",
+        default = "1024",
         )  
     bake_res_eyes: EnumProperty(
         items   = get_resolutions(),
-        default = "1024",
+        default = "256",
         )  
     bake_res_teeth: EnumProperty(
         items   = get_resolutions(),
-        default = "1024",
+        default = "256",
         )  
     bake_res_clothes: EnumProperty(
         items   = get_resolutions(),
-        default = "2048",
+        default = "1024",
         )  
 
     bake_export_folder: StringProperty(
@@ -800,3 +801,4 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     backup      : PointerProperty(name="hg_backup", type=bpy.types.Object)
     length      : FloatProperty()
     experimental: BoolProperty(default = False)
+    batch_result: BoolProperty(default = False)

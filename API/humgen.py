@@ -70,12 +70,12 @@ def _import_generated_human():
         bpy.context.scene.collection.objects.link(obj)
         toggle_hair_visibility(obj, show = True)
     
-    hg_rig = next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
+    human_parent = next((obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
                     [obj for obj in data_to.objects if obj.HG.ishuman][0])
     
-    hg_log(f'Import succesful for human {hg_rig.name}, import took: ',
+    hg_log(f'Import succesful for human {human_parent.name}, import took: ',
             round(time.time() - start_time_import, 2),
             's'
             )
             
-    return hg_rig
+    return human_parent

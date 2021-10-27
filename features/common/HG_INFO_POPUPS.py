@@ -198,3 +198,32 @@ posing and other systems of Human Generator.
 def experimental(layout):
     for i, line in enumerate(experimental_txt.splitlines()):
         layout.label(text=line)
+
+
+batch_texture_bake_res_txt = '''The baking resolution you've selected is higher
+than the resolution of the currently active 'source' textures.
+
+This is probably because you have selected a lower resolution 
+texture set than the default textures in the quality tab.
+
+For example, with the "Performance" option, the eye
+texture is 128 * 128 px. If you choose to bake at a higher
+resolution than this, the quality may be lower than expected.
+
+Either choose a lower baking resolution or a higher resolution
+texture set.
+'''
+
+def batch_texture_bake_res(layout):
+    for i, line in enumerate(batch_texture_bake_res_txt.splitlines()):
+        layout.label(text=line)
+
+
+batch_result_txt = '''This human was created with the batch system. Depending on
+what quality options you selected, there might be less options for
+this human than usual.
+'''
+
+def batch_result(layout):
+    for i, line in enumerate(batch_result_txt.splitlines()):
+        layout.label(text=line)

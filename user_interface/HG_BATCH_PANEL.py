@@ -3,14 +3,15 @@ This file is currently inactive
 """
 
 import bpy  # type: ignore
-import numpy as np  # type:ignore
+import numpy as np
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.batch_section.HG_BATCH_FUNC import (calculate_weight,
                                                     length_from_bell_curve)
 from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import \
     get_batch_marker_list
-from .HG_PANEL_FUNCTIONS import draw_panel_switch_header, get_flow
+from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_resolution_box,
+                                 get_flow)
 
 
 class Batch_PT_Base:
@@ -327,6 +328,35 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         if count == 0:
             col.alert = True
         col.label(text = 'Total: {} Expressions'.format(count))
+
+class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
+    bl_parent_id = "HG_PT_Batch_Panel"
+    bl_label = " Bake textures"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        header(self, context, 'bake')
+        self.layout.label(text = '', icon = "RENDERLAYERS")
+        
+    def draw(self, context):
+        layout = self.layout
+        sett = context.scene.HG3D
+        layout.enabled = sett.batch_bake
+
+        col = get_flow(sett, layout.box())
+        col.prop(sett, 'bake_samples', text = 'Quality')
+
+        col = get_flow(sett, layout.box())
+        
+        draw_resolution_box(sett, col, show_batch_comparison=True)
+
+        col = get_flow(sett, layout.box())
+        col.prop(sett, 'bake_export_folder', text = 'Output Folder:')
+        
+        row = col.row()
+        row.alignment = 'RIGHT'
+        row.label(text = 'HumGen folder when left empty', icon = 'INFO')
+        col.prop(sett, 'bake_file_type', text = 'Format:')
 
 def header(self, context, categ):
     sett = context.scene.HG3D

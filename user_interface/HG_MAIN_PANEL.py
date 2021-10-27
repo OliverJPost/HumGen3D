@@ -8,7 +8,8 @@ import bpy  # type: ignore
 from .. import bl_info
 from ..core.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
-from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs,
+                                              is_batch_result)
 from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_spoiler_box,
                                  draw_sub_spoiler, get_flow, in_creation_phase,
                                  searchbox)
@@ -39,7 +40,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.sett   = context.scene.HG3D
         self.pref   = get_prefs()
 
-        self.hg_rig = find_human(context.active_object)
+        self.hg_rig = find_human(context.active_object, include_applied_batch_results=True)
+        if self.hg_rig:
+            is_batch, is_applied_batch = is_batch_result(self.hg_rig)
+        
         found_problem = self.draw_info_and_warning_labels(context, layout) 
         if found_problem:
             return
@@ -49,7 +53,11 @@ class HG_PT_PANEL(bpy.types.Panel):
         hg_rig = self.hg_rig
         
         if not hg_rig:
+            if 'hg_batch_marker' in context.object:
+                self._draw_batch_marker_notification(layout)    
             self._draw_starting_human_ui(layout)
+        elif is_batch:
+            self._draw_batch_result_ui()
         elif 'cloth' in context.object or 'shoe' in context.object:
             self._draw_cloth_material_ui(context, layout)
         #creation phase
@@ -347,6 +355,15 @@ class HG_PT_PANEL(bpy.types.Panel):
                      depress = True
                      )
         
+    def _draw_batch_marker_notification(self, layout):
+        box = layout.box().column()
+        box.scale_y = 0.7
+        box.label(text = 'Go to the batch panel to', icon = 'INFO')
+        box.label(text = 'generate humans from this')
+        box.label(text = 'batch marker.')
+        box.separator()
+        box.label(text = '(Switch at the top of the UI)')
+
 
     # .______     ______    _______  ____    ____ 
     # |   _  \   /  __  \  |       \ \   \  /   / 
@@ -1923,6 +1940,35 @@ class HG_PT_PANEL(bpy.types.Panel):
         flow.scale_y = 1.2
         
         return flow, box
+
+
+    def _draw_batch_result_ui(self):
+        self._draw_batch_info_box()
+        
+        return self._draw_batch_hair_box()
+
+    def _draw_batch_hair_box(self):
+        spoiler_open, box = draw_spoiler_box(self, 'hair')
+        if not spoiler_open:
+            return
+        
+        hair_systems = self._get_hair_systems(self.hg_rig.HG.body_obj, eyesystems = True)
+        
+        self._draw_hair_length_ui(hair_systems, box)
+        self._draw_hair_material_ui(box)
+
+    def _draw_batch_info_box(self):
+        box = self.layout.box()
+        row = box.row(align = True)
+        row.alignment = 'CENTER'
+        row.scale_y = 2
+        row.label(text = 'This is a batch human', icon = 'INFO')
+        row.operator('hg3d.showinfo',
+                     text = '',
+                     icon ='QUESTION',
+                     emboss = False
+                     ).info = 'batch_result'
+          
 
 #TODO incorrect naming per Blender scheme
 class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
