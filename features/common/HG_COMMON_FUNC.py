@@ -242,6 +242,20 @@ def hg_log(*message, level = 'INFO'):
     if level in bcolors:
         print(bcolors[level] + level_tag + bcolors['ENDC'], *message)
 
+def print_context(context):
+    context_dict = {
+        "active": context.object,
+        "active object": context.active_object,
+        "selected objects": context.selected_objects,
+        "area": context.area,
+        "scene": context.scene,
+        "mode": context.mode,
+        "view layer": context.view_layer,
+        "visible objects": context.visible_objects
+    }
+    
+    hg_log(context_dict, level = 'DEBUG')
+
 #TODO make deepclean data removal, using:
 
 # for block in bpy.data.meshes:
