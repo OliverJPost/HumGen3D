@@ -89,7 +89,7 @@ def _check_body_object(hg_rig):
     Args:
         hg_rig (Object): HumGen human armature
     """
-    if hg_rig.HG.body_obj not in hg_rig.children:
+    if hg_rig.HG.body_obj not in hg_rig.children and not hg_rig.HG.batch:
         new_body = ([obj for obj in hg_rig.children if 'hg_rig' in obj] 
                     if hg_rig.children 
                     else None)
