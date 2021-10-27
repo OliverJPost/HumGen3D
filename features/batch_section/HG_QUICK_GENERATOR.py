@@ -159,8 +159,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         if self.add_expression:
             sett.expressions_sub = self.expressions_category
             set_random_active_in_pcoll(context, sett, 'expressions')
-            expr_sk = next(sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith('expr_'))
-            expr_sk.value = random.choice([.5,.7,.8,1,1,1])
+            expr_sk = next((sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith('expr_')), None)
+            if expr_sk:
+                expr_sk.value = random.choice([.5,.7,.8,1,1,1])
 
         hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
       
