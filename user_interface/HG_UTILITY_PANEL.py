@@ -137,7 +137,7 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
 
         col = get_flow(sett, layout.box())
         
-        self._draw_resolution_box(sett, col)
+        draw_resolution_box(sett, col)
 
         col = get_flow(sett, layout.box())
         col.prop(sett, 'bake_export_folder', text = 'Output Folder:')
@@ -152,22 +152,6 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
         col.alert   = True
         col.operator('hg3d.bake', icon = 'OUTPUT', depress = True)
         col.label(text = 'Blender freezes in current version', icon = 'INFO')
-
-    def _draw_resolution_box(self, sett, col):
-        """box for selecting baking resolution
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            col (UILayout): layout to draw in
-        """
-        row = col.row()
-        row.alignment = 'CENTER'
-        row.label(text = 'Resolution', icon = 'IMAGE_PLANE')
-        
-        for res_type in ['body', 'eyes', 'teeth', 'clothes']:
-            col.prop(sett, f'bake_res_{res_type}',
-                     text = res_type.capitalize()
-                     )
 
     def _draw_warning_labels(self, context, layout) -> bool:
         """Draws warning if no human is selected or textures are already baked
@@ -194,7 +178,6 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
         
         return False
         
-
 class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
     """Panel for applying modifiers to HumGen human
 

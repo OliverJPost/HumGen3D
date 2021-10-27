@@ -164,3 +164,37 @@ def searchbox(sett, name, layout):
                      icon = 'X'
                      ).searchbox_name = name
 
+
+def draw_resolution_box(sett, col, show_batch_comparison = False):
+    """box for selecting baking resolution
+
+    Args:
+        sett (PropertyGroup): HumGen props
+        col (UILayout): layout to draw in
+    """
+    row = col.row()
+    row.alignment = 'CENTER'
+    row.label(text = 'Resolution', icon = 'IMAGE_PLANE')
+    
+    batch_res_options = {
+        'high':         {'body': 4096, 'eyes': 4096, 'teeth': 4096, 'clothes': 4096},
+        'optimised':    {'body': 1024, 'eyes': 512, 'teeth': 512, 'clothes': 1024},
+        'performance':  {'body': 512, 'eyes': 128, 'teeth': 256, 'clothes': 512},   
+    }
+    batch_res_dict = batch_res_options[sett.batch_texture_resolution]
+    
+    for res_type in ['body', 'eyes', 'teeth', 'clothes']:
+        col.prop(sett, f'bake_res_{res_type}',
+                    text = res_type.capitalize()
+                    )
+        if show_batch_comparison:
+            current_res = batch_res_dict[res_type]
+            if int(getattr(sett, f'bake_res_{res_type}')) > current_res:
+                row = col.row()
+                row.alert = True
+                row.label(text = 'Higher than source texture')
+                row.operator('hg3d.showinfo',
+                     text = '',
+                     icon ='QUESTION',
+                     emboss = False
+                     ).info = 'batch_texture_bake_res'

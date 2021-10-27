@@ -10,12 +10,14 @@ import subprocess
 import time
 from pathlib import Path
 
-import bpy  # type:ignore
+import bpy
 
 from ...API import humgen
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
+from ...features.utility_section.HG_BAKE import \
+    get_bake_export_path  # type:ignore
 from ...user_interface.HG_BATCH_UILIST import batch_uilist_refresh
 from ..common.HG_COMMON_FUNC import get_prefs, hg_delete, hg_log, show_message
 from ..creation_phase.HG_CREATION import (HG_CREATION_BASE,
@@ -219,6 +221,14 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._add_category_list(context, sd, 'clothing') 
         
         sd['pose_type'] = pose_type
+        
+        sd['bake_textures']= sett.batch_bake
+        sd['bake_samples'] = int(sett.bake_samples)
+        sd['bake_extension']= sett.bake_file_type
+        sd['body_resolution']= int(sett.bake_res_body)
+        sd['eyes_resolution']= int(sett.bake_res_eyes)
+        sd['clothing_resolution'] = int(sett.bake_res_clothes)
+        sd['bake_export_folder'] = get_bake_export_path(sett, 'bake_from_batch')
         
         return sd
 

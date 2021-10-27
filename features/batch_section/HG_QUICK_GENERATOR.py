@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
+from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 
 from ...API.humgen import get_pcoll_options
 from ...core.HG_PCOLL import refresh_pcoll
@@ -17,6 +17,12 @@ from ...features.finalize_phase.HG_CLOTHING import \
     randomize_clothing_colors  # type:ignore
 from ...features.finalize_phase.HG_CLOTHING_LOAD import \
     set_clothing_texture_resolution
+from ...features.utility_section.HG_BAKE import add_image_node  # type:ignore
+from ...features.utility_section.HG_BAKE import (bake_texture,
+                                                 check_bake_render_settings,
+                                                 generate_bake_enum,
+                                                 get_solidify_state,
+                                                 material_setup)
 from ..common.HG_COMMON_FUNC import (apply_shapekeys, hg_delete, hg_log,
                                      toggle_hair_visibility)
 from ..common.HG_RANDOM import random_body_type, set_random_active_in_pcoll
@@ -84,6 +90,15 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
     expressions_category: StringProperty()
 
     pose_type: StringProperty()
+    
+    bake_textures: BoolProperty()
+    bake_samples: IntProperty()
+    bake_extension: StringProperty()
+    body_resolution: IntProperty()
+    eyes_resolution: IntProperty()
+    mouth_resolution: IntProperty()
+    clothing_resolution: IntProperty()
+    bake_export_folder: StringProperty()
 
     def execute(self, context):
         sett = context.scene.HG3D
@@ -148,12 +163,82 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             expr_sk.value = random.choice([.5,.7,.8,1,1,1])
 
         hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
+      
+      
+        if self.bake_textures:
+            self._bake_all_textures(context, hg_rig)
         
         #### Quality settings #####
         
         self._set_quality_settings(context, hg_rig, hg_body)
         
+        if self.apply_armature_modifier:
+            hg_body.HG.batch_result = True
+            hg_body.HG.ishuman = True
+            hg_body.HG.body_obj = hg_body
+            hg_rig_name = hg_rig.name
+            for child in hg_rig.children:
+                if child == hg_body:
+                    continue
+                child.parent = hg_body
+                child.matrix_parent_inverse = hg_body.matrix_world.inverted()
+            hg_delete(hg_rig)
+            hg_body.name = hg_rig_name
+        else:
+            hg_rig.HG.batch_result = True
+        
         return {'FINISHED'}
+
+
+    def _bake_all_textures(self, context, hg_rig):
+        check_bake_render_settings(context, self.bake_samples, force_cycles=True)        
+        bake_enum = generate_bake_enum(context, [hg_rig,])
+        hg_log("Bake enum", bake_enum)
+        
+        image_dict = {}
+        
+        for idx, sett_dict in enumerate(bake_enum):
+            human_name, texture_name, bake_obj, mat_slot, tex_type = sett_dict.values()
+            
+            bake_obj.select_set(True)
+            context.view_layer.objects.active = bake_obj
+
+            solidify_state = get_solidify_state(bake_obj, False) 
+            current_mat = bake_obj.data.materials[mat_slot]
+            
+            img_name = f'{human_name}_{texture_name}_{tex_type}'
+            
+            #TODO  teeth
+            if texture_name == 'body':
+                resolution = self.body_resolution
+            elif texture_name == 'eyes':
+                resolution = self.eyes_resolution
+            else:
+                resolution = self.clothing_resolution
+            
+            hg_rig.select_set(False)
+            img = bake_texture(context, current_mat, tex_type, img_name, self.bake_extension, resolution, self.bake_export_folder)
+            
+            assert img
+            
+            image_dict[img] = tex_type
+
+            #check if next texture belongs to another object
+            try:
+                last_texture = True if bake_enum[idx+1]["texture_name"] != texture_name else False       
+            except IndexError:
+                last_texture = True
+            
+            if last_texture:
+                new_mat = material_setup(bake_obj, mat_slot)
+                for img,tex_type in image_dict.items():
+                    add_image_node(img, tex_type, new_mat)   
+                image_dict.clear()
+            
+            get_solidify_state(bake_obj, solidify_state)
+            hg_rig = bpy.data.objects.get(human_name)
+            hg_rig['hg_baked'] = 1                 
+            
 
     def _set_quality_settings(self, context, hg_rig, hg_body):
         

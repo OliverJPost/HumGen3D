@@ -9,7 +9,8 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ...features.common.HG_COMMON_FUNC import (find_human, get_prefs, hg_log,
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, find_human,
+                                               get_prefs, hg_log,
                                                print_context)
 
 
@@ -56,18 +57,12 @@ class HG_BAKE(bpy.types.Operator):
         sett.bake_total = len(self.bake_enum)
         sett.bake_idx = 1
  
-        self.switched_to_cuda = False
-        if context.preferences.addons['cycles'].preferences.compute_device_type == 'OPTIX':
-            self.switched_to_cuda = True
-            context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
-        if context.scene.render.engine != 'CYCLES':
-            self.report({'WARNING'}, 'You can only bake while in Cycles')
-            return {'FINISHED'}             
- 
-        self.old_samples = context.scene.cycles.samples
-        context.scene.cycles.samples = int(sett.bake_samples)
+        cancelled, self.switched_to_cuda, self.old_samples, _ = check_bake_render_settings(
+            context, samples = int(sett.bake_samples), force_cycles = False)
 
-        
+        if cancelled:
+            return {'FINISHED'}
+
         wm = context.window_manager
         wm.modal_handler_add(self)
 
@@ -106,6 +101,7 @@ class HG_BAKE(bpy.types.Operator):
             bake_enum_dict = self.bake_enum[self.bake_idx-1] 
             
             human_name, texture_name, bake_obj, mat_slot, tex_type = [v for _,v in bake_enum_dict.items()]
+            hg_rig = bpy.data.objects.get(human_name)
             hg_log(f"Started baking object {bake_obj.name}, texture {texture_name}", level = 'DEBUG')
 
             bake_obj.select_set(True)
@@ -115,7 +111,18 @@ class HG_BAKE(bpy.types.Operator):
             current_mat = bake_obj.data.materials[mat_slot]
             
             img_name = f'{human_name}_{texture_name}_{tex_type}'
-            img = bake_texture(context, current_mat, tex_type, img_name, texture_name, bake_obj)
+            
+            if texture_name == 'body':
+                resolution = int(sett.bake_res_body)
+            elif texture_name == 'eyes':
+                resolution = int(sett.bake_res_eyes)
+            else:
+                resolution = int(sett.bake_res_clothes)
+                
+            export_path = get_bake_export_path(sett, hg_rig.name)
+            
+            hg_rig.select_set(False)
+            img = bake_texture(context, current_mat, tex_type, img_name, sett.bake_file_type, resolution, export_path)
             
             assert img
             
@@ -131,7 +138,6 @@ class HG_BAKE(bpy.types.Operator):
                 self.image_dict.clear()
             
             get_solidify_state(bake_obj, solidify_state)
-            hg_rig = bpy.data.objects.get(human_name)
             hg_rig['hg_baked'] = 1
 
             
@@ -149,6 +155,24 @@ class HG_BAKE(bpy.types.Operator):
         else:
             return {'RUNNING_MODAL'}
 
+def check_bake_render_settings(context, samples = 4, force_cycles = False):
+    switched_to_cuda = False
+    switched_from_eevee = False
+    if context.preferences.addons['cycles'].preferences.compute_device_type == 'OPTIX':
+        switched_to_cuda = True
+        context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
+    if context.scene.render.engine != 'CYCLES':
+        if force_cycles:
+            switched_from_eevee = True
+            context.scene.render.engine = 'CYCLES'
+        else:       
+            ShowMessageBox(message = 'You can only bake while in Cycles')
+            return True, None, None, None             
+
+    old_samples = context.scene.cycles.samples
+    context.scene.cycles.samples = samples    
+
+    return False, switched_to_cuda, old_samples, switched_from_eevee
 
 def material_setup(obj, slot):
     org_name = obj.material_slots[slot].material.name
@@ -198,21 +222,14 @@ def get_solidify_state(obj, state):
 
     return return_value
 
-def bake_texture(context, mat, bake_type, naming, obj_type, hg_rig):   
+def bake_texture(context, mat, bake_type, naming, image_ext, resolution, export_path):   
     pref  = get_prefs()
     sett  = context.scene.HG3D
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
-    ext   = sett.bake_file_type
+    #image_ext   = sett.bake_file_type
 
-    if obj_type == 'human':
-        res = int(sett.bake_res_body)
-    elif obj_type == 'eyes':
-        res = int(sett.bake_res_eyes)
-    else:
-        res = int(sett.bake_res_clothes)
-
-    image = bpy.data.images.new(naming + f'_{bake_type.lower()}', width=res, height=res)
+    image = bpy.data.images.new(naming + f'_{bake_type.lower()}', width=resolution, height=resolution)
     
     principled = [node for node in nodes if node.bl_idname == 'ShaderNodeBsdfPrincipled'][0]
     mat_output = [node for node in nodes if node.bl_idname == 'ShaderNodeOutputMaterial'][0]
@@ -232,22 +249,13 @@ def bake_texture(context, mat, bake_type, naming, obj_type, hg_rig):
         node2.select = False
     node.select  = True
     nodes.active = node
-
+    
     bake_type = 'NORMAL' if bake_type == 'Normal' else 'EMIT'
     print_context(context)
     bpy.ops.object.bake(type= bake_type)#, pass_filter={'COLOR'}
-    
-    folder_name = hg_rig.name# + str(datetime.datetime.now())
-    if sett.bake_export_folder:
-        filepath = sett.bake_export_folder + str(Path(f'/bake_results/{folder_name}'))
-        if not os.path.exists(filepath):
-                os.makedirs(filepath)
-    else:
-        filepath = pref.filepath + str(Path(f'/bake_results/{folder_name}'))
-        if not os.path.exists(filepath):
-                os.makedirs(filepath)
-    image.filepath_raw = filepath + str(Path(f'/{image.name}')) + f'.{ext}'
-    image.file_format  = ext.upper()
+
+    image.filepath_raw = export_path + str(Path(f'/{image.name}')) + f'.{image_ext}'
+    image.file_format  = image_ext.upper()
     image.save()
 
     return image
@@ -303,3 +311,15 @@ def generate_bake_enum(context, selected_humans) -> list:
                 })
 
     return bake_enum
+
+def get_bake_export_path(sett, folder_name) -> str:
+    if sett.bake_export_folder:
+        export_path = sett.bake_export_folder + str(Path(f'/bake_results/{folder_name}'))
+        if not os.path.exists(export_path):
+                os.makedirs(export_path)
+    else:
+        export_path = get_prefs().filepath + str(Path(f'/bake_results/{folder_name}'))
+        if not os.path.exists(export_path):
+                os.makedirs(export_path)
+                
+    return export_path
