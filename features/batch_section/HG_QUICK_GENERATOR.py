@@ -173,21 +173,24 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         self._set_quality_settings(context, hg_rig, hg_body)
         
         if self.apply_armature_modifier:
-            hg_body.HG.batch_result = True
-            hg_body.HG.ishuman = True
-            hg_body.HG.body_obj = hg_body
-            hg_rig_name = hg_rig.name
-            for child in hg_rig.children:
-                if child == hg_body:
-                    continue
-                child.parent = hg_body
-                child.matrix_parent_inverse = hg_body.matrix_world.inverted()
-            hg_delete(hg_rig)
-            hg_body.name = hg_rig_name
+            self._make_body_obj_main_object(hg_rig, hg_body)
         else:
             hg_rig.HG.batch_result = True
         
         return {'FINISHED'}
+
+    def _make_body_obj_main_object(self, hg_rig, hg_body):
+        hg_body.HG.batch_result = True
+        hg_body.HG.ishuman = True
+        hg_body.HG.body_obj = hg_body
+        hg_rig_name = hg_rig.name
+        for child in hg_rig.children:
+            if child == hg_body:
+                continue
+            child.parent = hg_body
+            child.matrix_parent_inverse = hg_body.matrix_world.inverted()
+        hg_delete(hg_rig)
+        hg_body.name = hg_rig_name
 
 
     def _bake_all_textures(self, context, hg_rig):
