@@ -12,7 +12,8 @@ from ...features.creation_phase.HG_BODY import scale_bones
 from ...features.creation_phase.HG_HAIR import (load_hair,
                                                 update_hair_shader_type)
 from ...features.creation_phase.HG_LENGTH import update_length
-from ...features.creation_phase.HG_MATERIAL import load_textures, toggle_sss, toggle_underwear
+from ...features.creation_phase.HG_MATERIAL import (load_textures, toggle_sss,
+                                                    toggle_underwear)
 from ...features.finalize_phase.HG_CLOTHING import load_pattern
 from ...features.finalize_phase.HG_CLOTHING_LOAD import load_outfit
 from ...features.finalize_phase.HG_EXPRESSION import load_expression
@@ -653,6 +654,16 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ],
         default = "png",
         )  
+
+    bake_idx: IntProperty(default = 0)
+    
+    bake_total: IntProperty(default = 0)
+
+    bake_progress: IntProperty(name = 'Progress',
+                                subtype='PERCENTAGE',
+                                min=0,
+                                max=100,
+                                default=0)
 
     modapply_search_objects: EnumProperty(
         name  = 'Objects to apply',
