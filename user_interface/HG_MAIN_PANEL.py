@@ -53,8 +53,11 @@ class HG_PT_PANEL(bpy.types.Panel):
         hg_rig = self.hg_rig
         
         if not hg_rig:
-            if 'hg_batch_marker' in context.object:
-                self._draw_batch_marker_notification(layout)    
+            try:
+                context.object['hg_batch_marker']
+                self._draw_batch_marker_notification(layout)  
+            except:
+                pass  
             self._draw_starting_human_ui(layout)
         elif is_batch:
             self._draw_batch_result_ui()
