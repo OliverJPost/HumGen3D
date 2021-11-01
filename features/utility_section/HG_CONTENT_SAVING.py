@@ -5,6 +5,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from shutil import copyfile
 
 import bpy  # type: ignore
 from mathutils import Vector
@@ -38,20 +39,22 @@ class Content_Saving_Operator:
         """
         
         img = bpy.data.images[current_name]
-        if current_name != 'Render Result':    
+        thumbnail_type = self.sett.thumbnail_saving_enum
+        
+        destination_path = os.path.join(folder, f'{save_name}.jpg')
+        if thumbnail_type in ('last_render', 'auto'):
+            image_name = 'temp_render_thumbnail' if thumbnail_type == 'last_render' else 'temp_thumbnail'
+            source_image = os.path.join(get_prefs().filepath, 'temp_data', f'{image_name}.jpg')
+            copyfile(source_image, destination_path) 
+            hg_log("Copied", source_image, "to", destination_path)
+        else:    
             try:
-                img.filepath_raw = str(Path(f'{folder}/{save_name}.jpg'))
+                img.filepath_raw = os.path.join(folder, f'{save_name}.jpg')
                 img.file_format  = 'JPEG'
                 img.save()
             except RuntimeError as e:
                 show_message(self, "Thumbnail image doesn't have any image data")
                 print(e)
-        else:
-            try:
-                img.save_render(str(Path(f'{folder}/{self.name}.jpg')))
-            except RuntimeError:
-                show_message(self, 
-                    "Saving render as thumbnail, but render is empty")
 
     def save_objects_optimized(self, context, objs, folder, filename, 
                                clear_sk = True, clear_materials = True,
@@ -311,7 +314,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         hg_body = hg_rig.HG.body_obj
         hg_eyes = [obj for obj in hg_rig.children if 'hg_eyes' in obj]
         
-        if not self.sett.dont_export_thumb:
+        if not self.sett.thumbnail_saving_enum == 'none':
             self.save_thumb(self.folder, self.thumb, self.name)
 
         preset_data = {}
@@ -534,7 +537,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
                                                             )
             if not os.path.exists(folder):
                 os.makedirs(folder)     
-            if not self.sett.dont_export_thumb:
+            if not self.sett.thumbnail_saving_enum == 'none':
                 self.save_thumb(folder, self.thumb, self.name)  
             
             self._make_hair_json(context, hair_obj, folder, self.name)
@@ -633,7 +636,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
         for gender in genders:
             gender_folder = self.folder + str(Path(f'/{gender}/Custom'))
-            if not self.sett.dont_export_thumb:
+            if not self.sett.thumbnail_saving_enum == 'none':
                 self.save_thumb(gender_folder, self.thumb, self.name)
         
         body_copy = self.hg_rig.HG.body_obj.copy()
