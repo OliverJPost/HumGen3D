@@ -23,7 +23,9 @@ from ...features.utility_section.HG_UTILITY_FUNC import (get_preset_thumbnail,
                                                          refresh_modapply,
                                                          refresh_shapekeys_ul)
 from ...user_interface import HG_BATCH_UILIST
-from .HG_PROP_FUNCTIONS import find_folders, get_resolutions, poll_mtc_armature
+from .HG_PROP_FUNCTIONS import (find_folders, get_resolutions,
+                                poll_mtc_armature,
+                                thumbnail_saving_prop_update)
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):   
@@ -763,7 +765,22 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update = build_content_collection
         )  
 
+    content_saving_ui: BoolProperty(default = False)
+    content_saving_type: StringProperty()
 
+    thumbnail_saving_enum: bpy.props.EnumProperty(
+        name="Thumbnail",
+        items = [
+            ("none", "No thumbnail",  "", 0),
+            ("auto", "Automatic render",  "", 1),
+            ("custom", "Select custom image",  "", 2),
+            ("last_render", "Use last render result",  "", 3)
+        ],
+        default = "auto",
+        update = thumbnail_saving_prop_update
+        )  
+    
+    content_saving_tab_index: IntProperty(default = 0)
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)

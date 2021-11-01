@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 import bpy  # type: ignore
+from mathutils import Vector
 
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
@@ -441,6 +442,22 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
 
         return preset_data
 
+
+class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator, Content_Saving_Operator):
+    bl_idname      = "hg3d.open_content_saving_tab"
+    bl_label       = "Save custom content"
+    bl_description = "Opens the screen to save custom content"
+
+    content_type: bpy.props.StringProperty()
+
+    def execute(self,context):  
+        sett = context.scene.HG3D
+        
+        sett.content_saving_ui = True
+        sett.content_saving_type = self.content_type  
+        sett.content_saving_tab_index = 0  
+        return {'FINISHED'}
+
 class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
     bl_idname      = "hg3d.savehair"
     bl_label       = "Save as starting human"
@@ -448,10 +465,10 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
     name: bpy.props.StringProperty()
 
-
     def invoke(self, context, event):
         pref = get_prefs()
         self.sett = context.scene.HG3D
+        
         self.hg_rig = find_human(context.object)
 
         self.thumb = self.sett.preset_thumbnail_enum
@@ -535,6 +552,9 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         msg = f'Saved {self.name} to {self.folder}'
         self.report({'INFO'}, msg)
         ShowMessageBox(message = msg)
+        
+        sett.content_saving_ui = False
+        
         return {'FINISHED'}
 
     def _find_vgs_used_by_hair(self, hair_obj) -> list:
@@ -776,3 +796,108 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             return full_path, saved_images
             
         return full_path, saved_images
+
+
+class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
+    bl_idname      = "hg3d.auto_render_thumbnail"
+    bl_label       = "Auto render thumbnail"
+    bl_description = "Automatically renders a thumbnail for you"
+
+    thumbnail_type: bpy.props.StringProperty()
+
+    def execute(self, context):
+        hg_rig = find_human(context.object)
+        
+        thumbnail_type = self.thumbnail_type
+               
+        type_settings_dict = {
+            'head': {'camera_x': -1.0, 'camera_y': -1.0, 'focal_length': 135, 'look_at_correction': 0.14},
+            'full_body': {'camera_x': 0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
+        }
+        
+        type_sett = type_settings_dict[thumbnail_type]
+        
+        hg_thumbnail_scene = bpy.data.scenes.new('HG_Thumbnail_Scene')
+        old_scene = context.window.scene
+        context.window.scene = hg_thumbnail_scene
+        
+        camera_data = bpy.data.cameras.new(name='Camera')
+        camera_object = bpy.data.objects.new('Camera', camera_data)
+        hg_thumbnail_scene.collection.objects.link(camera_object)
+        
+        camera_object.location = Vector(
+            (
+                type_sett['camera_x'],
+                type_sett['camera_y'],
+                hg_rig.dimensions[2]
+            )
+        ) + hg_rig.location
+        
+        hg_thumbnail_scene.camera = camera_object
+        hg_thumbnail_scene.render.engine = 'CYCLES'
+        hg_thumbnail_scene.cycles.samples = 16
+        try:
+            hg_thumbnail_scene.cycles.use_denoising = True
+        except Exception:
+            pass
+        
+        new_coll = hg_thumbnail_scene.collection
+        new_coll.objects.link(hg_rig)
+        for child in hg_rig.children:
+            new_coll.objects.link(child)
+        
+        
+        hg_thumbnail_scene.render.resolution_y = 256
+        hg_thumbnail_scene.render.resolution_x = 256
+
+        self.camera_look_at(camera_object, hg_rig, type_sett['look_at_correction'])
+        camera_data.lens = type_sett['focal_length']
+        
+        lights = []
+        for energy, location in [(100, (-.3, -1, 2.2)), (10, (0.38, 0.7, 1.83)), (50, (0, -1.2, 0))]:
+            point_light = bpy.data.lights.new(name = f'light_{energy}W', type = 'POINT')
+            point_light.energy = energy
+            point_light_object = bpy.data.objects.new('Light', point_light)
+            point_light_object.location = Vector(location) + hg_rig.location
+            hg_thumbnail_scene.collection.objects.link(point_light_object)
+            lights.append(point_light_object)
+
+        save_folder = os.path.join(get_prefs().filepath, 'temp_data')
+        
+        if not os.path.isdir(save_folder):
+            os.makedirs(save_folder)
+        
+        hg_thumbnail_scene.render.image_settings.file_format='JPEG'   
+        full_image_path = os.path.join(save_folder, 'temp_thumbnail.jpg')
+        hg_thumbnail_scene.render.filepath = full_image_path
+        
+        bpy.ops.render.render(write_still = True)
+        
+        for light in lights:
+            hg_delete(light)
+        
+        hg_delete(camera_object)
+        
+        context.window.scene = old_scene 
+        
+        bpy.data.scenes.remove(hg_thumbnail_scene)
+        
+        img = bpy.data.images.load(full_image_path)
+        context.scene.HG3D.preset_thumbnail = img
+        
+        return {'FINISHED'}
+            
+    def camera_look_at(self, obj_camera, hg_rig, look_at_correction):
+        hg_loc = hg_rig.location
+        height_adjustment = hg_rig.dimensions[2] - look_at_correction
+        hg_rig_loc_adjusted = Vector((hg_loc[0], hg_loc[1], hg_loc[2]+height_adjustment))
+        loc_camera = obj_camera.location
+
+        direction = hg_rig_loc_adjusted - loc_camera
+        # point the cameras '-Z' and use its 'Y' as up
+        rot_quat = direction.to_track_quat('-Z', 'Y')
+
+        # assume we're using euler rotation
+        obj_camera.rotation_euler = rot_quat.to_euler()        
+        
+        

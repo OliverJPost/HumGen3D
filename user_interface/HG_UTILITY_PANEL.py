@@ -85,7 +85,8 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.HG3D.active_ui_tab == 'TOOLS'
+        sett = context.scene.HG3D
+        return sett.active_ui_tab == 'TOOLS' and not sett.content_saving_ui
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -248,6 +249,33 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
             
         return False
 
+
+
+class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
+    """Shows options for adding preset/starting humans
+
+    Args:
+        Tools_PT_Base (class): bl_info and common tools
+        Tools_PT_Poll (class): poll for checking if object is HumGen human
+    """
+    bl_parent_id = "HG_PT_UTILITY"
+    bl_label     = "Save custom content"
+
+    @classmethod
+    def poll (cls, context):
+        hg_rig = find_human(context.object)
+        return hg_rig
+
+    def draw_header(self, context):
+        self.layout.label(text = '', icon = 'OUTLINER_OB_ARMATURE')
+        
+    def draw(self, context):   
+        layout = self.layout
+        
+        col = layout.column()
+        col.operator('hg3d.open_content_saving_tab').content_type = 'hair'
+
+
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected
 
@@ -257,7 +285,7 @@ class Tools_PT_Poll:
     @classmethod
     def poll (cls, context):
         hg_rig = find_human(context.object)
-        return hg_rig 
+        return hg_rig and get_prefs().classic_content_saving_panels
 
 class HG_PT_T_PRESET(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
     """Shows options for adding preset/starting humans

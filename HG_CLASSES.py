@@ -20,6 +20,7 @@ from .features.batch_section.HG_BATCH_PRIMITIVES import HG_OT_ADD_BATCH_MARKER
 from .features.batch_section.HG_QUICK_GENERATOR import HG_QUICK_GENERATE
 from .features.common.HG_COMMON_OPS import (HG_CLEAR_SEARCH, HG_DELETE,
                                             HG_DESELECT, HG_NEXT_PREV_HUMAN,
+                                            HG_NEXTPREV_CONTENT_SAVING_TAB,
                                             HG_OPENPREF, HG_SECTION_TOGGLE)
 from .features.common.HG_INFO_POPUPS import HG_OT_INFO
 from .features.common.HG_RANDOM import HG_COLOR_RANDOM, HG_RANDOM
@@ -41,11 +42,9 @@ from .features.finalize_phase.HG_EXPRESSION import (HG_ADD_FRIG,
                                                     HG_REMOVE_SHAPEKEY)
 from .features.finalize_phase.HG_POSE import HG_RIGIFY
 from .features.utility_section.HG_BAKE import HG_BAKE
-from .features.utility_section.HG_CONTENT_SAVING import (HG_OT_OPEN_FOLDER,
-                                                         HG_OT_SAVE_SHAPEKEY,
-                                                         HG_OT_SAVEHAIR,
-                                                         HG_OT_SAVEOUTFIT,
-                                                         HG_OT_SAVEPRESET)
+from .features.utility_section.HG_CONTENT_SAVING import (
+    HG_OT_AUTO_RENDER_THUMB, HG_OT_OPEN_CONTENT_SAVING_TAB, HG_OT_OPEN_FOLDER,
+    HG_OT_SAVE_SHAPEKEY, HG_OT_SAVEHAIR, HG_OT_SAVEOUTFIT, HG_OT_SAVEPRESET)
 from .features.utility_section.HG_DEVTOOLS import *
 from .features.utility_section.HG_MESH_TO_CLOTH import (HG_OT_ADDCLOTHMATH,
                                                         HG_OT_ADDCORRECTIVE,
@@ -62,6 +61,8 @@ from .tutorial_operator import HG_TUTORIAL_OP
 from .user_interface import (HG_BATCH_PANEL, HG_BATCH_UILIST, HG_MAIN_PANEL,
                              HG_UTILITY_PANEL, HG_UTILITY_UILISTS)
 from .user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_hg_marker_add
+from .user_interface.HG_CONTENT_SAVING_PANEL import (
+    HG_OT_CANCEL_CONTENT_SAVING_UI, HG_PT_CONTENT_SAVING)
 
 #features
     #common
@@ -219,5 +220,13 @@ hg_classes = (
     HG_QUICK_GENERATE,
     VIEW3D_MT_hg_marker_add,
     HG_OT_ADD_BATCH_MARKER,
-    HG_RESET_BATCH_OPERATOR
+    HG_RESET_BATCH_OPERATOR,
+    
+    #New content saving
+    HG_OT_CANCEL_CONTENT_SAVING_UI,
+    HG_PT_CONTENT_SAVING,
+    HG_OT_AUTO_RENDER_THUMB,
+    HG_NEXTPREV_CONTENT_SAVING_TAB,
+    HG_OT_OPEN_CONTENT_SAVING_TAB,
+    HG_UTILITY_PANEL.HG_PT_CUSTOM_CONTENT
     )
