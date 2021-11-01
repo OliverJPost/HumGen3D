@@ -273,3 +273,18 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
 
         return {'FINISHED'}
 
+class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
+
+    bl_idname      = "hg3d.nextprev_content_saving_tab"
+    bl_label       = "Next/previous"
+    bl_description = "Next/previous tab"
+
+    next: bpy.props.BoolProperty()
+
+    def execute(self,context):
+        sett = context.scene.HG3D
+        
+        sett.content_saving_tab_index += 1 if self.next else -1
+        
+        return {'FINISHED'}
+

@@ -110,6 +110,8 @@ class HG_PREF(bpy.types.AddonPreferences):
     silence_all_console_messages: bpy.props.BoolProperty(default = False)
 
     skip_url_request: bpy.props.BoolProperty(default = False)
+    
+    classic_content_saving_panels: bpy.props.BoolProperty(default = False)
 
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
