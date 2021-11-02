@@ -114,8 +114,32 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             if tab_idx == 0:
                 self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 1:
+                self._draw_pose_category_ui(context, layout)
+            elif tab_idx == 2:
                 self._draw_name_ui(context, layout, content_type)            
-    
+
+    def _draw_pose_category_ui(self, context, layout):
+        self._draw_header_box(layout, "What category should this \npose be saved to?", 'ARMATURE_DATA')
+
+        col = layout.column()
+        col.scale_y = 1.5
+        
+        row = col.row()
+        row.prop(self.sett, 'pose_category_to_save_to', expand = True)
+        
+        col.separator()
+        
+        if self.sett.pose_category_to_save_to == 'existing':
+            col.prop(self.sett, 'pose_chosen_existing_category', text = '')
+            poll = self.sett.pose_chosen_existing_category != 'All'
+        else:
+            col.prop(self.sett, 'pose_new_category_name', text = 'Name')
+            poll = self.sett.pose_new_category_name
+        
+        col.separator()  
+                
+        self._draw_next_button(layout, poll = poll)
+
     def _draw_clothing_gender_ui(self, context, layout):
         self._draw_header_box(layout, "Is this clothing for men \nwomen or all genders?", 'MOD_CLOTH')
         

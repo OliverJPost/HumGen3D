@@ -748,6 +748,19 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     mask_foot      : BoolProperty(default = False)
 
     pose_name: StringProperty()
+    pose_category_to_save_to: bpy.props.EnumProperty(
+        name="Pose Category",
+        items = [
+            ("existing", "Existing",  "", 0),
+            ("new", "Create new",  "", 1)
+        ],
+        default = "existing",
+        )  
+    pose_chosen_existing_category: EnumProperty(
+        name="Pose Library",
+        items  = lambda a,b: find_folders(a,b,"poses", False)
+        )   
+    pose_new_category_name: StringProperty()
 
     custom_content_categ : bpy.props.EnumProperty(
         name="Content type",

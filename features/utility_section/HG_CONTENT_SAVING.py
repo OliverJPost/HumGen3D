@@ -7,9 +7,10 @@ import subprocess
 from pathlib import Path
 from shutil import copyfile
 
-import bpy  # type: ignore
+import bpy
 from mathutils import Vector
 
+from ...core.HG_PCOLL import refresh_pcoll  # type: ignore
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
@@ -271,11 +272,17 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
     name: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        pref            = get_prefs()
-        self.sett       = context.scene.HG3D
+        pref = get_prefs()
+        sett = context.scene.HG3D
+        self.sett = sett
         
         self.thumb = self.sett.preset_thumbnail_enum
-        self.folder = pref.filepath + str(Path('/poses/shapekeys/'))
+        if sett.pose_category_to_save_to == 'existing':
+            category = sett.pose_chosen_existing_category
+        else:
+            category = sett.pose_new_category_name
+        
+        self.folder = os.path.join(pref.filepath, 'poses', category)
         self.name = self.sett.pose_name
         
         if os.path.isfile(os.path.join(self.folder, f'{self.name}.blend')):
@@ -308,6 +315,8 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         
         self.report({'INFO'}, msg)
         ShowMessageBox(message = msg)
+        
+        refresh_pcoll(self, context, 'poses')
         
         self.sett.content_saving_ui = False    
         
@@ -386,6 +395,8 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         ShowMessageBox(message = f'Saved starting human {self.name} to {folder}')    
         
         self.sett.content_saving_ui = False    
+        
+        refresh_pcoll(self, context, 'humans')
         
         return {'FINISHED'}
     
@@ -595,6 +606,9 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         
         sett.content_saving_ui = False
         
+        refresh_pcoll(self, context, 'hair')
+        refresh_pcoll(self, context, 'face_hair')
+        
         return {'FINISHED'}
 
     def _find_vgs_used_by_hair(self, hair_obj) -> list:
@@ -749,6 +763,9 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                 run_in_background= not sett.open_exported_outfits
             )
         hg_delete(body_copy)
+
+        refresh_pcoll(self, context, 'outfit')
+        refresh_pcoll(self, context, 'footwear')
 
         show_message(self, 'Succesfully exported outfits')
         self.sett.content_saving_ui = False  
