@@ -127,10 +127,9 @@ def refresh_outfit_ul(self, context):
     col  = context.scene.saveoutfit_col
     col.clear()
     
-    hg_rig = next((o for o in context.selected_objects if o.HG.ishuman), None)
-    sett.saveoutfit_human = hg_rig
+    hg_rig = sett.content_saving_active_human
 
-    for obj in [o for o in context.selected_objects 
+    for obj in [o for o in hg_rig.children
             if o.type == 'MESH' 
             and not 'hg_body' in o
             and not 'hg_eyes' in o

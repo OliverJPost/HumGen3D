@@ -290,6 +290,11 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
             'hg3d.open_content_saving_tab',
             text='Save custom shapekeys'
         ).content_type = 'shapekeys'
+        
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save outfit/footwear'
+        ).content_type = 'clothing'
 
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected
@@ -602,11 +607,10 @@ class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
         col = col.column()
         col.use_property_split = True
         col.use_property_decorate = False
-        col.prop(sett, 'saveoutfit_human', text = 'Human:')
         
         col.separator()
         
-        col.prop(sett, 'saveoutfit_name', text = 'Outfit name:')
+        col.prop(sett, 'clothing_name', text = 'Outfit name:')
         
         col.separator()
         
@@ -625,7 +629,7 @@ class HG_PT_T_OUTFIT(Tools_PT_Base, bpy.types.Panel):
         
         row = col.row(align = True)
         row.scale_y = 1.5
-        row.operator('hg3d.saveoutfit',
+        row.operator('hg3d.save_clothing',
                      text = 'Save as outfit',
                      depress= True
                      )

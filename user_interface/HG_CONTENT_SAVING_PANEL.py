@@ -89,7 +89,58 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                 self._draw_shapekey_selection_ui(context, layout)
             elif tab_idx == 1:
                 self._draw_name_ui(context, layout, content_type)
-                
+        elif content_type == 'clothing':
+            if tab_idx == 0:
+                self._draw_outfit_type_selector(context, layout)
+            elif tab_idx == 1:
+                self._draw_clothing_uilist_ui(context, layout)
+            elif tab_idx == 2:
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
+            elif tab_idx == 3:
+                self._draw_clothing_gender_ui(context, layout)
+            elif tab_idx == 4:
+                self._draw_name_ui(context, layout, content_type)
+    
+    def _draw_clothing_gender_ui(self, context, layout):
+        self._draw_header_box(layout, "Is this clothing for men \nwomen or all genders?", 'MOD_CLOTH')
+        
+        col = layout.column(align = True)
+        col.scale_y = 1.5
+        sett = self.sett
+        
+        col.prop(sett, 'saveoutfit_male', text = 'Male', toggle= True)    
+        col.prop(sett, 'saveoutfit_female', text = 'Female', toggle= True)      
+        
+        poll = any((sett.saveoutfit_male, sett.saveoutfit_female))  
+        self._draw_next_button(layout, poll = poll)      
+    
+    def _draw_clothing_uilist_ui(self, context, layout):
+        self._draw_header_box(layout, "Select which objects are \npart of this outfit.", 'MOD_CLOTH')
+        
+        col = layout.column(align = True)
+        row = col.row(align = True)
+        row.operator('hg3d.ulrefresh',
+                     text = 'Refresh objects'
+                     ).type = 'outfit'
+        col.template_list("HG_UL_SAVEOUTFIT",
+                          "",
+                          context.scene,
+                          "saveoutfit_col",
+                          context.scene,
+                          "saveoutfit_col_index"
+                          )       
+        
+        poll = [i for i in context.scene.saveoutfit_col if i.enabled]
+        self._draw_next_button(layout, poll = poll)   
+
+    def _draw_outfit_type_selector(self, context, layout):
+        self._draw_header_box(layout, "Are you saving an outfit \nor footwear?", 'MOD_CLOTH')
+        
+        col = layout.column()
+        col.scale_y = 1.5
+        col.prop(self.sett, 'saveoutfit_categ', expand = True)
+        
+        self._draw_next_button(layout)        
 
     def _draw_shapekey_selection_ui(self, context, layout):
         sett = self.sett
@@ -127,7 +178,8 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         tag_dict = {
             'hair': 'hairstyle',
             'starting_human': 'preset',
-            'shapekeys': 'sk_collection'
+            'shapekeys': 'sk_collection',
+            'clothing': 'clothing'
         }
         tag = tag_dict[content_type]
         self._draw_header_box(layout, f"Give your {tag.replace('sk_', '')} a name", 'OUTLINER_OB_FONT')

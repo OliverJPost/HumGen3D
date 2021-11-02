@@ -717,7 +717,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                   default = False,
                                   update = refresh_hair_ul)
 
-    saveoutfit_name: StringProperty(default = '')
+    clothing_name: StringProperty(default = '')
     saveoutfit_categ: EnumProperty(
         name = 'Clothing type',
         items = [
@@ -729,8 +729,6 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     saveoutfit_male  : BoolProperty(default = True)
     saveoutfit_female: BoolProperty(default = True)
-    saveoutfit_human : PointerProperty(name = 'Human',
-                                       type = bpy.types.Object)
     
     open_exported_outfits  : BoolProperty(default = False)
     open_exported_hair     : BoolProperty(default = False)
