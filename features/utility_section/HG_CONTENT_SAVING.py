@@ -698,6 +698,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
         show_message(self, 'Succesfully exported outfits')
         self.sett.content_saving_ui = False  
+        
         return {'FINISHED'}
 
     def draw(self, context):
