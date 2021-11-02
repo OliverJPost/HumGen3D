@@ -273,8 +273,19 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         hg_icons = preview_collections['hg_icons']
         
+        layout.label(text = 'Only during creation phase:', icon = 'RADIOBUT_OFF')
         col = layout.column()
         col.scale_y = 1.5
+
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save as starting human'
+        ).content_type = 'starting_human'
+
+        layout.label(text = 'Always possible:', icon = 'RADIOBUT_OFF')
+        col = layout.column()
+        col.scale_y = 1.5
+        
         col.operator(
             'hg3d.open_content_saving_tab',
             text='Save hairstyle',
@@ -283,22 +294,26 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
         col.operator(
             'hg3d.open_content_saving_tab',
-            text='Save as starting human'
-        ).content_type = 'starting_human'
-
-        col.operator(
-            'hg3d.open_content_saving_tab',
             text='Save custom shapekeys'
         ).content_type = 'shapekeys'
         
+        layout.label(text = 'Only after creation phase:', icon = 'RADIOBUT_OFF')
+        col = layout.column()
+        col.scale_y = 1.5
+
         col.operator(
             'hg3d.open_content_saving_tab',
             text='Save outfit/footwear'
         ).content_type = 'clothing'
+        
         col.operator(
             'hg3d.open_content_saving_tab',
             text='Save pose'
         ).content_type = 'pose'
+        
+
+        
+
 
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected
