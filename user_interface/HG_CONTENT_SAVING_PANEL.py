@@ -2,6 +2,9 @@ import bpy
 
 from ..core.HG_PCOLL import preview_collections
 from ..features.common.HG_COMMON_FUNC import find_human, hg_log
+from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
+                                                        refresh_outfit_ul,
+                                                        refresh_shapekeys_ul)
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 
 
@@ -31,7 +34,14 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett = context.scene.HG3D
         
         hg_rig = find_human(context.object)
-        
+
+        if self.content_type   == 'shapekeys':
+            refresh_shapekeys_ul(self, context)
+        elif self.content_type   == 'hair':
+            refresh_hair_ul(self, context)
+        elif self.content_type   == 'clothing':
+            refresh_outfit_ul(self, context)
+
         sett.content_saving_ui = True
         sett.content_saving_type = self.content_type  
         sett.content_saving_tab_index = 0  
