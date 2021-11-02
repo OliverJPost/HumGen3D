@@ -76,7 +76,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                  text = 'Name:'
                  )
         
-        self._draw_save_button(layout)
+        self._draw_save_button(layout, poll = bool(sett.hairstyle_name))
         
     def _draw_hair_gender_ui(self, context, layout):
         sett = self.sett
@@ -96,7 +96,8 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                     toggle= True
                     )      
         
-        self._draw_next_button(layout)    
+        poll = any((sett.savehair_male, sett.savehair_female))
+        self._draw_next_button(layout, poll = poll)    
           
     def _draw_hairtype_ui(self, context, layout):
         sett = self.sett
@@ -136,7 +137,8 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             "savehair_col_index"
             )
         
-        self._draw_next_button(layout)
+        poll = [i for i in context.scene.savehair_col if i.enabled]
+        self._draw_next_button(layout, poll)
         
 
     def _draw_thumbnail_selection_ui(self, context, layout, content_type):
@@ -180,8 +182,8 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             layout.separator()
             layout.label(text = 'If you render does not show,', icon = 'INFO')
             layout.label(text = 'reload thumbnail category above.')
-            
-        self._draw_next_button(layout)
+               
+        self._draw_next_button(layout, poll = sett.preset_thumbnail)
 
     def _draw_header_box(self, layout, text, icon):
         box = layout.box()
@@ -201,16 +203,19 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         for line in lines:
             text_col.label(text = line)
 
-    def _draw_next_button(self, layout):
+    def _draw_next_button(self, layout, poll = True):
         row = layout.row(align=True)
         row.scale_y = 1.5
         row.alert = True
         if self.sett.content_saving_tab_index > 0:
             row.operator('hg3d.nextprev_content_saving_tab', text = 'Previous', icon = 'TRIA_LEFT', depress = True).next = False
         
+        if not poll:
+            row = row.row(align = True)
+            row.enabled = False
         row.operator('hg3d.nextprev_content_saving_tab', text = 'Next', icon = 'TRIA_RIGHT', depress = True).next = True
 
-    def _draw_save_button(self, layout):
+    def _draw_save_button(self, layout, poll = True):
         split = layout.split(factor = 0.1, align = True)
         row = split.row(align = True)
         row.scale_y = 1.5
@@ -218,6 +223,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         row.operator('hg3d.nextprev_content_saving_tab', text = '', icon = 'TRIA_LEFT', depress = True).next = False
         
         row = split.row(align=True)
+        row.enabled = poll
         row.scale_y = 1.5
         row.operator('hg3d.savehair', text = 'Save', icon = 'FILEBROWSER', depress = True)        
 
