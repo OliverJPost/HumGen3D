@@ -81,17 +81,7 @@ def refresh_shapekeys_ul(self, context):
     
     col.clear()
 
-    existing_sks = ['Basis',]
-    if not sett.show_saved_sks:
-        walker = os.walk(str(pref.filepath) + str(Path('/models/shapekeys')))
-        for root, _, filenames in walker:
-            for fn in filenames:
-                if not os.path.splitext(fn)[1] == '.json':
-                    continue
-                with open(os.path.join(root,fn)) as f:
-                    data = json.load(f)
-                
-                existing_sks.extend(data)
+    existing_sks = find_existing_shapekeys(sett, pref)
 
     hg_rig = find_human(context.object)
     if not hg_rig:
@@ -110,6 +100,20 @@ def refresh_shapekeys_ul(self, context):
         item.on = True if not sk.mute else False
         if not item.on:
             item.enabled = False
+
+def find_existing_shapekeys(sett, pref):
+    existing_sks = ['Basis',]
+    if not sett.show_saved_sks:
+        walker = os.walk(str(pref.filepath) + str(Path('/models/shapekeys')))
+        for root, _, filenames in walker:
+            for fn in filenames:
+                if not os.path.splitext(fn)[1] == '.json':
+                    continue
+                with open(os.path.join(root,fn)) as f:
+                    data = json.load(f)
+                
+                existing_sks.extend(data)
+    return existing_sks
             
 
 
