@@ -1,10 +1,11 @@
 import bpy
 
 from ..core.HG_PCOLL import preview_collections
-from ..features.common.HG_COMMON_FUNC import find_human, hg_log
-from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
-                                                        refresh_outfit_ul,
-                                                        refresh_shapekeys_ul)
+from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs, hg_log,
+                                              show_message)
+from ..features.utility_section.HG_UTILITY_FUNC import (
+    find_existing_shapekeys, refresh_hair_ul, refresh_outfit_ul,
+    refresh_shapekeys_ul)
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 
 
@@ -39,13 +40,30 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett.content_saving_type = self.content_type  
         sett.content_saving_tab_index = 0  
         sett.content_saving_active_human = hg_rig
-
+        hg_log(self.content_type)
         if self.content_type   == 'shapekeys':
             refresh_shapekeys_ul(self, context)
         elif self.content_type   == 'hair':
             refresh_hair_ul(self, context)
         elif self.content_type   == 'clothing':
             refresh_outfit_ul(self, context)
+            
+        if self.content_type == 'starting_human':
+            existing_sks = find_existing_shapekeys(sett, get_prefs())
+            hg_log('existing sks', existing_sks)
+            hg_body = sett.content_saving_active_human.HG.body_obj
+            unsaved_sks = []
+            for sk in hg_body.data.shape_keys.key_blocks:
+                if sk.name not in existing_sks and sk.value > 0:
+                    unsaved_sks.append(sk.name)
+            if unsaved_sks:
+                message = "This human uses custom shape keys that are not saved yet! \nPlease save these shapekeys using our 'Save custom shapekeys' button:\n"
+                for sk_name in unsaved_sks:
+                    message += f"- {sk_name}\n"
+                show_message(self, message)
+                
+                sett.content_saving_ui = False
+                return {'CANCELLED'}
 
         return {'FINISHED'}
 
@@ -90,7 +108,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                 self._draw_hair_gender_ui(context, layout)
             else:
                 self._draw_name_ui(context, layout, content_type)
-        elif content_type == 'starting_human':
+        elif content_type == 'starting_human':        
             if tab_idx == 0:
                 self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 1:
