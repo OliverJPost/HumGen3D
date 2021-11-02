@@ -45,8 +45,9 @@ class Content_Saving_Operator:
         if thumbnail_type in ('last_render', 'auto'):
             image_name = 'temp_render_thumbnail' if thumbnail_type == 'last_render' else 'temp_thumbnail'
             source_image = os.path.join(get_prefs().filepath, 'temp_data', f'{image_name}.jpg')
+            hg_log("Copying", source_image, "to", destination_path)
             copyfile(source_image, destination_path) 
-            hg_log("Copied", source_image, "to", destination_path)
+            
         else:    
             try:
                 img.filepath_raw = os.path.join(folder, f'{save_name}.jpg')
@@ -597,7 +598,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
 #FIXME origin to model origin? Correction?
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
-    bl_idname      = "hg3d.saveoutfit"
+    bl_idname      = "hg3d.save_clothing"
     bl_label       = "Save as outfit"
     bl_description = "Save as outfit"
     bl_options     = {"UNDO"}
@@ -618,6 +619,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
         for gender in genders:
             gender_folder = self.folder + str(Path(f'/{gender}/Custom'))
+            if not os.path.isdir(gender_folder):
+                os.mkdir(gender_folder)
             if not self.sett.thumbnail_saving_enum == 'none':
                 self.save_thumb(gender_folder, self.thumb, self.name)
         
@@ -694,6 +697,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         hg_delete(body_copy)
 
         show_message(self, 'Succesfully exported outfits')
+        self.sett.content_saving_ui = False  
         return {'FINISHED'}
 
     def draw(self, context):
@@ -702,7 +706,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
     def invoke(self, context, event):
         self.pref   = get_prefs()
         self.sett   = context.scene.HG3D
-        self.hg_rig = find_human(self.sett.saveoutfit_human)
+        self.hg_rig = self.sett.content_saving_active_human
         self.col    = context.scene.saveoutfit_col
 
         self.thumb = self.sett.preset_thumbnail_enum
@@ -715,7 +719,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         if not (self.sett.savehair_male or self.sett.savehair_female):
             show_message(self, 'Select at least one gender')
             return {'CANCELLED'}
-        if not self.sett.saveoutfit_name:
+        if not self.sett.clothing_name:
             show_message(self, 'No name given for outfit')
             return {'CANCELLED'}
         if len(self.col) == 0:
@@ -728,7 +732,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             return {'CANCELLED'}            
 
         self.folder = os.path.join(self.pref.filepath, self.sett.saveoutfit_categ)
-        self.name = self.sett.saveoutfit_name
+        self.name = self.sett.clothing_name
         
         if os.path.isfile(str(Path(f'{self.folder}/{self.hg_rig.HG.gender}/Custom/{self.name}.blend'))):
             self.alert = 'overwrite'
