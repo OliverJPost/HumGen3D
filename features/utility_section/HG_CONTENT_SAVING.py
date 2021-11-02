@@ -456,9 +456,12 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator, Content_Saving_Operator)
     def execute(self,context):  
         sett = context.scene.HG3D
         
+        hg_rig = find_human(context.object)
+        
         sett.content_saving_ui = True
         sett.content_saving_type = self.content_type  
         sett.content_saving_tab_index = 0  
+        sett.content_saving_active_human = hg_rig
         return {'FINISHED'}
 
 class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
@@ -472,7 +475,13 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         pref = get_prefs()
         self.sett = context.scene.HG3D
         
-        self.hg_rig = find_human(context.object)
+        self.hg_rig = self.sett.content_saving_active_human
+        try:
+            self.hg_rig.name
+        except Exception as e:
+            show_message(self, 'Could not find human, did you delete it?')
+            hg_log('Content saving failed, rig could not be found with error: ', e)
+            return {'CANCELLED'}
 
         self.thumb = self.sett.preset_thumbnail_enum
         if not self.thumb and not self.sett.dont_export_thumb:

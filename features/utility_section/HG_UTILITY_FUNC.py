@@ -110,7 +110,7 @@ def refresh_hair_ul(self, context):
     col  = context.scene.savehair_col
     col.clear()
 
-    hg_rig = find_human(context.object)
+    hg_rig = sett.content_saving_active_human
     if not hg_rig:
         return
     
