@@ -286,6 +286,11 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
             text='Save as starting human'
         ).content_type = 'starting_human'
 
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save custom shapekeys'
+        ).content_type = 'shapekeys'
+
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected
 
@@ -394,7 +399,7 @@ class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
         self._draw_prefix_info(col)
 
         col.label(text = 'Collection name:')
-        col.prop(sett, 'shapekey_col_name', text = '')
+        col.prop(sett, 'sk_collection_name', text = '')
         
         col.separator()
         
@@ -423,7 +428,7 @@ class HG_PT_T_SHAPEKEY(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
         
         row = col.row(align = True)
         row.scale_y = 1.5
-        row.operator('hg3d.saveshapekey',
+        row.operator('hg3d.save_shapekeys',
                      text = 'Save selected shapekeys',
                      depress= True
                      )
