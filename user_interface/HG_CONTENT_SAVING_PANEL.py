@@ -110,6 +110,11 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                 self._draw_clothing_gender_ui(context, layout)
             elif tab_idx == 4:
                 self._draw_name_ui(context, layout, content_type)
+        elif content_type == 'pose':
+            if tab_idx == 0:
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
+            elif tab_idx == 1:
+                self._draw_name_ui(context, layout, content_type)            
     
     def _draw_clothing_gender_ui(self, context, layout):
         self._draw_header_box(layout, "Is this clothing for men \nwomen or all genders?", 'MOD_CLOTH')
@@ -189,7 +194,8 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             'hair': 'hairstyle',
             'starting_human': 'preset',
             'shapekeys': 'sk_collection',
-            'clothing': 'clothing'
+            'clothing': 'clothing',
+            'pose': 'pose'
         }
         tag = tag_dict[content_type]
         self._draw_header_box(layout, f"Give your {tag.replace('sk_', '')} a name", 'OUTLINER_OB_FONT')

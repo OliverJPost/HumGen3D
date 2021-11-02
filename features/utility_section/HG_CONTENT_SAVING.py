@@ -80,6 +80,8 @@ class Content_Saving_Operator:
                                                 background. Defaults to True.
         """
         for obj in objs:
+            if obj.type != 'MESH':
+                continue
             if clear_materials:
                 obj.data.materials.clear()
             if clear_vg:
@@ -251,6 +253,58 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         )
 
         msg = f'Saved {len(data)} shapekeys to {self.folder}'
+        
+        self.report({'INFO'}, msg)
+        ShowMessageBox(message = msg)
+        
+        self.sett.content_saving_ui = False    
+        
+        return {'FINISHED'}
+
+
+class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
+    bl_idname = "hg3d.save_pose"
+    bl_label = "Save pose"
+    bl_description = "Save pose"
+    bl_options = {'UNDO'}
+    
+    name: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        pref            = get_prefs()
+        self.sett       = context.scene.HG3D
+        
+        self.thumb = self.sett.preset_thumbnail_enum
+        self.folder = pref.filepath + str(Path('/poses/shapekeys/'))
+        self.name = self.sett.pose_name
+        
+        if os.path.isfile(os.path.join(self.folder, f'{self.name}.blend')):
+            return context.window_manager.invoke_props_dialog(self)
+
+        return self.execute(context)
+
+    def draw(self, context):
+        self.overwrite_warning()
+
+    def execute(self,context):        
+        hg_rig = self.sett.content_saving_active_human
+  
+        pose_object = hg_rig.copy()
+        pose_object.data = pose_object.data.copy()
+        pose_object.name = 'HG_Pose'
+        context.collection.objects.link(pose_object)        
+  
+        self.save_objects_optimized(
+            context,
+            [pose_object,],
+            self.folder,
+            self.name
+        )
+
+        if not self.sett.thumbnail_saving_enum == 'none':
+            self.save_thumb(self.folder, self.thumb, self.name)
+
+        msg = f'Saved {self.name} to {self.folder}'
         
         self.report({'INFO'}, msg)
         ShowMessageBox(message = msg)
