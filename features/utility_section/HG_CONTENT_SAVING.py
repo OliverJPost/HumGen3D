@@ -200,7 +200,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         name (str): internal, does not need to be passed
 
     """
-    bl_idname = "hg3d.saveshapekey"
+    bl_idname = "hg3d.save_shapekeys"
     bl_label = "Save shapekeys"
     bl_description = "Save shapekeys"
     bl_options = {'UNDO'}
@@ -212,17 +212,8 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         self.sett       = context.scene.HG3D
         self.collection = context.scene.shapekeys_col
 
-        has_selected = next((True for item in self.collection if item.enabled), False)
-        if not has_selected:
-            show_message(self, 'No shapekeys selected')
-            return {'CANCELLED'}
-
-        if not self.sett.shapekey_col_name:
-            show_message(self, 'No name given for collection file')
-            return {'CANCELLED'}
-
         self.folder = pref.filepath + str(Path('/models/shapekeys/'))
-        self.name = self.sett.shapekey_col_name
+        self.name = self.sett.sk_collection_name
         if os.path.isfile(str(Path(f'{self.folder}/{self.name}.blend'))):
             return context.window_manager.invoke_props_dialog(self)
 
@@ -232,7 +223,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         self.overwrite_warning()
 
     def execute(self,context):        
-        hg_rig = find_human(context.object)
+        hg_rig = self.sett.content_saving_active_human
 
         data = [item.sk_name for item in self.collection if item.enabled]
    
@@ -262,6 +253,8 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         
         self.report({'INFO'}, msg)
         ShowMessageBox(message = msg)
+        
+        self.sett.content_saving_ui = False    
         
         return {'FINISHED'}
 
@@ -798,7 +791,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
     thumbnail_type: bpy.props.StringProperty()
 
     def execute(self, context):
-        hg_rig = find_human(context.object)
+        hg_rig = context.scene.HG3D.content_saving_active_human
         
         thumbnail_type = self.thumbnail_type
                

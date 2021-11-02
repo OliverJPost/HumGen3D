@@ -697,7 +697,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         description='Thumbnail image for starting human')
     preset_name : StringProperty(default = '')
 
-    shapekey_col_name: StringProperty(default = '')
+    sk_collection_name: StringProperty(default = '')
     show_saved_sks   : BoolProperty(default = False,
                                     update = refresh_shapekeys_ul)
 

@@ -84,24 +84,58 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
                 self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 1:
                 self._draw_name_ui(context, layout, content_type)
+        elif content_type == 'shapekeys':
+            if tab_idx == 0:
+                self._draw_shapekey_selection_ui(context, layout)
+            elif tab_idx == 1:
+                self._draw_name_ui(context, layout, content_type)
+                
 
+    def _draw_shapekey_selection_ui(self, context, layout):
+        sett = self.sett
+        self._draw_header_box(layout, "Select shapekeys to save", 'SHAPEKEY_DATA')
+        
+        col = layout.column(align = True)
+        
+        col.operator(
+            'hg3d.ulrefresh',
+            text = 'Refresh shapekeys'
+            ).type = 'shapekeys'
+        col.template_list(
+            "HG_UL_SHAPEKEYS",
+            "",
+            context.scene,
+            "shapekeys_col",
+            context.scene,
+            "shapekeys_col_index"
+            )
+        
+        col.separator()
+        
+        col.prop(sett, 'show_saved_sks',
+                 text = 'Show already saved shapekeys',
+                 icon = ('CHECKBOX_HLT' 
+                         if sett.show_saved_sks 
+                         else 'CHECKBOX_DEHLT'))     
+        
+        poll = [i for i in context.scene.shapekeys_col if i.enabled]
+        self._draw_next_button(layout, poll = poll)   
 
     def _draw_name_ui(self, context, layout, content_type):
         sett = self.sett
         
         tag_dict = {
             'hair': 'hairstyle',
-            'starting_human': 'preset'
+            'starting_human': 'preset',
+            'shapekeys': 'sk_collection'
         }
         tag = tag_dict[content_type]
-        self._draw_header_box(layout, f"Give your {tag} a name", 'OUTLINER_OB_FONT')
+        self._draw_header_box(layout, f"Give your {tag.replace('sk_', '')} a name", 'OUTLINER_OB_FONT')
         
         col = layout.column()
-        col.use_property_split = True
-        col.use_property_decorate = False
         col.scale_y = 1.5
         col.prop(sett, f'{tag}_name',
-                 text = 'Name:'
+                 text = 'Name'
                  )
         
         self._draw_save_button(layout, content_type, poll = bool(getattr(sett, f'{tag}_name')))
