@@ -1,6 +1,7 @@
 import bpy
 
 from ..core.HG_PCOLL import preview_collections
+from ..features.common.HG_COMMON_FUNC import find_human, hg_log
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 
 
@@ -49,6 +50,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
 
         tab_idx = sett.content_saving_tab_index
 
+        self._draw_warning_if_different_active_human(context, layout)
         if tab_idx == 0:
             self._draw_particle_system_selection_ui(context, layout)
         elif tab_idx == 1:
@@ -218,3 +220,18 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         row = split.row(align=True)
         row.scale_y = 1.5
         row.operator('hg3d.savehair', text = 'Save', icon = 'FILEBROWSER', depress = True)        
+
+    def _draw_warning_if_different_active_human(self, context, layout):
+        sett = self.sett
+        
+        active_human = find_human(context.object)
+        try:            
+            if active_human and active_human != sett.content_saving_active_human:
+                row = layout.row()
+                row.alert = True
+                row.label(text = f'Selected human is not {sett.content_saving_active_human.name}')
+        except Exception as e:
+            row = layout.row()
+            row.alert = True
+            row.label(text='Human seems to be deleted')            
+            hg_log(e)
