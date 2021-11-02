@@ -2,8 +2,8 @@ import bpy  # type: ignore
 
 from ..core.HG_PCOLL import preview_collections
 from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
-from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_sub_spoiler,
-                                 get_flow, in_creation_phase)
+from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_resolution_box,
+                                 draw_sub_spoiler, get_flow, in_creation_phase)
 
 
 class Tools_PT_Base:
@@ -273,13 +273,17 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         hg_icons = preview_collections['hg_icons']
         
+        hg_rig = find_human(context.object)
+        
         layout.label(text = 'Only during creation phase:', icon = 'RADIOBUT_OFF')
         col = layout.column()
         col.scale_y = 1.5
+        col.enabled = in_creation_phase(hg_rig)
 
         col.operator(
             'hg3d.open_content_saving_tab',
-            text='Save as starting human'
+            text='Save as starting human',
+            icon_value = hg_icons['face'].icon_id
         ).content_type = 'starting_human'
 
         layout.label(text = 'Always possible:', icon = 'RADIOBUT_OFF')
@@ -294,21 +298,25 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
         col.operator(
             'hg3d.open_content_saving_tab',
-            text='Save custom shapekeys'
+            text='Save custom shapekeys',
+            icon_value = hg_icons['body'].icon_id
         ).content_type = 'shapekeys'
         
         layout.label(text = 'Only after creation phase:', icon = 'RADIOBUT_OFF')
         col = layout.column()
         col.scale_y = 1.5
+        col.enabled = not in_creation_phase(hg_rig)
 
         col.operator(
             'hg3d.open_content_saving_tab',
-            text='Save outfit/footwear'
+            text='Save outfit/footwear',
+            icon_value = hg_icons['clothing'].icon_id
         ).content_type = 'clothing'
         
         col.operator(
             'hg3d.open_content_saving_tab',
-            text='Save pose'
+            text='Save pose',
+            icon_value = hg_icons['pose'].icon_id
         ).content_type = 'pose'
         
 
