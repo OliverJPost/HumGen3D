@@ -35,6 +35,11 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         
         hg_rig = find_human(context.object)
 
+        sett.content_saving_ui = True
+        sett.content_saving_type = self.content_type  
+        sett.content_saving_tab_index = 0  
+        sett.content_saving_active_human = hg_rig
+
         if self.content_type   == 'shapekeys':
             refresh_shapekeys_ul(self, context)
         elif self.content_type   == 'hair':
@@ -42,10 +47,6 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         elif self.content_type   == 'clothing':
             refresh_outfit_ul(self, context)
 
-        sett.content_saving_ui = True
-        sett.content_saving_type = self.content_type  
-        sett.content_saving_tab_index = 0  
-        sett.content_saving_active_human = hg_rig
         return {'FINISHED'}
 
 class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel): 

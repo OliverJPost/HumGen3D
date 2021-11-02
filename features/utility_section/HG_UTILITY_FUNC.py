@@ -76,6 +76,9 @@ def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.shapekeys_col
+    
+    previously_enabled_items = [i.sk_name for i in col if i.enabled]
+    
     col.clear()
 
     existing_sks = ['Basis',]
@@ -100,14 +103,23 @@ def refresh_shapekeys_ul(self, context):
 
         item = col.add()
         item.sk_name = sk.name
+
+        if sk.name in previously_enabled_items:
+            item.enabled = True
+
         item.on = True if not sk.mute else False
         if not item.on:
             item.enabled = False
+            
+
 
 def refresh_hair_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.savehair_col
+    
+    previously_enabled_items = [i.ps_name for i in col if i.enabled]
+    
     col.clear()
 
     hg_rig = sett.content_saving_active_human
@@ -119,12 +131,18 @@ def refresh_hair_ul(self, context):
             continue
         item = col.add()
         item.ps_name = ps.name
+        
+        if ps.name in previously_enabled_items:
+            item.enabled = True
 
 #TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.saveoutfit_col
+    
+    previously_enabled_items = [i.obj_name for i in col if i.enabled]
+    
     col.clear()
     
     hg_rig = sett.content_saving_active_human
@@ -146,3 +164,5 @@ def refresh_outfit_ul(self, context):
         
         item.weight_paint_present = 'spine' in [vg.name for vg in obj.vertex_groups] 
         
+        if obj.name in previously_enabled_items:
+            item.enabled = True
