@@ -295,6 +295,10 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
             'hg3d.open_content_saving_tab',
             text='Save outfit/footwear'
         ).content_type = 'clothing'
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save pose'
+        ).content_type = 'pose'
 
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected

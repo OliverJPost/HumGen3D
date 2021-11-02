@@ -747,6 +747,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     mask_torso     : BoolProperty(default = False)
     mask_foot      : BoolProperty(default = False)
 
+    pose_name: StringProperty()
+
     custom_content_categ : bpy.props.EnumProperty(
         name="Content type",
         description="",
