@@ -107,11 +107,13 @@ class Content_Saving_Operator:
         #CHECK if still works
         python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/hg_purge.py'))
         if run_in_background:
-            subprocess.Popen([bpy.app.binary_path,
-                              blend_filepath,
-                              "--background",
-                              "--python",
-                              python_file])
+            hg_log('STARTING HumGen background process', level = 'BACKGROUND')
+            background_blender = subprocess.Popen([bpy.app.binary_path,
+                            blend_filepath,
+                            "--background",
+                            "--python",
+                            python_file],
+                            stdout= subprocess.DEVNULL)
         else:
             subprocess.Popen([bpy.app.binary_path,
                               blend_filepath,
@@ -316,6 +318,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         self.report({'INFO'}, msg)
         ShowMessageBox(message = msg)
         
+        context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, 'poses')
         
         self.sett.content_saving_ui = False    
@@ -396,6 +399,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         
         self.sett.content_saving_ui = False    
         
+        context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, 'humans')
         
         return {'FINISHED'}
@@ -764,6 +768,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             )
         hg_delete(body_copy)
 
+        context.view_layer.objects.active = self.hg_rig
         refresh_pcoll(self, context, 'outfit')
         refresh_pcoll(self, context, 'footwear')
 
