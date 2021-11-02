@@ -310,6 +310,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         col.prop(self, 'silence_all_console_messages', text = 'Silence all console messages')
         col.prop(self, 'dev_tools')
         col.prop(self, 'skip_url_request', text = 'Skip URL request')
+        col.prop(self, 'classic_content_saving_panels', text = 'Classic content saving panels')
         
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned"""
