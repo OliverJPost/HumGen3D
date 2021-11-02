@@ -856,7 +856,8 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
                
         type_settings_dict = {
             'head': {'camera_x': -1.0, 'camera_y': -1.0, 'focal_length': 135, 'look_at_correction': 0.14},
-            'full_body': {'camera_x': 0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
+            'full_body_front': {'camera_x': 0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
+            'full_body_side': {'camera_x': -2.0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
         }
         
         type_sett = type_settings_dict[thumbnail_type]

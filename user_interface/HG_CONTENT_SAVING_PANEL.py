@@ -306,7 +306,15 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         elif sett.thumbnail_saving_enum == 'auto':
             row = layout.row()
             row.scale_y = 1.5
-            row.operator('hg3d.auto_render_thumbnail', text = 'Render [Automatic]', icon = 'RENDER_STILL').thumbnail_type = 'head' if content_type in ('hairstyle', 'starting_human') else 'full_body'
+            thumbnail_type_dict = {
+                'head': ('hairstyle', 'starting_human'),
+                'full_body_front': ('clothing',),
+                'full_body_side': ('pose',)
+            }
+            
+            thumbnail_type = next(t_type for t_type, c_type_set in thumbnail_type_dict.items() if content_type in c_type_set)
+            
+            row.operator('hg3d.auto_render_thumbnail', text = 'Render [Automatic]', icon = 'RENDER_STILL').thumbnail_type = thumbnail_type
         elif sett.thumbnail_saving_enum == 'last_render':
             layout.label(text = '256*256px recommended', icon = 'INFO')
             layout.separator()
