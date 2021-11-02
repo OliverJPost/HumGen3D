@@ -307,7 +307,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             row = layout.row()
             row.scale_y = 1.5
             thumbnail_type_dict = {
-                'head': ('hairstyle', 'starting_human'),
+                'head': ('hair', 'starting_human'),
                 'full_body_front': ('clothing',),
                 'full_body_side': ('pose',)
             }
