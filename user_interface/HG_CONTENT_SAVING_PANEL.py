@@ -20,7 +20,23 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
         sett.content_saving_ui = False
         return {'FINISHED'}
     
+class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
+    bl_idname      = "hg3d.open_content_saving_tab"
+    bl_label       = "Save custom content"
+    bl_description = "Opens the screen to save custom content"
 
+    content_type: bpy.props.StringProperty()
+
+    def execute(self,context):  
+        sett = context.scene.HG3D
+        
+        hg_rig = find_human(context.object)
+        
+        sett.content_saving_ui = True
+        sett.content_saving_type = self.content_type  
+        sett.content_saving_tab_index = 0  
+        sett.content_saving_active_human = hg_rig
+        return {'FINISHED'}
 
 class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel): 
     """Panel with extra functionality for HumGen that is not suitable for the 
@@ -51,32 +67,44 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         tab_idx = sett.content_saving_tab_index
 
         self._draw_warning_if_different_active_human(context, layout)
-        if tab_idx == 0:
-            self._draw_particle_system_selection_ui(context, layout)
-        elif tab_idx == 1:
-            self._draw_thumbnail_selection_ui(context, layout, content_type)
-        elif tab_idx == 2:
-            self._draw_hairtype_ui(context, layout)  
-        elif tab_idx == 3:
-            self._draw_hair_gender_ui(context, layout)
-        else:
-            self._draw_hair_name_ui(context, layout)
+        
+        if content_type == 'hair':
+            if tab_idx == 0:
+                self._draw_particle_system_selection_ui(context, layout)
+            elif tab_idx == 1:
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
+            elif tab_idx == 2:
+                self._draw_hairtype_ui(context, layout)  
+            elif tab_idx == 3:
+                self._draw_hair_gender_ui(context, layout)
+            else:
+                self._draw_name_ui(context, layout, content_type)
+        elif content_type == 'starting_human':
+            if tab_idx == 0:
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
+            elif tab_idx == 1:
+                self._draw_name_ui(context, layout, content_type)
 
 
-    def _draw_hair_name_ui(self, context, layout):
+    def _draw_name_ui(self, context, layout, content_type):
         sett = self.sett
         
-        self._draw_header_box(layout, "Give your hairstyle a name", 'OUTLINER_OB_FONT')
+        tag_dict = {
+            'hair': 'hairstyle',
+            'starting_human': 'preset'
+        }
+        tag = tag_dict[content_type]
+        self._draw_header_box(layout, f"Give your {tag} a name", 'OUTLINER_OB_FONT')
         
         col = layout.column()
         col.use_property_split = True
         col.use_property_decorate = False
         col.scale_y = 1.5
-        col.prop(sett, 'hairstyle_name',
+        col.prop(sett, f'{tag}_name',
                  text = 'Name:'
                  )
         
-        self._draw_save_button(layout, poll = bool(sett.hairstyle_name))
+        self._draw_save_button(layout, content_type, poll = bool(getattr(sett, f'{tag}_name')))
         
     def _draw_hair_gender_ui(self, context, layout):
         sett = self.sett
@@ -176,7 +204,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         elif sett.thumbnail_saving_enum == 'auto':
             row = layout.row()
             row.scale_y = 1.5
-            row.operator('hg3d.auto_render_thumbnail', text = 'Render [Automatic]', icon = 'RENDER_STILL').thumbnail_type = 'head'
+            row.operator('hg3d.auto_render_thumbnail', text = 'Render [Automatic]', icon = 'RENDER_STILL').thumbnail_type = 'head' if content_type in ('hairstyle', 'starting_human') else 'full_body'
         elif sett.thumbnail_saving_enum == 'last_render':
             layout.label(text = '256*256px recommended', icon = 'INFO')
             layout.separator()
@@ -215,7 +243,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
             row.enabled = False
         row.operator('hg3d.nextprev_content_saving_tab', text = 'Next', icon = 'TRIA_RIGHT', depress = True).next = True
 
-    def _draw_save_button(self, layout, poll = True):
+    def _draw_save_button(self, layout, content_type, poll = True):
         split = layout.split(factor = 0.1, align = True)
         row = split.row(align = True)
         row.scale_y = 1.5
@@ -225,7 +253,7 @@ class HG_PT_CONTENT_SAVING(Tools_PT_Base, bpy.types.Panel):
         row = split.row(align=True)
         row.enabled = poll
         row.scale_y = 1.5
-        row.operator('hg3d.savehair', text = 'Save', icon = 'FILEBROWSER', depress = True)        
+        row.operator(f'hg3d.save_{content_type}', text = 'Save', icon = 'FILEBROWSER', depress = True)        
 
     def _draw_warning_if_different_active_human(self, context, layout):
         sett = self.sett

@@ -279,7 +279,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
     Args:
         name (str): internal, does not need to be passed
     """
-    bl_idname      = "hg3d.savepreset"
+    bl_idname      = "hg3d.save_starting_human"
     bl_label       = "Save as starting human"
     bl_description = "Save as starting human"
 
@@ -288,15 +288,9 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
     def invoke(self, context, event):
         pref        = get_prefs()
         self.sett   = context.scene.HG3D
-        self.hg_rig = find_human(context.object)
+        self.hg_rig = self.sett.content_saving_active_human
 
         self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb and not self.sett.dont_export_thumb:
-            show_message(self, 'No thumbnail selected')
-            return {'CANCELLED'}
-        if not self.sett.preset_name:
-            show_message(self, 'No name given for starting human')
-            return {'CANCELLED'}
 
         self.folder = pref.filepath + str(Path(f'/models/{self.hg_rig.HG.gender}/'))
         self.name = self.sett.preset_name
@@ -341,7 +335,10 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
             json.dump(preset_data, f, indent = 4)
         
         self.report({'INFO'}, f'Saved starting human {self.name} to {folder}')
-        ShowMessageBox(message = f'Saved starting human {self.name} to {folder}')        
+        ShowMessageBox(message = f'Saved starting human {self.name} to {folder}')    
+        
+        self.sett.content_saving_ui = False    
+        
         return {'FINISHED'}
     
     def add_body_proportions(self, preset_data, hg_rig) -> dict:
@@ -446,28 +443,11 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         return preset_data
 
 
-class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator, Content_Saving_Operator):
-    bl_idname      = "hg3d.open_content_saving_tab"
-    bl_label       = "Save custom content"
-    bl_description = "Opens the screen to save custom content"
-
-    content_type: bpy.props.StringProperty()
-
-    def execute(self,context):  
-        sett = context.scene.HG3D
-        
-        hg_rig = find_human(context.object)
-        
-        sett.content_saving_ui = True
-        sett.content_saving_type = self.content_type  
-        sett.content_saving_tab_index = 0  
-        sett.content_saving_active_human = hg_rig
-        return {'FINISHED'}
 
 class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
-    bl_idname      = "hg3d.savehair"
-    bl_label       = "Save as starting human"
-    bl_description = "Save as starting human"
+    bl_idname      = "hg3d.save_hair"
+    bl_label       = "Save hairstyle"
+    bl_description = "Save hairstyle"
 
     name: bpy.props.StringProperty()
 

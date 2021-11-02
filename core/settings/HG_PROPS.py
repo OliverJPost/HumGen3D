@@ -695,7 +695,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     preset_thumbnail: PointerProperty(
         type=bpy.types.Image,
         description='Thumbnail image for starting human')
-    preset_name     : StringProperty(default = '')
+    preset_name : StringProperty(default = '')
 
     shapekey_col_name: StringProperty(default = '')
     show_saved_sks   : BoolProperty(default = False,

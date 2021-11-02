@@ -271,10 +271,20 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         
     def draw(self, context):   
         layout = self.layout
+        hg_icons = preview_collections['hg_icons']
         
         col = layout.column()
-        col.operator('hg3d.open_content_saving_tab').content_type = 'hair'
+        col.scale_y = 1.5
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save hairstyle',
+            icon_value=hg_icons['hair'].icon_id
+        ).content_type = 'hair'
 
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Save as starting human'
+        ).content_type = 'starting_human'
 
 class Tools_PT_Poll:
     """adds a poll classmethod to check if a HumGen human is selected
@@ -329,7 +339,7 @@ class HG_PT_T_PRESET(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
 
         row = col.row(align = True)
         row.scale_y = 1.5
-        row.operator('hg3d.savepreset',
+        row.operator('hg3d.save_starting_human',
                      text = 'Save starting human',
                      depress= True
                      )
@@ -527,7 +537,7 @@ class HG_PT_T_HAIR(Tools_PT_Base, bpy.types.Panel, Tools_PT_Poll):
         
         row = col.row(align = True)
         row.scale_y = 1.5
-        row.operator('hg3d.savehair',
+        row.operator('hg3d.save_hair',
                      text = 'Save selected systems',
                      depress= True
                      )
