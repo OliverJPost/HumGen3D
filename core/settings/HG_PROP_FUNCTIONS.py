@@ -5,7 +5,10 @@ functions used by properties
 import os
 from pathlib import Path
 
-from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
+import bpy  # type:ignore
+
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, find_human,
+                                               get_prefs, hg_log)
 
 
 def find_folders(self, context, categ, gender_toggle, include_all = True, 
@@ -102,3 +105,38 @@ def get_resolutions():
     
 def poll_mtc_armature(self, object):
     return object.type == 'ARMATURE'
+
+
+def thumbnail_saving_prop_update(self, context):
+    switched_to = self.thumbnail_saving_enum
+    
+    self.preset_thumbnail = None
+    save_folder = os.path.join(get_prefs().filepath, 'temp_data')  
+    
+    if switched_to == 'auto':         
+        full_image_path = os.path.join(save_folder, 'temp_thumbnail.jpg')    
+        if os.path.isfile(full_image_path):
+            try:
+                img = bpy.data.images.load(full_image_path)
+                self.preset_thumbnail = img
+            except Exception as e:
+                hg_log('Auto thumbnail failed to load with error:', e)
+                
+    if switched_to == 'last_render':
+        render_result = bpy.data.images.get('Render Result')
+        hg_log([s for s in render_result.size])
+        if not render_result:
+            ShowMessageBox('No render result found')
+            return         
+        elif render_result.size[0] > 1024:
+            ShowMessageBox('Render result is too big! 256px by 256px is recommended.')
+            return          
+        
+        full_imagepath = os.path.join(save_folder, 'temp_render_thumbnail.jpg')
+        render_result.save_render(filepath= full_imagepath)
+        
+        saved_render_result = bpy.data.images.load(full_imagepath)
+        self.preset_thumbnail = saved_render_result
+        pass
+    
+    

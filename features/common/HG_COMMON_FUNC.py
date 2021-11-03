@@ -131,7 +131,8 @@ def ShowMessageBox(message = "", title = "Human Generator - Alert", icon = 'INFO
         icon (str, optional): Icon code. Defaults to 'INFO'.
     """
     def draw(self, context):
-        self.layout.label(text = message)
+        for line in message.splitlines():
+            self.layout.label(text = line)
 
     bpy.context.window_manager.popup_menu(draw, title = title, icon = icon)
 
