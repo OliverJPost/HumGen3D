@@ -23,7 +23,9 @@ from ...features.utility_section.HG_UTILITY_FUNC import (get_preset_thumbnail,
                                                          refresh_modapply,
                                                          refresh_shapekeys_ul)
 from ...user_interface import HG_BATCH_UILIST
-from .HG_PROP_FUNCTIONS import find_folders, get_resolutions, poll_mtc_armature
+from .HG_PROP_FUNCTIONS import (find_folders, get_resolutions,
+                                poll_mtc_armature,
+                                thumbnail_saving_prop_update)
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):   
@@ -693,9 +695,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     preset_thumbnail: PointerProperty(
         type=bpy.types.Image,
         description='Thumbnail image for starting human')
-    preset_name     : StringProperty(default = '')
+    preset_name : StringProperty(default = '')
 
-    shapekey_col_name: StringProperty(default = '')
+    sk_collection_name: StringProperty(default = '')
     show_saved_sks   : BoolProperty(default = False,
                                     update = refresh_shapekeys_ul)
 
@@ -715,7 +717,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                   default = False,
                                   update = refresh_hair_ul)
 
-    saveoutfit_name: StringProperty(default = '')
+    clothing_name: StringProperty(default = '')
     saveoutfit_categ: EnumProperty(
         name = 'Clothing type',
         items = [
@@ -727,8 +729,6 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     saveoutfit_male  : BoolProperty(default = True)
     saveoutfit_female: BoolProperty(default = True)
-    saveoutfit_human : PointerProperty(name = 'Human',
-                                       type = bpy.types.Object)
     
     open_exported_outfits  : BoolProperty(default = False)
     open_exported_hair     : BoolProperty(default = False)
@@ -747,6 +747,21 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     mask_torso     : BoolProperty(default = False)
     mask_foot      : BoolProperty(default = False)
 
+    pose_name: StringProperty()
+    pose_category_to_save_to: bpy.props.EnumProperty(
+        name="Pose Category",
+        items = [
+            ("existing", "Existing",  "", 0),
+            ("new", "Create new",  "", 1)
+        ],
+        default = "existing",
+        )  
+    pose_chosen_existing_category: EnumProperty(
+        name="Pose Library",
+        items  = lambda a,b: find_folders(a,b,"poses", False)
+        )   
+    pose_new_category_name: StringProperty()
+
     custom_content_categ : bpy.props.EnumProperty(
         name="Content type",
         description="",
@@ -763,7 +778,24 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update = build_content_collection
         )  
 
+    content_saving_ui: BoolProperty(default = False)
+    content_saving_type: StringProperty()
 
+    thumbnail_saving_enum: bpy.props.EnumProperty(
+        name="Thumbnail",
+        items = [
+            ("none", "No thumbnail",  "", 0),
+            ("auto", "Automatic render",  "", 1),
+            ("custom", "Select custom image",  "", 2),
+            ("last_render", "Use last render result",  "", 3)
+        ],
+        default = "auto",
+        update = thumbnail_saving_prop_update
+        )  
+    
+    content_saving_tab_index: IntProperty(default = 0)
+    
+    content_saving_active_human: PointerProperty(type = bpy.types.Object)
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)

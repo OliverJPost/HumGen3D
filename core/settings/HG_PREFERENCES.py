@@ -111,6 +111,7 @@ class HG_PREF(bpy.types.AddonPreferences):
 
     skip_url_request: bpy.props.BoolProperty(default = False)
 
+
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
         base_content_found = self._check_if_basecontent_is_installed()

@@ -115,6 +115,12 @@ class HG_UL_SAVEOUTFIT(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data,
                   active_propname, index):
+
+        enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
+
+        row = layout.row(align = True)
+        row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
+
         row = layout.row(align = True)      
         row.label(text=item.obj_name)
         
@@ -134,6 +140,7 @@ class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
     obj_name : bpy.props.StringProperty(name = 'Ojbect Name', default = '')
     cor_sks_present : bpy.props.BoolProperty(default = False)
     weight_paint_present: bpy.props.BoolProperty(default = False)
+    enabled: bpy.props.BoolProperty(default = False)
 
 
     

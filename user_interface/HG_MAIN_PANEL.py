@@ -30,7 +30,8 @@ class HG_PT_PANEL(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.HG3D.active_ui_tab == 'CREATE'
+        sett = context.scene.HG3D
+        return sett.active_ui_tab == 'CREATE' and not sett.content_saving_ui
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
