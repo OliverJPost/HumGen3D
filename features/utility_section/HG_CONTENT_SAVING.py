@@ -14,8 +14,9 @@ from ...core.HG_PCOLL import refresh_pcoll  # type: ignore
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
-                                               find_human, get_prefs,
-                                               hg_delete, hg_log, show_message)
+                                               find_human, get_addon_root,
+                                               get_prefs, hg_delete, hg_log,
+                                               show_message)
 from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 
@@ -104,8 +105,7 @@ class Content_Saving_Operator:
         blend_filepath = os.path.join(folder, f'{filename}.blend')
         bpy.data.libraries.write(blend_filepath, {new_scene})
         
-        #CHECK if still works
-        python_file = str(Path(__file__).parent.parent.parent.absolute()) + str(Path('/scripts/hg_purge.py'))
+        python_file = os.path.join(get_addon_root(), 'scripts', 'hg_purge.py')
         if run_in_background:
             hg_log('STARTING HumGen background process', level = 'BACKGROUND')
             background_blender = subprocess.Popen([bpy.app.binary_path,
@@ -527,15 +527,6 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             return {'CANCELLED'}
 
         self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb and not self.sett.dont_export_thumb:
-            show_message(self, 'No thumbnail selected')
-            return {'CANCELLED'}
-        if not (self.sett.savehair_male or self.sett.savehair_female):
-            show_message(self, 'Select at least one gender')
-            return {'CANCELLED'}
-        if not self.sett.hairstyle_name:
-            show_message(self, 'No name given for hairstyle')
-            return {'CANCELLED'}
 
         self.folder = pref.filepath + str(Path(f'/hair/{self.sett.save_hairtype}/'))
         self.name = self.sett.hairstyle_name
@@ -579,14 +570,11 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             if hair_type == 'face_hair' and gender == 'female':
                 continue
 
-            #TODO this is horrible
-            folder = (pref.filepath 
-                      + str(Path('hair/{}/{}Custom/'.format(
-                                                            hair_type,
-                                                            f'{gender}/' 
-                                                                if hair_type == 'head' 
-                                                            else '')))  
-                                                            )
+            if hair_type == 'head':
+                folder = os.path.join(pref.filepath, 'hair', hair_type, gender, 'Custom')
+            else:
+                folder = os.path.join(pref.filepath, 'hair', hair_type, 'Custom')
+
             if not os.path.exists(folder):
                 os.makedirs(folder)     
             if not self.sett.thumbnail_saving_enum == 'none':
@@ -616,9 +604,17 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         return {'FINISHED'}
 
     def _find_vgs_used_by_hair(self, hair_obj) -> list:
+        """Get a list of all vertex groups used by the hair systems
+
+        Args:
+            hair_obj (bpy.types.Object): Human body the hair is on
+
+        Returns:
+            list: list of vertex groups that are used by hairsystems
+        """
         all_vgs = [vg.name for vg in hair_obj.vertex_groups]
         keep_vgs = []
-        for ps in [ps for ps in hair_obj.particle_systems]:
+        for ps in [ps for ps in hair_obj.particle_systems]: #TODO only iterate over selected systems
             vg_types = [
                 ps.vertex_group_clump,
                 ps.vertex_group_density,
@@ -642,6 +638,12 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
 
     def _remove_other_systems(self, obj, keep_list):
+        """Remove particle systems that are nog going to be saved
+
+        Args:
+            obj (bpy.types.Object): Human body object to remove systems from
+            keep_list (list): List of names of particle systems to keep
+        """
         remove_list = [ps.name for ps in obj.particle_systems if ps.name not in keep_list]
            
         for ps_name in remove_list:    
@@ -650,6 +652,14 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             bpy.ops.object.particle_system_remove()
 
     def _make_hair_json(self, context, hair_obj, folder, style_name):
+        """Make a json that contains the settings for this hairstyle and save it
+
+        Args:
+            context (context): bl context
+            hair_obj (bpy.types.Object): Body object the hairstyles are on
+            folder (str): Folder to save json to
+            style_name (str): Name of this style
+        """
         ps_dict = {}
         for mod in hair_obj.modifiers:
             if mod.type == 'PARTICLE_SYSTEM':
@@ -661,7 +671,10 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
                                     "children_amount": ps_children,
                                     "path_steps": ps_steps}
 
-        json_data = {"blend_file": f'{style_name}.blend', "hair_systems": ps_dict}
+        json_data = {
+            "blend_file": f'{style_name}.blend',
+            "hair_systems": ps_dict
+        }
 
         full_path = os.path.join(folder, f'{style_name}.json')
         
@@ -670,6 +683,12 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
 #FIXME origin to model origin? Correction?
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
+    """Save this outfit to the content folder
+
+    Args:
+        name (str): Internal prop 
+        alert (str): Internal prop #TODO check if redundant
+    """
     bl_idname      = "hg3d.save_clothing"
     bl_label       = "Save as outfit"
     bl_description = "Save as outfit"
@@ -677,6 +696,31 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
     name: bpy.props.StringProperty()
     alert: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        self.pref   = get_prefs()
+        self.sett   = context.scene.HG3D
+        self.hg_rig = self.sett.content_saving_active_human
+        self.col    = context.scene.saveoutfit_col
+
+        self.thumb = self.sett.preset_thumbnail_enum
+        
+        obj_list_without_suffix = [self.remove_number_suffix(item.obj_name) for item in self.col]
+        if len(obj_list_without_suffix) != len(set(obj_list_without_suffix)):
+            show_message(self, 'There are objects in the list which have the same names if suffix like .001 is removed')
+            return {'CANCELLED'}            
+
+        self.folder = os.path.join(self.pref.filepath, self.sett.saveoutfit_categ)
+        self.name = self.sett.clothing_name
+        
+        if os.path.isfile(str(Path(f'{self.folder}/{self.hg_rig.HG.gender}/Custom/{self.name}.blend'))):
+            self.alert = 'overwrite'
+            return context.window_manager.invoke_props_dialog(self)
+        
+        return self.execute(context)
+
+    def draw(self, context):
+        self.overwrite_warning()
 
     def execute(self,context):        
         sett = self.sett
@@ -777,57 +821,30 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         
         return {'FINISHED'}
 
-    def draw(self, context):
-        self.overwrite_warning()
-
-    def invoke(self, context, event):
-        self.pref   = get_prefs()
-        self.sett   = context.scene.HG3D
-        self.hg_rig = self.sett.content_saving_active_human
-        self.col    = context.scene.saveoutfit_col
-
-        self.thumb = self.sett.preset_thumbnail_enum
-        if not self.thumb and not self.sett.dont_export_thumb:
-            show_message(self, 'No thumbnail selected')
-            return {'CANCELLED'}    
-        if not self.hg_rig:
-            show_message(self, 'No human selected as reference')
-            return {'CANCELLED'}
-        if not (self.sett.savehair_male or self.sett.savehair_female):
-            show_message(self, 'Select at least one gender')
-            return {'CANCELLED'}
-        if not self.sett.clothing_name:
-            show_message(self, 'No name given for outfit')
-            return {'CANCELLED'}
-        if len(self.col) == 0:
-            show_message(self, 'No objects in list')
-            return {'CANCELLED'}
-        
-        obj_list_without_suffix = [self.remove_number_suffix(item.obj_name) for item in self.col]
-        if len(obj_list_without_suffix) != len(set(obj_list_without_suffix)):
-            show_message(self, 'There are objects in the list which have the same names if suffix like .001 is removed')
-            return {'CANCELLED'}            
-
-        self.folder = os.path.join(self.pref.filepath, self.sett.saveoutfit_categ)
-        self.name = self.sett.clothing_name
-        
-        if os.path.isfile(str(Path(f'{self.folder}/{self.hg_rig.HG.gender}/Custom/{self.name}.blend'))):
-            self.alert = 'overwrite'
-            return context.window_manager.invoke_props_dialog(self)
-        
-        return self.execute(context)
-
     #CHECK naming adds .004 to file names, creating duplicates
     def save_material_textures(self, objs):
+        """Save the textures used by the materials of these objects to the
+        content folder
+
+        Args:
+            objs (list): List of objects to check for textures on
+        """
         saved_images = {}
 
         for obj in objs:
             for mat in obj.data.materials:
                 nodes= mat.node_tree.nodes
-                for img_node in [n for n in nodes if n.bl_idname == 'ShaderNodeTexImage']:
+                for img_node in [n for n in nodes 
+                                 if n.bl_idname == 'ShaderNodeTexImage']:
                     self._process_image(saved_images, img_node)
 
     def _process_image(self, saved_images, img_node):
+        """Prepare this image for saving and call _save_img on it
+
+        Args:
+            saved_images (dict): Dict to keep record of what images were saved
+            img_node (ShaderNode): TexImageShaderNode the image is in
+        """
         img = img_node.image
         if not img:
             return
@@ -841,6 +858,15 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             new_img.colorspace_settings.name = colorspace
     
     def _save_img(self, img, saved_images) -> 'tuple[str, list]':
+        """Save image to content folder
+
+        Returns:
+            tuple[str, dict]: 
+                str: path the image was saved to
+                dict[str: str]:
+                    str: name of the image
+                    str: path the image was saved to 
+        """
         img_name = self.remove_number_suffix(img.name)
         if img_name in saved_images:
             return saved_images[img_name], saved_images
@@ -865,6 +891,9 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
 
 class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
+    """Renders a thumbnail from preset camera positions and lighting. This thumb
+    is then added to the prop used by custom content saving operators.
+    """
     bl_idname      = "hg3d.auto_render_thumbnail"
     bl_label       = "Auto render thumbnail"
     bl_description = "Automatically renders a thumbnail for you"
@@ -876,13 +905,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         
         thumbnail_type = self.thumbnail_type
                
-        type_settings_dict = {
-            'head': {'camera_x': -1.0, 'camera_y': -1.0, 'focal_length': 135, 'look_at_correction': 0.14},
-            'full_body_front': {'camera_x': 0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
-            'full_body_side': {'camera_x': -2.0, 'camera_y': -2.0, 'focal_length': 50, 'look_at_correction': 0.9},
-        }
-        
-        type_sett = type_settings_dict[thumbnail_type]
+        type_sett = self._get_settings_dict_by_thumbnail_type(thumbnail_type)
         
         hg_thumbnail_scene = bpy.data.scenes.new('HG_Thumbnail_Scene')
         old_scene = context.window.scene
@@ -917,11 +940,20 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         hg_thumbnail_scene.render.resolution_y = 256
         hg_thumbnail_scene.render.resolution_x = 256
 
-        self.camera_look_at(camera_object, hg_rig, type_sett['look_at_correction'])
+        self._make_camera_look_at_human(
+            camera_object,
+            hg_rig,
+            type_sett['look_at_correction']
+        )
         camera_data.lens = type_sett['focal_length']
         
         lights = []
-        for energy, location in [(100, (-.3, -1, 2.2)), (10, (0.38, 0.7, 1.83)), (50, (0, -1.2, 0))]:
+        light_settings_enum = [
+            (100, (-.3, -1, 2.2)),
+            (10, (0.38, 0.7, 1.83)),
+            (50, (0, -1.2, 0))
+        ]
+        for energy, location in light_settings_enum:
             point_light = bpy.data.lights.new(name = f'light_{energy}W', type = 'POINT')
             point_light.energy = energy
             point_light_object = bpy.data.objects.new('Light', point_light)
@@ -953,18 +985,61 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         context.scene.HG3D.preset_thumbnail = img
         
         return {'FINISHED'}
+
+    def _get_settings_dict_by_thumbnail_type(self, thumbnail_type) -> dict:
+        """Returns a dict with settings of how to configure the camera for this
+        automatic thumbnail
+
+        Args:
+            thumbnail_type (str): key to the dict inside this function
+
+        Returns:
+            dict[str, float]:
+                str: name of this property
+                float: setting for camera property
+        """
+        type_settings_dict = {
+            'head': {
+                'camera_x': -1.0,
+                'camera_y': -1.0,
+                'focal_length': 135,
+                'look_at_correction': 0.14
+            },
+            'full_body_front': {
+                'camera_x': 0,
+                'camera_y': -2.0,
+                'focal_length': 50,
+                'look_at_correction': 0.9
+            },
+            'full_body_side': {
+                'camera_x': -2.0,
+                'camera_y': -2.0,
+                'focal_length': 50,
+                'look_at_correction': 0.9
+            },
+        }
+        
+        type_sett = type_settings_dict[thumbnail_type]
+        return type_sett
             
-    def camera_look_at(self, obj_camera, hg_rig, look_at_correction):
+    def _make_camera_look_at_human(self, obj_camera, hg_rig, look_at_correction):
+        """Makes the passed camera point towards a preset point on the human
+
+        Args:
+            obj_camera (bpy.types.Object): Camera object
+            hg_rig (Armature): Armature object of human
+            look_at_correction (float): Correction based on how much lower to 
+                point the camera compared to the top of the armature
+        """
+        
         hg_loc = hg_rig.location
         height_adjustment = hg_rig.dimensions[2] - look_at_correction
         hg_rig_loc_adjusted = Vector((hg_loc[0], hg_loc[1], hg_loc[2]+height_adjustment))
         loc_camera = obj_camera.location
 
         direction = hg_rig_loc_adjusted - loc_camera
-        # point the cameras '-Z' and use its 'Y' as up
         rot_quat = direction.to_track_quat('-Z', 'Y')
 
-        # assume we're using euler rotation
         obj_camera.rotation_euler = rot_quat.to_euler()        
         
         
