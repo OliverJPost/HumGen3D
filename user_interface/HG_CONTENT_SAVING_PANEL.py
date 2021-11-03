@@ -6,7 +6,9 @@ from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs, hg_log,
 from ..features.utility_section.HG_UTILITY_FUNC import (
     find_existing_shapekeys, refresh_hair_ul, refresh_outfit_ul,
     refresh_shapekeys_ul)
+from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
+from ..user_interface.TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
 
 
 class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
@@ -183,7 +185,14 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             elif tab_idx == 1:
                 self._draw_pose_category_ui(context, layout)
             elif tab_idx == 2:
-                self._draw_name_ui(context, layout, content_type)            
+                self._draw_name_ui(context, layout, content_type)    \
+        
+        draw_tips_suggestions_ui(
+            layout,
+            context='content_cration',
+            in_creation_phase=in_creation_phase(
+                sett.content_saving_active_human)
+        )
 
     ### Blocks for all content types:
     
