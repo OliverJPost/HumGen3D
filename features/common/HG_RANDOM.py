@@ -5,9 +5,11 @@ Randomize operator for sliders and pcolls
 import random
 from typing import Any
 
-import bpy  # type: ignore
+import bpy
 
 from ...core.HG_PCOLL import refresh_pcoll
+from ...features.creation_phase.HG_FACE import \
+    randomize_facial_feature_categ  # type: ignore
 from ...features.creation_phase.HG_MATERIAL import (randomize_iris_color,
                                                     randomize_skin_shader)
 from .HG_COMMON_FUNC import find_human
@@ -105,7 +107,7 @@ class HG_RANDOM(bpy.types.Operator):
             ff_subcateg = random_type[5:] #facial subcategories follow the pattern face_{category}
                                 #where face_all does all facial features
             hg_body = hg_rig.HG.body_obj
-            self.randomize_facial_feature_categ(hg_body, ff_subcateg)
+            randomize_facial_feature_categ(hg_body, ff_subcateg)
         elif random_type == 'iris_color':
             randomize_iris_color(hg_rig)
         
