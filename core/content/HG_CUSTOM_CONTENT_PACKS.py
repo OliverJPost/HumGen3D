@@ -318,10 +318,11 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             with open(filepath, 'r') as f:
                 data = json.load(f)
                 blendfile = data['blend_file']
-                folder = 'head' if categ == 'hairstyles' else 'facial_hair'
+                folder = 'head' if categ == 'hairstyles' else 'face_hair'
                 associated_files.append(str(Path(f'/hair/{folder}/{blendfile}')))
         
         mapped_associated_files = map(lambda x: self._correct_relative_path(x, categ), associated_files)
+
         returnv = list(mapped_associated_files)
         return returnv
     
@@ -343,7 +344,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         path = path.replace('/', '\\') #unifies slashes
         path_split = path.split('\\') #splits path into list
         path_split = list(filter(lambda x: x != '..', path_split)) #removes double dots in list
-        if categ != 'hairstyles':
+        if categ not in ('hairstyles', 'face_hair'):
             path_split.insert(0, categ) #adds the category name to the start of the path
         path = os.path.join(*path_split) #rebuilds the path from the path_split
 
