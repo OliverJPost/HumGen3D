@@ -16,7 +16,7 @@ from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
                                                find_human, get_addon_root,
                                                get_prefs, hg_delete, hg_log,
-                                               show_message)
+                                               show_message, unhide_human)
 from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 
@@ -520,7 +520,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         
         self.hg_rig = self.sett.content_saving_active_human
         try:
-            self.hg_rig.name
+            unhide_human(self.hg_rig)
         except Exception as e:
             show_message(self, 'Could not find human, did you delete it?')
             hg_log('Content saving failed, rig could not be found with error: ', e)
@@ -598,6 +598,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         
         sett.content_saving_ui = False
         
+        context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, 'hair')
         refresh_pcoll(self, context, 'face_hair')
         
