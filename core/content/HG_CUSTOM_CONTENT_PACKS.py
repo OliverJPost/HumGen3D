@@ -12,15 +12,15 @@ be saved/exported
 import json
 import os
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import bpy  # type: ignore
 
 from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
 from ...core.HG_PCOLL import get_pcoll_enum_items, refresh_pcoll
 from ...extern.blendfile import open_blend
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs, hg_log,
-                                               show_message)
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs,
+                                               hg_log, show_message)
 
 
 class HG_OT_CREATE_CPACK(bpy.types.Operator):
@@ -272,7 +272,14 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
         failed_exports = 0
         zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + '.zip'
-        zip = ZipFile(zip_path, 'w')
+        if get_prefs().compress_zip:
+            try:
+                zip = ZipFile(zip_path, 'w', ZIP_DEFLATED)
+            except Exception as e:
+                hg_log('Error while attempting zip compression', e, level= 'WARNING')
+                zip = ZipFile(zip_path, 'w')
+        else:
+            zip = ZipFile(zip_path, 'w')
         zip.write(json_path, os.path.relpath(json_path, pref.filepath))
         for relative_path in export_paths:
             full_path = pref.filepath + relative_path           
