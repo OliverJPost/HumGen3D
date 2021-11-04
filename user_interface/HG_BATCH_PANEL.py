@@ -335,6 +335,10 @@ class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
     bl_label = " Bake textures"
     bl_options = {'DEFAULT_CLOSED'}
 
+    @classmethod
+    def poll(cls, context):
+        return False
+
     def draw_header(self, context):
         header(self, context, 'bake')
         self.layout.label(text = '', icon = "RENDERLAYERS")
