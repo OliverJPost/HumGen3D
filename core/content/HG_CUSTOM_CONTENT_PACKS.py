@@ -155,7 +155,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                              if c.include]
         
         export_path_set, categ_set = self._build_export_set(pref, content_to_export)
-        hg_log('Exporting: ', export_path_set)
         
         self._write_json_file(pref, cpack, export_path_set, categ_set)
             
