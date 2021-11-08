@@ -113,7 +113,6 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
         col.scale_y = 1.5
         col.alert   = True
         col.operator('hg3d.bake', icon = 'OUTPUT', depress = True)
-        col.label(text = 'Blender freezes in current version', icon = 'INFO')
 
     def _draw_warning_labels(self, context, layout) -> bool:
         """Draws warning if no human is selected or textures are already baked
