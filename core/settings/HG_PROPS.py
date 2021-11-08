@@ -478,7 +478,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_average_height_in_female: IntProperty(name = 'in', default = 10, min = 0, max = 12)
     
     batch_standard_deviation: IntProperty(name = 'Standard deviation', default = 5, subtype = 'PERCENTAGE', min = 0, max = 10)
-    
+    show_height_examples: BoolProperty(default = False)
     
     
     batch_delete_backup: BoolProperty(name = 'Delete backup human', default = True)
