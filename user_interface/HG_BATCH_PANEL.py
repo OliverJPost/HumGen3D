@@ -6,7 +6,7 @@ import bpy  # type: ignore
 import numpy as np
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
-from ..features.batch_section.HG_BATCH_FUNC import (calculate_weight,
+from ..features.batch_section.HG_BATCH_FUNC import (calculate_batch_statistics,
                                                     length_from_bell_curve)
 from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import \
     get_batch_marker_list
@@ -61,18 +61,29 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         )
         if sett.batch_performance_statistics:
             box.separator()
-            split = box.split(factor = 0.28)
+            row = box.row()
+            row.alignment = 'CENTER'
+            row.label(text = 'Lower is better', icon = 'INFO')
+            box.separator()
+            split = box.split(factor = 0.25)
             split.scale_y = 0.8
             col_l = split.column(align = True)
             col_r = split.column(align = True)
+            
+            weight_dict = calculate_batch_statistics(sett)
+            
             col_l.label(text = 'Cycles:')
-            col_r.label(text = calculate_weight(sett)[0], icon = 'RENDER_STILL')
+            col_r.label(text = weight_dict['cycles_time'], icon = 'RENDER_STILL')
+            col_l.label(text = '')
+            col_r.label(text = weight_dict['cycles_memory'], icon = 'BLANK1')
             col_l.label(text = 'Eevee:')
-            col_r.label(text = calculate_weight(sett)[1], icon = 'RENDER_STILL')
-            col_l.label(text = 'Memory:')
-            col_r.label(text = calculate_weight(sett)[2], icon = 'MEMORY')
+            col_r.label(text = weight_dict['eevee_time'], icon = 'RENDER_STILL')
+            col_l.label(text = '')
+            col_r.label(text = weight_dict['eevee_memory'], icon = 'BLANK1')
+            col_l.label(text = 'RAM:')
+            col_r.label(text = weight_dict['scene_memory'], icon = 'MEMORY')
             col_l.label(text = 'Storage:')
-            col_r.label(text = calculate_weight(sett)[3], icon = 'DISK_DRIVE')
+            col_r.label(text = weight_dict['storage'], icon = 'DISK_DRIVE')
             col_r.label(text = '* Excluding textures')
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
