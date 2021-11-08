@@ -60,7 +60,9 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             icon="TRIA_DOWN" if sett.batch_performance_statistics else "TRIA_RIGHT"
         )
         if sett.batch_performance_statistics:
-            split = box.split(factor = 0.3)
+            box.separator()
+            split = box.split(factor = 0.28)
+            split.scale_y = 0.8
             col_l = split.column(align = True)
             col_r = split.column(align = True)
             col_l.label(text = 'Cycles:')
