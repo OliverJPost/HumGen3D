@@ -232,7 +232,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         
         col.separator()
         
-        col.label(text = 'Polygon reduction:', icon = 'MOD_DECIM')
+        col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
         col.prop(sett, 'batch_poly_reduction', text = '')
         
         col.separator()

@@ -423,10 +423,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                                   max=100,
                                   default=100)
 
-    batch_performance_statistics: BoolProperty(default = True)
+    batch_performance_statistics: BoolProperty(default = False)
 
     batch_pose      : BoolProperty(default = False)
-    batch_clothing  : BoolProperty(default = True)
+    batch_clothing  : BoolProperty(default = False)
     batch_expression: BoolProperty(default = False)
     batch_hair      : BoolProperty(default = False)
     batch_bake      : BoolProperty(default = False)
