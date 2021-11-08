@@ -126,13 +126,22 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align = True)
         col.prop(sett, 'batch_standard_deviation', slider = False)      
         
-        split = layout.box().split()
-        for gender in ['male', 'female']:
-            col_l = split.column()
-            col_l.separator()
-            col_l.label(text = f'{gender.capitalize()} examples:')
-            
-            self._draw_examples_list(col_l, sett, gender) 
+        box = layout.box()
+        box.prop(
+            sett, 'show_height_examples',
+            text = 'Show height examples',
+            icon="TRIA_DOWN" if sett.show_height_examples else "TRIA_RIGHT",
+            emboss=False,
+            toggle=True
+            )
+        if sett.show_height_examples:
+            split = box.split()
+            for gender in ['male', 'female']:
+                col_l = split.column()
+                col_l.separator()
+                col_l.label(text = f'{gender.capitalize()} examples:')
+                
+                self._draw_examples_list(col_l, sett, gender) 
 
     def _draw_average_height_props(self, layout, sett):
         """Draws props for the user to select the average height in either 
