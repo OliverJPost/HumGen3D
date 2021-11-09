@@ -1058,7 +1058,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         """
         
         hg_loc = hg_rig.location
-        height_adjustment = hg_rig.dimensions[2] - look_at_correction
+        height_adjustment = hg_rig.dimensions[2] - look_at_correction*0.55*hg_rig.dimensions[2] 
         hg_rig_loc_adjusted = Vector((hg_loc[0], hg_loc[1], hg_loc[2]+height_adjustment))
         loc_camera = obj_camera.location
 
