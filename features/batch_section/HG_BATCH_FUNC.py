@@ -43,6 +43,16 @@ def length_from_bell_curve(sett, gender, random_seed = True, samples = 1) -> lis
     return length_list 
 
 def calculate_batch_statistics(sett):
+    """Returns values to show the user how their choices in the batch settings
+    will impact the render times, memory usage and filesize. Good luck reading
+    this function, it's a bit of a mess.
+
+    Args:
+        sett (PropertyGroup): Addon properties
+
+    Returns:
+        dict: Dict with strings that explain to the user what the impact is
+    """
     eevee_time = 0
     eevee_memory = 0
     cycles_time = 0
@@ -166,9 +176,6 @@ def calculate_batch_statistics(sett):
     }
     
     return statistics_dict
-
-
-
 
 def get_batch_marker_list(context) -> list:
     sett = context.scene.HG3D
