@@ -127,7 +127,6 @@ def create_quality_dict_from_keywords(
     
     return locals()
 
-create_quality_dict_from_keywords()
 
 def generate_human_in_background(
         context,
