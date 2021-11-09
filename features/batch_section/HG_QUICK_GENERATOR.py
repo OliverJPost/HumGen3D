@@ -62,18 +62,18 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         default = "optimised",
         )
 
-    poly_reduction: EnumProperty(
-        name="Polygon reduction",   
-        items = [
-                ("none", "Disabled (original topology)",    "", 0),
-                ("medium", "Medium (33% polycount)", "", 1), #0.16 collapse
-                ("high", "High (15% polycount)",  "", 2), # 0.08 collapse
-                ("ultra", "Ultra (5% polycount)",  "", 3), # 0.025 collapse
-            ],
-        default = "medium",
-        )
+    # poly_reduction: EnumProperty(
+    #     name="Polygon reduction",   
+    #     items = [
+    #             ("none", "Disabled (original topology)",    "", 0),
+    #             ("medium", "Medium (33% polycount)", "", 1), #0.16 collapse
+    #             ("high", "High (15% polycount)",  "", 2), # 0.08 collapse
+    #             ("ultra", "Ultra (5% polycount)",  "", 3), # 0.025 collapse
+    #         ],
+    #     default = "medium",
+    #     )
     
-    apply_poly_reduction: BoolProperty()
+    # apply_poly_reduction: BoolProperty()
     
     gender: StringProperty()
 
@@ -91,14 +91,14 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
     pose_type: StringProperty()
     
-    bake_textures: BoolProperty()
-    bake_samples: IntProperty()
-    bake_extension: StringProperty()
-    body_resolution: IntProperty()
-    eyes_resolution: IntProperty()
-    mouth_resolution: IntProperty()
-    clothing_resolution: IntProperty()
-    bake_export_folder: StringProperty()
+    # bake_textures: BoolProperty()
+    # bake_samples: IntProperty()
+    # bake_extension: StringProperty()
+    # body_resolution: IntProperty()
+    # eyes_resolution: IntProperty()
+    # mouth_resolution: IntProperty()
+    # clothing_resolution: IntProperty()
+    # bake_export_folder: StringProperty()
 
     def execute(self, context):
         sett = context.scene.HG3D
@@ -166,8 +166,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         hg_rig.HG.phase = 'clothing' #TODO is this needed? Remove? 
       
       
-        if self.bake_textures:
-            self._bake_all_textures(context, hg_rig)
+        # if self.bake_textures:
+        #     self._bake_all_textures(context, hg_rig)
         
         #### Quality settings #####
         
@@ -194,54 +194,54 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         hg_body.name = hg_rig_name
 
 
-    def _bake_all_textures(self, context, hg_rig):
-        check_bake_render_settings(context, self.bake_samples, force_cycles=True)        
-        bake_enum = generate_bake_enum(context, [hg_rig,])
-        hg_log("Bake enum", bake_enum)
+    # def _bake_all_textures(self, context, hg_rig):
+    #     check_bake_render_settings(context, self.bake_samples, force_cycles=True)        
+    #     bake_enum = generate_bake_enum(context, [hg_rig,])
+    #     hg_log("Bake enum", bake_enum)
         
-        image_dict = {}
+    #     image_dict = {}
         
-        for idx, sett_dict in enumerate(bake_enum):
-            human_name, texture_name, bake_obj, mat_slot, tex_type = sett_dict.values()
+    #     for idx, sett_dict in enumerate(bake_enum):
+    #         human_name, texture_name, bake_obj, mat_slot, tex_type = sett_dict.values()
             
-            bake_obj.select_set(True)
-            context.view_layer.objects.active = bake_obj
+    #         bake_obj.select_set(True)
+    #         context.view_layer.objects.active = bake_obj
 
-            solidify_state = get_solidify_state(bake_obj, False) 
-            current_mat = bake_obj.data.materials[mat_slot]
+    #         solidify_state = get_solidify_state(bake_obj, False) 
+    #         current_mat = bake_obj.data.materials[mat_slot]
             
-            img_name = f'{human_name}_{texture_name}_{tex_type}'
+    #         img_name = f'{human_name}_{texture_name}_{tex_type}'
             
-            #TODO  teeth
-            if texture_name == 'body':
-                resolution = self.body_resolution
-            elif texture_name == 'eyes':
-                resolution = self.eyes_resolution
-            else:
-                resolution = self.clothing_resolution
+    #         #TODO  teeth
+    #         if texture_name == 'body':
+    #             resolution = self.body_resolution
+    #         elif texture_name == 'eyes':
+    #             resolution = self.eyes_resolution
+    #         else:
+    #             resolution = self.clothing_resolution
             
-            hg_rig.select_set(False)
-            img = bake_texture(context, current_mat, tex_type, img_name, self.bake_extension, resolution, self.bake_export_folder)
+    #         hg_rig.select_set(False)
+    #         img = bake_texture(context, current_mat, tex_type, img_name, self.bake_extension, resolution, self.bake_export_folder)
             
-            assert img
+    #         assert img
             
-            image_dict[img] = tex_type
+    #         image_dict[img] = tex_type
 
-            #check if next texture belongs to another object
-            try:
-                last_texture = True if bake_enum[idx+1]["texture_name"] != texture_name else False       
-            except IndexError:
-                last_texture = True
+    #         #check if next texture belongs to another object
+    #         try:
+    #             last_texture = True if bake_enum[idx+1]["texture_name"] != texture_name else False       
+    #         except IndexError:
+    #             last_texture = True
             
-            if last_texture:
-                new_mat = material_setup(bake_obj, mat_slot)
-                for img,tex_type in image_dict.items():
-                    add_image_node(img, tex_type, new_mat)   
-                image_dict.clear()
+    #         if last_texture:
+    #             new_mat = material_setup(bake_obj, mat_slot)
+    #             for img,tex_type in image_dict.items():
+    #                 add_image_node(img, tex_type, new_mat)   
+    #             image_dict.clear()
             
-            get_solidify_state(bake_obj, solidify_state)
-            hg_rig = bpy.data.objects.get(human_name)
-            hg_rig['hg_baked'] = 1                 
+    #         get_solidify_state(bake_obj, solidify_state)
+    #         hg_rig = bpy.data.objects.get(human_name)
+    #         hg_rig['hg_baked'] = 1                 
             
 
     def _set_quality_settings(self, context, hg_rig, hg_body):
@@ -275,11 +275,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 self._apply_modifier_by_type(context, obj, 'ARMATURE')
                 self._remove_redundant_vertex_groups(obj)               
             
-        if self.poly_reduction != 'none':
-            for obj in hg_objects:
-                pr_mod = self._add_poly_reduction_modifier(obj)
-                if self.apply_poly_reduction and pr_mod and self.apply_shapekeys:
-                    self._apply_modifier(context, obj, pr_mod)      
+        # if self.poly_reduction != 'none':
+        #     for obj in hg_objects:
+        #         pr_mod = self._add_poly_reduction_modifier(obj)
+        #         if self.apply_poly_reduction and pr_mod and self.apply_shapekeys:
+        #             self._apply_modifier(context, obj, pr_mod)      
             
         #Reconnect hair, so it follows the body again
         context.view_layer.objects.active = hg_body
@@ -317,19 +317,19 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         
         context.view_layer.objects.active = old_active_obj
 
-    def _add_poly_reduction_modifier(self, obj) -> bpy.types.Modifier:
-        #TODO optimise polygon reduction, UV layout
-        if obj.type != 'MESH':
-            return None      
+    # def _add_poly_reduction_modifier(self, obj) -> bpy.types.Modifier:
+    #     #TODO optimise polygon reduction, UV layout
+    #     if obj.type != 'MESH':
+    #         return None      
             
-        decimate_mod = obj.modifiers.new('HG_POLY_REDUCTION', 'DECIMATE')
+    #     decimate_mod = obj.modifiers.new('HG_POLY_REDUCTION', 'DECIMATE')
             
-        # if self.poly_reduction == 'medium':
-        #     decimate_mod.decimate_type = 'UNSUBDIV'
-        #     decimate_mod.iterations = 2
-        decimate_mod.ratio = 0.16 if self.poly_reduction == 'medium' else 0.08 if self.poly_reduction == 'high' else 0.025
+    #     # if self.poly_reduction == 'medium':
+    #     #     decimate_mod.decimate_type = 'UNSUBDIV'
+    #     #     decimate_mod.iterations = 2
+    #     decimate_mod.ratio = 0.16 if self.poly_reduction == 'medium' else 0.08 if self.poly_reduction == 'high' else 0.025
         
-        return decimate_mod
+    #     return decimate_mod
 
     def _remove_modifier_by_type(self, obj, mod_type):
         for modifier in [m for m in obj.modifiers if m.type == mod_type]:
