@@ -1,5 +1,6 @@
 import json
 import os
+import random
 import subprocess
 import time
 
@@ -16,8 +17,40 @@ def get_pcoll_options(pcoll_name) -> list:
     
     return pcoll_list
 
+def create_settings_dict_from_keywords(
+    gender = random.choice(('male', 'female')),
+    ethnicity = random.choice(('caucasian', 'black', 'asian')), #TODO option for custom ethnicities for custom starting humans
+    add_hair = False,
+    hair_type = 'particle',
+    hair_quality = 'medium',
+    add_expression = False,
+    expressions_category = 'All',
+    add_clothing = False,
+    clothing_category = 'All',
+    pose_type = 'A_Pose'
+    ) -> dict:
+    
+    return locals()
+    
+def create_quality_dict_from_keywords(
+    delete_backup = True,
+    apply_shapekeys = True,
+    apply_armature_modifier = True,
+    remove_clothing_subdiv = True,
+    remove_clothing_solidify = True,
+    apply_clothing_geometry_masks = True,
+    texture_resolution = 'optimised'
+    ) -> dict:
+    
+    return locals()
 
-def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
+
+def generate_human_in_background(
+        context,
+        settings_dict = create_settings_dict_from_keywords(),
+        quality_dict = create_quality_dict_from_keywords()
+    ) -> bpy.types.Object:
+    
     for obj in context.selected_objects:
         obj.select_set(False)
 
@@ -26,7 +59,7 @@ def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
     start_time_background_process = time.time()
     
     hg_log('STARTING HumGen background process', level = 'BACKGROUND')
-    _run_hg_subprocess(settings_dict, python_file)
+    _run_hg_subprocess(settings_dict, quality_dict, python_file)
     hg_log('^^^ HumGen background process ENDED', level = 'BACKGROUND')
 
     hg_log(f'Background Process succesful, took: ',
@@ -38,14 +71,14 @@ def generate_human_in_background(context, settings_dict) -> bpy.types.Object:
     
     return hg_rig
 
-def _run_hg_subprocess(settings_dict, python_file):
+def _run_hg_subprocess(settings_dict, quality_dict, python_file):
     background_blender = subprocess.run(
         [
             bpy.app.binary_path,
             "--background",
             "--python",
             python_file,
-            json.dumps(settings_dict)
+            json.dumps({**settings_dict, **quality_dict})
         ],
         stdout= subprocess.PIPE,
         stderr= subprocess.PIPE)
