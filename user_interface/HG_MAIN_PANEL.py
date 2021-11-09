@@ -4,13 +4,14 @@ from sys import platform
 
 import addon_utils  # type: ignore
 import bpy
-from ..user_interface.TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui  # type: ignore
 
 from .. import bl_info
 from ..core.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
 from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs,
                                               is_batch_result)
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
+    draw_tips_suggestions_ui  # type: ignore
 from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_spoiler_box,
                                  draw_sub_spoiler, get_flow, in_creation_phase,
                                  searchbox)
@@ -85,12 +86,12 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._draw_pose_section() 
             self._draw_expression_section() 
         
-        draw_tips_suggestions_ui(
-            layout,
-            context='main',
-            in_creation_phase=in_creation_phase(hg_rig)
-        )
-        layout.separator(factor=150)
+        if get_prefs().show_tips:
+            draw_tips_suggestions_ui(
+                layout,
+                context
+            )
+            layout.separator(factor=150)
 
     #  __    __   _______     ___       _______   _______ .______      
     # |  |  |  | |   ____|   /   \     |       \ |   ____||   _  \     
