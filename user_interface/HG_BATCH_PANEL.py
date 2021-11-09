@@ -2,7 +2,7 @@
 This file is currently inactive
 """
 
-import bpy  # type: ignore
+import bpy
 import numpy as np
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
@@ -10,6 +10,8 @@ from ..features.batch_section.HG_BATCH_FUNC import (calculate_weight,
                                                     length_from_bell_curve)
 from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import \
     get_batch_marker_list
+from ..features.common.HG_COMMON_FUNC import get_prefs  # type: ignore
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
 from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_resolution_box,
                                  get_flow)
 
@@ -363,3 +365,23 @@ def header(self, context, categ):
     sett = context.scene.HG3D
     layout = self.layout
     layout.prop(sett, 'batch_{}'.format(categ), text="")
+
+
+class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
+    bl_parent_id = "HG_PT_Batch_Panel"
+    bl_label = "Tips and suggestions!"
+    bl_options = {'HIDE_HEADER'}
+        
+    @classmethod
+    def poll(cls, context):
+        return get_prefs().show_tips
+    
+    def draw(self, context):
+        layout = self.layout
+    
+        draw_tips_suggestions_ui(
+            layout,
+            context
+        )
+        
+        layout.separator(factor=150)

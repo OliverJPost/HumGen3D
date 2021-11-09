@@ -8,7 +8,7 @@ from ..features.utility_section.HG_UTILITY_FUNC import (
     refresh_shapekeys_ul)
 from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
-from ..user_interface.TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
 
 
 class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
@@ -187,12 +187,15 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             elif tab_idx == 2:
                 self._draw_name_ui(context, layout, content_type)    \
         
-        draw_tips_suggestions_ui(
-            layout,
-            context='content_cration',
-            in_creation_phase=in_creation_phase(
-                sett.content_saving_active_human)
-        )
+        
+        if get_prefs().show_tips:
+            draw_tips_suggestions_ui(
+                layout,
+                context='content_cration',
+                in_creation_phase=in_creation_phase(
+                    sett.content_saving_active_human)
+            )
+            layout.separator(factor = 150)
 
     ### Blocks for all content types:
     
