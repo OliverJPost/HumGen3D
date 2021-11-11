@@ -519,7 +519,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
                 ("low", "Low",  "", 2), 
                 ("ultralow", "Ultra Low",  "", 3),    
             ],
-        default = "low",
+        default = "medium",
         )
     batch_hair_quality_haircards: EnumProperty(
         name="Haircard quality",   
