@@ -44,16 +44,26 @@ def draw_tips_suggestions_ui(layout, context):
     
     for tip_item in tips_col:
         col.separator()
-        _draw_text_bloc(col, tip_item.tip_text)
+        _draw_tips_bloc(col, tip_item)
         
 
-def _draw_text_bloc(layout, text):
-    col = layout.column()
-    col.scale_y = 0.7
-    col.enabled = False
+def _draw_tips_bloc(layout, tip_item):
+    col = layout.box()
+    row = col.row()
+    row.alignment = 'CENTER'
     
-    for line in text.splitlines():
-        col.label(text = line)
+    subrow = row.row()
+    subrow.alignment = 'CENTER'
+    subrow.enabled = False
+    subrow.label(text = tip_item.title, icon = tip_item.icon_name)
+    row.operator('hg3d.showinfo', text = "", icon = 'X', emboss = False)#.tip_name = tip_item.title
+    subcol = col.column()
+    subcol.scale_y = 0.8
+    subcol.enabled = False
+    
+    for line in tip_item.tip_text.splitlines():
+        subcol.label(text = line)
+
 
 def _update_tips_from_context(context, sett, hg_rig):
     hg_area = 'content_saving' if sett.content_saving_ui else sett.active_ui_tab
@@ -65,8 +75,9 @@ def _update_tips_from_context(context, sett, hg_rig):
         tips = get_batch_tips_from_context(context, sett, hg_rig)
     
     col.clear()
-    for icon_name, tip_text, operator_name, operator_label in tips:
+    for title, icon_name, tip_text, operator_name, operator_label in tips:
         item = col.add()
+        item.title = title
         item.icon_name = icon_name
         item.tip_text = tip_text
         item.operator_name = operator_name
@@ -76,6 +87,7 @@ class TIPS_ITEM(bpy.types.PropertyGroup):
     """
     Properties of the items in the uilist
     """
+    title: bpy.props.StringProperty(default = '')
     icon_name: bpy.props.StringProperty(default = '')   
     tip_text: bpy.props.StringProperty(default = '')
     operator_name: bpy.props.StringProperty(default = '')
