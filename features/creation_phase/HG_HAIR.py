@@ -604,8 +604,6 @@ def random_hair_color(hg_body):
         'black' : (0.0, 1.0, 0.0),
         'dark_brown' : (0.5, 1.0, 0.0),
         'brown' : (1.0, 1.0, 0.0),
-        'grey' : (4.0,  0.0, 0.0),
-        'greying' : (0.6, 0.0, 0.5),
         'red' : (3.0, 1.0, 0.0)
     }
     
