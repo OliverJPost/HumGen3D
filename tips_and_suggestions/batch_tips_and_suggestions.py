@@ -9,13 +9,12 @@ def get_batch_tips_from_context(context, sett, hg_rig):
         
    
 no_markers_in_scene = [
-'No markers in scene'
-'ERROR',
-"""You currently don't have any batch
-markers in this scene. Add some
-markers in the Add Object menu
-(shift+A) in the Human Generator
-section.
+'No markers in scene?',
+'INFO',
+"""If the purple button says
+"Generate 0 Humans", add some
+Human Generator markers from
+the Add Object (Shift+A) menu.
 """,
 '',
 ''
