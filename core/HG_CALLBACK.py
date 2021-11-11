@@ -195,10 +195,7 @@ def tab_change_update(self, context):
     Batch tab and Utility tab)"""
     
     refresh_modapply(self, context)
-    refresh_shapekeys_ul(self, context)
-    refresh_hair_ul(self, context)
-    refresh_outfit_ul(self, context)
-    
+
     batch_uilist_refresh(self, context, 'outfits')
     batch_uilist_refresh(self, context, 'expressions')
 
