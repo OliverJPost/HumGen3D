@@ -5,7 +5,8 @@ Operators not related to any particular section
 import bpy  # type: ignore
 
 from ...core.HG_PCOLL import refresh_pcoll
-from .HG_COMMON_FUNC import find_human, get_prefs, hg_delete, hg_log
+from .HG_COMMON_FUNC import (find_human, get_prefs, hg_delete, hg_log,
+                             is_batch_result)
 from .HG_INFO_POPUPS import HG_OT_INFO
 
 
@@ -69,10 +70,10 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             'hair': ('hair', 'face_hair'),
             'expression': ('expressions',)
         }
-        
-        if self.section_name in categ_dict:
-            for item in categ_dict[self.section_name]:
-                 refresh_pcoll(self, context, item)
+        if not is_batch_result(context.object):
+            if self.section_name in categ_dict:
+                for item in categ_dict[self.section_name]:
+                    refresh_pcoll(self, context, item)
         
         pref = get_prefs()
         if pref.auto_hide_hair_switch and not self.children_hide_exception:
