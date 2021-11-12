@@ -304,6 +304,11 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         layout   = self.layout
         hg_icons = preview_collections['hg_icons']
  
+        layout.operator(
+            'hg3d.open_content_saving_tab',
+            text='Make into clothing'
+            ).content_type = 'mesh_to_cloth'
+ 
         layout.operator('hg3d.draw_tutorial',
                     text = 'Tutorial',
                     icon = 'HELP'
