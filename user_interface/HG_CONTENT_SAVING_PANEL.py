@@ -7,7 +7,8 @@ from ..features.utility_section.HG_UTILITY_FUNC import (
     find_existing_shapekeys, refresh_hair_ul, refresh_outfit_ul,
     refresh_shapekeys_ul)
 from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase
-from ..user_interface.HG_TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import (draw_tips_suggestions_ui,
+                                                     update_tips_from_context)
 from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 
 
@@ -30,6 +31,12 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
     def execute(self,context):
         sett = context.scene.HG3D
         sett.content_saving_ui = False
+
+        update_tips_from_context(
+            context,
+            sett,
+            sett.content_saving_active_human
+        )
         return {'FINISHED'}
     
 class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
@@ -90,6 +97,12 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                     self,
                     "This object is already HG clothing, are you sure you want to redo this process?"
                 )
+                
+        update_tips_from_context(
+            context,
+            sett,
+            sett.content_saving_active_human
+        )
         return {'FINISHED'}
 
     def _check_if_human_uses_unsaved_shapekeys(self, sett) -> list:
@@ -281,9 +294,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         if get_prefs().show_tips:
             draw_tips_suggestions_ui(
                 layout,
-                context='content_cration',
-                in_creation_phase=in_creation_phase(
-                    sett.content_saving_active_human)
+                context
             )
             if get_prefs().full_height_menu:
                 layout.separator(factor = 150)
@@ -950,7 +961,8 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         col = layout.column()   
         col.scale_y = 1.5
 
-        if 'spine' in set([vg.name for vg in context.object.vertex_groups]):
+        cloth_obj = sett.content_saving_object
+        if 'spine' in set([vg.name for vg in cloth_obj.vertex_groups]):
             col.label(text= 'Weight painting found', icon = 'INFO')
             poll = True
         else:
