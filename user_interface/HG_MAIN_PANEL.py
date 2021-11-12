@@ -1281,7 +1281,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             mat for mat in self.hg_rig.HG.body_obj.data.materials
             if mat.name.startswith(mat_names[categ])
             )
-        if 'HG_Hair_V2' in [n.name for n in hair_mat.node_tree.nodes]:
+        if 'HG_Hair_V3' in [n.name for n in hair_mat.node_tree.nodes]:
+            hair_node = hair_mat.node_tree.nodes['HG_Hair_V3']
+            new_hair_node = True
+        elif 'HG_Hair_V2' in [n.name for n in hair_mat.node_tree.nodes]:
             hair_node = hair_mat.node_tree.nodes['HG_Hair_V2']
             new_hair_node = True
         else:

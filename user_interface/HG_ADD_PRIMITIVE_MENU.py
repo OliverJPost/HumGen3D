@@ -33,4 +33,4 @@ def add_hg_primitive_menu(self, context):
 
     layout.separator()
     layout.menu("VIEW3D_MT_hg_marker_add",
-                text="Human Generator Markers", icon="COMMUNITY")
+                text="Human Generator Markers", icon_value = get_hg_icon('HG_icon'))

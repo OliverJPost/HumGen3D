@@ -46,7 +46,7 @@ class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
     def execute(self,context):
         hg_rig = find_human(context.object)
         hg_body = hg_rig.HG.body_obj
-        if hg_body.data.materials[1].node_tree.nodes.get('HG_Hair_V2'):
+        if hg_body.data.materials[1].node_tree.nodes.get('HG_Hair_V3'):
             self.report({'INFO'}, 'This human already has the new hair shader')
             return {'FINISHED'}
         

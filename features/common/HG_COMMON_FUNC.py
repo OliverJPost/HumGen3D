@@ -272,6 +272,15 @@ def print_context(context):
     
     hg_log(context_dict)
 
+def unhide_human(obj):
+    """Makes sure the rig is visible. If not visible it might cause problems
+
+    Args:
+        obj (Object): object to unhide
+    """
+    obj.hide_viewport = False
+    obj.hide_set(False)
+
 #TODO make deepclean data removal, using:
 
 # for block in bpy.data.meshes:

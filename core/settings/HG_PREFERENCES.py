@@ -112,6 +112,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     skip_url_request: bpy.props.BoolProperty(default = False)
     
     show_tips: bpy.props.BoolProperty(default = True)
+    compress_zip: bpy.props.BoolProperty(default = True)
 
 
     def draw(self, context):  
@@ -312,6 +313,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         col.prop(self, 'dev_tools')
         col.prop(self, 'skip_url_request', text = 'Skip URL request')
         col.prop(self, 'show_tips', text = 'Show "Tips and Suggestions" interface')
+        col.prop(self, 'compress_zip', text = 'Compress cpack .zip on export (EXPERIMENTAL)')
         
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned"""

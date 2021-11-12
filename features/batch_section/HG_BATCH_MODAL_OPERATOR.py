@@ -147,7 +147,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 
             pose_type = current_marker['hg_batch_marker']
             settings_dict = self._build_settings_dict(context, sett, pose_type)    
-            result = humgen.generate_human_in_background(context, settings_dict)
+            quality_dict = self._build_quality_dict(sett)
+            result = humgen.generate_human_in_background(context, settings_dict, quality_dict)
             
             if not result:
                 self._cancel(sett, context)
@@ -188,51 +189,34 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         return {'CANCELLED'}
 
     def _build_settings_dict(self, context, sett, pose_type) -> dict:
-        sd = {}
+        settings_dict = humgen.create_settings_dict_from_keywords(
+            gender = str(random.choices(
+                ('male', 'female'),
+                weights = (sett.male_chance, sett.female_chance),
+                k=1)[0]),
+            ethnicity = str(random.choices(
+                ('caucasian', 'black', 'asian'),
+                weights = (
+                    sett.caucasian_chance,
+                    sett.black_chance,
+                    sett.asian_chance
+                    ),
+                k=1
+                )[0]),
+            add_hair = sett.batch_hair,
+            hair_type = sett.batch_hairtype,
+            hair_quality = getattr(sett, f'batch_hair_quality_{sett.batch_hairtype}'),
+            add_expression = sett.batch_expression,
+            expressions_category = self._choose_category_list(context, 'expressions'),
+            add_clothing = sett.batch_clothing,
+            clothing_category= self._choose_category_list(context, 'outfit'),
+            pose_type = pose_type
+        )
         
-        for quality_setting in self._get_quality_setting_names():
-            sd[quality_setting] = getattr(sett, f'batch_{quality_setting}')
-        
-        sd['gender'] = str(random.choices(
-            ('male', 'female'),
-            weights = (sett.male_chance, sett.female_chance),
-            k=1)[0])
-        
-        sd['ethnicity'] = str(random.choices(
-            ('caucasian', 'black', 'asian'),
-            weights = (
-                sett.caucasian_chance,
-                sett.black_chance,
-                sett.asian_chance
-                ),
-            k=1
-            )[0])
-                                    
-        sd['add_hair'] = sett.batch_hair
-        sd['hair_type'] = sett.batch_hairtype
-        sd['hair_quality'] = getattr(sett, f'batch_hair_quality_{sett.batch_hairtype}')
-        
-        sd['add_expression'] = sett.batch_expression
-        if sett.batch_expression:
-            self._add_category_list(context, sd, 'expressions') 
-        
-        sd['add_clothing'] = sett.batch_clothing
-        if sett.batch_clothing:
-            self._add_category_list(context, sd, 'clothing') 
-        
-        sd['pose_type'] = pose_type
-        
-        sd['bake_textures']= sett.batch_bake
-        sd['bake_samples'] = int(sett.bake_samples)
-        sd['bake_extension']= sett.bake_file_type
-        sd['body_resolution']= int(sett.bake_res_body)
-        sd['eyes_resolution']= int(sett.bake_res_eyes)
-        sd['clothing_resolution'] = int(sett.bake_res_clothes)
-        sd['bake_export_folder'] = get_bake_export_path(sett, 'bake_from_batch')
-        
-        return sd
+        return settings_dict
 
-    def _add_category_list(self, context, sd, pcoll_name):
+
+    def _choose_category_list(self, context, pcoll_name):
         
         #TODO fix naming inconsistency
         label = 'expressions' if pcoll_name == 'expressions' else 'clothing'
@@ -248,18 +232,21 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             
             enabled_categories = [i.library_name for i in collection]
             
-        sd[f'{pcoll_name}_category'] = random.choice(enabled_categories)
+        return random.choice(enabled_categories)
 
-    def _get_quality_setting_names(self):
-        return [
+    def _build_quality_dict(self, sett):
+        q_names = [
             'delete_backup',
             'apply_shapekeys',
             'apply_armature_modifier',
             'remove_clothing_subdiv',
             'remove_clothing_solidify',
             'apply_clothing_geometry_masks',
-            'texture_resolution',
-            'poly_reduction',
-            'apply_poly_reduction'
+            'texture_resolution'
         ]
         
+        quality_dict = humgen.create_quality_dict_from_keywords(
+            **{n: getattr(sett, f'batch_{n}') for n in q_names}
+            )
+        
+        return quality_dict
