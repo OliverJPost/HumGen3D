@@ -47,6 +47,10 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
 
     content_type: bpy.props.StringProperty()
 
+    @classmethod
+    def poll(cls, context):
+        return context.object
+
     def execute(self,context):  
         sett = context.scene.HG3D
         
@@ -74,7 +78,16 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                 
                 sett.content_saving_ui = False
                 return {'CANCELLED'}
-
+        if self.content_type == 'mesh_to_cloth':
+            if context.object.type != 'MESH':
+                show_message(self, "Active object is not a mesh")
+                sett.content_saving_ui = False
+                return {'CANCELLED'}
+            elif 'cloth' in context.object:
+                show_message(
+                    self,
+                    "This object is already HG clothing, are you sure you want to redo this process?"
+                )
         return {'FINISHED'}
 
     def _check_if_human_uses_unsaved_shapekeys(self, sett) -> list:
