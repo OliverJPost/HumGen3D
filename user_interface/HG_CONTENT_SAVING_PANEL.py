@@ -195,7 +195,8 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
                 in_creation_phase=in_creation_phase(
                     sett.content_saving_active_human)
             )
-            layout.separator(factor = 150)
+            if get_prefs().full_height_menu:
+                layout.separator(factor = 150)
 
     ### Blocks for all content types:
     

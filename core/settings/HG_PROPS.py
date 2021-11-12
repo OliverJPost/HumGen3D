@@ -797,6 +797,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     
     content_saving_active_human: PointerProperty(type = bpy.types.Object)
 
+    show_hidden_tips: bpy.props.BoolProperty(default = False)
+
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)
     phase  : EnumProperty(

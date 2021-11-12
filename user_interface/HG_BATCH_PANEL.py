@@ -410,4 +410,5 @@ class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
             context
         )
         
-        layout.separator(factor=150)
+        if get_prefs().full_height_menu:
+            layout.separator(factor=200)

@@ -64,7 +64,7 @@ from .user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_hg_marker_add
 from .user_interface.HG_CONTENT_SAVING_PANEL import (
     HG_OT_CANCEL_CONTENT_SAVING_UI, HG_OT_OPEN_CONTENT_SAVING_TAB,
     HG_PT_CONTENT_SAVING)
-from .user_interface.HG_TIPS_SUGGESTIONS_UI import TIPS_ITEM
+from .user_interface.HG_TIPS_SUGGESTIONS_UI import HG_OT_HIDE_TIP, HG_OT_UNHIDE_TIP, TIPS_ITEM
 
 #features
     #common
@@ -232,5 +232,7 @@ hg_classes = (
     #TIPS and suggestions
     TIPS_ITEM,
     HG_BATCH_PANEL.HG_PT_BATCH_TIPS,
-    HG_UTILITY_PANEL.HG_PT_EXTRAS_TIPS
+    HG_UTILITY_PANEL.HG_PT_EXTRAS_TIPS,
+    HG_OT_HIDE_TIP,
+    HG_OT_UNHIDE_TIP
     )

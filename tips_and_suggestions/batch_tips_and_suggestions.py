@@ -16,7 +16,13 @@ batch_tutorial = [
 """You can find the tutorial about
 the batch mode here:
 """,
-('URL', 'wm.url_open', 'Open tutorial in browser', 'https://humgen3d.com/support/batch_mode')    
+(
+    'URL',
+    'wm.url_open',
+    'Open tutorial in browser',
+    'url',
+    'https://humgen3d.com/support/batch_mode'
+)
 ]
 
    

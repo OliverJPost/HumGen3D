@@ -91,7 +91,8 @@ class HG_PT_PANEL(bpy.types.Panel):
                 layout,
                 context
             )
-            layout.separator(factor=150)
+            if get_prefs().full_height_menu:
+                layout.separator(factor=200)
 
     #  __    __   _______     ___       _______   _______ .______      
     # |  |  |  | |   ____|   /   \     |       \ |   ____||   _  \     
