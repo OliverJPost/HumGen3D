@@ -1,7 +1,9 @@
+import os
 from pathlib import Path
 
 import bpy  # type: ignore
 
+from ...API import humgen
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (get_prefs, hg_delete,
@@ -13,11 +15,7 @@ from ...features.finalize_phase.HG_CLOTHING_LOAD import (
 class MESH_TO_CLOTH_TOOLS():
     def invoke(self, context, event):
         self.sett= context.scene.HG3D
-        self.hg_rig = self.sett.mtc_armature
-        
-        if not self.hg_rig:
-            show_message(self, 'No armature selected in the field above')
-            return {'CANCELLED'}
+        self.hg_rig = self.sett.content_saving_active_human
         return self.execute(context)
             
 #TODO make compatible with non-standard poses
@@ -28,7 +26,9 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options     = {"UNDO"}
 
     def execute(self,context):     
-        cloth_obj = context.object
+        cloth_obj = context.scene.HG3D.content_saving_object
+        context.view_layer.objects.active = cloth_obj
+        
         for obj in context.selected_objects:
             if obj != cloth_obj:
                 obj.select_set(False)
@@ -79,17 +79,13 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
     def execute(self,context):   
         self.sett = context.scene.HG3D
-        hg_rig    = self.sett.mtc_armature
+        hg_rig    = self.sett.content_saving_active_human
         sett      = self.sett
-        cloth_obj = context.object
+        cloth_obj = sett.content_saving_object
         
         body_copy      = hg_rig.HG.body_obj.copy()
         body_copy.data = body_copy.data.copy()
         context.collection.objects.link(body_copy)
-        
-        if not context.object or context.object.type != 'MESH':
-            show_message(self, 'Active object is not a mesh')
-            return {'FINISHED'}
         
         if body_copy.data.shape_keys:
             remove_list = [driver for driver 
@@ -126,6 +122,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
         
         hg_delete(body_copy)
         cloth_obj.select_set(True)
+        cloth_obj['cloth'] = 1
         return {'FINISHED'}
 
     def _build_cor_shapekey_list(self, sett) -> list:
@@ -189,8 +186,22 @@ class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
             ob.data.materials[0] = mat
         else:
             ob.data.materials.append(mat)
+
+        img_path = os.path.join(pref.filepath, 'outfits', 'textures', 'Placeholder_Textures')
+
+        nodes = mat.node_tree.nodes
+        for texture_name in ('Base Color', 'Roughness', 'Normal'):
+            file_tag = texture_name.replace(' ','_')
+            img = bpy.data.images.load(os.path.join(img_path, f'HG_Placeholder_{file_tag}.png'), check_existing = True)
+            node = next(n for n in nodes if n.label == texture_name)
+            node.image = img
+            
+            if texture_name == 'Normal':
+                if pref.nc_colorspace_name:
+                    img.colorspace_settings.name = pref.nc_colorspace_name
+                else:
+                    img.colorspace_settings.name = 'Non-Color'
         
-        ob['cloth'] = 1
         
         return {'FINISHED'}
 
@@ -243,3 +254,5 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
             mod.invert_vertex_group = True            
       
         return {'FINISHED'}
+
+

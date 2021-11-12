@@ -202,6 +202,9 @@ def tab_change_update(self, context):
 def _hair_shader_type_update(sett, hg_body):
     mat= hg_body.data.materials[1]
     hair_node = mat.node_tree.nodes.get('HG_Hair_V3')
+
+    if not hair_node:
+        return
         
     switch_value = hair_node.inputs['Fast/Accurate'].default_value
 
