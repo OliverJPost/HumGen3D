@@ -65,9 +65,10 @@ def _draw_tips_bloc(layout, tip_item):
         subcol.label(text = line)
 
 
-def _update_tips_from_context(context, sett, hg_rig):
+def update_tips_from_context(context, sett, hg_rig):
     hg_area = 'content_saving' if sett.content_saving_ui else sett.active_ui_tab
-    phase = in_creation_phase(hg_rig)
+    if hg_rig:
+        phase = in_creation_phase(hg_rig)
     
     col = context.scene.hg_tips_and_suggestions
     
@@ -75,13 +76,16 @@ def _update_tips_from_context(context, sett, hg_rig):
         tips = get_batch_tips_from_context(context, sett, hg_rig)
     
     col.clear()
-    for title, icon_name, tip_text, operator_name, operator_label in tips:
+    for title, icon_name, tip_text, operator in tips:
         item = col.add()
         item.title = title
         item.icon_name = icon_name
         item.tip_text = tip_text
-        item.operator_name = operator_name
-        item.operator_label = operator_label
+        if operator:
+            item.operator_icon = operator[0]
+            item.operator_name = operator[1]
+            item.operator_label = operator[2]
+            item.operator_argument = operator[3]
 
 class TIPS_ITEM(bpy.types.PropertyGroup):
     """
@@ -92,3 +96,5 @@ class TIPS_ITEM(bpy.types.PropertyGroup):
     tip_text: bpy.props.StringProperty(default = '')
     operator_name: bpy.props.StringProperty(default = '')
     operator_label: bpy.props.StringProperty(default = '')
+    operator_argument: bpy.props.StringProperty(default = '')
+    operator_icon: bpy.props.StringProperty(default = '')
