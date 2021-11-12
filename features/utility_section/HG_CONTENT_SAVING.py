@@ -16,7 +16,7 @@ from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
 from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
                                                find_human, get_addon_root,
                                                get_prefs, hg_delete, hg_log,
-                                               show_message)
+                                               show_message, unhide_human)
 from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 
@@ -62,7 +62,7 @@ class Content_Saving_Operator:
     def save_objects_optimized(self, context, objs, folder, filename, 
                                clear_sk = True, clear_materials = True,
                                clear_vg = True, clear_ps = True,
-                               run_in_background = True):
+                               run_in_background = True, clear_drivers = True):
         """Saves the passed objects as a new blend file, opening the file in the
         background to make it as small as possible
 
@@ -92,6 +92,11 @@ class Content_Saving_Operator:
                 self._remove_shapekeys(obj)
             if clear_ps:
                 self._remove_particle_systems(context, obj)
+            if clear_drivers:
+                self._remove_obj_drivers(obj)
+
+        if clear_drivers:
+            self._clear_sk_drivers()
 
         new_scene = bpy.data.scenes.new(name='test_scene')
         new_col   = bpy.data.collections.new(name='HG')
@@ -124,6 +129,24 @@ class Content_Saving_Operator:
         for obj in objs:
             hg_delete(obj)
 
+    def _clear_sk_drivers(self):
+        for key in bpy.data.shape_keys:
+            try:
+                fcurves = key.animation_data.drivers
+                for _ in fcurves:
+                    fcurves.remove(fcurves[0])
+            except AttributeError:
+                pass
+
+    def _remove_obj_drivers(self, obj):
+        try:
+            drivers_data = obj.animation_data.drivers
+
+            for dr in drivers_data[:]:  
+                obj.driver_remove(dr.data_path, -1)
+        except AttributeError:
+            return
+        
     def _remove_particle_systems(self, context, obj):
         """Remove particle systems from the passed object
 
@@ -520,7 +543,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         
         self.hg_rig = self.sett.content_saving_active_human
         try:
-            self.hg_rig.name
+            unhide_human(self.hg_rig)
         except Exception as e:
             show_message(self, 'Could not find human, did you delete it?')
             hg_log('Content saving failed, rig could not be found with error: ', e)
@@ -598,6 +621,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         
         sett.content_saving_ui = False
         
+        context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, 'hair')
         refresh_pcoll(self, context, 'face_hair')
         
@@ -808,6 +832,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                 clear_sk=False,
                 clear_materials=False,
                 clear_vg=False,
+                clear_drivers= False,
                 run_in_background= not sett.open_exported_outfits
             )
         hg_delete(body_copy)
@@ -1033,7 +1058,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         """
         
         hg_loc = hg_rig.location
-        height_adjustment = hg_rig.dimensions[2] - look_at_correction
+        height_adjustment = hg_rig.dimensions[2] - look_at_correction*0.55*hg_rig.dimensions[2] 
         hg_rig_loc_adjusted = Vector((hg_loc[0], hg_loc[1], hg_loc[2]+height_adjustment))
         loc_camera = obj_camera.location
 

@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import random
+from pathlib import Path
 
 import bpy  # type: ignore
 
@@ -55,7 +55,7 @@ def _change_peripheral_texture_resolution(resolution_folder, hg_rig, hg_body):
                 dir = os.path.join(current_dir, resolution_folder)
                 fn, ext = os.path.splitext(os.path.basename(current_path))
                 resolution_tag = resolution_folder.replace('_RES', '')
-                corrected_fn = fn.replace('_4K', '').replace('_MEDIUM', '').replace('_LOW', '')
+                corrected_fn = fn.replace('_4K', '').replace('_MEDIUM', '').replace('_LOW', '').replace('_2K', '')
                 new_fn = corrected_fn+f'_{resolution_tag}'+ext
                 new_path = os.path.join(dir, new_fn)
                 

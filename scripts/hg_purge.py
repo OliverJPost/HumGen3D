@@ -2,6 +2,10 @@ import os
 
 import bpy  # type: ignore
 
+for obj in bpy.data.objects[:]:
+    if not bpy.context.scene.objects.get(obj.name):
+        bpy.data.objects.remove(obj)
+
 override = bpy.context.copy()
 override["area.type"]    = ['OUTLINER']
 override["display_mode"] = ['ORPHAN_DATA']

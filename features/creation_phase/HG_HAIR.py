@@ -512,10 +512,10 @@ def convert_to_new_hair_shader(hg_body):
         return    
         
     addon_folder = Path(Path(os.path.dirname(__file__)).parent).parent
-    blendfile = os.path.join(addon_folder, 'data', 'hair_shader_v2.blend')
+    blendfile = os.path.join(addon_folder, 'data', 'hair_shader_v3.blend')
 
-    if 'HG_Hair_V2' in [ng.name for ng in bpy.data.node_groups]:
-        new_hair_group = bpy.data.node_groups['HG_Hair_V2']
+    if 'HG_Hair_V3' in [ng.name for ng in bpy.data.node_groups]:
+        new_hair_group = bpy.data.node_groups['HG_Hair_V3']
     else:
         with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
             data_to.node_groups = data_from.node_groups
@@ -524,7 +524,7 @@ def convert_to_new_hair_shader(hg_body):
     
     for node in group_nodes:
         node.node_tree = new_hair_group
-        node.name = 'HG_Hair_V2'
+        node.name = 'HG_Hair_V3'
         
 def update_hair_shader_type(self, context):
     shader_type = self.hair_shader_type
@@ -534,7 +534,7 @@ def update_hair_shader_type(self, context):
     hg_body = hg_rig.HG.body_obj
     
     for mat in hg_body.data.materials[1:3]:
-        hair_group = mat.node_tree.nodes.get('HG_Hair_V2')
+        hair_group = mat.node_tree.nodes.get('HG_Hair_V3')
         if not hair_group:
             continue
         
@@ -604,8 +604,6 @@ def random_hair_color(hg_body):
         'black' : (0.0, 1.0, 0.0),
         'dark_brown' : (0.5, 1.0, 0.0),
         'brown' : (1.0, 1.0, 0.0),
-        'grey' : (4.0,  0.0, 0.0),
-        'greying' : (0.6, 0.0, 0.5),
         'red' : (3.0, 1.0, 0.0)
     }
     

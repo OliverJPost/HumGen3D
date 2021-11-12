@@ -197,18 +197,12 @@ def tab_change_update(self, context):
     Batch tab and Utility tab)"""
     
     refresh_modapply(self, context)
-    refresh_shapekeys_ul(self, context)
-    refresh_hair_ul(self, context)
-    refresh_outfit_ul(self, context)
-    
-    update_tips_from_context(context, context.scene.HG3D, find_human(context.object))
-    
     batch_uilist_refresh(self, context, 'outfits')
     batch_uilist_refresh(self, context, 'expressions')
 
 def _hair_shader_type_update(sett, hg_body):
     mat= hg_body.data.materials[1]
-    hair_node = mat.node_tree.nodes.get('HG_Hair_V2')
+    hair_node = mat.node_tree.nodes.get('HG_Hair_V3')
         
     switch_value = hair_node.inputs['Fast/Accurate'].default_value
 

@@ -12,15 +12,15 @@ be saved/exported
 import json
 import os
 from pathlib import Path
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import bpy  # type: ignore
 
 from ...core.content.HG_CONTENT_PACKS import cpacks_refresh
 from ...core.HG_PCOLL import get_pcoll_enum_items, refresh_pcoll
 from ...extern.blendfile import open_blend
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs, hg_log,
-                                               show_message)
+from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, get_prefs,
+                                               hg_log, show_message)
 
 
 class HG_OT_CREATE_CPACK(bpy.types.Operator):
@@ -155,7 +155,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                              if c.include]
         
         export_path_set, categ_set = self._build_export_set(pref, content_to_export)
-        hg_log('Exporting: ', export_path_set)
         
         self._write_json_file(pref, cpack, export_path_set, categ_set)
             
@@ -272,7 +271,14 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
         failed_exports = 0
         zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + '.zip'
-        zip = ZipFile(zip_path, 'w')
+        if get_prefs().compress_zip:
+            try:
+                zip = ZipFile(zip_path, 'w', ZIP_DEFLATED)
+            except Exception as e:
+                hg_log('Error while attempting zip compression', e, level= 'WARNING')
+                zip = ZipFile(zip_path, 'w')
+        else:
+            zip = ZipFile(zip_path, 'w')
         zip.write(json_path, os.path.relpath(json_path, pref.filepath))
         for relative_path in export_paths:
             full_path = pref.filepath + relative_path           
@@ -311,10 +317,11 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             with open(filepath, 'r') as f:
                 data = json.load(f)
                 blendfile = data['blend_file']
-                folder = 'head' if categ == 'hairstyles' else 'facial_hair'
+                folder = 'head' if categ == 'hairstyles' else 'face_hair'
                 associated_files.append(str(Path(f'/hair/{folder}/{blendfile}')))
         
         mapped_associated_files = map(lambda x: self._correct_relative_path(x, categ), associated_files)
+
         returnv = list(mapped_associated_files)
         return returnv
     
@@ -336,7 +343,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         path = path.replace('/', '\\') #unifies slashes
         path_split = path.split('\\') #splits path into list
         path_split = list(filter(lambda x: x != '..', path_split)) #removes double dots in list
-        if categ != 'hairstyles':
+        if categ not in ('hairstyles', 'face_hair'):
             path_split.insert(0, categ) #adds the category name to the start of the path
         path = os.path.join(*path_split) #rebuilds the path from the path_split
 
