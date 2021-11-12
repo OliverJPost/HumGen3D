@@ -81,7 +81,7 @@ def HG_Callback(self):
     ui_phase = sett.ui_phase
     
     _set_shader_switches(hg_rig, sett)
-
+    update_tips_from_context(bpy.context, sett, hg_rig)
     _context_specific_updates(self, sett, hg_rig, ui_phase)
 
 def _check_body_object(hg_rig):
@@ -197,6 +197,9 @@ def tab_change_update(self, context):
     Batch tab and Utility tab)"""
     
     refresh_modapply(self, context)
+    
+    update_tips_from_context(context, context.scene.HG3D, find_human(context.object))
+    
     batch_uilist_refresh(self, context, 'outfits')
     batch_uilist_refresh(self, context, 'expressions')
 
