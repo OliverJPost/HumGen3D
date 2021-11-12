@@ -584,7 +584,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             context (context): bl context
             layout (UILayout): layout to draw this tab in
         """
-        self._draw_header_box(layout, "Is this clothing for men \nwomen or all genders?", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Is this clothing for men \nwomen or all genders?",
+            'MOD_CLOTH'
+        )
         
         col = layout.column(align = True)
         col.scale_y = 1.5
@@ -604,7 +608,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             context (context): bl context
             layout (UIlayout): layout to draw tab in
         """
-        self._draw_header_box(layout, "Select which objects are \npart of this outfit.", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Select which objects are \npart of this outfit.",
+            'MOD_CLOTH'
+        )
         
         col = layout.column(align = True)
         row = col.row(align = True)
@@ -629,7 +637,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             context (context): bl context
             layout (UILayout): layout to draw tab in
         """
-        self._draw_header_box(layout, "Are you saving an outfit \nor footwear?", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Are you saving an outfit \nor footwear?",
+            'MOD_CLOTH'
+        )
         
         col = layout.column()
         col.scale_y = 1.5
@@ -648,7 +660,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             layout (UILayout): layout to draw tab in
         """
         sett = self.sett
-        self._draw_header_box(layout, "Select shapekeys to save", 'SHAPEKEY_DATA')
+        self._draw_header_box(
+            layout,
+            "Select shapekeys to save",
+            'SHAPEKEY_DATA'
+        )
         
         col = layout.column(align = True)
         
@@ -677,10 +693,19 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(layout, poll = poll)   
 
     def _confirm_object_is_correct_ui(self, context, layout):
+        """Ask the user to confirm the selected object is correct
+        """
         sett = self.sett
-        self._draw_header_box(layout, "You are converting the\nfollowing object to clothing:", 'CHECKMARK')        
+        self._draw_header_box(
+            layout,
+            "You are converting the\nfollowing object to clothing:",
+            'CHECKMARK'
+        )
         
-        layout.label(text = sett.content_saving_object.name, icon = 'OBJECT_DATAMODE')
+        layout.label(
+            text=sett.content_saving_object.name,
+            icon='OBJECT_DATAMODE'
+        )
         
         layout.label(text = 'Is this correct?')
         col = layout.column()
@@ -695,8 +720,15 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(layout)  
 
     def _select_human_to_add_to_ui(self, context, layout):
+        """Ask the user to select the rig of the human this clothing should be
+        added to.
+        """
         sett = self.sett
-        self._draw_header_box(layout, "Select the rig of the human\nthis clothing should be added\nto:", 'CHECKMARK')            
+        self._draw_header_box(
+            layout,
+            "Select the rig of the human\nthis clothing should be added\nto:",
+            'CHECKMARK'
+        )
 
         col = layout.column()
         col.scale_y = 1.5
@@ -710,7 +742,14 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             layout.label(text = 'Selected object is not a rig/skeleton')
             
     def _confirm_object_is_in_correct_position(self, context, layout):
-        self._draw_header_box(layout, "Is your clothing in the\ncorrect position?:", 'CHECKMARK') 
+        """Ask the user if the clothing is in the correct position or if it should
+        still be moved.
+        """
+        self._draw_header_box(
+            layout,
+            "Is your clothing in the\ncorrect position?:",
+            'CHECKMARK'
+        )
         
         col = layout.column()
         col.separator()
@@ -725,9 +764,15 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(layout) 
 
     def _mesh_to_cloth_material_ui(self, context, layout):
+        """Give the user options to add a default material to the clothing.
+        """
         sett = context.scene.HG3D
         #TODO add tips and suggestions item for this
-        self._draw_header_box(layout, "Do you want to add a default\nHuman Generator material to\nthis clothing?:", 'CHECKMARK') 
+        self._draw_header_box(
+            layout,
+            "Do you want to add a default\nHuman Generator material to\nthis clothing?:",
+            'CHECKMARK'
+        )
 
         col = layout.column()
 
@@ -754,11 +799,18 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             col = box.column()
             col.use_property_split = True
             col.use_property_decorate = False
-            col.prop(nodes['HG_Control'].inputs[4], 'default_value', text = 'Color')
+            col.prop(
+                nodes['HG_Control'].inputs[4],
+                'default_value',
+                text='Color'
+            )
             
-    
-            col.prop(nodes['Mapping'].inputs[3], 'default_value', text = 'Scale')
-            
+            col.prop(nodes[
+                'Mapping'].inputs[3],
+                'default_value',
+                text='Scale'
+            )
+
         self._draw_next_button(layout) 
 
     def _draw_image_picker(self, layout, nodes, node_name):
@@ -780,7 +832,13 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
                             )
 
     def _mesh_to_cloth_corrective_shapekeys_ui(self, context, layout):
-        self._draw_header_box(layout, "Add corrective shapekeys.", 'SHAPEKEY_DATA') 
+        """Show tab to add corrective shapekeys to the clothing.
+        """
+        self._draw_header_box(
+            layout,
+            "Add corrective shapekeys.",
+            'SHAPEKEY_DATA'
+        )
         sett = context.scene.HG3D
         
         cloth_obj = sett.content_saving_object
@@ -811,6 +869,8 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             self._draw_next_button(layout, poll = False) 
 
     def _mesh_to_cloth_weight_paint_ui(self, context, layout):
+        """Show tab to add weight painting to the clothing.
+        """
         self._draw_header_box(layout, "Add weight painting:", 'SHAPEKEY_DATA') 
         sett = context.scene.HG3D
 
