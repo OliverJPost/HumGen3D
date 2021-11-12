@@ -268,10 +268,12 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             elif tab_idx == 2:
                 self._confirm_object_is_in_correct_position(context, layout)
             elif tab_idx == 3:
-                self._mesh_to_cloth_material_ui(context, layout)
+                self._draw_mesh_to_cloth_mask_ui(context, layout)
             elif tab_idx == 4:
-                self._mesh_to_cloth_corrective_shapekeys_ui(context, layout)    
+                self._mesh_to_cloth_material_ui(context, layout)
             elif tab_idx == 5:
+                self._mesh_to_cloth_corrective_shapekeys_ui(context, layout)    
+            elif tab_idx == 6:
                 self._mesh_to_cloth_weight_paint_ui(context, layout)
     
     ### Blocks for all content types:
@@ -775,6 +777,52 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         col.separator()
 
         self._draw_next_button(layout) 
+
+
+    def _draw_mesh_to_cloth_mask_ui(self, context, layout):
+        sett = context.scene.HG3D
+
+        self._draw_header_box(
+            layout,
+            "Do you want to hide parts\nof the human underneath the\nclothing using masks?",
+            'MOD_MASK'
+        )
+        
+        col= layout.column(align = True, heading = 'Masks:')
+        col.use_property_split = True
+        col.use_property_decorate = False
+        
+        col.prop(sett, 'mask_short_legs', text = 'Short legs')
+        col.prop(sett, 'mask_long_legs', text = 'Long legs')
+        col.prop(sett, 'mask_short_arms', text = 'Short Arms')
+        col.prop(sett, 'mask_long_arms', text = 'Long Arms')
+        col.prop(sett, 'mask_torso', text = 'Torso')
+        col.prop(sett, 'mask_foot', text = 'Foot')
+        col.separator()
+        row = col.row()
+        row.scale_y = 1.5
+        row.operator('hg3d.add_masks', text = 'Add selected masks')
+        
+        mask_options = [
+                "mask_lower_short",
+                "mask_lower_long", 
+                "mask_torso",
+                "mask_arms_short",
+                "mask_arms_long",
+                "mask_foot",
+            ]
+        default = "lower_short",
+        
+        mask_props = [f'mask_{i}' for i in range(10)
+                      if f'mask_{i}' in sett.content_saving_object
+                      ]
+        if mask_props:
+            col.separator()
+            col.label(text = 'Current masks:')
+            for prop_name in mask_props:
+                col.label(text = sett.content_saving_object[prop_name])   
+                
+        self._draw_next_button(layout)      
 
     def _mesh_to_cloth_material_ui(self, context, layout):
         """Give the user options to add a default material to the clothing.

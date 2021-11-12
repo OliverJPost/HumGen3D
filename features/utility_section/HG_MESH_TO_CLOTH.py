@@ -211,21 +211,13 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_description = "Adds masks to hide human body behind cloth"
     bl_options     = {"UNDO"}
 
-    @classmethod
-    def poll(cls, context):
-        return context.scene.HG3D.mtc_armature
-
     def execute(self,context): 
         sett = context.scene.HG3D
         
-        hg_rig = sett.mtc_armature
+        hg_rig = sett.content_saving_active_human
         hg_body = hg_rig.HG.body_obj
         
-        cloth_obj = context.object
-        
-        if cloth_obj == hg_body:
-            show_message(self, 'It looks like you have the body selected, please select the clothing object')
-            return {'FINISHED'}
+        cloth_obj = sett.content_saving_object
         
         old_masks = find_masks(cloth_obj)
         
