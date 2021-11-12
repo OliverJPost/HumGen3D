@@ -7,8 +7,8 @@ from ..features.utility_section.HG_UTILITY_FUNC import (
     find_existing_shapekeys, refresh_hair_ul, refresh_outfit_ul,
     refresh_shapekeys_ul)
 from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase
-from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 from ..user_interface.HG_TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
+from ..user_interface.HG_UTILITY_PANEL import Tools_PT_Base
 
 
 class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
@@ -19,8 +19,8 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
     Currently in content saving UI
     """
     bl_idname      = "hg3d.cancel_content_saving_ui"
-    bl_label       = "Cancel saving operation"
-    bl_description = 'Cancel saving operation'
+    bl_label       = "Close this menu"
+    bl_description = 'Close this menu'
     bl_options     = {"UNDO"}
 
     def invoke(self, context, event):
@@ -49,6 +49,10 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
 
     content_type: bpy.props.StringProperty()
 
+    @classmethod
+    def poll(cls, context):
+        return context.object
+
     def execute(self,context):  
         sett = context.scene.HG3D
         
@@ -58,6 +62,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett.content_saving_type = self.content_type  
         sett.content_saving_tab_index = 0  
         sett.content_saving_active_human = hg_rig
+        sett.content_saving_object = context.object
         
         hg_log(self.content_type)
         if self.content_type   == 'shapekeys':
@@ -75,7 +80,16 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                 
                 sett.content_saving_ui = False
                 return {'CANCELLED'}
-
+        if self.content_type == 'mesh_to_cloth':
+            if context.object.type != 'MESH':
+                show_message(self, "Active object is not a mesh")
+                sett.content_saving_ui = False
+                return {'CANCELLED'}
+            elif 'cloth' in context.object:
+                show_message(
+                    self,
+                    "This object is already HG clothing, are you sure you want to redo this process?"
+                )
         return {'FINISHED'}
 
     def _check_if_human_uses_unsaved_shapekeys(self, sett) -> list:
@@ -111,7 +125,69 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
             message += f"- {sk_name}\n"
         return message
 
-class HG_PT_CONTENT_SAVING(bpy.types.Panel): 
+class CONTENT_SAVING_BASE():
+    def _draw_header_box(self, layout, text, icon):
+        """Draws a box with an icon to show the name/description of this tab. If
+        the text consists of multiple lines the icon will center in the height
+        axis
+
+        Args:
+            layout (UILayout): layout to draw header box in 
+            text (str): text to display in the header box, can be multiline
+            icon (str): name of icon to display in the box
+        """
+        box = layout.box()
+        
+        lines = text.splitlines()
+        
+        split = box.split(factor = 0.1)
+        icon_col = split.column()
+        text_col = split.column() 
+        
+        icon_col.scale_y = len(lines)*0.7 if len(lines) > 1 else 1
+        if len(lines) > 1:
+            text_col.scale_y = 0.7
+
+        icon_col.label(text = '', icon = icon)
+        
+        for line in lines:
+            text_col.label(text = line)
+
+    def _draw_next_button(self, layout, poll = True):
+        """Draws a button to go to the next tab. Also draws previous button if
+        the index is higher than 0. Next button is disabled if poll == False
+
+        Args:
+            layout (UILayout): layout to draw buttons in
+            poll (bool, optional): poll to enable/disable next button.
+                Defaults to True.
+        """
+        row = layout.row(align=True)
+        row.scale_y = 1.5
+        row.alert = True
+        
+        #Show previous button if the current index is higher than 0
+        if self.sett.content_saving_tab_index > 0:
+            row.operator(
+                'hg3d.nextprev_content_saving_tab',
+                text='Previous',
+                icon='TRIA_LEFT',
+                depress=True
+            ).next = False
+        
+        #Hide next button if poll is False
+        if not poll:
+            row = row.row(align = True)
+            row.enabled = False
+            
+        row.operator(
+            'hg3d.nextprev_content_saving_tab',
+            text='Next',
+            icon='TRIA_RIGHT',
+            depress=True
+        ).next = True
+
+class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE): 
     """Panel that shows step by step options for saving various kinds of custom
     content. Which custom content it displays options for is determined by 
     sett.content_saving_type. Which tab it shows is determined by 
@@ -185,9 +261,23 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             elif tab_idx == 1:
                 self._draw_pose_category_ui(context, layout)
             elif tab_idx == 2:
-                self._draw_name_ui(context, layout, content_type)    \
-        
-        
+                self._draw_name_ui(context, layout, content_type)            
+        elif content_type == 'mesh_to_cloth':
+            if tab_idx == 0:
+                self._confirm_object_is_correct_ui(context, layout)
+            elif tab_idx == 1:
+                self._select_human_to_add_to_ui(context, layout)
+            elif tab_idx == 2:
+                self._confirm_object_is_in_correct_position(context, layout)
+            elif tab_idx == 3:
+                self._draw_mesh_to_cloth_mask_ui(context, layout)
+            elif tab_idx == 4:
+                self._mesh_to_cloth_material_ui(context, layout)
+            elif tab_idx == 5:
+                self._mesh_to_cloth_corrective_shapekeys_ui(context, layout)    
+            elif tab_idx == 6:
+                self._mesh_to_cloth_weight_paint_ui(context, layout)
+
         if get_prefs().show_tips:
             draw_tips_suggestions_ui(
                 layout,
@@ -197,7 +287,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             )
             if get_prefs().full_height_menu:
                 layout.separator(factor = 150)
-
+    
     ### Blocks for all content types:
     
     def _draw_name_ui(self, context, layout, content_type):
@@ -318,67 +408,6 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
                 text='Render [Automatic]',
                 icon='RENDER_STILL'
             ).thumbnail_type = thumbnail_type
-
-    def _draw_header_box(self, layout, text, icon):
-        """Draws a box with an icon to show the name/description of this tab. If
-        the text consists of multiple lines the icon will center in the height
-        axis
-
-        Args:
-            layout (UILayout): layout to draw header box in 
-            text (str): text to display in the header box, can be multiline
-            icon (str): name of icon to display in the box
-        """
-        box = layout.box()
-        
-        lines = text.splitlines()
-        
-        split = box.split(factor = 0.1)
-        icon_col = split.column()
-        text_col = split.column() 
-        
-        icon_col.scale_y = len(lines)*0.7 if len(lines) > 1 else 1
-        if len(lines) > 1:
-            text_col.scale_y = 0.7
-
-        icon_col.label(text = '', icon = icon)
-        
-        for line in lines:
-            text_col.label(text = line)
-
-    def _draw_next_button(self, layout, poll = True):
-        """Draws a button to go to the next tab. Also draws previous button if
-        the index is higher than 0. Next button is disabled if poll == False
-
-        Args:
-            layout (UILayout): layout to draw buttons in
-            poll (bool, optional): poll to enable/disable next button.
-                Defaults to True.
-        """
-        row = layout.row(align=True)
-        row.scale_y = 1.5
-        row.alert = True
-        
-        #Show previous button if the current index is higher than 0
-        if self.sett.content_saving_tab_index > 0:
-            row.operator(
-                'hg3d.nextprev_content_saving_tab',
-                text='Previous',
-                icon='TRIA_LEFT',
-                depress=True
-            ).next = False
-        
-        #Hide next button if poll is False
-        if not poll:
-            row = row.row(align = True)
-            row.enabled = False
-            
-        row.operator(
-            'hg3d.nextprev_content_saving_tab',
-            text='Next',
-            icon='TRIA_RIGHT',
-            depress=True
-        ).next = True
 
     def _draw_save_button(self, layout, content_type, poll = True):
         """Draws a saving button on the last tab of the content saving ui. Also
@@ -582,7 +611,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             context (context): bl context
             layout (UILayout): layout to draw this tab in
         """
-        self._draw_header_box(layout, "Is this clothing for men \nwomen or all genders?", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Is this clothing for men \nwomen or all genders?",
+            'MOD_CLOTH'
+        )
         
         col = layout.column(align = True)
         col.scale_y = 1.5
@@ -602,7 +635,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             context (context): bl context
             layout (UIlayout): layout to draw tab in
         """
-        self._draw_header_box(layout, "Select which objects are \npart of this outfit.", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Select which objects are \npart of this outfit.",
+            'MOD_CLOTH'
+        )
         
         col = layout.column(align = True)
         row = col.row(align = True)
@@ -627,16 +664,17 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             context (context): bl context
             layout (UILayout): layout to draw tab in
         """
-        self._draw_header_box(layout, "Are you saving an outfit \nor footwear?", 'MOD_CLOTH')
+        self._draw_header_box(
+            layout,
+            "Are you saving an outfit \nor footwear?",
+            'MOD_CLOTH'
+        )
         
         col = layout.column()
         col.scale_y = 1.5
         col.prop(self.sett, 'saveoutfit_categ', expand = True)
         
         self._draw_next_button(layout)        
-
-
-
 
     ### Shapekey tabs
 
@@ -649,7 +687,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             layout (UILayout): layout to draw tab in
         """
         sett = self.sett
-        self._draw_header_box(layout, "Select shapekeys to save", 'SHAPEKEY_DATA')
+        self._draw_header_box(
+            layout,
+            "Select shapekeys to save",
+            'SHAPEKEY_DATA'
+        )
         
         col = layout.column(align = True)
         
@@ -677,4 +719,252 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
         poll = [i for i in context.scene.shapekeys_col if i.enabled]
         self._draw_next_button(layout, poll = poll)   
 
+    def _confirm_object_is_correct_ui(self, context, layout):
+        """Ask the user to confirm the selected object is correct
+        """
+        sett = self.sett
+        self._draw_header_box(
+            layout,
+            "You are converting the\nfollowing object to clothing:",
+            'CHECKMARK'
+        )
+        
+        layout.label(
+            text=sett.content_saving_object.name,
+            icon='OBJECT_DATAMODE'
+        )
+        
+        layout.label(text = 'Is this correct?')
+        col = layout.column()
+        col.separator()
+        col.scale_y = 0.8
+        col.enabled = False
+        col.label(text = 'If not, press cancel, select the')
+        col.label(text = 'correct object and start again.')
+        
+        col.separator()
+        
+        self._draw_next_button(layout)  
 
+    def _select_human_to_add_to_ui(self, context, layout):
+        """Ask the user to select the rig of the human this clothing should be
+        added to.
+        """
+        sett = self.sett
+        self._draw_header_box(
+            layout,
+            "Select the rig of the human\nthis clothing should be added\nto:",
+            'CHECKMARK'
+        )
+
+        col = layout.column()
+        col.scale_y = 1.5
+        col.prop(sett, 'content_saving_active_human', text = '')
+        
+        selected_obj = sett.content_saving_active_human
+        poll = selected_obj and selected_obj.HG.ishuman
+        self._draw_next_button(layout, poll=poll)  
+        
+        if selected_obj and not poll:
+            layout.label(text = 'Selected object is not a rig/skeleton')
+            
+    def _confirm_object_is_in_correct_position(self, context, layout):
+        """Ask the user if the clothing is in the correct position or if it should
+        still be moved.
+        """
+        self._draw_header_box(
+            layout,
+            "Is your clothing in the\ncorrect position?:",
+            'CHECKMARK'
+        )
+        
+        col = layout.column()
+        col.separator()
+        col.scale_y = 0.8
+        col.enabled = False
+        col.label(text='Make sure the clothing is placed')
+        col.label(text='on the human you selected in the')
+        col.label(text='previous step.')
+        
+        col.separator()
+
+        self._draw_next_button(layout) 
+
+
+    def _draw_mesh_to_cloth_mask_ui(self, context, layout):
+        sett = context.scene.HG3D
+
+        self._draw_header_box(
+            layout,
+            "Do you want to hide parts\nof the human underneath the\nclothing using masks?",
+            'MOD_MASK'
+        )
+        
+        col= layout.column(align = True, heading = 'Masks:')
+        col.use_property_split = True
+        col.use_property_decorate = False
+        
+        col.prop(sett, 'mask_short_legs', text = 'Short legs')
+        col.prop(sett, 'mask_long_legs', text = 'Long legs')
+        col.prop(sett, 'mask_short_arms', text = 'Short Arms')
+        col.prop(sett, 'mask_long_arms', text = 'Long Arms')
+        col.prop(sett, 'mask_torso', text = 'Torso')
+        col.prop(sett, 'mask_foot', text = 'Foot')
+        col.separator()
+        row = col.row()
+        row.scale_y = 1.5
+        row.operator('hg3d.add_masks', text = 'Add selected masks')
+        
+        mask_options = [
+                "mask_lower_short",
+                "mask_lower_long", 
+                "mask_torso",
+                "mask_arms_short",
+                "mask_arms_long",
+                "mask_foot",
+            ]
+        default = "lower_short",
+        
+        mask_props = [f'mask_{i}' for i in range(10)
+                      if f'mask_{i}' in sett.content_saving_object
+                      ]
+        if mask_props:
+            col.separator()
+            col.label(text = 'Current masks:')
+            for prop_name in mask_props:
+                col.label(text = sett.content_saving_object[prop_name])   
+                
+        self._draw_next_button(layout)      
+
+    def _mesh_to_cloth_material_ui(self, context, layout):
+        """Give the user options to add a default material to the clothing.
+        """
+        sett = context.scene.HG3D
+        #TODO add tips and suggestions item for this
+        self._draw_header_box(
+            layout,
+            "Do you want to add a default\nHuman Generator material to\nthis clothing?:",
+            'CHECKMARK'
+        )
+
+        col = layout.column()
+
+        col.operator('hg3d.draw_tutorial',
+                    text = 'Material tutorial',
+                    icon = 'HELP'
+                    ).tutorial_name = 'cloth_mat_tutorial'
+                
+        mat = sett.content_saving_object.active_material
+        if not (mat and 'HG_Control' in [n.name for n in mat.node_tree.nodes]):
+            col.operator('hg3d.addclothmat',
+                         text = 'Add default HG material'
+                         ) 
+        else:       
+            box = col.box()
+            box.label(text = 'Material settings:', icon = 'SETTINGS')
+            nodes = mat.node_tree.nodes
+            self._draw_image_picker(box, nodes, 'Base Color')
+            self._draw_image_picker(box, nodes, 'Roughness')
+            self._draw_image_picker(box, nodes, 'Normal')    
+            
+            box.separator()
+
+            col = box.column()
+            col.use_property_split = True
+            col.use_property_decorate = False
+            col.prop(
+                nodes['HG_Control'].inputs[4],
+                'default_value',
+                text='Color'
+            )
+            
+            col.prop(nodes[
+                'Mapping'].inputs[3],
+                'default_value',
+                text='Scale'
+            )
+
+        self._draw_next_button(layout) 
+
+    def _draw_image_picker(self, layout, nodes, node_name):
+        """adds an template_ID image picker for the cloth material nodes
+
+        Args:
+            layout (UILayout): to draw in
+            nodes (ShaderNode list): nodes of cloth material
+            node_name (str): name of image node
+        """
+        image_node = nodes.get(node_name)
+        if not image_node:
+            return
+        
+        layout.label(text = node_name)
+        layout.template_ID(image_node, "image",
+                            new="image.new",
+                            open="image.open"
+                            )
+
+    def _mesh_to_cloth_corrective_shapekeys_ui(self, context, layout):
+        """Show tab to add corrective shapekeys to the clothing.
+        """
+        self._draw_header_box(
+            layout,
+            "Add corrective shapekeys.",
+            'SHAPEKEY_DATA'
+        )
+        sett = context.scene.HG3D
+        
+        cloth_obj = sett.content_saving_object
+        
+        if cloth_obj.data.shape_keys:
+            has_corrective_sks = next(
+                (True for sk in cloth_obj.data.shape_keys.key_blocks
+                    if sk.name.startswith('cor')),
+                False
+                )
+        else:
+            has_corrective_sks = False
+            
+        if has_corrective_sks:
+            layout.label(text = 'Corrective shapekeys found!',
+                            icon = 'INFO'
+                            )
+            self._draw_next_button(layout) 
+        else:             
+            col = layout.column()
+            col.label(text = 'Type of clothing:')
+            col = layout.column()
+            col.scale_y = 1.5
+            col.prop(sett, 'shapekey_calc_type', text = '')
+            col.operator('hg3d.addcorrective',
+                        text = 'Generate corrective shapekeys'
+                        )        
+            self._draw_next_button(layout, poll = False) 
+
+    def _mesh_to_cloth_weight_paint_ui(self, context, layout):
+        """Show tab to add weight painting to the clothing.
+        """
+        self._draw_header_box(layout, "Add weight painting:", 'SHAPEKEY_DATA') 
+        sett = context.scene.HG3D
+
+        col = layout.column()   
+        col.scale_y = 1.5
+
+        if 'spine' in set([vg.name for vg in context.object.vertex_groups]):
+            col.label(text= 'Weight painting found', icon = 'INFO')
+            poll = True
+        else:
+            col.operator('hg3d.autoweight', text = 'Auto weight paint')  
+            poll = False
+        
+        layout.separator()
+        row = layout.row()
+        row.scale_y = 1.5
+        row.enabled = poll
+        row.alert = True
+        row.operator(
+            'hg3d.cancel_content_saving_ui',
+            text='Finish',
+            icon='CHECKMARK',
+            depress=True
+        )

@@ -1,6 +1,6 @@
 import bpy
 
-from ..core.HG_PCOLL import preview_collections
+from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
 from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
     draw_tips_suggestions_ui  # type: ignore
@@ -306,186 +306,24 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
                           )
 
     def draw(self, context):   
-        sett     = context.scene.HG3D
         layout   = self.layout
-        hg_icons = preview_collections['hg_icons']
- 
-        layout.operator('hg3d.draw_tutorial',
-                    text = 'Tutorial',
-                    icon = 'HELP'
-                    ).tutorial_name = 'mtc_tutorial'
         
-        box = layout.box().row()
-        box.alignment = 'CENTER'
-        box.label(text = context.object.name,
-                  icon_value = hg_icons['clothing'].icon_id
-                  )
-        
-        col= layout.column(align = True)
-        col.use_property_split = True
-        col.use_property_decorate = False
-        
-        col.prop(sett, 'mtc_armature', text = 'Armature:')
-        if sett.mtc_armature and in_creation_phase(sett.mtc_armature):
-            scol = col.column()
-            scol.alert = True
-            scol.label(text = 'Human in creation phase', icon = 'ERROR')
-        col.prop(sett, 'shapekey_calc_type', text = 'Cloth type')
-        
-#TODO make this panel work 
-class HG_PT_T_MASKS(Tools_PT_Base, bpy.types.Panel):
-    """Currently disabled
-    """
-    bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label = "Geometry masks"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    def draw(self, context):   
-        hg_rig = find_human(context.object)
-        sett = context.scene.HG3D
-        layout = self.layout
-        col= layout.column(align = True, heading = 'Masks:')
-        col.use_property_split = True
-        col.use_property_decorate = False
-        
-        col.prop(sett, 'mask_short_legs', text = 'Short legs')
-        col.prop(sett, 'mask_long_legs', text = 'Long legs')
-        col.prop(sett, 'mask_short_arms', text = 'Short Arms')
-        col.prop(sett, 'mask_long_arms', text = 'Long Arms')
-        col.prop(sett, 'mask_torso', text = 'Torso')
-        col.prop(sett, 'mask_foot', text = 'Foot')
+        col = layout.column()
+        col.scale_y = 0.8
+        col.enabled = False
+        col.label(text = 'Select the object you want to add')
+        col.label(text = 'to your human as clothing. ')
         col.separator()
-        col.operator('hg3d.add_masks', text = 'Add masks')
+        col.label(text = 'Then press:')
         
-        mask_options = [
-                "mask_lower_short",
-                "mask_lower_long", 
-                "mask_torso",
-                "mask_arms_short",
-                "mask_arms_long",
-                "mask_foot",
-            ]
-        default = "lower_short",
-        
-        if not context.object:
-            return
-        
-        mask_props = [f'mask_{i}' for i in range(10)
-                      if f'mask_{i}' in context.object
-                      ]
-        if mask_props:
-            col.separator()
-            col.label(text = 'Current masks:')
-            for prop_name in mask_props:
-                col.label(text = context.object[prop_name])
-        
-class HG_PT_T_CLOTHWEIGHT(Tools_PT_Base, bpy.types.Panel):
-    """Subsubpanel for adding weight painting to clothes
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-    bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label     = "Weight painting"
-    
-    def draw(self, context):        
-        sett = context.scene.HG3D
-        hg_rig = sett.mtc_armature
-        layout = self.layout
-           
-        if not hg_rig:
-            layout.label(text = 'Select an armature in the field above')   
-            return
-            
-        col = layout.column()   
-        col.prop(sett, 'mtc_add_armature_mod', text = 'Add armature modifier')
-        col.prop(sett, 'mtc_parent', text = 'Parent cloth to human')
-        col.operator('hg3d.autoweight', text = 'Auto weight paint')
-
-        if 'spine' in set([vg.name for vg in context.object.vertex_groups]):
-            col.label(text= 'Weight painting found', icon = 'INFO')
-        
-class HG_PT_T_CLOTHSK(Tools_PT_Base, bpy.types.Panel):
-    """Subsubpanel for adding corrective shapekeys to cloth
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-    bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label     = "Corrective shapekeys"
-    
-    def draw(self, context):   
-        hg_rig = find_human(context.object)
-        sett = context.scene.HG3D
-        layout = self.layout
-
-        if context.object and not context.object.type == 'MESH':
-            return
-
-        if hg_rig and context.object.data.shape_keys:
-            has_corrective_sks = next(
-                (True for sk in context.object.data.shape_keys.key_blocks
-                    if sk.name.startswith('cor')),
-                False
-                )
-            if has_corrective_sks:
-                layout.label(text = 'Corrective shapekeys found!',
-                             icon = 'INFO'
-                             )
-                    
         col = layout.column()
-        col.operator('hg3d.addcorrective',
-                     text = 'Add corrective shapekeys'
-                     )
-        
-class HG_PT_T_CLOTHMAT(Tools_PT_Base, bpy.types.Panel):
-    """Subsubpanel for adding standard material to cloth object
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-    bl_parent_id = "HG_PT_T_CLOTH"
-    bl_label     = "Clothing material"
-    
-    def draw(self, context):   
-        layout = self.layout
-  
-        col = layout.column()
-        
-        col.operator('hg3d.draw_tutorial',
-                    text = 'Material tutorial',
-                    icon = 'HELP'
-                    ).tutorial_name = 'cloth_mat_tutorial'
-                
-        mat = context.object.active_material
-        if not (mat and 'HG_Control' in [n.name for n in mat.node_tree.nodes]):
-            col.operator('hg3d.addclothmat',
-                         text = 'Add default HG material'
-                         ) 
-            return
-        
-        nodes = mat.node_tree.nodes
-        self._draw_image_picker(col, nodes, 'Base Color')
-        self._draw_image_picker(col, nodes, 'Roughness')
-        self._draw_image_picker(col, nodes, 'Normal')
-        
-    def _draw_image_picker(self, layout, nodes, node_name):
-        """adds an template_ID image picker for the cloth material nodes
-
-        Args:
-            layout (UILayout): to draw in
-            nodes (ShaderNode list): nodes of cloth material
-            node_name (str): name of image node
-        """
-        image_node = nodes.get(node_name)
-        if not image_node:
-            return
-        
-        layout.label(text = node_name)
-        layout.template_ID(image_node, "image",
-                            new="image.new",
-                            open="image.open"
-                            )
+        col.scale_y = 1.5
+        col.operator(
+            'hg3d.open_content_saving_tab',
+            text='Make mesh into clothing',
+            icon_value = get_hg_icon('clothing')
+            ).content_type = 'mesh_to_cloth'
+ 
           
 class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
     """developer tools subpanel
