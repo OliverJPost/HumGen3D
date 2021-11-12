@@ -796,6 +796,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     content_saving_tab_index: IntProperty(default = 0)
     
     content_saving_active_human: PointerProperty(type = bpy.types.Object)
+    content_saving_object: PointerProperty(type = bpy.types.Object)
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     ishuman: BoolProperty(name="Is Human", default=False)
