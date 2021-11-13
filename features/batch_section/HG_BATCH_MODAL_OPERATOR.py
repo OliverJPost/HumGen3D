@@ -204,8 +204,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 k=1
                 )[0]),
             add_hair = sett.batch_hair,
-            hair_type = sett.batch_hairtype,
-            hair_quality = getattr(sett, f'batch_hair_quality_{sett.batch_hairtype}'),
+            hair_type = 'particle', #sett.batch_hairtype,
+            hair_quality = getattr(sett, f'batch_hair_quality_particle'),#{sett.batch_hairtype}'),
             add_expression = sett.batch_expression,
             expressions_category = self._choose_category_list(context, 'expressions'),
             add_clothing = sett.batch_clothing,
