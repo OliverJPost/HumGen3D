@@ -290,7 +290,12 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
         row = layout.row(align = True)
         row.scale_y = 1.5
         row.prop(sett, 'batch_hairtype', expand = True)
-        layout.prop(sett, 'batch_hair_quality_{}'.format(sett.batch_hairtype), text = 'Quality')
+        if sett.batch_hairtype == 'particle':
+            layout.prop(sett, 'batch_hair_quality_{}'.format(sett.batch_hairtype), text = 'Quality')
+        else:
+            col = layout.column()
+            col.alert = True
+            col.label(text = 'Coming soon!')
 
 class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
