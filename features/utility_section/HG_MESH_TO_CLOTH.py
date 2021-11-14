@@ -3,7 +3,6 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ...API import humgen
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
 from ...features.common.HG_COMMON_FUNC import (get_prefs, hg_delete,

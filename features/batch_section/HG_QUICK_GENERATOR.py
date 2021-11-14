@@ -5,7 +5,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 
-from ...API.humgen import get_pcoll_options
+from ...API import HG_BATCH_HUMAN
 from ...core.HG_PCOLL import refresh_pcoll
 from ...features.creation_phase.HG_FACE import \
     randomize_facial_feature_categ  # type:ignore
