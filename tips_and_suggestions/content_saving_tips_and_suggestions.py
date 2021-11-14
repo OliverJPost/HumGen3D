@@ -131,7 +131,7 @@ using Mesh->Cloth here:
     'wm.url_open',
     'Open tutorial in browser',
     'url',
-    'https://humgen3d.com/support/batch_mode' #TODO correct url
+    'https://help.humgen3d.com/Adding+custom+content/Make+your+clothing+work+with+HG+humans' #TODO correct url
 )
 ]      
         
