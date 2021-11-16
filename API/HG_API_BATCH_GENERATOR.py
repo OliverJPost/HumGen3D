@@ -11,7 +11,7 @@ from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
 from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
                                               toggle_hair_visibility)
 from .HG_API_HUMAN import HG_Human
-from .HG_API_UTILS import HumGenException
+from ..features.common.HG_COMMON_FUNC import HumGenException
 
 
 class HG_Batch_Generator(): 

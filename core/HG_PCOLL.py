@@ -8,7 +8,8 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ..features.common.HG_COMMON_FUNC import find_human, get_prefs, hg_log
+from ..features.common.HG_COMMON_FUNC import (HumGenException, find_human,
+                                              get_prefs, hg_log)
 
 preview_collections = {} #global dictionary of all pcolls
 
@@ -34,6 +35,7 @@ def refresh_pcoll(self, context, pcoll_name, ignore_genders = False, hg_rig = No
         pcoll_name (str): name of the preview collection to refresh
     """
     sett = context.scene.HG3D
+    _check_for_HumGen_filepath_issues(self)
 
     sett.load_exception = False if pcoll_name == 'poses' else True
         
@@ -42,6 +44,20 @@ def refresh_pcoll(self, context, pcoll_name, ignore_genders = False, hg_rig = No
                                                 #the 'click here to select' item    
     
     sett.load_exception = False
+
+def _check_for_HumGen_filepath_issues(self):
+    pref = get_prefs()
+    if not pref.filepath:
+        raise HumGenException("No filepath selected in HumGen preferences.")
+    base_humans_path = (
+        pref.filepath
+        + str(Path('content_packs/Base_Humans.json'))
+        )
+    
+    base_content = os.path.exists(base_humans_path)
+    
+    if not base_content:
+        raise HumGenException("Filepath selected, but no humans found in path")
 
 def _populate_pcoll(self, context, pcoll_categ, ignore_genders, hg_rig = None):
     """Populates the preview collection enum list with blend file filepaths and 
