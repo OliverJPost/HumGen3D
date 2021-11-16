@@ -17,45 +17,59 @@ from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
 from . HG_API_UTILS import HumGenException
 
 class HG_Batch_Generator():  
-    def __init__(self):
-        self.delete_backup = True
-        """(bool, optional): Delete the backup human, which is an 
+    def __init__(self,
+        delete_backup = True,
+        apply_shapekeys = True,
+        apply_armature_modifier = False,
+        remove_clothing_subdiv = True,
+        remove_clothing_solidify = True,
+        apply_clothing_geometry_masks = True,
+        texture_resolution = 'optimised'
+            ):
+        """Creates a dictionary with settings to pass to generate_human_in_background
+        if you want to change the quality settings from the default values.
+
+        Args:
+            delete_backup (bool, optional): Delete the backup human, which is an 
                 extra object used to revert to creation phase and to load 1-click 
                 expressions. 
                 Big storage impact. Medium RAM impact.
-                Defaults to True."""
-        self.apply_shapekeys = True
-        """(bool, optional): Applies all the shape keys on the 
+                Defaults to True.
+            apply_shapekeys (bool, optional): Applies all the shape keys on the 
                 human. Simplifies object. 
                 Small performance impact, medium storage impact. 
-                Defaults to True."""
-        self.apply_armature_modifier = False
-        """(bool, optional): Applies the armature modifier,
+                Defaults to True.
+            apply_armature_modifier (bool, optional): Applies the armature modifier,
                 removes bone vertex groups and deletes the rig. 
                 Use this if you don't need a rig. 
                 Small impact. 
-                Defaults to True."""
-        self.remove_clothing_subdiv = True
-        """(bool, optional): Removes any subdiv modifier 
+                Defaults to False.
+            remove_clothing_subdiv (bool, optional): Removes any subdiv modifier 
                 from clothing.
                 Small to medium impact. 
-                Defaults to True."""
-        self.remove_clothing_solidify = True
-        """(bool, optional): Removes any solidify modifier
+                Defaults to True.
+            remove_clothing_solidify (bool, optional): Removes any solidify modifier
                 from clothing. 
                 Small to medium impact. 
-                Defaults to True."""
-        self.apply_clothing_geometry_masks = True
-        """(bool, optional): Applies the modifiers 
+                Defaults to True.
+            apply_clothing_geometry_masks (bool, optional): Applies the modifiers 
                 that hide the body geometry behind clothing. 
                 Small impact.
-                Defaults to True."""
-        self.texture_resolution = 'optimised'
-        """(str, optional): Texture resolution in 
+                Defaults to True.
+            texture_resolution (str, optional): Texture resolution in 
                 ('high', 'optimised', 'performance') from high to low. 
                 Also applies to clothing, eyes and teeth.
                 HUGE memory and Eevee impact. 
-                Defaults to 'optimised'."""
+                Defaults to 'optimised'.
+                """
+        self.delete_backup = delete_backup
+        self.apply_shapekeys = apply_shapekeys
+        self.apply_armature_modifier = apply_armature_modifier
+        self.remove_clothing_subdiv = remove_clothing_subdiv
+        self.remove_clothing_solidify = remove_clothing_solidify
+        self.apply_clothing_geometry_masks = apply_clothing_geometry_masks
+        self.texture_resolution = texture_resolution
+
 
     def generate_in_background(
             self,
