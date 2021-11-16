@@ -12,7 +12,7 @@ from pathlib import Path
 
 import bpy
 
-from ...API import HG_BATCH_HUMAN, HG_Human
+from ...API import HG_Batch_Generator, HG_Human
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
@@ -147,10 +147,10 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 
             pose_type = current_marker['hg_batch_marker']
 
-            batch_human = HG_BATCH_HUMAN()
+            batch_human = HG_Batch_Generator()
             self._build_settings_dict(context, sett, pose_type, batch_human)    
             self._build_quality_dict(sett, batch_human)
-            result = batch_human.generate_human_in_background(context)
+            result = batch_human.generate_in_background(context)
             
             if not result:
                 self._cancel(sett, context)
