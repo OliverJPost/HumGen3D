@@ -1,0 +1,3 @@
+class HumGenException(Exception):
+    pass
+
