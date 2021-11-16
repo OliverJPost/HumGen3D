@@ -183,6 +183,7 @@ class HG_Human():
         return self.rig_object.location
     @location.setter
     def location(self, location_tuple):
+        """Setter"""
         self.rig_object.location = location_tuple
 
     @property
@@ -199,6 +200,7 @@ class HG_Human():
         return self.rig_object.rotation_euler
     @rotation_euler.setter
     def rotation_euler(self, rotation_euler):
+        """Setter"""
         self.rig_object.rotation_euler = rotation_euler
 
     @property
@@ -215,6 +217,7 @@ class HG_Human():
         return self.rig_object.name
     @name.setter
     def name(self, new_name):
+        """Setter"""
         self.__check_if_rig_exists()
         self._rig_object.name = new_name
 
