@@ -1,8 +1,5 @@
 
 from .HG_API_HUMAN import HG_Human
-import sys
-
-sys.path.append("..")
 
 import json
 import os
@@ -11,24 +8,11 @@ import subprocess
 import time
 
 import bpy  # type:ignore
-from mathutils import Euler, Vector
 
-from ..core.HG_PCOLL import refresh_pcoll
-#TODO replace .. with HumGen3D
 from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
 from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
                                               toggle_hair_visibility)
-from ..features.common.HG_RANDOM import random_body_type as _random_body_type
-from ..features.creation_phase.HG_CREATION import \
-    HG_CREATION_BASE  # type:ignore
-from ..features.creation_phase.HG_FACE import \
-    randomize_facial_feature_categ as _randomize_facial_feature_categ
-from ..features.creation_phase.HG_FINISH_CREATION_PHASE import \
-    finish_creation_phase as _finish_creation_phase
-from ..features.creation_phase.HG_MATERIAL import \
-    randomize_skin_shader as _randomize_skin_shader
-from ..user_interface.HG_PANEL_FUNCTIONS import \
-    in_creation_phase as _in_creation_phase
+
 
 from . HG_API_UTILS import HumGenException
 
@@ -87,7 +71,9 @@ class HG_Batch_Generator():
             clothing_category = 'All',
             pose_type = 'a_pose'
         ) -> HG_Human:
-        """
+        """Generate a new HG_Human in a background proces based on the settings
+        of this HG_Batch_Generator instance and import the created human to 
+        Blender
             
         Args:    
             context (bl context, optional): Blender context, if None is passed
@@ -141,6 +127,7 @@ class HG_Batch_Generator():
         python_file = os.path.join(get_addon_root(), 'scripts', 'batch_generate.py')
         
         start_time_background_process = time.time()
+        
         
         hg_log('STARTING HumGen background process', level = 'BACKGROUND')
         self.__run_hg_subprocess(python_file, settings_dict)
