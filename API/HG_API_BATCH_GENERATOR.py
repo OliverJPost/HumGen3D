@@ -1,6 +1,4 @@
 
-from .HG_API_HUMAN import HG_Human
-
 import json
 import os
 import random
@@ -12,11 +10,13 @@ import bpy  # type:ignore
 from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
 from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
                                               toggle_hair_visibility)
+from .HG_API_HUMAN import HG_Human
+from .HG_API_UTILS import HumGenException
 
 
-from . HG_API_UTILS import HumGenException
-
-class HG_Batch_Generator():  
+class HG_Batch_Generator(): 
+    """Generator/factory (?) for making completed HG_Humans in the background, the 
+    same way as the batch panel in the Human Generator GUI does.""" 
     def __init__(self,
         delete_backup = True,
         apply_shapekeys = True,
@@ -128,7 +128,7 @@ class HG_Batch_Generator():
                 Defaults to 'A_Pose'.
         Returns:
             HG_Human: Python representation of a Human Generator Human. See
-                [[HG Human (API)]]
+                [[HG_Human]]
         """
         context = context if context else bpy.context
         
