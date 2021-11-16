@@ -82,7 +82,7 @@ def load_expression(self, context):
         new_key = None
 
     for sk in hg_body.data.shape_keys.key_blocks:
-        if not sk.name.startswith(('expr', 'cor')) and sk.name != 'Basis':
+        if sk.name.startswith(backup_body.name.split('.')[0]):
             new_key = sk
         else:
             sk.value = 0
