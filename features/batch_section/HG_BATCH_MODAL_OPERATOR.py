@@ -12,7 +12,7 @@ from pathlib import Path
 
 import bpy
 
-from ...API import humgen
+from ...API import HG_Batch_Generator, HG_Human
 from ...features.batch_section.HG_BATCH_FUNC import (get_batch_marker_list,
                                                      has_associated_human)
 from ...features.batch_section.HG_QUICK_GENERATOR import toggle_hair_visibility
@@ -146,9 +146,11 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 self._delete_old_associated_human(current_marker)
                 
             pose_type = current_marker['hg_batch_marker']
-            settings_dict = self._build_settings_dict(context, sett, pose_type)    
-            quality_dict = self._build_quality_dict(sett)
-            result = humgen.generate_human_in_background(context, settings_dict, quality_dict)
+
+            batch_human = HG_Batch_Generator()
+            self._build_settings_dict(context, sett, pose_type, batch_human)    
+            self._build_quality_dict(sett, batch_human)
+            result = batch_human.generate_in_background(context)
             
             if not result:
                 self._cancel(sett, context)
@@ -188,8 +190,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.workspace.status_text_set(status_text_callback)
         return {'CANCELLED'}
 
-    def _build_settings_dict(self, context, sett, pose_type) -> dict:
-        settings_dict = humgen.create_settings_dict_from_keywords(
+    def _build_settings_dict(self, context, sett, pose_type, batch_human) -> dict:
+        settings_dict = batch_human.create_settings_dict_from_keywords(
             gender = str(random.choices(
                 ('male', 'female'),
                 weights = (sett.male_chance, sett.female_chance),
@@ -212,8 +214,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             clothing_category= self._choose_category_list(context, 'outfit'),
             pose_type = pose_type
         )
-        
-        return settings_dict
 
 
     def _choose_category_list(self, context, pcoll_name):
@@ -234,7 +234,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             
         return random.choice(enabled_categories)
 
-    def _build_quality_dict(self, sett):
+    def _build_quality_dict(self, sett, batch_human):
         q_names = [
             'delete_backup',
             'apply_shapekeys',
@@ -245,8 +245,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             'texture_resolution'
         ]
         
-        quality_dict = humgen.create_quality_dict_from_keywords(
+        quality_dict = batch_human.create_quality_dict_from_keywords(
             **{n: getattr(sett, f'batch_{n}') for n in q_names}
             )
         
-        return quality_dict

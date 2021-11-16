@@ -5,7 +5,6 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 
-from ...API.humgen import get_pcoll_options
 from ...core.HG_PCOLL import refresh_pcoll
 from ...features.creation_phase.HG_FACE import \
     randomize_facial_feature_categ  # type:ignore
@@ -304,7 +303,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             
         nodes = hg_body.data.materials[0].node_tree.nodes
         old_image = next(n.image.name for n in nodes if n.name == 'Color')
-        pcoll_options = get_pcoll_options('textures')
+        pcoll_options = sett['previews_list_textures']
         searchword = os.path.splitext(old_image)[0].replace('4K', '').replace('MEDIUM', '').replace('LOW', '').replace('1K', '').replace('512px', '').replace('4k', '')
         sett.pcoll_textures = next(p for p in pcoll_options if searchword in p)
 
