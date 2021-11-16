@@ -70,7 +70,6 @@ class HG_Batch_Generator():
         self.apply_clothing_geometry_masks = apply_clothing_geometry_masks
         self.texture_resolution = texture_resolution
 
-
     def generate_in_background(
             self,
             context = None,
@@ -133,7 +132,7 @@ class HG_Batch_Generator():
         """
         context = context if context else bpy.context
         
-        settings_dict = self._construct_settings_dict_from_kwargs(locals())
+        settings_dict = self.__construct_settings_dict_from_kwargs(locals())
         
         for obj in context.selected_objects:
             obj.select_set(False)
@@ -156,7 +155,7 @@ class HG_Batch_Generator():
         
         return HG_Human(existing_human = hg_rig)
 
-    def _construct_settings_dict_from_kwargs(self, settings_dict):
+    def __construct_settings_dict_from_kwargs(self, settings_dict):
         del settings_dict['self']
         del settings_dict['context']
         if not settings_dict['gender']:
