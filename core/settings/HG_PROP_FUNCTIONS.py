@@ -51,7 +51,7 @@ def find_folders(self, context, categ, gender_toggle, include_all = True,
     categ_list = []
     ext = ('.jpg', 'png', '.jpeg', '.blend')
     for item in dirlist:
-        if not item.endswith(ext) and item != '.DS_Store':
+        if not item.endswith(ext) and'.DS_Store' not in item:
             categ_list.append(item)
     
     if not categ_list:
