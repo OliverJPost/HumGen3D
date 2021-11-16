@@ -14,8 +14,8 @@ from mathutils import Euler, Vector
 from ..core.HG_PCOLL import refresh_pcoll
 #TODO replace .. with HumGen3D
 from ..features.common.HG_COMMON_FUNC import get_addon_root  # type:ignore
-from ..features.common.HG_COMMON_FUNC import (get_prefs, hg_log,
-                                              toggle_hair_visibility)
+from ..features.common.HG_COMMON_FUNC import (HumGenException, get_prefs,
+                                              hg_log, toggle_hair_visibility)
 from ..features.common.HG_RANDOM import random_body_type as _random_body_type
 from ..features.creation_phase.HG_CREATION import \
     HG_CREATION_BASE  # type:ignore
@@ -27,7 +27,6 @@ from ..features.creation_phase.HG_MATERIAL import \
     randomize_skin_shader as _randomize_skin_shader
 from ..user_interface.HG_PANEL_FUNCTIONS import \
     in_creation_phase as _in_creation_phase
-from .HG_API_UTILS import HumGenException
 
 
 class HG_Key_Blocks():
@@ -309,6 +308,7 @@ class HG_Human():
         Raised:
             ValueError: If passed gender is not in ('male', 'female')
         """
+        context = self.__check_passed_context(context)
         sett = context.scene.HG3D
         
         if self._rig_object:
@@ -416,7 +416,7 @@ class HG_Human():
         self.__check_if_rig_exists()
         return self.__get_pcoll_list(context, 'hair') 
 
-    def set_hair(self, context, chosen_hair_option = None):
+    def set_hair(self, context = None, chosen_hair_option = None):
         """Sets the active hairstyle of this human, importing it in Blender. By
         default this method will hide the particle children of the created
         hairstyle for performance reasons (it makes a big difference). You can
@@ -592,7 +592,7 @@ class HG_Human():
         """   
         context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
-        return self.__get_pcoll_list(context, 'pose') 
+        return self.__get_pcoll_list(context, 'poses') 
 
     def set_pose(self, context=None, chosen_pose_option = None):
         """Sets the active pose of this human, importing it in Blender.
@@ -615,7 +615,7 @@ class HG_Human():
         if not chosen_pose_option:
             chosen_pose_option = random.choice(self.get_pose_options(context))
         
-        self.__set_active_in_pcoll(context, 'pose', chosen_pose_option)
+        self.__set_active_in_pcoll(context, 'poses', chosen_pose_option)
 
     def get_expression_options(self, context = None):
         """Get a list of names of possible expressions for this human. Choosing
@@ -636,7 +636,7 @@ class HG_Human():
         context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
-        return self.__get_pcoll_list(context, 'expression') 
+        return self.__get_pcoll_list(context, 'expressions') 
 
     def set_expression(self, context=None, chosen_expression_option = None):
         """Sets the active 1-click expression of this human, importing it in 
@@ -662,7 +662,7 @@ class HG_Human():
                     self.get_expression_options(context)
                 )
         
-        self.__set_active_in_pcoll(context, 'expression', chosen_expression_option)
+        self.__set_active_in_pcoll(context, 'expressions', chosen_expression_option)
 
     def __get_pcoll_list(self, context, pcoll_name) -> 'list[str]': 
         """Internal method that's used to retreive preview collection options.
@@ -709,7 +709,7 @@ class HG_Human():
         """Internal method to show HumGenException when human is not in finalize
         phase.
         """
-        if not _in_creation_phase(self._rig_object):
+        if _in_creation_phase(self._rig_object):
             raise HumGenException("The human needs to be in finalize phase to use this method.")
 
     def __check_if_rig_exists(self):

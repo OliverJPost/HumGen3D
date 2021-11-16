@@ -281,22 +281,5 @@ def unhide_human(obj):
     obj.hide_viewport = False
     obj.hide_set(False)
 
-#TODO make deepclean data removal, using:
-
-# for block in bpy.data.meshes:
-#     if block.users == 0:
-#         bpy.data.meshes.remove(block)
-
-# for block in bpy.data.materials:
-#     if block.users == 0:
-#         bpy.data.materials.remove(block)
-
-# for block in bpy.data.textures:
-#     if block.users == 0:
-#         bpy.data.textures.remove(block)
-
-# for block in bpy.data.images:
-#     if block.users == 0:
-#         bpy.data.images.remove(block)
-
-#TODO add pre-save handler to remove unused data
+class HumGenException(Exception):
+    pass
