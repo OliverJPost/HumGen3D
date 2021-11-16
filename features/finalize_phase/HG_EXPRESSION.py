@@ -54,6 +54,8 @@ def load_expression(self, context):
     pref = get_prefs()
 
     item = context.scene.HG3D.pcoll_expressions
+    if item == 'none':
+        return
     sk_name, _ = os.path.splitext(os.path.basename(item))
     
     sett_dict = {}
