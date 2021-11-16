@@ -1,4 +1,5 @@
 
+from .HG_API_HUMAN import HG_Human
 import sys
 
 sys.path.append("..")
@@ -31,37 +32,73 @@ from ..user_interface.HG_PANEL_FUNCTIONS import \
 
 from . HG_API_UTILS import HumGenException
 
-class HG_BATCH_HUMAN():
-    
+class HG_Batch_Generator():  
     def __init__(self):
-        self.settings_dict = {}
-        self.quality_dict = {}
-    
-    def create_settings_dict_from_keywords(
-        self,
-        gender = random.choice(('male', 'female')),
-        ethnicity = random.choice(('caucasian', 'black', 'asian')), #TODO option for custom ethnicities for custom starting humans
-        add_hair = False,
-        hair_type = 'particle',
-        hair_quality = 'medium',
-        add_expression = False,
-        expressions_category = 'All',
-        add_clothing = False,
-        clothing_category = 'All',
-        pose_type = 'A_Pose'
-        ) -> dict:
-        
-        """Creates a dictionary with settings to pass to generate_human_in_background
-        if you don't want to use the default settings or want to add hair, clothing
-        etc. Creating this dict is optional.
+        self.delete_backup = True
+        """(bool, optional): Delete the backup human, which is an 
+                extra object used to revert to creation phase and to load 1-click 
+                expressions. 
+                Big storage impact. Medium RAM impact.
+                Defaults to True."""
+        self.apply_shapekeys = True
+        """(bool, optional): Applies all the shape keys on the 
+                human. Simplifies object. 
+                Small performance impact, medium storage impact. 
+                Defaults to True."""
+        self.apply_armature_modifier = False
+        """(bool, optional): Applies the armature modifier,
+                removes bone vertex groups and deletes the rig. 
+                Use this if you don't need a rig. 
+                Small impact. 
+                Defaults to True."""
+        self.remove_clothing_subdiv = True
+        """(bool, optional): Removes any subdiv modifier 
+                from clothing.
+                Small to medium impact. 
+                Defaults to True."""
+        self.remove_clothing_solidify = True
+        """(bool, optional): Removes any solidify modifier
+                from clothing. 
+                Small to medium impact. 
+                Defaults to True."""
+        self.apply_clothing_geometry_masks = True
+        """(bool, optional): Applies the modifiers 
+                that hide the body geometry behind clothing. 
+                Small impact.
+                Defaults to True."""
+        self.texture_resolution = 'optimised'
+        """(str, optional): Texture resolution in 
+                ('high', 'optimised', 'performance') from high to low. 
+                Also applies to clothing, eyes and teeth.
+                HUGE memory and Eevee impact. 
+                Defaults to 'optimised'."""
 
-        Args:
+    def generate_in_background(
+            self,
+            context = None,
+            gender = None, 
+            ethnicity = None,
+            add_hair = False,
+            hair_type = 'particle',
+            hair_quality = 'medium',
+            add_expression = False,
+            expressions_category = 'All',
+            add_clothing = False,
+            clothing_category = 'All',
+            pose_type = 'a_pose'
+        ) -> HG_Human:
+        """
+            
+        Args:    
+            context (bl context, optional): Blender context, if None is passed
+                bpy.context will be used.
             gender (str, optional): The gender of the human to create, either 'male'
                 or 'female'. 
-                Defaults to random.choice(('male', 'female')).
+                If None is passed, random.choice(('male', 'female')) will be used
             ethnicity (str, optional): Ethnicity of the human to create. Will search
                 for starting humans with this string in their name.
-                Defaults to random.choice(('caucasian', 'black', 'asian')).
+                If None is passed, random.choice(('caucasian', 'black', 'asian'))
+                will be used.
             add_hair (bool, optional): If True, hair will be added to the created 
                 human. 
                 Defaults to False.
@@ -90,74 +127,13 @@ class HG_BATCH_HUMAN():
             pose_type (str, optional): Category to choose pose from. 
                 Use get_pcoll_categs('pose') to see options.
                 Defaults to 'A_Pose'.
-
         Returns:
-            dict: Settings dictionary to pass to generate_human_in_background
+            HG_Human: Python representation of a Human Generator Human. See
+                [[HG Human (API)]]
         """
+        context = context if context else bpy.context
         
-        return locals()
-        
-    def create_quality_dict_from_keywords(
-        self,
-        delete_backup = True,
-        apply_shapekeys = True,
-        apply_armature_modifier = True,
-        remove_clothing_subdiv = True,
-        remove_clothing_solidify = True,
-        apply_clothing_geometry_masks = True,
-        texture_resolution = 'optimised'
-        ) -> dict:
-        """Creates a dictionary with settings to pass to generate_human_in_background
-        if you want to change the quality settings from the default values.
-
-        Args:
-            delete_backup (bool, optional): Delete the backup human, which is an 
-                extra object used to revert to creation phase and to load 1-click 
-                expressions. 
-                Big storage impact. Medium RAM impact.
-                Defaults to True.
-            apply_shapekeys (bool, optional): Applies all the shape keys on the 
-                human. Simplifies object. 
-                Small performance impact, medium storage impact. 
-                Defaults to True.
-            apply_armature_modifier (bool, optional): Applies the armature modifier,
-                removes bone vertex groups and deletes the rig. 
-                Use this if you don't need a rig. 
-                Small impact. 
-                Defaults to True.
-            remove_clothing_subdiv (bool, optional): Removes any subdiv modifier 
-                from clothing.
-                Small to medium impact. 
-                Defaults to True.
-            remove_clothing_solidify (bool, optional): Removes any solidify modifier
-                from clothing. 
-                Small to medium impact. 
-                Defaults to True.
-            apply_clothing_geometry_masks (bool, optional): Applies the modifiers 
-                that hide the body geometry behind clothing. 
-                Small impact.
-                Defaults to True.
-            texture_resolution (str, optional): Texture resolution in 
-                ('high', 'optimised', 'performance') from high to low. 
-                Also applies to clothing, eyes and teeth.
-                HUGE memory and Eevee impact. 
-                Defaults to 'optimised'.
-
-        Returns:
-            dict: Quality dictionary to pass to generate_human_in_background
-        """
-        
-        return locals()
-
-    def generate_human_in_background(
-            self,
-            context
-        ) -> bpy.types.Object:
-        
-        if not self.settings_dict:
-            self.create_settings_dict_from_keywords()
-        if not self.quality_dict:
-            self.create_quality_dict_from_keywords()
+        settings_dict = self._construct_settings_dict_from_kwargs(locals())
         
         for obj in context.selected_objects:
             obj.select_set(False)
@@ -167,26 +143,37 @@ class HG_BATCH_HUMAN():
         start_time_background_process = time.time()
         
         hg_log('STARTING HumGen background process', level = 'BACKGROUND')
-        self.__run_hg_subprocess(python_file)
+        self.__run_hg_subprocess(python_file, settings_dict)
         hg_log('^^^ HumGen background process ENDED', level = 'BACKGROUND')
 
-        hg_log(f'Background Process succesful, took: ',
+        hg_log(f'Background process took: ',
                 round(time.time() - start_time_background_process, 2),
                 's'
                 )
 
         hg_rig = self.__import_generated_human()
         
-        return hg_rig
+        return HG_Human(existing_human = hg_rig)
 
-    def __run_hg_subprocess(self, python_file):
+    def _construct_settings_dict_from_kwargs(self, settings_dict):
+        del settings_dict['self']
+        del settings_dict['context']
+        if not settings_dict['gender']:
+            settings_dict['gender'] = random.choice(('male', 'female'))
+        if not settings_dict['ethnicity']:
+            settings_dict['ethnicity'] = random.choice(('caucasian', 'black', 'asian')) #TODO option for custom ethnicities for custom starting humans
+
+        return settings_dict
+
+    def __run_hg_subprocess(self, python_file, settings_dict):
         background_blender = subprocess.run(
             [
                 bpy.app.binary_path,
                 "--background",
                 "--python",
                 python_file,
-                json.dumps({**self.settings_dict, **self.quality_dict})
+                json.dumps({**settings_dict,
+                            **vars(self.quality_settings)})
             ],
             stdout= subprocess.PIPE,
             stderr= subprocess.PIPE)
