@@ -291,12 +291,12 @@ class HG_Human():
             else:
                 raise ValueError('Passed armature was not created with Human Generator.')
 
-    def get_starting_human_options(self, context = bpy.context, gender = None):
+    def get_starting_human_options(self, context = None, gender = None):
         """Get a list of all starting human options (i.e. Caucasian 5, Black 2)
 
         Args:
-            context (bpy.context): Blender context, if not passed bpy.context
-                will be used.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             gender (str, optional): Choose a gender in ('male', 'female') to get
                 options for. If not passed, a random gender will be chosen,
                 which can be checked with the .gender property of your HG_Human
@@ -322,15 +322,15 @@ class HG_Human():
         refresh_pcoll(None, context, 'humans')
         return sett['previews_list_humans']
 
-    def create(self, context = bpy.context, chosen_starting_human = None
+    def create(self, context = None, chosen_starting_human = None
                ) -> bpy.types.Object:
         """Adds a new human to the active Blender scene. Required for most
         functionality if you didn't pass an existing_human when creating your 
         HG_Human instance.
 
         Args:
-            context (bpy.context): Blender context. If not passed bpy.context
-                will be used.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_starting_human (str, optional): Optionally, you can choose the 
                 starting human yourself by picking an option from 
                 get_starting_human_options(). 
@@ -340,6 +340,7 @@ class HG_Human():
             HumGenException: When calling this method on an instance that 
                 already exists in Blender.
         """
+        context = self.__check_passed_context(context)
         sett = context.scene.HG3D
   
         if self._rig_object:
@@ -394,20 +395,21 @@ class HG_Human():
             use_bell_curve=self._gender == 'female'
         )
 
-    def get_hair_options(self, context=bpy.context) -> 'list[str]':
+    def get_hair_options(self, context=None) -> 'list[str]':
         """Get a list of names of possible hairstyles for this human. Choosing
         a name and passing it to set_hair() will add this hairstyle to your 
         human.
         
         Args:
-            context (bpy.context): Blender context. If not passed bpy.context
-                will be used.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Returns:
             list[str]: List of internal names of hairstyles, expect the internal
                 names to be relative paths from the Human Generator folder.
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """        
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         return self.__get_pcoll_list(context, 'hair') 
 
@@ -418,13 +420,15 @@ class HG_Human():
         turn the children back on with set_hair_visibility(True)
 
         Args:
-            context ([type]): [description]
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_hair_option (str, optional): The name of an hair option chosen
                 from get_hair_options(). Defaults to None. If not passed a 
                 random one will be chosen.
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
                 
         if not chosen_hair_option:
@@ -441,7 +445,7 @@ class HG_Human():
         """
         _randomize_skin_shader(self._body_object, self._gender)
 
-    def finish_creation_phase(self, context = bpy.context):
+    def finish_creation_phase(self, context = None):
         """Works the same as the Finish Creation Phase button in the GUI. Needed
         for the human to be posed and for clothing to be added. Does a whole lot
         of things behind the scenes. Most importantly it adds a backup human to
@@ -450,11 +454,12 @@ class HG_Human():
         human until you've selected an expression with set_expression()
 
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        
+        context = self.__check_passed_context(context)
         _finish_creation_phase(None, context, self._rig_object, self._body_object)     
         self._rig_object.HG.phase = 'clothing'        
 
@@ -478,13 +483,14 @@ class HG_Human():
             else:
                 ps.settings.child_nbr =  1
      
-    def get_outfit_options(self, context = bpy.context) -> list:
+    def get_outfit_options(self, context = None) -> list:
         """Get a list of names of possible outfits for this human. Choosing
         a name and passing it to set_outfit() will add this outfit to your 
         human.
         
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Returns:
             list[str]: List of internal names of outfits, expect the internal
                 names to be relative paths from the Human Generator folder.
@@ -493,15 +499,17 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.            
         """    
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, 'outfit') 
 
-    def set_outfit(self, context = bpy.context, chosen_outfit_option = None):
+    def set_outfit(self, context = None, chosen_outfit_option = None):
         """Sets the active outfit of this human, importing it in Blender.
 
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_outfit_option (str, optional): The name of outfit option chosen
                 from get_outfit_options(). Defaults to None. If not passed a 
                 random one will be chosen.
@@ -510,6 +518,7 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.
         """
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
                 
@@ -518,13 +527,14 @@ class HG_Human():
         
         self.__set_active_in_pcoll(context, 'outfit', chosen_outfit_option)
 
-    def get_footwear_options(self, context=bpy.context) -> list:
+    def get_footwear_options(self, context=None) -> list:
         """Get a list of names of possible footwear for this human. Choosing
         a name and passing it to set_footwear() will add this outfit to your 
         human.
         
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Returns:
             list[str]: List of internal names of footwear, expect the internal
                 names to be relative paths from the Human Generator folder.
@@ -533,15 +543,17 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.            
         """            
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, 'footwear') 
 
-    def set_footwear(self, context=bpy.context, chosen_footwear_option = None):
+    def set_footwear(self, context=None, chosen_footwear_option = None):
         """Sets the active outfit of this human, importing it in Blender.
 
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_footwear_option (str, optional): The name of footwear option 
                 chosen from get_footwear_options(). Defaults to None. If not 
                 passed a random one will be chosen.
@@ -550,7 +562,7 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.
         """
-
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
                 
@@ -559,13 +571,14 @@ class HG_Human():
         
         self.__set_active_in_pcoll(context, 'footwear', chosen_footwear_option)
 
-    def get_pose_options(self, context=bpy.context) -> list:
+    def get_pose_options(self, context=None) -> list:
         """Get a list of names of possible poses for this human. Choosing
         a name and passing it to set_pose() will add this outfit to your 
         human.
         
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Returns:
             list[str]: List of internal names of poses, expect the internal
                 names to be relative paths from the Human Generator folder.
@@ -574,14 +587,16 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.            
         """   
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         return self.__get_pcoll_list(context, 'pose') 
 
-    def set_pose(self, context=bpy.context, chosen_pose_option = None):
+    def set_pose(self, context=None, chosen_pose_option = None):
         """Sets the active pose of this human, importing it in Blender.
 
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_pose_option (str, optional): The name of pose option 
                 chosen from get_pose_options(). Defaults to None. If not 
                 passed a random one will be chosen.
@@ -590,6 +605,7 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.
         """
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
                 
@@ -598,13 +614,14 @@ class HG_Human():
         
         self.__set_active_in_pcoll(context, 'pose', chosen_pose_option)
 
-    def get_expression_options(self, context = bpy.context):
+    def get_expression_options(self, context = None):
         """Get a list of names of possible expressions for this human. Choosing
         a name and passing it to set_expression() will add this outfit to your 
         human.
         
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
         Returns:
             list[str]: List of internal names of expressions, expect the internal
                 names to be relative paths from the Human Generator folder.
@@ -613,16 +630,18 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.            
         """   
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, 'expression') 
 
-    def set_expression(self, context=bpy.context, chosen_expression_option = None):
+    def set_expression(self, context=None, chosen_expression_option = None):
         """Sets the active 1-click expression of this human, importing it in 
         Blender.
 
         Args:
-            context (context, optional): Blender context. Defaults to bpy.context.
+            context (context, optional): Blender context. If None is passed, 
+                bpy.context will be used.
             chosen_expression_option (str, optional): The name of expression
                 option chosen from get_expression_options(). Defaults to None. If 
                 not passed a random one will be chosen.
@@ -631,6 +650,7 @@ class HG_Human():
             HumGenException: When this human is not in finalize phase, but 
                 still in the creation phase.
         """
+        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
                 
@@ -699,3 +719,7 @@ class HG_Human():
         """
         if not self._rig_object:
             raise HumGenException("This HG_Human instance does not yet exist in Blender.")
+        
+    def __check_passed_context(self, context):
+        context = context if context else bpy.context
+        return context
