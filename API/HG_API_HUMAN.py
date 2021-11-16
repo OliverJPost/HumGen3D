@@ -27,8 +27,8 @@ from ..features.creation_phase.HG_MATERIAL import \
     randomize_skin_shader as _randomize_skin_shader
 from ..user_interface.HG_PANEL_FUNCTIONS import \
     in_creation_phase as _in_creation_phase
+from .HG_API_UTILS import HumGenException
 
-from . HG_API_UTILS import HumGenException
 
 class HG_Key_Blocks():
     """Object that contains the different types of key_blocks used by Human 
@@ -113,13 +113,13 @@ class HG_Human():
 
         Args:
             existing_human (bpy.types.Object, optional): Existing Blender 
-                ARMATURE object that was created by Human Generator. 
+                ```ARMATURE``` object that was created by Human Generator. 
                 Defaults to None.
             
         Raises:
-            TypeError: When passed object is not of type ARMATURE
+            TypeError: When passed object is not of type ```ARMATURE``` 
             ValueError: When passed object is an ARMATURE but does not have the
-                object.HG.ishuman == True custom property    
+                ```object.HG.ishuman == True``` custom property    
         """
         if existing_human:
             self.__check_if_valid_hg_rig(existing_human)
