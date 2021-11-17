@@ -3,13 +3,15 @@ from pathlib import Path
 from sys import platform
 
 import addon_utils  # type: ignore
-import bpy  # type: ignore
+import bpy
 
 from .. import bl_info
 from ..core.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
 from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs,
                                               is_batch_result)
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
+    draw_tips_suggestions_ui  # type: ignore
 from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_spoiler_box,
                                  draw_sub_spoiler, get_flow, in_creation_phase,
                                  searchbox)
@@ -83,6 +85,14 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._draw_footwear_section() 
             self._draw_pose_section() 
             self._draw_expression_section() 
+        
+        if get_prefs().show_tips:
+            draw_tips_suggestions_ui(
+                layout,
+                context
+            )
+            if get_prefs().full_height_menu:
+                layout.separator(factor=200)
 
     #  __    __   _______     ___       _______   _______ .______      
     # |  |  |  | |   ____|   /   \     |       \ |   ____||   _  \     

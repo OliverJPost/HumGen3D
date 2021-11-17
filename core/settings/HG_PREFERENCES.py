@@ -111,8 +111,9 @@ class HG_PREF(bpy.types.AddonPreferences):
 
     skip_url_request: bpy.props.BoolProperty(default = False)
     
+    show_tips: bpy.props.BoolProperty(default = True)
     compress_zip: bpy.props.BoolProperty(default = True)
-
+    full_height_menu: bpy.props.BoolProperty(default = False)
 
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
@@ -306,12 +307,24 @@ class HG_PREF(bpy.types.AddonPreferences):
         
         layout.separator()
         
+        col = layout.column(heading="Tips and suggestions:")
+        col.prop(self, 'show_tips', text = 'Show "Tips and Suggestions" interface')
+        col.prop(self, 'full_height_menu', text = 'Make Tips and Suggestions full height')
+        
+        layout.separator()
+        
+        col = layout.column(heading="Saving custom content:")
+        col.prop(self, 'compress_zip', text = 'Compress cpack .zip on export (EXPERIMENTAL)')
+              
+        layout.separator()
+                
         col = layout.column(heading="Advanced options:")
         col.prop(self, 'debug_mode', text = "Debug Mode")
         col.prop(self, 'silence_all_console_messages', text = 'Silence all console messages')
         col.prop(self, 'dev_tools')
         col.prop(self, 'skip_url_request', text = 'Skip URL request')
-        col.prop(self, 'compress_zip', text = 'Compress cpack .zip on export (EXPERIMENTAL)')
+
+        
         
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned"""
