@@ -236,7 +236,7 @@ class HG_Human():
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return next(child for child in self.hg_rig.children if 'hg_eyes' in child)
+        return next(child for child in self.rig_object.children if 'hg_eyes' in child)
     
     @property
     def teeth_objects(self) -> 'list[bpy.types.Object]':
@@ -247,7 +247,7 @@ class HG_Human():
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return [child for child in self.hg_rig.children if 'hg_teeth' in child]
+        return [child for child in self.rig_object.children if 'hg_teeth' in child]
 
     @property
     def clothing_objects(self) -> 'list[bpy.types.Object]':
@@ -259,7 +259,7 @@ class HG_Human():
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """        
-        return [child for child in self.hg_rig.children if 'cloth' in child]
+        return [child for child in self.rig_object.children if 'cloth' in child]
 
     @property
     def footwear_objects(self) -> 'list[bpy.types.Object]':
@@ -271,7 +271,7 @@ class HG_Human():
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """       
-        return [child for child in self.hg_rig.children if 'shoe' in child]
+        return [child for child in self.rig_object.children if 'shoe' in child]
 
     def __check_if_valid_hg_rig(self, hg_rig):
         """Checks if the passed hg_rig is a valid Human Generator human.
