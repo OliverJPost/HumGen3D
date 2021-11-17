@@ -21,7 +21,7 @@ the batch mode here:
     'wm.url_open',
     'Open tutorial in browser',
     'url',
-    'https://humgen3d.com/support/batch_mode' #TODO correct url
+    'https://publish.obsidian.md/human-generator/Home' #TODO correct url
 )
 ]
 
