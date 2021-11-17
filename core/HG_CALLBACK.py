@@ -9,7 +9,7 @@ This callback has the following usages:
     a human is duplicated by the user
 '''
 
-import bpy  # type:ignore
+import bpy
 
 from ..features.common.HG_COMMON_FUNC import find_human, hg_log
 from ..features.creation_phase.HG_BODY import get_scaling_data
@@ -19,6 +19,8 @@ from ..features.utility_section.HG_UTILITY_FUNC import (refresh_hair_ul,
                                                         refresh_shapekeys_ul)
 from ..user_interface.HG_BATCH_UILIST import \
     batch_uilist_refresh  # type: ignore
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
+    update_tips_from_context  # type:ignore
 from .HG_PCOLL import refresh_pcoll
 
 
@@ -79,7 +81,7 @@ def HG_Callback(self):
     ui_phase = sett.ui_phase
     
     _set_shader_switches(hg_rig, sett)
-
+    update_tips_from_context(bpy.context, sett, hg_rig)
     _context_specific_updates(self, sett, hg_rig, ui_phase)
 
 def _check_body_object(hg_rig):
@@ -195,7 +197,9 @@ def tab_change_update(self, context):
     Batch tab and Utility tab)"""
     
     refresh_modapply(self, context)
-
+    
+    update_tips_from_context(context, context.scene.HG3D, find_human(context.object))
+    
     batch_uilist_refresh(self, context, 'outfits')
     batch_uilist_refresh(self, context, 'expressions')
 

@@ -43,6 +43,7 @@ from .core.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
 from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
 from .user_interface import HG_BATCH_UILIST, HG_UTILITY_UILISTS
 from .user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
+from .user_interface.HG_TIPS_SUGGESTIONS_UI import TIPS_ITEM
 
 if __name__ != "HG3D":
     sys.modules['HG3D'] = sys.modules[__name__]
@@ -119,6 +120,9 @@ def _initiate_ui_lists():
     
     sc.hg_update_col            = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
     sc.hg_update_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
+    
+    sc.hg_tips_and_suggestions       = bpy.props.CollectionProperty(type = TIPS_ITEM)
+    sc.hg_tips_and_suggestions_index = bpy.props.IntProperty(name = "Index", default = 0)            
 
 from .HG_CLASSES import hg_classes
 

@@ -1,7 +1,9 @@
-import bpy  # type: ignore
+import bpy
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
+    draw_tips_suggestions_ui  # type: ignore
 from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_resolution_box,
                                  draw_sub_spoiler, get_flow, in_creation_phase)
 
@@ -62,15 +64,11 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
         
         hg_rig = find_human(context.object)
         if not hg_rig:
-            layout.label(text='No human selected')
-            
-
-        col_h = layout.column()
-        col_h.scale_y = 1.5
-        col_h.operator('hg3d.draw_tutorial',
-                       text = 'Open Tutorial Again',
-                       icon = 'WINDOW'
-                       ).tutorial_name = 'get_started_tutorial'
+            col = layout.column()
+            col.scale_y = 0.8
+            col.label(text='No human selected, select a human')
+            col.label(text = 'to see all options.')
+            col.separator()
 
  
 class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
@@ -82,6 +80,10 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
     bl_label     = "Texture Baking"
     bl_options   = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return find_human(context.object)
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'RENDER_RESULT')
@@ -148,6 +150,10 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_UTILITY"
     bl_label     = "Apply modifiers"
     bl_options   = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return find_human(context.object)
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'MOD_SUBSURF')
@@ -342,3 +348,23 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         col.operator('hg3d.prepare_for_arkit')
         col.operator('hg3d.convert_hair_shader')
         col.operator('hg3d.reset_batch_operator')
+
+
+class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
+    bl_parent_id = "HG_PT_UTILITY"
+    bl_label = "Tips and suggestions!"
+    bl_options = {'HIDE_HEADER'}
+        
+    @classmethod
+    def poll(cls, context):
+        return get_prefs().show_tips
+    
+    def draw(self, context):
+        layout = self.layout
+    
+        draw_tips_suggestions_ui(
+            layout,
+            context
+        )
+        if get_prefs().full_height_menu:
+            layout.separator(factor=200)

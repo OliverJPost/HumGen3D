@@ -2,9 +2,11 @@
 Operators not related to any particular section
 """
 
-import bpy  # type: ignore
+import bpy
 
 from ...core.HG_PCOLL import refresh_pcoll
+from ...user_interface.HG_TIPS_SUGGESTIONS_UI import \
+    update_tips_from_context  # type: ignore
 from .HG_COMMON_FUNC import (find_human, get_prefs, hg_delete, hg_log,
                              is_batch_result)
 from .HG_INFO_POPUPS import HG_OT_INFO
@@ -286,6 +288,12 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett = context.scene.HG3D
         
         sett.content_saving_tab_index += 1 if self.next else -1
+        
+        update_tips_from_context(
+            context,
+            sett,
+            sett.content_saving_active_human
+        )
         
         return {'FINISHED'}
 
