@@ -243,10 +243,10 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         col.label(text = 'Texture resolution:', icon = 'IMAGE_PLANE')
         col.prop(sett, 'batch_texture_resolution', text = '')
         
-        col.separator()
+        # col.separator()
         
-        col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
-        col.prop(sett, 'batch_poly_reduction', text = '')
+        # col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
+        # col.prop(sett, 'batch_poly_reduction', text = '')
         
         col.separator()
 
@@ -263,7 +263,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         col_e.enabled = sett.batch_apply_shapekeys       
         col_e.prop(sett, 'batch_apply_armature_modifier', text = 'Armature')
         col_e.prop(sett, 'batch_apply_clothing_geometry_masks', text = 'Geometry masks') 
-        col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
+        #col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
         
         col.separator()
 

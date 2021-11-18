@@ -83,10 +83,11 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         sett.batch_progress = 0
 
         self.human_idx = 0
-        self.timer = wm.event_timer_add(0.01, window=context.window)
+        self.timer = wm.event_timer_add(0.01, window =context.window)
 
         sett.batch_idx = 1
         context.workspace.status_text_set(status_text_callback)
+        context.area.tag_redraw()
 
     def _show_dialog_to_confirm_deleting_humans(self, context):
         generate_queue = self.generate_queue
@@ -147,16 +148,37 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 
             pose_type = current_marker['hg_batch_marker']
 
-            batch_human = HG_Batch_Generator()
-            self._build_settings_dict(context, sett, pose_type, batch_human)    
-            self._build_quality_dict(sett, batch_human)
-            result = batch_human.generate_in_background(context)
+            generator = self._create_generator_instance(sett)   
+            result = generator.generate_in_background(
+                context = context,
+                gender = str(random.choices(
+                    ('male', 'female'),
+                    weights = (sett.male_chance, sett.female_chance),
+                    k=1)[0]),
+                ethnicity = str(random.choices(
+                    ('caucasian', 'black', 'asian'),
+                    weights = (
+                        sett.caucasian_chance,
+                        sett.black_chance,
+                        sett.asian_chance
+                        ),
+                    k=1
+                    )[0]),
+                add_hair = sett.batch_hair,
+                hair_type = 'particle', #sett.batch_hairtype,
+                hair_quality = getattr(sett, f'batch_hair_quality_particle'),#{sett.batch_hairtype}'),
+                add_expression = sett.batch_expression,
+                expressions_category = self._choose_category_list(context, 'expressions'),
+                add_clothing = sett.batch_clothing,
+                clothing_category= self._choose_category_list(context, 'outfit'),
+                pose_type = pose_type
+                )
             
             if not result:
                 self._cancel(sett, context)
                 return {'RUNNING_MODAL'}
             else:
-                hg_rig = result
+                hg_rig = result.rig_object
             
             hg_rig.location = current_marker.location
             hg_rig.rotation_euler = current_marker.rotation_euler
@@ -190,32 +212,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.workspace.status_text_set(status_text_callback)
         return {'CANCELLED'}
 
-    def _build_settings_dict(self, context, sett, pose_type, batch_human) -> dict:
-        settings_dict = batch_human.create_settings_dict_from_keywords(
-            gender = str(random.choices(
-                ('male', 'female'),
-                weights = (sett.male_chance, sett.female_chance),
-                k=1)[0]),
-            ethnicity = str(random.choices(
-                ('caucasian', 'black', 'asian'),
-                weights = (
-                    sett.caucasian_chance,
-                    sett.black_chance,
-                    sett.asian_chance
-                    ),
-                k=1
-                )[0]),
-            add_hair = sett.batch_hair,
-            hair_type = 'particle', #sett.batch_hairtype,
-            hair_quality = getattr(sett, f'batch_hair_quality_particle'),#{sett.batch_hairtype}'),
-            add_expression = sett.batch_expression,
-            expressions_category = self._choose_category_list(context, 'expressions'),
-            add_clothing = sett.batch_clothing,
-            clothing_category= self._choose_category_list(context, 'outfit'),
-            pose_type = pose_type
-        )
-
-
     def _choose_category_list(self, context, pcoll_name):
         
         #TODO fix naming inconsistency
@@ -234,7 +230,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             
         return random.choice(enabled_categories)
 
-    def _build_quality_dict(self, sett, batch_human):
+    def _create_generator_instance(self, sett):
         q_names = [
             'delete_backup',
             'apply_shapekeys',
@@ -245,7 +241,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             'texture_resolution'
         ]
         
-        quality_dict = batch_human.create_quality_dict_from_keywords(
-            **{n: getattr(sett, f'batch_{n}') for n in q_names}
-            )
+        quality_dict = {n: getattr(sett, f'batch_{n}') for n in q_names}
         
+        generator = HG_Batch_Generator(**quality_dict)
+        
+        return generator

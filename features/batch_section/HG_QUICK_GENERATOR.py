@@ -343,8 +343,10 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         backup_children = [obj for obj in backup_rig.children]
             
         for obj in backup_children:
+            hg_log('Deleted', obj.name)
             hg_delete(obj)
-            
+        
+        hg_log('Deleted', backup_rig.name)    
         hg_delete(backup_rig)
 
     def _set_pose(self, context, sett, pose_type):

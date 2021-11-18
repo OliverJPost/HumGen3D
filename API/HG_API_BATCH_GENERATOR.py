@@ -173,7 +173,7 @@ class HG_Batch_Generator():
                 "--python",
                 python_file,
                 json.dumps({**settings_dict,
-                            **vars(self.quality_settings)})
+                            **vars(self)})
             ],
             stdout= subprocess.PIPE,
             stderr= subprocess.PIPE)
