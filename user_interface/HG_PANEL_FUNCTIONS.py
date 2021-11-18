@@ -117,6 +117,9 @@ def draw_spoiler_box(self, ui_name) -> 'tuple[bool, bpy.types.UILayout]':
     row.alignment = 'LEFT'
 
     label = ui_name.capitalize().replace('_', ' ')
+    if ui_name == 'creation_phase':
+        label = 'Creation Phase Backup'
+    
     try:
         hg_icons =  preview_collections["hg_icons"]
         row.operator('hg3d.section_toggle',
