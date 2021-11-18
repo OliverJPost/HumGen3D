@@ -1,5 +1,6 @@
 import bpy
 
+
 def get_main_ui_tips_from_context(context, sett, hg_rig):
     yield main_tutorial
     

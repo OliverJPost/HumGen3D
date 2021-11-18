@@ -20,7 +20,7 @@ bl_info = {
     "author" : "OliverJPost",
     "description" : "Human Generator allows you to generate humans including clothing, poses and emotions",
     "blender" : (2, 83, 0),
-    "version" : (2, 0, 9), #RELEASE update version number
+    "version" : (3, 0, 0), #RELEASE update version number
     "location" : "Add-On Sidepanel > HumGen",
     "wiki_url": "http://humgen3d.com",
     "tracker_url": "http://humgen3d.com",
@@ -129,7 +129,6 @@ from .HG_CLASSES import hg_classes
 
 def register():
     #RELEASE remove print statements
-    #RELEASE TURN OFF SSS
     for cls in hg_classes:    
         bpy.utils.register_class(cls)
     

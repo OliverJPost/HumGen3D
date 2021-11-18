@@ -230,7 +230,7 @@ def _load_thumbnail(thumb_name, pcoll) -> list:
     
     return thumb
 
-#TODO cleanup
+
 def _add_file_to_pcoll(pcoll_categ, sett, pref, pcoll, pcoll_enum, path_list,
                        i, full_path):
     """Adds the passed file to the given preview collection

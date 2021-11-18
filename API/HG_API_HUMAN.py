@@ -1,7 +1,3 @@
-import sys
-
-sys.path.append("..")
-
 import json
 import os
 import random

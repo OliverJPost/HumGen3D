@@ -131,7 +131,6 @@ class HG_OT_EXIT_CPACK_EDIT(bpy.types.Operator):
         pref.editing_cpack = ''
         return {"FINISHED"}
 
-#TODO implement save to json and progress bar
 class HG_OT_SAVE_CPACK(bpy.types.Operator):
     bl_idname = "hg3d.save_cpack"
     bl_label = "Save this pack"
@@ -252,7 +251,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         
         return categ_dict
       
-    #TODO implement compression
     def _zip_files(self, pref, export_paths, json_path, cpack):
         """Zip all the files from the export_paths set to a zip file in the 
         user given directory
