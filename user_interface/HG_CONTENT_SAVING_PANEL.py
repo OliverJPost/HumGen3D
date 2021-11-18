@@ -851,7 +851,6 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         """Give the user options to add a default material to the clothing.
         """
         sett = context.scene.HG3D
-        #TODO add tips and suggestions item for this
         self._draw_header_box(
             layout,
             "Do you want to add a default\nHuman Generator material to\nthis clothing?:",

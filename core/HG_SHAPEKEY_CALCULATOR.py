@@ -8,7 +8,6 @@ from ..features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
 from ..features.creation_phase.HG_LENGTH import apply_armature
 
 
-#TODO keep
 def build_distance_dict(source_org, target, apply = True):
     """
     Returns a dict with a key for each vertex of the source and the value the closest vertex of the target and the distance to it
@@ -51,7 +50,6 @@ def _add_empty(location):
     bpy.context.scene.collection.objects.link( o )
     o.location = location
 
-#TODO keep
 def deform_obj_from_difference(name, distance_dict, deform_target, obj_to_deform, as_shapekey = True, apply_source_sks = True, ignore_cor_sk = False):
     """
     Creates a shapekey from the difference between the distance_dict value and the current distance to that corresponding vertex
