@@ -337,10 +337,11 @@ def set_clothing_texture_resolution(clothing_item, resolution_category):
     
     for node in [n for n in nodes if n.bl_idname == 'ShaderNodeTexImage']:
         image = node.image
-        old_color_setting = image.colorspace_settings.name
-        
+
         if not image:
             continue
+        
+        old_color_setting = image.colorspace_settings.name
         
         dir = os.path.dirname(image.filepath)
         filename, ext = os.path.splitext(os.path.basename(image.filepath))

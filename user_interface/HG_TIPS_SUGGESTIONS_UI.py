@@ -135,7 +135,8 @@ def update_tips_from_context(context, sett, hg_rig):
     if os.path.exists(json_path):
         with open(json_path) as f:
             hidden_tips_list = json.load(f) 
- 
+    else:
+        hidden_tips_list = None
     
     col.clear()
     for title, icon_name, tip_text, operator in tips:
