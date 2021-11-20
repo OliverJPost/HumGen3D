@@ -2,9 +2,13 @@
 Operators and functions to be used by the developer and content pack creators
 """
 
-import bpy  # type: ignore
+import bpy
+from mathutils import Matrix
 
-from ...features.common.HG_COMMON_FUNC import find_human
+from ...core.HG_SHAPEKEY_CALCULATOR import (  # type: ignore
+    build_distance_dict, deform_obj_from_difference)
+from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, find_human,
+                                               hg_delete, hg_log)
 from ...features.creation_phase.HG_FINISH_CREATION_PHASE import \
     remove_stretch_bones
 from ...features.creation_phase.HG_HAIR import convert_to_new_hair_shader
@@ -20,7 +24,6 @@ class HG_TESTOP(bpy.types.Operator):
     bl_options     = {"UNDO"}
 
     def execute(self,context):
-            
         return {'FINISHED'}
 
 class HG_RESET_BATCH_OPERATOR(bpy.types.Operator):

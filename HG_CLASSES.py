@@ -46,7 +46,7 @@ from .features.utility_section.HG_CONTENT_SAVING import (
     HG_OT_AUTO_RENDER_THUMB, HG_OT_OPEN_FOLDER, HG_OT_SAVE_POSE,
     HG_OT_SAVE_SHAPEKEY, HG_OT_SAVEHAIR, HG_OT_SAVEOUTFIT, HG_OT_SAVEPRESET)
 from .features.utility_section.HG_DEVTOOLS import *
-from .features.utility_section.HG_MESH_TO_CLOTH import (HG_OT_ADDCLOTHMATH,
+from .features.utility_section.HG_MESH_TO_CLOTH import (HG_MTC_TO_A_POSE, HG_OT_ADDCLOTHMATH,
                                                         HG_OT_ADDCORRECTIVE,
                                                         HG_OT_ADDMASKS,
                                                         HG_OT_AUTOWEIGHT)
@@ -224,6 +224,7 @@ hg_classes = (
     HG_OT_OPEN_CONTENT_SAVING_TAB,
     HG_UTILITY_PANEL.HG_PT_CUSTOM_CONTENT,
     HG_OT_SAVE_POSE,
+    HG_MTC_TO_A_POSE,
     
     #TIPS and suggestions
     TIPS_ITEM,

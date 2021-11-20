@@ -780,6 +780,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     content_saving_ui: BoolProperty(default = False)
     content_saving_type: StringProperty()
+    mtc_not_in_a_pose: BoolProperty(default = False)
 
     thumbnail_saving_enum: bpy.props.EnumProperty(
         name="Thumbnail",

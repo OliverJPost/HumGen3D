@@ -2,11 +2,12 @@ import os
 from pathlib import Path
 
 import bpy  # type: ignore
+from mathutils import Matrix
 
 from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
                                             deform_obj_from_difference)
-from ...features.common.HG_COMMON_FUNC import (get_prefs, hg_delete,
-                                               show_message)
+from ...features.common.HG_COMMON_FUNC import (apply_shapekeys, get_prefs,
+                                               hg_delete, show_message)
 from ...features.finalize_phase.HG_CLOTHING_LOAD import (
     find_masks, set_cloth_corrective_drivers)
 
@@ -247,3 +248,46 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         return {'FINISHED'}
 
 
+class HG_MTC_TO_A_POSE(bpy.types.Operator):
+    bl_idname      = "hg3d.mtc_to_a_pose"
+    bl_label       = "Transform clothing to A Pose"
+    bl_description = "Transform clothing to A Pose"
+    bl_options     = {"UNDO"}
+
+    def execute(self,context):
+        sett = context.scene.HG3D
+        hg_rig = sett.content_saving_active_human
+        hg_body = hg_rig.HG.body_obj
+        
+        cloth_obj = sett.content_saving_object
+        
+        hg_body_eval = hg_body.copy()
+        hg_body_eval.data = hg_body_eval.data.copy()
+        context.scene.collection.objects.link(hg_body_eval)
+                
+        apply_shapekeys(hg_body_eval)
+        bpy.context.view_layer.objects.active = hg_body_eval
+        bpy.ops.object.modifier_apply(modifier="Armature")	
+
+        for sk in hg_body.data.shape_keys.key_blocks:
+            if sk.name.startswith('cor'):
+                sk.mute = True
+        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)
+        deform_obj_from_difference(
+            'Test sk',
+            distance_dict,
+            hg_body, cloth_obj,
+            as_shapekey=False
+            )
+
+        for pb in hg_rig.pose.bones:
+            pb.matrix_basis = Matrix()
+
+        for sk in hg_body.data.shape_keys.key_blocks:
+            if sk.name.startswith('cor'):
+                sk.mute = False
+            
+        cloth_obj['transformed_to_a_pose'] = 1    
+            
+        hg_delete(hg_body_eval)
+        return {'FINISHED'}
