@@ -281,7 +281,10 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             elif tab_idx == 1:
                 self._select_human_to_add_to_ui(context, layout)
             elif tab_idx == 2:
-                self._confirm_object_is_in_correct_position(context, layout)
+                if sett.mtc_not_in_a_pose: 
+                    self._not_in_A_pose_ui(context, layout)
+                else:
+                    self._confirm_object_is_in_correct_position(context, layout)
             elif tab_idx == 3:
                 self._draw_mesh_to_cloth_mask_ui(context, layout)
             elif tab_idx == 4:
@@ -979,3 +982,36 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             icon='CHECKMARK',
             depress=True
         )
+
+    def _not_in_A_pose_ui(self, context, layout):
+        self._draw_header_box(layout, "Human is not in default\nA Pose!", 'OUTLINER_DATA_ARMATURE')        
+
+        col = layout.column()
+        col.separator()
+        col.scale_y = 0.8
+        col.enabled = False
+        col.label(text='For clothing to work with')
+        col.label(text='Human Generator it needs to')
+        col.label(text='be made for the default A Pose.')
+        col.separator()
+        col.label(text='You can use this button to')
+        col.label(text='auto transform your clothing')
+        col.label(text='to A pose.')
+        
+        col = layout.column()
+        col.scale_y = 1.5
+        col.operator('hg3d.mtc_to_a_pose', text ='Transform to A Pose')
+        
+        col = layout.column()
+        col.separator()
+        col.scale_y = 0.8
+        col.enabled = False    
+        col.label(text='You might have to do some')   
+        col.label(text='small edits to fix areas') 
+        col.label(text='that the auto transform button')
+        col.label(text="didn't do properly.")
+        
+        cloth_obj = context.scene.HG3D.content_saving_object
+        
+        self._draw_next_button(layout, poll = 'transformed_to_a_pose' in cloth_obj) 
+                        

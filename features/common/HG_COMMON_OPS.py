@@ -287,6 +287,13 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
     def execute(self,context):
         sett = context.scene.HG3D
         
+        
+        if self.next and sett.content_saving_type == 'mesh_to_cloth':
+            not_in_a_pose = self.check_if_in_A_pose(context, sett)
+            
+            if not_in_a_pose:
+                sett.mtc_not_in_a_pose = True
+                
         sett.content_saving_tab_index += 1 if self.next else -1
         
         update_tips_from_context(
@@ -297,3 +304,34 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
         
         return {'FINISHED'}
 
+    def check_if_in_A_pose(self, context, sett):
+        hg_rig = sett.content_saving_active_human
+        context.view_layer.objects.active = hg_rig
+        bpy.ops.object.mode_set(mode='POSE')
+        
+        important_bone_suffixes = (
+            'forearm',
+            'upper',
+            'spine',
+            'shoulder',
+            'neck',
+            'head',
+            'thigh',
+            'shin',
+            'foot',
+            'toe',
+            'hand',
+            'breast'
+        )
+        
+        not_in_a_pose = False
+        for bone in hg_rig.pose.bones:
+            if not bone.name.startswith(important_bone_suffixes):
+                continue
+            for i in range(1, 4):
+                if bone.rotation_quaternion[i]:
+                    not_in_a_pose = True
+        
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        return not_in_a_pose
