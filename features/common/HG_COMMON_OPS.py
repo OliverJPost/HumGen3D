@@ -307,6 +307,7 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
     def check_if_in_A_pose(self, context, sett):
         hg_rig = sett.content_saving_active_human
         context.view_layer.objects.active = hg_rig
+        hg_rig.select_set(True)
         bpy.ops.object.mode_set(mode='POSE')
         
         important_bone_suffixes = (
