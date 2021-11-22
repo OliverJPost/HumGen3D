@@ -140,3 +140,8 @@ def thumbnail_saving_prop_update(self, context):
         pass
     
     
+def add_image_to_thumb_enum(self, context):
+    """Adds the custom selected image to the enum""" 
+    img = self.preset_thumbnail
+    
+    self.preset_thumbnail_enum = img.name

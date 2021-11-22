@@ -23,7 +23,7 @@ from ...features.utility_section.HG_UTILITY_FUNC import (get_preset_thumbnail,
                                                          refresh_modapply,
                                                          refresh_shapekeys_ul)
 from ...user_interface import HG_BATCH_UILIST
-from .HG_PROP_FUNCTIONS import (find_folders, get_resolutions,
+from .HG_PROP_FUNCTIONS import (add_image_to_thumb_enum, find_folders, get_resolutions,
                                 poll_mtc_armature,
                                 thumbnail_saving_prop_update)
 
@@ -361,6 +361,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     preset_thumbnail_enum: EnumProperty(
         items = get_preset_thumbnail,
         )  
+    preset_thumbnail: PointerProperty(
+        type=bpy.types.Image,
+        description='Thumbnail image for starting human',
+        update = add_image_to_thumb_enum
+        )    
+
 
     ######### skin props ###########
     skin_sss: EnumProperty(
@@ -691,10 +697,6 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     modapply_apply_hidden  : BoolProperty(default = False)
     modapply_keep_shapekeys: BoolProperty(default = True)
-
-    preset_thumbnail: PointerProperty(
-        type=bpy.types.Image,
-        description='Thumbnail image for starting human')
     preset_name : StringProperty(default = '')
 
     sk_collection_name: StringProperty(default = '')
@@ -793,6 +795,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "auto",
         update = thumbnail_saving_prop_update
         )  
+
     
     content_saving_tab_index: IntProperty(default = 0)
     
