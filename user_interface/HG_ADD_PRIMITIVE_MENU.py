@@ -13,10 +13,10 @@ class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
         layout.operator_context = 'INVOKE_REGION_WIN'
         
         layout.operator(
-            'hg3d.draw_tutorial',
+            'wm.url_open',
             text='Tutorial',
             icon='HELP'
-        ).tutorial_name = 'hairstyles_tutorial'
+        ).url = 'https://publish.obsidian.md/human-generator/Using+the+batch+mode/Using+the+batch+generator'
         
         layout.separator()
         
