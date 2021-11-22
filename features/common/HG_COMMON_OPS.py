@@ -72,7 +72,8 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             'hair': ('hair', 'face_hair'),
             'expression': ('expressions',)
         }
-        if not is_batch_result(context.object):
+        
+        if not any(is_batch_result(context.object)):
             if self.section_name in categ_dict:
                 for item in categ_dict[self.section_name]:
                     refresh_pcoll(self, context, item)
