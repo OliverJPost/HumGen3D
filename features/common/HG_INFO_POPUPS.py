@@ -155,7 +155,7 @@ def length_hair_change(layout):
 
 
 autohide_hair_txt = '''Hair children were hidden to improve performance.
-You can turn them back on in the hair tab, next to 'Children are hidden'.
+You can turn them back on at the top of the Human Generator interface.
 
 You can also hold CTRL when clicking on the tab you want to go to
 to keep the hair children turned on.
