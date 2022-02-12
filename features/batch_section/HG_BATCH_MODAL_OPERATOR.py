@@ -171,7 +171,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
                 expressions_category = self._choose_category_list(context, 'expressions'),
                 add_clothing = sett.batch_clothing,
                 clothing_category= self._choose_category_list(context, 'outfit'),
-                pose_type = pose_type
+                pose_type = pose_type,
+                face_rig = sett.batch_face_rig
                 )
             
             if not result:

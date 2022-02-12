@@ -82,7 +82,8 @@ class HG_Batch_Generator():
             expressions_category = 'All',
             add_clothing = False,
             clothing_category = 'All',
-            pose_type = 'a_pose'
+            pose_type = 'a_pose',
+            face_rig = False
         ) -> HG_Human:
         """Generate a new HG_Human in a background proces based on the settings
         of this HG_Batch_Generator instance and import the created human to 

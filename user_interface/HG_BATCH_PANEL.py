@@ -358,6 +358,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         if count == 0:
             col.alert = True
         col.label(text = 'Total: {} Expressions'.format(count))
+        col.prop(sett, 'batch_face_rig')
 
 class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"

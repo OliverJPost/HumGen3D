@@ -536,7 +536,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default = "low",
         )
         
-
+    batch_face_rig: BoolProperty(default = False)
 
     
     ######### Dev tools ######## 

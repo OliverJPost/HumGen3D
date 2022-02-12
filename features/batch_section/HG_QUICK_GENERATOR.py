@@ -90,6 +90,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
     pose_type: StringProperty()
     
+    face_rig: BoolProperty()
+    
     # bake_textures: BoolProperty()
     # bake_samples: IntProperty()
     # bake_extension: StringProperty()
@@ -155,7 +157,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         if self.pose_type != 'a_pose':
             self._set_pose(context, sett, self.pose_type)
 
-        if self.add_expression:
+        if self.face_rig:
+            hg_rig.select_set(True)
+            context.view_layer.objects.active = hg_rig
+            bpy.ops.hg3d.addfrig()
+        elif self.add_expression:
             sett.expressions_sub = self.expressions_category
             set_random_active_in_pcoll(context, sett, 'expressions')
             expr_sk = next((sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith('expr_')), None)
