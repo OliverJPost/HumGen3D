@@ -149,9 +149,12 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
     context = bpy.context
     if sett.active_ui_tab == 'TOOLS':   
         refresh_modapply(self, context)
-        refresh_shapekeys_ul(self, context)
-        refresh_hair_ul(self, context)
-        refresh_outfit_ul(self, context)
+        try:
+            refresh_shapekeys_ul(self, context)
+            refresh_hair_ul(self, context)
+            refresh_outfit_ul(self, context)
+        except AttributeError:
+            pass
         return
     elif ui_phase == 'body':
         _refresh_body_scaling(self, sett, hg_rig)
