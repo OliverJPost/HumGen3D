@@ -9,8 +9,8 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, find_human,
-                                               get_prefs, hg_log,
+from ...features.common.HG_COMMON_FUNC import (HumGenException, ShowMessageBox,
+                                               find_human, get_prefs, hg_log,
                                                print_context)
 
 
@@ -109,6 +109,7 @@ class HG_BAKE(bpy.types.Operator):
 
             solidify_state = get_solidify_state(bake_obj, False) 
             current_mat = bake_obj.data.materials[mat_slot]
+            bake_obj.active_material_index = mat_slot
             
             img_name = f'{human_name}_{texture_name}_{tex_type}'
             
@@ -239,19 +240,19 @@ def bake_texture(context, mat, bake_type, naming, image_ext, resolution, export_
     else:
         source_socket = follow_links(principled, bake_type)
         if not source_socket:
-            return None
+            raise HumGenException("Can't find node", bake_type)
         links.new(source_socket, emit_node.inputs[0])
         links.new(emit_node.outputs[0], mat_output.inputs[0])
 
-    node       = nodes.new('ShaderNodeTexImage')
+    node = nodes.new('ShaderNodeTexImage')
     node.image = image
     for node2 in nodes: 
         node2.select = False
     node.select  = True
     nodes.active = node
     
+    
     bake_type = 'NORMAL' if bake_type == 'Normal' else 'EMIT'
-    print_context(context)
     bpy.ops.object.bake(type= bake_type)#, pass_filter={'COLOR'}
 
     image.filepath_raw = export_path + str(Path(f'/{image.name}')) + f'.{image_ext}'
