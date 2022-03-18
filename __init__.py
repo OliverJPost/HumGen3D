@@ -16,16 +16,16 @@
 '''
 
 bl_info = {
-    "name" : "Human Generator 3D",
-    "author" : "OliverJPost",
-    "description" : "Human Generator allows you to generate humans including clothing, poses and emotions",
-    "blender" : (2, 83, 0),
-    "version" : (3, 0, 2), #RELEASE update version number
-    "location" : "Add-On Sidepanel > HumGen",
+    "name": "Human Generator 3D",
+    "author": "OliverJPost",
+    "description": "Human Generator allows you to generate humans including clothing, poses and emotions",
+    "blender": (2, 83, 0),
+    "version": (3, 0, 2),  # RELEASE update version number
+    "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "http://humgen3d.com",
     "tracker_url": "http://humgen3d.com",
-    "warning" : "",
-    "category" : ""
+    "warning": "",
+    "category": ""
 }
 
 
@@ -33,14 +33,17 @@ import os
 import sys
 
 import bpy  # type: ignore
-import bpy.utils.previews  # type: ignore # Has to be imported like this, otherwise returns error for some users
+# Has to be imported like this, otherwise returns error for some users
+import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent  # type: ignore
 
 from .core.content.HG_CONTENT_PACKS import (HG_CONTENT_PACK, HG_INSTALLPACK,
                                             cpacks_refresh)
 from .core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
 from .core.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
+from .core.HG_PCOLL import preview_collections
 from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
+from .HG_CLASSES import hg_classes
 from .user_interface import HG_BATCH_UILIST, HG_UTILITY_UILISTS
 from .user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
 from .user_interface.HG_TIPS_SUGGESTIONS_UI import TIPS_ITEM
@@ -48,83 +51,96 @@ from .user_interface.HG_TIPS_SUGGESTIONS_UI import TIPS_ITEM
 if __name__ != "HG3D":
     sys.modules['HG3D'] = sys.modules[__name__]
 
-########### startup procedure #########
+
+# Startup procedure
 @persistent
 def HG_start(dummy):
-    """Runs the activating class when a file is loaded or blender is opened
-    """    
+    """Runs the activating class when a file is loaded or blender is opened"""
     bpy.ops.HG3D.activate()
     cpacks_refresh(None, bpy.context)
     check_update()
 
-from .core.HG_PCOLL import preview_collections
-
 
 def _initiate_preview_collections():
-    #initiate preview collections
+    # Initiate preview collections
     pcoll_names = [
-    'humans',
-    'poses',
-    'outfit',
-    'footwear',
-    'hair',
-    'face_hair',
-    'expressions',
-    'patterns',
-    'textures'
+        'humans',
+        'poses',
+        'outfit',
+        'footwear',
+        'hair',
+        'face_hair',
+        'expressions',
+        'patterns',
+        'textures'
     ]
-    
+
     for pcoll_name in pcoll_names:
         preview_collections.setdefault(
             f"pcoll_{pcoll_name}",
             bpy.utils.previews.new()
             )
+
+
 def _initiate_custom_icons():
-    #load custom icons
-    hg_icons = preview_collections.setdefault("hg_icons", bpy.utils.previews.new())
-    hg_dir = os.path.join(os.path.dirname(__file__), 'icons') 
-    for root, dir, fns in os.walk(hg_dir):
+    # Load custom icons
+    hg_icons = preview_collections.setdefault(
+        "hg_icons", bpy.utils.previews.new())
+    hg_dir = os.path.join(os.path.dirname(__file__), 'icons')
+    for _, _, fns in os.walk(hg_dir):
         for fn in [f for f in fns if f.endswith('.png')]:
-            hg_icons.load(os.path.splitext(fn)[0], os.path.join(hg_dir, fn), 'IMAGE')
+            hg_icons.load(os.path.splitext(
+                fn)[0], os.path.join(hg_dir, fn), 'IMAGE')
     preview_collections["hg_icons"] = hg_icons
+
 
 def _initiate_ui_lists():
     sc = bpy.types.Scene
-    
-    sc.batch_clothing_col            = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_CLOTHING_ITEM)
-    sc.batch_clothing_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.batch_expressions_col        = bpy.props.CollectionProperty(type = HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM)
-    sc.batch_expressions_col_index  = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.contentpacks_col         = bpy.props.CollectionProperty(type = HG_CONTENT_PACK)
-    sc.contentpacks_col_index   = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.installpacks_col         = bpy.props.CollectionProperty(type = HG_INSTALLPACK)
-    sc.installpacks_col_index   = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.modapply_col             = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.MODAPPLY_ITEM)
-    sc.modapply_col_index       = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.shapekeys_col            = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SHAPEKEY_ITEM)
-    sc.shapekeys_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.savehair_col             = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEHAIR_ITEM)
-    sc.savehair_col_index       = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.saveoutfit_col           = bpy.props.CollectionProperty(type = HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM)
-    sc.saveoutfit_col_index     = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.custom_content_col       = bpy.props.CollectionProperty(type = CUSTOM_CONTENT_ITEM)
-    sc.custom_content_col_index = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.hg_update_col            = bpy.props.CollectionProperty(type = UPDATE_INFO_ITEM)
-    sc.hg_update_col_index      = bpy.props.IntProperty(name = "Index", default = 0)
-    
-    sc.hg_tips_and_suggestions       = bpy.props.CollectionProperty(type = TIPS_ITEM)
-    sc.hg_tips_and_suggestions_index = bpy.props.IntProperty(name = "Index", default = 0)            
 
-from .HG_CLASSES import hg_classes
+    sc.batch_clothing_col = bpy.props.CollectionProperty(
+        type=HG_BATCH_UILIST.BATCH_CLOTHING_ITEM)
+    sc.batch_clothing_col_index = bpy.props.IntProperty(
+        name="Index", default=0)
+
+    sc.batch_expressions_col = bpy.props.CollectionProperty(
+        type=HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM)
+    sc.batch_expressions_col_index = bpy.props.IntProperty(
+        name="Index", default=0)
+
+    sc.contentpacks_col = bpy.props.CollectionProperty(type=HG_CONTENT_PACK)
+    sc.contentpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.installpacks_col = bpy.props.CollectionProperty(type=HG_INSTALLPACK)
+    sc.installpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.modapply_col = bpy.props.CollectionProperty(
+        type=HG_UTILITY_UILISTS.MODAPPLY_ITEM)
+    sc.modapply_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.shapekeys_col = bpy.props.CollectionProperty(
+        type=HG_UTILITY_UILISTS.SHAPEKEY_ITEM)
+    sc.shapekeys_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.savehair_col = bpy.props.CollectionProperty(
+        type=HG_UTILITY_UILISTS.SAVEHAIR_ITEM)
+    sc.savehair_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.saveoutfit_col = bpy.props.CollectionProperty(
+        type=HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM)
+    sc.saveoutfit_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.custom_content_col = bpy.props.CollectionProperty(
+        type=CUSTOM_CONTENT_ITEM)
+    sc.custom_content_col_index = bpy.props.IntProperty(
+        name="Index", default=0)
+
+    sc.hg_update_col = bpy.props.CollectionProperty(type=UPDATE_INFO_ITEM)
+    sc.hg_update_col_index = bpy.props.IntProperty(name="Index", default=0)
+
+    sc.hg_tips_and_suggestions = bpy.props.CollectionProperty(type=TIPS_ITEM)
+    sc.hg_tips_and_suggestions_index = bpy.props.IntProperty(
+        name="Index", default=0)
+
 
 
 def register():
