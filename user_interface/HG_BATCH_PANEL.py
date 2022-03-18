@@ -3,7 +3,6 @@ This file is currently inactive
 """
 
 import bpy
-import numpy as np
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
 from ..features.batch_section.HG_BATCH_FUNC import (calculate_batch_statistics,
@@ -21,18 +20,19 @@ class Batch_PT_Base:
     bl_region_type = "UI"
     bl_category = "HumGen"
 
-    def Header (self, context):
+    def Header(self, _):
         return True
+
 
 class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     bl_idname = "HG_PT_Batch_Panel"
-    bl_label = "Batch Mode" #tab name
+    bl_label = "Batch Mode"  # Tab name
 
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
         return sett.active_ui_tab == 'BATCH' and not sett.content_saving_ui
-    
+
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
 
@@ -43,16 +43,16 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align = True)
         col.scale_y = 1.5
         col.prop(sett, 'batch_marker_selection', text = '')
-        
+
         marker_total = len(get_batch_marker_list(context))
-        
+
         col = col.column(align = True)
         if sett.batch_idx:
             col.prop(sett, 'batch_progress', text=f'Building Human {sett.batch_idx}')
-        else: 
+        else:
             col.alert = True
             col.operator('hg3d.generate', text = f'Generate {marker_total} humans', depress = True, icon  = 'TIME').run_immediately = False
-              
+
         box = layout.box().column(align = True)
         box.prop(
             sett,
@@ -71,9 +71,9 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             split.scale_y = 0.8
             col_l = split.column(align = True)
             col_r = split.column(align = True)
-            
+
             weight_dict = calculate_batch_statistics(sett)
-            
+
             col_l.label(text = 'Cycles:')
             col_r.label(text = weight_dict['cycles_time'], icon = 'RENDER_STILL')
             col_l.label(text = '')
@@ -95,7 +95,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'MOD_TINT')
-        
+
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -103,7 +103,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align = True)
 
         flow = get_flow(sett, col)
-        flow.separator() 
+        flow.separator()
         flow.prop(sett, 'male_chance')
         flow.prop(sett, 'female_chance')
         flow.separator()
@@ -111,7 +111,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         flow.prop(sett, 'caucasian_chance')
         flow.prop(sett, 'black_chance')
         flow.prop(sett, 'asian_chance')
-        
+
 class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
     """Subpanel showing options for height variation in the generation of batch
     humans.
@@ -122,25 +122,25 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         self.layout.label(text = '', icon_value = get_hg_icon('length'))
-        
+
     def draw(self, context):
-        layout = self.layout      
+        layout = self.layout
         sett = context.scene.HG3D
-        
+
         row = layout.box().row(align = True)
         row.scale_y = 1.5
         row.prop(sett, 'batch_height_system', expand = True)
-        
+
         layout.label(text = 'Average height:', icon = 'EMPTY_SINGLE_ARROW')
-        
+
         self._draw_average_height_props(layout, sett)
-        
+
         layout.separator()
         layout.label(text = 'Bell curve settings:', icon = 'SMOOTHCURVE')
-        
+
         col = layout.column(align = True)
-        col.prop(sett, 'batch_standard_deviation', slider = False)      
-        
+        col.prop(sett, 'batch_standard_deviation', slider = False)
+
         box = layout.box()
         box.prop(
             sett, 'show_height_examples',
@@ -155,11 +155,11 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
                 col_l = split.column()
                 col_l.separator()
                 col_l.label(text = f'{gender.capitalize()} examples:')
-                
-                self._draw_examples_list(col_l, sett, gender) 
+
+                self._draw_examples_list(col_l, sett, gender)
 
     def _draw_average_height_props(self, layout, sett):
-        """Draws props for the user to select the average height in either 
+        """Draws props for the user to select the average height in either
         metric or imperial system
 
         Args:
@@ -194,18 +194,18 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
             random_seed=False,
             samples=10
         )
-        
+
         col = layout.column(align = True)
         col.scale_y = 0.8
-        
+
         for i in length_list:
             length_m = round(i/100, 2)
-            
+
             length_label = self._unit_conversion(sett, length_m)
-            
+
             row = col.row(align = True)
             row.alert = i > 200 or i < 150
-            row.label(text = length_label) 
+            row.label(text = length_label)
 
     def _unit_conversion(self, sett, length_m):
         if sett.batch_height_system == 'imperial':
@@ -219,7 +219,7 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
         else:
             alignment = '0 ' if len(str(length_m)) == 3 else ' '
             length_label = str(length_m) + alignment + 'm'
-        
+
         return length_label
 
 
@@ -231,7 +231,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         self.layout.label(text = '', icon = 'OPTIONS')
-        
+
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -239,40 +239,40 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         col = layout.column()
         col.use_property_split = True
         col.use_property_decorate = False
-        
+
         col.label(text = 'Texture resolution:', icon = 'IMAGE_PLANE')
         col.prop(sett, 'batch_texture_resolution', text = '')
-        
+
         # col.separator()
-        
+
         # col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
         # col.prop(sett, 'batch_poly_reduction', text = '')
-        
+
         col.separator()
 
         col.label(text = 'Objects:', icon = 'MESH_CUBE')
         col_header = col.column(heading = 'Delete')
         col_header.prop(sett, 'batch_delete_backup', text = 'Backup human')
-        
+
         col.separator()
-        
+
         col.label(text = 'Modifiers/effects:', icon = 'MODIFIER')
         col_header = col.column(heading = 'Apply')
         col_header.prop(sett, 'batch_apply_shapekeys', text = 'Shape keys')
         col_e = col_header.column()
-        col_e.enabled = sett.batch_apply_shapekeys       
+        col_e.enabled = sett.batch_apply_shapekeys
         col_e.prop(sett, 'batch_apply_armature_modifier', text = 'Armature')
-        col_e.prop(sett, 'batch_apply_clothing_geometry_masks', text = 'Geometry masks') 
+        col_e.prop(sett, 'batch_apply_clothing_geometry_masks', text = 'Geometry masks')
         #col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
-        
+
         col.separator()
 
         col.label(text = 'Clothing:', icon = 'MOD_CLOTH')
         col_header = col.column(heading = 'Remove')
         col_header.prop(sett, 'batch_remove_clothing_subdiv', text = 'Subdivisions')
         col_header.prop(sett, 'batch_remove_clothing_solidify', text = 'Solidify')
-        
-        
+
+
 
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
@@ -283,7 +283,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     def draw_header(self, context):
         header(self,context, 'hair')
         self.layout.label(text = '', icon_value = get_hg_icon('hair'))
-        
+
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -313,7 +313,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         sett = context.scene.HG3D
         layout.enabled = sett.batch_clothing
         hg_icons = preview_collections['hg_icons']
-        
+
         col = layout.column(align = True)
         box =col.box().row()
         box.label(text = 'Select libraries:')
@@ -322,15 +322,15 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         #col.scale_y = 1.5
         row=col.row(align = False)
         row.template_list("HG_UL_BATCH_CLOTHING", "", context.scene, "batch_clothing_col", context.scene, "batch_clothing_col_index")
-        
+
         col = layout.column()
         count = sum([(item.male_items + item.female_items) for item in context.scene.batch_clothing_col if item.enabled])
-        
+
         if count == 0:
             col.alert = True
-        
+
         col.label(text = 'Total: {} Outfits'.format(count))
-        
+
 
 
 class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
@@ -341,7 +341,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
     def draw_header(self, context):
         header(self, context, 'expression')
         self.layout.label(text = '', icon_value = get_hg_icon('expression'))
-        
+
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -371,7 +371,7 @@ class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
     def draw_header(self, context):
         header(self, context, 'bake')
         self.layout.label(text = '', icon = "RENDERLAYERS")
-        
+
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
@@ -381,12 +381,12 @@ class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
         col.prop(sett, 'bake_samples', text = 'Quality')
 
         col = get_flow(sett, layout.box())
-        
+
         draw_resolution_box(sett, col, show_batch_comparison=True)
 
         col = get_flow(sett, layout.box())
         col.prop(sett, 'bake_export_folder', text = 'Output Folder:')
-        
+
         row = col.row()
         row.alignment = 'RIGHT'
         row.label(text = 'HumGen folder when left empty', icon = 'INFO')
@@ -402,18 +402,18 @@ class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Tips and suggestions!"
     bl_options = {'HIDE_HEADER'}
-        
+
     @classmethod
     def poll(cls, context):
         return get_prefs().show_tips
-    
+
     def draw(self, context):
         layout = self.layout
-    
+
         draw_tips_suggestions_ui(
             layout,
             context
         )
-        
+
         if get_prefs().full_height_menu:
             layout.separator(factor=200)
