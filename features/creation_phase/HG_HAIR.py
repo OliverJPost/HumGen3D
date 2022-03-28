@@ -12,14 +12,14 @@ from .HG_LENGTH import apply_armature
 
 class HG_REMOVE_HAIR(bpy.types.Operator):
     """Removes the corresponding hair system
-    
+
     Operator type:
         Particle systems
-    
+
     Prereq:
         Hair_system passed, and hair system is present on active object
         Active object is part of a HumGen human
-        
+
     """
     bl_idname      = "hg3d.removehair"
     bl_label       = "Remove hair system"
@@ -39,7 +39,7 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
             if ps.name == self.hair_system
         )
         hg_body.particle_systems.active_index = ps_idx
-        bpy.ops.object.particle_system_remove()  
+        bpy.ops.object.particle_system_remove()
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -50,7 +50,7 @@ class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
 
     Operator type:
         Particle system
-    
+
     Prereq:
         Active object is part of HumGen human
     """
@@ -82,15 +82,15 @@ class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
 
 class HG_EYEBROW_SWITCH(bpy.types.Operator):
     """Cycle trough all eyebrow particle systems on this object
-    
+
     Operator type:
         Particle system
-    
+
     Prereq:
         forward passed
         Active object is part of HumGen human
         At least 2 particle systems on this object starting with 'Eyebrows'
-        
+
     Args:
         forward (bool): True if go forward in list, False if go backward
     """
@@ -109,11 +109,11 @@ class HG_EYEBROW_SWITCH(bpy.types.Operator):
         return {'FINISHED'}
 
 def _switch_eyebrows(self, hg_body, forward = True, report = False):
-    eyebrows = [mod for mod in hg_body.modifiers 
-                if mod.type == 'PARTICLE_SYSTEM' 
+    eyebrows = [mod for mod in hg_body.modifiers
+                if mod.type == 'PARTICLE_SYSTEM'
                 and mod.particle_system.name.startswith('Eyebrows')
                 ]
-    
+
     if not eyebrows:
         if report:
             self.report({'WARNING'}, 'No eyebrow particle systems found')
@@ -121,8 +121,8 @@ def _switch_eyebrows(self, hg_body, forward = True, report = False):
     if len(eyebrows) == 1:
         if report:
             self.report({'WARNING'}, 'Only one eyebrow system found')
-        return          
-    
+        return
+
     idx, current_ps = next(
         ((i, mod) for i, mod in enumerate(eyebrows)
             if mod.show_viewport or mod.show_render),
@@ -135,10 +135,10 @@ def _switch_eyebrows(self, hg_body, forward = True, report = False):
 
     next_ps = eyebrows[next_idx]
     next_ps.show_viewport = next_ps.show_render = True
-    
+
     for ps in eyebrows:
         if ps != next_ps:
-            ps.show_viewport = ps.show_render = False    
+            ps.show_viewport = ps.show_render = False
 
 
 def load_hair(self,context, type):
@@ -173,18 +173,18 @@ def load_hair(self,context, type):
     for mod in hair_obj.modifiers:
         if mod.type == 'PARTICLE_SYSTEM':
             mod.show_viewport = True
-   
+
     context.view_layer.objects.active = hair_obj
     _morph_hair_obj_to_body_obj(context, hg_body, hair_obj)
 
-    context.view_layer.objects.active = hair_obj 
-    bpy.ops.particle.disconnect_hair(all=True) 
+    context.view_layer.objects.active = hair_obj
+    bpy.ops.particle.disconnect_hair(all=True)
 
     for obj in context.selected_objects:
         obj.select_set(False)
     context.view_layer.objects.active = hair_obj
     hg_body.select_set(True)
-    
+
     #iterate over hair systems that need to be transferred
     for ps_name in json_systems:
         _transfer_hair_system(json_systems, hair_obj, ps_name)
@@ -211,7 +211,7 @@ def load_hair(self,context, type):
         # Turn on masks again
         if mod.type == 'MASK':
             mod.show_viewport = True
-        
+
         #Show all hair systems
         elif mod.type == 'PARTICLE_SYSTEM':
             ps_sett = mod.particle_system.settings
@@ -235,7 +235,7 @@ def _get_hair_json(type, pref, sett) -> dict:
         sett (PropertyGroup): addon props
 
     Returns:
-        dict: 
+        dict:
             key 'blend_file':
                 value (str): filename of .blend that contains the hair systems
             key 'hair_systems':
@@ -243,7 +243,7 @@ def _get_hair_json(type, pref, sett) -> dict:
                     key (str): name of particle system
                     value (dict):
                         key (str): name of setting prop
-                        value (AnyType): value to set prop to 
+                        value (AnyType): value to set prop to
     """
     if type == 'head':
         short_path = sett.pcoll_hair
@@ -253,7 +253,7 @@ def _get_hair_json(type, pref, sett) -> dict:
     full_path = str(pref.filepath) + short_path
     with open(full_path) as f:
         data = json.load(f)
-        
+
     return data
 
 def _import_hair_obj(context, type, pref, blendfile) -> bpy.types.Object:
@@ -270,26 +270,26 @@ def _import_hair_obj(context, type, pref, blendfile) -> bpy.types.Object:
     """
     #import hair object, linking it to the scene and collection
     blendpath = (str(pref.filepath)
-                 + str(Path('/hair/{}/{}'.format('head' if type == 'head' 
+                 + str(Path('/hair/{}/{}'.format('head' if type == 'head'
                                                  else 'face_hair',
                                                  blendfile
                                                  )
                             )
                        )
                  )
-    
+
     with bpy.data.libraries.load(blendpath, link = False) as (data_from ,data_to):
-        data_to.objects = ['HG_Body'] 
-    
+        data_to.objects = ['HG_Body']
+
     hair_obj = data_to.objects[0]
     scene    = context.scene
     scene.collection.objects.link(hair_obj)
-    
+
     return hair_obj
 
 def _remove_old_hair(hg_body, remove_face_hair):
     """Removes old hair systems from body object
-    
+
     Args:
         hg_body (Object)
         remove_face_hair (bool): True if facial hair needs to be removed, False
@@ -299,12 +299,12 @@ def _remove_old_hair(hg_body, remove_face_hair):
     for ps in hg_body.particle_systems:
         if ps.name.lower().startswith('fh') and remove_face_hair:
             remove_list.append(ps.name)
-        elif (not ps.name.lower().startswith(('fh', 'eye')) 
+        elif (not ps.name.lower().startswith(('fh', 'eye'))
                   and not remove_face_hair):
             remove_list.append(ps.name)
-            
-    for ps_name in remove_list:    
-        ps_idx = [i for i, ps in enumerate(hg_body.particle_systems) 
+
+    for ps_name in remove_list:
+        ps_idx = [i for i, ps in enumerate(hg_body.particle_systems)
                   if ps.name == ps_name]
         hg_body.particle_systems.active_index = ps_idx[0]
         bpy.ops.object.particle_system_remove()
@@ -338,7 +338,7 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     hg_delete(body_copy)
 
 def _transfer_hair_system(json_systems, hair_obj, ps):
-    ps_mods = [mod for mod in hair_obj.modifiers 
+    ps_mods = [mod for mod in hair_obj.modifiers
                     if mod.type == 'PARTICLE_SYSTEM']
     for mod in ps_mods:
         if mod.particle_system.name == ps:
@@ -354,7 +354,7 @@ def _set_particle_settings(json_systems, mod, ps_name):
     """Sets the settings of this particle settings according to the json dict
 
     Args:
-        json_systems (dict): 
+        json_systems (dict):
             key (str): name of hair system
             value (dict):
                 key (str): name of setting
@@ -366,10 +366,10 @@ def _set_particle_settings(json_systems, mod, ps_name):
     json_sett = json_systems[ps_name]
     if 'length' in json_sett:
         psys.child_length = json_sett['length']
-    if 'children_amount' in json_sett: 
+    if 'children_amount' in json_sett:
         psys.child_nbr            = json_sett['children_amount']
         psys.rendered_child_count = json_sett['children_amount']
-    if "path_steps" in json_sett: 
+    if "path_steps" in json_sett:
         psys.display_step = json_sett['path_steps']
         psys.render_step  = json_sett['path_steps']
 
@@ -392,7 +392,7 @@ def _transfer_vertexgroup(to_obj, from_obj, vg_name):
     target_vg = to_obj.vertex_groups.new(name=vg_name)
 
     for v in vert_dict:
-        target_vg.add([v,], vert_dict[v], 'ADD')   
+        target_vg.add([v,], vert_dict[v], 'ADD')
 
 def _get_hair_systems_dict(hg_body, hair_obj) -> dict:
     """Gets hair particle systems on passed object, including modifiers
@@ -402,7 +402,7 @@ def _get_hair_systems_dict(hg_body, hair_obj) -> dict:
         hair_obj (Object): imported hair obj
 
     Returns:
-        dict: 
+        dict:
             key   (bpy.types.modifier)       : Modifier of a particle system
             value (bpy.types.particle_system): Particle hair system
     """
@@ -458,26 +458,26 @@ def _set_correct_particle_vertexgroups(new_systems, from_obj, to_obj):
             'vertex_group_twist',
             'vertex_group_velocity'
             ]
-  
+
         old_ps_sett = from_obj.particle_systems[ps_name]
         new_ps_sett = to_obj.particle_systems[ps_name]
 
         for vg_attr in vg_attributes:
             setattr(new_ps_sett, vg_attr, getattr(old_ps_sett, vg_attr))
-        
+
 def _set_correct_hair_material(new_systems, hg_body, hair_type):
-    """Sets face hair material for face hair systems and head head material for 
+    """Sets face hair material for face hair systems and head head material for
     head hair
 
     Args:
         new_systems (dict): Dict of modifiers and particle_systems of hair systems
-        hg_body (Object): 
+        hg_body (Object):
         hair_type (str): 'head' for normal, 'facial_hair' for facial hair
     """
     search_mat = '.HG_Hair_Face' if hair_type == 'face' else '.HG_Hair_Head'
-    mat_name   = [mat.name for mat in hg_body.data.materials 
+    mat_name   = [mat.name for mat in hg_body.data.materials
                   if mat.name.startswith(search_mat)]
-    
+
     for ps in new_systems:
         ps.particle_system.settings.material_slot = mat_name[0]
 
@@ -489,28 +489,28 @@ def _move_modifiers_above_masks(hg_body, new_systems):
         )
     if not lowest_mask_index:
         return
-        
+
     for mod in new_systems:
         if (2, 90, 0) > bpy.app.version: #use old method when older than 2.90
             while hg_body.modifiers.find(mod.name) > lowest_mask_index:
                 bpy.ops.object.modifier_move_up({'object': hg_body},
                                                 modifier=mod.name)
-        
+
         elif hg_body.modifiers.find(mod.name) > lowest_mask_index:
             bpy.ops.object.modifier_move_to_index(modifier=mod.name,
                                                   index=lowest_mask_index)
 
 def convert_to_new_hair_shader(hg_body):
     hair_mats = hg_body.data.materials[1:3]
-    
+
     group_nodes = []
     for mat in hair_mats:
         group_nodes.append(next((n for n in mat.node_tree.nodes if n.name == 'HG_Hair'), None))
-    
-    #check if there is at least one 
+
+    #check if there is at least one
     if not any(group_nodes):
-        return    
-        
+        return
+
     addon_folder = Path(Path(os.path.dirname(__file__)).parent).parent
     blendfile = os.path.join(addon_folder, 'data', 'hair_shader_v3.blend')
 
@@ -519,37 +519,37 @@ def convert_to_new_hair_shader(hg_body):
     else:
         with bpy.data.libraries.load(blendfile, link = False) as (data_from ,data_to):
             data_to.node_groups = data_from.node_groups
-            
+
         new_hair_group = data_to.node_groups[0]
-    
+
     for node in group_nodes:
         node.node_tree = new_hair_group
         node.name = 'HG_Hair_V3'
-        
+
 def update_hair_shader_type(self, context):
     shader_type = self.hair_shader_type
     value = 0 if shader_type == 'fast' else 1
-    
+
     hg_rig = find_human(context.object)
     hg_body = hg_rig.HG.body_obj
-    
+
     for mat in hg_body.data.materials[1:3]:
         hair_group = mat.node_tree.nodes.get('HG_Hair_V3')
         if not hair_group:
             continue
-        
+
         hair_group.inputs['Fast/Accurate'].default_value = value
 
 def set_hair_quality(context, hair_type, hair_quality):
     hg_body = find_human(context.object).HG.body_obj
-    
+
     for mod in [m for m in hg_body.modifiers if m.type == 'PARTICLE_SYSTEM']:
         ps = mod.particle_system.settings
         max_steps = ps['steps']
         max_children = ps['children']
         max_root = ps['root']
         max_tip = ps['tip']
-        
+
         ps.render_step = ps.display_step = _get_steps_amount(hair_quality, max_steps)
         ps.rendered_child_count = ps.child_nbr = _get_child_amount(hair_quality, max_children)
         ps.root_radius, ps.tip_radius = _get_root_and_tip(hair_quality, max_root, max_tip)
@@ -566,7 +566,7 @@ def _get_steps_amount(hair_quality, max_steps):
     new_steps = max_steps - deduction_dict[hair_quality]
     if new_steps < min_steps:
         new_steps = min_steps
-        
+
     return new_steps
 
 def _get_child_amount(hair_quality, max_children):
@@ -575,10 +575,10 @@ def _get_child_amount(hair_quality, max_children):
         'medium': 2,
         'low': 4,
         'ultralow': 10
-    }        
+    }
     new_children = max_children / division_dict[hair_quality]
-    
-    return new_children
+
+    return int(new_children)
 
 def _get_root_and_tip(hair_quality, max_root, max_tip):
     multiplication_dict = {
@@ -587,16 +587,16 @@ def _get_root_and_tip(hair_quality, max_root, max_tip):
         'low': 6,
         'ultralow': 12
     }
-    
+
     new_root = max_root * multiplication_dict[hair_quality]
     new_tip = max_tip * multiplication_dict[hair_quality]
-    
+
     return new_root, new_tip
 
 def randomize_eyebrows(hg_body):
     for i in random.randrange(0, 8):
         _switch_eyebrows(None, hg_body, forward = True)
-        
+
 def random_hair_color(hg_body):
     #TODO make system more elaborate
     hair_color_dict= {
@@ -606,13 +606,12 @@ def random_hair_color(hg_body):
         'brown' : (1.0, 1.0, 0.0),
         'red' : (3.0, 1.0, 0.0)
     }
-    
+
     hair_color = hair_color_dict[random.choice([name for name in hair_color_dict])]
-    
+
     for mat in hg_body.data.materials[1:]:
         nodes = mat.node_tree.nodes
         hair_node = next(n for n in nodes if n.name.startswith('HG_Hair'))
         hair_node.inputs['Hair Lightness'].default_value = hair_color[0]
         hair_node.inputs['Hair Redness'].default_value = hair_color[1]
         hair_node.inputs['Pepper & Salt'].default_value = hair_color[2]
-    
