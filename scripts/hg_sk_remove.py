@@ -8,10 +8,10 @@ for obj in bpy.data.objects:
             obj.shape_key_remove(sk)
     except:
         pass
-    
+
 bpy.ops.wm.save_mainfile()
 
-blend1_file = bpy.data.filepath.replace('.blend', '.blend1')
+blend1_file = bpy.data.filepath.replace(".blend", ".blend1")
 
 try:
     os.remove(blend1_file)

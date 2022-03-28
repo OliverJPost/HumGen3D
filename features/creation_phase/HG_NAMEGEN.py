@@ -1,6 +1,6 @@
-'''
+"""
 function that returns a random name for the given gender
-'''
+"""
 
 import random
 
@@ -14,11 +14,12 @@ def get_name(gender) -> str:
     Returns:
         str: random given name
     """
-    rand_int = random.randrange(0,499)
+    rand_int = random.randrange(0, 499)
 
     names = _get_namelist(gender)
 
     return names[rand_int]
+
 
 def _get_namelist(gender) -> list:
     """List of 500 names for each gender
@@ -530,7 +531,7 @@ def _get_namelist(gender) -> list:
         "Santiago",
         "Sonny",
         "Gilbert",
-        "Delmar"
+        "Delmar",
     )
 
     names_female = [
@@ -1034,7 +1035,8 @@ def _get_namelist(gender) -> list:
         "Elenor",
         "Belinda",
         "Harriet",
-        "Gertie"        
+        "Gertie",
     ]
-    
-    return names_male if gender =='male' else names_female
+
+    return names_male if gender == "male" else names_female
+
