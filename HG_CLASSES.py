@@ -10,6 +10,7 @@ from .core.content.HG_CUSTOM_CONTENT_PACKS import (CUSTOM_CONTENT_ITEM,
                                                    HG_OT_EDIT_CPACK,
                                                    HG_OT_EXIT_CPACK_EDIT,
                                                    HG_OT_SAVE_CPACK)
+from .core.content.HG_UPDATE import UPDATE_INFO_ITEM
 from .core.HG_CALLBACK import HG_ACTIVATE
 from .core.settings.HG_PREFERENCES import (HG_PATHCHANGE, HG_PREF,
                                            HG_PT_ICON_LEGEND)

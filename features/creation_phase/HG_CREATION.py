@@ -24,7 +24,7 @@ class HG_CREATION_BASE():
         """Creates a new human based on the selected gender and starting human
 
         Returns:
-            tuple [bpy.types.Object, bpy.types.Object]: 
+            tuple [bpy.types.Object, bpy.types.Object]:
                 hg_rig : Armature of newly created human, used for storing props
                 hg_body: Body object of newly created human
         """
@@ -40,10 +40,10 @@ class HG_CREATION_BASE():
 
         context.view_layer.objects.active = hg_rig
         self._set_gender_shapekeys(hg_body, gender)
-        
+
         context.view_layer.objects.active = hg_body
         self.delete_gender_hair(hg_body, gender)
-        
+
         context.view_layer.objects.active = hg_rig
 
         if platform == 'darwin': #skip beautyspots on MacOS to prevent OpenGL issue
@@ -55,11 +55,11 @@ class HG_CREATION_BASE():
 
         #set correct gender specific node group
         set_gender_specific_shader(hg_body, gender)
-            
+
         mat   = hg_body.data.materials[0]
         nodes = mat.node_tree.nodes
         mat.node_tree.nodes.remove(nodes['Delete_node']) #TODO wtf is this
-        
+
         json_path = pref.filepath + sett.pcoll_humans.replace('jpg', 'json')
         with open(json_path) as json_file:
             preset_data = json.load(json_file)
@@ -94,7 +94,7 @@ class HG_CREATION_BASE():
             if not obj.HG.ishuman:
                 continue
             taken_names.append(obj.name[4:])
-        
+
         #generate name
         name = get_name(gender)
 
@@ -103,7 +103,7 @@ class HG_CREATION_BASE():
         while i<10 and name in taken_names:
             name = get_name(gender)
             i+=1
-        
+
         hg_rig.name = 'HG_' + name
 
         return name
@@ -118,7 +118,7 @@ class HG_CREATION_BASE():
             pref (AddonPreferences): HumGen preferences
 
         Returns:
-            tuple[str, bpy.types.Object*3]: 
+            tuple[str, bpy.types.Object*3]:
                 gender  (str)   : gender of the imported human
                 hg_rig  (Object): imported armature of human
                 hg_body (Object): imported body of human
@@ -134,18 +134,18 @@ class HG_CREATION_BASE():
                                'HG_TeethLower']
 
         gender = sett.gender
-        
+
         #link to scene
         hg_rig  = data_to.objects[0]
         hg_body = data_to.objects[1]
         hg_eyes = data_to.objects[2]
         scene   = context.scene
-        for obj in data_to.objects: 
+        for obj in data_to.objects:
             scene.collection.objects.link(obj)
             add_to_collection(context, obj)
-      
-        hg_rig.location = context.scene.cursor.location 
-             
+
+        hg_rig.location = context.scene.cursor.location
+
         #set custom properties for identifying
         hg_body['hg_body'] = 1
         hg_eyes['hg_eyes'] = 1
@@ -153,7 +153,7 @@ class HG_CREATION_BASE():
                     if 'Teeth' in obj.name]
         for tooth in hg_teeth:
             tooth['hg_teeth'] = 1
-            
+
         return gender, hg_rig, hg_body, hg_eyes
 
     def _set_HG_object_props(self, sett, hg_rig, hg_body):
@@ -166,13 +166,13 @@ class HG_CREATION_BASE():
         """
         #custom properties
         HG = hg_rig.HG
-        
+
         HG.ishuman  = True
         HG.gender   = sett.gender
         HG.phase    = 'body'
         HG.body_obj = hg_body
         HG.length   = hg_rig.dimensions[2]
-        
+
     def _load_external_shapekeys(self, context, pref, hg_body):
         """Imports external shapekeys from the models/shapekeys folder
 
@@ -193,12 +193,12 @@ class HG_CREATION_BASE():
                                                                root, fn)
                 if not imported_body:
                     continue
-                
+
                 self._transfer_shapekeys(context, hg_body, imported_body)
-                
+
                 imported_body.select_set(False)
                 hg_delete(imported_body)
-        
+
         hg_body.show_only_shape_key = False
 
     def _import_external_sk_human(self, context, pref,
@@ -222,13 +222,13 @@ class HG_CREATION_BASE():
             show_message(self, 'Could not import '+blendfile)
             print(e)
             return None
-        
+
         hg_log('Existing shapekeys imported:', data_to.objects, level = 'DEBUG')
         imported_body = [obj for obj in data_to.objects
-                         if obj.name.lower() == 'hg_shapekey'][0] 
-        
+                         if obj.name.lower() == 'hg_shapekey'][0]
+
         context.scene.collection.objects.link(imported_body)
-        
+
         return imported_body
 
     def _transfer_shapekeys(self, context, hg_body, imported_body):
@@ -256,7 +256,7 @@ class HG_CREATION_BASE():
             hg_body (Object): HumGen body object
             gender (str): gender of this human
         """
-        
+
         for sk in [sk for sk in hg_body.data.shape_keys.key_blocks]:
             if sk.name.lower().startswith(gender):
                 if sk.name != 'Male':
@@ -264,9 +264,9 @@ class HG_CREATION_BASE():
                     sk.name = sk.name.replace(f'{GD}_',
                                               ''
                                               )
-            
-            opposite_gender = 'male' if gender == 'female' else 'female'    
-            
+
+            opposite_gender = 'male' if gender == 'female' else 'female'
+
             if sk.name.lower().startswith(opposite_gender) and sk.name != 'Male':
                 hg_body.shape_key_remove(sk)
 
@@ -287,13 +287,13 @@ class HG_CREATION_BASE():
                           if ps.name == ps_name
                      )
             hg_body.particle_systems.active_index = ps_idx
-            
-            bpy.ops.object.particle_system_remove()  
+
+            bpy.ops.object.particle_system_remove()
 
     def _configure_human_from_preset(self, context, sett, gender,
                                               hg_body, hg_eyes, preset_data):
         """Configures this human according to the preset human that was selected
-        by the user. Configuring from imported json 
+        by the user. Configuring from imported json
 
         Args:
             context ([type]): [description]
@@ -305,12 +305,12 @@ class HG_CREATION_BASE():
         """
         if preset_data['experimental']:
             bpy.ops.hg3d.experimental()
-        
+
         preset_length = preset_data['body_proportions']['length']*100
         if preset_length > 181 and preset_length < 182:
             preset_length = 183.15 #override for clothing creation
         sett.human_length = preset_length
-        sett.chest_size = preset_data['body_proportions']['chest']  
+        sett.chest_size = preset_data['body_proportions']['chest']
 
         sks = hg_body.data.shape_keys.key_blocks
         missed_shapekeys = 0
@@ -330,7 +330,7 @@ class HG_CREATION_BASE():
         for node_name, value in preset_data['material']['eyes'].items():
             eye_nodes[node_name].inputs[2].default_value = value
 
-        if 'eyebrows' in preset_data:  
+        if 'eyebrows' in preset_data:
             self._set_preset_eyebrows(hg_body, preset_data)
 
     def _load_preset_texture_set(self, context, sett, gender, preset_data):
@@ -343,24 +343,24 @@ class HG_CREATION_BASE():
             preset_data (dict): dict of preset_data from json
         """
         refresh_pcoll(None, context, 'textures')
-        
+
         texture_name         = preset_data['material']['diffuse']
         texture_library      = preset_data['material']['texture_library']
         sett.texture_library = preset_data['material']['texture_library']
-        
+
         sett.pcoll_textures  = str(Path(
             f'/textures/{gender}/{texture_library}/{texture_name}'
             ) #update function handles the actual texture loading
         )
 
     def _set_preset_node_values(self, nodes, node_name, input_dict):
-        """For each input (key) in the input dict, sets the input.default_value 
+        """For each input (key) in the input dict, sets the input.default_value
         to the value named in the dict
 
         Args:
             nodes (ShaderNode list): nodes of this material
             node_name (str): name of node to set values for
-            input_dict (dict): 
+            input_dict (dict):
                 key (str): name of the input on the passed node
                 value (AnyType): value to set as default_value for this input
         """
@@ -386,12 +386,12 @@ class HG_CREATION_BASE():
             mod.show_viewport = mod.show_render = False
 
         preset_eyebrows = next(
-            (mod for mod in eyebrows 
+            (mod for mod in eyebrows
                 if mod.particle_system.name == preset_data['eyebrows']),
             None
             )
         if not preset_eyebrows:
-            ShowMessageBox(message = ('Could not find eyebrows named ' 
+            ShowMessageBox(message = ('Could not find eyebrows named '
                                       + preset_data['eyebrows']))
         else:
             preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
@@ -402,7 +402,7 @@ class HG_CREATION_BASE():
             if mod.type == 'PARTICLE_SYSTEM':
                 ps_sett = mod.particle_system.settings
                 if ps_sett.child_nbr > 1:
-                    ps_sett.child_nbr = 1    
+                    ps_sett.child_nbr = 1
 
 
 def set_eevee_ao_and_strip(context):
@@ -413,13 +413,13 @@ def set_eevee_ao_and_strip(context):
     context.scene.render.engine = current_render_engine
 
 class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
-    """Imports human, setting the correct custom properties. 
-    
+    """Imports human, setting the correct custom properties.
+
     Operator type:
         Object importer
         Prop setter
         Material
-    
+
     Prereq:
         Starting human selected in humans preview collection
     """
@@ -430,7 +430,7 @@ class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
 
     @classmethod
     def poll (cls, context):
-        return (context.scene.HG3D.pcoll_humans != 'none' 
+        return (context.scene.HG3D.pcoll_humans != 'none'
                 or context.scene.HG3D.active_ui_tab == 'BATCH')
 
     def execute(self,context):
@@ -444,6 +444,6 @@ class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
         name = self._give_random_name_to_human(sett.gender, hg_rig)
 
         self.report({'INFO'}, "You've created: {}".format(name))
-        
+
         return {'FINISHED'}
 
