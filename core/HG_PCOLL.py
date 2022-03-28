@@ -1,5 +1,5 @@
 """
-Functions related to the preview_collections of human generator, including 
+Functions related to the preview_collections of human generator, including
 population of them
 """
 
@@ -8,8 +8,12 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ..features.common.HG_COMMON_FUNC import (HumGenException, find_human,
-                                              get_prefs, hg_log)
+from ..features.common.HG_COMMON_FUNC import (
+    HumGenException,
+    find_human,
+    get_prefs,
+    hg_log,
+)
 
 preview_collections = {} #global dictionary of all pcolls
 
@@ -25,8 +29,8 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     pcoll = preview_collections.get('pcoll_{}'.format(pcoll_type))
     if not pcoll:
         return [('none', 'Reload category below', '', 0),]
-    
-    return pcoll['pcoll_{}'.format(pcoll_type)]  
+
+    return pcoll['pcoll_{}'.format(pcoll_type)]
 
 def refresh_pcoll(self, context, pcoll_name, ignore_genders = False, hg_rig = None):
     """Refresh the items of this preview
@@ -38,11 +42,11 @@ def refresh_pcoll(self, context, pcoll_name, ignore_genders = False, hg_rig = No
     _check_for_HumGen_filepath_issues(self)
 
     sett.load_exception = False if pcoll_name == 'poses' else True
-        
+
     _populate_pcoll(self, context, pcoll_name, ignore_genders, hg_rig = hg_rig)
     sett['pcoll_{}'.format(pcoll_name)] = 'none' #set the preview collection to
-                                                #the 'click here to select' item    
-    
+                                                #the 'click here to select' item
+
     sett.load_exception = False
 
 def _check_for_HumGen_filepath_issues(self):
@@ -53,14 +57,14 @@ def _check_for_HumGen_filepath_issues(self):
         pref.filepath
         + str(Path('content_packs/Base_Humans.json'))
         )
-    
+
     base_content = os.path.exists(base_humans_path)
-    
+
     if not base_content:
         raise HumGenException("Filepath selected, but no humans found in path")
 
 def _populate_pcoll(self, context, pcoll_categ, ignore_genders, hg_rig = None):
-    """Populates the preview collection enum list with blend file filepaths and 
+    """Populates the preview collection enum list with blend file filepaths and
     icons
 
     Args:
@@ -72,46 +76,46 @@ def _populate_pcoll(self, context, pcoll_categ, ignore_genders, hg_rig = None):
     #create variables if they dont exist in settings
     if not 'previews_dir_{}'.format(pcoll_categ) in sett:
         sett['previews_dir_{}'.format(pcoll_categ)] = ''
-    #clear previews list        
+    #clear previews list
     sett['previews_list_{}'.format(pcoll_categ)] = []
-    
+
     # find category and subcategory in order to determine the dir to search
     if not hg_rig:
         hg_rig = find_human(context.active_object)
-        
+
     gender = ('' if ignore_genders
-              else sett.gender if pcoll_categ == 'humans' 
+              else sett.gender if pcoll_categ == 'humans'
               else hg_rig.HG.gender)
     categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender)
-    
+
     pcoll_full_dir = str(pref.filepath) + str(Path('/{}/'.format(categ_dir)))
     if subcateg_dir != 'All':
         pcoll_full_dir = pcoll_full_dir + str(Path('/{}/'.format(subcateg_dir)))
-   
-    file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)    
-    
-    path_list = []  
+
+    file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
+
+    path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equels None
     pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
     pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
-    
+
     none_thumb = _load_thumbnail('pcoll_placeholder', pcoll)
     pcoll_enum = [('none', '', '', none_thumb.icon_id, 0)]
-    for i, full_path in enumerate(file_paths):            
+    for i, full_path in enumerate(file_paths):
         _add_file_to_pcoll(pcoll_categ, sett, pref, pcoll, pcoll_enum,
                            path_list, i, full_path)
-    
+
     if len(pcoll_enum) <= 1:
         empty_thumb = _load_thumbnail('pcoll_empty', pcoll)
         pcoll_enum = [('none', '', '', empty_thumb.icon_id, 0)]
 
     pcoll['pcoll_{}'.format(pcoll_categ)] = pcoll_enum
-    sett['previews_list_{}'.format(pcoll_categ)] = path_list    
+    sett['previews_list_{}'.format(pcoll_categ)] = path_list
     pcoll['previews_dir_{}'.format(pcoll_categ)] = pcoll_full_dir
 
 def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> 'tuple[str, str]':
-    """Gets the directory name of the preview collection category and of the 
+    """Gets the directory name of the preview collection category and of the
     user selected subcategory
 
     Args:
@@ -120,7 +124,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> 'tuple[str, str]'
         gender (str): gender to find pcoll items for
 
     Returns:
-        tuple[str, str]: 
+        tuple[str, str]:
             str: directory of preview collection items. Relative from HumGen filepath
             str: subdirectory, based on user selection. Relative from cateG_dir
     """
@@ -148,10 +152,10 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> 'tuple[str, str]'
         'textures'   : sett.texture_library
         }
     subcateg_dir = dir_sub_dict[pcoll_categ]
-    
+
     return categ_dir, subcateg_dir
 
-def list_pcoll_files_in_dir(dir, pcoll_type) -> list:    
+def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
     """Gets a list of files in dir with certain extension. Extension depends on
     the passed pcoll_type. Also handles search terms the users entered in a
     searchbox
@@ -164,23 +168,23 @@ def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
         list: list of file paths in dir of certain extension
     """
     sett = bpy.context.scene.HG3D
-    
+
     search_term = _get_search_term(pcoll_type, sett)
 
     ext = _get_pcoll_files_extension(pcoll_type)
-    
+
     file_paths = []
     for root, dirs, files in os.walk(dir):
         if pcoll_type == 'textures' and 'PBR' in root:
             continue #don't show textures in PBR folder of texture sets
-        
-        found_files = [fn for fn in files 
-                       if fn.lower().endswith(ext) 
+
+        found_files = [fn for fn in files
+                       if fn.lower().endswith(ext)
                        and search_term.lower() in fn.lower()
                        ]
         for fn in found_files:
             full_path = os.path.join(root, fn)
-            file_paths.append(full_path)          
+            file_paths.append(full_path)
 
     hg_log('getting files for {} in {}'.format(pcoll_type, dir), level = 'DEBUG')
     hg_log('found files {}'.format(file_paths), level = 'DEBUG')
@@ -189,7 +193,7 @@ def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
 
 def _get_pcoll_files_extension(pcoll_type) -> str:
     """Gets the filetype extension that belongs to this preview collection.
-    
+
     I.e. pcoll_humans looks for .json and pcoll_outfits looks for .blend
 
     Args:
@@ -220,14 +224,14 @@ def _load_thumbnail(thumb_name, pcoll) -> list:
     """
 
     filepath_thumb = (
-        str(Path(os.path.dirname(__file__)).parent) 
+        str(Path(os.path.dirname(__file__)).parent)
         + str(Path(f'/icons/{thumb_name}.jpg'))
     )
     if not pcoll.get(filepath_thumb):
         thumb = pcoll.load(filepath_thumb, filepath_thumb, 'IMAGE')
-    else: 
+    else:
         thumb = pcoll[filepath_thumb]
-    
+
     return thumb
 
 
@@ -245,15 +249,15 @@ def _add_file_to_pcoll(pcoll_categ, sett, pref, pcoll, pcoll_enum, path_list,
         i           (int)             : index of enumerate of files
         full_path   (Path)            : filepath of item to add to pcoll
     """
-    filepath_thumb = os.path.splitext(full_path)[0] + '.jpg' 
+    filepath_thumb = os.path.splitext(full_path)[0] + '.jpg'
     if not pcoll.get(filepath_thumb):
         thumb = pcoll.load(filepath_thumb, filepath_thumb, 'IMAGE')
-    else: thumb = pcoll[filepath_thumb]   
+    else: thumb = pcoll[filepath_thumb]
 
     short_path = full_path.replace(str(pref.filepath), '')
-    
+
     display_name = _get_display_name(full_path)
-    
+
     pcoll_enum.append((short_path,
                        os.path.splitext(display_name)[0],
                        "",
@@ -272,9 +276,9 @@ def _get_display_name(full_path) -> str:
     """
     display_name = os.path.basename(full_path)
     for remove_string in ('HG', 'Male', 'Female'):
-        display_name = display_name.replace(remove_string, '') 
+        display_name = display_name.replace(remove_string, '')
     display_name = display_name.replace('_', ' ')
-    
+
     return display_name
 
 def _get_search_term(pcoll_type, sett) -> str:
@@ -297,13 +301,13 @@ def _get_search_term(pcoll_type, sett) -> str:
         }
 
     search_term = (search_term_dict[pcoll_type]
-                   if pcoll_type in search_term_dict 
+                   if pcoll_type in search_term_dict
                    else ''
                    )
-                   
+
     return search_term
 
 def get_hg_icon(icon_name) -> int:
     icon_list = preview_collections['hg_icons']
-    
+
     return icon_list[icon_name].icon_id
