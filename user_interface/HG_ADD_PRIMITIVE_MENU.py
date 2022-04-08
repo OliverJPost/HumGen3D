@@ -3,12 +3,15 @@ import bpy  # type:ignore
 from ..core.HG_PCOLL import get_hg_icon
 
 
-class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
+class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):
     # Define the "Single Vert" menu
-    bl_idname = "VIEW3D_MT_hg_marker_add"
+    bl_idname = "VIEW3D_MT_HG_Marker_Add"
     bl_label = "Human Generator Markers"
 
     def draw(self, context):
+        """Menu in the 'add object' modal for the user to add markers for the
+        HG batch generator
+        """
         layout = self.layout
         layout.operator_context = "INVOKE_REGION_WIN"
 
@@ -27,11 +30,13 @@ class VIEW3D_MT_hg_marker_add(bpy.types.Menu):
             "walking",
             "running",
         ]:
-            layout.operator(
+            primitive_name_formatted = primitive.capitalize().replace("_", " ")
+            operator = layout.operator(
                 "hg3d.add_batch_marker",
-                text=primitive.capitalize().replace("_", " "),
+                text=primitive_name_formatted,
                 icon_value=get_hg_icon(primitive),
-            ).marker_type = primitive
+            )
+            operator.marker_type = primitive
 
 
 def add_hg_primitive_menu(self, context):
@@ -40,7 +45,7 @@ def add_hg_primitive_menu(self, context):
 
     layout.separator()
     layout.menu(
-        "VIEW3D_MT_hg_marker_add",
+        "VIEW3D_MT_HG_Marker_Add",
         text="Human Generator Markers",
         icon_value=get_hg_icon("HG_icon"),
     )

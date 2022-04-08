@@ -4,6 +4,13 @@ import os
 from pathlib import Path
 
 import bpy  # type: ignore
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    IntProperty,
+    IntVectorProperty,
+    StringProperty,
+)
 from bpy_extras.io_utils import ImportHelper  # type: ignore
 
 from ... import bl_info
@@ -18,15 +25,15 @@ class HG_PREF(bpy.types.AddonPreferences):
     bl_idname = __package__.split(".")[0]
 
     # RELEASE remove default path
-    filepath: bpy.props.StringProperty(name="Install Filepath", default="")
+    filepath: StringProperty(name="Install Filepath", default="")
 
     # update props
-    latest_version: bpy.props.IntVectorProperty(default=(0, 0, 0))
-    cpack_update_available: bpy.props.BoolProperty(default=False)
-    cpack_update_required: bpy.props.BoolProperty(default=False)
-    update_info_ui: bpy.props.BoolProperty(default=True)
+    latest_version: IntVectorProperty(default=(0, 0, 0))
+    cpack_update_available: BoolProperty(default=False)
+    cpack_update_required: BoolProperty(default=False)
+    update_info_ui: BoolProperty(default=True)
     # main prefs UI props
-    pref_tabs: bpy.props.EnumProperty(
+    pref_tabs: EnumProperty(
         name="tabs",
         description="",
         items=[
@@ -38,11 +45,11 @@ class HG_PREF(bpy.types.AddonPreferences):
     )
 
     # cpack editing props
-    editing_cpack: bpy.props.StringProperty()
-    cpack_content_search: bpy.props.StringProperty()
-    newly_added_ui: bpy.props.BoolProperty(default=False)
-    removed_ui: bpy.props.BoolProperty(default=False)
-    custom_content_categ: bpy.props.EnumProperty(
+    editing_cpack: StringProperty()
+    cpack_content_search: StringProperty()
+    newly_added_ui: BoolProperty(default=False)
+    removed_ui: BoolProperty(default=False)
+    custom_content_categ: EnumProperty(
         name="Content type",
         description="",
         items=[
@@ -57,22 +64,22 @@ class HG_PREF(bpy.types.AddonPreferences):
         ],
         default="starting_humans",
     )
-    cpack_name: bpy.props.StringProperty()
-    cpack_creator: bpy.props.StringProperty()
-    cpack_version: bpy.props.IntProperty(min=0)
-    cpack_subversion: bpy.props.IntProperty(min=0)
-    cpack_weblink: bpy.props.StringProperty()
-    cpack_export_folder: bpy.props.StringProperty(subtype="DIR_PATH")
-    hide_other_packs: bpy.props.BoolProperty(default=True)
+    cpack_name: StringProperty()
+    cpack_creator: StringProperty()
+    cpack_version: IntProperty(min=0)
+    cpack_subversion: IntProperty(min=0)
+    cpack_weblink: StringProperty()
+    cpack_export_folder: StringProperty(subtype="DIR_PATH")
+    hide_other_packs: BoolProperty(default=True)
 
     # cpack user preferences
-    units: bpy.props.EnumProperty(
+    units: EnumProperty(
         name="units",
         description="",
         items=[("metric", "Metric", "", 0), ("imperial", "Imperial", "", 1),],
         default="metric",
     )
-    hair_section: bpy.props.EnumProperty(
+    hair_section: EnumProperty(
         name="Show hair section",
         description="",
         items=[
@@ -83,31 +90,29 @@ class HG_PREF(bpy.types.AddonPreferences):
         default="creation",
     )
 
-    show_confirmation: bpy.props.BoolProperty(default=True)
-    dev_tools: bpy.props.BoolProperty(
+    show_confirmation: BoolProperty(default=True)
+    dev_tools: BoolProperty(
         name="Show Dev Tools", description="", default=False
     )  # RELEASE set to False
 
-    auto_hide_hair_switch: bpy.props.BoolProperty(default=True)
-    auto_hide_popup: bpy.props.BoolProperty(default=True)
-    remove_clothes: bpy.props.BoolProperty(default=True)
+    auto_hide_hair_switch: BoolProperty(default=True)
+    auto_hide_popup: BoolProperty(default=True)
+    remove_clothes: BoolProperty(default=True)
 
-    compact_ff_ui: bpy.props.BoolProperty(
-        name="Compact face UI", default=False
-    )
-    keep_all_shapekeys: bpy.props.BoolProperty(
+    compact_ff_ui: BoolProperty(name="Compact face UI", default=False)
+    keep_all_shapekeys: BoolProperty(
         name="Keep all shapekeys after creation phase", default=False
     )
 
-    nc_colorspace_name: bpy.props.StringProperty(default="")
-    debug_mode: bpy.props.BoolProperty(default=False)
-    silence_all_console_messages: bpy.props.BoolProperty(default=False)
+    nc_colorspace_name: StringProperty(default="")
+    debug_mode: BoolProperty(default=False)
+    silence_all_console_messages: BoolProperty(default=False)
 
-    skip_url_request: bpy.props.BoolProperty(default=False)
+    skip_url_request: BoolProperty(default=False)
 
-    show_tips: bpy.props.BoolProperty(default=True)
-    compress_zip: bpy.props.BoolProperty(default=True)
-    full_height_menu: bpy.props.BoolProperty(default=False)
+    show_tips: BoolProperty(default=True)
+    compress_zip: BoolProperty(default=True)
+    full_height_menu: BoolProperty(default=False)
 
     def draw(self, context):
         # check if base content is installed, otherwise show installation ui
@@ -713,7 +718,7 @@ class HG_PREF(bpy.types.AddonPreferences):
                 )
             try:
                 box.template_icon(item.icon_value, scale=5)
-            except:
+            except Exception:
                 pass
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(
@@ -778,4 +783,3 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
 
         for icon_desc, icon in icon_dict.items():
             layout.label(text=icon_desc, icon_value=hg_icons[icon].icon_id)
-

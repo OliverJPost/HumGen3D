@@ -71,7 +71,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             try:
                 context.object["hg_batch_marker"]
                 self._draw_batch_marker_notification(layout)
-            except:
+            except (KeyError, TypeError):
                 pass
             self._draw_starting_human_ui(layout)
         elif is_batch:

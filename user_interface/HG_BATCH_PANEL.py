@@ -1,7 +1,3 @@
-"""
-This file is currently inactive
-"""
-
 import bpy
 
 from ..core.HG_PCOLL import get_hg_icon, preview_collections
@@ -129,7 +125,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         flow.prop(sett, "asian_chance")
 
 
-class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
+class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
     """Subpanel showing options for height variation in the generation of batch
     humans.
     """
@@ -229,8 +225,9 @@ class HG_PT_B_HEIGHT_VARIATION(Batch_PT_Base, bpy.types.Panel):
             length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
             length_label = (
                 str(int(length_feet)) + "' " + str(length_inches) + '"'
-            )
+            ) 
         else:
+            # Add 0 for vertical alignment if float has 1 decimal
             alignment = "0 " if len(str(length_m)) == 3 else " "
             length_label = str(length_m) + alignment + "m"
 

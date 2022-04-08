@@ -19,7 +19,11 @@ from .core.content.HG_CUSTOM_CONTENT_PACKS import (
 )
 from .core.content.HG_UPDATE import UPDATE_INFO_ITEM
 from .core.HG_CALLBACK import HG_ACTIVATE
-from .core.settings.HG_PREFERENCES import HG_PATHCHANGE, HG_PREF, HG_PT_ICON_LEGEND
+from .core.settings.HG_PREFERENCES import (
+    HG_PATHCHANGE,
+    HG_PREF,
+    HG_PT_ICON_LEGEND,
+)
 from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
 from .features.batch_section.HG_BATCH_MODAL_OPERATOR import HG_BATCH_GENERATE
 from .features.batch_section.HG_BATCH_PRIMITIVES import HG_OT_ADD_BATCH_MARKER
@@ -38,7 +42,9 @@ from .features.common.HG_RANDOM import HG_COLOR_RANDOM, HG_RANDOM
 from .features.creation_phase.HG_BACKUP import HG_REVERT_TO_CREATION
 from .features.creation_phase.HG_CREATION import HG_START_CREATION
 from .features.creation_phase.HG_FACE import HG_RESET_FACE
-from .features.creation_phase.HG_FINISH_CREATION_PHASE import HG_FINISH_CREATION
+from .features.creation_phase.HG_FINISH_CREATION_PHASE import (
+    HG_FINISH_CREATION,
+)
 from .features.creation_phase.HG_HAIR import (
     HG_EYEBROW_SWITCH,
     HG_REMOVE_HAIR,
@@ -67,7 +73,13 @@ from .features.utility_section.HG_CONTENT_SAVING import (
     HG_OT_SAVEOUTFIT,
     HG_OT_SAVEPRESET,
 )
-from .features.utility_section.HG_DEVTOOLS import *
+from .features.utility_section.HG_DEVTOOLS import (
+    HG_CONVERT_HAIR_SHADER,
+    HG_DELETE_STRETCH,
+    HG_MASK_PROP,
+    HG_RESET_BATCH_OPERATOR,
+    HG_TESTOP,
+)
 from .features.utility_section.HG_MESH_TO_CLOTH import (
     HG_MTC_TO_A_POSE,
     HG_OT_ADDCLOTHMATH,
@@ -94,7 +106,7 @@ from .user_interface import (
     HG_UTILITY_PANEL,
     HG_UTILITY_UILISTS,
 )
-from .user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_hg_marker_add
+from .user_interface.HG_ADD_PRIMITIVE_MENU import VIEW3D_MT_HG_Marker_Add
 from .user_interface.HG_CONTENT_SAVING_PANEL import (
     HG_OT_CANCEL_CONTENT_SAVING_UI,
     HG_OT_OPEN_CONTENT_SAVING_TAB,
@@ -228,7 +240,7 @@ hg_classes = (
     # Batch
     HG_BATCH_GENERATE,
     HG_QUICK_GENERATE,
-    VIEW3D_MT_hg_marker_add,
+    VIEW3D_MT_HG_Marker_Add,
     HG_OT_ADD_BATCH_MARKER,
     HG_RESET_BATCH_OPERATOR,
     # New content saving
@@ -247,4 +259,3 @@ hg_classes = (
     HG_OT_HIDE_TIP,
     HG_OT_UNHIDE_TIP,
 )
-

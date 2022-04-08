@@ -73,15 +73,14 @@ def uilist_layout(layout, context, item):
             if item.female_items != 0
             else hg_icons["female_false"].icon_id,
         )
-    except:
+    except AttributeError:
+        # If the item doesn't have (fe)male_items attribute. Bad design
         subrow.alignment = "RIGHT"
         subrow.label(text=str(item.count))
 
 
 class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist"""
 
     library_name: bpy.props.StringProperty(
         name="Library Name", description="", default="",
@@ -92,9 +91,7 @@ class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
 
 
 class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist"""
 
     library_name: bpy.props.StringProperty(
         name="Library Name", description="", default="",
@@ -107,29 +104,24 @@ def batch_uilist_refresh(self, context, categ):
     """
     Refreshes uilist
     """
-    add_temp = []
-
+    scene = context.scene
     if categ == "outfits":
-        collection = context.scene.batch_clothing_col
-        gender = True
-    else:
-        if categ == "poses":
-            collection = context.scene.batch_pose_col
-        elif categ == "expressions":
-            collection = context.scene.batch_expressions_col
-
-        gender = False
+        collection = scene.batch_clothing_col  
+    elif categ == "poses":
+        collection = scene.batch_pose_col
+    elif categ == "expressions":
+        collection = scene.batch_expressions_col
 
     enabled_dict = {i.name: i.enabled for i in collection}
+    collection.clear()
 
+    gender = categ == "outfits"
     found_folders_male = find_folders(
         self, context, categ, gender, include_all=False, gender_override="male"
     )
-    collection.clear()
-
+    
     for folder in found_folders_male:
         item = collection.add()
-        # ['{}_col{}'.format(categ, '' if not gender else '_{}'.format(gender[0]))]
         item.name = folder[0]
         item.library_name = folder[0]
         if folder[0] in [n for n in enabled_dict]:
