@@ -729,7 +729,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     mask_foot: BoolProperty(default=False)
 
     pose_name: StringProperty()
-    pose_category_to_save_to: bpy.props.EnumProperty(
+    pose_category_to_save_to: EnumProperty(
         name="Pose Category",
         items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
         default="existing",
@@ -740,7 +740,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     )
     pose_new_category_name: StringProperty()
 
-    custom_content_categ: bpy.props.EnumProperty(
+    custom_content_categ: EnumProperty(
         name="Content type",
         description="",
         items=[
@@ -760,7 +760,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     content_saving_type: StringProperty()
     mtc_not_in_a_pose: BoolProperty(default=False)
 
-    thumbnail_saving_enum: bpy.props.EnumProperty(
+    thumbnail_saving_enum: EnumProperty(
         name="Thumbnail",
         items=[
             ("none", "No thumbnail", "", 0),
@@ -777,7 +777,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     content_saving_active_human: PointerProperty(type=bpy.types.Object)
     content_saving_object: PointerProperty(type=bpy.types.Object)
 
-    show_hidden_tips: bpy.props.BoolProperty(default=False)
+    show_hidden_tips: BoolProperty(default=False)
 
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):

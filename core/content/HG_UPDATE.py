@@ -2,7 +2,6 @@
 code updates"""
 
 import json
-from sys import version_info
 
 import bpy  # type: ignore
 import requests  # type: ignore

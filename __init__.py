@@ -86,22 +86,24 @@ def _initiate_preview_collections():
 
 
 def _initiate_custom_icons():
-    # Load custom icons
+    """Load custom icons"""
     hg_icons = preview_collections.setdefault(
         "hg_icons", bpy.utils.previews.new()
     )
-    hg_dir = os.path.join(os.path.dirname(__file__), "icons")
-    for _, _, fns in os.walk(hg_dir):
-        for fn in [f for f in fns if f.endswith(".png")]:
-            hg_icons.load(
-                os.path.splitext(fn)[0], os.path.join(hg_dir, fn), "IMAGE"
-            )
+    icon_dir = os.path.join(os.path.dirname(__file__), "icons")
+    for _, _, fns in os.walk(icon_dir):
+        png_files = [f for f in fns if f.endswith(".png")]
+        for fn in png_files:
+            fn_base = os.path.splitext(fn)[0]
+            full_path = os.path.join(icon_dir, fn)
+            hg_icons.load(fn_base, full_path, "IMAGE")
     preview_collections["hg_icons"] = hg_icons
 
 
 def _initiate_ui_lists():
     sc = bpy.types.Scene
 
+    # Collection of batch clothing categories
     sc.batch_clothing_col = bpy.props.CollectionProperty(
         type=HG_BATCH_UILIST.BATCH_CLOTHING_ITEM
     )
@@ -109,6 +111,7 @@ def _initiate_ui_lists():
         name="Index", default=0
     )
 
+    # Collection of batch expression categories
     sc.batch_expressions_col = bpy.props.CollectionProperty(
         type=HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM
     )
@@ -116,32 +119,40 @@ def _initiate_ui_lists():
         name="Index", default=0
     )
 
+    # Installed content packs
     sc.contentpacks_col = bpy.props.CollectionProperty(type=HG_CONTENT_PACK)
     sc.contentpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of packs selected by user to be installed
     sc.installpacks_col = bpy.props.CollectionProperty(type=HG_INSTALLPACK)
     sc.installpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of modifiers that are available for ModApply operator
     sc.modapply_col = bpy.props.CollectionProperty(
         type=HG_UTILITY_UILISTS.MODAPPLY_ITEM
     )
     sc.modapply_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of shapekeys that can be saved
     sc.shapekeys_col = bpy.props.CollectionProperty(
         type=HG_UTILITY_UILISTS.SHAPEKEY_ITEM
     )
     sc.shapekeys_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of hairstyles that can be saved
     sc.savehair_col = bpy.props.CollectionProperty(
         type=HG_UTILITY_UILISTS.SAVEHAIR_ITEM
     )
     sc.savehair_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of otufits that can be saved
     sc.saveoutfit_col = bpy.props.CollectionProperty(
         type=HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM
     )
     sc.saveoutfit_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of all custom content that can be selected in the content pack
+    # export screen
     sc.custom_content_col = bpy.props.CollectionProperty(
         type=CUSTOM_CONTENT_ITEM
     )
@@ -149,9 +160,12 @@ def _initiate_ui_lists():
         name="Index", default=0
     )
 
+    # Collection of items that were changed in the active content pack of the
+    # content pack export screen
     sc.hg_update_col = bpy.props.CollectionProperty(type=UPDATE_INFO_ITEM)
     sc.hg_update_col_index = bpy.props.IntProperty(name="Index", default=0)
 
+    # Collection of tips and suggestions to show to the user
     sc.hg_tips_and_suggestions = bpy.props.CollectionProperty(type=TIPS_ITEM)
     sc.hg_tips_and_suggestions_index = bpy.props.IntProperty(
         name="Index", default=0
@@ -163,12 +177,10 @@ def register():
     for cls in hg_classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.HG3D = bpy.props.PointerProperty(
-        type=HG_SETTINGS
-    )  # Main props
-    bpy.types.Object.HG = bpy.props.PointerProperty(
-        type=HG_OBJECT_PROPS
-    )  # Object specific props
+    # Main props
+    bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS)
+    # Object specific props
+    bpy.types.Object.HG = bpy.props.PointerProperty(type=HG_OBJECT_PROPS)
 
     _initiate_preview_collections()
     _initiate_custom_icons()
