@@ -50,7 +50,7 @@ from .features.creation_phase.HG_HAIR import (
     HG_REMOVE_HAIR,
     HG_TOGGLE_HAIR_CHILDREN,
 )
-from .features.creation_phase.HG_HAIRCARDS import HG_CONVERT_HAIRCARDS
+from .features.creation_phase.HG_HAIRCARDS_NUMPY import HG_CONVERT_HAIRCARDS
 from .features.creation_phase.HG_LENGTH import HG_RANDOM_LENGTH
 from .features.finalize_phase.HG_CLOTHING import (
     HG_BACK_TO_HUMAN,

@@ -20,12 +20,15 @@ from ...features.common.HG_COMMON_FUNC import get_prefs
 
 
 class HG_PREF(bpy.types.AddonPreferences):
-    """ HumGen user preferences """
+    """HumGen user preferences"""
 
     bl_idname = __package__.split(".")[0]
 
     # RELEASE remove default path
-    filepath: StringProperty(name="Install Filepath", default="")
+    filepath: StringProperty(
+        name="Install Filepath",
+        default="/Users/olepost/Documents/Humgen_Files_Main/",
+    )
 
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))
@@ -76,7 +79,10 @@ class HG_PREF(bpy.types.AddonPreferences):
     units: EnumProperty(
         name="units",
         description="",
-        items=[("metric", "Metric", "", 0), ("imperial", "Imperial", "", 1),],
+        items=[
+            ("metric", "Metric", "", 0),
+            ("imperial", "Imperial", "", 1),
+        ],
         default="metric",
     )
     hair_section: EnumProperty(

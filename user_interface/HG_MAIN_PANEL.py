@@ -8,11 +8,7 @@ import bpy
 from .. import bl_info
 from ..core.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
-from ..features.common.HG_COMMON_FUNC import (
-    find_human,
-    get_prefs,
-    is_batch_result,
-)
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs, is_batch_result
 from ..user_interface.HG_TIPS_SUGGESTIONS_UI import (
     draw_tips_suggestions_ui,  # type: ignore
 )
@@ -1178,7 +1174,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         self._draw_hair_length_ui(hair_systems, box)
         self._draw_hair_material_ui(box)
 
-        return  # disable hair cards UI until operator works
+        #return  # disable hair cards UI until operator works
 
         if hair_systems:
             self._draw_hair_cards_ui(box)
