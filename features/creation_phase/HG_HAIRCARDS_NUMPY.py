@@ -20,7 +20,8 @@ class Hair:
     rotation: Tuple[float]
     nearest_vert_normals: np.ndarray
     particle_sys: bpy.types.ParticleSystem
-    obj: bpy.types.Object
+    perpendicular_card: bpy.types.Object
+    parallel_card: bpy.types.Object
 
     def __init__(self, mw, kd, guide_hair, particle_sys, verts):
         self.location = guide_hair.location
@@ -35,7 +36,8 @@ class Hair:
             ].normal.normalized()
 
         self.particle_system = particle_sys
-        self.obj = None
+        self.perpendicular_card = None
+        self.parallel_card = None
 
     def normalized(self, a, axis=-1, order=2):
         l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
@@ -54,8 +56,6 @@ class Hair:
         return coords
 
     def to_mesh(self, mw, scene):
-        mesh = bpy.data.meshes.new(name=f"hair_{self.location}")
-
         hk_len = len(self.key_coordinates)
         head_normals = self.nearest_vert_normals
         hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=1)
@@ -65,120 +65,155 @@ class Hair:
 
         perpendicular = np.cross(head_normals, hair_key_vectors)
 
-        print(perpendicular)
-
-        vertices = self.matrix_multiplication(mw, self.key_coordinates)
-
         length_correction = np.arange(
             0.01, 0.03, 0.02 / hk_len, dtype=np.float32
         )
 
         length_correction = length_correction[::-1]
         length_correction = np.expand_dims(length_correction, axis=-1)
-        print(length_correction)
-        print(length_correction.shape)
 
-        perpendicular_offset = length_correction * perpendicular
+        perpendicular_offset = length_correction * np.abs(perpendicular)
+        head_normal_offset = length_correction * np.abs(head_normals) * 0.3
 
-        head_normal_offset = length_correction * head_normals
-
-        vertices_right = self.key_coordinates + perpendicular_offset
-        vertices_left = np.flip(
-            self.key_coordinates - perpendicular_offset, axis=0
+        self.perpendicular_card = self.__create_mesh_from_offset(
+            mw, scene, perpendicular_offset
+        )
+        self.parallel_card = self.__create_mesh_from_offset(
+            mw, scene, head_normal_offset, check=True
         )
 
+    def __create_mesh_from_offset(self, mw, scene, offset, check=False):
+        mesh = bpy.data.meshes.new(name=f"hair_{self.location}")
+
+        vertices_right = self.key_coordinates + offset
+        vertices_left = np.flip(self.key_coordinates - offset, axis=0)
+
         vertices = np.concatenate((vertices_left, vertices_right))
-        vertices = self.matrix_multiplication(mw, vertices)
+        vertices_subdivided = self.__subdivide_coordinates(
+            vertices, factor=1.3
+        )
+        vertices_subdivided = self.matrix_multiplication(
+            mw, vertices_subdivided
+        )
 
         edges = []
 
-        vert_count = vertices.shape[0]
+        vert_count = vertices_subdivided.shape[0]
         assert vert_count % 2 == 0
 
         faces = []
         for i in range(int(vert_count / 2)):
             faces.append((i, i + 1, vert_count - i - 2, vert_count - i - 1))
 
-        mesh.from_pydata(vertices, edges, faces)
+        mesh.from_pydata(vertices_subdivided, edges, faces)
         mesh.update()
+
+        for f in mesh.polygons:
+            f.use_smooth = True
 
         obj = bpy.data.objects.new(f"hair_{self.location}", mesh)
 
         scene.collection.objects.link(obj)
 
-        self.obj = obj
+        return obj
+
+    def __subdivide_coordinates(self, coords: np.ndarray, factor: float = 2.0):
+        c_len = coords.shape[0]
+
+        # Round samples to nearest EVEN integer
+        samples = math.ceil(c_len * factor / 2.0) * 2
+
+        steps_new = np.linspace(0, 1, samples)
+        steps_old = np.linspace(0, 1, c_len)
+
+        co_interp = np.empty((samples, 3), dtype=np.float32)
+
+        for i in range(3):
+            axis_co = coords[:, i]
+            axis_interp = np.interp(steps_new, steps_old, axis_co)
+
+            co_interp[:, i] = axis_interp
+
+        return co_interp
 
     def add_uv(self):
-        poly_count = len(self.obj.data.polygons)
+        for obj in [self.perpendicular_card, self.parallel_card]:
+            poly_count = len(obj.data.polygons)
 
-        haircard_json = os.path.join(
-            get_prefs().filepath,
-            "hair",
-            "haircards",
-            "HairMediumLength_zones.json",
-        )
-        with open(haircard_json, "r") as f:
-            zone_dict = json.load(f)
+            haircard_json = os.path.join(
+                get_prefs().filepath,
+                "hair",
+                "haircards",
+                "HairMediumLength_zones.json",
+            )
+            with open(haircard_json, "r") as f:
+                zone_dict = json.load(f)
 
-        uv_layer = self.obj.data.uv_layers.new()
+            uv_layer = obj.data.uv_layers.new()
 
-        vert_loop_dict: Dict[int, List[bpy.types.uvloop]] = {}
+            vert_loop_dict: Dict[int, List[bpy.types.uvloop]] = {}
 
-        for poly in self.obj.data.polygons:
-            for vert_idx, loop_idx in zip(poly.vertices, poly.loop_indices):
-                loop = uv_layer.data[loop_idx]
-                if vert_idx not in vert_loop_dict:
-                    vert_loop_dict[vert_idx] = [
-                        loop,
-                    ]
-                else:
-                    vert_loop_dict[vert_idx].append(loop)
+            for poly in obj.data.polygons:
+                for vert_idx, loop_idx in zip(
+                    poly.vertices, poly.loop_indices
+                ):
+                    loop = uv_layer.data[loop_idx]
+                    if vert_idx not in vert_loop_dict:
+                        vert_loop_dict[vert_idx] = [
+                            loop,
+                        ]
+                    else:
+                        vert_loop_dict[vert_idx].append(loop)
 
-        print(vert_loop_dict)
+            flattened_hairzones = []
+            for hz in zone_dict["long"]["dense"]["wide"]:
+                flattened_hairzones.append(hz)
+            for hz in zone_dict["long"]["dense"]["narrow"]:
+                flattened_hairzones.append(hz)
 
-        flattened_hairzones = []
-        for hz in zone_dict["long"]["dense"]["wide"]:
-            flattened_hairzones.append(hz)
-        for hz in zone_dict["long"]["dense"]["narrow"]:
-            flattened_hairzones.append(hz)
+            vert_pairs = []
+            vert_count = len(obj.data.vertices)
+            half = len(obj.data.vertices) // 2
+            for vert in obj.data.vertices[:half]:
+                vert_pairs.append((vert.index, vert_count - vert.index - 1))
 
-        vert_pairs = []
-        vert_count = len(self.obj.data.vertices)
-        half = len(self.obj.data.vertices) // 2
-        for vert in self.obj.data.vertices[:half]:
-            vert_pairs.append((vert.index, vert_count - vert.index - 1))
+            chosen_zone = random.choice(flattened_hairzones)
+            bottom_left, top_right = chosen_zone
 
-        chosen_zone = random.choice(flattened_hairzones)
-        bottom_left, top_right = chosen_zone
+            for i, (vert_left, vert_right) in enumerate(vert_pairs):
+                left_loops = vert_loop_dict[vert_left]
+                right_loops = vert_loop_dict[vert_right]
 
-        for i, (vert_left, vert_right) in enumerate(vert_pairs):
-            left_loops = vert_loop_dict[vert_left]
-            right_loops = vert_loop_dict[vert_right]
+                x_min = bottom_left[0]
+                x_max = top_right[0]
 
-            x_min = bottom_left[0]
-            x_max = top_right[0]
+                y_min = bottom_left[1]
+                y_max = top_right[1]
+                y_diff = y_max - y_min
 
-            y_min = bottom_left[1]
-            y_max = top_right[1]
-            y_diff = y_max - y_min
+                y_relative = i / (half - 1)
+                for loop in left_loops:
+                    loop.uv = (x_max, y_min + y_diff * y_relative)
 
-            y_relative = i / (half - 1)
-            for loop in left_loops:
-                loop.uv = (x_max, y_min + y_diff * y_relative)
-
-            for loop in right_loops:
-                loop.uv = (x_min, y_min + y_diff * y_relative)
+                for loop in right_loops:
+                    loop.uv = (x_min, y_min + y_diff * y_relative)
 
     def add_material(self):
-        blendpath = os.path.join(
-            get_prefs().filepath, "hair", "haircards", "haircards.blend"
-        )
-        with bpy.data.libraries.load(blendpath, link=False) as (_, data_to):
-            data_to.materials = ["HG_Haircards"]
+        mat = bpy.data.materials.get("HG_Haircards")
+        if not mat:
+            blendpath = os.path.join(
+                get_prefs().filepath, "hair", "haircards", "haircards.blend"
+            )
+            with bpy.data.libraries.load(blendpath, link=False) as (
+                _,
+                data_to,
+            ):
+                data_to.materials = ["HG_Haircards"]
 
-        mat = data_to.materials[0]
+            mat = data_to.materials[0]
 
-        self.obj.data.materials.append(mat)
+        self.perpendicular_card.data.materials.append(mat)
+        self.parallel_card.data.materials.append(mat)
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -189,7 +224,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     bl_idname = "hg3d.haircards"
     bl_label = "Convert to hair cards"
     bl_description = "Converts this system to hair cards"
-    bl_opti = ons = {"REGISTER", "UNDO"}
+    bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
 
@@ -221,8 +256,21 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             hair.to_mesh(mw, scene)
             hair.add_uv()
             hair.add_material()
-        print(len(hairs))
-        print(hairs[0].nearest_vert_normals)
+
+        hair_objs = [h.parallel_card for h in hairs] + [
+            h.perpendicular_card for h in hairs
+        ]
+
+        c = {}
+
+        c["object"] = c["active_object"] = hair_objs[0]
+        c["selected_objects"] = c["selected_editable_objects"] = hair_objs
+
+        bpy.ops.object.join(c)
+
+        for mod in hg_body.modifiers:
+            mod.show_viewport = False
+
         return {"FINISHED"}
 
     def downsample_to_size(self, list_to_downsample, wanted_size):
