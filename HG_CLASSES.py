@@ -58,6 +58,9 @@ from .blender_operators.creation_phase.HG_HAIR import (
 )
 from .blender_operators.creation_phase.HG_HAIRCARDS import HG_CONVERT_HAIRCARDS
 from .blender_operators.creation_phase.HG_LENGTH import HG_RANDOM_LENGTH
+
+# Tutorial operator
+from .blender_operators.documentation.tutorial_operator import HG_TUTORIAL_OP
 from .blender_operators.finalize_phase.HG_CLOTHING import (
     HG_BACK_TO_HUMAN,
     HG_DELETE_CLOTH,
@@ -100,9 +103,7 @@ from .blender_operators.utility_section.HG_UTILITY_OPS import (
     HG_OT_REFRESH_UL,
     HG_OT_SELECTMODAPPLY,
 )
-
-# Tutorial operator
-from .blender_operators.documentation.tutorial_operator import HG_TUTORIAL_OP
+from .tests.HG_CONTENT_TESTS import HG_CONTENT_TESTS
 
 # User interface
 from .user_interface import (
@@ -264,4 +265,6 @@ hg_classes = (
     HG_UTILITY_PANEL.HG_PT_EXTRAS_TIPS,
     HG_OT_HIDE_TIP,
     HG_OT_UNHIDE_TIP,
+    # Tests
+    HG_CONTENT_TESTS,
 )
