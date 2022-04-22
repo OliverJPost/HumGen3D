@@ -313,3 +313,20 @@ def unhide_human(obj):
 
 class HumGenException(Exception):
     pass
+
+
+def remove_broken_drivers():
+    """Credits to batFINGER for this solution"""
+    for sk in bpy.data.shape_keys:
+        if not sk.animation_data:
+            continue
+        broken_drivers = []
+
+        for d in sk.animation_data.drivers:
+            try:
+                sk.path_resolve(d.data_path)
+            except ValueError:
+                broken_drivers.append(d)
+
+        while broken_drivers:
+            sk.animation_data.drivers.remove(broken_drivers.pop())

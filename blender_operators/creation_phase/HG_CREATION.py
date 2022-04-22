@@ -16,12 +16,10 @@ from ...blender_operators.common.HG_COMMON_FUNC import (
     get_prefs,
     hg_delete,
     hg_log,
+    remove_broken_drivers,
     show_message,
 )
-from .HG_HAIR import (
-    add_quality_props_to_hair_system,
-    convert_to_new_hair_shader,
-)
+from .HG_HAIR import add_quality_props_to_hair_system, convert_to_new_hair_shader
 from .HG_MATERIAL import set_gender_specific_shader
 from .HG_NAMEGEN import get_name
 
@@ -43,6 +41,7 @@ class HG_CREATION_BASE:
         gender, hg_rig, hg_body, hg_eyes = self._import_human(
             context, sett, pref
         )
+        remove_broken_drivers()
         self._set_HG_object_props(sett, hg_rig, hg_body)
 
         set_eevee_ao_and_strip(context)
