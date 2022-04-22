@@ -228,11 +228,16 @@ class HG_DELETE(bpy.types.Operator):
     bl_description = "Deletes human and all objects associated with the human"
     bl_options = {"UNDO"}
 
+    obj_override: bpy.props.StringProperty()
+
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        hg_rig = find_human(context.active_object)
+        if self.obj_override:
+            hg_rig = bpy.data.objects.get(self.obj_override)
+        else:
+            hg_rig = find_human(context.active_object)
         if not hg_rig:
             self.report({"INFO"}, "No human selected")
             return {"FINISHED"}
