@@ -43,7 +43,7 @@ def find_folders(
     elif hg_rig:
         gender = hg_rig.HG.gender
     else:
-        return []
+        return [("NONE", "None", "", 0)]
 
     if gender_toggle == True:
         categ_folder = os.path.join(pref.filepath, categ, gender)
