@@ -65,6 +65,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         """
 
     section_name: bpy.props.StringProperty()
+    children_hide_exception: bpy.props.BoolProperty(default=False)
 
     def invoke(self, context, event):
         self.children_hide_exception = event.ctrl
