@@ -12,6 +12,7 @@ from ...blender_operators.common.HG_COMMON_FUNC import (
     find_human,
     get_prefs,
     hg_delete,
+    remove_broken_drivers,
 )
 from ...blender_operators.creation_phase.HG_FINISH_CREATION_PHASE import (
     add_driver,
@@ -260,7 +261,7 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
             data_to,
         ):
             data_to.objects = data_from.objects
-
+        remove_broken_drivers()
         hg_lower_teeth = next(
             c
             for c in hg_rig.children
@@ -350,5 +351,7 @@ class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
             hg_body.shape_key_remove(sk)
 
         del hg_body["facial_rig"]
+
+        remove_broken_drivers()
 
         return {"FINISHED"}

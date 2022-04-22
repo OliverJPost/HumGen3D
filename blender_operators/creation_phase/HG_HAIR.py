@@ -181,6 +181,7 @@ def load_hair(self, context, type):
     hg_rig.hide_viewport = False
 
     remove_fh = True if type == "face" else False
+    remove_broken_drivers()
     _remove_old_hair(hg_body, remove_fh)
 
     for mod in [mod for mod in hg_body.modifiers if mod.type == "MASK"]:
@@ -237,7 +238,6 @@ def load_hair(self, context, type):
             ps_sett.child_nbr = ps_sett.rendered_child_count
 
     hg_delete(hair_obj)
-    print("removing broken drivers")
     remove_broken_drivers()
 
 
