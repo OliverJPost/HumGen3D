@@ -345,7 +345,7 @@ class HG_REMOVE_FRIG(bpy.types.Operator, FRIG_DATA):
         for sk in [
             sk
             for sk in hg_body.data.shape_keys.key_blocks
-            if not sk.name.startswith(("Basis", "cor_", "expr_"))
+            if not sk.name.startswith(("Basis", "cor_", "expr_", "eye"))
         ]:
             hg_body.shape_key_remove(sk)
 
