@@ -105,12 +105,14 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             pref (AddonPreferences): HumGen preferences
         """
         mods = find_human(context.object).HG.body_obj.modifiers
+        show_message = False
         for mod in [m for m in mods if m.type == "PARTICLE_SYSTEM"]:
             ps_sett = mod.particle_system.settings
-            if ps_sett.child_nbr <= 1:
-                continue
+            if ps_sett.child_nbr > 1:
+                ps_sett.child_nbr = 1
+                show_message = True
 
-            ps_sett.child_nbr = 1
+        if show_message:
             self.report(
                 {"INFO"}, "Hair children were hidden to improve performance."
             )
