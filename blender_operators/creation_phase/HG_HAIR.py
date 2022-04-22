@@ -10,6 +10,7 @@ from ...blender_operators.common.HG_COMMON_FUNC import (
     find_human,
     get_prefs,
     hg_delete,
+    remove_broken_drivers,
 )
 from .HG_LENGTH import apply_armature
 
@@ -236,6 +237,8 @@ def load_hair(self, context, type):
             ps_sett.child_nbr = ps_sett.rendered_child_count
 
     hg_delete(hair_obj)
+    print("removing broken drivers")
+    remove_broken_drivers()
 
 
 def add_quality_props_to_hair_system(mod):
@@ -352,6 +355,7 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     context.scene.collection.objects.link(body_copy)
 
     apply_shapekeys(body_copy)
+    remove_broken_drivers()
     apply_armature(body_copy)
 
     for obj in context.selected_objects:
