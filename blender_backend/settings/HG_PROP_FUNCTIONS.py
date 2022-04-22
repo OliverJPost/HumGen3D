@@ -43,7 +43,7 @@ def find_folders(
     elif hg_rig:
         gender = hg_rig.HG.gender
     else:
-        return [("NONE", "None", "", 0)]
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
 
     if gender_toggle == True:
         categ_folder = os.path.join(pref.filepath, categ, gender)
@@ -65,7 +65,10 @@ def find_folders(
     for i, name in enumerate(categ_list):
         enum_list.append((name, name, "", i + 1))
 
-    return enum_list
+    if not enum_list:
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
+    else:
+        return enum_list
 
 
 def find_item_amount(context, categ, gender, folder) -> int:
