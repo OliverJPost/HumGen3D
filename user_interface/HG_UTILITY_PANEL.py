@@ -375,6 +375,8 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         col.operator("hg3d.content_tests")
         col.operator("hg3d.main_operator_tests")
         col.operator("hg3d.batch_tests")
+        col.operator("hg3d.utility_tests")
+        col.operator("hg3d.api_tests")
 
 
 class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
