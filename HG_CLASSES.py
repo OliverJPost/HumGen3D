@@ -103,6 +103,7 @@ from .blender_operators.utility_section.HG_UTILITY_OPS import (
     HG_OT_REFRESH_UL,
     HG_OT_SELECTMODAPPLY,
 )
+from .tests.HG_BATCH_TESTS import HG_BATCH_TESTS
 from .tests.HG_CONTENT_TESTS import HG_CONTENT_TESTS
 from .tests.HG_MAIN_OPERATORS_TESTS import HG_MAIN_OPERATORS_TESTS
 
@@ -269,4 +270,5 @@ hg_classes = (
     # Tests
     HG_CONTENT_TESTS,
     HG_MAIN_OPERATORS_TESTS,
+    HG_BATCH_TESTS,
 )

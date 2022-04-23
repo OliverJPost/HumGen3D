@@ -374,6 +374,7 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         col.label(text="Tests")
         col.operator("hg3d.content_tests")
         col.operator("hg3d.main_operator_tests")
+        col.operator("hg3d.batch_tests")
 
 
 class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
