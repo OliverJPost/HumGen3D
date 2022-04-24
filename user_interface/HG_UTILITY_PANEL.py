@@ -1,7 +1,7 @@
 import bpy
 
-from ..core.HG_PCOLL import get_hg_icon, preview_collections
-from ..features.common.HG_COMMON_FUNC import find_human, get_prefs
+from ..blender_backend.HG_PCOLL import get_hg_icon, preview_collections
+from ..blender_operators.common.HG_COMMON_FUNC import find_human, get_prefs
 from ..user_interface.HG_TIPS_SUGGESTIONS_UI import (
     draw_tips_suggestions_ui,  # type: ignore
 )
@@ -15,8 +15,7 @@ from .HG_PANEL_FUNCTIONS import (
 
 
 class Tools_PT_Base:
-    """Bl_info and commonly used tools for Utility panels
-    """
+    """Bl_info and commonly used tools for Utility panels"""
 
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"

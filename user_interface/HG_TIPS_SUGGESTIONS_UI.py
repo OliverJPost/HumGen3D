@@ -3,18 +3,18 @@ import os
 
 import bpy
 
-from ..core.HG_PCOLL import preview_collections
-from ..features.common.HG_COMMON_FUNC import get_prefs
-from ..features.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
+from ..blender_backend.HG_PCOLL import preview_collections
+from ..blender_operators.common.HG_COMMON_FUNC import get_prefs
+from ..blender_operators.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
     get_batch_tips_from_context,  # type:ignore
 )
-from ..features.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
+from ..blender_operators.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
-from ..features.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
+from ..blender_operators.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
     get_extras_menu_tips_from_context,
 )
-from ..features.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
+from ..blender_operators.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
 from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase

@@ -3,7 +3,7 @@ import time
 
 import bpy
 
-from ..features.common.HG_COMMON_FUNC import hg_delete, hg_log
+from ..blender_operators.common.HG_COMMON_FUNC import hg_delete, hg_log
 
 
 class HG_CONTENT_TESTS(bpy.types.Operator):
@@ -49,5 +49,3 @@ class HG_CONTENT_TESTS(bpy.types.Operator):
             for child in human.children:
                 hg_delete(child)
             hg_delete(human)
-
-

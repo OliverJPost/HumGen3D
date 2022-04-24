@@ -4,8 +4,11 @@ This file is currently inactive
 
 import bpy  # type: ignore
 
-from ..core.HG_PCOLL import preview_collections
-from ..core.settings.HG_PROP_FUNCTIONS import find_folders, find_item_amount
+from ..blender_backend.HG_PCOLL import preview_collections
+from ..blender_backend.settings.HG_PROP_FUNCTIONS import (
+    find_folders,
+    find_item_amount,
+)
 
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
@@ -83,7 +86,9 @@ class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
     """Properties of the items in the uilist"""
 
     library_name: bpy.props.StringProperty(
-        name="Library Name", description="", default="",
+        name="Library Name",
+        description="",
+        default="",
     )
     enabled: bpy.props.BoolProperty(default=True)
     male_items: bpy.props.IntProperty(default=0)
@@ -94,7 +99,9 @@ class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
     """Properties of the items in the uilist"""
 
     library_name: bpy.props.StringProperty(
-        name="Library Name", description="", default="",
+        name="Library Name",
+        description="",
+        default="",
     )
     enabled: bpy.props.BoolProperty(default=True)
     count: bpy.props.IntProperty(default=0)
@@ -106,7 +113,7 @@ def batch_uilist_refresh(self, context, categ):
     """
     scene = context.scene
     if categ == "outfits":
-        collection = scene.batch_clothing_col  
+        collection = scene.batch_clothing_col
     elif categ == "poses":
         collection = scene.batch_pose_col
     elif categ == "expressions":
@@ -119,7 +126,7 @@ def batch_uilist_refresh(self, context, categ):
     found_folders_male = find_folders(
         self, context, categ, gender, include_all=False, gender_override="male"
     )
-    
+
     for folder in found_folders_male:
         item = collection.add()
         item.name = folder[0]
