@@ -23,7 +23,7 @@ from .quick_generator import (
 from ..utility_section.baking import (
     get_bake_export_path,
 )  # type:ignore
-from ...user_interface.batch_ui_lists import batch_uilist_refresh
+from ....user_interface.batch_ui_lists import batch_uilist_refresh
 from ..common.common_functions import (
     get_prefs,
     hg_delete,

@@ -224,7 +224,7 @@ def get_addon_root() -> str:
         str: path of the root directory of the add-on
     """
 
-    root_folder = Path(__file__).parent.parent.parent.absolute()
+    root_folder = Path(__file__).parent.parent.parent.parent.absolute()  # TODO
 
     return str(root_folder)
 

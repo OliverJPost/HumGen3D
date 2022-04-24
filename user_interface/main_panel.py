@@ -4,18 +4,15 @@ from sys import platform
 
 import addon_utils  # type: ignore
 import bpy
+from HumGen3D import bl_info  # type: ignore
 
-from .. import bl_info
-from ..blender_backend.preview_collections import preview_collections
-from ..data.colors import color_dict
-from ..blender_operators.common.common_functions import (
+from ..old.blender_backend.preview_collections import preview_collections
+from ..old.blender_operators.common.common_functions import (
     find_human,
     get_prefs,
     is_batch_result,
 )
-from .tips_suggestions_ui import (
-    draw_tips_suggestions_ui,  # type: ignore
-)
+from ..old.data.colors import color_dict
 from .panel_functions import (
     draw_panel_switch_header,
     draw_spoiler_box,
@@ -24,6 +21,7 @@ from .panel_functions import (
     in_creation_phase,
     searchbox,
 )
+from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 
 
 class HG_PT_PANEL(bpy.types.Panel):

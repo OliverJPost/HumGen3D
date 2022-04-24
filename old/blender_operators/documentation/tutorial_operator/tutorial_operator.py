@@ -4,8 +4,8 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.types import Operator  # type: ignore
 
-from ....blender_backend.content.update import check_update
-from ....blender_backend.callback import msgbus
+from .....backend.callback import msgbus
+from .....backend.update import check_update
 from ....blender_backend.preview_collections import refresh_pcoll
 from .bl_ui_button import *
 from .bl_ui_drag_panel import *

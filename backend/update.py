@@ -5,9 +5,9 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
+from HumGen3D import bl_info  # type: ignore
 
-from ... import bl_info
-from ...blender_operators.common.common_functions import get_prefs, hg_log
+from ..old.blender_operators.common.common_functions import get_prefs, hg_log
 
 
 def check_update():

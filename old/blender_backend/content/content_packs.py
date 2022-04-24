@@ -25,7 +25,7 @@ from ...blender_operators.common.common_functions import (
     hg_log,
 )
 from ..preview_collections import preview_collections
-from .update import check_update
+from ....backend.update import check_update
 
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):

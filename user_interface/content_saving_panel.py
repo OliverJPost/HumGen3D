@@ -1,13 +1,13 @@
 import bpy
 
-from ..blender_backend.preview_collections import preview_collections
-from ..blender_operators.common.common_functions import (
+from ..old.blender_backend.preview_collections import preview_collections
+from ..old.blender_operators.common.common_functions import (
     find_human,
     get_prefs,
     hg_log,
     show_message,
 )
-from ..blender_operators.utility_section.utility_functions import (
+from ..old.blender_operators.utility_section.utility_functions import (
     find_existing_shapekeys,
     refresh_hair_ul,
     refresh_outfit_ul,

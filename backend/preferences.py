@@ -13,10 +13,10 @@ from bpy.props import (
 )
 from bpy_extras.io_utils import ImportHelper  # type: ignore
 
-from ... import bl_info
-from ..content.content_packs import cpacks_refresh
-from ..preview_collections import preview_collections
-from ...blender_operators.common.common_functions import get_prefs
+from HumGen3D import bl_info  # type: ignore
+from ..old.blender_backend.content.content_packs import cpacks_refresh
+from ..old.blender_backend.preview_collections import preview_collections
+from ..old.blender_operators.common.common_functions import get_prefs
 
 
 class HG_PREF(bpy.types.AddonPreferences):

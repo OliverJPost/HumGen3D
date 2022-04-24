@@ -1,13 +1,7 @@
 import bpy
 
-from ..blender_backend.preview_collections import (
-    get_hg_icon,
-    preview_collections,
-)
-from ..blender_operators.common.common_functions import find_human, get_prefs
-from .tips_suggestions_ui import (
-    draw_tips_suggestions_ui,  # type: ignore
-)
+from ..old.blender_backend.preview_collections import get_hg_icon, preview_collections
+from ..old.blender_operators.common.common_functions import find_human, get_prefs
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,
@@ -15,6 +9,7 @@ from .panel_functions import (
     get_flow,
     in_creation_phase,
 )
+from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 
 
 class Tools_PT_Base:
@@ -374,6 +369,7 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         col.operator("hg3d.prepare_for_arkit")
         col.operator("hg3d.convert_hair_shader")
         col.operator("hg3d.reset_batch_operator")
+        col.operator('hg3d.main_operator_tests')
 
 
 class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):

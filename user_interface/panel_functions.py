@@ -1,6 +1,6 @@
 import bpy  # type: ignore
 
-from ..blender_backend.preview_collections import preview_collections
+from ..old.blender_backend.preview_collections import preview_collections
 
 
 def draw_sub_spoiler(

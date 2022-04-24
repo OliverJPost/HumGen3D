@@ -3,7 +3,7 @@ import time
 
 import bpy
 
-from ..blender_operators.common.common_functions import hg_delete, hg_log
+from ..old.blender_operators.common.common_functions import hg_delete, hg_log
 
 
 class HG_CONTENT_TESTS(bpy.types.Operator):

@@ -4,10 +4,10 @@ Operators not related to any particular section
 
 import bpy
 
-from ...blender_backend.preview_collections import refresh_pcoll
-from ...user_interface.tips_suggestions_ui import (
+from ....user_interface.tips_suggestions_ui import (
     update_tips_from_context,  # type: ignore
 )
+from ...blender_backend.preview_collections import refresh_pcoll
 from .common_functions import (
     find_human,
     get_prefs,
@@ -65,6 +65,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         """
 
     section_name: bpy.props.StringProperty()
+    children_hide_exception: bpy.props.BoolProperty()
 
     def invoke(self, context, event):
         self.children_hide_exception = event.ctrl

@@ -8,35 +8,38 @@ from bpy.props import (  # type: ignore
     StringProperty,
 )
 
-from ..content.custom_content_packs import (
+from ..old.blender_backend.content.custom_content_packs import (
     build_content_collection,
 )
-from ..callback import tab_change_update
-from ..preview_collections import get_pcoll_enum_items, refresh_pcoll
-from ...blender_operators.common.common_functions import make_path_absolute
-from ...blender_operators.creation_phase.body import scale_bones
-from ...blender_operators.creation_phase.hair import (
+from .callback import tab_change_update
+from ..old.blender_backend.preview_collections import (
+    get_pcoll_enum_items,
+    refresh_pcoll,
+)
+from ..old.blender_operators.common.common_functions import make_path_absolute
+from ..old.blender_operators.creation_phase.body import scale_bones
+from ..old.blender_operators.creation_phase.hair import (
     load_hair,
     update_hair_shader_type,
 )
-from ...blender_operators.creation_phase.length import update_length
-from ...blender_operators.creation_phase.material import (
+from ..old.blender_operators.creation_phase.length import update_length
+from ..old.blender_operators.creation_phase.material import (
     load_textures,
     toggle_sss,
     toggle_underwear,
 )
-from ...blender_operators.finalize_phase.clothing import load_pattern
-from ...blender_operators.finalize_phase.clothing_loading import load_outfit
-from ...blender_operators.finalize_phase.expression import load_expression
-from ...blender_operators.finalize_phase.pose import load_pose
-from ...blender_operators.utility_section.utility_functions import (
+from ..old.blender_operators.finalize_phase.clothing import load_pattern
+from ..old.blender_operators.finalize_phase.clothing_loading import load_outfit
+from ..old.blender_operators.finalize_phase.expression import load_expression
+from ..old.blender_operators.finalize_phase.pose import load_pose
+from ..old.blender_operators.utility_section.utility_functions import (
     get_preset_thumbnail,
     refresh_hair_ul,
     refresh_modapply,
     refresh_shapekeys_ul,
 )
-from ...user_interface import batch_ui_lists
-from .property_functions import (
+from ..user_interface import batch_ui_lists
+from ..old.blender_backend.settings.property_functions import (
     add_image_to_thumb_enum,
     find_folders,
     get_resolutions,

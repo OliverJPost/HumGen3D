@@ -1,6 +1,7 @@
 # Core
-from .blender_backend.callback import HG_ACTIVATE
-from .blender_backend.content.content_packs import (
+from .tests.main_operators import HG_MAIN_OPERATORS_TESTS
+from .backend.callback import HG_ACTIVATE
+from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
     HG_DELETE_CPACK,
     HG_DELETE_INSTALLPACK,
@@ -11,24 +12,28 @@ from .blender_backend.content.content_packs import (
     HG_UL_CONTENTPACKS,
     HG_UL_INSTALLPACKS,
 )
-from .blender_backend.content.custom_content_packs import (
+from .old.blender_backend.content.custom_content_packs import (
     CUSTOM_CONTENT_ITEM,
     HG_OT_CREATE_CPACK,
     HG_OT_EDIT_CPACK,
     HG_OT_EXIT_CPACK_EDIT,
     HG_OT_SAVE_CPACK,
 )
-from .blender_backend.content.update import UPDATE_INFO_ITEM
-from .blender_backend.settings.preferences import (
+from .backend.update import UPDATE_INFO_ITEM
+from .backend.preferences import (
     HG_PATHCHANGE,
     HG_PREF,
     HG_PT_ICON_LEGEND,
 )
-from .blender_backend.settings.properties import HG_OBJECT_PROPS, HG_SETTINGS
-from .blender_operators.batch_section.modal import HG_BATCH_GENERATE
-from .blender_operators.batch_section.primitives import HG_OT_ADD_BATCH_MARKER
-from .blender_operators.batch_section.quick_generator import HG_QUICK_GENERATE
-from .blender_operators.common.common_operators import (
+from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .old.blender_operators.batch_section.modal import HG_BATCH_GENERATE
+from .old.blender_operators.batch_section.primitives import (
+    HG_OT_ADD_BATCH_MARKER,
+)
+from .old.blender_operators.batch_section.quick_generator import (
+    HG_QUICK_GENERATE,
+)
+from .old.blender_operators.common.common_operators import (
     HG_CLEAR_SEARCH,
     HG_DELETE,
     HG_DESELECT,
@@ -37,35 +42,41 @@ from .blender_operators.common.common_operators import (
     HG_OPENPREF,
     HG_SECTION_TOGGLE,
 )
-from .blender_operators.common.info_popups import HG_OT_INFO
-from .blender_operators.common.random import HG_COLOR_RANDOM, HG_RANDOM
-from .blender_operators.creation_phase.backup import HG_REVERT_TO_CREATION
-from .blender_operators.creation_phase.creation import HG_START_CREATION
-from .blender_operators.creation_phase.face import HG_RESET_FACE
-from .blender_operators.creation_phase.finish_creation_phase import HG_FINISH_CREATION
-from .blender_operators.creation_phase.hair import (
+from .old.blender_operators.common.info_popups import HG_OT_INFO
+from .old.blender_operators.common.random import HG_COLOR_RANDOM, HG_RANDOM
+from .old.blender_operators.creation_phase.backup import HG_REVERT_TO_CREATION
+from .old.blender_operators.creation_phase.creation import HG_START_CREATION
+from .old.blender_operators.creation_phase.face import HG_RESET_FACE
+from .old.blender_operators.creation_phase.finish_creation_phase import (
+    HG_FINISH_CREATION,
+)
+from .old.blender_operators.creation_phase.hair import (
     HG_EYEBROW_SWITCH,
     HG_REMOVE_HAIR,
     HG_TOGGLE_HAIR_CHILDREN,
 )
-from .blender_operators.creation_phase.haircards import HG_CONVERT_HAIRCARDS
-from .blender_operators.creation_phase.length import HG_RANDOM_LENGTH
+from .old.blender_operators.creation_phase.haircards import (
+    HG_CONVERT_HAIRCARDS,
+)
+from .old.blender_operators.creation_phase.length import HG_RANDOM_LENGTH
 
 # Tutorial operator
-from .blender_operators.documentation.tutorial_operator import tutorial_operator
-from .blender_operators.finalize_phase.clothing import (
+from .old.blender_operators.documentation.tutorial_operator import (
+    tutorial_operator,
+)
+from .old.blender_operators.finalize_phase.clothing import (
     HG_BACK_TO_HUMAN,
     HG_DELETE_CLOTH,
     HG_OT_PATTERN,
 )
-from .blender_operators.finalize_phase.expression import (
+from .old.blender_operators.finalize_phase.expression import (
     HG_ADD_FRIG,
     HG_REMOVE_FRIG,
     HG_REMOVE_SHAPEKEY,
 )
-from .blender_operators.finalize_phase.pose import HG_RIGIFY
-from .blender_operators.utility_section.baking import HG_BAKE
-from .blender_operators.utility_section.content_saving import (
+from .old.blender_operators.finalize_phase.pose import HG_RIGIFY
+from .old.blender_operators.utility_section.baking import HG_BAKE
+from .old.blender_operators.utility_section.content_saving import (
     HG_OT_AUTO_RENDER_THUMB,
     HG_OT_OPEN_FOLDER,
     HG_OT_SAVE_POSE,
@@ -74,21 +85,21 @@ from .blender_operators.utility_section.content_saving import (
     HG_OT_SAVEOUTFIT,
     HG_OT_SAVEPRESET,
 )
-from .blender_operators.utility_section.devtools import (
+from .old.blender_operators.utility_section.devtools import (
     HG_CONVERT_HAIR_SHADER,
     HG_DELETE_STRETCH,
     HG_MASK_PROP,
     HG_RESET_BATCH_OPERATOR,
     HG_TESTOP,
 )
-from .blender_operators.utility_section.mesh_to_cloth import (
+from .old.blender_operators.utility_section.mesh_to_cloth import (
     HG_MTC_TO_A_POSE,
     HG_OT_ADDCLOTHMATH,
     HG_OT_ADDCORRECTIVE,
     HG_OT_ADDMASKS,
     HG_OT_AUTOWEIGHT,
 )
-from .blender_operators.utility_section.utility_operators import (
+from .old.blender_operators.utility_section.utility_operators import (
     HG_MAKE_EXPERIMENTAL,
     HG_OT_MODAPPLY,
     HG_OT_PREPARE_FOR_ARKIT,
@@ -256,4 +267,5 @@ hg_classes = (
     utility_panel.HG_PT_EXTRAS_TIPS,
     HG_OT_HIDE_TIP,
     HG_OT_UNHIDE_TIP,
+    HG_MAIN_OPERATORS_TESTS,
 )

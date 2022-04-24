@@ -8,6 +8,7 @@ import bpy  # type: ignore
 from ..common.common_functions import (
     apply_shapekeys,
     find_human,
+    get_addon_root,
     get_prefs,
     hg_delete,
 )
@@ -569,7 +570,7 @@ def convert_to_new_hair_shader(hg_body):
     if not any(group_nodes):
         return
 
-    addon_folder = Path(Path(os.path.dirname(__file__)).parent).parent
+    addon_folder = get_addon_root()
     blendfile = os.path.join(addon_folder, "data", "hair_shader_v3.blend")
 
     if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
