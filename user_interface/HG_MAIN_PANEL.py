@@ -6,9 +6,9 @@ import addon_utils  # type: ignore
 import bpy
 
 from .. import bl_info
-from ..core.HG_PCOLL import preview_collections
+from ..blender_backend.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
-from ..features.common.HG_COMMON_FUNC import (
+from ..blender_operators.common.HG_COMMON_FUNC import (
     find_human,
     get_prefs,
     is_batch_result,
@@ -680,8 +680,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |_______/    |__|\__\ |__| |__| \__|
 
     def _draw_skin_section(self):
-        """Collapsable section with options for changing the shader of the human
-        """
+        """Collapsable section with options for changing the shader of the human"""
         spoiler_open, box = draw_spoiler_box(self, "skin")
         if not spoiler_open:
             return
@@ -1056,8 +1055,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |_______|   |__|     |_______|_______/
 
     def _draw_eyes_section(self):
-        """Options for changing eyebrows and eye shader
-        """
+        """Options for changing eyebrows and eye shader"""
         spoiler_open, box = draw_spoiler_box(self, "eyes")
         if not spoiler_open:
             return
@@ -1207,7 +1205,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col_h.prop(sett, "face_hair_sub", text="")
 
     def _draw_hair_children_switch(self, hair_systems, layout):
-        """ Draws a switch for turning children to render amount or back to 1
+        """Draws a switch for turning children to render amount or back to 1
 
         Args:
             hair_systems (list): List of hair particle systems
@@ -1450,8 +1448,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     #  \______|| _| `._____||_______/__/     \__\  |__|     |__|  \______/  |__| \__|    |______/  /__/     \__\ \______||__|\__\  \______/  | _|
 
     def draw_creation_backup_section(self):
-        """Se3ction for options that are still accesible from creation phase
-        """
+        """Se3ction for options that are still accesible from creation phase"""
         spoiler_open, box = draw_spoiler_box(self, "creation_phase")
         if not spoiler_open:
             return
@@ -1506,8 +1503,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     #  \______||_______| \______/      |__|     |__|  |__| |__| |__| \__|  \______|
 
     def _draw_clothing_section(self):
-        """draws a template_icon_view for adding outfits
-        """
+        """draws a template_icon_view for adding outfits"""
         spoiler_open, box = draw_spoiler_box(self, "clothing")
         if not spoiler_open:
             return
@@ -1536,8 +1532,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |_______/    |__|  |__|  \______/  |_______|
 
     def _draw_footwear_section(self):
-        """draws a template icon view to add footwear to the human
-        """
+        """draws a template icon view to add footwear to the human"""
         spoiler_open, box = draw_spoiler_box(self, "footwear")
         if not spoiler_open:
             return
@@ -1902,7 +1897,9 @@ class HG_PT_PANEL(bpy.types.Panel):
             "hg3d.pattern",
             text="Remove" if pattern else "Add Pattern",
             icon="TRASH" if pattern else "TEXTURE",
-        ).add = (False if pattern else True)
+        ).add = (
+            False if pattern else True
+        )
 
         if pattern:
             row.popover(
@@ -2038,4 +2035,3 @@ class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
 
         col.label(text="Scale")
         col.prop(mapping_node.inputs["Scale"], "default_value", text="")
-

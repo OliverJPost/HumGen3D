@@ -1,6 +1,6 @@
 import bpy  # type: ignore
 
-from ..core.HG_PCOLL import preview_collections
+from ..blender_backend.HG_PCOLL import preview_collections
 
 
 def draw_sub_spoiler(
@@ -206,4 +206,3 @@ def draw_resolution_box(sett, col, show_batch_comparison=False):
                 row.operator(
                     "hg3d.showinfo", text="", icon="QUESTION", emboss=False
                 ).info = "batch_texture_bake_res"
-

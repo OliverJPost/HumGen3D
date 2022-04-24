@@ -1,14 +1,14 @@
 import bpy
 
-from ..core.HG_PCOLL import get_hg_icon, preview_collections
-from ..features.batch_section.HG_BATCH_FUNC import (
+from ..blender_backend.HG_PCOLL import get_hg_icon, preview_collections
+from ..blender_operators.batch_section.HG_BATCH_FUNC import (
     calculate_batch_statistics,
     length_from_bell_curve,
 )
-from ..features.batch_section.HG_BATCH_MODAL_OPERATOR import (
+from ..blender_operators.batch_section.HG_BATCH_MODAL_OPERATOR import (
     get_batch_marker_list,
 )
-from ..features.common.HG_COMMON_FUNC import get_prefs  # type: ignore
+from ..blender_operators.common.HG_COMMON_FUNC import get_prefs  # type: ignore
 from ..user_interface.HG_TIPS_SUGGESTIONS_UI import draw_tips_suggestions_ui
 from .HG_PANEL_FUNCTIONS import (
     draw_panel_switch_header,
@@ -225,7 +225,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
             length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
             length_label = (
                 str(int(length_feet)) + "' " + str(length_inches) + '"'
-            ) 
+            )
         else:
             # Add 0 for vertical alignment if float has 1 decimal
             alignment = "0 " if len(str(length_m)) == 3 else " "

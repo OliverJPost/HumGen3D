@@ -1,13 +1,13 @@
 import bpy
 
-from ..core.HG_PCOLL import preview_collections
-from ..features.common.HG_COMMON_FUNC import (
+from ..blender_backend.HG_PCOLL import preview_collections
+from ..blender_operators.common.HG_COMMON_FUNC import (
     find_human,
     get_prefs,
     hg_log,
     show_message,
 )
-from ..features.utility_section.HG_UTILITY_FUNC import (
+from ..blender_operators.utility_section.HG_UTILITY_FUNC import (
     find_existing_shapekeys,
     refresh_hair_ul,
     refresh_outfit_ul,
@@ -731,8 +731,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(layout, poll=poll)
 
     def _confirm_object_is_correct_ui(self, context, layout):
-        """Ask the user to confirm the selected object is correct
-        """
+        """Ask the user to confirm the selected object is correct"""
         sett = self.sett
         self._draw_header_box(
             layout,
@@ -846,8 +845,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(layout)
 
     def _mesh_to_cloth_material_ui(self, context, layout):
-        """Give the user options to add a default material to the clothing.
-        """
+        """Give the user options to add a default material to the clothing."""
         sett = context.scene.HG3D
         self._draw_header_box(
             layout,
@@ -903,8 +901,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         )
 
     def _mesh_to_cloth_corrective_shapekeys_ui(self, context, layout):
-        """Show tab to add corrective shapekeys to the clothing.
-        """
+        """Show tab to add corrective shapekeys to the clothing."""
         self._draw_header_box(
             layout, "Add corrective shapekeys.", "SHAPEKEY_DATA"
         )
@@ -939,8 +936,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             self._draw_next_button(layout, poll=False)
 
     def _mesh_to_cloth_weight_paint_ui(self, context, layout):
-        """Show tab to add weight painting to the clothing.
-        """
+        """Show tab to add weight painting to the clothing."""
         self._draw_header_box(layout, "Add weight painting:", "SHAPEKEY_DATA")
         sett = context.scene.HG3D
 
@@ -1004,4 +1000,3 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_next_button(
             layout, poll="transformed_to_a_pose" in cloth_obj
         )
-

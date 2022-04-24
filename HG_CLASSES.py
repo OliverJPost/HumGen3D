@@ -1,5 +1,5 @@
 # Core
-from .core.content.HG_CONTENT_PACKS import (
+from .blender_backend.content.HG_CONTENT_PACKS import (
     HG_CONTENT_PACK,
     HG_DELETE_CPACK,
     HG_DELETE_INSTALLPACK,
@@ -10,25 +10,31 @@ from .core.content.HG_CONTENT_PACKS import (
     HG_UL_CONTENTPACKS,
     HG_UL_INSTALLPACKS,
 )
-from .core.content.HG_CUSTOM_CONTENT_PACKS import (
+from .blender_backend.content.HG_CUSTOM_CONTENT_PACKS import (
     CUSTOM_CONTENT_ITEM,
     HG_OT_CREATE_CPACK,
     HG_OT_EDIT_CPACK,
     HG_OT_EXIT_CPACK_EDIT,
     HG_OT_SAVE_CPACK,
 )
-from .core.content.HG_UPDATE import UPDATE_INFO_ITEM
-from .core.HG_CALLBACK import HG_ACTIVATE
-from .core.settings.HG_PREFERENCES import (
+from .blender_backend.content.HG_UPDATE import UPDATE_INFO_ITEM
+from .blender_backend.HG_CALLBACK import HG_ACTIVATE
+from .blender_backend.settings.HG_PREFERENCES import (
     HG_PATHCHANGE,
     HG_PREF,
     HG_PT_ICON_LEGEND,
 )
-from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
-from .features.batch_section.HG_BATCH_MODAL_OPERATOR import HG_BATCH_GENERATE
-from .features.batch_section.HG_BATCH_PRIMITIVES import HG_OT_ADD_BATCH_MARKER
-from .features.batch_section.HG_QUICK_GENERATOR import HG_QUICK_GENERATE
-from .features.common.HG_COMMON_OPS import (
+from .blender_backend.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
+from .blender_operators.batch_section.HG_BATCH_MODAL_OPERATOR import (
+    HG_BATCH_GENERATE,
+)
+from .blender_operators.batch_section.HG_BATCH_PRIMITIVES import (
+    HG_OT_ADD_BATCH_MARKER,
+)
+from .blender_operators.batch_section.HG_QUICK_GENERATOR import (
+    HG_QUICK_GENERATE,
+)
+from .blender_operators.common.HG_COMMON_OPS import (
     HG_CLEAR_SEARCH,
     HG_DELETE,
     HG_DESELECT,
@@ -37,34 +43,34 @@ from .features.common.HG_COMMON_OPS import (
     HG_OPENPREF,
     HG_SECTION_TOGGLE,
 )
-from .features.common.HG_INFO_POPUPS import HG_OT_INFO
-from .features.common.HG_RANDOM import HG_COLOR_RANDOM, HG_RANDOM
-from .features.creation_phase.HG_BACKUP import HG_REVERT_TO_CREATION
-from .features.creation_phase.HG_CREATION import HG_START_CREATION
-from .features.creation_phase.HG_FACE import HG_RESET_FACE
-from .features.creation_phase.HG_FINISH_CREATION_PHASE import (
+from .blender_operators.common.HG_INFO_POPUPS import HG_OT_INFO
+from .blender_operators.common.HG_RANDOM import HG_COLOR_RANDOM, HG_RANDOM
+from .blender_operators.creation_phase.HG_BACKUP import HG_REVERT_TO_CREATION
+from .blender_operators.creation_phase.HG_CREATION import HG_START_CREATION
+from .blender_operators.creation_phase.HG_FACE import HG_RESET_FACE
+from .blender_operators.creation_phase.HG_FINISH_CREATION_PHASE import (
     HG_FINISH_CREATION,
 )
-from .features.creation_phase.HG_HAIR import (
+from .blender_operators.creation_phase.HG_HAIR import (
     HG_EYEBROW_SWITCH,
     HG_REMOVE_HAIR,
     HG_TOGGLE_HAIR_CHILDREN,
 )
-from .features.creation_phase.HG_HAIRCARDS import HG_CONVERT_HAIRCARDS
-from .features.creation_phase.HG_LENGTH import HG_RANDOM_LENGTH
-from .features.finalize_phase.HG_CLOTHING import (
+from .blender_operators.creation_phase.HG_HAIRCARDS import HG_CONVERT_HAIRCARDS
+from .blender_operators.creation_phase.HG_LENGTH import HG_RANDOM_LENGTH
+from .blender_operators.finalize_phase.HG_CLOTHING import (
     HG_BACK_TO_HUMAN,
     HG_DELETE_CLOTH,
     HG_OT_PATTERN,
 )
-from .features.finalize_phase.HG_EXPRESSION import (
+from .blender_operators.finalize_phase.HG_EXPRESSION import (
     HG_ADD_FRIG,
     HG_REMOVE_FRIG,
     HG_REMOVE_SHAPEKEY,
 )
-from .features.finalize_phase.HG_POSE import HG_RIGIFY
-from .features.utility_section.HG_BAKE import HG_BAKE
-from .features.utility_section.HG_CONTENT_SAVING import (
+from .blender_operators.finalize_phase.HG_POSE import HG_RIGIFY
+from .blender_operators.utility_section.HG_BAKE import HG_BAKE
+from .blender_operators.utility_section.HG_CONTENT_SAVING import (
     HG_OT_AUTO_RENDER_THUMB,
     HG_OT_OPEN_FOLDER,
     HG_OT_SAVE_POSE,
@@ -73,21 +79,21 @@ from .features.utility_section.HG_CONTENT_SAVING import (
     HG_OT_SAVEOUTFIT,
     HG_OT_SAVEPRESET,
 )
-from .features.utility_section.HG_DEVTOOLS import (
+from .blender_operators.utility_section.HG_DEVTOOLS import (
     HG_CONVERT_HAIR_SHADER,
     HG_DELETE_STRETCH,
     HG_MASK_PROP,
     HG_RESET_BATCH_OPERATOR,
     HG_TESTOP,
 )
-from .features.utility_section.HG_MESH_TO_CLOTH import (
+from .blender_operators.utility_section.HG_MESH_TO_CLOTH import (
     HG_MTC_TO_A_POSE,
     HG_OT_ADDCLOTHMATH,
     HG_OT_ADDCORRECTIVE,
     HG_OT_ADDMASKS,
     HG_OT_AUTOWEIGHT,
 )
-from .features.utility_section.HG_UTILITY_OPS import (
+from .blender_operators.utility_section.HG_UTILITY_OPS import (
     HG_MAKE_EXPERIMENTAL,
     HG_OT_MODAPPLY,
     HG_OT_PREPARE_FOR_ARKIT,
@@ -96,7 +102,7 @@ from .features.utility_section.HG_UTILITY_OPS import (
 )
 
 # Tutorial operator
-from .features.documentation.tutorial_operator import HG_TUTORIAL_OP
+from .blender_operators.documentation.tutorial_operator import HG_TUTORIAL_OP
 
 # User interface
 from .user_interface import (

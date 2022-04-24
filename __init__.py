@@ -38,15 +38,15 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent  # type: ignore
 
-from .core.content.HG_CONTENT_PACKS import (
+from .blender_backend.content.HG_CONTENT_PACKS import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
     cpacks_refresh,
 )
-from .core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
-from .core.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
-from .core.HG_PCOLL import preview_collections
-from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
+from .blender_backend.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
+from .blender_backend.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
+from .blender_backend.HG_PCOLL import preview_collections
+from .blender_backend.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
 from .HG_CLASSES import hg_classes
 from .user_interface import HG_BATCH_UILIST, HG_UTILITY_UILISTS
 from .user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
