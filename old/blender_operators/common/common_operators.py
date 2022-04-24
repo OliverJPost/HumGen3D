@@ -65,7 +65,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         """
 
     section_name: bpy.props.StringProperty()
-    children_hide_exception: bpy.props.BoolProperty()
+    children_hide_exception: bpy.props.BoolProperty(default=False)
 
     def invoke(self, context, event):
         self.children_hide_exception = event.ctrl
@@ -105,12 +105,14 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             pref (AddonPreferences): HumGen preferences
         """
         mods = find_human(context.object).HG.body_obj.modifiers
+        show_message = False
         for mod in [m for m in mods if m.type == "PARTICLE_SYSTEM"]:
             ps_sett = mod.particle_system.settings
-            if ps_sett.child_nbr <= 1:
-                continue
+            if ps_sett.child_nbr > 1:
+                ps_sett.child_nbr = 1
+                show_message = True
 
-            ps_sett.child_nbr = 1
+        if show_message:
             self.report(
                 {"INFO"}, "Hair children were hidden to improve performance."
             )
@@ -228,11 +230,16 @@ class HG_DELETE(bpy.types.Operator):
     bl_description = "Deletes human and all objects associated with the human"
     bl_options = {"UNDO"}
 
+    obj_override: bpy.props.StringProperty()
+
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        hg_rig = find_human(context.active_object)
+        if self.obj_override:
+            hg_rig = bpy.data.objects.get(self.obj_override)
+        else:
+            hg_rig = find_human(context.active_object)
         if not hg_rig:
             self.report({"INFO"}, "No human selected")
             return {"FINISHED"}

@@ -25,7 +25,10 @@ class HG_PREF(bpy.types.AddonPreferences):
     bl_idname = __package__.split(".")[0]
 
     # RELEASE remove default path
-    filepath: StringProperty(name="Install Filepath", default="")
+    filepath: StringProperty(
+        name="Install Filepath",
+        default="/Users/olepost/Documents/Humgen_Files_Main/",
+    )
 
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))
