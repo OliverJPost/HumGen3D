@@ -38,19 +38,19 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent  # type: ignore
 
-from .blender_backend.content.HG_CONTENT_PACKS import (
+from .blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
     cpacks_refresh,
 )
-from .blender_backend.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
-from .blender_backend.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
-from .blender_backend.HG_PCOLL import preview_collections
-from .blender_backend.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
-from .HG_CLASSES import hg_classes
-from .user_interface import HG_BATCH_UILIST, HG_UTILITY_UILISTS
-from .user_interface.HG_ADD_PRIMITIVE_MENU import add_hg_primitive_menu
-from .user_interface.HG_TIPS_SUGGESTIONS_UI import TIPS_ITEM
+from .blender_backend.content.custom_content_packs import CUSTOM_CONTENT_ITEM
+from .blender_backend.content.update import UPDATE_INFO_ITEM, check_update
+from .blender_backend.preview_collections import preview_collections
+from .blender_backend.settings.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .classes import hg_classes
+from .user_interface import batch_ui_lists, utility_ui_lists
+from .user_interface.primitive_menu import add_hg_primitive_menu
+from .user_interface.tips_suggestions_ui import TIPS_ITEM
 
 if __name__ != "HG3D":
     sys.modules["HG3D"] = sys.modules[__name__]
@@ -105,7 +105,7 @@ def _initiate_ui_lists():
 
     # Collection of batch clothing categories
     sc.batch_clothing_col = bpy.props.CollectionProperty(
-        type=HG_BATCH_UILIST.BATCH_CLOTHING_ITEM
+        type=batch_ui_lists.BATCH_CLOTHING_ITEM
     )
     sc.batch_clothing_col_index = bpy.props.IntProperty(
         name="Index", default=0
@@ -113,7 +113,7 @@ def _initiate_ui_lists():
 
     # Collection of batch expression categories
     sc.batch_expressions_col = bpy.props.CollectionProperty(
-        type=HG_BATCH_UILIST.BATCH_EXPRESSION_ITEM
+        type=batch_ui_lists.BATCH_EXPRESSION_ITEM
     )
     sc.batch_expressions_col_index = bpy.props.IntProperty(
         name="Index", default=0
@@ -129,25 +129,25 @@ def _initiate_ui_lists():
 
     # Collection of modifiers that are available for ModApply operator
     sc.modapply_col = bpy.props.CollectionProperty(
-        type=HG_UTILITY_UILISTS.MODAPPLY_ITEM
+        type=utility_ui_lists.MODAPPLY_ITEM
     )
     sc.modapply_col_index = bpy.props.IntProperty(name="Index", default=0)
 
     # Collection of shapekeys that can be saved
     sc.shapekeys_col = bpy.props.CollectionProperty(
-        type=HG_UTILITY_UILISTS.SHAPEKEY_ITEM
+        type=utility_ui_lists.SHAPEKEY_ITEM
     )
     sc.shapekeys_col_index = bpy.props.IntProperty(name="Index", default=0)
 
     # Collection of hairstyles that can be saved
     sc.savehair_col = bpy.props.CollectionProperty(
-        type=HG_UTILITY_UILISTS.SAVEHAIR_ITEM
+        type=utility_ui_lists.SAVEHAIR_ITEM
     )
     sc.savehair_col_index = bpy.props.IntProperty(name="Index", default=0)
 
     # Collection of otufits that can be saved
     sc.saveoutfit_col = bpy.props.CollectionProperty(
-        type=HG_UTILITY_UILISTS.SAVEOUTFIT_ITEM
+        type=utility_ui_lists.SAVEOUTFIT_ITEM
     )
     sc.saveoutfit_col_index = bpy.props.IntProperty(name="Index", default=0)
 
