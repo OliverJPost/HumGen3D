@@ -38,16 +38,18 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent  # type: ignore
 
-from .blender_backend.content.content_packs import (
+from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.update import UPDATE_INFO_ITEM, check_update
+from .classes import hg_classes
+from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
     cpacks_refresh,
 )
-from .blender_backend.content.custom_content_packs import CUSTOM_CONTENT_ITEM
-from .blender_backend.content.update import UPDATE_INFO_ITEM, check_update
-from .blender_backend.preview_collections import preview_collections
-from .blender_backend.settings.properties import HG_OBJECT_PROPS, HG_SETTINGS
-from .classes import hg_classes
+from .old.blender_backend.content.custom_content_packs import (
+    CUSTOM_CONTENT_ITEM,
+)
+from .old.blender_backend.preview_collections import preview_collections
 from .user_interface import batch_ui_lists, utility_ui_lists
 from .user_interface.primitive_menu import add_hg_primitive_menu
 from .user_interface.tips_suggestions_ui import TIPS_ITEM
@@ -90,7 +92,9 @@ def _initiate_custom_icons():
     hg_icons = preview_collections.setdefault(
         "hg_icons", bpy.utils.previews.new()
     )
-    icon_dir = os.path.join(os.path.dirname(__file__), "data", "icons")
+    icon_dir = os.path.join(
+        os.path.dirname(__file__), "user_interface", "icons"
+    )
     for _, _, fns in os.walk(icon_dir):
         png_files = [f for f in fns if f.endswith(".png")]
         for fn in png_files:

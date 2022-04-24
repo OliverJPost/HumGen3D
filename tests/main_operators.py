@@ -2,8 +2,8 @@ import random
 
 import bpy
 
-from ..blender_operators.common.common_functions import hg_log
-from ..blender_operators.finalize_phase.pose import HG_RIGIFY
+from ..old.blender_operators.common.common_functions import hg_log
+from ..old.blender_operators.finalize_phase.pose import HG_RIGIFY
 
 
 class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):

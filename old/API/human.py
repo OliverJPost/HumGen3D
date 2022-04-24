@@ -7,24 +7,19 @@ import time
 import bpy  # type:ignore
 from mathutils import Euler, Vector
 
+from ...user_interface.panel_functions import in_creation_phase as _in_creation_phase
 from ..blender_backend.preview_collections import refresh_pcoll
 
 # TODO replace .. with HumGen3D
-from ..blender_operators.common.common_functions import (
-    get_addon_root,
-)  # type:ignore
-from ..blender_operators.common.common_functions import (
+from ..blender_operators.common.common_functions import (  # type:ignore
     HumGenException,
+    get_addon_root,
     get_prefs,
     hg_log,
     toggle_hair_visibility,
 )
-from ..blender_operators.common.random import (
-    random_body_type as _random_body_type,
-)
-from ..blender_operators.creation_phase.creation import (
-    HG_CREATION_BASE,
-)  # type:ignore
+from ..blender_operators.common.random import random_body_type as _random_body_type
+from ..blender_operators.creation_phase.creation import HG_CREATION_BASE  # type:ignore
 from ..blender_operators.creation_phase.face import (
     randomize_facial_feature_categ as _randomize_facial_feature_categ,
 )
@@ -33,9 +28,6 @@ from ..blender_operators.creation_phase.finish_creation_phase import (
 )
 from ..blender_operators.creation_phase.material import (
     randomize_skin_shader as _randomize_skin_shader,
-)
-from ..user_interface.panel_functions import (
-    in_creation_phase as _in_creation_phase,
 )
 
 
@@ -146,6 +138,8 @@ class HG_Human:
             self._rig_object = None
             self._body_object = None
             self._gender = None
+
+        hg_log("This is the old API for Human Generator. It still works, but might be removed in a future release", level = "WARNING")
 
     @property
     def rig_object(self) -> bpy.types.Object:
@@ -474,75 +468,6 @@ class HG_Human:
             chosen_hair_option = random.choice(self.get_hair_options(context))
 
         self.__set_active_in_pcoll(context, "hair", chosen_hair_option)
-        self.set_hair_visibility(False)
-
-    def get_face_hair_options(self, context=None) -> "list[str]":
-        """Get a list of names of possible facial hairstyles for this human. Choosing
-        a name and passing it to set_face_hair() will add this facial hairstyle to your
-        human.
-
-        Args:
-            context (context, optional): Blender context. If None is passed,
-                bpy.context will be used.
-        Returns:
-            list[str]: List of internal names of facial hairstyles, expect the internal
-                names to be relative paths from the Human Generator folder.
-        Raises:
-            HumGenException: When this human does not yet exist in Blender.
-        """
-        context = self.__check_passed_context(context)
-        self.__check_if_rig_exists()
-        return self.__get_pcoll_list(context, "face_hair")
-
-    def set_height(self, context=None, height: float = None):
-        """Sets the height of this human in centimeters,
-        thee value provided must be between 150 and 200
-
-        Args:
-            context (context, optional): Blender context. If None is passed,
-                bpy.context will be used.
-            height (float, optional): Height in cm. If None is passed,
-                a random height will be used.
-        Raises:
-            ValueError: When the height is less then 150 or more then 200
-        """
-        context = self.__check_passed_context(context)
-        self.__check_if_rig_exists()
-        sett = context.scene.HG3D
-        if height is None:
-            height = random.randrange(150, 200)
-        if height < 150 or height > 200:
-            raise ValueError(
-                f"Height must be between 150 and 200 cm, input value was: {height}"
-            )
-        sett.human_length = height
-
-    def set_face_hair(self, context=None, chosen_face_hair_option=None):
-        """Sets the active facial hairstyle of this human, importing it in Blender. By
-        default this method will hide the particle children of the created
-        facial hairstyle for performance reasons (it makes a big difference). You can
-        turn the children back on with set_hair_visibility(True)
-
-        Args:
-            context (context, optional): Blender context. If None is passed,
-                bpy.context will be used.
-            chosen_face_hair_option (str, optional): The name of a facial hair option chosen
-                from get_face_hair_options(). Defaults to None. If not passed a
-                random one will be chosen.
-        Raises:
-            HumGenException: When this human does not yet exist in Blender.
-        """
-        context = self.__check_passed_context(context)
-        self.__check_if_rig_exists()
-
-        if not chosen_face_hair_option:
-            chosen_face_hair_option = random.choice(
-                self.get_facial_hair_options(context)
-            )
-
-        self.__set_active_in_pcoll(
-            context, "face_hair", chosen_face_hair_option
-        )
         self.set_hair_visibility(False)
 
     def randomize_skin(self):

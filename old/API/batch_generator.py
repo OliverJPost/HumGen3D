@@ -15,7 +15,7 @@ from ..blender_operators.common.common_functions import (
     hg_log,
     toggle_hair_visibility,
 )
-from .HG_API_HUMAN import HG_Human
+from .human import HG_Human
 
 
 class HG_Batch_Generator:

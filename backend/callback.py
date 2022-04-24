@@ -11,9 +11,10 @@ This callback has the following usages:
 
 import bpy
 
-from ..blender_operators.common.common_functions import find_human, hg_log
-from ..blender_operators.creation_phase.body import get_scaling_data
-from ..blender_operators.utility_section.utility_functions import (
+from ..old.blender_backend.preview_collections import refresh_pcoll
+from ..old.blender_operators.common.common_functions import find_human, hg_log
+from ..old.blender_operators.creation_phase.body import get_scaling_data
+from ..old.blender_operators.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
     refresh_outfit_ul,
@@ -21,9 +22,8 @@ from ..blender_operators.utility_section.utility_functions import (
 )
 from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
 from ..user_interface.tips_suggestions_ui import (
-    update_tips_from_context,  # type:ignore
-)
-from .preview_collections import refresh_pcoll
+    update_tips_from_context,
+)  # type:ignore
 
 
 class HG_ACTIVATE(bpy.types.Operator):

@@ -18,7 +18,7 @@ import bpy  # type: ignore
 
 from .content_packs import cpacks_refresh
 from ..preview_collections import get_pcoll_enum_items, refresh_pcoll
-from ...extern.blendfile import open_blend
+from ....extern.blendfile import open_blend
 from ...blender_operators.common.common_functions import (
     ShowMessageBox,
     get_prefs,
