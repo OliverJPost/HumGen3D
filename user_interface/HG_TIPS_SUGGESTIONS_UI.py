@@ -5,16 +5,16 @@ import bpy
 
 from ..core.HG_PCOLL import preview_collections
 from ..features.common.HG_COMMON_FUNC import get_prefs
-from ..tips_and_suggestions.batch_tips_and_suggestions import (
+from ..features.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
     get_batch_tips_from_context,  # type:ignore
 )
-from ..tips_and_suggestions.content_saving_tips_and_suggestions import (
+from ..features.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
-from ..tips_and_suggestions.extras_menu_tips_and_suggestions import (
+from ..features.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
     get_extras_menu_tips_from_context,
 )
-from ..tips_and_suggestions.main_ui_tips_and_suggestions import (
+from ..features.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
 from ..user_interface.HG_PANEL_FUNCTIONS import in_creation_phase
@@ -212,7 +212,9 @@ class HG_OT_HIDE_TIP(bpy.types.Operator):
 
         with open(json_path, "w") as f:
             json.dump(
-                hidden_tips_list, f, indent=4,
+                hidden_tips_list,
+                f,
+                indent=4,
             )
 
         return {"FINISHED"}
@@ -243,8 +245,9 @@ class HG_OT_UNHIDE_TIP(bpy.types.Operator):
 
             with open(json_path, "w") as f:
                 json.dump(
-                    hidden_tips_list, f, indent=4,
+                    hidden_tips_list,
+                    f,
+                    indent=4,
                 )
 
         return {"FINISHED"}
-

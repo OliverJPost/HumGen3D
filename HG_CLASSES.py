@@ -96,7 +96,7 @@ from .features.utility_section.HG_UTILITY_OPS import (
 )
 
 # Tutorial operator
-from .tutorial_operator import HG_TUTORIAL_OP
+from .features.documentation.tutorial_operator import HG_TUTORIAL_OP
 
 # User interface
 from .user_interface import (

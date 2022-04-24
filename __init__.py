@@ -90,7 +90,7 @@ def _initiate_custom_icons():
     hg_icons = preview_collections.setdefault(
         "hg_icons", bpy.utils.previews.new()
     )
-    icon_dir = os.path.join(os.path.dirname(__file__), "icons")
+    icon_dir = os.path.join(os.path.dirname(__file__), "data", "icons")
     for _, _, fns in os.walk(icon_dir):
         png_files = [f for f in fns if f.endswith(".png")]
         for fn in png_files:
