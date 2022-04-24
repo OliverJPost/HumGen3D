@@ -1,6 +1,8 @@
 # Core
-from .tests.main_operators import HG_MAIN_OPERATORS_TESTS
 from .backend.callback import HG_ACTIVATE
+from .backend.preferences import HG_PATHCHANGE, HG_PREF, HG_PT_ICON_LEGEND
+from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.update import UPDATE_INFO_ITEM
 from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
     HG_DELETE_CPACK,
@@ -19,13 +21,6 @@ from .old.blender_backend.content.custom_content_packs import (
     HG_OT_EXIT_CPACK_EDIT,
     HG_OT_SAVE_CPACK,
 )
-from .backend.update import UPDATE_INFO_ITEM
-from .backend.preferences import (
-    HG_PATHCHANGE,
-    HG_PREF,
-    HG_PT_ICON_LEGEND,
-)
-from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .old.blender_operators.batch_section.modal import HG_BATCH_GENERATE
 from .old.blender_operators.batch_section.primitives import (
     HG_OT_ADD_BATCH_MARKER,
@@ -106,6 +101,12 @@ from .old.blender_operators.utility_section.utility_operators import (
     HG_OT_REFRESH_UL,
     HG_OT_SELECTMODAPPLY,
 )
+from .tests.HG_API_TESTS import HG_API_TESTS
+from .tests.HG_BATCH_TESTS import HG_BATCH_TESTS
+from .tests.HG_CONTENT_TESTS import HG_CONTENT_TESTS
+from .tests.HG_MAIN_OPERATORS_TESTS import HG_MAIN_OPERATORS_TESTS
+from .tests.HG_UTILITY_TESTS import HG_UTILITY_TESTS
+from .tests.main_operators import HG_MAIN_OPERATORS_TESTS
 
 # User interface
 from .user_interface import (
@@ -267,5 +268,10 @@ hg_classes = (
     utility_panel.HG_PT_EXTRAS_TIPS,
     HG_OT_HIDE_TIP,
     HG_OT_UNHIDE_TIP,
+    # Tests
+    HG_CONTENT_TESTS,
     HG_MAIN_OPERATORS_TESTS,
+    HG_BATCH_TESTS,
+    HG_UTILITY_TESTS,
+    HG_API_TESTS,
 )

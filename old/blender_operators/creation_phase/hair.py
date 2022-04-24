@@ -11,6 +11,7 @@ from ..common.common_functions import (
     get_addon_root,
     get_prefs,
     hg_delete,
+    remove_broken_drivers,
 )
 from .length import apply_armature
 
@@ -181,6 +182,7 @@ def load_hair(self, context, type):
     hg_rig.hide_viewport = False
 
     remove_fh = True if type == "face" else False
+    remove_broken_drivers()
     _remove_old_hair(hg_body, remove_fh)
 
     for mod in [mod for mod in hg_body.modifiers if mod.type == "MASK"]:
@@ -237,6 +239,7 @@ def load_hair(self, context, type):
             ps_sett.child_nbr = ps_sett.rendered_child_count
 
     hg_delete(hair_obj)
+    remove_broken_drivers()
 
 
 def add_quality_props_to_hair_system(mod):
@@ -353,6 +356,7 @@ def _morph_hair_obj_to_body_obj(context, hg_body, hair_obj):
     context.scene.collection.objects.link(body_copy)
 
     apply_shapekeys(body_copy)
+    remove_broken_drivers()
     apply_armature(body_copy)
 
     for obj in context.selected_objects:
