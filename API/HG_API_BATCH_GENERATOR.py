@@ -6,10 +6,10 @@ import time
 
 import bpy  # type:ignore
 
-from ..blender_operators.common.HG_COMMON_FUNC import (
+from ..blender_operators.common.common_functions import (
     get_addon_root,
 )  # type:ignore
-from ..blender_operators.common.HG_COMMON_FUNC import (
+from ..blender_operators.common.common_functions import (
     HumGenException,
     get_prefs,
     hg_log,

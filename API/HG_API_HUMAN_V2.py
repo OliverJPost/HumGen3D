@@ -7,34 +7,34 @@ import time
 import bpy  # type:ignore
 from mathutils import Euler, Vector
 
-from ..blender_backend.HG_PCOLL import refresh_pcoll
+from ..blender_backend.preview_collections import refresh_pcoll
 
 # TODO replace .. with HumGen3D
-from ..blender_operators.common.HG_COMMON_FUNC import (
+from ..blender_operators.common.common_functions import (
     get_addon_root,
 )  # type:ignore
-from ..blender_operators.common.HG_COMMON_FUNC import (
+from ..blender_operators.common.common_functions import (
     HumGenException,
     get_prefs,
     hg_log,
     toggle_hair_visibility,
 )
-from ..blender_operators.common.HG_RANDOM import (
+from ..blender_operators.common.random import (
     random_body_type as _random_body_type,
 )
-from ..blender_operators.creation_phase.HG_CREATION import (
+from ..blender_operators.creation_phase.creation import (
     HG_CREATION_BASE,
 )  # type:ignore
-from ..blender_operators.creation_phase.HG_FACE import (
+from ..blender_operators.creation_phase.face import (
     randomize_facial_feature_categ as _randomize_facial_feature_categ,
 )
-from ..blender_operators.creation_phase.HG_FINISH_CREATION_PHASE import (
+from ..blender_operators.creation_phase.finish_creation_phase import (
     finish_creation_phase as _finish_creation_phase,
 )
-from ..blender_operators.creation_phase.HG_MATERIAL import (
+from ..blender_operators.creation_phase.material import (
     randomize_skin_shader as _randomize_skin_shader,
 )
-from ..user_interface.HG_PANEL_FUNCTIONS import (
+from ..user_interface.panel_functions import (
     in_creation_phase as _in_creation_phase,
 )
 
