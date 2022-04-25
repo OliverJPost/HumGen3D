@@ -33,6 +33,7 @@ import os
 import sys
 
 import bpy  # type: ignore
+from .human.human import Human
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore

@@ -10,6 +10,7 @@ This callback has the following usages:
 """
 
 import bpy
+from HumGen3D import Human, bl_info  # type: ignore
 
 from ..old.blender_backend.preview_collections import refresh_pcoll
 from ..old.blender_operators.common.common_functions import find_human, hg_log
@@ -27,16 +28,7 @@ from ..user_interface.tips_suggestions_ui import (
 
 
 class HG_ACTIVATE(bpy.types.Operator):
-    """
-    Activates the HumGen msgbus, also refreshes human pcoll
-
-    Operator type:
-        -Backend
-        -Prop setter
-
-    Prereq:
-        -Not subscribed to Msgbus (sett.subscribed == False)
-    """
+    """Activates the HumGen msgbus, also populates human pcoll"""
 
     bl_idname = "hg3d.activate"
     bl_label = "Activate"
@@ -44,19 +36,17 @@ class HG_ACTIVATE(bpy.types.Operator):
 
     def execute(self, context):
         sett = bpy.context.scene.HG3D
-        sett.subscribed = False
+        sett.subscribed = False  # TODO is this even used?
 
         msgbus(self, context)
         refresh_pcoll(self, context, "humans")
-        hg_log("Activating HumGen")
+        hg_log(f"Activating HumGen, version {bl_info['version']}")
         return {"FINISHED"}
 
 
 def msgbus(self, context):
-    """
-    Activates the subscribtion to the active object
-    """
-    sett = bpy.context.scene.HG3D
+    """Activates the subscribtion to changes to the active object"""
+    sett = context.scene.HG3D
 
     if sett.subscribed == True:
         return
@@ -66,53 +56,28 @@ def msgbus(self, context):
         key=subscribe_to,
         owner=self,
         args=(self,),
-        notify=HG_Callback,
+        notify=hg_callback,
     )
     sett.subscribed = True
 
 
-def HG_Callback(self):
+def hg_callback(self):
     """
     Runs every time the active object changes
     """
 
-    hg_rig = find_human(bpy.context.active_object)
-    if not hg_rig:
+    human = Human(bpy.context.object, soft_check=True)
+    if not human:
         return  # return immediately when the active object is not part of a human
 
-    _check_body_object(hg_rig)
+    human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
     ui_phase = sett.ui_phase
 
-    _set_shader_switches(hg_rig, sett)
-    update_tips_from_context(bpy.context, sett, hg_rig)
-    _context_specific_updates(self, sett, hg_rig, ui_phase)
-
-
-def _check_body_object(hg_rig):
-    """Update HG.body_obj if it's not a child of the rig. This would happen if
-    the user duplicated the human manually
-
-    Args:
-        hg_rig (Object): HumGen human armature
-    """
-    if hg_rig.HG.body_obj not in hg_rig.children and not hg_rig.HG.batch:
-        new_body = (
-            [obj for obj in hg_rig.children if "hg_rig" in obj]
-            if hg_rig.children
-            else None
-        )
-
-        if new_body:
-            hg_rig.HG.body_obj = new_body[0]
-            if "no_body" in hg_rig:
-                del hg_rig["no_body"]
-        else:
-            hg_rig["no_body"] = 1
-    else:
-        if "no_body" in hg_rig:
-            del hg_rig["no_body"]
+    _set_shader_switches(human.rig_obj, sett)
+    update_tips_from_context(bpy.context, sett, human.rig_obj)
+    _context_specific_updates(self, sett, human.rig_obj, ui_phase)
 
 
 def _set_shader_switches(hg_rig, sett):

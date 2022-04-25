@@ -22,12 +22,8 @@ from .old.blender_backend.content.custom_content_packs import (
     HG_OT_SAVE_CPACK,
 )
 from .old.blender_operators.batch_section.modal import HG_BATCH_GENERATE
-from .old.blender_operators.batch_section.primitives import (
-    HG_OT_ADD_BATCH_MARKER,
-)
-from .old.blender_operators.batch_section.quick_generator import (
-    HG_QUICK_GENERATE,
-)
+from .old.blender_operators.batch_section.primitives import HG_OT_ADD_BATCH_MARKER
+from .old.blender_operators.batch_section.quick_generator import HG_QUICK_GENERATE
 from .old.blender_operators.common.common_operators import (
     HG_CLEAR_SEARCH,
     HG_DELETE,
@@ -50,15 +46,11 @@ from .old.blender_operators.creation_phase.hair import (
     HG_REMOVE_HAIR,
     HG_TOGGLE_HAIR_CHILDREN,
 )
-from .old.blender_operators.creation_phase.haircards import (
-    HG_CONVERT_HAIRCARDS,
-)
+from .old.blender_operators.creation_phase.haircards import HG_CONVERT_HAIRCARDS
 from .old.blender_operators.creation_phase.length import HG_RANDOM_LENGTH
 
 # Tutorial operator
-from .old.blender_operators.documentation.tutorial_operator import (
-    tutorial_operator,
-)
+from .old.blender_operators.documentation.tutorial_operator import tutorial_operator
 from .old.blender_operators.finalize_phase.clothing import (
     HG_BACK_TO_HUMAN,
     HG_DELETE_CLOTH,
@@ -101,12 +93,11 @@ from .old.blender_operators.utility_section.utility_operators import (
     HG_OT_REFRESH_UL,
     HG_OT_SELECTMODAPPLY,
 )
-from .tests.HG_API_TESTS import HG_API_TESTS
-from .tests.HG_BATCH_TESTS import HG_BATCH_TESTS
-from .tests.HG_CONTENT_TESTS import HG_CONTENT_TESTS
-from .tests.HG_MAIN_OPERATORS_TESTS import HG_MAIN_OPERATORS_TESTS
-from .tests.HG_UTILITY_TESTS import HG_UTILITY_TESTS
+from .tests.api import HG_API_TESTS
+from .tests.batch import HG_BATCH_TESTS
+from .tests.content import HG_CONTENT_TESTS
 from .tests.main_operators import HG_MAIN_OPERATORS_TESTS
+from .tests.utility import HG_UTILITY_TESTS
 
 # User interface
 from .user_interface import (

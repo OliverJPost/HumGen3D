@@ -26,7 +26,8 @@ from .namegen import get_name
 
 class HG_CREATION_BASE:
     def create_human(
-        self, context
+        self,
+        context,
     ) -> "tuple [bpy.types.Object, bpy.types.Object]":
         """Creates a new human based on the selected gender and starting human
 
@@ -124,75 +125,75 @@ class HG_CREATION_BASE:
 
         return name
 
-    def _import_human(
-        self, context, sett, pref
-    ) -> "tuple[str, bpy.types.Object, bpy.types.Object, bpy.types.Object]":
-        """Import human from HG_HUMAN.blend and add it to scene
-        Also adds some identifiers to the objects to find them later
+    # def _import_human(
+    #     self, context, sett, pref
+    # ) -> "tuple[str, bpy.types.Object, bpy.types.Object, bpy.types.Object]":
+    #     """Import human from HG_HUMAN.blend and add it to scene
+    #     Also adds some identifiers to the objects to find them later
 
-        Args:
-            sett (PropertyGroup)   : HumGen props
-            pref (AddonPreferences): HumGen preferences
+    #     Args:
+    #         sett (PropertyGroup)   : HumGen props
+    #         pref (AddonPreferences): HumGen preferences
 
-        Returns:
-            tuple[str, bpy.types.Object*3]:
-                gender  (str)   : gender of the imported human
-                hg_rig  (Object): imported armature of human
-                hg_body (Object): imported body of human
-                hg_eyes (Object): imported eyes of human
-        """
-        # import from HG_Human file
-        blendfile = str(pref.filepath) + str(Path("/models/HG_HUMAN.blend"))
-        with bpy.data.libraries.load(blendfile, link=False) as (
-            data_from,
-            data_to,
-        ):
-            data_to.objects = [
-                "HG_Rig",
-                "HG_Body",
-                "HG_Eyes",
-                "HG_TeethUpper",
-                "HG_TeethLower",
-            ]
+    #     Returns:
+    #         tuple[str, bpy.types.Object*3]:
+    #             gender  (str)   : gender of the imported human
+    #             hg_rig  (Object): imported armature of human
+    #             hg_body (Object): imported body of human
+    #             hg_eyes (Object): imported eyes of human
+    #     """
+    #     # import from HG_Human file
+    #     blendfile = str(pref.filepath) + str(Path("/models/HG_HUMAN.blend"))
+    #     with bpy.data.libraries.load(blendfile, link=False) as (
+    #         data_from,
+    #         data_to,
+    #     ):
+    #         data_to.objects = [
+    #             "HG_Rig",
+    #             "HG_Body",
+    #             "HG_Eyes",
+    #             "HG_TeethUpper",
+    #             "HG_TeethLower",
+    #         ]
 
-        gender = sett.gender
+    #     gender = sett.gender
 
-        # link to scene
-        hg_rig = data_to.objects[0]
-        hg_body = data_to.objects[1]
-        hg_eyes = data_to.objects[2]
-        scene = context.scene
-        for obj in data_to.objects:
-            scene.collection.objects.link(obj)
-            add_to_collection(context, obj)
+    #     # link to scene
+    #     hg_rig = data_to.objects[0]
+    #     hg_body = data_to.objects[1]
+    #     hg_eyes = data_to.objects[2]
+    #     scene = context.scene
+    #     for obj in data_to.objects:
+    #         scene.collection.objects.link(obj)
+    #         add_to_collection(context, obj)
 
-        hg_rig.location = context.scene.cursor.location
+    #     hg_rig.location = context.scene.cursor.location
 
-        # set custom properties for identifying
-        hg_body["hg_body"] = 1
-        hg_eyes["hg_eyes"] = 1
-        hg_teeth = [obj for obj in data_to.objects if "Teeth" in obj.name]
-        for tooth in hg_teeth:
-            tooth["hg_teeth"] = 1
+    #     # set custom properties for identifying
+    #     hg_body["hg_body"] = 1
+    #     hg_eyes["hg_eyes"] = 1
+    #     hg_teeth = [obj for obj in data_to.objects if "Teeth" in obj.name]
+    #     for tooth in hg_teeth:
+    #         tooth["hg_teeth"] = 1
 
-        return gender, hg_rig, hg_body, hg_eyes
+    #     return gender, hg_rig, hg_body, hg_eyes
 
-    def _set_HG_object_props(self, sett, hg_rig, hg_body):
-        """Sets the custom properties to the HG Object propertygroup
+    # def _set_HG_object_props(self, sett, hg_rig, hg_body):
+    #     """Sets the custom properties to the HG Object propertygroup
 
-        Args:
-            sett (PropertyGRoup): HumGen SCENE props
-            hg_rig (Object): humgen armature
-            hg_body (Object): humgen body
-        """
-        # custom properties
-        HG = hg_rig.HG
+    #     Args:
+    #         sett (PropertyGRoup): HumGen SCENE props
+    #         hg_rig (Object): humgen armature
+    #         hg_body (Object): humgen body
+    #     """
+    #     # custom properties
+    #     HG = hg_rig.HG
 
-        HG.ishuman = True
-        HG.gender = sett.gender
-        HG.phase = "body"
-        HG.body_obj = hg_body
-        HG.length = hg_rig.dimensions[2]
+    #     HG.ishuman = True
+    #     HG.gender = sett.gender
+    #     HG.phase = "body"
+    #     HG.body_obj = hg_body
+    #     HG.length = hg_rig.dimensions[2]
 
     def _load_external_shapekeys(self, context, pref, hg_body):
         """Imports external shapekeys from the models/shapekeys folder
@@ -485,6 +486,8 @@ class HG_START_CREATION(bpy.types.Operator, HG_CREATION_BASE):
         sett = context.scene.HG3D
         sett.ui_phase = "body"
 
+        human = Human()
+        human.create()
         hg_rig, _ = self.create_human(context)
         hg_rig.select_set(True)
         context.view_layer.objects.active = hg_rig
