@@ -3,7 +3,7 @@ from .backend.callback import HG_ACTIVATE
 from .backend.preferences import HG_PATHCHANGE, HG_PREF, HG_PT_ICON_LEGEND
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import UPDATE_INFO_ITEM
-from .human.base.operator import HG_RANDOM
+from .human.base.operators import HG_RANDOM, HG_TOGGLE_HAIR_CHILDREN
 from .human.creation_phase.operators import HG_START_CREATION
 from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
@@ -24,12 +24,8 @@ from .old.blender_backend.content.custom_content_packs import (
     HG_OT_SAVE_CPACK,
 )
 from .old.blender_operators.batch_section.modal import HG_BATCH_GENERATE
-from .old.blender_operators.batch_section.primitives import (
-    HG_OT_ADD_BATCH_MARKER,
-)
-from .old.blender_operators.batch_section.quick_generator import (
-    HG_QUICK_GENERATE,
-)
+from .old.blender_operators.batch_section.primitives import HG_OT_ADD_BATCH_MARKER
+from .old.blender_operators.batch_section.quick_generator import HG_QUICK_GENERATE
 from .old.blender_operators.common.common_operators import (
     HG_CLEAR_SEARCH,
     HG_DELETE,
@@ -46,20 +42,12 @@ from .old.blender_operators.creation_phase.face import HG_RESET_FACE
 from .old.blender_operators.creation_phase.finish_creation_phase import (
     HG_FINISH_CREATION,
 )
-from .old.blender_operators.creation_phase.hair import (
-    HG_EYEBROW_SWITCH,
-    HG_REMOVE_HAIR,
-    HG_TOGGLE_HAIR_CHILDREN,
-)
-from .old.blender_operators.creation_phase.haircards import (
-    HG_CONVERT_HAIRCARDS,
-)
+from .old.blender_operators.creation_phase.hair import HG_EYEBROW_SWITCH, HG_REMOVE_HAIR
+from .old.blender_operators.creation_phase.haircards import HG_CONVERT_HAIRCARDS
 from .old.blender_operators.creation_phase.length import HG_RANDOM_LENGTH
 
 # Tutorial operator
-from .old.blender_operators.documentation.tutorial_operator import (
-    tutorial_operator,
-)
+from .old.blender_operators.documentation.tutorial_operator import tutorial_operator
 from .old.blender_operators.finalize_phase.clothing import (
     HG_BACK_TO_HUMAN,
     HG_DELETE_CLOTH,

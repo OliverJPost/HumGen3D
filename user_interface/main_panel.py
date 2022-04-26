@@ -55,7 +55,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.hg_rig = find_human(
             context.active_object, include_applied_batch_results=True
         )
-        self.human = Human.from_existing(context.active_object, strict_check = False)
+        self.human = Human.from_existing(
+            context.active_object, strict_check=False
+        )
         if self.hg_rig:
             is_batch, is_applied_batch = is_batch_result(self.hg_rig)
 
@@ -296,7 +298,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         # button showing name and gender of human
         subrow_h.operator(
             "view3d.view_selected",
-            text=self._get_header_label(hg_rig),
+            text=self._get_header_label(),
             depress=bool(hg_rig),
         )
 
@@ -336,12 +338,12 @@ class HG_PT_PANEL(bpy.types.Panel):
             depress=True,
         )
 
-    def _get_header_label(self, hg_rig):
-        if not hg_rig:
+    def _get_header_label(self):
+        if not self.human:
             label = "No Human selected"
         else:
-            name = hg_rig.name.replace("HG_", "").replace("_RIGIFY", "")
-            gender = hg_rig.HG.gender.capitalize()
+            name = self.human.name.replace("HG_", "").replace("_RIGIFY", "")
+            gender = self.human.gender.capitalize()
             label = f"This is {name} [{gender}]"
         return label
 
@@ -1216,7 +1218,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row.label(
             text=(
                 "Hair children are hidden"
-                if hair_systems[0].settings.child_nbr <= 1
+                if self.human.hair.children_ishidden
                 else "Hair children are visible"
             )
         )

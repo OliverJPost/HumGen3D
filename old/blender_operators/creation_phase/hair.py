@@ -3,7 +3,7 @@ import os
 import random
 from pathlib import Path
 
-import bpy  # type: ignore
+import bpy
 
 from ..common.common_functions import (
     apply_shapekeys,
@@ -52,43 +52,6 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
 
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
-
-
-class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
-    """Turn hair children to 1 or back to render amount
-
-    Operator type:
-        Particle system
-
-    Prereq:
-        Active object is part of HumGen human
-    """
-
-    bl_idname = "hg3d.togglechildren"
-    bl_label = "Toggle hair children"
-    bl_description = "Toggle between hidden and visible hair children"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        hg_rig = find_human(context.active_object)
-        hg_body = hg_rig.HG.body_obj
-
-        hair_systems = []
-        make_zero = False
-        for mod in hg_body.modifiers:
-            if mod.type == "PARTICLE_SYSTEM":
-                ps = mod.particle_system
-                hair_systems.append(ps)
-                if ps.settings.child_nbr > 1:
-                    make_zero = True
-        for ps in hair_systems:
-            if make_zero:
-                ps.settings.child_nbr = 1
-            else:
-                render_children = ps.settings.rendered_child_count
-                ps.settings.child_nbr = render_children
-
-        return {"FINISHED"}
 
 
 class HG_EYEBROW_SWITCH(bpy.types.Operator):
