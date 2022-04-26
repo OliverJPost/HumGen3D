@@ -18,6 +18,14 @@ class ShapeKeySettings(PropCollection):
         super().__init__(human.body_obj.data.shape_keys.key_blocks)
         self._human = human
 
+    @property
+    def body_proportions(self):
+        if not hasattr(self, "_body_proportions"):
+            self._body_proportions = PropCollection(
+                sk for sk in self if sk.name.startswith("bp_")
+            )
+        return self._body_proportions
+
     def _load_external(self, human, context=None):
         """Imports external shapekeys from the models/shapekeys folder
 

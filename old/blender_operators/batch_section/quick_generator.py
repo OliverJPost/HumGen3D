@@ -5,43 +5,33 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 
+from ....human.human import Human
 from ...blender_backend.preview_collections import refresh_pcoll
-from ..creation_phase.face import (
-    randomize_facial_feature_categ,  # type:ignore
-)
-from ..creation_phase.hair import (
-    random_hair_color,
-    set_hair_quality,
-)
-from ..creation_phase.material import (
-    randomize_iris_color,
-    randomize_skin_shader,
-)
-from ..finalize_phase.clothing import (
-    randomize_clothing_colors,  # type:ignore
-)
-from ..finalize_phase.clothing_loading import (
-    set_clothing_texture_resolution,
-)
-from ..utility_section.baking import (
-    add_image_node,
-)  # type:ignore
-from ..utility_section.baking import (
-    bake_texture,
-    check_bake_render_settings,
-    generate_bake_enum,
-    get_solidify_state,
-    material_setup,
-)
 from ..common.common_functions import (
     apply_shapekeys,
     hg_delete,
     hg_log,
     toggle_hair_visibility,
 )
-from ..common.random import random_body_type, set_random_active_in_pcoll
+from ..common.random import set_random_active_in_pcoll
 from ..creation_phase.creation import HG_CREATION_BASE
+from ..creation_phase.face import randomize_facial_feature_categ  # type:ignore
 from ..creation_phase.finish_creation_phase import finish_creation_phase
+from ..creation_phase.hair import random_hair_color, set_hair_quality
+from ..creation_phase.material import (
+    randomize_iris_color,
+    randomize_skin_shader,
+)
+from ..finalize_phase.clothing import randomize_clothing_colors  # type:ignore
+from ..finalize_phase.clothing_loading import set_clothing_texture_resolution
+from ..utility_section.baking import (  # type:ignore
+    add_image_node,
+    bake_texture,
+    check_bake_render_settings,
+    generate_bake_enum,
+    get_solidify_state,
+    material_setup,
+)
 from .batch_functions import length_from_bell_curve
 
 
@@ -125,12 +115,12 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             context, sett, "humans", searchterm=self.ethnicity
         )
         hg_rig, hg_body = self.create_human(context)  # inherited
-
+        human = Human.from_existing(hg_rig)
         self._give_random_name_to_human(self.gender, hg_rig)  # inherited
 
         context.view_layer.objects.active = hg_rig
 
-        random_body_type(hg_rig)
+        human.creation_phase.body.randomize()
         randomize_facial_feature_categ(
             hg_body, "all", use_bell_curve=self.gender == "female"
         )

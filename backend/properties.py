@@ -24,7 +24,6 @@ from ..old.blender_backend.settings.property_functions import (
     thumbnail_saving_prop_update,
 )
 from ..old.blender_operators.common.common_functions import make_path_absolute
-from ..old.blender_operators.creation_phase.body import scale_bones
 from ..old.blender_operators.creation_phase.hair import (
     load_hair,
     update_hair_shader_type,
@@ -179,83 +178,107 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         max=250,
         update=lambda s, c: Human.from_existing(
             c.object
-        ).creation_phase.length.set(self.human_length, c),
+        ).creation_phase.length.set(s.human_length, c),
     )
 
     head_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "head"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.head_size, "head", c),
     )
     neck_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "neck"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.neck_size, "neck", c),
     )
 
     chest_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "chest"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.chest_size, "chest", c),
     )
     shoulder_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "shoulder"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.shoulder_size, "shoulder", c),
     )
     breast_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "breast"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.breast_size, "breast", c),
     )
     hips_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "hips"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.hips_size, "hips", c),
     )
 
     upper_arm_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "upper_arm"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.upper_arm_size, "upper_arm", c),
     )
     forearm_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "forearm"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.forearm_size, "forearm", c),
     )
     hand_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "hand"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.hand_size, "hand", c),
     )
 
     thigh_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "thigh"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.thigh_size, "thigh", c),
     )
     shin_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "shin"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.shin_size, "shin", c),
     )
     foot_size: FloatProperty(
         default=0.5,
         soft_min=0,
         soft_max=1,
-        update=lambda a, b: scale_bones(a, b, "foot"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.body.set_bone_scale(s.foot_size, "foot", c),
     )
 
     ####### preview collections ########
