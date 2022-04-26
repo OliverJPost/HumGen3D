@@ -16,6 +16,7 @@ from .common_functions import (
     is_batch_result,
 )
 from .info_popups import HG_OT_INFO
+from HumGen3D import Human
 
 
 class HG_DESELECT(bpy.types.Operator):
@@ -237,40 +238,15 @@ class HG_DELETE(bpy.types.Operator):
 
     def execute(self, context):
         if self.obj_override:
-            hg_rig = bpy.data.objects.get(self.obj_override)
+            obj = bpy.data.objects.get(self.obj_override)
+            human = Human.from_existing(obj)
         else:
-            hg_rig = find_human(context.active_object)
-        if not hg_rig:
+            human = Human.from_existing(context.object, strict_check=False)
+        if not human:
             self.report({"INFO"}, "No human selected")
             return {"FINISHED"}
 
-        backup_obj = hg_rig.HG.backup
-        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
-
-        copied_humans = [
-            human
-            for human in humans
-            if human.HG.backup == backup_obj and human != hg_rig
-        ]
-
-        delete_list = [
-            hg_rig,
-        ]
-        for child in hg_rig.children:
-            delete_list.append(child)
-            for sub_child in child.children:
-                delete_list.append(sub_child)
-
-        if not copied_humans and backup_obj:
-            delete_list.append(backup_obj)
-            for child in backup_obj.children:
-                delete_list.append(child)
-
-        for obj in delete_list:
-            try:
-                hg_delete(obj)
-            except:
-                hg_log("could not remove", obj)
+        human.delete()
 
         return {"FINISHED"}
 

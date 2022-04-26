@@ -14,8 +14,12 @@ from ..old.blender_operators.common.common_functions import (
     HumGenException,
     add_to_collection,
     get_prefs,
+    hg_delete,
+    hg_log,
 )
-from ..old.blender_operators.creation_phase.creation import set_eevee_ao_and_strip
+from ..old.blender_operators.creation_phase.creation import (
+    set_eevee_ao_and_strip,
+)
 from ..old.blender_operators.creation_phase.namegen import get_name
 from .creation_phase.creation_phase import CreationPhaseSettings
 from .hair.hair import HairSettings
@@ -344,3 +348,32 @@ class Human:
             i += 1
 
         self.name = "HG_" + name
+
+    def delete(self):
+        backup_obj = self.props.backup
+        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+
+        copied_humans = [
+            human
+            for human in humans
+            if human.HG.backup == backup_obj and human != self.rig_obj
+        ]
+
+        delete_list = [
+            self.rig_obj,
+        ]
+        for child in self.rig_obj.children:
+            delete_list.append(child)
+            for sub_child in child.children:
+                delete_list.append(sub_child)
+
+        if not copied_humans and backup_obj:
+            delete_list.append(backup_obj)
+            for child in backup_obj.children:
+                delete_list.append(child)
+
+        for obj in delete_list:
+            try:
+                hg_delete(obj)
+            except:
+                hg_log("could not remove", obj)
