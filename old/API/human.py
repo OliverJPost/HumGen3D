@@ -230,7 +230,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return self.rig_object.name
+        return self.rig_obj.name
 
     @name.setter
     def name(self, new_name):

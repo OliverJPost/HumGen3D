@@ -13,6 +13,23 @@ class HairSettings:
             self._eyebrows = EyebrowSettings(self._human)
         return self._eyebrows
 
+    @property
+    def children_ishidden(self) -> bool:
+        ishidden = False
+        for ps in self._human.hair.particle_systems:
+            if ps.settings.child_nbr > 1:
+                ishidden = True
+
+        return ishidden
+
+    def set_children_hide_state(self, turn_on):
+        for ps in self._human.hair.particle_systems:
+            if turn_on:
+                render_children = ps.settings.rendered_child_count
+                ps.settings.child_nbr = render_children
+            else:
+                ps.settings.child_nbr = 1
+
     def _delete_opposite_gender_specific(self):
         """Deletes the hair of the opposite gender
 
