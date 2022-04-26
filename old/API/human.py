@@ -4,10 +4,13 @@ import random
 import subprocess
 import time
 
-import bpy  # type:ignore
+import bpy
 from mathutils import Euler, Vector
 
-from ...user_interface.panel_functions import in_creation_phase as _in_creation_phase
+from ...human.human import Human  # type:ignore
+from ...user_interface.panel_functions import (
+    in_creation_phase as _in_creation_phase,
+)
 from ..blender_backend.preview_collections import refresh_pcoll
 
 # TODO replace .. with HumGen3D
@@ -18,8 +21,9 @@ from ..blender_operators.common.common_functions import (  # type:ignore
     hg_log,
     toggle_hair_visibility,
 )
-from ..blender_operators.common.random import random_body_type as _random_body_type
-from ..blender_operators.creation_phase.creation import HG_CREATION_BASE  # type:ignore
+from ..blender_operators.creation_phase.creation import (
+    HG_CREATION_BASE,
+)  # type:ignore
 from ..blender_operators.creation_phase.face import (
     randomize_facial_feature_categ as _randomize_facial_feature_categ,
 )
@@ -139,7 +143,10 @@ class HG_Human:
             self._body_object = None
             self._gender = None
 
-        hg_log("This is the old API for Human Generator. It still works, but might be removed in a future release", level = "WARNING")
+        hg_log(
+            "This is the old API for Human Generator. It still works, but might be removed in a future release",
+            level="WARNING",
+        )
 
     @property
     def rig_object(self) -> bpy.types.Object:
@@ -411,7 +418,8 @@ class HG_Human:
         self.__check_if_rig_exists()
         self.__check_if_in_creation_phase()
 
-        _random_body_type(self._rig_object)
+        human = Human.from_existing(self._rig_object)
+        human.creation_phase.body.randomize()
 
     def randomize_face_proportions(self):
         """Randomize the face proportion sliders of this human. Only possible

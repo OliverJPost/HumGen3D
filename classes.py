@@ -3,6 +3,7 @@ from .backend.callback import HG_ACTIVATE
 from .backend.preferences import HG_PATHCHANGE, HG_PREF, HG_PT_ICON_LEGEND
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import UPDATE_INFO_ITEM
+from .human.base.operator import HG_RANDOM
 from .human.creation_phase.operators import HG_START_CREATION
 from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
@@ -39,7 +40,7 @@ from .old.blender_operators.common.common_operators import (
     HG_SECTION_TOGGLE,
 )
 from .old.blender_operators.common.info_popups import HG_OT_INFO
-from .old.blender_operators.common.random import HG_COLOR_RANDOM, HG_RANDOM
+from .old.blender_operators.common.random import HG_COLOR_RANDOM
 from .old.blender_operators.creation_phase.backup import HG_REVERT_TO_CREATION
 from .old.blender_operators.creation_phase.face import HG_RESET_FACE
 from .old.blender_operators.creation_phase.finish_creation_phase import (

@@ -1,33 +1,6 @@
 from ..common.common_functions import find_human
 
 
-def scale_bones(self, context, bone_type):
-    """
-    Scales the bones based on the user input
-
-    Args:
-        bone_type (str): internal name of bone group to scale
-    """
-    hg_rig = find_human(context.object)
-    sett = context.scene.HG3D
-
-    if sett.update_exception:
-        return
-
-    sc = get_scaling_data(bone_type, sett)
-    for bone_name in sc["bones"]:
-        bone = hg_rig.pose.bones[bone_name]
-        x = sc["x"]
-        y = sc["x"] if sc["y"] == "copy" else sc["y"]
-        z = sc["x"] if sc["z"] == "copy" else sc["z"]
-
-        bone.scale = (
-            x if sc["x"] else bone.scale[0],
-            y if sc["y"] else bone.scale[1],
-            z if sc["z"] else bone.scale[2],
-        )
-
-
 def get_scaling_data(bone_type, sett, return_whole_dict=False) -> dict:
     """Gets the scaling dict that determines how to scale this body part
 

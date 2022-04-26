@@ -4,8 +4,9 @@ from sys import platform
 
 import addon_utils  # type: ignore
 import bpy
-from HumGen3D import bl_info  # type: ignore
+from HumGen3D import bl_info
 
+from ..human.human import Human  # type: ignore
 from ..old.blender_backend.preview_collections import preview_collections
 from ..old.blender_operators.common.common_functions import (
     find_human,
@@ -54,6 +55,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.hg_rig = find_human(
             context.active_object, include_applied_batch_results=True
         )
+        self.human = Human.from_existing(context.active_object, strict_check = False)
         if self.hg_rig:
             is_batch, is_applied_batch = is_batch_result(self.hg_rig)
 
@@ -417,13 +419,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         ).random_type = "body_type"
 
         col.separator()
-
-        hg_body = self.hg_rig.HG.body_obj
         flow = get_flow(sett, col)
 
-        sks = hg_body.data.shape_keys.key_blocks
-        bp_sks = [sk for sk in sks if sk.name.startswith("bp_")]
-        for sk in bp_sks:
+        for sk in self.human.creation_phase.body.shape_keys:
             flow.prop(
                 sk,
                 "value",
