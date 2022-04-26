@@ -40,28 +40,14 @@ class HG_MAKE_EXPERIMENTAL(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        hg_rig = find_human(context.active_object)
-        HG = hg_rig.HG
-        hg_body = hg_rig.HG.body_obj
+        from HumGen3D import Human
 
-        is_experimental = HG.experimental
+        human = Human.from_existing(context.object)
 
-        s_max = 1 if is_experimental else 2
-        s_min_ff = -1 if is_experimental else -2
-        s_min_bd = 0 if is_experimental else -0.5
+        is_experimental = human.props.experimental
 
-        for sk in hg_body.data.shape_keys.key_blocks:
-            if sk.name.startswith("ff_"):
-                sk.slider_min = s_min_ff
-                sk.slider_max = s_max
-            elif sk.name.startswith("bp_"):
-                sk.slider_min = s_min_bd
-                sk.slider_max = s_max
-            elif sk.name.startswith("pr_"):
-                sk.slider_min = s_min_bd
-                sk.slider_max = s_max
+        human.creation_phase.body.set_experimental(not is_experimental)
 
-        HG.experimental = False if is_experimental else True
         if not is_experimental:
             HG_OT_INFO.ShowMessageBox(None, "experimental")
         return {"FINISHED"}

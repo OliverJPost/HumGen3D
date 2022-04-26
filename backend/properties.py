@@ -8,13 +8,20 @@ from bpy.props import (  # type: ignore
     StringProperty,
 )
 
+from ..human.human import Human
 from ..old.blender_backend.content.custom_content_packs import (
     build_content_collection,
 )
-from .callback import tab_change_update
 from ..old.blender_backend.preview_collections import (
     get_pcoll_enum_items,
     refresh_pcoll,
+)
+from ..old.blender_backend.settings.property_functions import (
+    add_image_to_thumb_enum,
+    find_folders,
+    get_resolutions,
+    poll_mtc_armature,
+    thumbnail_saving_prop_update,
 )
 from ..old.blender_operators.common.common_functions import make_path_absolute
 from ..old.blender_operators.creation_phase.body import scale_bones
@@ -22,7 +29,6 @@ from ..old.blender_operators.creation_phase.hair import (
     load_hair,
     update_hair_shader_type,
 )
-from ..old.blender_operators.creation_phase.length import update_length
 from ..old.blender_operators.creation_phase.material import (
     load_textures,
     toggle_sss,
@@ -39,13 +45,7 @@ from ..old.blender_operators.utility_section.utility_functions import (
     refresh_shapekeys_ul,
 )
 from ..user_interface import batch_ui_lists
-from ..old.blender_backend.settings.property_functions import (
-    add_image_to_thumb_enum,
-    find_folders,
-    get_resolutions,
-    poll_mtc_armature,
-    thumbnail_saving_prop_update,
-)
+from .callback import tab_change_update
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -177,7 +177,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         soft_max=200,
         min=120,
         max=250,
-        update=update_length,
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).creation_phase.length.set(self.human_length, c),
     )
 
     head_size: FloatProperty(
@@ -364,7 +366,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     pcoll_textures: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "textures"),
-        update=load_textures,
+        update=lambda s, c: Human.from_existing(c.object).skin.textures.set(
+            s.pcoll_textures
+        ),
     )
     texture_library: EnumProperty(
         name="Texture Library",
@@ -814,6 +818,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     content_saving_object: PointerProperty(type=bpy.types.Object)
 
     show_hidden_tips: BoolProperty(default=False)
+
+    @property
+    def test_prop(self):
+        return True
 
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):

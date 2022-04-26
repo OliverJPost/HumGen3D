@@ -57,7 +57,7 @@ def get_prefs() -> bpy.types.AddonPreferences:
     Returns:
         AddonPreferences: HumGen user preferences
     """
-    addon_name = __package__.split(".")[0]
+    addon_name = "HumGen3D"
 
     return bpy.context.preferences.addons[addon_name].preferences
 

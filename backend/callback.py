@@ -10,8 +10,8 @@ This callback has the following usages:
 """
 
 import bpy
-from HumGen3D import Human, bl_info  # type: ignore
 
+from ..human.human import Human  # , bl_info  # type: ignore
 from ..old.blender_backend.preview_collections import refresh_pcoll
 from ..old.blender_operators.common.common_functions import find_human, hg_log
 from ..old.blender_operators.creation_phase.body import get_scaling_data
@@ -35,6 +35,8 @@ class HG_ACTIVATE(bpy.types.Operator):
     bl_description = "Activate HumGen"
 
     def execute(self, context):
+        from HumGen3D import bl_info
+
         sett = bpy.context.scene.HG3D
         sett.subscribed = False  # TODO is this even used?
 
@@ -66,7 +68,7 @@ def hg_callback(self):
     Runs every time the active object changes
     """
 
-    human = Human(bpy.context.object, soft_check=True)
+    human = Human.from_existing(bpy.context.object, strict_check=False)
     if not human:
         return  # return immediately when the active object is not part of a human
 
