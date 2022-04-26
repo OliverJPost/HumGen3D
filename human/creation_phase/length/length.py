@@ -1,10 +1,13 @@
 import json
+import os
+from typing import TYPE_CHECKING
+
 import bpy
 from bpy.types import Context
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from HumGen3D import Human
+
 import numpy as np
 
 
@@ -23,10 +26,13 @@ class LengthSettings:
         multiplier = ((2 * value_cm) / 100 - 4) * -1
         old_length = self._human.rig_obj.dimensions[2]
 
-        with open("stretch_bones.json", "r") as f:
+        __location__ = os.path.realpath(
+            os.path.join(os.getcwd(), os.path.dirname(__file__))
+        )
+        with open(os.path.join(__location__, "stretch_bones.json"), "r") as f:
             stretch_bone_dict = json.load(f)
 
-        bones = hg_rig.pose.bones
+        bones = self._human.rig_obj.pose.bones
 
         for stretch_bone, bone_data in stretch_bone_dict.items():
             self._set_stretch_bone_position(
@@ -34,7 +40,9 @@ class LengthSettings:
             )
 
         context.view_layer.update()  # Requires update to get new length of rig
-        hg_rig = Human.find(context.active_object).rig_obj  # Retrieve again
+        hg_rig = (
+            self._human.rig_obj
+        )  # Human.find(context.active_object).rig_obj  # Retrieve again
         new_length = hg_rig.dimensions[2]
         hg_rig.location[2] += self._origin_correction(
             old_length

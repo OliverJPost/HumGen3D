@@ -12,8 +12,8 @@ from bpy.props import (
     StringProperty,
 )
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-
 from HumGen3D import bl_info  # type: ignore
+
 from ..old.blender_backend.content.content_packs import cpacks_refresh
 from ..old.blender_backend.preview_collections import preview_collections
 from ..old.blender_operators.common.common_functions import get_prefs

@@ -5,7 +5,6 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
-from HumGen3D import bl_info  # type: ignore
 
 from ..old.blender_operators.common.common_functions import get_prefs, hg_log
 
@@ -13,6 +12,7 @@ from ..old.blender_operators.common.common_functions import get_prefs, hg_log
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack
     updates available"""
+    from HumGen3D import bl_info  # type: ignore
     pref = get_prefs()
     if pref.skip_url_request:
         return

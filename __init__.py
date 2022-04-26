@@ -33,7 +33,6 @@ import os
 import sys
 
 import bpy  # type: ignore
-from .human.human import Human
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
@@ -41,7 +40,7 @@ from bpy.app.handlers import persistent  # type: ignore
 
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import UPDATE_INFO_ITEM, check_update
-from .classes import hg_classes
+from .human.human import Human
 from .old.blender_backend.content.content_packs import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
@@ -179,6 +178,8 @@ def _initiate_ui_lists():
 
 def register():
     # RELEASE remove print statements
+    from .classes import hg_classes
+
     for cls in hg_classes:
         bpy.utils.register_class(cls)
 
@@ -199,6 +200,8 @@ def register():
 
 
 def unregister():
+    from .classes import hg_classes
+
     for cls in hg_classes:
         bpy.utils.unregister_class(cls)
 

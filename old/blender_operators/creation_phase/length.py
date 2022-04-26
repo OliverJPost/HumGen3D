@@ -31,112 +31,112 @@ class HG_RANDOM_LENGTH(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def update_length(self, context):
-    """Called by human_length prop, changes stretch bone position in order to
-    set length of the active human
-    """
-    if context.scene.HG3D.update_exception:
-        return
+# def update_length(self, context):
+#     """Called by human_length prop, changes stretch bone position in order to
+#     set length of the active human
+#     """
+#     if context.scene.HG3D.update_exception:
+#         return
 
-    hg_rig = find_human(context.active_object)
-    hg_body = hg_rig.HG.body_obj
-    sett = context.scene.HG3D
+#     hg_rig = find_human(context.active_object)
+#     hg_body = hg_rig.HG.body_obj
+#     sett = context.scene.HG3D
 
-    multiplier = ((2 * sett.human_length) / 100 - 4) * -1
-    old_length = hg_rig.dimensions[2]
+#     multiplier = ((2 * sett.human_length) / 100 - 4) * -1
+#     old_length = hg_rig.dimensions[2]
 
-    stretch_bone_dict = _get_stretch_bone_dict()
+#     stretch_bone_dict = _get_stretch_bone_dict()
 
-    bones = hg_rig.pose.bones
+#     bones = hg_rig.pose.bones
 
-    for stretch_bone, bone_data in stretch_bone_dict.items():
-        _set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
+#     for stretch_bone, bone_data in stretch_bone_dict.items():
+#         _set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
 
-    context.view_layer.update()  # Requires update to get new length of rig
-    hg_rig = find_human(context.active_object)
-    new_length = hg_rig.dimensions[2]
-    hg_rig.location[2] += origin_correction(old_length) - origin_correction(
-        new_length
-    )
+#     context.view_layer.update()  # Requires update to get new length of rig
+#     hg_rig = find_human(context.active_object)
+#     new_length = hg_rig.dimensions[2]
+#     hg_rig.location[2] += origin_correction(old_length) - origin_correction(
+#         new_length
+#     )
 
 
-def _get_stretch_bone_dict() -> dict:
-    """Dictionary to base stretch bone position on.
+# def _get_stretch_bone_dict() -> dict:
+#     """Dictionary to base stretch bone position on.
 
-    Returns:
-        dict:
-            key (str): stretch bone name (does not inlude .R, .L suffix)
-            value (dict):
-                key 'sym':
-                    value (bool): True if bones should have .R and .L suffix
-                        for symmetry
-                key 'mac_loc':
-                    value (FloatVectorProperty): local x,y,z location for stretch
-                        bones in maximum position (human at 2.0m)
-                key 'min_loc':
-                    value (FloatVectorProperty): local x,y,z location for stretch
-                        bones in minimum position (human at 1.5m)
+#     Returns:
+#         dict:
+#             key (str): stretch bone name (does not inlude .R, .L suffix)
+#             value (dict):
+#                 key 'sym':
+#                     value (bool): True if bones should have .R and .L suffix
+#                         for symmetry
+#                 key 'mac_loc':
+#                     value (FloatVectorProperty): local x,y,z location for stretch
+#                         bones in maximum position (human at 2.0m)
+#                 key 'min_loc':
+#                     value (FloatVectorProperty): local x,y,z location for stretch
+#                         bones in minimum position (human at 1.5m)
 
-    """
-    stretch_bone_dict = {
-        "stretch_upper_arm": {
-            "sym": True,
-            "max_loc": (0, 0.0255, 0),
-            "min_loc": (0, -0.051, 0),
-        },
-        "stretch_forearm": {
-            "sym": True,
-            "max_loc": (0, 0.0204, 0),
-            "min_loc": (0, -0.0408, 0),
-        },
-        "stretch_thigh": {
-            "sym": True,
-            "max_loc": (0, 0.0468, 0),
-            "min_loc": (0, -0.0936, 0),
-        },
-        "stretch_shin": {
-            "sym": True,
-            "max_loc": (0, 0.0408, 0),
-            "min_loc": (0, -0.0816, 0),
-        },
-        "stretch_foot": {
-            "sym": True,
-            "max_loc": (0, 0.0066, 0.004286),
-            "min_loc": (0, -0.0132, -0.008571),
-        },
-        "stretch_spine": {
-            "sym": False,
-            "max_loc": (0, 0.0214, 0),
-            "min_loc": (0, -0.0428, 0),
-        },
-        "stretch_spine.001": {
-            "sym": False,
-            "max_loc": (0, 0.0214, 0),
-            "min_loc": (0, -0.0428, 0),
-        },
-        "stretch_spine.002": {
-            "sym": False,
-            "max_loc": (0, 0.0107, 0),
-            "min_loc": (0, -0.0214, 0),
-        },
-        "stretch_spine.003": {
-            "sym": False,
-            "max_loc": (0, 0.0107, 0),
-            "min_loc": (0, -0.0214, 0),
-        },
-        "stretch_neck": {
-            "sym": False,
-            "max_loc": (0, 0.0108, 0),
-            "min_loc": (0, -0.0214, 0),
-        },
-        "stretch_head": {
-            "sym": False,
-            "max_loc": (0, 0.0015, 0),
-            "min_loc": (0, -0.003, 0),
-        },
-    }
+#     """
+#     stretch_bone_dict = {
+#         "stretch_upper_arm": {
+#             "sym": True,
+#             "max_loc": (0, 0.0255, 0),
+#             "min_loc": (0, -0.051, 0),
+#         },
+#         "stretch_forearm": {
+#             "sym": True,
+#             "max_loc": (0, 0.0204, 0),
+#             "min_loc": (0, -0.0408, 0),
+#         },
+#         "stretch_thigh": {
+#             "sym": True,
+#             "max_loc": (0, 0.0468, 0),
+#             "min_loc": (0, -0.0936, 0),
+#         },
+#         "stretch_shin": {
+#             "sym": True,
+#             "max_loc": (0, 0.0408, 0),
+#             "min_loc": (0, -0.0816, 0),
+#         },
+#         "stretch_foot": {
+#             "sym": True,
+#             "max_loc": (0, 0.0066, 0.004286),
+#             "min_loc": (0, -0.0132, -0.008571),
+#         },
+#         "stretch_spine": {
+#             "sym": False,
+#             "max_loc": (0, 0.0214, 0),
+#             "min_loc": (0, -0.0428, 0),
+#         },
+#         "stretch_spine.001": {
+#             "sym": False,
+#             "max_loc": (0, 0.0214, 0),
+#             "min_loc": (0, -0.0428, 0),
+#         },
+#         "stretch_spine.002": {
+#             "sym": False,
+#             "max_loc": (0, 0.0107, 0),
+#             "min_loc": (0, -0.0214, 0),
+#         },
+#         "stretch_spine.003": {
+#             "sym": False,
+#             "max_loc": (0, 0.0107, 0),
+#             "min_loc": (0, -0.0214, 0),
+#         },
+#         "stretch_neck": {
+#             "sym": False,
+#             "max_loc": (0, 0.0108, 0),
+#             "min_loc": (0, -0.0214, 0),
+#         },
+#         "stretch_head": {
+#             "sym": False,
+#             "max_loc": (0, 0.0015, 0),
+#             "min_loc": (0, -0.003, 0),
+#         },
+#     }
 
-    return stretch_bone_dict
+#     return stretch_bone_dict
 
 
 def _set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data):

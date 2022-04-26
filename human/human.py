@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from sys import platform
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
@@ -15,9 +16,11 @@ from ..old.blender_operators.common.common_functions import (
     get_prefs,
 )
 from ..old.blender_operators.creation_phase.creation import set_eevee_ao_and_strip
-
-if TYPE_CHECKING:
-    from .creation_phase import CreationPhaseSettings
+from ..old.blender_operators.creation_phase.namegen import get_name
+from .creation_phase.creation_phase import CreationPhaseSettings
+from .hair.hair import HairSettings
+from .shape_keys.shape_keys import ShapeKeySettings
+from .skin.skin import SkinSettings
 
 
 class Human:
@@ -63,10 +66,15 @@ class Human:
             context = bpy.context
 
         preset_path = os.path.join(
-            get_prefs().filepath, preset.replace("jpg", "json")
+            get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
         )
+        print(get_prefs().filepath)
+        print(preset.replace("jpg", "json"))
+        print(preset_path)
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
+
+        gender = context.scene.HG3D.gender  # TODO fix this
 
         human: Human = cls._import_human(context, gender)
         # remove broken drivers
@@ -85,16 +93,16 @@ class Human:
 
         # Set shape key values from preset
         for sk_name, sk_value in preset_data["shapekeys"].items():
-            human.shape_keys[sk_name] = sk_value
+            human.shape_keys[sk_name].value = sk_value
 
         # Set skin material from preset
         human.skin.texture._set_from_preset(preset_data["material"])
-        human.skin.nodes._set_from_preset(
-            preset_data["material"]["node_inputs"]
-        )
+        human.skin._set_from_preset(preset_data["material"]["node_inputs"])
 
         # Set eyebrows from preset
         human.hair.eyebrows._set_from_preset(preset_data["eyebrows"])
+
+        human._set_random_name()
 
         return human
 
@@ -154,11 +162,11 @@ class Human:
 
     @property
     def name(self) -> str:
-        pass  # TODO
+        return self.rig_obj.name.replace("HG_", "")
 
     @name.setter
     def name(self, name: str):
-        pass  # TODO
+        self.rig_obj.name = name
 
     @property
     def location(self) -> FloatVectorProperty:
@@ -182,9 +190,35 @@ class Human:
 
     @property
     def creation_phase(self):
-        if not self._creation_phase:
+        if not hasattr(self, "_creation_phase"):
             self._creation_phase = CreationPhaseSettings(self)
         return self._creation_phase
+
+    @property
+    def skin(self) -> SkinSettings:
+        if not hasattr(self, "_skin"):
+            self._skin = SkinSettings(self)
+        return self._skin
+
+    @property
+    def shape_keys(self) -> ShapeKeySettings:
+        if not hasattr(self, "_shape_keys"):
+            self._shape_keys = ShapeKeySettings(self)
+        return self._shape_keys
+
+    @property
+    def hair(self) -> HairSettings:
+        if not hasattr(self, "_hair"):
+            self._hair = HairSettings(self)
+        return self._hair
+
+    @property
+    def properties(self):
+        return self.rig_obj.HG
+
+    @property
+    def body_obj(self) -> Object:
+        return self.rig_obj.HG.body_obj
 
     def objects(self) -> List[Object]:
         return self.rig_obj.children + self.rig_obj
@@ -274,21 +308,39 @@ class Human:
 
         human = cls(hg_rig)
 
-        human.shape_keys._load_external()
-        human.shape_keys._set_gender_specific()
+        human.shape_keys._load_external(human, context)
+        human.shape_keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
 
         if platform == "darwin":
-            human.body.material._mac_material_fix()
+            human.skin._mac_material_fix()
 
-        human.creation_phase.body.material._set_gender_specific()
-        human.creation_phase.body.material._remove_opposite_gender_specific()
+        human.skin._set_gender_specific()
+        human.skin._remove_opposite_gender_specific()
 
         # new hair shader?
-        for hairstyle in human.hair:
-            hairstyle._add_quality_props()
 
-        for mod in human.body.modifiers:
+        human.hair._add_quality_props()
+
+        for mod in human.body_obj.modifiers:
             mod.show_expanded = False
 
         return human
+
+    def _set_random_name(self):
+        taken_names = []
+        for obj in bpy.data.objects:
+            if not obj.HG.ishuman:
+                continue
+            taken_names.append(obj.name[4:])
+
+        # generate name
+        name = get_name(self.gender)
+
+        # get new name if it's already taken
+        i = 0
+        while i < 10 and name in taken_names:
+            name = get_name(self.gender)
+            i += 1
+
+        self.name = "HG_" + name
