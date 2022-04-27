@@ -15,7 +15,6 @@ from ..common.common_functions import (
 )
 from ..common.random import set_random_active_in_pcoll
 from ..creation_phase.creation import HG_CREATION_BASE
-from ..creation_phase.face import randomize_facial_feature_categ  # type:ignore
 from ..creation_phase.finish_creation_phase import finish_creation_phase
 from ..creation_phase.hair import random_hair_color, set_hair_quality
 from ..creation_phase.material import (
@@ -121,8 +120,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         context.view_layer.objects.active = hg_rig
 
         human.creation_phase.body.randomize()
-        randomize_facial_feature_categ(
-            hg_body, "all", use_bell_curve=self.gender == "female"
+        human.creation_phase.face.randomize(
+            use_bell_curve=self.gender == "female"
         )
 
         if self.texture_resolution in ("optimised", "performance"):

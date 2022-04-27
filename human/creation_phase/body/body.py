@@ -17,7 +17,7 @@ class BodySettings:
 
     def set_experimental(self, turn_on: bool) -> None:
         sk_max_value = 2 if turn_on else 1
-        sk_min_value_ff = -2 if turn_on else 2
+        sk_min_value_ff = -2 if turn_on else -1
         sk_min_value_body = -0.5 if turn_on else 0
 
         for sk in self._human.shape_keys:

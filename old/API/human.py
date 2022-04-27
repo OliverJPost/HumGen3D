@@ -24,9 +24,6 @@ from ..blender_operators.common.common_functions import (  # type:ignore
 from ..blender_operators.creation_phase.creation import (
     HG_CREATION_BASE,
 )  # type:ignore
-from ..blender_operators.creation_phase.face import (
-    randomize_facial_feature_categ as _randomize_facial_feature_categ,
-)
 from ..blender_operators.creation_phase.finish_creation_phase import (
     finish_creation_phase as _finish_creation_phase,
 )
@@ -134,6 +131,7 @@ class HG_Human:
         if existing_human:
             self.__check_if_valid_hg_rig(existing_human)
 
+            self.human = Human.from_existing(existing_human)
             self._rig_object = existing_human
             self._body_object = existing_human.HG.body_obj
             self._gender = existing_human.HG.gender
@@ -386,26 +384,7 @@ class HG_Human:
                 "This HG_Human instance already exists in Blender."
             )
 
-        if not self._gender:
-            self._gender = random.choice(("male", "female"))
-
-        sett.gender = self._gender
-        refresh_pcoll(None, context, "humans")
-
-        if chosen_starting_human:
-            sett.pcoll_humans = chosen_starting_human
-        else:
-            sett.pcoll_humans = random.choice(
-                self.get_starting_human_options(context)
-            )
-
-        hg_rig, hg_body = HG_CREATION_BASE().create_human(context)
-
-        HG_CREATION_BASE()._give_random_name_to_human(self._gender, hg_rig)
-
-        self._rig_object = hg_rig
-        self._body_object = hg_body
-        self._key_blocks = HG_Key_Blocks(body_object=self._body_object)
+        self.human = Human.from_preset(chosen_starting_human)
 
     def randomize_body_proportions(self):
         """Randomize the body proportion sliders of this human. Only possible
@@ -432,9 +411,7 @@ class HG_Human:
         self.__check_if_rig_exists()
         self.__check_if_in_creation_phase()
 
-        _randomize_facial_feature_categ(
-            self._body_object, "all", use_bell_curve=self._gender == "female"
-        )
+        self.human.creation_phase.face.randomize()
 
     def get_hair_options(self, context=None) -> "list[str]":
         """Get a list of names of possible hairstyles for this human. Choosing
