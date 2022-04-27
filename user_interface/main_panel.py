@@ -579,7 +579,8 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         # iterate over each collapsable menu, adding shapekey sliders to them
         for prefix in prefix_dict:
-            if not prefix_dict[prefix][1]:
+            is_open = prefix_dict[prefix][1]
+            if not is_open:
                 continue
             for sk in [sk for sk in face_sks if sk.name.startswith(prefix)]:
                 prefix_dict[prefix][0].prop(
@@ -588,14 +589,14 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         # menu for all shapekeys starting with pr_ (preset) prefix
         if sett.ui_presets:
-            sks = hg_body.data.shape_keys.key_blocks
-            for sk in [sk for sk in sks if sk.name.startswith("pr_")]:
+            for sk in self.human.shape_keys.face_presets:
+                label = (
+                    sk.name.replace("pr_", "").replace("_", " ").capitalize()
+                )
                 flow_presets.prop(
                     sk,
                     "value",
-                    text=sk.name.replace("pr_", "")
-                    .replace("_", " ")
-                    .capitalize(),
+                    text=label,
                 )
 
     def _build_sk_name(self, sk_name, prefix) -> str:

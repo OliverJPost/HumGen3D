@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 from sys import platform
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Generator, List, Tuple, Union
 
 import bpy
 from bpy.props import FloatVectorProperty
@@ -38,8 +38,8 @@ class Human:
     # teeth: TeethSettings
     # eyes: EyeSettings
 
-    def __init__(self, rig_obj):
-        if not rig_obj.HG.ishuman:
+    def __init__(self, rig_obj, strict_check: bool = True):
+        if strict_check and not rig_obj.HG.ishuman:
             raise HumGenException("Did not pass a valid HG rig object")
 
         self.rig_obj = rig_obj
@@ -48,19 +48,19 @@ class Human:
     def from_existing(
         cls, existing_human: Object, strict_check: bool = True
     ) -> Human:
-        if not isinstance(existing_human, Object):
+        if strict_check and not isinstance(existing_human, Object):
             raise TypeError(
                 f"Expected a Blender object, got {type(existing_human)}"
             )
 
         rig_obj = cls.find(existing_human)
 
-        if not rig_obj and strict_check:
+        if strict_check and not rig_obj:
             raise HumGenException(
                 f"Passed object '{existing_human.name}' is not part of an existing human"
             )
 
-        return cls(rig_obj)
+        return cls(rig_obj, strict_check=strict_check)
 
     @classmethod
     def from_preset(
@@ -156,8 +156,17 @@ class Human:
     def __repr__(self):
         pass  # TODO
 
-    def __nonzero__(self) -> bool:
-        return self.rig_obj
+    def __bool__(self) -> bool:
+        return bool(self.rig_obj)
+
+    @property
+    def objects(self) -> Generator[Object]:
+        yield self.rig_obj
+        for child in self.rig_obj.children:
+            yield child
+
+            for subchild in child.children:
+                yield subchild
 
     @property
     def gender(self) -> str:
@@ -224,8 +233,6 @@ class Human:
     def body_obj(self) -> Object:
         return self.rig_obj.HG.body_obj
 
-    def objects(self) -> List[Object]:
-        return self.rig_obj.children + self.rig_obj
 
     def delete(self) -> None:
         pass  # TODO
