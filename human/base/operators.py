@@ -2,9 +2,7 @@ import bpy
 
 from ...old.blender_operators.common.common_functions import find_human
 from ...old.blender_operators.common.random import set_random_active_in_pcoll
-from ...old.blender_operators.creation_phase.material import (
-    randomize_iris_color,
-)
+
 from ..human import Human
 
 
@@ -58,7 +56,7 @@ class HG_RANDOM(bpy.types.Operator):
             # where face_all does all facial features
             human.creation_phase.face.randomize(ff_subcateg)
         elif random_type == "iris_color":
-            randomize_iris_color(hg_rig)
+            human.eyes.randomize()
 
         return {"FINISHED"}
 

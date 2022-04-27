@@ -22,6 +22,7 @@ from ..old.blender_operators.creation_phase.creation import (
 )
 from ..old.blender_operators.creation_phase.namegen import get_name
 from .creation_phase.creation_phase import CreationPhaseSettings
+from .eyes.eyes import EyeSettings
 from .hair.hair import HairSettings
 from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
@@ -220,6 +221,12 @@ class Human:
         return self._shape_keys
 
     @property
+    def eyes(self) -> EyeSettings:
+        if not hasattr(self, "_eyes"):
+            self._eyes = EyeSettings(self)
+        return self._eyes
+
+    @property
     def hair(self) -> HairSettings:
         if not hasattr(self, "_hair"):
             self._hair = HairSettings(self)
@@ -232,7 +239,6 @@ class Human:
     @property
     def body_obj(self) -> Object:
         return self.rig_obj.HG.body_obj
-
 
     def delete(self) -> None:
         pass  # TODO
