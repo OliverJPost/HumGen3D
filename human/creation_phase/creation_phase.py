@@ -6,8 +6,8 @@ from .body.body import BodySettings
 from .face.face import FaceKeys
 from .length.length import LengthSettings
 
-# if TYPE_CHECKING:
-#     from HumGen3D import Human
+if TYPE_CHECKING:
+    from HumGen3D import Human
 
 
 class CreationPhaseSettings:

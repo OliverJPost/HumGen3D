@@ -1,8 +1,5 @@
 import bpy
 from ...old.blender_operators.common.random import set_random_active_in_pcoll
-from ...old.blender_operators.creation_phase.face import (
-    randomize_facial_feature_categ,
-)
 from ...old.blender_operators.creation_phase.material import (
     randomize_iris_color,
     randomize_skin_shader,
@@ -59,8 +56,7 @@ class HG_RANDOM(bpy.types.Operator):
                 5:
             ]  # facial subcategories follow the pattern face_{category}
             # where face_all does all facial features
-            hg_body = hg_rig.HG.body_obj
-            randomize_facial_feature_categ(hg_body, ff_subcateg)
+            human.creation_phase.face.randomize(ff_subcateg)
         elif random_type == "iris_color":
             randomize_iris_color(hg_rig)
 

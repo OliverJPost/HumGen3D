@@ -8,9 +8,6 @@ from typing import Any
 import bpy
 
 from ...blender_backend.preview_collections import refresh_pcoll
-from ..creation_phase.face import (
-    randomize_facial_feature_categ,  # type: ignore
-)
 from ..creation_phase.material import (
     randomize_iris_color,
     randomize_skin_shader,
