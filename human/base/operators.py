@@ -1,10 +1,10 @@
 import bpy
+
+from ...old.blender_operators.common.common_functions import find_human
 from ...old.blender_operators.common.random import set_random_active_in_pcoll
 from ...old.blender_operators.creation_phase.material import (
     randomize_iris_color,
-    randomize_skin_shader,
 )
-from ...old.blender_operators.common.common_functions import find_human
 from ..human import Human
 
 
@@ -50,7 +50,7 @@ class HG_RANDOM(bpy.types.Operator):
         ):
             set_random_active_in_pcoll(context, sett, random_type)
         elif random_type == "skin":
-            randomize_skin_shader(hg_rig.HG.body_obj, hg_rig.HG.gender)
+            human.skin.randomize()
         elif random_type.startswith("face"):
             ff_subcateg = random_type[
                 5:
