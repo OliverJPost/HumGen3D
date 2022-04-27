@@ -685,28 +685,25 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         sett = self.sett
-        hg_body = self.hg_rig.HG.body_obj
-        mat = hg_body.data.materials[0]
-        nodes = mat.node_tree.nodes
 
         if "hg_baked" in self.hg_rig:
             box.label(text="Textures are baked", icon="INFO")
             return
 
         self._draw_texture_subsection(sett, box)
-        self._draw_main_skin_subsection(sett, box, nodes)
-        self._draw_light_dark_subsection(sett, box, nodes)
-        self._draw_freckles_subsection(sett, box, nodes)
-        self._draw_beautyspots_subsection(sett, box, nodes)
-        self._draw_age_subsection(sett, box, nodes)
+        self._draw_main_skin_subsection(sett, box)
+        self._draw_light_dark_subsection(sett, box)
+        self._draw_freckles_subsection(sett, box)
+        self._draw_beautyspots_subsection(sett, box)
+        self._draw_age_subsection(sett, box)
 
         gender = self.hg_rig.HG.gender
         if gender == "female":
-            self._draw_makeup_subsection(sett, box, nodes)
+            self._draw_makeup_subsection(sett, box)
         else:
-            self._draw_beard_shadow_subsection(sett, box, nodes)
+            self._draw_beard_shadow_subsection(sett, box)
 
-    def _draw_main_skin_subsection(self, sett, box, nodes):
+    def _draw_main_skin_subsection(self, sett, box):
         """Collapsable section with main sliders of skin effects
 
         Args:
@@ -728,7 +725,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         ).random_type = "skin"
 
         col.separator()
-
+        nodes = self.human.skin.nodes
         tone_node = nodes["Skin_tone"]
         col.prop(
             tone_node.inputs[1], "default_value", text="Tone", slider=True
@@ -788,7 +785,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         )
         col.prop(sett, "texture_library", text="Library")
 
-    def _draw_light_dark_subsection(self, sett, box, nodes):
+    def _draw_light_dark_subsection(self, sett, box):
         """Collapsable section with sliders for dark and light areas on the skin
 
         Args:
@@ -802,6 +799,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         )
         if not is_open:
             return
+
+        nodes = self.human.skin.nodes
 
         light_hsv = nodes["Lighten_hsv"]
         dark_hsv = nodes["Darken_hsv"]
@@ -821,7 +820,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             slider=True,
         )
 
-    def _draw_age_subsection(self, sett, box, nodes):
+    def _draw_age_subsection(self, sett, box):
         """Collapsable section with sliders age effects
 
         Args:
@@ -836,6 +835,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         hg_body = self.hg_rig.HG.body_obj
         sk = hg_body.data.shape_keys.key_blocks
 
+        nodes = self.human.skin.nodes
+
         age_sk = sk["age_old.Transferred"]
         age_node = nodes["HG_Age"]
 
@@ -846,7 +847,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             age_node.inputs[1], "default_value", text="Wrinkles", slider=True
         )
 
-    def _draw_freckles_subsection(self, sett, box, nodes):
+    def _draw_freckles_subsection(self, sett, box):
         """Collapsable section with sliders for freckles
 
         Args:
@@ -859,6 +860,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         )
         if not is_open:
             return
+
+        nodes = self.human.skin.nodes
 
         freckles_node = nodes["Freckles_control"]
         splotches_node = nodes["Splotches_control"]
@@ -878,7 +881,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             slider=True,
         )
 
-    def _draw_makeup_subsection(self, sett, box, nodes):
+    def _draw_makeup_subsection(self, sett, box):
         """Collapsable section with sliders for makeup
 
         Args:
@@ -890,6 +893,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         is_open, boxbox = draw_sub_spoiler(box, sett, "makeup_ui", "Makeup")
         if not is_open:
             return
+
+        nodes = self.human.skin.nodes
 
         makeup_node = nodes["Gender_Group"]
 
@@ -985,7 +990,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         return flow
 
-    def _draw_beautyspots_subsection(self, sett, box, nodes):
+    def _draw_beautyspots_subsection(self, sett, box):
         """Collapsable section with sliders for beautyspots
 
         Args:
@@ -1005,6 +1010,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not is_open:
             return
 
+        nodes = self.human.skin.nodes
+
         bs_node = nodes["BS_Control"]
         opacity_node = nodes["BS_Opacity"]
 
@@ -1021,7 +1028,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         )
         col.prop(bs_node.inputs[1], "default_value", text="Seed [Randomize]")
 
-    def _draw_beard_shadow_subsection(self, sett, box, nodes):
+    def _draw_beard_shadow_subsection(self, sett, box):
         """Collapsable section with sliders for beard shadow
 
         Args:
@@ -1034,6 +1041,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         )
         if not is_open:
             return
+
+        nodes = self.human.skin.nodes
 
         beard_node = nodes["Gender_Group"]
 

@@ -72,3 +72,11 @@ class PropCollection:
     @bpy_only
     def values(self):
         return self._collection.values()
+
+    @bpy_only
+    def new(self, *items):
+        self._collection.new(*items)
+
+    @bpy_only
+    def remove(self, *items):
+        self._collection.remove(*items)

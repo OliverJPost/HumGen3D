@@ -10,12 +10,70 @@ from bpy.types import Context, Material, ShaderNode, bpy_prop_collection
 
 from ...old.blender_backend.preview_collections import refresh_pcoll
 from ...old.blender_operators.common.common_functions import (
+    HumGenException,
     ShowMessageBox,
     get_prefs,
 )
+from ..base.prop_collection import PropCollection
+
+
+def create_node_property(node_name, input_name):
+    @property
+    def _property_function(self) -> float:
+        tone_node = self.nodes[node_name]
+        print("getting")
+        return tone_node.inputs[input_name].default_value
+
+    @_property_function.setter
+    def _property_function(self, value: float):
+        tone_node = self.nodes[node_name]
+        print("setting to", value)
+        tone_node.inputs[input_name].default_value = value
+
+    return _property_function
+
+
+class MaleSkin:
+    mustache_shadows = create_node_property("Gender_Group", 2)
+    beard_shadow = create_node_property("Gender_Group", 3)
+
+    def __init__(self, nodes):
+        self.nodes = nodes
+
+
+class FemaleSkin:
+    foundation_amount = create_node_property(
+        "Gender_Group", "Foundation Amount"
+    )
+    foundation_color = create_node_property("Gender_Group", "Foundation Color")
+    blush_opacity = create_node_property("Gender_Group", "Blush Opacity")
+    blush_color = create_node_property("Gender_Group", "Blush Color")
+    eyebrow_opacity = create_node_property("Gender_Group", "Eyebrow Opacity")
+    eyebrow_color = create_node_property("Gender_Group", "Eyebrow Color")
+    lipstick_color = create_node_property("Gender_Group", "Lipstick Color")
+    lipstick_opacity = create_node_property("Gender_Group", "Lipstick Opacity")
+    eyeliner_opacity = create_node_property("Gender_Group", "Eyeliner Opacity")
+    eyeliner_color = create_node_property("Gender_Group", "Eyeliner Color")
+
+    def __init__(self, nodes):
+        self.nodes = nodes
 
 
 class SkinSettings:
+    tone = create_node_property("Skin_tone", 1)
+    redness = create_node_property("Skin_tone", 2)
+    saturation = create_node_property("Skin_tone", 3)
+    normal_strength = create_node_property("Normal Map", 0)
+    roughness_multiplier = create_node_property("R_Multiply", 1)
+    light_areas = create_node_property("Lighten_hsv", "Value")
+    dark_areas = create_node_property("Darken_hsv", "Value")
+    skin_sagging = create_node_property("HG_Age", 1)
+    freckles = create_node_property("Freckles_control", "Pos2")
+    splotches = create_node_property("Splotches_control", "Pos2")
+    beautyspots_amount = create_node_property("BS_Control", 2)
+    beautyspots_opacity = create_node_property("BS_Opacity", 1)
+    beautyspots_seed = create_node_property("BS_Control", 1)
+
     def __init__(self, human):
         self._human = human
 
@@ -40,6 +98,16 @@ class SkinSettings:
     @property
     def material(self) -> Material:
         return self._human.body_obj.data.materials[0]
+
+    @property
+    def gender_specific(self):
+        if not hasattr(self, "_gender_specific"):
+            if self._human.gender == "male":
+                gender_specific_class = MaleSkin
+            else:
+                gender_specific_class = FemaleSkin
+            self._gender_specific = gender_specific_class(self.nodes)
+        return self._gender_specific
 
     def _mac_material_fix(self):
         self.links.new(
