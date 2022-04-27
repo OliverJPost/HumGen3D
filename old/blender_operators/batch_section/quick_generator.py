@@ -17,7 +17,6 @@ from ..common.random import set_random_active_in_pcoll
 from ..creation_phase.creation import HG_CREATION_BASE
 from ..creation_phase.finish_creation_phase import finish_creation_phase
 from ..creation_phase.hair import random_hair_color, set_hair_quality
-from ..creation_phase.material import randomize_iris_color
 from ..finalize_phase.clothing import randomize_clothing_colors  # type:ignore
 from ..finalize_phase.clothing_loading import set_clothing_texture_resolution
 from ..utility_section.baking import (  # type:ignore
@@ -125,7 +124,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             self._set_body_texture_resolution(sett, hg_body)
 
         human.skin.randomize()
-        randomize_iris_color(hg_rig)
+        human.eyes.randomize()
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, "hair")
