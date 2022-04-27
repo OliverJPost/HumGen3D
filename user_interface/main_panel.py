@@ -1480,12 +1480,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         row.alignment = "CENTER"
         row.label(text="Skin Settings", icon_value=hg_icons["skin"].icon_id)
 
-        nodes = self.hg_rig.HG.body_obj.data.materials[0].node_tree.nodes
-
-        self._draw_main_skin_subsection(sett, boxbox, nodes)
+        self._draw_main_skin_subsection(sett, boxbox)
 
         if self.hg_rig.HG.gender == "female":
-            self._draw_makeup_subsection(sett, boxbox, nodes)
+            self._draw_makeup_subsection(sett, boxbox)
 
         if not self.pref.hair_section == "creation":
             return
