@@ -27,9 +27,6 @@ from ..blender_operators.creation_phase.creation import (
 from ..blender_operators.creation_phase.finish_creation_phase import (
     finish_creation_phase as _finish_creation_phase,
 )
-from ..blender_operators.creation_phase.material import (
-    randomize_skin_shader as _randomize_skin_shader,
-)
 
 
 class HG_Key_Blocks:
@@ -461,7 +458,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        _randomize_skin_shader(self._body_object, self._gender)
+        self.human.skin.randomize()
 
     def finish_creation_phase(self, context=None):
         """Works the same as the Finish Creation Phase button in the GUI. Needed

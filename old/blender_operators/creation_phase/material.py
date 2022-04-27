@@ -152,42 +152,6 @@ def set_gender_specific_shader(hg_body, gender):
         gender_specific_node.node_tree = male_node_group
 
 
-def randomize_skin_shader(hg_body, gender):
-    mat = hg_body.data.materials[0]
-    nodes = mat.node_tree.nodes
-
-    # Tone, redness, saturation
-    for input_idx in [1, 2, 3]:
-        if f"skin_tone_default_{input_idx}" in mat:
-            default_value = mat[f"skin_tone_default_{input_idx}"]
-        else:
-            default_value = nodes["Skin_tone"].inputs[input_idx].default_value
-            mat[f"skin_tone_default_{input_idx}"] = default_value
-
-        new_value = random.uniform(default_value * 0.8, default_value * 1.2)
-        nodes["Skin_tone"].inputs[input_idx].default_value = new_value
-
-    probability_list = [0, 0, 0, 0, 0, 0, 0.2, 0.3, 0.5]
-
-    # Freckles and splotches
-    nodes["Freckles_control"].inputs[3].default_value = random.choice(
-        probability_list
-    )
-    nodes["Splotches_control"].inputs[3].default_value = random.choice(
-        probability_list
-    )
-
-    # Age
-    age_value = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5]) * 2
-    hg_body.data.shape_keys.key_blocks["age_old.Transferred"].value = age_value
-    nodes["HG_Age"].inputs[1].default_value = age_value * 6
-
-    if gender == "male":
-        beard_shadow_value = random.choice(probability_list) * 2
-        nodes["Gender_Group"].inputs[2].default_value = beard_shadow_value
-        nodes["Gender_Group"].inputs[3].default_value = beard_shadow_value
-
-
 def toggle_sss(self, context):
     """
     Turns subsurface on and off

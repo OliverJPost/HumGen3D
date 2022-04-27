@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 from pathlib import Path
 from typing import List
 
@@ -8,10 +9,7 @@ import bpy
 from bpy.types import Context, Material, ShaderNode, bpy_prop_collection
 
 from ...old.blender_backend.preview_collections import refresh_pcoll
-from ...old.blender_operators.common.common_functions import (
-    ShowMessageBox,
-    get_prefs,
-)
+from ...old.blender_operators.common.common_functions import ShowMessageBox, get_prefs
 
 
 class SkinSettings:
@@ -79,6 +77,42 @@ class SkinSettings:
                 if input_name.isnumeric():
                     input_name = int(input_name)
                 node.inputs[input_name].default_value = value
+
+
+    def randomize(self):
+        mat = self.material
+        nodes = self.nodes
+
+        # Tone, redness, saturation
+        for input_idx in [1, 2, 3]:
+            if f"skin_tone_default_{input_idx}" in mat:
+                default_value = mat[f"skin_tone_default_{input_idx}"]
+            else:
+                default_value = nodes["Skin_tone"].inputs[input_idx].default_value
+                mat[f"skin_tone_default_{input_idx}"] = default_value
+
+            new_value = random.uniform(default_value * 0.8, default_value * 1.2)
+            nodes["Skin_tone"].inputs[input_idx].default_value = new_value
+
+        probability_list = [0, 0, 0, 0, 0, 0, 0.2, 0.3, 0.5]
+
+        # Freckles and splotches
+        nodes["Freckles_control"].inputs[3].default_value = random.choice(
+            probability_list
+        )
+        nodes["Splotches_control"].inputs[3].default_value = random.choice(
+            probability_list
+        )
+
+        # Age
+        age_value = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5]) * 2
+        self._human.shape_keys["age_old.Transferred"].value = age_value
+        nodes["HG_Age"].inputs[1].default_value = age_value * 6
+
+        if self._human.gender == "male":
+            beard_shadow_value = random.choice(probability_list) * 2
+            nodes["Gender_Group"].inputs[2].default_value = beard_shadow_value
+            nodes["Gender_Group"].inputs[3].default_value = beard_shadow_value
 
 
 class TextureSettings:

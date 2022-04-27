@@ -8,11 +8,6 @@ from typing import Any
 import bpy
 
 from ...blender_backend.preview_collections import refresh_pcoll
-from ..creation_phase.material import (
-    randomize_iris_color,
-    randomize_skin_shader,
-)
-from .common_functions import find_human
 
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
