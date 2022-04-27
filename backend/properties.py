@@ -28,11 +28,6 @@ from ..old.blender_operators.creation_phase.hair import (
     load_hair,
     update_hair_shader_type,
 )
-from ..old.blender_operators.creation_phase.material import (
-    load_textures,
-    toggle_sss,
-    toggle_underwear,
-)
 from ..old.blender_operators.finalize_phase.clothing import load_pattern
 from ..old.blender_operators.finalize_phase.clothing_loading import load_outfit
 from ..old.blender_operators.finalize_phase.expression import load_expression
@@ -418,7 +413,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("off", "Off", "", 1),
         ],
         default="off",
-        update=toggle_sss,
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).skin.set_subsurface_scattering(s.skin_sss == "on", c),
     )
 
     underwear_switch: EnumProperty(
@@ -428,7 +425,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("off", "Off", "", 1),
         ],
         default="on",
-        update=toggle_underwear,
+        update=lambda s, c: Human.from_existing(c.object).skin.set_underwear(
+            s.underwear_switch == "on", c
+        ),
     )
 
     ####### batch mode ###########

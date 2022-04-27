@@ -9,7 +9,10 @@ import bpy
 from bpy.types import Context, Material, ShaderNode, bpy_prop_collection
 
 from ...old.blender_backend.preview_collections import refresh_pcoll
-from ...old.blender_operators.common.common_functions import ShowMessageBox, get_prefs
+from ...old.blender_operators.common.common_functions import (
+    ShowMessageBox,
+    get_prefs,
+)
 
 
 class SkinSettings:
@@ -78,7 +81,6 @@ class SkinSettings:
                     input_name = int(input_name)
                 node.inputs[input_name].default_value = value
 
-
     def randomize(self):
         mat = self.material
         nodes = self.nodes
@@ -88,10 +90,14 @@ class SkinSettings:
             if f"skin_tone_default_{input_idx}" in mat:
                 default_value = mat[f"skin_tone_default_{input_idx}"]
             else:
-                default_value = nodes["Skin_tone"].inputs[input_idx].default_value
+                default_value = (
+                    nodes["Skin_tone"].inputs[input_idx].default_value
+                )
                 mat[f"skin_tone_default_{input_idx}"] = default_value
 
-            new_value = random.uniform(default_value * 0.8, default_value * 1.2)
+            new_value = random.uniform(
+                default_value * 0.8, default_value * 1.2
+            )
             nodes["Skin_tone"].inputs[input_idx].default_value = new_value
 
         probability_list = [0, 0, 0, 0, 0, 0, 0.2, 0.3, 0.5]
@@ -113,6 +119,32 @@ class SkinSettings:
             beard_shadow_value = random.choice(probability_list) * 2
             nodes["Gender_Group"].inputs[2].default_value = beard_shadow_value
             nodes["Gender_Group"].inputs[3].default_value = beard_shadow_value
+
+    def set_subsurface_scattering(self, turn_on: bool, context=None):
+        if not context:
+            context = bpy.context
+
+        if context.scene.HG3D.update_exception:
+            return
+
+        principled_bsdf = next(
+            node for node in self.nodes if node.type == "BSDF_PRINCIPLED"
+        )
+
+        principled_bsdf.inputs["Subsurface"].default_value = (
+            0.015 if turn_on else 0
+        )
+
+    def set_underwear(self, turn_on: bool, context: Context = None):
+        if not context:
+            context = bpy.context
+
+        if context.scene.HG3D.update_exception:
+            return
+
+        underwear_node = self.nodes.get("Underwear_Opacity")
+
+        underwear_node.inputs[1].default_value = 1 if turn_on else 0
 
 
 class TextureSettings:
