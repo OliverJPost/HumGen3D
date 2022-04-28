@@ -4,14 +4,14 @@ functions used by properties
 
 import os
 from pathlib import Path
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preference_func import get_prefs
 
-import bpy  # type:ignore
+import bpy
+from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type:ignore
 
-from ...blender_operators.common.common_functions import (
-    ShowMessageBox,
+from ..old.blender_operators.common.common_functions import (
     find_human,
-    get_prefs,
-    hg_log,
 )
 
 

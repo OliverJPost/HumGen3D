@@ -2,21 +2,21 @@ import json
 import os
 
 import bpy
-
-from ..old.blender_backend.preview_collections import preview_collections
-from ..old.blender_operators.common.common_functions import get_prefs
-from ..old.blender_operators.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
-    get_batch_tips_from_context,  # type:ignore
+from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preview_collections import preview_collections
+from HumGen3D.user_interface.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
+    get_batch_tips_from_context,
 )
-from ..old.blender_operators.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
+from HumGen3D.user_interface.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
-from ..old.blender_operators.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
+from HumGen3D.user_interface.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
     get_extras_menu_tips_from_context,
 )
-from ..old.blender_operators.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
+from HumGen3D.user_interface.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
+
 from .panel_functions import in_creation_phase
 
 lorum_ipsum = """

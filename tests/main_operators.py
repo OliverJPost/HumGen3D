@@ -1,9 +1,7 @@
 import random
 
 import bpy
-
-from ..old.blender_operators.common.common_functions import hg_log
-from ..old.blender_operators.finalize_phase.pose import HG_RIGIFY
+from HumGen3D.backend.logging import hg_log
 
 
 class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):

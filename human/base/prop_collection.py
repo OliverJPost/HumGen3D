@@ -1,8 +1,7 @@
 import functools
 
 from bpy.types import bpy_prop_collection
-
-from ...old.blender_operators.common.common_functions import HumGenException
+from HumGen3D.human.base.exceptions import HumGenException
 
 
 def bpy_only(func):

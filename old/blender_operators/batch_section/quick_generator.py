@@ -4,21 +4,14 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
+from ....backend.preview_collections import refresh_pcoll
 from ....human.human import Human
-from ...blender_backend.preview_collections import refresh_pcoll
-from ..common.common_functions import (
-    apply_shapekeys,
-    hg_delete,
-    hg_log,
-    toggle_hair_visibility,
-)
 from ..common.random import set_random_active_in_pcoll
-from ..creation_phase.creation import HG_CREATION_BASE
-from ..creation_phase.finish_creation_phase import finish_creation_phase
 from ..creation_phase.hair import random_hair_color, set_hair_quality
-from ..finalize_phase.clothing import randomize_clothing_colors  # type:ignore
-from ..finalize_phase.clothing_loading import set_clothing_texture_resolution
 from ..utility_section.baking import (  # type:ignore
     add_image_node,
     bake_texture,
@@ -30,7 +23,7 @@ from ..utility_section.baking import (  # type:ignore
 from .batch_functions import length_from_bell_curve
 
 
-class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
+class HG_QUICK_GENERATE(bpy.types.Operator):
     """Operator to create a human from start to finish in one go. Includes
     properties to determine the quality of the human, as well as properties that
     determine what the human should look like, wear, expression etc.
@@ -131,11 +124,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
         set_hair_quality(context, self.hair_type, self.hair_quality)
         random_hair_color(hg_body)
 
-        toggle_hair_visibility(hg_body, show=False)
+        human.hair.set_children_hide_state(False)
 
         sett.human_length = int(length_from_bell_curve(sett, self.gender))
 
-        finish_creation_phase(None, context, hg_rig, hg_body)
+        human.creation_phase.finish(context)
 
         #### Finalize Phase #####
 
@@ -158,8 +151,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
             for child in [
                 c for c in hg_rig.children if "cloth" in c or "shoe" in c
             ]:
-                randomize_clothing_colors(context, child)
-                set_clothing_texture_resolution(child, self.texture_resolution)
+                pass
+                # FIXME randomize_clothing_colors(context, child)
+                # FIXME set_clothing_texture_resolution(child, self.texture_resolution)
 
         if self.pose_type != "a_pose":
             self._set_pose(context, sett, self.pose_type)
@@ -260,7 +254,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         if self.delete_backup:
             self._delete_backup_human(hg_rig)
-
+        human = Human.from_existing(hg_rig)
         hg_objects = [
             hg_rig,
         ]
@@ -272,9 +266,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         # Disconnect hair to prevent it shifting during mesh modification
         context.view_layer.objects.active = hg_body
-        toggle_hair_visibility(hg_body, True)
+        human.hair.set_children_hide_state(True)
         bpy.ops.particle.disconnect_hair(all=True)
-        toggle_hair_visibility(hg_body, False)
+        human.hair.set_children_hide_state(False)
 
         for obj in hg_objects:
             if self.apply_clothing_geometry_masks and self.apply_shapekeys:
@@ -297,9 +291,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
 
         # Reconnect hair, so it follows the body again
         context.view_layer.objects.active = hg_body
-        toggle_hair_visibility(hg_body, True)
+        human.hair.set_children_hide_state(True)
         bpy.ops.particle.connect_hair(all=True)
-        toggle_hair_visibility(hg_body, False)
+        human.hair.set_children_hide_state(False)
 
     def _remove_redundant_vertex_groups(self, obj):
         vg_remove_list = [

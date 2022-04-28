@@ -2,15 +2,15 @@ import os
 from pathlib import Path
 from sys import platform
 
-import addon_utils  # type: ignore
+import addon_utils
+from HumGen3D.backend.preference_func import get_prefs  # type: ignore
 import bpy
 from HumGen3D import bl_info
 
 from ..human.human import Human  # type: ignore
-from ..old.blender_backend.preview_collections import preview_collections
+from ..backend.preview_collections import preview_collections
 from ..old.blender_operators.common.common_functions import (
     find_human,
-    get_prefs,
     is_batch_result,
 )
 from ..old.data.colors import color_dict

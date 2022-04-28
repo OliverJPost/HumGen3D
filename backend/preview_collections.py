@@ -6,14 +6,12 @@ population of them
 import os
 from pathlib import Path
 
-import bpy  # type: ignore
+import bpy
 
-from ..blender_operators.common.common_functions import (
-    HumGenException,
-    find_human,
-    get_prefs,
-    hg_log,
-)
+from ..human.base.exceptions import HumGenException  # type: ignore
+from ..old.blender_operators.common.common_functions import find_human
+from .logging import hg_log
+from .preference_func import get_prefs
 
 preview_collections = {}  # global dictionary of all pcolls
 

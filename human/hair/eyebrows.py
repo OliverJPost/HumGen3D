@@ -1,6 +1,7 @@
 import bpy
+from bpy.types import Context
+from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
-from ...old.blender_operators.common.common_functions import ShowMessageBox
 from ..base.prop_collection import PropCollection
 
 
@@ -60,3 +61,61 @@ class EyebrowSettings:
             )
         else:
             preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
+
+    def remove_unused(self, context: Context = None, _internal: bool = False):
+        if not context:
+            context = bpy.context
+
+        remove_list = [
+            mod.particle_system.name
+            for mod in self.modifiers
+            if not mod.show_render
+        ]
+
+        if _internal and len(self.modifiers) == len(remove_list):
+            ShowMessageBox(
+                message="""All eyebrow systems are hidden (render),
+                        please manually remove particle systems you aren't using
+                        """
+            )
+            return
+
+        # TODO without bpy.ops
+        old_active = context.view_layer.objects.active
+        context.view_layer.objects.active = self._human.body_obj
+        for remove_name in remove_list:
+            ps_idx = self.particle_systems.find(remove_name)
+            self.particle_systems.active_index = ps_idx[0]
+            bpy.ops.object.particle_system_remove()
+        context.view_layer.objects.active = old_active
+
+    def _switch_eyebrows(self, forward=True, report=False):
+        eyebrows = self.modifiers
+        if not eyebrows:
+            if report:
+                self.report({"WARNING"}, "No eyebrow particle systems found")
+            return
+        if len(eyebrows) == 1:
+            if report:
+                self.report({"WARNING"}, "Only one eyebrow system found")
+            return
+
+        idx, current_ps = next(
+            (
+                (i, mod)
+                for i, mod in enumerate(eyebrows)
+                if mod.show_viewport or mod.show_render
+            ),
+            0,
+        )
+
+        next_idx = idx + 1 if forward else idx - 1
+        if next_idx >= len(eyebrows) or next_idx < 0:
+            next_idx = 0
+
+        next_ps = eyebrows[next_idx]
+        next_ps.show_viewport = next_ps.show_render = True
+
+        for ps in eyebrows:
+            if ps != next_ps:
+                ps.show_viewport = ps.show_render = False

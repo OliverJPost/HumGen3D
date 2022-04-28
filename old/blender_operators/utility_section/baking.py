@@ -6,16 +6,15 @@ Texture baking operators
 
 import os
 from pathlib import Path
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preference_func import get_prefs
 
-import bpy  # type: ignore
+import bpy
+from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
 
 from ..common.common_functions import (
-    HumGenException,
-    ShowMessageBox,
     find_human,
-    get_prefs,
-    hg_log,
-    print_context,
 )
 
 
@@ -398,3 +397,16 @@ def get_bake_export_path(sett, folder_name) -> str:
             os.makedirs(export_path)
 
     return export_path
+
+
+def make_path_absolute(key):
+    """Makes sure the passed path is absolute
+
+    Args:
+        key (str): path
+    """
+
+    props = bpy.context.scene.HG3D
+    sane_path = lambda p: os.path.abspath(bpy.path.abspath(p))
+    if key in props and props[key].startswith("//"):
+        props[key] = sane_path(props[key])

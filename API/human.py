@@ -3,30 +3,17 @@ import os
 import random
 import subprocess
 import time
+from ..backend.logging import hg_log
 
 import bpy
+from ..human.base.exceptions import HumGenException
 from mathutils import Euler, Vector
 
-from ...human.human import Human  # type:ignore
-from ...user_interface.panel_functions import (
+from ..human.human import Human  # type:ignore
+from ..user_interface.panel_functions import (
     in_creation_phase as _in_creation_phase,
 )
-from ..blender_backend.preview_collections import refresh_pcoll
-
-# TODO replace .. with HumGen3D
-from ..blender_operators.common.common_functions import (  # type:ignore
-    HumGenException,
-    get_addon_root,
-    get_prefs,
-    hg_log,
-    toggle_hair_visibility,
-)
-from ..blender_operators.creation_phase.creation import (
-    HG_CREATION_BASE,
-)  # type:ignore
-from ..blender_operators.creation_phase.finish_creation_phase import (
-    finish_creation_phase as _finish_creation_phase,
-)
+from ..backend.preview_collections import refresh_pcoll
 
 
 class HG_Key_Blocks:
@@ -475,9 +462,7 @@ class HG_Human:
             HumGenException: When this human does not yet exist in Blender.
         """
         context = self.__check_passed_context(context)
-        _finish_creation_phase(
-            None, context, self._rig_object, self._body_object
-        )
+        self.human.creation_phase.finish(context)
         self._rig_object.HG.phase = "clothing"
 
     def set_hair_visibility(self, set_visible):

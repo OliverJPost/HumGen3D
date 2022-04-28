@@ -11,29 +11,14 @@ import time
 from pathlib import Path
 
 import bpy
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.memory_management import hg_delete
 
-from ...API import HG_Batch_Generator, HG_Human
-from .batch_functions import (
-    get_batch_marker_list,
-    has_associated_human,
-)
-from .quick_generator import (
-    toggle_hair_visibility,
-)
-from ..utility_section.baking import (
-    get_bake_export_path,
-)  # type:ignore
-from ....user_interface.batch_ui_lists import batch_uilist_refresh
-from ..common.common_functions import (
-    get_prefs,
-    hg_delete,
-    hg_log,
-    show_message,
-)
+from ....API import HG_Batch_Generator
 from ..creation_phase.creation import (
-    HG_CREATION_BASE,
     set_eevee_ao_and_strip,
-)
+)  # HG_CREATION_BASE,
+from .batch_functions import get_batch_marker_list, has_associated_human
 
 
 def status_text_callback(header, context):
@@ -57,7 +42,7 @@ def status_text_callback(header, context):
     layout.separator_spacer()
 
 
-class HG_BATCH_GENERATE(bpy.types.Operator, HG_CREATION_BASE):
+class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
     """
     clears searchfield INACTIVE
     """

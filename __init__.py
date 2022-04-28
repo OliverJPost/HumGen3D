@@ -19,7 +19,7 @@ bl_info = {
     "name": "Human Generator 3D",
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",
-    "blender": (2, 83, 0),
+    "blender": (2, 93, 0),
     "version": (3, 0, 2),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "http://humgen3d.com",
@@ -29,27 +29,41 @@ bl_info = {
 }
 
 
+import importlib
+import inspect
+import itertools
 import os
 import sys
+from pathlib import Path
 
 import bpy  # type: ignore
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent  # type: ignore
+from bpy.types import (
+    AddonPreferences,
+    Header,
+    Menu,
+    Operator,
+    Panel,
+    PropertyGroup,
+    UIList,
+)
 
-from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
-from .backend.update import UPDATE_INFO_ITEM, check_update
-from .human.human import Human
-from .old.blender_backend.content.content_packs import (
+from HumGen3D.backend.content_packs.content_packs import (
     HG_CONTENT_PACK,
     HG_INSTALLPACK,
     cpacks_refresh,
 )
-from .old.blender_backend.content.custom_content_packs import (
+from HumGen3D.backend.content_packs.custom_content_packs import (
     CUSTOM_CONTENT_ITEM,
 )
-from .old.blender_backend.preview_collections import preview_collections
+
+from .backend.preview_collections import preview_collections
+from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.update import UPDATE_INFO_ITEM, check_update
+from .human.human import Human
 from .user_interface import batch_ui_lists, utility_ui_lists
 from .user_interface.primitive_menu import add_hg_primitive_menu
 from .user_interface.tips_suggestions_ui import TIPS_ITEM
@@ -176,11 +190,91 @@ def _initiate_ui_lists():
     )
 
 
+def build_class_list():
+    print("started building")
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+
+    # There are more, but I'm not using them
+    bpy_classes = (
+        Operator,
+        PropertyGroup,
+        Panel,
+        AddonPreferences,
+        Header,
+        Menu,
+        UIList,
+    )
+    yielded = []
+    for root, dirs, files in os.walk(dir_path):
+        for f in files:
+            if ".vscode" in root:
+                continue
+            if ".mypy_cached" in root:
+                continue
+            if ".git" in root:
+                continue
+            if "tutorial_operator" in root:
+                continue
+
+            if not f.endswith(".py"):
+                continue
+            if f == "__init__.py":
+                continue
+            if f == "setup.py":
+                continue
+            abspath = os.path.join(root, f)
+            module_path = os.path.relpath(abspath, dir_path)
+            module_path = os.path.normpath(module_path)
+            split_module_path = module_path.split(os.sep)
+            module_import_path = ".".join(split_module_path)
+
+            print(
+                "attempting to import", module_import_path, "from", module_path
+            )
+            mod = __import__(
+                ".".join([__name__, module_import_path[:-3]]),
+                fromlist=[module_import_path[:-3]],
+            )
+            waitlist = []
+            for name, obj in inspect.getmembers(mod):
+                if inspect.isclass(obj) and issubclass(obj, bpy_classes):
+                    if name not in yielded:
+                        if hasattr(obj, "bl_parent_id"):
+                            waitlist.append(obj)
+                            continue
+                        print("yielding", name, "from", module_import_path)
+                        yielded.append(name)
+                        yield obj
+
+            yield from waitlist
+            # to_import = [getattr(mod, x) for x in dir(mod)]
+            # if isinstance(getattr(mod, x), type)]  # if you need classes only
+
+            # for i in to_import:
+            #     try:
+            #         setattr(sys.modules[__name__], i.__name__, i)
+            #         # print(i)
+            #     except AttributeError:
+            #         pass
+
+
+hg_classes = build_class_list()
+from HumGen3D.user_interface.documentation.tutorial_operator import (
+    tutorial_operator,
+)
+
+
 def register():
     # RELEASE remove print statements
-    from .classes import hg_classes
+    # from .classes import hg_classes
 
-    for cls in hg_classes:
+    for cls in itertools.chain(
+        hg_classes,
+        [
+            tutorial_operator.HG_DRAW_PANEL,
+        ],
+    ):
+        print("registerging", cls)
         bpy.utils.register_class(cls)
 
     # Main props
@@ -200,9 +294,14 @@ def register():
 
 
 def unregister():
-    from .classes import hg_classes
+    # from .classes import hg_classes
 
-    for cls in hg_classes:
+    for cls in itertools.chain(
+        hg_classes,
+        [
+            tutorial_operator.HG_DRAW_PANEL,
+        ],
+    ):
         bpy.utils.unregister_class(cls)
 
     # remove handler

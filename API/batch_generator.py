@@ -3,18 +3,10 @@ import os
 import random
 import subprocess
 import time
-
+from ..backend.logging import hg_log
+from ..backend.preferences import get_addon_root, get_prefs
 import bpy  # type:ignore
 
-from ..blender_operators.common.common_functions import (
-    get_addon_root,
-)  # type:ignore
-from ..blender_operators.common.common_functions import (
-    HumGenException,
-    get_prefs,
-    hg_log,
-    toggle_hair_visibility,
-)
 from .human import HG_Human
 
 
@@ -214,7 +206,7 @@ class HG_Batch_Generator:
 
         for obj in data_to.objects:
             bpy.context.scene.collection.objects.link(obj)
-            toggle_hair_visibility(obj, show=True)
+            # toggle_hair_visibility(obj, show=True)
 
         human_parent = next(
             (

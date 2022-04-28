@@ -4,8 +4,8 @@ This file is currently inactive
 
 import bpy  # type: ignore
 
-from ..old.blender_backend.preview_collections import preview_collections
-from ..old.blender_backend.settings.property_functions import (
+from ..backend.preview_collections import preview_collections
+from ..backend.property_functions import (
     find_folders,
     find_item_amount,
 )

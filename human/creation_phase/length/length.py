@@ -11,6 +11,20 @@ if TYPE_CHECKING:
 import numpy as np
 
 
+def apply_armature(obj):
+    """Applies all armature modifiers on this object
+
+    Args:
+        obj (Object): object to apply armature modifiers on
+    """
+    bpy.context.view_layer.objects.active = obj
+    armature_mods = [
+        mod.name for mod in obj.modifiers if mod.type == "ARMATURE"
+    ]
+    for mod_name in armature_mods:
+        bpy.ops.object.modifier_apply(modifier=mod_name)
+
+
 class LengthSettings:
     def __init__(self, human):
         self._human = human
@@ -86,3 +100,43 @@ class LengthSettings:
     def _origin_correction(self, length):
         # TODO DOCUMENT
         return -0.553 * length + 1.0114
+
+    def apply(self, context):
+        """
+        Applies the pose to the rig, Also sets the correct origin position
+
+        Args:
+            hg_rig (Object): Armature of HumGen human
+        """
+        hg_rig = self._human.rig_obj
+        rig_length = hg_rig.dimensions[2]
+
+        bpy.context.view_layer.objects.active = hg_rig
+        bpy.ops.object.mode_set(mode="POSE")
+        bpy.ops.pose.armature_apply(selected=False)
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.transform_apply(
+            location=False, rotation=False, scale=True
+        )
+
+        for obj in bpy.context.selected_objects:
+            obj.select_set(False)
+
+        self._correct_origin(context, hg_rig, hg_rig.HG.body_obj)
+
+        bpy.context.view_layer.objects.active = hg_rig
+
+    def _correct_origin(self, context, obj_to_correct, hg_body):
+        """Uses a formula to comensate the origina position for legnth changes"""
+        context.scene.cursor.location = obj_to_correct.location
+
+        bottom_vertex_loc = (
+            hg_body.matrix_world @ hg_body.data.vertices[21085].co
+        )  # RELEASE check if this is still the bottom vertex
+
+        context.scene.cursor.location[2] = bottom_vertex_loc[2]
+
+        context.view_layer.objects.active = obj_to_correct
+        obj_to_correct.select_set(True)
+        bpy.ops.object.origin_set(type="ORIGIN_CURSOR")

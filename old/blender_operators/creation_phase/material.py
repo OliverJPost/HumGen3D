@@ -1,13 +1,13 @@
 import os
 import random
 from pathlib import Path
+from HumGen3D.backend.preference_func import get_prefs
 
-import bpy  # type: ignore
+import bpy
+from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
 
 from ..common.common_functions import (
-    ShowMessageBox,
     find_human,
-    get_prefs,
 )
 
 

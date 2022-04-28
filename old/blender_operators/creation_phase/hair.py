@@ -2,124 +2,16 @@ import json
 import os
 import random
 from pathlib import Path
+from HumGen3D.backend.preferences import get_addon_root, get_prefs
+from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 
 import bpy
+from HumGen3D.human.creation_phase.length.length import apply_armature
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
 from ..common.common_functions import (
-    apply_shapekeys,
     find_human,
-    get_addon_root,
-    get_prefs,
-    hg_delete,
-    remove_broken_drivers,
 )
-from .length import apply_armature
-
-
-class HG_REMOVE_HAIR(bpy.types.Operator):
-    """Removes the corresponding hair system
-
-    Operator type:
-        Particle systems
-
-    Prereq:
-        Hair_system passed, and hair system is present on active object
-        Active object is part of a HumGen human
-
-    """
-
-    bl_idname = "hg3d.removehair"
-    bl_label = "Remove hair system"
-    bl_description = "Removes this specific hair system from your human"
-    bl_options = {"UNDO"}
-
-    hair_system: bpy.props.StringProperty()
-
-    def execute(self, context):
-        hg_rig = find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
-
-        context.view_layer.objects.active = hg_body
-
-        ps_idx = next(
-            i
-            for i, ps in enumerate(hg_body.particle_systems)
-            if ps.name == self.hair_system
-        )
-        hg_body.particle_systems.active_index = ps_idx
-        bpy.ops.object.particle_system_remove()
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
-
-
-class HG_EYEBROW_SWITCH(bpy.types.Operator):
-    """Cycle trough all eyebrow particle systems on this object
-
-    Operator type:
-        Particle system
-
-    Prereq:
-        forward passed
-        Active object is part of HumGen human
-        At least 2 particle systems on this object starting with 'Eyebrows'
-
-    Args:
-        forward (bool): True if go forward in list, False if go backward
-    """
-
-    bl_idname = "hg3d.eyebrowswitch"
-    bl_label = "Switch eyebrows"
-    bl_description = "Next or previous eyebrow style"
-
-    forward: bpy.props.BoolProperty()
-
-    def execute(self, context):
-        hg_rig = find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
-
-        _switch_eyebrows(self, hg_body, forward=self.forward)
-
-        return {"FINISHED"}
-
-
-def _switch_eyebrows(self, hg_body, forward=True, report=False):
-    eyebrows = [
-        mod
-        for mod in hg_body.modifiers
-        if mod.type == "PARTICLE_SYSTEM"
-        and mod.particle_system.name.startswith("Eyebrows")
-    ]
-
-    if not eyebrows:
-        if report:
-            self.report({"WARNING"}, "No eyebrow particle systems found")
-        return
-    if len(eyebrows) == 1:
-        if report:
-            self.report({"WARNING"}, "Only one eyebrow system found")
-        return
-
-    idx, current_ps = next(
-        (
-            (i, mod)
-            for i, mod in enumerate(eyebrows)
-            if mod.show_viewport or mod.show_render
-        ),
-        0,
-    )
-
-    next_idx = idx + 1 if forward else idx - 1
-    if next_idx >= len(eyebrows) or next_idx < 0:
-        next_idx = 0
-
-    next_ps = eyebrows[next_idx]
-    next_ps.show_viewport = next_ps.show_render = True
-
-    for ps in eyebrows:
-        if ps != next_ps:
-            ps.show_viewport = ps.show_render = False
 
 
 def load_hair(self, context, type):
@@ -538,7 +430,9 @@ def convert_to_new_hair_shader(hg_body):
         return
 
     addon_folder = get_addon_root()
-    blendfile = os.path.join(addon_folder, "data", "hair_shader_v3.blend")
+    blendfile = os.path.join(
+        addon_folder, "human", "hair", "hair_shader_v3.blend"
+    )
 
     if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
         new_hair_group = bpy.data.node_groups["HG_Hair_V3"]
@@ -616,11 +510,6 @@ def _get_root_and_tip(hair_quality, max_root, max_tip):
     new_tip = max_tip * multiplication_dict[hair_quality]
 
     return new_root, new_tip
-
-
-def randomize_eyebrows(hg_body):
-    for i in random.randrange(0, 8):
-        _switch_eyebrows(None, hg_body, forward=True)
 
 
 def random_hair_color(hg_body):

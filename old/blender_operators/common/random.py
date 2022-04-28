@@ -7,7 +7,7 @@ from typing import Any
 
 import bpy
 
-from ...blender_backend.preview_collections import refresh_pcoll
+from ....backend.preview_collections import refresh_pcoll
 
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
