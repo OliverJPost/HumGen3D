@@ -1,3 +1,6 @@
+from HumGen3D.backend.content_packs.custom_content_packs import (
+    build_content_collection,
+)
 import bpy  # type: ignore
 from bpy.props import (  # type: ignore
     BoolProperty,
@@ -7,31 +10,28 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-
-from ..human.human import Human
-from ..old.blender_backend.content.custom_content_packs import (
-    build_content_collection,
+from HumGen3D.old.blender_operators.utility_section.baking import (
+    make_path_absolute,
 )
-from ..old.blender_backend.preview_collections import (
+
+from HumGen3D.human.human import Human
+
+from .preview_collections import (
     get_pcoll_enum_items,
     refresh_pcoll,
 )
-from ..old.blender_backend.settings.property_functions import (
+from .property_functions import (
     add_image_to_thumb_enum,
     find_folders,
     get_resolutions,
     poll_mtc_armature,
     thumbnail_saving_prop_update,
 )
-from ..old.blender_operators.common.common_functions import make_path_absolute
 from ..old.blender_operators.creation_phase.hair import (
     load_hair,
     update_hair_shader_type,
 )
-from ..old.blender_operators.finalize_phase.clothing import load_pattern
-from ..old.blender_operators.finalize_phase.clothing_loading import load_outfit
-from ..old.blender_operators.finalize_phase.expression import load_expression
-from ..old.blender_operators.finalize_phase.pose import load_pose
+
 from ..old.blender_operators.utility_section.utility_functions import (
     get_preset_thumbnail,
     refresh_hair_ul,
@@ -285,7 +285,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # posing
     pcoll_poses: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "poses"),
-        update=load_pose,
+        update=None,  # FIXME load_pose,
     )
     pose_sub: EnumProperty(
         name="Pose Library",
@@ -301,7 +301,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # outfit
     pcoll_outfit: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "outfit"),
-        update=lambda a, b: load_outfit(a, b, footwear=False),
+        update=None,  # FIXME lambda a, b: load_outfit(a, b, footwear=False),
     )
     outfit_sub: EnumProperty(
         name="Outfit Library",
@@ -337,7 +337,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # expression
     pcoll_expressions: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "expressions"),
-        update=load_expression,
+        update=None,  # FIXME load_expression,
     )
     expressions_sub: EnumProperty(
         name="Expressions Library",
@@ -353,7 +353,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # footwear
     pcoll_footwear: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "footwear"),
-        update=lambda a, b: load_outfit(a, b, footwear=True),
+        update=None,  # FIXME lambda a, b: load_outfit(a, b, footwear=True),
     )
     footwear_sub: EnumProperty(
         name="Footwear Library",
@@ -369,7 +369,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # patterns
     pcoll_patterns: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "patterns"),
-        update=load_pattern,
+        update=None,  # FIXME load_pattern,
     )
     patterns_sub: EnumProperty(
         name="Pattern Library",

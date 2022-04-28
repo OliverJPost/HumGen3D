@@ -1,12 +1,12 @@
+from HumGen3D.backend.preference_func import get_prefs
 import bpy
 
-from ..old.blender_backend.preview_collections import (
+from ..backend.preview_collections import (
     get_hg_icon,
     preview_collections,
 )
 from ..old.blender_operators.common.common_functions import (
     find_human,
-    get_prefs,
 )
 from .panel_functions import (
     draw_panel_switch_header,

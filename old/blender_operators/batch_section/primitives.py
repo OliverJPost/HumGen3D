@@ -1,12 +1,9 @@
 import os
 from pathlib import Path
+from HumGen3D.backend.preferences import get_addon_root
 
-import bpy  # type:ignore
-
-from ..common.common_functions import (
-    add_to_collection,
-    get_addon_root,
-)
+import bpy
+from HumGen3D.human.base.collections import add_to_collection  # type:ignore
 
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):

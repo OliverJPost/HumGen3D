@@ -1,17 +1,15 @@
 """UNDER CONSTRUCTION"""
 
 from pathlib import Path
+from HumGen3D.backend.preference_func import get_prefs
 
 import bmesh  # type: ignore
 import bpy  # type: ignore
 import numpy as np
 from mathutils import Vector
 
-from ..common.common_functions import (
+from ...old.blender_operators.common.common_functions import (
     find_human,
-    get_prefs,
-    hg_log,
-    print_context,
 )
 
 

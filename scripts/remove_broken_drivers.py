@@ -20,15 +20,20 @@ def remove_broken_drivers():
             sk.animation_data.drivers.remove(broken_drivers.pop())
 
 
-remove_broken_drivers()
+def main():
+    remove_broken_drivers()
 
-bpy.ops.wm.save_mainfile()
-print('test2')
-blend1_file = bpy.data.filepath.replace(".blend", ".blend1")
+    bpy.ops.wm.save_mainfile()
+    print("test2")
+    blend1_file = bpy.data.filepath.replace(".blend", ".blend1")
 
-try:
-    os.remove(blend1_file)
-except OSError:
-    pass
+    try:
+        os.remove(blend1_file)
+    except OSError:
+        pass
 
-bpy.ops.wm.quit_blender()
+    bpy.ops.wm.quit_blender()
+
+
+if __name__ == "__main__":
+    main()

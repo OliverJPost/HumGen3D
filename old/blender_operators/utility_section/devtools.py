@@ -5,22 +5,8 @@ Operators and functions to be used by the developer and content pack creators
 import bpy
 from mathutils import Matrix
 
-from ...blender_backend.shapekey_calculator import (  # type: ignore
-    build_distance_dict,
-    deform_obj_from_difference,
-)
-from ..common.common_functions import (
-    apply_shapekeys,
-    find_human,
-    hg_delete,
-    hg_log,
-)
-from ..creation_phase.finish_creation_phase import (
-    remove_stretch_bones,
-)
-from ..creation_phase.hair import (
-    convert_to_new_hair_shader,
-)
+from ..common.common_functions import find_human
+from ..creation_phase.hair import convert_to_new_hair_shader
 
 
 # REMOVE
@@ -122,6 +108,6 @@ class HG_DELETE_STRETCH(bpy.types.Operator):
         for driver in remove_list:
             hg_body.data.shape_keys.animation_data.drivers.remove(driver)
 
-        remove_stretch_bones(hg_rig)
+        # FIXME remove_stretch_bones(hg_rig)
 
         return {"FINISHED"}

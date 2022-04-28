@@ -1,10 +1,11 @@
 import json
 import os
 from pathlib import Path
+from HumGen3D.backend.preference_func import get_prefs
 
 import bpy  # type: ignore
 
-from ..common.common_functions import find_human, get_prefs
+from ..common.common_functions import find_human
 
 
 def refresh_modapply(self, context):

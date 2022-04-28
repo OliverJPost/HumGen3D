@@ -7,20 +7,22 @@ from sys import platform
 from typing import TYPE_CHECKING, Any, Dict, Generator, List, Tuple, Union
 
 import bpy
-from bpy.props import FloatVectorProperty
-from bpy.types import Context, Object, PropertyGroup
 
-from ..old.blender_operators.common.common_functions import (
-    HumGenException,
-    add_to_collection,
-    get_prefs,
-    hg_delete,
-    hg_log,
-)
+from ..backend.logging import hg_log
+from ..backend.memory_management import hg_delete
+from ..backend.preview_collections import refresh_pcoll
+
+if TYPE_CHECKING:
+    from bpy.props import FloatVectorProperty
+    from bpy.types import Context, Object, PropertyGroup
+
+from ..backend.preference_func import get_prefs
 from ..old.blender_operators.creation_phase.creation import (
     set_eevee_ao_and_strip,
 )
-from ..old.blender_operators.creation_phase.namegen import get_name
+from .base.collections import add_to_collection
+from .base.exceptions import HumGenException
+from .base.namegen import get_name
 from .creation_phase.creation_phase import CreationPhaseSettings
 from .eyes.eyes import EyeSettings
 from .hair.hair import HairSettings
@@ -244,9 +246,6 @@ class Human:
         pass  # TODO
 
     def finish_creation_phase(self) -> None:
-        pass  # TODO
-
-    def revert_to_creation_phase(self) -> None:
         pass  # TODO
 
     def _verify_body_object(self):

@@ -4,16 +4,13 @@ import os
 import random
 from pathlib import Path
 from typing import List
+from HumGen3D.backend.preference_func import get_prefs
 
 import bpy
 from bpy.types import Context, Material, ShaderNode, bpy_prop_collection
+from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
-from ...old.blender_backend.preview_collections import refresh_pcoll
-from ...old.blender_operators.common.common_functions import (
-    HumGenException,
-    ShowMessageBox,
-    get_prefs,
-)
+from ...backend.preview_collections import refresh_pcoll
 from ..base.prop_collection import PropCollection
 
 

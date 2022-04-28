@@ -1,20 +1,10 @@
-"""
-Operators and functions used for clothing, outfits and footwear of the humans.
-"""
-
-from pathlib import Path
-
-import bpy  # type: ignore
-
-from ...data.colors import color_dict
-from ..common.common_functions import (
-    find_human,
-    get_prefs,
-    hg_delete,
-    hg_log,
+from HumGen3D.backend.memory_management import hg_delete
+import bpy
+from .base_clothing import find_masks
+from HumGen3D.old.blender_operators.common.common_functions import find_human
+from HumGen3D.old.blender_operators.common.random import (
+    set_random_active_in_pcoll,
 )
-from ..common.random import set_random_active_in_pcoll
-from .clothing_loading import find_masks
 
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
@@ -151,63 +141,3 @@ class HG_OT_PATTERN(bpy.types.Operator):
         )
 
         return node
-
-
-def load_pattern(self, context):
-    """
-    Loads the pattern that is the current active item in the patterns preview_collection
-    """
-    pref = get_prefs()
-    mat = context.object.active_material
-
-    # finds image node, returns error if for some reason the node doesn't exist
-    try:
-        img_node = mat.node_tree.nodes["HG_Pattern"]
-    except:
-        self.report(
-            {"WARNING"},
-            "Couldn't find pattern node, click 'Remove pattern' and try to add it again",
-        )
-
-    filepath = str(pref.filepath) + str(
-        Path(context.scene.HG3D.pcoll_patterns)
-    )
-    images = bpy.data.images
-    pattern = images.load(filepath, check_existing=True)
-
-    img_node.image = pattern
-
-
-def randomize_clothing_colors(context, cloth_obj):
-    mat = cloth_obj.data.materials[0]
-    if not mat:
-        return
-    nodes = mat.node_tree.nodes
-
-    control_node = nodes.get("HG_Control")
-    if not control_node:
-        hg_log(
-            f"Could not set random color for {cloth_obj.name}, control node not found",
-            level="WARNING",
-        )
-        return
-
-    # TODO Rewrite color_random so it doesn't need to be called as operator
-    old_active = context.view_layer.objects.active
-
-    for input in control_node.inputs:
-        color_groups = tuple(["_{}".format(name) for name in color_dict])
-        color_group = (
-            input.name[-2:] if input.name.endswith(color_groups) else None
-        )
-
-        if not color_group:
-            continue
-
-        context.view_layer.objects.active = cloth_obj
-
-        bpy.ops.hg3d.color_random(
-            input_name=input.name, color_group=color_group
-        )
-
-    context.view_layer.objects.active = old_active

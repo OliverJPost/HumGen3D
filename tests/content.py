@@ -1,9 +1,9 @@
 import os
 import time
+from HumGen3D.backend.memory_management import hg_delete
 
 import bpy
-
-from ..old.blender_operators.common.common_functions import hg_delete, hg_log
+from HumGen3D.backend.logging import hg_log
 
 
 class HG_CONTENT_TESTS(bpy.types.Operator):

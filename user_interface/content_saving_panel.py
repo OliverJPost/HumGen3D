@@ -1,11 +1,11 @@
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preference_func import get_prefs
 import bpy
+from HumGen3D.user_interface.feedback_func import show_message
 
-from ..old.blender_backend.preview_collections import preview_collections
+from ..backend.preview_collections import preview_collections
 from ..old.blender_operators.common.common_functions import (
     find_human,
-    get_prefs,
-    hg_log,
-    show_message,
 )
 from ..old.blender_operators.utility_section.utility_functions import (
     find_existing_shapekeys,

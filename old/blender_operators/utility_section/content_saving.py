@@ -8,28 +8,14 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend.preferences import get_addon_root, get_prefs
+from HumGen3D.backend.preview_collections import refresh_pcoll  # type: ignore
+from HumGen3D.human.creation_phase.length.length import apply_armature
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message
 from mathutils import Vector
-
-from ...blender_backend.preview_collections import refresh_pcoll  # type: ignore
-from ...blender_backend.shapekey_calculator import (
-    build_distance_dict,
-    deform_obj_from_difference,
-)
-from ..common.common_functions import (
-    ShowMessageBox,
-    apply_shapekeys,
-    find_human,
-    get_addon_root,
-    get_prefs,
-    hg_delete,
-    hg_log,
-    show_message,
-    unhide_human,
-)
-from ..creation_phase.length import (
-    apply_armature,
-    correct_origin,
-)
 
 
 class Content_Saving_Operator:
@@ -604,7 +590,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
         self.hg_rig = self.sett.content_saving_active_human
         try:
-            unhide_human(self.hg_rig)
+            pass  # TODO unhide_human(self.hg_rig)
         except Exception as e:
             show_message(self, "Could not find human, did you delete it?")
             hg_log(
@@ -873,7 +859,9 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         self.save_material_textures(objs)
         obj_distance_dict = {}
         for obj in objs:
-            distance_dict = build_distance_dict(body_copy, obj, apply=False)
+            distance_dict = (
+                None  # FIXME build_distance_dict(body_copy, obj, apply=False)
+            )
             obj_distance_dict[obj.name] = distance_dict
 
         for gender in genders:
@@ -912,16 +900,16 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     name = ""
                     as_sk = False
 
-                deform_obj_from_difference(
-                    name,
-                    distance_dict,
-                    backup_human,
-                    obj_copy,
-                    as_shapekey=as_sk,
-                    apply_source_sks=False,
-                    ignore_cor_sk=True,
-                )
-                correct_origin(context, obj, backup_human)
+                # FIXME deform_obj_from_difference(
+                #     name,
+                #     distance_dict,
+                #     backup_human,
+                #     obj_copy,
+                #     as_shapekey=as_sk,
+                #     apply_source_sks=False,
+                #     ignore_cor_sk=True,
+                # )
+                # FIXME correct_origin(context, obj, backup_human)
                 export_list.append(obj_copy)
 
             if gender == "male":

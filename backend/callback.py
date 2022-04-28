@@ -10,11 +10,10 @@ This callback has the following usages:
 """
 
 import bpy
+from HumGen3D.backend.logging import hg_log
 
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..old.blender_backend.preview_collections import refresh_pcoll
-from ..old.blender_operators.common.common_functions import find_human, hg_log
-from ..old.blender_operators.creation_phase.body import get_scaling_data
+from ..old.blender_operators.common.common_functions import find_human
 from ..old.blender_operators.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
@@ -25,6 +24,7 @@ from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
 from ..user_interface.tips_suggestions_ui import (
     update_tips_from_context,
 )  # type:ignore
+from .preview_collections import refresh_pcoll
 
 
 class HG_ACTIVATE(bpy.types.Operator):
@@ -77,12 +77,12 @@ def hg_callback(self):
     sett = bpy.context.scene.HG3D
     ui_phase = sett.ui_phase
 
-    _set_shader_switches(human.rig_obj, sett)
+    _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human.rig_obj)
-    _context_specific_updates(self, sett, human.rig_obj, ui_phase)
+    _context_specific_updates(self, sett, human, ui_phase)
 
 
-def _set_shader_switches(hg_rig, sett):
+def _set_shader_switches(human, sett):
     """Sets the subsurface toggle to the correct position. Update_exception is
     used to prevent an endless loop of setting the toggle
 
@@ -91,7 +91,7 @@ def _set_shader_switches(hg_rig, sett):
         sett (PropertyGroup): HumGen props
     """
     sett.update_exception = True
-    body_obj = hg_rig.HG.body_obj
+    body_obj = human.body_obj
     nodes = body_obj.data.materials[0].node_tree.nodes
     if not body_obj:
         return
@@ -117,7 +117,7 @@ def _set_shader_switches(hg_rig, sett):
     sett.update_exception = False
 
 
-def _context_specific_updates(self, sett, hg_rig, ui_phase):
+def _context_specific_updates(self, sett, human, ui_phase):
     """Does all updates that are only necessary for a certain UI context. I.e.
     updating the preview collection of clothing when in the clothing section
 
@@ -138,7 +138,7 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
             pass
         return
     elif ui_phase == "body":
-        _refresh_body_scaling(self, sett, hg_rig)
+        _refresh_body_scaling(self, sett, human)
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
         return
@@ -147,7 +147,7 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
         return
     elif ui_phase == "hair":
         refresh_pcoll(self, context, "hair")
-        if hg_rig.HG.gender == "male":
+        if human.gender == "male":
             refresh_pcoll(self, context, "face_hair")
         return
     elif ui_phase == "expression":
@@ -155,7 +155,7 @@ def _context_specific_updates(self, sett, hg_rig, ui_phase):
         return
 
 
-def _refresh_body_scaling(self, sett, hg_rig):
+def _refresh_body_scaling(self, sett, human):
     """This callback makes sure the sliders of scaling the bones are at the
     correct values of the selected human
 
@@ -163,8 +163,10 @@ def _refresh_body_scaling(self, sett, hg_rig):
         sett (PropertyGroup): HumGen props
         hg_rig (Object): Armature object of HumGen human
     """
-    bones = hg_rig.pose.bones
-    sd = get_scaling_data("head", sett, return_whole_dict=True).items()
+    bones = human.pose_bones
+    sd = human.creation_phase.body.get_scaling_data(
+        "head", sett, return_whole_dict=True
+    ).items()
 
     bone_groups = {
         group_name: scaling_data["bones"] for group_name, scaling_data in sd
