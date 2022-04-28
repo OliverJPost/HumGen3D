@@ -14,7 +14,9 @@ from ..backend.preview_collections import refresh_pcoll
 
 if TYPE_CHECKING:
     from bpy.props import FloatVectorProperty
-    from bpy.types import Context, Object, PropertyGroup
+    from bpy.types import Context, PropertyGroup
+
+from bpy.types import Object
 
 from ..backend.preference_func import get_prefs
 from ..old.blender_operators.creation_phase.creation import (
