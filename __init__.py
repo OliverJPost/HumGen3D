@@ -29,8 +29,6 @@ bl_info = {
 }
 
 
-import importlib
-import inspect
 import itertools
 import os
 import sys
@@ -60,6 +58,7 @@ from HumGen3D.backend.content_packs.custom_content_packs import (
     CUSTOM_CONTENT_ITEM,
 )
 
+from .backend.bpy_classes import _get_bpy_classes
 from .backend.preview_collections import preview_collections
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import UPDATE_INFO_ITEM, check_update
@@ -119,162 +118,35 @@ def _initiate_custom_icons():
 
 
 def _initiate_ui_lists():
-    sc = bpy.types.Scene
+    collections = {
+        "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
+        "batch_expressions_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
+        "contentpacks_col": HG_CONTENT_PACK,
+        "installpacks_col": HG_CONTENT_PACK,
+        "modapply_col": utility_ui_lists.MODAPPLY_ITEM,
+        "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
+        "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
+        "saveoutfit_col": utility_ui_lists.SAVEOUTFIT_ITEM,
+        "custom_content_col": CUSTOM_CONTENT_ITEM,
+        "hg_update_col": UPDATE_INFO_ITEM,
+        "hg_tips_and_suggestions": TIPS_ITEM,
+    }
 
-    # Collection of batch clothing categories
-    sc.batch_clothing_col = bpy.props.CollectionProperty(
-        type=batch_ui_lists.BATCH_CLOTHING_ITEM
-    )
-    sc.batch_clothing_col_index = bpy.props.IntProperty(
-        name="Index", default=0
-    )
-
-    # Collection of batch expression categories
-    sc.batch_expressions_col = bpy.props.CollectionProperty(
-        type=batch_ui_lists.BATCH_EXPRESSION_ITEM
-    )
-    sc.batch_expressions_col_index = bpy.props.IntProperty(
-        name="Index", default=0
-    )
-
-    # Installed content packs
-    sc.contentpacks_col = bpy.props.CollectionProperty(type=HG_CONTENT_PACK)
-    sc.contentpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of packs selected by user to be installed
-    sc.installpacks_col = bpy.props.CollectionProperty(type=HG_INSTALLPACK)
-    sc.installpacks_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of modifiers that are available for ModApply operator
-    sc.modapply_col = bpy.props.CollectionProperty(
-        type=utility_ui_lists.MODAPPLY_ITEM
-    )
-    sc.modapply_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of shapekeys that can be saved
-    sc.shapekeys_col = bpy.props.CollectionProperty(
-        type=utility_ui_lists.SHAPEKEY_ITEM
-    )
-    sc.shapekeys_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of hairstyles that can be saved
-    sc.savehair_col = bpy.props.CollectionProperty(
-        type=utility_ui_lists.SAVEHAIR_ITEM
-    )
-    sc.savehair_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of otufits that can be saved
-    sc.saveoutfit_col = bpy.props.CollectionProperty(
-        type=utility_ui_lists.SAVEOUTFIT_ITEM
-    )
-    sc.saveoutfit_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of all custom content that can be selected in the content pack
-    # export screen
-    sc.custom_content_col = bpy.props.CollectionProperty(
-        type=CUSTOM_CONTENT_ITEM
-    )
-    sc.custom_content_col_index = bpy.props.IntProperty(
-        name="Index", default=0
-    )
-
-    # Collection of items that were changed in the active content pack of the
-    # content pack export screen
-    sc.hg_update_col = bpy.props.CollectionProperty(type=UPDATE_INFO_ITEM)
-    sc.hg_update_col_index = bpy.props.IntProperty(name="Index", default=0)
-
-    # Collection of tips and suggestions to show to the user
-    sc.hg_tips_and_suggestions = bpy.props.CollectionProperty(type=TIPS_ITEM)
-    sc.hg_tips_and_suggestions_index = bpy.props.IntProperty(
-        name="Index", default=0
-    )
+    scene = bpy.types.Scene
+    for coll_name, coll_class in collections.items():
+        coll_prop = bpy.props.CollectionProperty(type=coll_class)
+        setattr(scene, coll_name, coll_prop)
+        index = bpy.props.IntProperty(name="Index", default=0)
+        setattr(scene, f"{coll_name}_index", index)
 
 
-def build_class_list():
-    print("started building")
-    dir_path = os.path.dirname(os.path.abspath(__file__))
-
-    # There are more, but I'm not using them
-    bpy_classes = (
-        Operator,
-        PropertyGroup,
-        Panel,
-        AddonPreferences,
-        Header,
-        Menu,
-        UIList,
-    )
-    yielded = []
-    for root, dirs, files in os.walk(dir_path):
-        for f in files:
-            if ".vscode" in root:
-                continue
-            if ".mypy_cached" in root:
-                continue
-            if ".git" in root:
-                continue
-            if "tutorial_operator" in root:
-                continue
-
-            if not f.endswith(".py"):
-                continue
-            if f == "__init__.py":
-                continue
-            if f == "setup.py":
-                continue
-            abspath = os.path.join(root, f)
-            module_path = os.path.relpath(abspath, dir_path)
-            module_path = os.path.normpath(module_path)
-            split_module_path = module_path.split(os.sep)
-            module_import_path = ".".join(split_module_path)
-
-            print(
-                "attempting to import", module_import_path, "from", module_path
-            )
-            mod = __import__(
-                ".".join([__name__, module_import_path[:-3]]),
-                fromlist=[module_import_path[:-3]],
-            )
-            waitlist = []
-            for name, obj in inspect.getmembers(mod):
-                if inspect.isclass(obj) and issubclass(obj, bpy_classes):
-                    if name not in yielded:
-                        if hasattr(obj, "bl_parent_id"):
-                            waitlist.append(obj)
-                            continue
-                        print("yielding", name, "from", module_import_path)
-                        yielded.append(name)
-                        yield obj
-
-            yield from waitlist
-            # to_import = [getattr(mod, x) for x in dir(mod)]
-            # if isinstance(getattr(mod, x), type)]  # if you need classes only
-
-            # for i in to_import:
-            #     try:
-            #         setattr(sys.modules[__name__], i.__name__, i)
-            #         # print(i)
-            #     except AttributeError:
-            #         pass
-
-
-hg_classes = build_class_list()
-from HumGen3D.user_interface.documentation.tutorial_operator import (
-    tutorial_operator,
-)
+hg_classes = _get_bpy_classes()
 
 
 def register():
     # RELEASE remove print statements
-    # from .classes import hg_classes
 
-    for cls in itertools.chain(
-        hg_classes,
-        [
-            tutorial_operator.HG_DRAW_PANEL,
-        ],
-    ):
-        print("registerging", cls)
+    for cls in hg_classes:
         bpy.utils.register_class(cls)
 
     # Main props
@@ -296,12 +168,7 @@ def register():
 def unregister():
     # from .classes import hg_classes
 
-    for cls in itertools.chain(
-        hg_classes,
-        [
-            tutorial_operator.HG_DRAW_PANEL,
-        ],
-    ):
+    for cls in hg_classes:
         bpy.utils.unregister_class(cls)
 
     # remove handler
