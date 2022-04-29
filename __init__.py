@@ -29,55 +29,38 @@ bl_info = {
 }
 
 
-import itertools
 import os
 import sys
-from pathlib import Path
 
 import bpy  # type: ignore
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
-from bpy.app.handlers import persistent  # type: ignore
-from bpy.types import (
-    AddonPreferences,
-    Header,
-    Menu,
-    Operator,
-    Panel,
-    PropertyGroup,
-    UIList,
-)
+from bpy.app.handlers import persistent as _persistent  # type: ignore
 
-from HumGen3D.backend.content_packs.content_packs import (
-    HG_CONTENT_PACK,
-    HG_INSTALLPACK,
-    cpacks_refresh,
-)
-from HumGen3D.backend.content_packs.custom_content_packs import (
-    CUSTOM_CONTENT_ITEM,
-)
+from HumGen3D.backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
+
+
 
 from .backend.bpy_classes import _get_bpy_classes
-from .backend.preview_collections import preview_collections
+from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
-from .backend.update import UPDATE_INFO_ITEM, check_update
+from .backend.update import check_update as _check_update
 from .human.human import Human
-from .user_interface import batch_ui_lists, utility_ui_lists
-from .user_interface.primitive_menu import add_hg_primitive_menu
-from .user_interface.tips_suggestions_ui import TIPS_ITEM
+
+
 
 if __name__ != "HG3D":
     sys.modules["HG3D"] = sys.modules[__name__]
 
 
 # Startup procedure
-@persistent
+@_persistent
 def HG_start(dummy):
     """Runs the activating class when a file is loaded or blender is opened"""
     bpy.ops.HG3D.activate()
-    cpacks_refresh(None, bpy.context)
-    check_update()
+    _cpacks_refresh(None, bpy.context)
+    _check_update()
 
 
 def _initiate_preview_collections():
@@ -118,18 +101,23 @@ def _initiate_custom_icons():
 
 
 def _initiate_ui_lists():
+    # Import in local namespace to prevent cluttering package namespace
+    from HumGen3D.user_interface import batch_ui_lists, utility_ui_lists, tips_suggestions_ui 
+    from HumGen3D.backend.content_packs import content_packs
+    from HumGen3D.backend import update
+    
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "batch_expressions_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
-        "contentpacks_col": HG_CONTENT_PACK,
-        "installpacks_col": HG_CONTENT_PACK,
+        "contentpacks_col": content_packs.HG_CONTENT_PACK,
+        "installpacks_col": content_packs.HG_CONTENT_PACK,
         "modapply_col": utility_ui_lists.MODAPPLY_ITEM,
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
         "saveoutfit_col": utility_ui_lists.SAVEOUTFIT_ITEM,
-        "custom_content_col": CUSTOM_CONTENT_ITEM,
-        "hg_update_col": UPDATE_INFO_ITEM,
-        "hg_tips_and_suggestions": TIPS_ITEM,
+        "custom_content_col": content_packs.CUSTOM_CONTENT_ITEM,
+        "hg_update_col": update.UPDATE_INFO_ITEM,
+        "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
     }
 
     scene = bpy.types.Scene
@@ -158,6 +146,7 @@ def register():
     _initiate_custom_icons()
     _initiate_ui_lists()
 
+    from .user_interface.primitive_menu import add_hg_primitive_menu
     bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
 
     # load handler
@@ -175,6 +164,7 @@ def unregister():
     if HG_start in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(HG_start)
 
+    from .user_interface.primitive_menu import add_hg_primitive_menu
     bpy.types.VIEW3D_MT_add.remove(add_hg_primitive_menu)
 
     # remove pcolls
