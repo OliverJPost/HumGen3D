@@ -3,9 +3,8 @@ from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.drivers import build_driver_dict
-from HumGen3D.old.blender_operators.common.common_functions import find_human
-
 from HumGen3D.human.human import Human
+from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 
 class HG_RIGIFY(bpy.types.Operator):
@@ -64,7 +63,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
         sks = hg_body.data.shape_keys.key_blocks
         for target_sk_name, sett_dict in driver_dict.items():
-            human.shape_keys._add_driver(hg_body, sks[target_sk_name], sett_dict)
+            human.shape_keys._add_driver(sks[target_sk_name], sett_dict)
 
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)

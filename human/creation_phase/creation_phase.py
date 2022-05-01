@@ -109,6 +109,8 @@ class CreationPhaseSettings:
 
         context.space_data.shading.type = old_shading
 
+        hg_rig.HG.phase = "clothing"
+
     def _create_backup_human(self, context: Context = None):
         if not context:
             context = bpy.context

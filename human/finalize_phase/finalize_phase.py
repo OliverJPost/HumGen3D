@@ -1,18 +1,21 @@
-from HumGen3D.backend.memory_management import hg_delete
-from bpy.types import Context
-
 import bpy
+from bpy.types import Context
+from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.human.base.collections import add_to_collection
-from .expression.expression import ExpressionSettings
 
-from .pose.pose import PoseSettings
 from .clothing.footwear import FootwearSettings
 from .clothing.outfit import OutfitSettings
+from .expression.expression import ExpressionSettings
+from .pose.pose import PoseSettings
 
 
 class FinalizePhaseSettings:
     def __init__(self, human):
         self._human = human
+
+    @property
+    def backup_rig(self):
+        return self._human.props.backup
 
     @property
     def pose(self) -> PoseSettings:
@@ -42,28 +45,31 @@ class FinalizePhaseSettings:
         if not context:
             context = bpy.context
 
+        backup_rig = self.backup_rig
+        assert backup_rig
         # remove current human, including all children of the current human
-        for obj in self.objects:
+        for obj in self._human.objects:
             hg_delete(obj)
 
         # backup human: rename, make visible, add to collection
-        self.backup_rig.name = self.backup_rig.name.replace("_Backup", "")
-        self.backup_rig.hide_viewport = False
-        self.backup_rig.hide_render = False
-        add_to_collection(context, self.backup_rig)
+        self._human.rig_obj = backup_rig
+        hg_rig = self._human.rig_obj
+        hg_rig.name = hg_rig.name.replace("_Backup", "")
+        self._human.hide_set(False)
+        add_to_collection(context, hg_rig)
 
         # backup children: set correct body_obj property, add to collection, make visible
         hg_body = None
-        for child in self.backup_rig.children:
+        for child in hg_rig.children:
             if "hg_body" in child:
-                self.backup_rig.HG.body_obj = child
+                hg_rig.HG.body_obj = child
                 hg_body = child
             add_to_collection(context, child)
             child.hide_viewport = False
             child.hide_render = False
 
         # point constraints to the correct rig
-        p_bones = self.backup_rig.pose.bones
+        p_bones = hg_rig.pose.bones
         for bone in [p_bones["jaw"], p_bones["jaw_upper"]]:
             child_constraints = [
                 c
@@ -73,4 +79,4 @@ class FinalizePhaseSettings:
             for c in child_constraints:
                 c.target = hg_body
 
-        context.view_layer.objects.active = self.backup_rig
+        context.view_layer.objects.active = hg_rig

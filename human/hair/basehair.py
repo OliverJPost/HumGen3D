@@ -4,6 +4,7 @@ import random
 from pathlib import Path
 
 import bpy
+from HumGen3D.backend.logging import hg_log, print_context
 from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human import hair
@@ -14,13 +15,13 @@ from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
 
 class BaseHair:
-    def _add_quality_props(self):
-        for mod in self.modifiers:
-            ps = mod.particle_system.settings
-            ps["steps"] = ps.render_step
-            ps["children"] = ps.rendered_child_count
-            ps["root"] = ps.root_radius
-            ps["tip"] = ps.tip_radius
+    def _add_quality_props(self, mod):
+
+        ps = mod.particle_system.settings
+        ps["steps"] = ps.render_step
+        ps["children"] = ps.rendered_child_count
+        ps["root"] = ps.root_radius
+        ps["tip"] = ps.tip_radius
 
     def randomize_color(self, hg_body):
         # TODO make system more elaborate
@@ -45,15 +46,11 @@ class BaseHair:
 
     @property
     def particle_systems(self):
-        if not hasattr(self, "_particle_systems"):
-            self._particle_systems = self._get_particle_systems()
-        return self._particle_systems
+        return self._get_particle_systems()
 
     @property
     def modifiers(self):
-        if not hasattr(self, "_modifiers"):
-            self._modifiers = self._get_modifiers()
-        return self._modifiers
+        return self._get_modifiers()
 
     def _get_modifiers(self):
         particle_mods = self._human.hair.modifiers
@@ -110,6 +107,8 @@ class ImportableHair(BaseHair):
             if isinstance(self, hair.facial_hair.FacialHairSettings)
             else "head"
         )
+        hg_log("////////////////////////////////")
+        hg_log("Hair type is", hair_type)
 
         hair_obj = self._import_hair_obj(context, hair_type, pref, blendfile)
 
@@ -122,7 +121,10 @@ class ImportableHair(BaseHair):
             human.hair.regular_hair.remove_all()
         remove_broken_drivers()
 
-        for mod in human.finialize_phase.clothing.mask_modifiers:
+        mask_mods = [
+            m for m in self._human.body_obj.modifiers if m.type == "MASK"
+        ]
+        for mod in mask_mods:
             mod.show_viewport = False
 
         # IMPORTANT: Hair systems do not transfer correctly if they are hidden in the viewport
@@ -133,17 +135,20 @@ class ImportableHair(BaseHair):
         context.view_layer.objects.active = hair_obj
         self._morph_hair_obj_to_body_obj(context, hair_obj)
 
-        # context.view_layer.objects.active = hair_obj
+        context.view_layer.objects.active = hair_obj
         bpy.ops.particle.disconnect_hair(all=True)
 
-        # for obj in context.selected_objects:
-        #     obj.select_set(False)
-        # context.view_layer.objects.active = hair_obj
-        # hg_body.select_set(True)
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        context.view_layer.objects.active = hair_obj
+        human.body_obj.select_set(True)
 
         # iterate over hair systems that need to be transferred
+
         for ps_name in json_systems:
-            self._transfer_hair_system(json_systems, hair_obj, ps_name)
+            self._transfer_hair_system(
+                context, json_systems, hair_obj, ps_name
+            )
 
         for vg in hair_obj.vertex_groups:
             if vg.name.lower().startswith(("hair", "fh")):
@@ -151,7 +156,7 @@ class ImportableHair(BaseHair):
 
         new_hair_systems = self._get_hair_systems_dict(hair_obj)
 
-        # context.view_layer.objects.active = hg_body
+        context.view_layer.objects.active = self._human.body_obj
         for mod in new_hair_systems:
             self._reconnect_hair(mod)
             self._add_quality_props(mod)
@@ -177,7 +182,7 @@ class ImportableHair(BaseHair):
         remove_broken_drivers()
 
     def _import_hair_obj(
-        self, context, type, pref, blendfile
+        self, context, hair_type, pref, blendfile
     ) -> bpy.types.Object:
         """Imports the object that contains the hair systems named in the json file
 
@@ -191,7 +196,7 @@ class ImportableHair(BaseHair):
             Object: body object that contains the hair systems
         """
         # import hair object, linking it to the scene and collection
-        subfolder = "head" if type == "head" else "face_hair"
+        subfolder = "head" if hair_type == "head" else "face_hair"
         blendpath = os.path.join(pref.filepath, "hair", subfolder, blendfile)
 
         with bpy.data.libraries.load(blendpath, link=False) as (_, data_to):
@@ -211,7 +216,7 @@ class ImportableHair(BaseHair):
             hg_body (Object): body object
             hair_obj (Oject): imported hair object
         """
-        body_copy = self._human.body_obj.hg_body.copy()  # TODO without copying
+        body_copy = self._human.body_obj.copy()  # TODO without copying
         body_copy.data = body_copy.data.copy()
         context.scene.collection.objects.link(body_copy)
 
@@ -232,7 +237,7 @@ class ImportableHair(BaseHair):
 
         hg_delete(body_copy)
 
-    def _transfer_hair_system(self, json_systems, hair_obj, ps):
+    def _transfer_hair_system(self, context, json_systems, hair_obj, ps):
         ps_mods = [
             mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"
         ]
@@ -240,7 +245,8 @@ class ImportableHair(BaseHair):
             if mod.particle_system.name == ps:
                 self._set_particle_settings(json_systems, mod, ps)
                 break
-        override = bpy.context.copy()
+
+        override = context.copy()
         override["particle_system"] = hair_obj.particle_systems[ps]
         bpy.ops.particle.copy_particle_systems(
             override, remove_target_particles=False, use_active=True
@@ -269,7 +275,7 @@ class ImportableHair(BaseHair):
             psys.display_step = json_sett["path_steps"]
             psys.render_step = json_sett["path_steps"]
 
-    def _transfer_vertexgroup(self, to_obj, from_obj, vg_name):
+    def _transfer_vertexgroup(self, from_obj, vg_name):
         """Copies vertex groups from one object to the other
 
         Args:
@@ -287,7 +293,7 @@ class ImportableHair(BaseHair):
             except:
                 pass
 
-        target_vg = to_obj.vertex_groups.new(name=vg_name)
+        target_vg = self._human.body_obj.vertex_groups.new(name=vg_name)
         # fmt: off
         for v in vert_dict:
             target_vg.add([v,],vert_dict[v],"ADD")
@@ -315,6 +321,9 @@ class ImportableHair(BaseHair):
         new_mod_dict = {}
         for mod in self._human.hair.modifiers:
             if mod.particle_system.name in system_names:
+                print(
+                    f"adding {mod} from {[x for x in self._human.hair.modifiers]} to list"
+                )
                 new_mod_dict[mod] = mod.particle_system.name
 
         return new_mod_dict
@@ -333,9 +342,7 @@ class ImportableHair(BaseHair):
         particle_systems.active_index = ps_idx
         bpy.ops.particle.connect_hair(all=False)
 
-    def _set_correct_particle_vertexgroups(
-        self, new_systems, from_obj, to_obj
-    ):
+    def _set_correct_particle_vertexgroups(self, new_systems, from_obj):
         """Transferring particle systems results in the wrong vertex group being set,
         this corrects that
 
@@ -363,7 +370,7 @@ class ImportableHair(BaseHair):
             ]
 
             old_ps_sett = from_obj.particle_systems[ps_name]
-            new_ps_sett = to_obj.particle_systems[ps_name]
+            new_ps_sett = self._human.hair.particle_systems[ps_name]
 
             for vg_attr in vg_attributes:
                 setattr(new_ps_sett, vg_attr, getattr(old_ps_sett, vg_attr))
@@ -420,3 +427,8 @@ class ImportableHair(BaseHair):
                 bpy.ops.object.modifier_move_to_index(
                     modifier=mod.name, index=lowest_mask_index
                 )
+
+    def remove_all(self):
+        modifiers = self.modifiers
+        for mod in modifiers:
+            self._human.body_obj.modifiers.remove(mod)

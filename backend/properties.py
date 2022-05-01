@@ -296,7 +296,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         items=lambda a, b: get_pcoll_enum_items(a, b, "outfit"),
         update=lambda s, c: Human.from_existing(
             c.object
-        ).finalize_phase.clothings.outfit.set(s.pcoll_outfit, c),
+        ).finalize_phase.outfit.set(s.pcoll_outfit, c),
     )
     outfit_sub: EnumProperty(
         name="Outfit Library",
@@ -356,7 +356,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         items=lambda a, b: get_pcoll_enum_items(a, b, "footwear"),
         update=lambda s, c: Human.from_existing(
             c.object
-        ).finalize_phase.clothing.footwear.set(s.pcoll_footwear, c),
+        ).finalize_phase.footwear.set(s.pcoll_footwear, c),
     )
     footwear_sub: EnumProperty(
         name="Footwear Library",
@@ -387,7 +387,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     pcoll_textures: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "textures"),
-        update=lambda s, c: Human.from_existing(c.object).skin.textures.set(
+        update=lambda s, c: Human.from_existing(c.object).skin.texture.set(
             s.pcoll_textures
         ),
     )
