@@ -6,19 +6,21 @@ import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.human.human import Human
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-
-from ....backend.preview_collections import refresh_pcoll
-from ....human.human import Human
-from ..common.random import set_random_active_in_pcoll
-from ..utility_section.baking import (  # type:ignore
-    add_image_node,
-    bake_texture,
-    check_bake_render_settings,
-    generate_bake_enum,
-    get_solidify_state,
-    material_setup,
+from HumGen3D.old.blender_operators.common.random import (
+    set_random_active_in_pcoll,
 )
+
+# from ..utility_section.baking import (  # type:ignore
+#     add_image_node,
+#     bake_texture,
+#     check_bake_render_settings,
+#     generate_bake_enum,
+#     get_solidify_state,
+#     material_setup,
+# )
 from .batch_functions import length_from_bell_curve
 
 
@@ -97,15 +99,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         #### Creation Phase ####
 
-        sett.gender = self.gender
-        set_random_active_in_pcoll(
-            context, sett, "humans", searchterm=self.ethnicity
-        )
-        hg_rig, hg_body = self.create_human(context)  # inherited
-        human = Human.from_existing(hg_rig)
-        self._give_random_name_to_human(self.gender, hg_rig)  # inherited
-
-        context.view_layer.objects.active = hg_rig
+        presets = Human.get_preset_options(self.gender)
+        chosen_preset = random.choice(presets)
+        human = Human.from_preset(chosen_preset)
 
         human.creation_phase.body.randomize()
         human.creation_phase.face.randomize(
@@ -113,13 +109,15 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         )
 
         if self.texture_resolution in ("optimised", "performance"):
-            self._set_body_texture_resolution(sett, hg_body)
+            self._set_body_texture_resolution(sett, human.body_obj)
 
         human.skin.randomize()
         human.eyes.randomize()
 
         if self.add_hair:
-            set_random_active_in_pcoll(context, sett, "hair")
+            human.hair.regular_hair.randomize(context)
+            if self.gender == "male":
+                human.hair.facial_hair.randomize(context)
 
         human.hair.set_hair_quality(self.hair_quality, context)
         human.hair.regular_hair.randomize_color()
@@ -133,8 +131,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         human.creation_phase.finish(context)
 
         #### Finalize Phase #####
-
-        context.view_layer.objects.active = hg_rig
 
         if self.add_clothing:
             try:
@@ -150,37 +146,38 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             set_random_active_in_pcoll(context, sett, "outfit")
             sett.footwear_sub = "All"
             set_random_active_in_pcoll(context, sett, "footwear")
-            for cloth in human.finalize_phase.outfit.obj_settings:
-                cloth.randomize_colors(context)
-                cloth.set_texture_resolution(self.texture_resolution)
+            # FIXME
+            # for cloth in human.finalize_phase.outfit.obj_settings:
+            #     cloth.randomize_colors(context)
+            #     cloth.set_texture_resolution(self.texture_resolution)
 
-            for cloth in human.finalize_phase.footwear.obj_settings:
-                cloth.randomize_colors(context)
-                cloth.set_texture_resolution(self.texture_resolution)
+            # for cloth in human.finalize_phase.footwear.obj_settings:
+            #     cloth.randomize_colors(context)
+            #     cloth.set_texture_resolution(self.texture_resolution)
 
         if self.pose_type != "a_pose":
             self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
+            # TODO implement in OOP
             sett.expressions_sub = self.expressions_category
             set_random_active_in_pcoll(context, sett, "expressions")
             expr_sk = next(
-                (
-                    sk
-                    for sk in hg_body.data.shape_keys.key_blocks
-                    if sk.name.startswith("expr_")
-                ),
+                (sk for sk in human.shape_keys if sk.name.startswith("expr_")),
                 None,
             )
             if expr_sk:
                 expr_sk.value = random.choice([0.5, 0.7, 0.8, 1, 1, 1])
 
-        hg_rig.HG.phase = "clothing"  # TODO is this needed? Remove?
+        human.props.phase = "clothing"  # TODO is this needed? Remove?
 
         # if self.bake_textures:
         #     self._bake_all_textures(context, hg_rig)
 
         #### Quality settings #####
+
+        hg_rig = human.rig_obj
+        hg_body = human.body_obj
 
         self._set_quality_settings(context, hg_rig, hg_body)
 

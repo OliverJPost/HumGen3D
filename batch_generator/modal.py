@@ -11,11 +11,11 @@ import time
 from pathlib import Path
 
 import bpy
+from HumGen3D.API import HG_Batch_Generator
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
 
-from ....API import HG_Batch_Generator
 from .batch_functions import get_batch_marker_list, has_associated_human
 
 
@@ -189,12 +189,12 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                 ),
                 pose_type=pose_type,
             )
-
-            if not result:
-                self._cancel(sett, context)
-                return {"RUNNING_MODAL"}
-            else:
-                hg_rig = result.rig_object
+            # FIXME repair return
+            # if not result:
+            #     self._cancel(sett, context)
+            #     return {"RUNNING_MODAL"}
+            # else:
+            hg_rig = result  # result.rig_object
 
             hg_rig.location = current_marker.location
             hg_rig.rotation_euler = current_marker.rotation_euler

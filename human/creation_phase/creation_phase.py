@@ -71,8 +71,13 @@ class CreationPhaseSettings:
 
         human.hair.children_set_hide(True)
 
-        old_shading = context.space_data.shading.type
-        context.space_data.shading.type = "SOLID"
+        try:
+            old_shading = context.space_data.shading.type
+            context.space_data.shading.type = "SOLID"
+        # Catch background process exception
+        except AttributeError:
+            old_shading = None
+
         t = time_update("startup", t)
         human.hair.eyebrows.remove_unused(_internal=True)
         t = time_update("remove eyebrows", t)
@@ -113,7 +118,8 @@ class CreationPhaseSettings:
         sk["cor_ShoulderSideRaise_Lt"].mute = True
         sk["cor_ShoulderSideRaise_Lt"].mute = False
 
-        context.space_data.shading.type = old_shading
+        if old_shading:
+            context.space_data.shading.type = old_shading
 
         hg_rig.HG.phase = "clothing"
         t = time_update("ending", t)

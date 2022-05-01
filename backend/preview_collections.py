@@ -35,7 +35,12 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
 
 
 def refresh_pcoll(
-    self, context, pcoll_name, ignore_genders=False, hg_rig=None
+    self,
+    context,
+    pcoll_name,
+    ignore_genders=False,
+    hg_rig=None,
+    gender_override=None,
 ):
     """Refresh the items of this preview
 
@@ -47,7 +52,14 @@ def refresh_pcoll(
 
     sett.load_exception = False if pcoll_name == "poses" else True
 
-    _populate_pcoll(self, context, pcoll_name, ignore_genders, hg_rig=hg_rig)
+    _populate_pcoll(
+        self,
+        context,
+        pcoll_name,
+        ignore_genders,
+        gender_override,
+        hg_rig=hg_rig,
+    )
     sett[
         "pcoll_{}".format(pcoll_name)
     ] = "none"  # set the preview collection to
@@ -70,7 +82,9 @@ def _check_for_HumGen_filepath_issues(self):
         raise HumGenException("Filepath selected, but no humans found in path")
 
 
-def _populate_pcoll(self, context, pcoll_categ, ignore_genders, hg_rig=None):
+def _populate_pcoll(
+    self, context, pcoll_categ, ignore_genders, gender_override, hg_rig=None
+):
     """Populates the preview collection enum list with blend file filepaths and
     icons
 
@@ -89,6 +103,15 @@ def _populate_pcoll(self, context, pcoll_categ, ignore_genders, hg_rig=None):
     # find category and subcategory in order to determine the dir to search
     if not hg_rig:
         hg_rig = find_human(context.active_object)
+
+    if ignore_genders:
+        gender = ""
+    elif gender_override:
+        gender = gender_override
+    elif pcoll_categ == "humans":
+        gender = sett.gender
+    else:
+        gender = hg_rig.HG.gender
 
     gender = (
         ""

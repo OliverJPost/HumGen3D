@@ -23,7 +23,7 @@ class BaseHair:
         ps["root"] = ps.root_radius
         ps["tip"] = ps.tip_radius
 
-    def randomize_color(self, hg_body):
+    def randomize_color(self):
         # TODO make system more elaborate
         hair_color_dict = {
             "blonde": (4.0, 0.8, 0.0),
@@ -37,7 +37,7 @@ class BaseHair:
             random.choice([name for name in hair_color_dict])
         ]
 
-        for mat in hg_body.data.materials[1:]:
+        for mat in self._human.body_obj.data.materials[1:]:
             nodes = mat.node_tree.nodes
             hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
             hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
@@ -427,3 +427,11 @@ class ImportableHair(BaseHair):
         modifiers = self.modifiers
         for mod in modifiers:
             self._human.body_obj.modifiers.remove(mod)
+
+    def randomize(self, context=None):
+        if not context:
+            context = bpy.context
+
+        preset_options = self.get_preset_options()
+        chosen_preset = random.choice(preset_options)
+        self.set(chosen_preset, context)

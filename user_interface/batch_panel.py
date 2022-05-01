@@ -1,12 +1,15 @@
-from HumGen3D.backend.preference_func import get_prefs
 import bpy
-
-from ..backend.preview_collections import get_hg_icon, preview_collections
-from ..old.blender_operators.batch_section.batch_functions import (
+from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preview_collections import (
+    get_hg_icon,
+    preview_collections,
+)
+from HumGen3D.batch_generator.batch_functions import (
     calculate_batch_statistics,
+    get_batch_marker_list,
     length_from_bell_curve,
 )
-from ..old.blender_operators.batch_section.modal import get_batch_marker_list
+
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,

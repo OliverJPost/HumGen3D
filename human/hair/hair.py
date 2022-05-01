@@ -160,8 +160,8 @@ class HairSettings:
         if not context:
             context = bpy.context
 
-        for mod in self._human.hair.particle_systems:
-            ps = mod.particle_system.settings
+        for psys in self._human.hair.particle_systems:
+            ps = psys.settings
             max_steps = ps["steps"]
             max_children = ps["children"]
             max_root = ps["root"]
