@@ -173,6 +173,11 @@ class Human:
                 yield subchild
 
     @property
+    def children(self) -> Generator[Object]:
+        for child in self.rig_obj.children:
+            yield child
+
+    @property
     def gender(self) -> str:
         """Gender of this human in ("male", "female")"""
         return self.rig_obj.HG.gender
@@ -233,9 +238,7 @@ class Human:
 
     @property
     def shape_keys(self) -> ShapeKeySettings:
-        if not hasattr(self, "_shape_keys"):
-            self._shape_keys = ShapeKeySettings(self)
-        return self._shape_keys
+        return ShapeKeySettings(self)
 
     @property
     def eyes(self) -> EyeSettings:
@@ -258,9 +261,6 @@ class Human:
         return self.rig_obj.HG.body_obj
 
     def delete(self) -> None:
-        pass  # TODO
-
-    def finish_creation_phase(self) -> None:
         pass  # TODO
 
     def _verify_body_object(self):

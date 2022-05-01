@@ -1,14 +1,13 @@
 import os
 from pathlib import Path
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
 
 import bpy
 from bpy.types import Context
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.user_interface.feedback_func import show_message
-
 
 from ..base.prop_collection import PropCollection
 
@@ -41,7 +40,10 @@ def apply_shapekeys(ob):
 
 class ShapeKeySettings(PropCollection):
     def __init__(self, human):
-        super().__init__(human.body_obj.data.shape_keys.key_blocks)
+        try:
+            super().__init__(human.body_obj.data.shape_keys.key_blocks)
+        except AttributeError:
+            self._collection = None
         self._human = human
 
     @property
@@ -175,17 +177,24 @@ class ShapeKeySettings(PropCollection):
                 hg_body.shape_key_remove(sk)
 
     def _extract_permanent_keys(
-        self, context: Context = None, apply_armature: bool = True, override_obj = None
+        self,
+        context: Context = None,
+        apply_armature: bool = True,
+        override_obj=None,
     ):
         if not context:
             context = bpy.context
 
         pref = get_prefs()
 
-        driver_dict = build_driver_dict(self)
-
         obj = override_obj if override_obj else self._human.body_obj
-        sks = override_obj.data.shape_keys.key_blocks if override_obj else self._human.shape_keys
+        sks = (
+            override_obj.data.shape_keys.key_blocks
+            if override_obj
+            else self._human.shape_keys
+        )
+
+        driver_dict = build_driver_dict(obj)
 
         obj_list = []
         for shapekey in sks:
@@ -225,7 +234,10 @@ class ShapeKeySettings(PropCollection):
             bpy.ops.object.join_shapes()
             ob.select_set(False)
             if ob.name in driver_dict:
-                target_sk = self[ob.name]
+                print(self._collection)
+                print([sk.name for sk in self._human.shape_keys])
+                print("Searching for", ob.name)
+                target_sk = self._human.shape_keys.get(ob.name)
                 self._add_driver(target_sk, driver_dict[ob.name])
 
         for ob in sk_objects:
