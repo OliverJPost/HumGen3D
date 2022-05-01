@@ -224,6 +224,8 @@ class TextureSettings:
 
         if diffuse_texture == "none":
             return
+        if diffuse_texture.startswith(os.sep):
+            diffuse_texture = diffuse_texture[1:]
 
         nodes = self._human.skin.nodes
         gender = self._human.gender
