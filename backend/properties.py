@@ -7,13 +7,9 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend.content_packs.custom_content_packs import (
-    build_content_collection,
-)
+from HumGen3D.backend.content_packs.custom_content_packs import build_content_collection
 from HumGen3D.human.human import Human
-from HumGen3D.old.blender_operators.utility_section.baking import (
-    make_path_absolute,
-)
+from HumGen3D.old.blender_operators.utility_section.baking import make_path_absolute
 
 from ..old.blender_operators.utility_section.utility_functions import (
     get_preset_thumbnail,
@@ -325,7 +321,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         items=lambda a, b: get_pcoll_enum_items(a, b, "face_hair"),
         update=lambda s, c: Human.from_existing(
             c.object
-        ).hair.regular_hair.set(s.pcoll_face_hair, c),
+        ).hair.facial_hair.set(s.pcoll_face_hair, c),
     )
     face_hair_sub: EnumProperty(
         name="Facial Hair Library",
