@@ -16,11 +16,14 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
 
     def execute(self, context):
         blendfile = os.path.join(
-            get_addon_root(), "data", "hg_batch_markers.blend"
+            get_addon_root(),
+            "batch_generator",
+            "data",
+            "hg_batch_markers.blend",
         )
 
         with bpy.data.libraries.load(blendfile, link=False) as (
-            data_from,
+            _,
             data_to,
         ):
             data_to.objects = [

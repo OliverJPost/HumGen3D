@@ -49,6 +49,15 @@ class Human:
         self.rig_obj = rig_obj
 
     @classmethod
+    def get_preset_options(cls, gender: str, context=None):
+        if not context:
+            context = bpy.context
+
+        refresh_pcoll(None, context, "humans", gender_override=gender)
+        # TODO more low level way
+        return context.scene.HG3D["previews_list_humans"]
+
+    @classmethod
     def from_existing(
         cls, existing_human: Object, strict_check: bool = True
     ) -> Human:

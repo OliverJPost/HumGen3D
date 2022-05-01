@@ -154,7 +154,9 @@ class HG_Batch_Generator:
 
         hg_rig = self.__import_generated_human()
 
-        return HG_Human(existing_human=hg_rig)
+        return hg_rig
+        # FIXME keep old API active
+        # return HG_Human(existing_human=hg_rig)
 
     def __construct_settings_dict_from_kwargs(self, settings_dict):
         del settings_dict["self"]
