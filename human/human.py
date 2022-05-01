@@ -11,6 +11,8 @@ import bpy
 from ..backend.logging import hg_log
 from ..backend.memory_management import hg_delete
 from ..backend.preview_collections import refresh_pcoll
+from .base.render import set_eevee_ao_and_strip
+from .finalize_phase.finalize_phase import FinalizePhaseSettings
 
 if TYPE_CHECKING:
     from bpy.props import FloatVectorProperty
@@ -19,9 +21,6 @@ if TYPE_CHECKING:
 from bpy.types import Object
 
 from ..backend.preference_func import get_prefs
-from ..old.blender_operators.creation_phase.creation import (
-    set_eevee_ao_and_strip,
-)
 from .base.collections import add_to_collection
 from .base.exceptions import HumGenException
 from .base.namegen import get_name
@@ -182,6 +181,14 @@ class Human:
     def name(self) -> str:
         return self.rig_obj.name.replace("HG_", "")
 
+    @property
+    def pose_bones(self):
+        return self.rig_obj.pose.bones
+
+    @property
+    def edit_bones(self):
+        return self.rig_obj.data.edit_bones
+
     @name.setter
     def name(self, name: str):
         self.rig_obj.name = name
@@ -211,6 +218,12 @@ class Human:
         if not hasattr(self, "_creation_phase"):
             self._creation_phase = CreationPhaseSettings(self)
         return self._creation_phase
+
+    @property
+    def finalize_phase(self):
+        if not hasattr(self, "_finalize_phase"):
+            self._finalize_phase = FinalizePhaseSettings(self)
+        return self._finalize_phase
 
     @property
     def skin(self) -> SkinSettings:
@@ -391,3 +404,8 @@ class Human:
                 hg_delete(obj)
             except:
                 hg_log("could not remove", obj)
+
+    def hide_set(self, state):
+        for obj in self.objects:
+            obj.hide_set(state)
+            obj.hide_viewport = state

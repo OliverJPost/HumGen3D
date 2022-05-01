@@ -5,6 +5,8 @@ from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.old.blender_operators.common.common_functions import find_human
 
+from HumGen3D.human.human import Human
+
 
 class HG_RIGIFY(bpy.types.Operator):
     """Changes the rig to make it compatible with Rigify, then generates the rig
@@ -25,6 +27,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
     def execute(self, context):
         hg_rig = find_human(context.active_object)
+        human = Human.from_existing(context.object)
         context.view_layer.objects.active = hg_rig
         hg_body = hg_rig.HG.body_obj
 
@@ -61,7 +64,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
         sks = hg_body.data.shape_keys.key_blocks
         for target_sk_name, sett_dict in driver_dict.items():
-            pass  # FIXME add_driver(hg_body, sks[target_sk_name], sett_dict)
+            human.shape_keys._add_driver(hg_body, sks[target_sk_name], sett_dict)
 
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)

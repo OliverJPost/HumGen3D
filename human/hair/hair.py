@@ -1,4 +1,12 @@
+import os
+
 import bpy
+from HumGen3D.backend.preference_func import get_addon_root
+from HumGen3D.human.base.prop_collection import PropCollection
+from HumGen3D.human.hair.eyelashes import EyelashSettings
+from HumGen3D.human.hair.facial_hair import FacialHairSettings
+from HumGen3D.human.hair.regular_hair import RegularHairSettings
+from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 from ..hair.eyebrows import EyebrowSettings
 
@@ -12,6 +20,24 @@ class HairSettings:
         if not hasattr(self, "_eyebrows"):
             self._eyebrows = EyebrowSettings(self._human)
         return self._eyebrows
+
+    @property
+    def eyelashes(self) -> EyelashSettings:
+        if not hasattr(self, "_eyelashes"):
+            self._eyelashes = EyelashSettings(self._human)
+        return self._eyelashes
+
+    @property
+    def facial_hair(self) -> FacialHairSettings:
+        if not hasattr(self, "_facial_hair"):
+            self._facial_hair = FacialHairSettings(self._human)
+        return self._facial_hair
+
+    @property
+    def regular_hair(self) -> RegularHairSettings:
+        if not hasattr(self, "_regular_hair"):
+            self._regular_hair = RegularHairSettings(self._human)
+        return self._regular_hair
 
     @property
     def children_ishidden(self) -> bool:
@@ -60,6 +86,18 @@ class HairSettings:
     def particle_systems(self):
         return self._human.body_obj.particle_systems
 
+    @property
+    def modifiers(self):
+        if not hasattr(self, "_modifiers"):
+            self._modifiers = PropCollection(
+                [
+                    mod
+                    for mod in self._human.body_obj.modifiers
+                    if mod.type == "PARTICLE_SYSTEM"
+                ]
+            )
+        return self._modifiers
+
     def _add_quality_props(self):
         for psys in self.particle_systems:
             ps = psys.settings
@@ -67,3 +105,104 @@ class HairSettings:
             ps["children"] = ps.rendered_child_count
             ps["root"] = ps.root_radius
             ps["tip"] = ps.tip_radius
+
+    def convert_to_new_hair_shader(self, hg_body):
+        hair_mats = hg_body.data.materials[1:3]
+
+        group_nodes = []
+        for mat in hair_mats:
+            group_nodes.append(
+                next(
+                    (n for n in mat.node_tree.nodes if n.name == "HG_Hair"),
+                    None,
+                )
+            )
+
+        # check if there is at least one
+        if not any(group_nodes):
+            return
+
+        addon_folder = get_addon_root()
+        blendfile = os.path.join(
+            addon_folder, "human", "hair", "hair_shader_v3.blend"
+        )
+
+        if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
+            new_hair_group = bpy.data.node_groups["HG_Hair_V3"]
+        else:
+            with bpy.data.libraries.load(blendfile, link=False) as (
+                data_from,
+                data_to,
+            ):
+                data_to.node_groups = data_from.node_groups
+
+            new_hair_group = data_to.node_groups[0]
+
+        for node in group_nodes:
+            node.node_tree = new_hair_group
+            node.name = "HG_Hair_V3"
+
+    def update_hair_shader_type(self, shader_type, context=None):
+        if not context:
+            context = bpy.context
+
+        value = 0 if shader_type == "fast" else 1
+
+        hg_rig = find_human(context.object)
+        hg_body = hg_rig.HG.body_obj
+
+        for mat in hg_body.data.materials[1:3]:
+            hair_group = mat.node_tree.nodes.get("HG_Hair_V3")
+            if not hair_group:
+                continue
+
+            hair_group.inputs["Fast/Accurate"].default_value = value
+
+    def set_hair_quality(self, hair_quality, context=None):
+        if not context:
+            context = bpy.context
+
+        for mod in self._human.hair.particle_systems:
+            ps = mod.particle_system.settings
+            max_steps = ps["steps"]
+            max_children = ps["children"]
+            max_root = ps["root"]
+            max_tip = ps["tip"]
+
+            ps.render_step = ps.display_step = self._get_steps_amount(
+                hair_quality, max_steps
+            )
+            ps.rendered_child_count = ps.child_nbr = self._get_child_amount(
+                hair_quality, max_children
+            )
+            ps.root_radius, ps.tip_radius = self._get_root_and_tip(
+                hair_quality, max_root, max_tip
+            )
+
+    def _get_steps_amount(self, hair_quality, max_steps):
+        min_steps = 1 if max_steps <= 2 else 2 if max_steps <= 4 else 3
+        deduction_dict = {"high": 0, "medium": 1, "low": 2, "ultralow": 3}
+        new_steps = max_steps - deduction_dict[hair_quality]
+        if new_steps < min_steps:
+            new_steps = min_steps
+
+        return new_steps
+
+    def _get_child_amount(self, hair_quality, max_children):
+        division_dict = {"high": 1, "medium": 2, "low": 4, "ultralow": 10}
+        new_children = max_children / division_dict[hair_quality]
+
+        return int(new_children)
+
+    def _get_root_and_tip(self, hair_quality, max_root, max_tip):
+        multiplication_dict = {
+            "high": 1,
+            "medium": 2,
+            "low": 6,
+            "ultralow": 12,
+        }
+
+        new_root = max_root * multiplication_dict[hair_quality]
+        new_tip = max_tip * multiplication_dict[hair_quality]
+
+        return new_root, new_tip

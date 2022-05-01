@@ -494,7 +494,7 @@ class HG_REFRESH_CPACKS(bpy.types.Operator):
         return {"FINISHED"}
 
 
-# FIXME slow switch between preferences tabs
+# TODO slow switch between preferences tabs
 def cpacks_refresh(self, context):
     """Refreshes the content pack ui list by scanning the content_packs folder
     in the file structure"""

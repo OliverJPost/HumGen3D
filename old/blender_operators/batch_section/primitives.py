@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from HumGen3D.backend.preferences import get_addon_root
 
 import bpy
+from HumGen3D.backend.preference_func import get_addon_root
 from HumGen3D.human.base.collections import add_to_collection  # type:ignore
 
 

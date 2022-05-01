@@ -43,7 +43,7 @@ class ExpressionSettings:
             backup_body = next(
                 child for child in backup_rig.children if "hg_body" in child
             )
-            self.transfer_as_one_shapekey(
+            self._transfer_as_one_shapekey(
                 context, backup_body, hg_body, sett_dict, backup_rig
             )
 
@@ -61,7 +61,7 @@ class ExpressionSettings:
         new_key.mute = False
         new_key.value = 1
 
-    def transfer_as_one_shapekey(context, source, target, sk_dict, backup_rig):
+    def _transfer_as_one_shapekey(self, context, source, target, sk_dict, backup_rig):
         """Transfers multiple shapekeys as one shapekey
 
         Args:
@@ -96,8 +96,8 @@ class ExpressionSettings:
         backup_rig_copy.HG.body_obj = source_copy
 
         apply_armature(source_copy)
-        # FIXME
-        # apply_length_to_rig(backup_rig_copy, context)
+
+        self._human.creation_phase.length.apply(context)
 
         for obj in context.selected_objects:
             obj.select_set(False)

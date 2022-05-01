@@ -2,38 +2,16 @@ import bpy
 from bpy.types import Context
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
+from HumGen3D.human.hair.basehair import BaseHair
+
 from ..base.prop_collection import PropCollection
 
 
-class EyebrowSettings:
+class EyebrowSettings(BaseHair):
     def __init__(self, human):
         self._human = human
+        self._startswith="Eyebrow"
 
-    @property
-    def particle_systems(self):
-        if not hasattr(self, "_particle_systems"):
-            particle_systems = self._human.body_obj.particle_systems
-            eyebrows = [
-                ps for ps in particle_systems if ps.name.startswith("Eyebrows")
-            ]
-            self._particle_systems = PropCollection(eyebrows)
-        return self._particle_systems
-
-    @property
-    def modifiers(self):
-        if not hasattr(self, "_modifiers"):
-            particle_mods = [
-                mod
-                for mod in self._human.body_obj.modifiers
-                if mod.type == "PARTICLE_SYSTEM"
-            ]
-            eyebrows = [
-                mod
-                for mod in particle_mods
-                if mod.particle_system.name.startswith("Eyebrows")
-            ]
-            self._modifiers = PropCollection(eyebrows)
-        return self._modifiers
 
     def _set_from_preset(self, preset_eyebrow):
         """Sets the eyebrow named in preset_data as the only visible eyebrow

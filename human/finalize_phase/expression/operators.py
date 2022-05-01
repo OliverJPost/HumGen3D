@@ -187,7 +187,7 @@ class HG_ADD_FRIG(bpy.types.Operator, FRIG_DATA):
         for driver_shapekey in driver_dict:
             if driver_shapekey in sks_on_target:
                 sk = to_obj.data.shape_keys.key_blocks[driver_shapekey]
-                driver = None  # FIXME add_driver(to_obj, sk, driver_dict[driver_shapekey])
+                driver = self._human.shape_keys._add_driver(to_obj, sk, driver_dict[driver_shapekey])
 
                 # correction for mistake in expression
                 if driver_shapekey == "mouthClose":

@@ -10,8 +10,12 @@ from shutil import copyfile
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preferences import get_addon_root, get_prefs
+from HumGen3D.backend.preference_func import get_addon_root, get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll  # type: ignore
+from HumGen3D.human.base.shapekey_calculator import (
+    build_distance_dict,
+    deform_obj_from_difference,
+)
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message
@@ -777,7 +781,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             json.dump(json_data, f, indent=4)
 
 
-# FIXME origin to model origin? Correction?
+# TODO origin to model origin? Correction?
 class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
     """Save this outfit to the content folder
 
@@ -859,9 +863,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         self.save_material_textures(objs)
         obj_distance_dict = {}
         for obj in objs:
-            distance_dict = (
-                None  # FIXME build_distance_dict(body_copy, obj, apply=False)
-            )
+            distance_dict = build_distance_dict(body_copy, obj, apply=False)
             obj_distance_dict[obj.name] = distance_dict
 
         for gender in genders:
@@ -900,16 +902,19 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     name = ""
                     as_sk = False
 
-                # FIXME deform_obj_from_difference(
-                #     name,
-                #     distance_dict,
-                #     backup_human,
-                #     obj_copy,
-                #     as_shapekey=as_sk,
-                #     apply_source_sks=False,
-                #     ignore_cor_sk=True,
-                # )
-                # FIXME correct_origin(context, obj, backup_human)
+                deform_obj_from_difference(
+                    name,
+                    distance_dict,
+                    backup_human,
+                    obj_copy,
+                    as_shapekey=as_sk,
+                    apply_source_sks=False,
+                    ignore_cor_sk=True,
+                )
+                human = None  # FIXME
+                human.creation_phase.length._correct_origin(
+                    context, obj, backup_human
+                )
                 export_list.append(obj_copy)
 
             if gender == "male":

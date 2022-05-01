@@ -3,10 +3,10 @@ Operators and functions to be used by the developer and content pack creators
 """
 
 import bpy
+from HumGen3D.human.human import Human
 from mathutils import Matrix
 
 from ..common.common_functions import find_human
-from ..creation_phase.hair import convert_to_new_hair_shader
 
 
 # REMOVE
@@ -46,13 +46,12 @@ class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        hg_rig = find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
-        if hg_body.data.materials[1].node_tree.nodes.get("HG_Hair_V3"):
+        human = Human.from_existing(context.object)
+        if human.materials.get("HG_Hair_V3"):
             self.report({"INFO"}, "This human already has the new hair shader")
             return {"FINISHED"}
 
-        convert_to_new_hair_shader(hg_body)
+        human.hair.convert_to_new_hair_shader()
         self.report({"INFO"}, "Converted hair to new hair shader")
         return {"FINISHED"}
 
@@ -94,12 +93,12 @@ class HG_DELETE_STRETCH(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        hg_rig = find_human(context.object)
-        if not hg_rig:
+        human = Human.from_existing(context.object)
+        if not human:
             self.report({"WARNING"}, "No human selected")
             return {"FINISHED"}
 
-        hg_body = hg_rig.HG.body_obj
+        hg_body = human.body_obj
 
         remove_list = [
             driver for driver in hg_body.data.shape_keys.animation_data.drivers
@@ -108,6 +107,6 @@ class HG_DELETE_STRETCH(bpy.types.Operator):
         for driver in remove_list:
             hg_body.data.shape_keys.animation_data.drivers.remove(driver)
 
-        # FIXME remove_stretch_bones(hg_rig)
+        human.creation_phase.delete_stretch_bones()
 
         return {"FINISHED"}

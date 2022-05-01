@@ -1,17 +1,20 @@
+import json
 import os
 from pathlib import Path
+from typing import Tuple
 
 import bpy
-import numpy as np
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
 from HumGen3D.human.base.collections import add_to_collection
-from HumGen3D.human.creation_phase.length.length import apply_armature
+from HumGen3D.human.base.shapekey_calculator import (
+    build_distance_dict,
+    deform_obj_from_difference,
+)
+from HumGen3D.human.finalize_phase import clothing
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.old.blender_operators.common.common_functions import find_human
-from mathutils import Vector, kdtree
 
 
 def find_masks(obj) -> list:
@@ -34,133 +37,31 @@ def find_masks(obj) -> list:
 
 
 class BaseClothing:
-    def build_distance_dict(self, source_org, target, apply=True):
-        """
-        Returns a dict with a key for each vertex of the source and the value the closest vertex of the target and the distance to it
-        """
-        source = source_org.copy()
-        source.data = source.data.copy()
-        bpy.context.scene.collection.objects.link(source)
-
-        apply_shapekeys(source)
-        hg_rig = find_human(bpy.context.object)
-        if apply:
-            apply_armature(source)
-
-        v_source = source.data.vertices
-        v_target = target.data.vertices
-
-        size = len(v_source)
-        kd = kdtree.KDTree(size)
-
-        for i, v in enumerate(v_source):
-            kd.insert(v.co, i)
-
-        kd.balance()
-        distance_dict = {}
-        for vt in v_target:
-            vt_loc = target.matrix_world @ vt.co
-
-            co_find = source.matrix_world.inverted() @ vt_loc
-
-            for (co, index, _) in kd.find_n(co_find, 1):
-                v_dist = np.subtract(co, co_find)
-
-                distance_dict[vt.index] = (index, Vector(v_dist))
-
-        hg_delete(source)
-        return distance_dict
-
-    def deform_obj_from_difference(
-        self,
-        name,
-        distance_dict,
-        deform_target,
-        obj_to_deform,
-        as_shapekey=True,
-        apply_source_sks=True,
-        ignore_cor_sk=False,
-    ):
-        """
-        Creates a shapekey from the difference between the distance_dict value and the current distance to that corresponding vertex
-        """
-        deform_target_copy = deform_target.copy()
-        deform_target_copy.data = deform_target_copy.data.copy()
-        bpy.context.scene.collection.objects.link(deform_target_copy)
-
-        if deform_target_copy.data.shape_keys and ignore_cor_sk:
-            for sk in [
-                sk
-                for sk in deform_target_copy.data.shape_keys.key_blocks
-                if sk.name.startswith("cor_")
-            ]:
-                deform_target_copy.shape_key_remove(sk)
-
-        if apply_source_sks:
-            apply_shapekeys(deform_target_copy)
-        hg_rig = find_human(bpy.context.object)
-        # apply_armature(source_copy)
-
-        if "Female_" in name or "Male_" in name:
-            name = name.replace("Female_", "")
-            name = name.replace("Male_", "")
-
-        sk = None
-        if as_shapekey:
-            sk = obj_to_deform.shape_key_add(name=name)
-            sk.interpolation = "KEY_LINEAR"
-            sk.value = 1
-        elif obj_to_deform.data.shape_keys:
-            sk = obj_to_deform.data.shape_keys.key_blocks["Basis"]
-
-        for vertex_index in distance_dict:
-            source_new_vert_loc = (
-                deform_target_copy.matrix_world
-                @ deform_target_copy.data.vertices[
-                    distance_dict[vertex_index][0]
-                ].co
-            )
-            distance_to_vert = distance_dict[vertex_index][1]
-            world_new_loc = source_new_vert_loc - distance_to_vert
-
-            if sk:
-                sk.data[vertex_index].co = (
-                    obj_to_deform.matrix_world.inverted() @ world_new_loc
-                )
-            else:
-                obj_to_deform.data.vertices[vertex_index].co = (
-                    obj_to_deform.matrix_world.inverted() @ world_new_loc
-                )
-
-        hg_delete(deform_target_copy)
-
-    def load_outfit(self, context, footwear=False):
+    def set(self, preset, context=None):
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
 
         Args:
             footwear (boolean): True if called by pcoll_footwear, else loads as outfit
         """
-        pref = get_prefs()
-        sett = context.scene.HG3D
-        hg_rig = find_human(context.active_object)
-        hg_body = hg_rig.HG.body_obj
+        if not context:
+            context = bpy.context
 
-        hg_rig.hide_set(False)
-        hg_rig.hide_viewport = False
+        pref = get_prefs()
+
+        self._human.hide_set(False)
+
+        is_footwear = isinstance(self, clothing.footwear.FootwearSettings)
 
         # returns immediately if the active item in the preview_collection is the
         # 'click here to select' icon
-        if (not footwear and sett.pcoll_outfit == "none") or (
-            footwear and sett.pcoll_footwear == "none"
-        ):
+        if preset == "none":
             return
 
-        tag = "shoe" if footwear else "cloth"
-        mask_remove_list = None  # FIXME remove_old_outfits(pref, hg_rig, tag)
+        tag = "shoe" if is_footwear else "cloth"
+        if pref.remove_clothes:  # TODO as argument?
+            mask_remove_list = self.remove()
 
-        cloth_objs, collections = None  # FIXME _import_cloth_items(
-        #     context, sett, pref, hg_rig, footwear
-        # )
+        cloth_objs, collections = self._import_cloth_items(preset, context)
 
         new_mask_list = []
         for obj in cloth_objs:
@@ -169,24 +70,24 @@ class BaseClothing:
                 tag
             ] = 1  # adds a custom property to the cloth for identifying purposes
 
-            # FIXME _deform_cloth_to_human(self, context, hg_rig, hg_body, obj)
+            self._deform_cloth_to_human(self, context, obj)
 
             for mod in obj.modifiers:
                 mod.show_expanded = False  # collapse modifiers
 
-            # FIXME set_cloth_corrective_drivers(
-            #     hg_body, obj, obj.data.shape_keys.key_blocks
-            # )
+            self._set_cloth_corrective_drivers(
+                obj, obj.data.shape_keys.key_blocks
+            )
 
         # remove collection that was imported along with the cloth objects
         for col in collections:
             bpy.data.collections.remove(col)
-        # FIXME _set_geometry_masks(mask_remove_list, new_mask_list, hg_body)
+        self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
         refresh_pcoll(self, context, "outfit")
 
-    def _deform_cloth_to_human(self, context, hg_rig, hg_body, obj):
+    def _deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using
         HG_SHAPEKEY_CALCULATOR
 
@@ -195,30 +96,35 @@ class BaseClothing:
             hg_body (Object): HumGen body
             obj (Object): cloth object to deform
         """
-        backup_rig = hg_rig.HG.backup
-        obj.parent = backup_rig
+        backup_rig = self._human.backup_rig
+        cloth_obj.parent = backup_rig
 
         backup_rig.HG.body_obj.hide_viewport = False
         backup_body = [obj for obj in backup_rig.children if "hg_body" in obj][
             0
         ]
 
-        backup_body_copy = (
-            None  # FIXME _copy_backup_with_gender_sk(backup_body)
+        backup_body_copy = self._copy_backup_with_gender_sk(backup_body)
+
+        distance_dict = build_distance_dict(
+            backup_body_copy, cloth_obj, apply=False
         )
-        distance_dict = None  # FIXME build_distance_dict(backup_body_copy, obj, apply=False)
 
-        obj.parent = hg_rig
+        cloth_obj.parent = self._human.rig_obj
 
-        # FIXME deform_obj_from_difference(
-        #     "Body Proportions", distance_dict, hg_body, obj, as_shapekey=True
-        # )
+        deform_obj_from_difference(
+            "Body Proportions",
+            distance_dict,
+            self._human.body_obj,
+            cloth_obj,
+            as_shapekey=True,
+        )
 
-        obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
+        cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
 
-        context.view_layer.objects.active = obj
-        # FIXME _set_armature(context, obj, hg_rig)
-        context.view_layer.objects.active = hg_rig
+        context.view_layer.objects.active = cloth_obj
+        self._set_armature(context, cloth_obj, self._human.rig_obj)
+        context.view_layer.objects.active = self._human.rig_obj
 
         hg_delete(backup_body_copy)
 
@@ -257,7 +163,7 @@ class BaseClothing:
 
         return copy
 
-    def _set_geometry_masks(mask_remove_list, new_mask_list, hg_body):
+    def _set_geometry_masks(self, mask_remove_list, new_mask_list):
         """Adds geometry mask modifiers to hg_body based on custom properties on the
         imported clothing
 
@@ -281,17 +187,19 @@ class BaseClothing:
         # remove modifiers used by old clothes
         for mask in mask_remove_list:
             try:
-                hg_body.modifiers.remove(hg_body.modifiers.get(mask))
-            except:
+                self._human.body_obj.modifiers.remove(
+                    self._human.body_obj.modifiers.get(mask)
+                )
+            except Exception:
                 pass
 
         # add new masks used by new clothes
         for mask in new_mask_list:
-            mod = hg_body.modifiers.new(mask, "MASK")
+            mod = self._human.body_obj.modifiers.new(mask, "MASK")
             mod.vertex_group = mask
             mod.invert_vertex_group = True
 
-    def _set_armature(context, obj, hg_rig):
+    def _set_armature(self, context, obj, hg_rig):
         """Adds an armature modifier to this cloth object
 
         Args:
@@ -307,9 +215,9 @@ class BaseClothing:
             armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
 
         armature_mods[0].object = hg_rig
-        # FIXME _move_armature_to_top(context, obj, armature_mods)
+        self._move_armature_to_top(context, obj, armature_mods)
 
-    def _move_armature_to_top(context, obj, armature_mods):
+    def _move_armature_to_top(self, context, obj, armature_mods):
         """Moves the armature modifier to the top of the stack
 
         Args:
@@ -334,8 +242,10 @@ class BaseClothing:
                 )
 
     def _import_cloth_items(
-        context, sett, pref, hg_rig, footwear
-    ) -> "tuple[list, list]":
+        self,
+        preset,
+        context=None,
+    ) -> Tuple[list, list]:
         """Imports the cloth objects from an external file
 
         Args:
@@ -352,8 +262,11 @@ class BaseClothing:
         """
         # load the whole collection from the outfit file. It loads collections
         # instead of objects because this allows loading of linked objects
-        pcoll_item = sett.pcoll_footwear if footwear else sett.pcoll_outfit
-        blendfile = str(pref.filepath) + str(Path(pcoll_item))
+
+        if not context:
+            context = bpy.context
+
+        blendfile = str(get_prefs().filepath) + str(Path(preset))
         with bpy.data.libraries.load(blendfile, link=False) as (
             data_from,
             data_to,
@@ -378,7 +291,7 @@ class BaseClothing:
         for obj in cloth_objs:
             add_to_collection(context, obj)
             obj.location = (0, 0, 0)
-            obj.parent = hg_rig
+            obj.parent = self._human.rig_obj
             obj.select_set(True)
 
         # makes linked objects/textures/nodes local
@@ -387,7 +300,7 @@ class BaseClothing:
 
         return cloth_objs, collections
 
-    def remove_old_outfits(pref, hg_rig, tag) -> list:
+    def remove(self) -> list:
         """Removes the cloth objects that were already on the human
 
         Args:
@@ -401,15 +314,13 @@ class BaseClothing:
         # removes previous outfit/shoes if the preferences option is True
         mask_remove_list = []
 
-        if pref.remove_clothes:
-            for child in [child for child in hg_rig.children]:
-                if tag in child:
-                    mask_remove_list.extend(find_masks(child))
-                    hg_delete(child)
+        for obj in self.objects:
+            mask_remove_list.extend(find_masks(obj))
+            hg_delete(obj)
 
         return mask_remove_list
 
-    def set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
+    def _set_cloth_corrective_drivers(self, hg_cloth, sk):
         """Sets up the drivers of the corrective shapekeys on the clothes
 
         Args:
@@ -422,7 +333,11 @@ class BaseClothing:
         except AttributeError:
             pass
 
-        for driver in hg_body.data.shape_keys.animation_data.drivers:
+        body_drivers = (
+            self._human.body_obj.data.shape_keys.animation_data.drivers
+        )
+
+        for driver in body_drivers:
             target_sk = driver.data_path.replace('key_blocks["', "").replace(
                 '"].value', ""
             )  # TODO this is horrible
@@ -436,14 +351,15 @@ class BaseClothing:
             new_target = new_var.targets[0]
             old_var = driver.driver.variables[0]
             old_target = old_var.targets[0]
-            new_target.id = hg_body.parent
+            new_target.id = self._human.rig_obj
 
             new_driver.driver.expression = driver.driver.expression
             new_target.bone_target = old_target.bone_target
             new_target.transform_type = old_target.transform_type
             new_target.transform_space = old_target.transform_space
 
-    def set_clothing_texture_resolution(clothing_item, resolution_category):
+    # TODO item independent
+    def set_texture_resolution(self, clothing_item, resolution_category):
         if resolution_category == "performance":
             resolution_tag = "low"
         elif resolution_category == "optimised":
@@ -511,7 +427,9 @@ class BaseClothing:
 
         img_node.image = pattern
 
-    def randomize_clothing_colors(context, cloth_obj):
+    def randomize_colors(self, cloth_obj, context=None):
+        if not context:
+            context = bpy.context
         mat = cloth_obj.data.materials[0]
         if not mat:
             return
@@ -528,8 +446,13 @@ class BaseClothing:
         # TODO Rewrite color_random so it doesn't need to be called as operator
         old_active = context.view_layer.objects.active
 
+        colorgroups_json = "colorgroups.json"
+
+        with open(colorgroups_json) as f:
+            color_dict = json.load(f)
+
         for input in control_node.inputs:
-            color_groups = None  # FIXME tuple(["_{}".format(name) for name in color_dict])
+            color_groups = tuple(["_{}".format(name) for name in color_dict])
             color_group = (
                 input.name[-2:] if input.name.endswith(color_groups) else None
             )

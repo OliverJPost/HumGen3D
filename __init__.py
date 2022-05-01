@@ -38,17 +38,17 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent  # type: ignore
 
-from HumGen3D.backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
-
-
+from HumGen3D.backend.content_packs.content_packs import (
+    cpacks_refresh as _cpacks_refresh,
+)
 
 from .backend.bpy_classes import _get_bpy_classes
-from .backend.preview_collections import preview_collections as _preview_collections
+from .backend.preview_collections import (
+    preview_collections as _preview_collections,
+)
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .human.human import Human
-
-
 
 if __name__ != "HG3D":
     sys.modules["HG3D"] = sys.modules[__name__]
@@ -78,14 +78,14 @@ def _initiate_preview_collections():
     ]
 
     for pcoll_name in pcoll_names:
-        preview_collections.setdefault(
+        _preview_collections.setdefault(
             f"pcoll_{pcoll_name}", bpy.utils.previews.new()
         )
 
 
 def _initiate_custom_icons():
     """Load custom icons"""
-    hg_icons = preview_collections.setdefault(
+    hg_icons = _preview_collections.setdefault(
         "hg_icons", bpy.utils.previews.new()
     )
     icon_dir = os.path.join(
@@ -97,15 +97,22 @@ def _initiate_custom_icons():
             fn_base = os.path.splitext(fn)[0]
             full_path = os.path.join(icon_dir, fn)
             hg_icons.load(fn_base, full_path, "IMAGE")
-    preview_collections["hg_icons"] = hg_icons
+    _preview_collections["hg_icons"] = hg_icons
 
 
 def _initiate_ui_lists():
     # Import in local namespace to prevent cluttering package namespace
-    from HumGen3D.user_interface import batch_ui_lists, utility_ui_lists, tips_suggestions_ui 
-    from HumGen3D.backend.content_packs import content_packs
     from HumGen3D.backend import update
-    
+    from HumGen3D.backend.content_packs import (
+        content_packs,
+        custom_content_packs,
+    )
+    from HumGen3D.user_interface import (
+        batch_ui_lists,
+        tips_suggestions_ui,
+        utility_ui_lists,
+    )
+
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "batch_expressions_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
@@ -115,7 +122,7 @@ def _initiate_ui_lists():
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
         "saveoutfit_col": utility_ui_lists.SAVEOUTFIT_ITEM,
-        "custom_content_col": content_packs.CUSTOM_CONTENT_ITEM,
+        "custom_content_col": custom_content_packs.CUSTOM_CONTENT_ITEM,
         "hg_update_col": update.UPDATE_INFO_ITEM,
         "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
     }
@@ -147,6 +154,7 @@ def register():
     _initiate_ui_lists()
 
     from .user_interface.primitive_menu import add_hg_primitive_menu
+
     bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
 
     # load handler
@@ -165,12 +173,13 @@ def unregister():
         bpy.app.handlers.load_post.remove(HG_start)
 
     from .user_interface.primitive_menu import add_hg_primitive_menu
+
     bpy.types.VIEW3D_MT_add.remove(add_hg_primitive_menu)
 
     # remove pcolls
-    for pcoll in preview_collections.values():
+    for pcoll in _preview_collections.values():
         bpy.utils.previews.remove(pcoll)
-    preview_collections.clear()
+    _preview_collections.clear()
 
 
 if __name__ == "__main__":

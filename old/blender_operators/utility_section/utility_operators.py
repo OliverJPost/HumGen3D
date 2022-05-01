@@ -3,18 +3,16 @@ Operators and functions for experimental features and QoL automations
 """
 
 from pathlib import Path
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
 
 import bpy
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.user_interface.feedback_func import show_message  # type: ignore
+from HumGen3D.user_interface.feedback_func import show_message
 
-from ..common.common_functions import (
-    find_human,
-)
 from ....user_interface.info_popups import HG_OT_INFO
-
+from ..common.common_functions import find_human
 from .utility_functions import (
     build_object_list,
     refresh_hair_ul,
@@ -59,7 +57,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
     def execute(self, context):
         sett = context.scene.HG3D
         col = context.scene.modapply_col
-
+        human = Human.from_existing(context.object)
         objs = build_object_list(context, sett)
 
         sk_dict = {}
@@ -101,12 +99,12 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         # TODO this is kind of weird
         keep_sk_pref = pref.keep_all_shapekeys
         pref.keep_all_shapekeys = True
-        sk_dict[obj.name], driver_dict[obj.name] = (
-            None,
-            None,
-        )  # FIXME human.shape_keys._extract_permanent_keys(
-        #     context, obj, apply_armature=apply
-        # )
+        (
+            sk_dict[obj.name],
+            driver_dict[obj.name],
+        ) = self.human.shape_keys._extract_permanent_keys(
+            context, override_obj=obj, apply_armature=apply
+        )
         pref.keep_all_shapekeys = keep_sk_pref
         return sk_dict, driver_dict
 
