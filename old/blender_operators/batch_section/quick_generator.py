@@ -11,7 +11,6 @@ from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from ....backend.preview_collections import refresh_pcoll
 from ....human.human import Human
 from ..common.random import set_random_active_in_pcoll
-from ..creation_phase.hair import random_hair_color, set_hair_quality
 from ..utility_section.baking import (  # type:ignore
     add_image_node,
     bake_texture,
@@ -121,8 +120,12 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         if self.add_hair:
             set_random_active_in_pcoll(context, sett, "hair")
-        set_hair_quality(context, self.hair_type, self.hair_quality)
-        random_hair_color(hg_body)
+
+        human.hair.set_hair_quality(self.hair_quality, context)
+        human.hair.regular_hair.randomize_color()
+        human.hair.facial_hair.randomize_color()
+        human.hair.eyebrows.randomize_color()
+
 
         human.hair.set_children_hide_state(False)
 
@@ -148,12 +151,13 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             set_random_active_in_pcoll(context, sett, "outfit")
             sett.footwear_sub = "All"
             set_random_active_in_pcoll(context, sett, "footwear")
-            for child in [
-                c for c in hg_rig.children if "cloth" in c or "shoe" in c
-            ]:
-                pass
-                # FIXME randomize_clothing_colors(context, child)
-                # FIXME set_clothing_texture_resolution(child, self.texture_resolution)
+            for cloth in human.finalize_phase.outfit.obj_settings:
+                cloth.randomize_colors(context)
+                cloth.set_texture_resolution(self.texture_resolution)
+
+            for cloth in human.finalize_phase.footwear.obj_settings:
+                cloth.randomize_colors(context)
+                cloth.set_texture_resolution(self.texture_resolution)
 
         if self.pose_type != "a_pose":
             self._set_pose(context, sett, self.pose_type)

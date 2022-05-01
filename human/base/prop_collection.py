@@ -36,6 +36,9 @@ class PropCollection:
     def __iter__(self):
         yield from self._collection
 
+    def __len__(self):
+        return len(self._collection)
+
     def find(self, item_name):
         if self.is_bpy:
             return self._collection.find(item_name)
@@ -51,6 +54,9 @@ class PropCollection:
                 (item for item in self._collection if item.name == item_name),
                 None,
             )
+
+    def __getattr__(self, attr):
+        return getattr(self._collection, attr)
 
     @bpy_only
     def foreach_get(self, attr, sequence):

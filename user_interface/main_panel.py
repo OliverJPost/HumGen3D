@@ -3,17 +3,16 @@ from pathlib import Path
 from sys import platform
 
 import addon_utils
-from HumGen3D.backend.preference_func import get_prefs  # type: ignore
 import bpy
 from HumGen3D import bl_info
+from HumGen3D.backend.preference_func import get_prefs  # type: ignore
 
-from ..human.human import Human  # type: ignore
 from ..backend.preview_collections import preview_collections
+from ..human.human import Human  # type: ignore
 from ..old.blender_operators.common.common_functions import (
     find_human,
     is_batch_result,
 )
-from ..old.data.colors import color_dict
 from .panel_functions import (
     draw_panel_switch_header,
     draw_spoiler_box,
@@ -1840,12 +1839,13 @@ class HG_PT_PANEL(bpy.types.Panel):
             color_flow (UILayout): indented list where color pickers are placed
             node_input (ShaderNodeInput): input of the color value on group node
         """
-        color_groups = tuple(["_{}".format(name) for name in color_dict])
-        color_group = (
-            node_input.name[-2:]
-            if node_input.name.endswith(color_groups)
-            else None
-        )
+        # FIXME
+        # color_groups = tuple(["_{}".format(name) for name in color_dict])
+        # color_group = (
+        #     node_input.name[-2:]
+        #     if node_input.name.endswith(color_groups)
+        #     else None
+        # )
 
         row = color_flow.row(align=False)
         row.prop(

@@ -1,6 +1,3 @@
-from HumGen3D.backend.content_packs.custom_content_packs import (
-    build_content_collection,
-)
 import bpy  # type: ignore
 from bpy.props import (  # type: ignore
     BoolProperty,
@@ -10,26 +7,12 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
+from HumGen3D.backend.content_packs.custom_content_packs import (
+    build_content_collection,
+)
+from HumGen3D.human.human import Human
 from HumGen3D.old.blender_operators.utility_section.baking import (
     make_path_absolute,
-)
-
-from HumGen3D.human.human import Human
-
-from .preview_collections import (
-    get_pcoll_enum_items,
-    refresh_pcoll,
-)
-from .property_functions import (
-    add_image_to_thumb_enum,
-    find_folders,
-    get_resolutions,
-    poll_mtc_armature,
-    thumbnail_saving_prop_update,
-)
-from ..old.blender_operators.creation_phase.hair import (
-    load_hair,
-    update_hair_shader_type,
 )
 
 from ..old.blender_operators.utility_section.utility_functions import (
@@ -40,6 +23,14 @@ from ..old.blender_operators.utility_section.utility_functions import (
 )
 from ..user_interface import batch_ui_lists
 from .callback import tab_change_update
+from .preview_collections import get_pcoll_enum_items, refresh_pcoll
+from .property_functions import (
+    add_image_to_thumb_enum,
+    find_folders,
+    get_resolutions,
+    poll_mtc_armature,
+    thumbnail_saving_prop_update,
+)
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -285,7 +276,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # posing
     pcoll_poses: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "poses"),
-        update=None,  # FIXME load_pose,
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).finalize_phase.pose.set(s.pcoll_poses, c),
     )
     pose_sub: EnumProperty(
         name="Pose Library",
@@ -301,7 +294,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # outfit
     pcoll_outfit: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "outfit"),
-        update=None,  # FIXME lambda a, b: load_outfit(a, b, footwear=False),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).finalize_phase.clothings.outfit.set(s.pcoll_outfit, c),
     )
     outfit_sub: EnumProperty(
         name="Outfit Library",
@@ -317,7 +312,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # hair
     pcoll_hair: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "hair"),
-        update=lambda a, b: load_hair(a, b, "head"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).hair.regular_hair.set(s.pcoll_hair, c),
     )
     hair_sub: EnumProperty(
         name="Hair Library",
@@ -326,7 +323,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     )
     pcoll_face_hair: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "face_hair"),
-        update=lambda a, b: load_hair(a, b, "face"),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).hair.regular_hair.set(s.pcoll_face_hair, c),
     )
     face_hair_sub: EnumProperty(
         name="Facial Hair Library",
@@ -337,7 +336,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # expression
     pcoll_expressions: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "expressions"),
-        update=None,  # FIXME load_expression,
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).finalize_phase.expression.set(s.pcoll_expressions, c),
     )
     expressions_sub: EnumProperty(
         name="Expressions Library",
@@ -353,7 +354,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # footwear
     pcoll_footwear: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "footwear"),
-        update=None,  # FIXME lambda a, b: load_outfit(a, b, footwear=True),
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).finalize_phase.clothing.footwear.set(s.pcoll_footwear, c),
     )
     footwear_sub: EnumProperty(
         name="Footwear Library",
@@ -662,7 +665,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("accurate", "Accurate (Cycles only)", "", 1),
         ],
         default="fast",
-        update=update_hair_shader_type,
+        update=lambda s, c: Human.from_existing(
+            c.object
+        ).hair.update_hair_shader_type(s.hair_shader_type, c),
     )
 
     # baking

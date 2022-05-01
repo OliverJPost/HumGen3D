@@ -73,7 +73,7 @@ class CreationPhaseSettings:
         for obj in human.children:
             apply_armature(obj)
 
-        # FIXME apply_length_to_rig(hg_rig, context)
+        human.creation_phase.length.apply(context)
 
         human.creation_phase.stretch_bones.remove()
 

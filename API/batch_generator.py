@@ -3,10 +3,11 @@ import os
 import random
 import subprocess
 import time
-from ..backend.logging import hg_log
-from ..backend.preferences import get_addon_root, get_prefs
-import bpy  # type:ignore
 
+import bpy  # type:ignore
+from HumGen3D.backend.preference_func import get_addon_root, get_prefs
+
+from ..backend.logging import hg_log
 from .human import HG_Human
 
 

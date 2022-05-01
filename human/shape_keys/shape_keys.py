@@ -175,7 +175,7 @@ class ShapeKeySettings(PropCollection):
                 hg_body.shape_key_remove(sk)
 
     def _extract_permanent_keys(
-        self, context: Context = None, apply_armature: bool = True
+        self, context: Context = None, apply_armature: bool = True, override_obj = None
     ):
         if not context:
             context = bpy.context
@@ -184,14 +184,17 @@ class ShapeKeySettings(PropCollection):
 
         driver_dict = build_driver_dict(self)
 
+        obj = override_obj if override_obj else self._human.body_obj
+        sks = override_obj.data.shape_keys.key_blocks if override_obj else self._human.shape_keys
+
         obj_list = []
-        for shapekey in self._human.shape_keys:
+        for shapekey in sks:
             if (
                 not shapekey.name.startswith(("cor_", "eyeLook"))
                 and not pref.keep_all_shapekeys
             ):
                 continue
-            ob = self._human.body_obj.copy()
+            ob = obj.copy()
             ob.data = ob.data.copy()
             context.collection.objects.link(ob)
             ob.name = shapekey.name
