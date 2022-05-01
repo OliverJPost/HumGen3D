@@ -1,7 +1,9 @@
 import os
+import time
 from pathlib import Path
 
 import bpy
+import numpy as np
 from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.drivers import build_driver_dict
@@ -141,14 +143,19 @@ class ExpressionSettings:
             hg_body (Object): HumGen body object to import shapekeys on
         """
         pref = get_prefs()
-
+        t = time.perf_counter()
         blendfile = pref.filepath + str(Path("/models/FACS/HG_FACS.blend"))
         with bpy.data.libraries.load(blendfile, link=False) as (
             data_from,
             data_to,
         ):
             data_to.objects = data_from.objects
+
+        print("import", time.perf_counter() - t)
+        t = time.perf_counter()
         remove_broken_drivers()
+        print("remove broken", time.perf_counter() - t)
+        t = time.perf_counter()
         # TODO make easier
         hg_lower_teeth = next(
             c
@@ -180,11 +187,13 @@ class ExpressionSettings:
 
         to_obj.select_set(True)
         from_obj.select_set(True)
+
         for idx, sk in enumerate(from_obj.data.shape_keys.key_blocks):
             if sk.name in ["Basis", "Male"]:
                 continue
             from_obj.active_shape_key_index = idx
-            bpy.ops.object.shape_key_transfer()
+            # bpy.ops.object.shape_key_transfer()
+            self._transfer(sk, to_obj)
 
         sks_on_target = to_obj.data.shape_keys.key_blocks
         for driver_shapekey in driver_dict:
@@ -201,6 +210,14 @@ class ExpressionSettings:
         from_obj.select_set(False)
         hg_delete(from_obj)
         to_obj.show_only_shape_key = False
+
+    def _transfer(self, sk, to_obj):
+        new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
+        new_sk.interpolation = "KEY_LINEAR"
+        old_sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
+
+        sk.data.foreach_get("co", old_sk_data)
+        new_sk.data.foreach_set("co", old_sk_data)
 
     def remove_facial_rig(self, context=None):
         if not context:

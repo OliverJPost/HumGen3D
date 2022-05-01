@@ -1,4 +1,5 @@
 import random
+import time as timelib
 
 import bpy
 from HumGen3D.backend.logging import hg_log
@@ -11,67 +12,84 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
     bl_options = {"UNDO", "REGISTER"}
 
     human: bpy.props.PointerProperty(type=bpy.types.Object)
+    time: bpy.props.IntProperty()
 
     def execute(self, context):
 
         assert not [obj for obj in bpy.data.objects if obj.HG.ishuman]
 
-        for gender in ("male", "female"):
+        self.time_dict = {}
+        self.time = timelib.perf_counter()
+
+        for gender in ("male",):  # "female"):
             hg_log(f"Starting tests for {gender} characters")
             self.test_human_creation(context, gender)
-            hg_log("Finished human creation")
+            self.timeit("Finished human creation")
 
             self.test_body_proportions(context)
-            hg_log(f"Finished body proportions")
+            self.timeit(f"Finished body proportions")
             self.test_length_change(context)
-            hg_log(f"Finished length changes")
+            self.timeit(f"Finished length changes")
             self.assert_shape_keys(context)
-            hg_log("Asserted shape keys")
+            self.timeit("Asserted shape keys")
             self.test_face_randomize_buttons(context)
-            hg_log("Finished face randomization")
+            self.timeit("Finished face randomization")
             self.test_texture_sets(context)
-            hg_log("Finished texture sets")
+            self.timeit("Finished texture sets")
             self.test_skin_buttons_and_sliders(context)
-            hg_log("Finished skin")
+            self.timeit("Finished skin")
             self.test_eyes(context)
-            hg_log("Finished eyes")
+            self.timeit("Finished eyes")
             self.test_hair_functions(context)
-            hg_log("Finished hair")
+            self.timeit("Finished hair")
 
             self.test_finish_creation_phase(context)
-            hg_log("Finished Creation Phase")
+            self.timeit("Finished Creation Phase")
 
             self.test_clothing_functions(context)
-            hg_log("Finished clothing functions")
+            self.timeit("Finished clothing functions")
             self.test_footwear_functions(context)
-            hg_log("Finished footwear functions")
+            self.timeit("Finished footwear functions")
             self.test_pose_functions(context)
-            hg_log("Finished pose functions")
+            self.timeit("Finished pose functions")
             self.test_expression_functions(context)
-            hg_log("Finished expression functions")
+            self.timeit("Finished expression functions")
 
             self.test_face_rig(context)
-            hg_log("Finished face rig")
+            self.timeit("Finished face rig")
             self.test_rigify(context)
-            hg_log("Finished rigify")
+            self.timeit("Finished rigify")
 
             self.test_revert_to_creation_phase(context)
-            hg_log("Finished reverting")
+            self.timeit("Finished reverting")
             self.test_finish_creation_phase(context)
-            hg_log("2nd Finished creation phase")
+            self.timeit("2nd Finished creation phase")
 
             self.test_expression_functions(context)
-            hg_log("2nd Finished expression functions")
+            self.timeit("2nd Finished expression functions")
 
             self.test_face_rig(context)
-            hg_log("2nd Finished face rig")
+            self.timeit("2nd Finished face rig")
             self.test_rigify(context)
-            hg_log("2nd Finished rigify")
+            self.timeit("2nd Finished rigify")
 
             bpy.ops.hg3d.delete(obj_override=self.human.name)
 
         hg_log("Finished all tests")
+        total_time = sum(self.time_dict.values())
+        for name, time in self.time_dict.items():
+            print(name, "\t", time, "\t", time / total_time * 100, "%")
+        print("Total time", total_time)
+
         return {"FINISHED"}
+
+    def timeit(self, text):
+        elapsed = timelib.perf_counter() - self.time
+        self.time = timelib.perf_counter()
+        if text in self.time_dict:
+            self.time_dict[text] += elapsed
+        else:
+            self.time_dict[text] = elapsed
 
     def test_human_creation(self, context, gender):
         context.scene.HG3D.gender = gender
@@ -241,16 +259,27 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         bpy.ops.hg3d.removesk(shapekey=expr_sk)
 
     def test_face_rig(self, context):
+        print("starting")
+        print("------------------------------------------------")
+        print("------------------------------------------------")
+        t = timelib.perf_counter()
         context.scene.HG3D.expression_type = "frig"
         bpy.ops.hg3d.addfrig()
-
+        print("add first time", timelib.perf_counter() - t)
+        t = timelib.perf_counter()
         bpy.context.scene.HG3D.expression_type = "1click"
         bpy.ops.hg3d.removefrig()
+        print("remove", timelib.perf_counter() - t)
+        t = timelib.perf_counter()
 
         self.__test_pcoll(context, "expressions")
+        print("test pcoll", timelib.perf_counter() - t)
+        t = timelib.perf_counter()
 
         context.scene.HG3D.expression_type = "frig"
         bpy.ops.hg3d.addfrig()
+        print("add second time", timelib.perf_counter() - t)
+        print("ending")
 
     def test_rigify(self, context):
         bpy.ops.hg3d.section_toggle(section_name="pose")

@@ -65,5 +65,5 @@ def print_context(context):
 
 
 def time_update(label, prev_time) -> int:
-    hg_log(label, round(time.time() - prev_time, 2))
-    return time.time()
+    hg_log(label, round(time.perf_counter() - prev_time, 2))
+    return time.perf_counter()

@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+from typing import Dict
 
 import bpy
+import numpy as np
 from bpy.types import Context
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
@@ -179,7 +181,6 @@ class ShapeKeySettings(PropCollection):
     def _extract_permanent_keys(
         self,
         context: Context = None,
-        apply_armature: bool = True,
         override_obj=None,
     ):
         if not context:
@@ -193,52 +194,48 @@ class ShapeKeySettings(PropCollection):
             if override_obj
             else self._human.shape_keys
         )
+        vert_count = len(obj.data.vertices)
 
         driver_dict = build_driver_dict(obj)
 
-        obj_list = []
+        basis_data = np.empty(vert_count * 3, dtype=np.float64)
+        sks.get("Basis").data.foreach_get("co", basis_data)
+
+        sk_vector_dict: Dict[str, np.ndarray] = {}
         for shapekey in sks:
             if (
                 not shapekey.name.startswith(("cor_", "eyeLook"))
                 and not pref.keep_all_shapekeys
             ):
                 continue
-            ob = obj.copy()
-            ob.data = ob.data.copy()
-            context.collection.objects.link(ob)
-            ob.name = shapekey.name
-            obj_list.append(ob)
 
-            face_sk = ob.data.shape_keys.key_blocks[shapekey.name]
-            face_sk.mute = False
-            face_sk.value = 1
-            apply_shapekeys(ob)
-            if apply_armature:
-                bpy.ops.object.modifier_apply(modifier="HG_Armature")
+            sk_data = np.empty(vert_count * 3, dtype=np.float64)
+            shapekey.data.foreach_get("co", sk_data)
+            sk_vectors = sk_data - basis_data
+            sk_vector_dict[shapekey.name] = sk_vectors
 
-        return obj_list, driver_dict
+        return sk_vector_dict, driver_dict
 
     def _reapply_permanent_keys(
-        self, sk_objects, driver_dict, context: Context = None
+        self, sk_vector_dict, driver_dict, context: Context = None
     ):
         if not context:
             context = bpy.context
+        body_obj = self._human.body_obj
+        vert_count = len(body_obj.data.vertices)
+        body_obj.shape_key_add(name="Basis")
 
-        for ob in context.selected_objects:
-            ob.select_set(False)
-        context.view_layer.objects.active = self._human.body_obj
-        self._human.body_obj.select_set(True)
+        basis_data = np.empty(vert_count * 3, dtype=np.float64)
+        sks = body_obj.data.shape_keys.key_blocks
+        sks.get("Basis").data.foreach_get("co", basis_data)
 
-        for ob in sk_objects:
-            ob.select_set(True)
-            bpy.ops.object.join_shapes()
-            ob.select_set(False)
-            if ob.name in driver_dict:
-                target_sk = self._human.shape_keys.get(ob.name)
-                self._add_driver(target_sk, driver_dict[ob.name])
+        for name, vectors in sk_vector_dict.items():
+            sk = body_obj.shape_key_add(name=name, from_mix=False)
+            sk.interpolation = "KEY_LINEAR"
+            sk.data.foreach_set("co", vectors + basis_data)
 
-        for ob in sk_objects:
-            hg_delete(ob)
+            if name in driver_dict:
+                self._add_driver(sk, driver_dict[name])
 
     def _add_driver(self, target_sk, sett_dict):
         """Adds a new driver to the passed shapekey, using the passed dict as settings

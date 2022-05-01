@@ -126,8 +126,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         human.hair.facial_hair.randomize_color()
         human.hair.eyebrows.randomize_color()
 
-
-        human.hair.set_children_hide_state(False)
+        human.hair.children_set_hide(True)
 
         sett.human_length = int(length_from_bell_curve(sett, self.gender))
 
@@ -270,9 +269,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         # Disconnect hair to prevent it shifting during mesh modification
         context.view_layer.objects.active = hg_body
-        human.hair.set_children_hide_state(True)
+        human.hair.children_set_hide(False)
         bpy.ops.particle.disconnect_hair(all=True)
-        human.hair.set_children_hide_state(False)
+        human.hair.children_set_hide(True)
 
         for obj in hg_objects:
             if self.apply_clothing_geometry_masks and self.apply_shapekeys:
@@ -295,9 +294,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         # Reconnect hair, so it follows the body again
         context.view_layer.objects.active = hg_body
-        human.hair.set_children_hide_state(True)
+        human.hair.children_set_hide(False)
         bpy.ops.particle.connect_hair(all=True)
-        human.hair.set_children_hide_state(False)
+        human.hair.children_set_hide(True)
 
     def _remove_redundant_vertex_groups(self, obj):
         vg_remove_list = [
