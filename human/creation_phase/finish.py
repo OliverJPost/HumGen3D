@@ -2,12 +2,12 @@
 Operator and corresponding functions for finishing the cration phase
 """
 
-from ..human import Human
-from ...backend.preference_func import get_prefs
 import bpy  # type: ignore
 
+from ...backend.preference_func import get_prefs
 from ...backend.preview_collections import refresh_pcoll
 from ...user_interface.info_popups import HG_OT_INFO
+from ..human import Human
 
 
 class HG_FINISH_CREATION(bpy.types.Operator):
@@ -43,7 +43,7 @@ class HG_FINISH_CREATION(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         children_hide_state = human.hair.children_ishidden
-        human.finish_creation_phase(context)
+        human.creation_phase.finish(context)
         if children_hide_state:
             self.report(
                 {"INFO"},

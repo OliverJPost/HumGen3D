@@ -9,15 +9,20 @@ class PoseSettings:
     def __init__(self, _human):
         self._human = _human
 
-    def load_pose(self, context):
+    def set(self, preset, context=None):
         """Gets called by pcoll_pose to add selected pose to human"""
+
+        if not context:
+            context = bpy.context
+
         sett = context.scene.HG3D
         pref = get_prefs()
 
         if sett.load_exception:
             return
+
         hg_rig = find_human(context.active_object)
-        hg_pose = self._import_pose(context)
+        hg_pose = self._import_pose(preset, context)
 
         self._match_rotation_mode(hg_rig, hg_pose, context)
         self._match_roll(hg_rig, hg_pose, context)
@@ -40,7 +45,7 @@ class PoseSettings:
         if not pref.debug_mode:
             hg_delete(hg_pose)
 
-    def _import_pose(context) -> bpy.types.Object:
+    def _import_pose(preset, context) -> bpy.types.Object:
         """Import selected pose object
 
         Returns:
@@ -48,9 +53,9 @@ class PoseSettings:
         """
         pref = get_prefs()
 
-        blendfile = str(pref.filepath) + context.scene.HG3D.pcoll_poses
+        blendfile = str(pref.filepath) + preset
         with bpy.data.libraries.load(blendfile, link=False) as (
-            data_from,
+            _,
             data_to,
         ):
             data_to.objects = ["HG_Pose"]

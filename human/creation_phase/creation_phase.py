@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 import bpy
 from bpy.types import Context
+from HumGen3D.human.base.prop_collection import PropCollection
 
 from ...backend.preview_collections import refresh_pcoll
-
 from ..base.collections import add_to_collection
 from ..shape_keys.shape_keys import apply_shapekeys
 from .body.body import BodySettings
@@ -37,6 +37,18 @@ class CreationPhaseSettings:
             self._face = FaceKeys(self._human)
         return self._face
 
+    # FIXME this will crash blender when accessed after modified
+    @property
+    def stretch_bones(self):
+        if not hasattr(self, "_stretch_bones"):
+            stretch_bones = []
+            for bone in self._human.pose_bones:
+                if [c for c in bone.constraints if c.type == "STRETCH_TO"]:
+                    stretch_bones.append(bone)
+            self._stretch_bones = PropCollection(stretch_bones)
+
+        return self._stretch_bones
+
     def finish(self, context):
         """For full feature breakdown, see HG_FINISH_CREATION
 
@@ -68,19 +80,18 @@ class CreationPhaseSettings:
         )
 
         apply_shapekeys(human.body_obj)
-        apply_shapekeys(human.eyes)
+        apply_shapekeys(human.eyes.eye_obj)
 
         for obj in human.children:
             apply_armature(obj)
 
         human.creation_phase.length.apply(context)
 
-        human.creation_phase.stretch_bones.remove()
+        human.creation_phase.remove_stretch_bones()
 
         for obj in human.children:
             self._add_applied_armature(obj)
-
-        human.shape_keys.reapply_permanent_keys(driver_dict, context)
+        human.shape_keys._reapply_permanent_keys(sk_dict, driver_dict, context)
 
         context.view_layer.objects.active = hg_rig
 
@@ -102,7 +113,7 @@ class CreationPhaseSettings:
         if not context:
             context = bpy.context
 
-        hg_rig = self.rig_obj
+        hg_rig = self._human.rig_obj
         hg_backup = hg_rig.copy()
         hg_rig.HG.backup = hg_backup
         hg_backup.data = hg_backup.data.copy()

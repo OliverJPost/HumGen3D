@@ -1,8 +1,7 @@
 import bpy
 from bpy.types import Context
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
-
 from HumGen3D.human.hair.basehair import BaseHair
+from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 from ..base.prop_collection import PropCollection
 
@@ -10,8 +9,7 @@ from ..base.prop_collection import PropCollection
 class EyebrowSettings(BaseHair):
     def __init__(self, human):
         self._human = human
-        self._startswith="Eyebrow"
-
+        self._startswith = "Eyebrow"
 
     def _set_from_preset(self, preset_eyebrow):
         """Sets the eyebrow named in preset_data as the only visible eyebrow
@@ -62,8 +60,8 @@ class EyebrowSettings(BaseHair):
         old_active = context.view_layer.objects.active
         context.view_layer.objects.active = self._human.body_obj
         for remove_name in remove_list:
-            ps_idx = self.particle_systems.find(remove_name)
-            self.particle_systems.active_index = ps_idx[0]
+            ps_idx = self._human.hair.particle_systems.find(remove_name)
+            self.particle_systems.active_index = ps_idx
             bpy.ops.object.particle_system_remove()
         context.view_layer.objects.active = old_active
 

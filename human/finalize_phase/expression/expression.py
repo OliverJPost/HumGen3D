@@ -12,19 +12,21 @@ class ExpressionSettings:
     def __init__(self, _human):
         self._human = _human
 
-    def load_expression(self, context):
+    def set(self, preset, context=None):
         """Loads the active expression in the preview collection"""
+
+        if not context:
+            context = bpy.context
 
         pref = get_prefs()
 
-        item = context.scene.HG3D.pcoll_expressions
-        if item == "none":
+        if preset == "none":
             return
-        sk_name, _ = os.path.splitext(os.path.basename(item))
+        sk_name, _ = os.path.splitext(os.path.basename(preset))
 
         sett_dict = {}
 
-        filepath = str(pref.filepath) + str(item)
+        filepath = str(pref.filepath) + str(preset)
         sett_file = open(filepath)
         for line in sett_file:
             key, value = line.split()
@@ -61,7 +63,9 @@ class ExpressionSettings:
         new_key.mute = False
         new_key.value = 1
 
-    def _transfer_as_one_shapekey(self, context, source, target, sk_dict, backup_rig):
+    def _transfer_as_one_shapekey(
+        self, context, source, target, sk_dict, backup_rig
+    ):
         """Transfers multiple shapekeys as one shapekey
 
         Args:
