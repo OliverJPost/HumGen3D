@@ -45,7 +45,7 @@ class PoseSettings:
         if not pref.debug_mode:
             hg_delete(hg_pose)
 
-    def _import_pose(preset, context) -> bpy.types.Object:
+    def _import_pose(self, preset, context) -> bpy.types.Object:
         """Import selected pose object
 
         Returns:
@@ -73,7 +73,7 @@ class PoseSettings:
 
         return hg_pose
 
-    def _match_roll(hg_rig, hg_pose, context):
+    def _match_roll(self, hg_rig, hg_pose, context):
         """Some weird issue caused changed to the rig to change the roll values on
         bones. This caused imported poses that still use the original armature to
         not copy properly to the human
@@ -91,7 +91,7 @@ class PoseSettings:
                 bone.roll = hg_pose.data.edit_bones[b_name].roll
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    def _match_rotation_mode(hg_rig, hg_pose, context):
+    def _match_rotation_mode(self, hg_rig, hg_pose, context):
         context.view_layer.objects.active = hg_pose
         hg_rig.select_set(True)
         bpy.ops.object.mode_set(mode="POSE")
@@ -103,7 +103,7 @@ class PoseSettings:
                 ].rotation_mode = "QUATERNION"
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    def _copy_pose(context, pose):
+    def _copy_pose(self, context, pose):
         """Copies pose from one human to the other
 
         Args:

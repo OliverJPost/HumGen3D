@@ -165,12 +165,12 @@ class Human:
 
     @property
     def objects(self) -> Generator[Object]:
-        yield self.rig_obj
         for child in self.rig_obj.children:
-            yield child
-
             for subchild in child.children:
                 yield subchild
+            yield child
+
+        yield self.rig_obj
 
     @property
     def children(self) -> Generator[Object]:

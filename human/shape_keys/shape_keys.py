@@ -234,9 +234,6 @@ class ShapeKeySettings(PropCollection):
             bpy.ops.object.join_shapes()
             ob.select_set(False)
             if ob.name in driver_dict:
-                print(self._collection)
-                print([sk.name for sk in self._human.shape_keys])
-                print("Searching for", ob.name)
                 target_sk = self._human.shape_keys.get(ob.name)
                 self._add_driver(target_sk, driver_dict[ob.name])
 

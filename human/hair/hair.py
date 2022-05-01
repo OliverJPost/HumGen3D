@@ -88,15 +88,13 @@ class HairSettings:
 
     @property
     def modifiers(self):
-        if not hasattr(self, "_modifiers"):
-            self._modifiers = PropCollection(
-                [
-                    mod
-                    for mod in self._human.body_obj.modifiers
-                    if mod.type == "PARTICLE_SYSTEM"
-                ]
-            )
-        return self._modifiers
+        return PropCollection(
+            [
+                mod
+                for mod in self._human.body_obj.modifiers
+                if mod.type == "PARTICLE_SYSTEM"
+            ]
+        )
 
     def _add_quality_props(self):
         for psys in self.particle_systems:

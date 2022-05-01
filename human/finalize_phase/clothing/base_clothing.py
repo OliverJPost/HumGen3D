@@ -66,11 +66,10 @@ class BaseClothing:
         new_mask_list = []
         for obj in cloth_objs:
             new_mask_list.extend(find_masks(obj))
-            obj[
-                tag
-            ] = 1  # adds a custom property to the cloth for identifying purposes
+            # adds a custom property to the cloth for identifying purposes
+            obj[tag] = 1
 
-            self._deform_cloth_to_human(self, context, obj)
+            self._deform_cloth_to_human(context, obj)
 
             for mod in obj.modifiers:
                 mod.show_expanded = False  # collapse modifiers
@@ -96,7 +95,7 @@ class BaseClothing:
             hg_body (Object): HumGen body
             obj (Object): cloth object to deform
         """
-        backup_rig = self._human.backup_rig
+        backup_rig = self._human.props.backup
         cloth_obj.parent = backup_rig
 
         backup_rig.HG.body_obj.hide_viewport = False
@@ -128,7 +127,7 @@ class BaseClothing:
 
         hg_delete(backup_body_copy)
 
-    def _copy_backup_with_gender_sk(backup_body) -> bpy.types.Object:
+    def _copy_backup_with_gender_sk(self, backup_body) -> bpy.types.Object:
         """Creates a copy of the backup human with the correct gender settings and
         all other shapekeys set to 0
 

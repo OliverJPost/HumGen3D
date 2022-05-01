@@ -31,7 +31,6 @@ class PropCollection:
         del self._collection[item]
 
     def __getitem__(self, item):
-        print(f"checking if {item} in {self._collection}")
         return self._collection[item]
 
     def __iter__(self):

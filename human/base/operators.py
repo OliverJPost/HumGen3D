@@ -1,17 +1,16 @@
+import bpy
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
-import bpy
+from HumGen3D.old.blender_operators.common.common_functions import (
+    find_human,
+    is_batch_result,
+)
 from HumGen3D.user_interface.info_popups import HG_OT_INFO
 from HumGen3D.user_interface.tips_suggestions_ui import (
     update_tips_from_context,
 )
 
-from HumGen3D.old.blender_operators.common.common_functions import (
-    find_human,
-    is_batch_result,
-)
 from ...old.blender_operators.common.random import set_random_active_in_pcoll
-
 from ..human import Human
 
 
@@ -427,5 +426,5 @@ class HG_REVERT_TO_CREATION(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        Human.from_existing(context.object).revert_to_creation_phase(context)
+        Human.from_existing(context.object).finalize_phase.revert(context)
         return {"FINISHED"}
