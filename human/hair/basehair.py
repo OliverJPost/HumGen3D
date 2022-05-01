@@ -107,8 +107,6 @@ class ImportableHair(BaseHair):
             if isinstance(self, hair.facial_hair.FacialHairSettings)
             else "head"
         )
-        hg_log("////////////////////////////////")
-        hg_log("Hair type is", hair_type)
 
         hair_obj = self._import_hair_obj(context, hair_type, pref, blendfile)
 
@@ -321,9 +319,6 @@ class ImportableHair(BaseHair):
         new_mod_dict = {}
         for mod in self._human.hair.modifiers:
             if mod.particle_system.name in system_names:
-                print(
-                    f"adding {mod} from {[x for x in self._human.hair.modifiers]} to list"
-                )
                 new_mod_dict[mod] = mod.particle_system.name
 
         return new_mod_dict

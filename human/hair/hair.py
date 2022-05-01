@@ -48,13 +48,13 @@ class HairSettings:
 
         return ishidden
 
-    def set_children_hide_state(self, turn_on):
+    def children_set_hide(self, hide: bool):
         for ps in self._human.hair.particle_systems:
-            if turn_on:
+            if hide:
+                ps.settings.child_nbr = 1
+            else:
                 render_children = ps.settings.rendered_child_count
                 ps.settings.child_nbr = render_children
-            else:
-                ps.settings.child_nbr = 1
 
     def _delete_opposite_gender_specific(self):
         """Deletes the hair of the opposite gender

@@ -87,7 +87,7 @@ class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         current_state = human.hair.children_ishidden
-        human.hair.set_children_hide_state(not current_state)
+        human.hair.children_set_hide(not current_state)
 
         return {"FINISHED"}
 
@@ -171,7 +171,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         if pref.auto_hide_hair_switch and not self.children_hide_exception:
             if not self.section_name in ("hair", "eyes"):
                 on_before = not human.hair.children_ishidden
-                human.hair.set_children_hide_state(True)
+                human.hair.children_set_hide(True)
                 if on_before:
                     self.report(
                         {"INFO"},

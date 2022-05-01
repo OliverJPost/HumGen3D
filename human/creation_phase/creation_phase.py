@@ -1,7 +1,9 @@
+import time
 from typing import TYPE_CHECKING
 
 import bpy
 from bpy.types import Context
+from HumGen3D.backend.logging import time_update
 from HumGen3D.human.base.prop_collection import PropCollection
 
 from ...backend.preview_collections import refresh_pcoll
@@ -56,6 +58,7 @@ class CreationPhaseSettings:
             hg_rig (Object): HumGen armature
             hg_body (Object): HumGen body object
         """
+        t = time.perf_counter()
         human = self._human
         hg_rig = human.rig_obj
         hg_rig.select_set(True)
@@ -66,19 +69,19 @@ class CreationPhaseSettings:
             if obj != hg_rig:
                 obj.select_set(False)
 
-        human.hair.set_children_hide_state(True)
+        human.hair.children_set_hide(True)
 
         old_shading = context.space_data.shading.type
         context.space_data.shading.type = "SOLID"
-
+        t = time_update("startup", t)
         human.hair.eyebrows.remove_unused(_internal=True)
-
+        t = time_update("remove eyebrows", t)
         self._create_backup_human(context)
-
-        sk_dict, driver_dict = human.shape_keys._extract_permanent_keys(
+        t = time_update("create backup", t)
+        sk_vector_dict, driver_dict = human.shape_keys._extract_permanent_keys(
             context
         )
-
+        t = time_update("extract sk", t)
         apply_shapekeys(human.body_obj)
         apply_shapekeys(human.eyes.eye_obj)
 
@@ -91,13 +94,16 @@ class CreationPhaseSettings:
 
         for obj in human.children:
             self._add_applied_armature(obj)
-        human.shape_keys._reapply_permanent_keys(sk_dict, driver_dict, context)
-
+        t = time_update("apply", t)
+        human.shape_keys._reapply_permanent_keys(
+            sk_vector_dict, driver_dict, context
+        )
+        t = time_update("reapply sk", t)
         context.view_layer.objects.active = hg_rig
 
         self._remove_teeth_constraint()
         self._set_teeth_parent()
-
+        t = time_update("teeth", t)
         refresh_pcoll(self, context, "poses")
 
         human.props.length = hg_rig.dimensions[2]
@@ -110,6 +116,7 @@ class CreationPhaseSettings:
         context.space_data.shading.type = old_shading
 
         hg_rig.HG.phase = "clothing"
+        t = time_update("ending", t)
 
     def _create_backup_human(self, context: Context = None):
         if not context:
