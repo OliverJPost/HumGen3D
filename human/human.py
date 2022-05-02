@@ -187,6 +187,10 @@ class Human:
             yield child
 
     @property
+    def baking(self) -> BakingSettings:
+        return BakingSettings(self)
+
+    @property
     def gender(self) -> str:
         """Gender of this human in ("male", "female")"""
         return self.rig_obj.HG.gender
