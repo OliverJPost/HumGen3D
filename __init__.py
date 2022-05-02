@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
 bl_info = {
@@ -20,10 +20,10 @@ bl_info = {
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",
     "blender": (2, 93, 0),
-    "version": (3, 0, 2),  # RELEASE update version number
+    "version": (4, 0, 0),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
-    "wiki_url": "http://humgen3d.com",
-    "tracker_url": "http://humgen3d.com",
+    "wiki_url": "https://humgen3d.com",
+    "tracker_url": "https://humgen3d.com",
     "warning": "",
     "category": "",
 }
