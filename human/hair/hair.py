@@ -6,7 +6,6 @@ from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.facial_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 from ..hair.eyebrows import EyebrowSettings
 
@@ -146,7 +145,7 @@ class HairSettings:
 
         value = 0 if shader_type == "fast" else 1
 
-        hg_rig = find_human(context.object)
+        hg_rig = self._human.rig_obj
         hg_body = hg_rig.HG.body_obj
 
         for mat in hg_body.data.materials[1:3]:

@@ -2,8 +2,6 @@ import random
 
 from bpy.types import Material, Object
 
-from ...old.blender_operators.creation_phase.material import _hex_to_rgb
-
 
 class EyeSettings:
     def __init__(self, human):
@@ -80,6 +78,22 @@ class EyeSettings:
             )[0]
         )
 
-        pupil_color_rgb = _hex_to_rgb(pupil_color_hex)
+        pupil_color_rgb = self._hex_to_rgb(pupil_color_hex)
 
         nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb
+
+    def _srgb_to_linearrgb(self, c):
+        # Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896
+        if c < 0:
+            return 0
+        elif c < 0.04045:
+            return c / 12.92
+        else:
+            return ((c + 0.055) / 1.055) ** 2.4
+
+    def _hex_to_rgb(self, h, alpha=1):
+        # Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896
+        r = (h & 0xFF0000) >> 16
+        g = (h & 0x00FF00) >> 8
+        b = h & 0x0000FF
+        return tuple([self._srgb_to_linearrgb(c / 0xFF) for c in (r, g, b)] + [alpha])

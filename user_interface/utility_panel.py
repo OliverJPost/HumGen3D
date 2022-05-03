@@ -5,9 +5,6 @@ from ..backend.preview_collections import (
     get_hg_icon,
     preview_collections,
 )
-from ..old.blender_operators.common.common_functions import (
-    find_human,
-)
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,
@@ -16,7 +13,7 @@ from .panel_functions import (
     in_creation_phase,
 )
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-
+from HumGen3D.human.human import Human
 
 class Tools_PT_Base:
     """Bl_info and commonly used tools for Utility panels"""
@@ -74,8 +71,8 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
             layout.label(text="No filepath selected", icon="ERROR")
             return
 
-        hg_rig = find_human(context.object)
-        if not hg_rig:
+        human = Human.from_existing(context.object)
+        if not human:
             col = layout.column()
             col.scale_y = 0.8
             col.label(text="No human selected, select a human")
@@ -96,7 +93,7 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return find_human(context.object)
+        return Human.from_existing(context.object)
 
     def draw_header(self, context):
         self.layout.label(text="", icon="RENDER_RESULT")
@@ -139,12 +136,12 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
         Returns:
             bool: True if problem found, causing rest of ui to cancel
         """
-        hg_rig = find_human(context.object)
-        if not hg_rig:
+        human = Human.from_existing(context.object)
+        if not human:
             layout.label(text="No human selected")
             return True
 
-        if "hg_baked" in hg_rig:
+        if "hg_baked" in human.rig_obj:
             if context.scene.HG3D.batch_idx:
                 layout.label(text="Baking in progress")
             else:
@@ -168,7 +165,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return find_human(context.object)
+        return Human.from_existing(context.object)
 
     def draw_header(self, context):
         self.layout.label(text="", icon="MOD_SUBSURF")
@@ -228,7 +225,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
         Returns:
             bool: True if problem found, prompting return
         """
-        hg_rig = find_human(context.object)
+        hg_rig = Human.from_existing(context.object).rig_obj
         if not hg_rig:
             layout.label(text="No human selected")
             return True
@@ -255,8 +252,8 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        hg_rig = find_human(context.object)
-        return hg_rig
+        human = Human.from_existing(context.object)
+        return human
 
     def draw_header(self, context):
         self.layout.label(text="", icon="OUTLINER_OB_ARMATURE")
@@ -265,7 +262,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         layout = self.layout
         hg_icons = preview_collections["hg_icons"]
 
-        hg_rig = find_human(context.object)
+        hg_rig = Human.from_existing(context.object).rig_obj
 
         layout.label(text="Only during creation phase:", icon="RADIOBUT_OFF")
         col = layout.column()

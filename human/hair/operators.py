@@ -1,5 +1,4 @@
 from HumGen3D.human.human import Human
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 import bpy
 
 
@@ -23,7 +22,7 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
     hair_system: bpy.props.StringProperty()
 
     def execute(self, context):
-        hg_rig = find_human(context.object)
+        hg_rig = Human.from_existing(context.object).rig_obj
         hg_body = hg_rig.HG.body_obj
 
         context.view_layer.objects.active = hg_body

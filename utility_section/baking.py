@@ -13,9 +13,8 @@ import bpy
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
 
-from ..common.common_functions import (
-    find_human,
-)
+from HumGen3D.human.human import Human
+
 
 
 def status_text_callback(header, context):
@@ -61,9 +60,9 @@ class HG_BAKE(bpy.types.Operator):
         sett = context.scene.HG3D
         selected_humans = set(
             [
-                find_human(obj)
+                Human.from_existing(obj).rig_obj
                 for obj in context.selected_objects
-                if find_human(obj)
+                if Human.from_existing(obj)
             ]
         )
         self.bake_enum = generate_bake_enum(context, selected_humans)

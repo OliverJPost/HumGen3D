@@ -6,12 +6,12 @@ import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preview_collections import refresh_pcoll
-from HumGen3D.human.human import Human
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.old.blender_operators.common.random import (
+from HumGen3D.backend.preview_collections import (
+    refresh_pcoll,
     set_random_active_in_pcoll,
 )
+from HumGen3D.human.human import Human
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
 # from ..utility_section.baking import (  # type:ignore
 #     add_image_node,

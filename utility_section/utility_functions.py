@@ -2,10 +2,9 @@ import json
 import os
 from pathlib import Path
 from HumGen3D.backend.preference_func import get_prefs
-
+from HumGen3D.human.human import Human
 import bpy  # type: ignore
 
-from ..common.common_functions import find_human
 
 
 def refresh_modapply(self, context):
@@ -33,7 +32,7 @@ def build_object_list(context, sett) -> list:
     if sett.modapply_search_objects != "selected":
         humans = (
             [
-                find_human(context.object),
+                Human.from_existing(context.object).rig_obj,
             ]
             if sett.modapply_search_objects == "full"
             else [obj for obj in bpy.data.objects if obj.HG.ishuman]
@@ -98,11 +97,11 @@ def refresh_shapekeys_ul(self, context):
 
     existing_sks = find_existing_shapekeys(sett, pref)
 
-    hg_rig = find_human(context.object)
-    if not hg_rig:
+    human = Human.from_existing(context.object)
+    if not human:
         return
 
-    for sk in hg_rig.HG.body_obj.data.shape_keys.key_blocks:
+    for sk in human.shape_keys:
         if sk.name in existing_sks:
             continue
 

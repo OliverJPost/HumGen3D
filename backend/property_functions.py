@@ -6,13 +6,10 @@ import os
 from pathlib import Path
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preference_func import get_prefs
-
+from HumGen3D.human.human import Human
 import bpy
 from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type:ignore
 
-from ..old.blender_operators.common.common_functions import (
-    find_human,
-)
 
 
 def find_folders(
@@ -35,13 +32,13 @@ def find_folders(
     Returns:
         list: enum of folders
     """
-    hg_rig = find_human(context.active_object)
+    human = Human.from_existing(context.active_object)
     pref = get_prefs()
 
     if gender_override:
         gender = gender_override
-    elif hg_rig:
-        gender = hg_rig.HG.gender
+    elif human:
+        gender = human.gender
     else:
         return [("ERROR", "ERROR", "", i) for i in range(99)]
 

@@ -2,7 +2,6 @@ from HumGen3D.backend.memory_management import hg_delete
 import bpy
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 from mathutils import Vector, kdtree
 
 import numpy as np
@@ -16,7 +15,6 @@ def build_distance_dict(source_org, target, apply=True):
     bpy.context.scene.collection.objects.link(source)
 
     apply_shapekeys(source)
-    hg_rig = find_human(bpy.context.object)
     if apply:
         apply_armature(source)
 
@@ -70,7 +68,6 @@ def deform_obj_from_difference(
 
     if apply_source_sks:
         apply_shapekeys(deform_target_copy)
-    hg_rig = find_human(bpy.context.object)
     # apply_armature(source_copy)
 
     if "Female_" in name or "Male_" in name:
