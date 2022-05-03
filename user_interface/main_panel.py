@@ -9,10 +9,6 @@ from HumGen3D.backend.preference_func import get_prefs  # type: ignore
 
 from ..backend.preview_collections import preview_collections
 from ..human.human import Human  # type: ignore
-from ..old.blender_operators.common.common_functions import (
-    find_human,
-    is_batch_result,
-)
 from .panel_functions import (
     draw_panel_switch_header,
     draw_spoiler_box,
@@ -51,14 +47,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.sett = context.scene.HG3D
         self.pref = get_prefs()
 
-        self.hg_rig = find_human(
-            context.active_object, include_applied_batch_results=True
-        )
         self.human = Human.from_existing(
             context.active_object, strict_check=False
         )
+        self.hg_rig = self.human.rig_obj
+
         if self.hg_rig:
-            is_batch, is_applied_batch = is_batch_result(self.hg_rig)
+            is_batch, is_applied_batch = self.human.is_batch_result
 
         found_problem = self.draw_info_and_warning_labels(context, layout)
         if found_problem:
@@ -1165,7 +1160,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         sett = self.sett
-        hg_rig = find_human(context.active_object)
+        hg_rig = Human.from_existing(context.object).rig_obj
         body_obj = hg_rig.HG.body_obj
 
         hair_systems = self._get_hair_systems(body_obj)

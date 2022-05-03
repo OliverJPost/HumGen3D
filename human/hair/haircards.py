@@ -8,9 +8,7 @@ import bpy  # type: ignore
 import numpy as np
 from mathutils import Vector
 
-from ...old.blender_operators.common.common_functions import (
-    find_human,
-)
+
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -26,7 +24,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     def execute(self, context):
         pref = get_prefs()
 
-        hg_rig = find_human(context.object)
+        hg_rig = None #find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
         for ps in hg_body.particle_systems:

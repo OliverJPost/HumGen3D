@@ -1,16 +1,13 @@
 import bpy
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
-from HumGen3D.old.blender_operators.common.common_functions import (
-    find_human,
-    is_batch_result,
-)
+
 from HumGen3D.user_interface.info_popups import HG_OT_INFO
 from HumGen3D.user_interface.tips_suggestions_ui import (
     update_tips_from_context,
 )
 
-from ...old.blender_operators.common.random import set_random_active_in_pcoll
+from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
 from ..human import Human
 
 
@@ -41,7 +38,6 @@ class HG_RANDOM(bpy.types.Operator):
     def execute(self, context):
         random_type = self.random_type
         sett = context.scene.HG3D
-        hg_rig = find_human(context.active_object)
         human = Human.from_existing(context.active_object)
 
         if random_type == "body_type":
@@ -162,7 +158,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             "expression": ("expressions",),
         }
 
-        if not any(is_batch_result(context.object)):
+        if not any(human.is_batch_result()):
             if self.section_name in categ_dict:
                 for item in categ_dict[self.section_name]:
                     refresh_pcoll(self, context, item)
@@ -219,7 +215,7 @@ class HG_NEXT_PREV_HUMAN(bpy.types.Operator):
             self.report({"INFO"}, "No Humans in this scene")
             return {"FINISHED"}
 
-        hg_rig = find_human(context.active_object)
+        hg_rig = Human.from_existing(context.active_object).rig_obj
 
         index = humans.index(hg_rig) if hg_rig in humans else 0
 

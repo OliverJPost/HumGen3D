@@ -9,7 +9,6 @@ from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 
 class ExpressionSettings:
@@ -36,7 +35,7 @@ class ExpressionSettings:
             key, value = line.split()
             sett_dict[key] = value
 
-        hg_rig = find_human(context.active_object)
+        hg_rig = self._human.rig_obj
         hg_body = hg_rig.HG.body_obj
         sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
         if "expr_{}".format(sk_name) in sk_names:

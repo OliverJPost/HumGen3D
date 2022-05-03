@@ -4,7 +4,6 @@ from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.human import Human
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 
 class HG_RIGIFY(bpy.types.Operator):
@@ -25,7 +24,7 @@ class HG_RIGIFY(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        hg_rig = find_human(context.active_object)
+        hg_rig = Human.from_existing(context.active_object).rig_obj
         human = Human.from_existing(context.object)
         context.view_layer.objects.active = hg_rig
         hg_body = hg_rig.HG.body_obj

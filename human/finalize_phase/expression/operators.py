@@ -4,7 +4,6 @@ import bpy
 from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.drivers import build_driver_dict
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 from HumGen3D.human.human import Human
 
@@ -34,7 +33,7 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        hg_rig = find_human(context.active_object)
+        hg_rig = Human.from_existing(context.active_object).rig_obj
         hg_body = hg_rig.HG.body_obj
 
         sk_delete = hg_body.data.shape_keys.key_blocks[self.shapekey]

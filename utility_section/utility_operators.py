@@ -10,9 +10,8 @@ from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.user_interface.feedback_func import show_message
+from HumGen3D.user_interface.info_popups import HG_OT_INFO
 
-from ....user_interface.info_popups import HG_OT_INFO
-from ..common.common_functions import find_human
 from .utility_functions import (
     build_object_list,
     refresh_hair_ul,
@@ -225,10 +224,9 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
         layout.prop(self, "suffix", text="Suffix")
 
     def execute(self, context):
-        hg_rig = find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
+        human = Human.from_existing(context.object)
 
-        for sk in hg_body.data.shape_keys.key_blocks[:]:
+        for sk in human.shape_keys:
             if sk.name == "Basis" or sk.name.startswith("cor_"):
                 continue
             sk.driver_remove("value")

@@ -11,15 +11,14 @@ This callback has the following usages:
 
 import bpy
 from HumGen3D.backend.logging import hg_log
-
-from ..human.human import Human  # , bl_info  # type: ignore
-from ..old.blender_operators.common.common_functions import find_human
-from ..old.blender_operators.utility_section.utility_functions import (
+from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
+
+from ..human.human import Human  # , bl_info  # type: ignore
 from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
 from ..user_interface.tips_suggestions_ui import (
     update_tips_from_context,
@@ -188,7 +187,9 @@ def tab_change_update(self, context):
     refresh_modapply(self, context)
 
     update_tips_from_context(
-        context, context.scene.HG3D, find_human(context.object)
+        context,
+        context.scene.HG3D,
+        Human.from_existing(context.object).rig_obj,
     )
 
     batch_uilist_refresh(self, context, "outfits")

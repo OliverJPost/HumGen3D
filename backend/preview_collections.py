@@ -4,16 +4,79 @@ population of them
 """
 
 import os
+import random
 from pathlib import Path
+from typing import Any
 
 import bpy
 
 from ..human.base.exceptions import HumGenException  # type: ignore
-from ..old.blender_operators.common.common_functions import find_human
 from .logging import hg_log
 from .preference_func import get_prefs
+# from HumGen3D.human.human import Human
 
 preview_collections = {}  # global dictionary of all pcolls
+
+def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
+    """Sets a random object in this preview collection as active
+
+    Args:
+        sett (PropertyGroup): HumGen props
+        pcoll_name (str): internal name of preview collection to pick random for
+        searchterm (str): filter to only look for items in the pcoll that include this string
+    """
+
+    refresh_pcoll(None, context, pcoll_name)
+
+    current_item = sett["pcoll_{}".format(pcoll_name)]
+
+    pcoll_list = sett["previews_list_{}".format(pcoll_name)]
+    random_item = get_random_from_list(pcoll_list, current_item, searchterm)
+
+    if not random_item:
+        setattr(sett, f"{pcoll_name}_sub", "All")
+        refresh_pcoll(None, context, pcoll_name)
+        pcoll_list = sett["previews_list_{}".format(pcoll_name)]
+        random_item = get_random_from_list(
+            pcoll_list, current_item, searchterm
+        )
+
+    setattr(sett, f"pcoll_{pcoll_name}", random_item)
+
+
+def get_random_from_list(list, current_item, searchterm) -> Any:
+    """Gets a random item from passed list, trying max 6 times to prevent choosing
+    the currently active item
+
+    Args:
+        list (list): list to choose item from
+        current_item (AnyType): currently active item
+        searchterm (str): filter to only look for items in the pcoll that include this string
+
+    Returns:
+        Any: randomly chosen item
+    """
+
+    corrected_list = (
+        [item for item in list if searchterm in item.lower()]
+        if searchterm
+        else list
+    )
+    if not corrected_list:
+        print("ERROR: Searchterm not found in pcoll: ", searchterm)
+        corrected_list = list
+
+    try:
+        random_item = random.choice(corrected_list)
+    except IndexError:
+        return None
+
+    i = 0
+    while random_item == current_item and i < 5:
+        random_item = random.choice(corrected_list)
+        i += 1
+
+    return random_item
 
 
 def get_pcoll_enum_items(self, context, pcoll_type) -> list:
@@ -102,7 +165,7 @@ def _populate_pcoll(
 
     # find category and subcategory in order to determine the dir to search
     if not hg_rig:
-        hg_rig = find_human(context.active_object)
+        hg_rig = None # FIXME Human.from_existing(context.object).rig_obj
 
     if ignore_genders:
         gender = ""
@@ -113,13 +176,7 @@ def _populate_pcoll(
     else:
         gender = hg_rig.HG.gender
 
-    gender = (
-        ""
-        if ignore_genders
-        else sett.gender
-        if pcoll_categ == "humans"
-        else hg_rig.HG.gender
-    )
+
     categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(
         pcoll_categ, sett, gender
     )
@@ -134,7 +191,7 @@ def _populate_pcoll(
 
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
-    # pcoll equels None
+    # pcoll equals None
     pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
     pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
 

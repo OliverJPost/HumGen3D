@@ -187,6 +187,10 @@ class Human:
             yield child
 
     @property
+    def is_batch_result_tuple(self) -> Tuple[bool, bool]:
+        return self.props.batch_result, self.body_obj == self.rig_obj
+
+    @property
     def gender(self) -> str:
         """Gender of this human in ("male", "female")"""
         return self.rig_obj.HG.gender

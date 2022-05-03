@@ -1,24 +1,20 @@
+import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preference_func import get_prefs
-import bpy
+from HumGen3D.human.human import Human
 from HumGen3D.user_interface.feedback_func import show_message
-
-from ..backend.preview_collections import preview_collections
-from ..old.blender_operators.common.common_functions import (
-    find_human,
-)
-from ..old.blender_operators.utility_section.utility_functions import (
+from HumGen3D.utility_section.utility_functions import (
     find_existing_shapekeys,
     refresh_hair_ul,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
-from .panel_functions import in_creation_phase
+
+from ..backend.preview_collections import preview_collections
 from .tips_suggestions_ui import (
     draw_tips_suggestions_ui,
     update_tips_from_context,
 )
-from .utility_panel import Tools_PT_Base
 
 
 class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
@@ -73,7 +69,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
     def execute(self, context):
         sett = context.scene.HG3D
 
-        hg_rig = find_human(context.object)
+        hg_rig = Human.from_existing(context.object).rig_obj
 
         sett.content_saving_ui = True
         sett.content_saving_type = self.content_type
@@ -476,7 +472,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         """
         sett = self.sett
 
-        active_human = find_human(context.object)
+        active_human = Human.from_existing(context.object).rig_obj
         try:
             if (
                 active_human

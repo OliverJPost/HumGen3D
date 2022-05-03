@@ -6,7 +6,7 @@ import bpy
 from HumGen3D.human.human import Human
 from mathutils import Matrix
 
-from ..common.common_functions import find_human
+
 
 
 # REMOVE

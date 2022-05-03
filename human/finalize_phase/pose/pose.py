@@ -2,7 +2,6 @@ import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preference_func import get_prefs
-from HumGen3D.old.blender_operators.common.common_functions import find_human
 
 
 class PoseSettings:
@@ -21,7 +20,7 @@ class PoseSettings:
         if sett.load_exception:
             return
 
-        hg_rig = find_human(context.active_object)
+        hg_rig = self._human.rig_obj
         hg_pose = self._import_pose(preset, context)
 
         self._match_rotation_mode(hg_rig, hg_pose, context)
