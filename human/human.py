@@ -240,12 +240,16 @@ class Human:
 
     @property
     def creation_phase(self):
+        if self.phase != "creation":
+            raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
         if not hasattr(self, "_creation_phase"):
             self._creation_phase = CreationPhaseSettings(self)
         return self._creation_phase
 
     @property
     def finalize_phase(self):
+        if self.phase != "finalize":
+            raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
         if not hasattr(self, "_finalize_phase"):
             self._finalize_phase = FinalizePhaseSettings(self)
         return self._finalize_phase
