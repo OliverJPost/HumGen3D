@@ -48,8 +48,8 @@ class Human:
 
         self.rig_obj = rig_obj
 
-    @classmethod
-    def get_preset_options(cls, gender: str, context=None):
+    @staticmethod
+    def get_preset_options(gender: str, context=None):
         if not context:
             context = bpy.context
 
@@ -60,7 +60,7 @@ class Human:
     @classmethod
     def from_existing(
         cls, existing_human: Object, strict_check: bool = True
-    ) -> Human:
+    ) -> Human | None:
         if strict_check and not isinstance(existing_human, Object):
             raise TypeError(
                 f"Expected a Blender object, got {type(existing_human)}"
@@ -68,12 +68,15 @@ class Human:
 
         rig_obj = cls.find(existing_human)
 
-        if strict_check and not rig_obj:
+        if rig_obj:
+            return cls(rig_obj, strict_check=strict_check)
+        elif strict_check:
             raise HumGenException(
                 f"Passed object '{existing_human.name}' is not part of an existing human"
             )
+        else:
+            return None
 
-        return cls(rig_obj, strict_check=strict_check)
 
     @classmethod
     def from_preset(
@@ -167,10 +170,7 @@ class Human:
         )
 
     def __repr__(self):
-        pass  # TODO
-
-    def __bool__(self) -> bool:
-        return bool(self.rig_obj)
+        return f"Human {self.name} in {self.phase} phase."
 
     @property
     def objects(self) -> Generator[Object]:
@@ -180,6 +180,13 @@ class Human:
             yield child
 
         yield self.rig_obj
+
+    @property
+    def phase(self) -> str:
+        if hg_rig.HG.phase in ["body", "face", "skin", "length"]:
+            return "creation"
+        else:
+            return "finalize"
 
     @property
     def children(self) -> Generator[Object]:
