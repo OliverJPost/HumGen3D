@@ -329,7 +329,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
                 # structure with the same name
             else:
                 return "None"
-        except:
+        except Exception:
             return "None"
 
 
@@ -367,7 +367,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
         coll.clear()
         try:
             cpacks_refresh(self, context)
-        except:
+        except Exception:
             pass
 
         return {"FINISHED"}

@@ -160,7 +160,7 @@ class Human:
             return obj
 
     @classmethod
-    def _is_batch_result(self, obj) -> Tuple[bool, bool]:
+    def _is_batch_result(cls, obj) -> Tuple[bool, bool]:
         return (
             obj.HG.batch_result,
             obj.HG.body_obj == obj,
@@ -273,9 +273,6 @@ class Human:
     def body_obj(self) -> Object:
         return self.rig_obj.HG.body_obj
 
-    def delete(self) -> None:
-        pass  # TODO
-
     def _verify_body_object(self):
         """Update HG.body_obj if it's not a child of the rig. This would happen if
         the user duplicated the human manually
@@ -289,7 +286,7 @@ class Human:
             )
 
             if new_body:
-                self.body_obj = new_body[0]
+                self.props.body_obj = new_body[0]
                 if "no_body" in self.rig_obj:
                     del self.rig_obj["no_body"]
             else:

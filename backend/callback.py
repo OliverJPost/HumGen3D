@@ -49,7 +49,7 @@ def msgbus(self, context):
     """Activates the subscribtion to changes to the active object"""
     sett = context.scene.HG3D
 
-    if sett.subscribed == True:
+    if sett.subscribed:
         return
 
     subscribe_to = bpy.types.LayerObjects, "active"
@@ -95,7 +95,7 @@ def _set_shader_switches(human, sett):
     if not body_obj:
         return
 
-    body_obj.data.materials[0].node_tree.nodes
+    # body_obj.data.materials[0].node_tree.nodes
     principled_bsdf = next(
         node for node in nodes if node.type == "BSDF_PRINCIPLED"
     )

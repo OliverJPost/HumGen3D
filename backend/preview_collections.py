@@ -44,12 +44,12 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
     setattr(sett, f"pcoll_{pcoll_name}", random_item)
 
 
-def get_random_from_list(list, current_item, searchterm) -> Any:
+def get_random_from_list(lst, current_item, searchterm) -> Any:
     """Gets a random item from passed list, trying max 6 times to prevent choosing
     the currently active item
 
     Args:
-        list (list): list to choose item from
+        lst (list): list to choose item from
         current_item (AnyType): currently active item
         searchterm (str): filter to only look for items in the pcoll that include this string
 
@@ -58,13 +58,13 @@ def get_random_from_list(list, current_item, searchterm) -> Any:
     """
 
     corrected_list = (
-        [item for item in list if searchterm in item.lower()]
+        [item for item in lst if searchterm in item.lower()]
         if searchterm
-        else list
+        else lst
     )
     if not corrected_list:
         print("ERROR: Searchterm not found in pcoll: ", searchterm)
-        corrected_list = list
+        corrected_list = lst
 
     try:
         random_item = random.choice(corrected_list)
@@ -359,7 +359,7 @@ def _add_file_to_pcoll(
     else:
         thumb = pcoll[filepath_thumb]
 
-    short_path = full_path.replace(str(pref.filepath), "")
+    short_path = full_path.replace(str(pref.filepath), "") # TODO
 
     display_name = _get_display_name(full_path)
 

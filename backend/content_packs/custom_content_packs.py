@@ -296,25 +296,25 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         )
         if get_prefs().compress_zip:
             try:
-                zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
+                cpack_zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
             except Exception as e:
                 hg_log(
                     "Error while attempting zip compression",
                     e,
                     level="WARNING",
                 )
-                zip = ZipFile(zip_path, "w")
+                cpack_zip = ZipFile(zip_path, "w")
         else:
-            zip = ZipFile(zip_path, "w")
-        zip.write(json_path, os.path.relpath(json_path, pref.filepath))
+            cpack_zip = ZipFile(zip_path, "w")
+        cpack_zip.write(json_path, os.path.relpath(json_path, pref.filepath))
         for relative_path in export_paths:
             full_path = pref.filepath + relative_path
             try:
-                zip.write(full_path, relative_path)
+                cpack_zip.write(full_path, relative_path)
             except FileNotFoundError:
                 hg_log("Could not find file ", full_path, level="WARNING")
                 failed_exports += 1
-        zip.close()
+        cpack_zip.close()
 
         hg_log("Failed exports ", failed_exports, level="WARNING")
 

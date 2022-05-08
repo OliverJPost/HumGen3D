@@ -540,14 +540,14 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
             node for node in nodes if node.bl_idname == "ShaderNodeGroup"
         ]:
             input_dict = {}
-            for input in [inp for inp in node.inputs if not inp.links]:
+            for input_socket in [inp for inp in node.inputs if not inp.links]:
                 inp_value = (
-                    tuple(input.default_value)
-                    if str(type(input.default_value))
+                    tuple(input_socket.default_value)
+                    if str(type(input_socket.default_value))
                     == "<class 'bpy_prop_array'>"
-                    else input.default_value
+                    else input_socket.default_value
                 )
-                input_dict[input.name] = inp_value
+                input_dict[input_socket.name] = inp_value
 
             nodegroup_dict[node.name] = input_dict
         nodename_dict = {

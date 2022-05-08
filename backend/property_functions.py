@@ -42,7 +42,7 @@ def find_folders(
     else:
         return [("ERROR", "ERROR", "", i) for i in range(99)]
 
-    if gender_toggle == True:
+    if gender_toggle:
         categ_folder = os.path.join(pref.filepath, categ, gender)
     else:
         categ_folder = os.path.join(pref.filepath, categ)
@@ -111,8 +111,8 @@ def get_resolutions():
     ]
 
 
-def poll_mtc_armature(self, object):
-    return object.type == "ARMATURE"
+def poll_mtc_armature(self, obj):
+    return obj.type == "ARMATURE"
 
 
 def thumbnail_saving_prop_update(self, context):

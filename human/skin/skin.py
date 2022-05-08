@@ -261,10 +261,10 @@ class TextureSettings:
         )
 
     def _change_peripheral_texture_resolution(
-        self, resolution_folder, hg_rig, hg_body
+        self, resolution_folder
     ):
         # TODO cleanup
-        for obj in hg_rig.children:
+        for obj in self._human.children:
             for mat in obj.data.materials:
                 for node in [
                     node
@@ -275,7 +275,7 @@ class TextureSettings:
                         node.name.startswith(
                             ("skin_rough_spec", "Normal", "Color")
                         )
-                        and obj == hg_body
+                        and obj == self._human.body_obj
                     ):
                         continue
                     current_image = node.image

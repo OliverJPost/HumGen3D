@@ -179,9 +179,9 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
         color_rgba = self._hex_to_rgba(color_hex)
 
         nodes = context.object.active_material.node_tree.nodes
-        input = nodes["HG_Control"].inputs[self.input_name]
+        input_socket = nodes["HG_Control"].inputs[self.input_name]
 
-        input.default_value = tuple(color_rgba)
+        input_socket.default_value = tuple(color_rgba)
 
         return {"FINISHED"}
 

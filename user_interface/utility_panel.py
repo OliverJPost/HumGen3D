@@ -1,19 +1,19 @@
-from HumGen3D.backend.preference_func import get_prefs
 import bpy
+from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.human.human import Human
 
-from ..backend.preview_collections import (
-    get_hg_icon,
-    preview_collections,
-)
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,
-    draw_sub_spoiler,
     get_flow,
     in_creation_phase,
 )
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from HumGen3D.human.human import Human
+from ..backend.preview_collections import (
+    get_hg_icon,
+    preview_collections,
+)
+
 
 class Tools_PT_Base:
     """Bl_info and commonly used tools for Utility panels"""

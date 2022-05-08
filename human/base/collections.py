@@ -33,7 +33,7 @@ def add_to_collection(
 
     try:
         context.scene.collection.objects.unlink(obj)
-    except:
+    except Exception:
         obj.users_collection[0].objects.unlink(obj)
 
     collection.objects.link(obj)
