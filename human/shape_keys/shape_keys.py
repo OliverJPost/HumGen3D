@@ -50,19 +50,15 @@ class ShapeKeySettings(PropCollection):
 
     @property
     def body_proportions(self):
-        if not hasattr(self, "_body_proportions"):
-            self._body_proportions = PropCollection(
-                sk for sk in self if sk.name.startswith("bp_")
-            )
-        return self._body_proportions
+        return PropCollection(
+            sk for sk in self if sk.name.startswith("bp_")
+        )
 
     @property
     def face_presets(self):
-        if not hasattr(self, "_face_presets"):
-            self._face_presets = PropCollection(
-                sk for sk in self if sk.name.startswith("pr_")
-            )
-        return self._face_presets
+        return PropCollection(
+            sk for sk in self if sk.name.startswith("pr_")
+        )
 
     def _load_external(self, human, context=None):
         """Imports external shapekeys from the models/shapekeys folder

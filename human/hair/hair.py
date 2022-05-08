@@ -8,35 +8,27 @@ from HumGen3D.human.hair.facial_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
 from ..hair.eyebrows import EyebrowSettings
-
+from HumGen3D.human.base.decorators import cached_property
 
 class HairSettings:
     def __init__(self, human):
         self._human = human
 
-    @property
+    @cached_property
     def eyebrows(self) -> EyebrowSettings:
-        if not hasattr(self, "_eyebrows"):
-            self._eyebrows = EyebrowSettings(self._human)
-        return self._eyebrows
+        return EyebrowSettings(self._human)
 
-    @property
+    @cached_property
     def eyelashes(self) -> EyelashSettings:
-        if not hasattr(self, "_eyelashes"):
-            self._eyelashes = EyelashSettings(self._human)
-        return self._eyelashes
+        return EyelashSettings(self._human)
 
-    @property
+    @cached_property
     def facial_hair(self) -> FacialHairSettings:
-        if not hasattr(self, "_facial_hair"):
-            self._facial_hair = FacialHairSettings(self._human)
-        return self._facial_hair
+        return FacialHairSettings(self._human)
 
-    @property
+    @cached_property
     def regular_hair(self) -> RegularHairSettings:
-        if not hasattr(self, "_regular_hair"):
-            self._regular_hair = RegularHairSettings(self._human)
-        return self._regular_hair
+        return RegularHairSettings(self._human)
 
     @property
     def children_ishidden(self) -> bool:

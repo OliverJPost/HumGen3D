@@ -12,19 +12,17 @@ from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 from ...backend.preview_collections import refresh_pcoll
 from ..base.prop_collection import PropCollection
-
+from HumGen3D.human.base.decorators import cached_property
 
 def create_node_property(node_name, input_name):
     @property
     def _property_function(self) -> float:
         tone_node = self.nodes[node_name]
-        print("getting")
         return tone_node.inputs[input_name].default_value
 
     @_property_function.setter
     def _property_function(self, value: float):
         tone_node = self.nodes[node_name]
-        print("setting to", value)
         tone_node.inputs[input_name].default_value = value
 
     return _property_function
@@ -74,37 +72,29 @@ class SkinSettings:
     def __init__(self, human):
         self._human = human
 
-    @property
+    @cached_property
     def texture(self) -> TextureSettings:
-        if not hasattr(self, "_texture"):
-            self._texture = TextureSettings(self._human)
-        return self._texture
+        return TextureSettings(self._human)
 
     @property
     def nodes(self) -> SkinNodes:
-        if not hasattr(self, "_nodes"):
-            self._nodes = SkinNodes(self._human)
-        return self._nodes
+        return SkinNodes(self._human)
 
     @property
     def links(self) -> SkinLinks:
-        if not hasattr(self, "_links"):
-            self._links = SkinLinks(self._human)
-        return self._links
+        return SkinLinks(self._human)
 
     @property
     def material(self) -> Material:
         return self._human.body_obj.data.materials[0]
 
-    @property
+    @cached_property
     def gender_specific(self):
-        if not hasattr(self, "_gender_specific"):
-            if self._human.gender == "male":
-                gender_specific_class = MaleSkin
-            else:
-                gender_specific_class = FemaleSkin
-            self._gender_specific = gender_specific_class(self.nodes)
-        return self._gender_specific
+        if self._human.gender == "male":
+            gender_specific_class = MaleSkin
+        else:
+            gender_specific_class = FemaleSkin
+        return gender_specific_class(self.nodes)
 
     def _mac_material_fix(self):
         self.links.new(
