@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 from bpy.types import Object
 
+from .base.decorators import cached_property
 from ..backend.preference_func import get_prefs
 from .base.collections import add_to_collection
 from .base.exceptions import HumGenException
@@ -238,43 +239,33 @@ class Human:
     def props(self) -> PropertyGroup:
         return self.rig_obj.HG
 
-    @property
+    @cached_property
     def creation_phase(self):
         if self.phase != "creation":
             raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
-        if not hasattr(self, "_creation_phase"):
-            self._creation_phase = CreationPhaseSettings(self)
-        return self._creation_phase
+        return CreationPhaseSettings(self)
 
-    @property
+    @cached_property
     def finalize_phase(self):
         if self.phase != "finalize":
             raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
-        if not hasattr(self, "_finalize_phase"):
-            self._finalize_phase = FinalizePhaseSettings(self)
-        return self._finalize_phase
+        return FinalizePhaseSettings(self)
 
-    @property
+    @cached_property
     def skin(self) -> SkinSettings:
-        if not hasattr(self, "_skin"):
-            self._skin = SkinSettings(self)
-        return self._skin
+        return SkinSettings(self)
 
     @property
     def shape_keys(self) -> ShapeKeySettings:
         return ShapeKeySettings(self)
 
-    @property
+    @cached_property
     def eyes(self) -> EyeSettings:
-        if not hasattr(self, "_eyes"):
-            self._eyes = EyeSettings(self)
-        return self._eyes
+        return EyeSettings(self)
 
-    @property
+    @cached_property
     def hair(self) -> HairSettings:
-        if not hasattr(self, "_hair"):
-            self._hair = HairSettings(self)
-        return self._hair
+        return HairSettings(self)
 
     @property
     def properties(self):

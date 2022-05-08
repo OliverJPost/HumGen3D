@@ -15,41 +15,32 @@ from .length.length import LengthSettings, apply_armature
 
 if TYPE_CHECKING:
     from HumGen3D import Human
+from HumGen3D.human.base.decorators import cached_property
 
 
 class CreationPhaseSettings:
     def __init__(self, human):
         self._human: Human = human
 
-    @property
+    @cached_property
     def body(self) -> BodySettings:
-        if not hasattr(self, "_body"):
-            self._body = BodySettings(self._human)
-        return self._body
+        return BodySettings(self._human)
 
-    @property
+    @cached_property
     def length(self) -> LengthSettings:
-        if not hasattr(self, "_length"):
-            self._length = LengthSettings(self._human)
-        return self._length
+        return LengthSettings(self._human)
 
-    @property
+    @cached_property
     def face(self) -> FaceKeys:
-        if not hasattr(self, "_face"):
-            self._face = FaceKeys(self._human)
-        return self._face
+        return FaceKeys(self._human)
 
-    # FIXME this will crash blender when accessed after modified
     @property
     def stretch_bones(self):
-        if not hasattr(self, "_stretch_bones"):
-            stretch_bones = []
-            for bone in self._human.pose_bones:
-                if [c for c in bone.constraints if c.type == "STRETCH_TO"]:
-                    stretch_bones.append(bone)
-            self._stretch_bones = PropCollection(stretch_bones)
-
-        return self._stretch_bones
+        stretch_bones = []
+        for bone in self._human.pose_bones:
+            if [c for c in bone.constraints if c.type == "STRETCH_TO"]:
+                stretch_bones.append(bone)
+        return PropCollection(stretch_bones)
 
     def finish(self, context):
         """For full feature breakdown, see HG_FINISH_CREATION

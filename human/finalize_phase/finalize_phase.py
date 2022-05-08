@@ -7,7 +7,7 @@ from .clothing.footwear import FootwearSettings
 from .clothing.outfit import OutfitSettings
 from .expression.expression import ExpressionSettings
 from .pose.pose import PoseSettings
-
+from HumGen3D.human.base.decorators import cached_property
 
 class FinalizePhaseSettings:
     def __init__(self, human):
@@ -17,29 +17,21 @@ class FinalizePhaseSettings:
     def backup_rig(self):
         return self._human.props.backup
 
-    @property
+    @cached_property
     def pose(self) -> PoseSettings:
-        if not hasattr(self, "_pose"):
-            self._pose = PoseSettings(self._human)
-        return self._pose
+        return PoseSettings(self._human)
 
-    @property
+    @cached_property
     def outfit(self) -> OutfitSettings:
-        if not hasattr(self, "_outfit"):
-            self._outfit = OutfitSettings(self._human)
-        return self._outfit
+        return OutfitSettings(self._human)
 
-    @property
+    @cached_property
     def footwear(self) -> FootwearSettings:
-        if not hasattr(self, "_footwear"):
-            self._footwear = FootwearSettings(self._human)
-        return self._footwear
+        return FootwearSettings(self._human)
 
-    @property
+    @cached_property
     def expression(self) -> ExpressionSettings:
-        if not hasattr(self, "_expression"):
-            self._expression = ExpressionSettings(self._human)
-        return self._expression
+        return ExpressionSettings(self._human)
 
     def revert(self, context: Context = None) -> None:
         if not context:
