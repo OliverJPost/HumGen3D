@@ -183,7 +183,7 @@ class HG_BAKE(bpy.types.Operator):
             sett.bake_idx += 1
 
             if self.bake_idx > 0:
-                progress = self.bake_idx / (sett.bake_total)
+                progress = self.bake_idx / sett.bake_total
                 sett.bake_progress = int(progress * 100)
 
             context.workspace.status_text_set(status_text_callback)

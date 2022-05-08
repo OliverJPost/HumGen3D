@@ -62,6 +62,7 @@ class HG_RANDOM(bpy.types.Operator):
         elif random_type == "iris_color":
             human.eyes.randomize()
 
+
         return {"FINISHED"}
 
 

@@ -73,7 +73,7 @@ class EyeSettings:
 
         pupil_color_hex = random.choice(
             random.choices(
-                [list for _, list in weighted_lists.items()],
+                [lst for _, lst in weighted_lists.items()],
                 weights=[weight for weight in weighted_lists],
             )[0]
         )

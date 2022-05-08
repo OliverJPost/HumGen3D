@@ -148,10 +148,10 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         for prefix in prefixes:
             assert [sk for sk in sks if sk.name.startswith(f"{prefix}_")]
 
+        bung_drivers = []
         for sk in bpy.data.shape_keys:
             if not sk.animation_data:
                 continue
-            bung_drivers = []
             for d in sk.animation_data.drivers:
                 try:
                     sk.path_resolve(d.data_path)

@@ -116,7 +116,7 @@ def batch_uilist_refresh(self, context, categ):
         collection = scene.batch_clothing_col
     elif categ == "poses":
         collection = scene.batch_pose_col
-    elif categ == "expressions":
+    else:
         collection = scene.batch_expressions_col
 
     enabled_dict = {i.name: i.enabled for i in collection}

@@ -58,8 +58,8 @@ class BaseClothing:
             return
 
         tag = "shoe" if is_footwear else "cloth"
-        if pref.remove_clothes:  # TODO as argument?
-            mask_remove_list = self.remove()
+        # TODO as argument?
+        mask_remove_list = self.remove() if pref.remove_clothes else []
 
         cloth_objs, collections = self._import_cloth_items(preset, context)
 
@@ -81,6 +81,7 @@ class BaseClothing:
         # remove collection that was imported along with the cloth objects
         for col in collections:
             bpy.data.collections.remove(col)
+
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
@@ -375,7 +376,7 @@ class BaseClothing:
 
             old_color_setting = image.colorspace_settings.name
 
-            dir = os.path.dirname(image.filepath)
+            img_dir = os.path.dirname(image.filepath)
             filename, ext = os.path.splitext(os.path.basename(image.filepath))
 
             if filename.endswith("_MEDIUM"):
@@ -388,7 +389,7 @@ class BaseClothing:
             else:
                 new_filename = filename + f"_{resolution_tag.upper()}" + ext
 
-            new_path = os.path.join(dir, new_filename)
+            new_path = os.path.join(img_dir, new_filename)
 
             if not os.path.isfile(new_path):
                 hg_log(
@@ -412,11 +413,12 @@ class BaseClothing:
         # finds image node, returns error if for some reason the node doesn't exist
         try:
             img_node = mat.node_tree.nodes["HG_Pattern"]
-        except:
+        except KeyError:
             self.report(
                 {"WARNING"},
                 "Couldn't find pattern node, click 'Remove pattern' and try to add it again",
             )
+            return
 
         filepath = str(pref.filepath) + str(
             Path(context.scene.HG3D.pcoll_patterns)
@@ -450,10 +452,10 @@ class BaseClothing:
         with open(colorgroups_json) as f:
             color_dict = json.load(f)
 
-        for input in control_node.inputs:
+        for input_socket in control_node.inputs:
             color_groups = tuple(["_{}".format(name) for name in color_dict])
             color_group = (
-                input.name[-2:] if input.name.endswith(color_groups) else None
+                input_socket.name[-2:] if input_socket.name.endswith(color_groups) else None
             )
 
             if not color_group:
@@ -462,7 +464,7 @@ class BaseClothing:
             context.view_layer.objects.active = cloth_obj
 
             bpy.ops.hg3d.color_random(
-                input_name=input.name, color_group=color_group
+                input_name=input_socket.name, color_group=color_group
             )
 
         context.view_layer.objects.active = old_active
