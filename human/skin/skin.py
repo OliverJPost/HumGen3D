@@ -16,8 +16,13 @@ from ..base.decorators import injected_context
 
 if TYPE_CHECKING:
     from bpy.types import (
-        Context, FloatVectorProperty, Material, NodeInput, ShaderNode,
-        bpy_prop_collection)
+        Context,
+        FloatVectorProperty,
+        Material,
+        NodeInput,
+        ShaderNode,
+        bpy_prop_collection,
+    )
 
     from ..human import Human
 
