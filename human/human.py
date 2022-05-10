@@ -43,11 +43,18 @@ class Human:
     # teeth: TeethSettings
     # eyes: EyeSettings
 
+    # region Magic Methods
     def __init__(self, rig_obj, strict_check: bool = True):
         if strict_check and not rig_obj.HG.ishuman:
             raise HumGenException("Did not pass a valid HG rig object")
 
         self.rig_obj = rig_obj
+
+    def __repr__(self):
+        return f"Human {self.name} in {self.phase} phase."
+
+    # endregion
+    # region Class & Static Methods
 
     @staticmethod
     @injected_context
@@ -169,8 +176,8 @@ class Human:
             obj.HG.body_obj == obj,
         )
 
-    def __repr__(self):
-        return f"Human {self.name} in {self.phase} phase."
+    # endregion
+    # region Properties
 
     @property
     def objects(self) -> Generator[Object]:
@@ -273,6 +280,46 @@ class Human:
     @property
     def body_obj(self) -> Object:
         return self.rig_obj.HG.body_obj
+
+    # endregion
+    # region Public Methods
+
+    def delete(self):
+        backup_obj = self.props.backup
+        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+
+        copied_humans = [
+            human
+            for human in humans
+            if human.HG.backup == backup_obj and human != self.rig_obj
+        ]
+
+        delete_list = [
+            self.rig_obj,
+        ]
+        for child in self.rig_obj.children:
+            delete_list.append(child)
+            for sub_child in child.children:
+                delete_list.append(sub_child)
+
+        if not copied_humans and backup_obj:
+            delete_list.append(backup_obj)
+            for child in backup_obj.children:
+                delete_list.append(child)
+
+        for obj in delete_list:
+            try:
+                hg_delete(obj)
+            except:
+                hg_log("could not remove", obj)
+
+    def hide_set(self, state):
+        for obj in self.objects:
+            obj.hide_set(state)
+            obj.hide_viewport = state
+
+    # endregion
+    # region Protected Methods
 
     def _verify_body_object(self):
         """Update HG.body_obj if it's not a child of the rig. This would happen if
@@ -387,36 +434,5 @@ class Human:
 
         self.name = "HG_" + name
 
-    def delete(self):
-        backup_obj = self.props.backup
-        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+    # endregion
 
-        copied_humans = [
-            human
-            for human in humans
-            if human.HG.backup == backup_obj and human != self.rig_obj
-        ]
-
-        delete_list = [
-            self.rig_obj,
-        ]
-        for child in self.rig_obj.children:
-            delete_list.append(child)
-            for sub_child in child.children:
-                delete_list.append(sub_child)
-
-        if not copied_humans and backup_obj:
-            delete_list.append(backup_obj)
-            for child in backup_obj.children:
-                delete_list.append(child)
-
-        for obj in delete_list:
-            try:
-                hg_delete(obj)
-            except:
-                hg_log("could not remove", obj)
-
-    def hide_set(self, state):
-        for obj in self.objects:
-            obj.hide_set(state)
-            obj.hide_viewport = state

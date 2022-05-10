@@ -115,6 +115,32 @@ class CreationPhaseSettings:
         hg_rig.HG.phase = "clothing"
         t = time_update("ending", t)
 
+    def remove_stretch_bones(self):
+        """Removes all bones on this rig that have a stretch_to constraint
+
+        Args:
+            hg_rig (Object): HumGen human armature
+        """
+        bpy.ops.object.mode_set(mode="POSE")
+        for bone in self._human.pose_bones:
+            stretch_constraints = [
+                c for c in bone.constraints if c.type == "STRETCH_TO"
+            ]
+
+            for c in stretch_constraints:
+                bone.constraints.remove(c)
+
+        bpy.ops.object.mode_set(mode="EDIT")
+        remove_list = []
+        for bone in self._human.edit_bones:
+            if bone.name.startswith("stretch"):
+                remove_list.append(bone)
+
+        for bone in remove_list:
+            self._human.edit_bones.remove(bone)
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+
     def _create_backup_human(self, context: Context = None):
         if not context:
             context = bpy.context
@@ -154,32 +180,6 @@ class CreationPhaseSettings:
 
         hg_backup.matrix_parent_inverse = hg_rig.matrix_world.inverted()
         hg_backup.select_set(False)
-
-    def remove_stretch_bones(self):
-        """Removes all bones on this rig that have a stretch_to constraint
-
-        Args:
-            hg_rig (Object): HumGen human armature
-        """
-        bpy.ops.object.mode_set(mode="POSE")
-        for bone in self._human.pose_bones:
-            stretch_constraints = [
-                c for c in bone.constraints if c.type == "STRETCH_TO"
-            ]
-
-            for c in stretch_constraints:
-                bone.constraints.remove(c)
-
-        bpy.ops.object.mode_set(mode="EDIT")
-        remove_list = []
-        for bone in self._human.edit_bones:
-            if bone.name.startswith("stretch"):
-                remove_list.append(bone)
-
-        for bone in remove_list:
-            self._human.edit_bones.remove(bone)
-
-        bpy.ops.object.mode_set(mode="OBJECT")
 
     def _add_applied_armature(self, obj):
         """Adds an armature modifier to the passed object, linking it to the passed
