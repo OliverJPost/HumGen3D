@@ -48,7 +48,7 @@ class Human:
 
         self.rig_obj = rig_obj
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Human {self.name} in {self.phase} phase."
 
     # endregion
@@ -398,7 +398,7 @@ class Human:
     # endregion
     # region Protected Methods
 
-    def _verify_body_object(self):
+    def _verify_body_object(self) -> None:
         """Update HG.body_obj if it's not a child of the rig. This would happen if
         the user duplicated the human manually
         """
@@ -489,7 +489,7 @@ class Human:
 
         return human
 
-    def _set_random_name(self):
+    def _set_random_name(self) -> None:
         """Randomizes name of human. Will add "HG_" prefix"""
         taken_names = []
         for obj in bpy.data.objects:
