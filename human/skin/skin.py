@@ -10,6 +10,7 @@ import bpy
 from bpy.types import Context, Material, ShaderNode, bpy_prop_collection
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
+from ..base.decorators import injected_context
 from ...backend.preview_collections import refresh_pcoll
 from ..base.prop_collection import PropCollection
 from HumGen3D.human.base.decorators import cached_property
@@ -175,10 +176,8 @@ class SkinSettings:
             nodes["Gender_Group"].inputs[2].default_value = beard_shadow_value
             nodes["Gender_Group"].inputs[3].default_value = beard_shadow_value
 
+    @injected_context
     def set_subsurface_scattering(self, turn_on: bool, context=None):
-        if not context:
-            context = bpy.context
-
         if context.scene.HG3D.update_exception:
             return
 
@@ -236,9 +235,8 @@ class TextureSettings:
 
         self._human.skin.material["texture_library"] = library
 
+    @injected_context
     def _set_from_preset(self, mat_preset_data, context=None):
-        if not context:
-            context = bpy.context
 
         refresh_pcoll(None, context, "textures")
 
