@@ -1,21 +1,17 @@
-import json
-import os
 import random
-import subprocess
-import time
-
-from HumGen3D.human.base.decorators import injected_context
-from ..backend.logging import hg_log
 
 import bpy
-from ..human.base.exceptions import HumGenException
 from mathutils import Euler, Vector
 
+from HumGen3D.human.base.decorators import injected_context
+
+from ..backend.logging import hg_log
+from ..backend.preview_collections import refresh_pcoll
+from ..human.base.exceptions import HumGenException
 from ..human.human import Human  # type:ignore
 from ..user_interface.panel_functions import (
     in_creation_phase as _in_creation_phase,
 )
-from ..backend.preview_collections import refresh_pcoll
 
 
 class HG_Key_Blocks:
@@ -128,7 +124,7 @@ class HG_Human:
             self._gender = None
 
         hg_log(
-            "This is the old API for Human Generator. It still works, but might be removed in a future release",
+            "This is the old API for Human Generator. It still works, but might be removed in a future release!",
             level="WARNING",
         )
 
@@ -173,7 +169,7 @@ class HG_Human:
         rig_object.
 
         Returns:
-            Vector: FoatVectorProperty of size 3, representing (x,y,z) in
+            Vector: FloatVectorProperty of size 3, representing (x,y,z) in
                 Blender global space
         Raises:
             HumGenException: When this human does not yet exist in Blender.
@@ -214,7 +210,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return self.rig_obj.name
+        return self.rig_object.name
 
     @name.setter
     def name(self, new_name):
@@ -281,7 +277,8 @@ class HG_Human:
         """
         return [child for child in self.rig_object.children if "shoe" in child]
 
-    def __check_if_valid_hg_rig(self, hg_rig):
+    @staticmethod
+    def __check_if_valid_hg_rig(hg_rig):
         """Checks if the passed hg_rig is a valid Human Generator human.
 
         Args:
@@ -363,14 +360,12 @@ class HG_Human:
             HumGenException: When calling this method on an instance that
                 already exists in Blender.
         """
-        sett = context.scene.HG3D
-
         if self._rig_object:
             raise HumGenException(
                 "This HG_Human instance already exists in Blender."
             )
 
-        self.human = Human.from_preset(chosen_starting_human)
+        self.human = Human.from_preset(chosen_starting_human, context=context)
 
     def randomize_body_proportions(self):
         """Randomize the body proportion sliders of this human. Only possible

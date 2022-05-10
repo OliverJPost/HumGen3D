@@ -2,46 +2,44 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 from sys import platform
-from typing import TYPE_CHECKING, Any, Dict, Generator, List, Tuple, Union
+from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
+from bpy.types import Object
 
 from ..backend.logging import hg_log
 from ..backend.memory_management import hg_delete
-from ..backend.preview_collections import refresh_pcoll
-from .base.render import set_eevee_ao_and_strip
-from .finalize_phase.finalize_phase import FinalizePhaseSettings
-
-if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty
-    from bpy.types import Context, PropertyGroup
-
-from bpy.types import Object
-
-from .base.decorators import cached_property, injected_context
 from ..backend.preference_func import get_prefs
+from ..backend.preview_collections import refresh_pcoll
 from .base.collections import add_to_collection
+from .base.decorators import cached_property, injected_context
 from .base.exceptions import HumGenException
 from .base.namegen import get_name
+from .base.render import set_eevee_ao_and_strip
 from .creation_phase.creation_phase import CreationPhaseSettings
 from .eyes.eyes import EyeSettings
+from .finalize_phase.finalize_phase import FinalizePhaseSettings
 from .hair.hair import HairSettings
 from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
+if TYPE_CHECKING:
+    from bpy.props import FloatVectorProperty
+    from bpy.types import (
+        Context,
+        EditBone,
+        PoseBone,
+        PropertyGroup,
+        bpy_prop_collection,
+    )
+
 
 class Human:
-    rig_obj: Object
-
-    # creation_phase: CreationPhaseSettings
-    # finalize_phase: FinalizePhaseSettings
-    # phase: Union[CreationPhaseSettings, FinalizePhaseSettings]
-    # hair: HairSettings
-    # skin: SkinSettings
-    # teeth: TeethSettings
-    # eyes: EyeSettings
+    """
+    Python representation of a Human Generator human. This class with its subclasses can be used to modify the
+    Human Generator human inside Blender.
+    """
 
     # region Magic Methods
     def __init__(self, rig_obj, strict_check: bool = True):
@@ -58,7 +56,18 @@ class Human:
 
     @staticmethod
     @injected_context
-    def get_preset_options(gender: str, context=None):
+    def get_preset_options(gender: str, context: Context = None) -> List[str]:
+        """
+        Returns a list of human possible presets for the given gender. Pass one of these to Human.from_preset()
+
+        Args:
+          gender (str): string in ('male', 'female')
+          context (Context): Blender context, uses bpy.context if not passed
+
+        Returns:
+          A list of starting human presets you can choose from
+        """
+
         refresh_pcoll(None, context, "humans", gender_override=gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
@@ -67,6 +76,18 @@ class Human:
     def from_existing(
         cls, existing_human: Object, strict_check: bool = True
     ) -> Human | None:
+        """
+        Creates a Human instance from a passed Blender object that is part of an existing Blender human.
+
+        Args:
+          existing_human (Object): The object that is part of the human you want to get.
+          strict_check (bool): If True, the function will raise an exception if the passed object is not part of a
+          human. IfnFalse, it will return None instead. Defaults to True
+
+        Returns:
+          A Human instance or None
+        """
+
         if strict_check and not isinstance(existing_human, Object):
             raise TypeError(
                 f"Expected a Blender object, got {type(existing_human)}"
@@ -83,15 +104,23 @@ class Human:
         else:
             return None
 
-
     @classmethod
     @injected_context
     def from_preset(
         cls, preset: str, context: Context = None, prettify_eevee: bool = True
     ) -> Human:
-        if not context:
-            context = bpy.context
+        """
+        Creates a new human in Blender based on the passed preset and returns a Human instance
 
+        Args:
+          preset (str): The name of the preset, as retrieved from Human.get_preset_options()
+          context (Context): The Blender context.
+          prettify_eevee (bool): If True, the AO and Strip settings will be set to settings that look nicer.
+            Defaults to True
+
+        Returns:
+          A Human instance
+        """
         preset_path = os.path.join(
             get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
         )
@@ -135,10 +164,7 @@ class Human:
 
     @classmethod
     def find(cls, obj, include_applied_batch_results=False) -> Object:
-        """Checks if the passed object is part of a HumGen human
-
-        This makes sure the add-on works as expected, even if a child object of the
-        rig is selected.
+        """Checks if the passed object is part of a HumGen human. Does NOT return an instance
 
         Args:
             obj (bpy.types.Object): Object to check for if it's part of a HG human
@@ -152,6 +178,8 @@ class Human:
             if the human is an applied batch result and include_applied_batch_results
             is True)
         """
+        # TODO clean up this mess
+
         if not obj:
             return None
         elif not obj.HG.ishuman:
@@ -181,6 +209,9 @@ class Human:
 
     @property
     def objects(self) -> Generator[Object]:
+        """
+        A generator that yields all the Blender objects that the human consists of
+        """
         for child in self.rig_obj.children:
             for subchild in child.children:
                 yield subchild
@@ -189,19 +220,30 @@ class Human:
         yield self.rig_obj
 
     @property
+    def body_obj(self) -> Object:
+        """Points to the human body Blender object"""
+        return self.rig_obj.HG.body_obj
+
+    @property
     def phase(self) -> str:
-        if hg_rig.HG.phase in ["body", "face", "skin", "length"]:
+        """String in ("creation", "finalize") to indicate what phase this human is in."""
+        if self.props.phase in ["body", "face", "skin", "length"]:
             return "creation"
         else:
             return "finalize"
 
     @property
     def children(self) -> Generator[Object]:
+        """A generator of all children of the rig object of the human. Does NOT yield subchildren."""
         for child in self.rig_obj.children:
             yield child
 
+    # TODO as method?
     @property
     def is_batch_result_tuple(self) -> Tuple[bool, bool]:
+        """Checks if this human was created with the batch system and if 'apply armature' was used.
+        If apply armature was used, the human no longer has a rig object.
+        """
         return self.props.batch_result, self.body_obj == self.rig_obj
 
     @property
@@ -211,80 +253,110 @@ class Human:
 
     @property
     def name(self) -> str:
+        """Name of this human. Takes the name of the rig object and removes "HG_" prefix."""
         return self.rig_obj.name.replace("HG_", "")
-
-    @property
-    def pose_bones(self):
-        return self.rig_obj.pose.bones
-
-    @property
-    def edit_bones(self):
-        return self.rig_obj.data.edit_bones
 
     @name.setter
     def name(self, name: str):
         self.rig_obj.name = name
 
     @property
-    def location(self) -> FloatVectorProperty:
-        pass  # TODO
-
-    @location.setter
-    def location(self, location: FloatVectorProperty):
-        pass  # TODO
+    def pose_bones(self) -> bpy_prop_collection[PoseBone]:
+        """rig_obj.pose.bones prop collection"""
+        return self.rig_obj.pose.bones
 
     @property
-    def rotation(self) -> FloatVectorProperty:
-        pass  # TODO
+    def edit_bones(self) -> bpy_prop_collection[EditBone]:
+        """rig_obj.data.edit_bones prop collection"""
+        return self.rig_obj.data.edit_bones
 
-    @rotation.setter
-    def rotation(self, location: FloatVectorProperty):
-        pass  # TODO
+    @property
+    def location(self) -> FloatVectorProperty:
+        """Location of the human in Blender global space. Retrieved from rig_obj.location"""
+        return self.rig_obj.location
+
+    @location.setter
+    def location(self, location: FloatVectorProperty | Tuple[float]):
+        self.rig_obj.location = location
+
+    @property
+    def rotation_euler(self) -> FloatVectorProperty:
+        """Euler rotation of the human in Blender global space. Retrieved from rig_obj.rotation_euler"""
+        return self.rig_obj.rotation_euler
+
+    @rotation_euler.setter
+    def rotation_euler(self, rotation: FloatVectorProperty | Tuple[float]):
+        self.rig_obj.rotation_euler = rotation
 
     @property
     def props(self) -> PropertyGroup:
+        """Custom object properties of the human, used by the add-on for storing metadata like
+        gender, backup_human pointer, current phase, body_obj pointer. Points to rig_obj.HG"""
         return self.rig_obj.HG
 
     @cached_property
-    def creation_phase(self):
+    def creation_phase(self) -> CreationPhaseSettings:
+        """
+        Subclass used to control aspects that can ONLY be changed
+        during the creation phase like human length, face proportions and body proportions.
+
+        Raises:
+            HumGenException: Raised if accessing on a human that is not in creation phase
+
+        Returns:
+            CreationPhaseSettings: Subclass containing creation_phase options
+        """
         if self.phase != "creation":
-            raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
+            raise HumGenException(
+                f"Human is in {self.phase}, not in creation phase."
+            )
         return CreationPhaseSettings(self)
 
     @cached_property
-    def finalize_phase(self):
+    def finalize_phase(self) -> FinalizePhaseSettings:
+        """
+        Subclass used to control aspects that can ONLY be changed
+        during the finalize_phase like clothing and expression.
+
+        Raises:
+            HumGenException: Raised if accessing on a human that is not in finalize phase
+
+        Returns:
+            FinalizePhaseSettings: Subclass containing finalize_phase options
+        """
         if self.phase != "finalize":
-            raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
+            raise HumGenException(
+                f"Human is in {self.phase}, not in finalize phase."
+            )
         return FinalizePhaseSettings(self)
 
     @cached_property
     def skin(self) -> SkinSettings:
+        """Subclass used to change the skin material of the human body."""
         return SkinSettings(self)
 
     @property
     def shape_keys(self) -> ShapeKeySettings:
+        """Subclass used to access and change the shape keys of the body object. Iterating yields key_blocks."""
         return ShapeKeySettings(self)
 
     @cached_property
     def eyes(self) -> EyeSettings:
+        """Subclass used to access and change the eye object and material of the human."""
         return EyeSettings(self)
 
     @cached_property
     def hair(self) -> HairSettings:
+        """Subclass used to access and change the hair systems and materials of the human."""
         return HairSettings(self)
-
-    @property
-    def properties(self):
-        return self.rig_obj.HG
-
-    @property
-    def body_obj(self) -> Object:
-        return self.rig_obj.HG.body_obj
 
     # endregion
     # region Public Methods
 
-    def delete(self):
+    def delete(self) -> None:
+        """Delete the human from Blender. Will delete all meshes and objects that this human consists of, including
+        the backup human.
+        """
         backup_obj = self.props.backup
         humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
 
@@ -310,10 +382,15 @@ class Human:
         for obj in delete_list:
             try:
                 hg_delete(obj)
-            except:
-                hg_log("could not remove", obj)
+            except Exception:
+                hg_log("Could not remove", obj)
 
-    def hide_set(self, state):
+    def hide_set(self, state: bool) -> None:
+        """Switch between visible and hidden state for all objects this human consists of. Does NOT affect backup human.
+
+        Args:
+            state: Use True for hidden, False for visible
+        """
         for obj in self.objects:
             obj.hide_set(state)
             obj.hide_viewport = state
@@ -338,26 +415,22 @@ class Human:
                 if "no_body" in self.rig_obj:
                     del self.rig_obj["no_body"]
             else:
-                self.rig_obj = None["no_body"] = 1
+                self.rig_obj["no_body"] = 1
         else:
             if "no_body" in self.rig_obj:
                 del self.rig_obj["no_body"]
 
     @classmethod
-    def _import_human(cls, context, gender) -> Object:
-        """Import human from HG_HUMAN.blend and add it to scene
-        Also adds some identifiers to the objects to find them later
+    def _import_human(cls, context: Context, gender: str) -> Human:
+        """
+        It imports the human model from the HG_Human.blend file, sets it up correctly, and returns a Human instance
 
         Args:
-            sett (PropertyGroup)   : HumGen props
-            pref (AddonPreferences): HumGen preferences
+          context: The context of the current scene.
+          gender: "male" or "female"
 
         Returns:
-            tuple[str, bpy.types.Object*3]:
-                gender  (str)   : gender of the imported human
-                hg_rig  (Object): imported armature of human
-                hg_body (Object): imported body of human
-                hg_eyes (Object): imported eyes of human
+          A Human object
         """
         # import from HG_Human file
         blendfile = os.path.join(
@@ -417,6 +490,7 @@ class Human:
         return human
 
     def _set_random_name(self):
+        """Randomizes name of human. Will add "HG_" prefix"""
         taken_names = []
         for obj in bpy.data.objects:
             if not obj.HG.ishuman:
@@ -435,4 +509,3 @@ class Human:
         self.name = "HG_" + name
 
     # endregion
-
