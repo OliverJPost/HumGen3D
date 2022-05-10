@@ -16,13 +16,8 @@ from ..base.decorators import injected_context
 
 if TYPE_CHECKING:
     from bpy.types import (
-        Context,
-        FloatVectorProperty,
-        Material,
-        NodeInput,
-        ShaderNode,
-        bpy_prop_collection,
-    )
+        Context, FloatVectorProperty, Material, NodeInput, ShaderNode,
+        bpy_prop_collection)
 
     from ..human import Human
 
@@ -129,11 +124,11 @@ class SkinSettings:
 
         if gender == "male":
             gender_specific_node = self.nodes["Gender_Group"]
-            male_node_group = [
+            male_node_group = next(
                 ng
                 for ng in bpy.data.node_groups
                 if ".HG_Beard_Shadow" in ng.name
-            ][0]
+            )
             gender_specific_node.node_tree = male_node_group
 
     def _remove_opposite_gender_specific(self) -> None:
