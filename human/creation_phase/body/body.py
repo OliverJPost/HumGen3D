@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 import bpy
 
+from HumGen3D.human.base.decorators import injected_context
+
 if TYPE_CHECKING:
     from HumGen3D import Human
 
@@ -49,10 +51,8 @@ class BodySettings:
             else:
                 sk.value = random.uniform(0, 1.0)
 
+    @injected_context
     def set_bone_scale(self, scale, bone_type, context=None):
-        if not context:
-            context = bpy.context
-
         sett = context.scene.HG3D
         if sett.update_exception:
             return

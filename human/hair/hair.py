@@ -7,6 +7,7 @@ from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.facial_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
+from ..base.decorators import injected_context
 from ..hair.eyebrows import EyebrowSettings
 from HumGen3D.human.base.decorators import cached_property
 
@@ -131,10 +132,7 @@ class HairSettings:
             node.node_tree = new_hair_group
             node.name = "HG_Hair_V3"
 
-    def update_hair_shader_type(self, shader_type, context=None):
-        if not context:
-            context = bpy.context
-
+    def update_hair_shader_type(self, shader_type):
         value = 0 if shader_type == "fast" else 1
 
         hg_rig = self._human.rig_obj
@@ -147,10 +145,7 @@ class HairSettings:
 
             hair_group.inputs["Fast/Accurate"].default_value = value
 
-    def set_hair_quality(self, hair_quality, context=None):
-        if not context:
-            context = bpy.context
-
+    def set_hair_quality(self, hair_quality):
         for psys in self._human.hair.particle_systems:
             ps = psys.settings
             max_steps = ps["steps"]

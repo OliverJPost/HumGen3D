@@ -3,6 +3,8 @@ import os
 import random
 import subprocess
 import time
+
+from HumGen3D.human.base.decorators import injected_context
 from ..backend.logging import hg_log
 
 import bpy
@@ -305,6 +307,7 @@ class HG_Human:
                     "Passed armature was not created with Human Generator."
                 )
 
+    @injected_context
     def get_starting_human_options(self, context=None, gender=None):
         """Get a list of all starting human options (i.e. Caucasian 5, Black 2)
 
@@ -320,7 +323,6 @@ class HG_Human:
         Raised:
             ValueError: If passed gender is not in ('male', 'female')
         """
-        context = self.__check_passed_context(context)
         sett = context.scene.HG3D
 
         if self._rig_object:
@@ -341,6 +343,7 @@ class HG_Human:
         refresh_pcoll(None, context, "humans")
         return sett["previews_list_humans"]
 
+    @injected_context
     def create(
         self, context=None, chosen_starting_human=None
     ) -> bpy.types.Object:
@@ -360,7 +363,6 @@ class HG_Human:
             HumGenException: When calling this method on an instance that
                 already exists in Blender.
         """
-        context = self.__check_passed_context(context)
         sett = context.scene.HG3D
 
         if self._rig_object:
@@ -397,6 +399,7 @@ class HG_Human:
 
         self.human.creation_phase.face.randomize()
 
+    @injected_context
     def get_hair_options(self, context=None) -> "list[str]":
         """Get a list of names of possible hairstyles for this human. Choosing
         a name and passing it to set_hair() will add this hairstyle to your
@@ -411,10 +414,10 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         return self.__get_pcoll_list(context, "hair")
 
+    @injected_context
     def set_hair(self, context=None, chosen_hair_option=None):
         """Sets the active hairstyle of this human, importing it in Blender. By
         default this method will hide the particle children of the created
@@ -430,7 +433,6 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
 
         if not chosen_hair_option:
@@ -447,6 +449,7 @@ class HG_Human:
         """
         self.human.skin.randomize()
 
+    @injected_context
     def finish_creation_phase(self, context=None):
         """Works the same as the Finish Creation Phase button in the GUI. Needed
         for the human to be posed and for clothing to be added. Does a whole lot
@@ -461,7 +464,6 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        context = self.__check_passed_context(context)
         self.human.creation_phase.finish(context)
         self._rig_object.HG.phase = "clothing"
 
@@ -488,6 +490,7 @@ class HG_Human:
             else:
                 ps.settings.child_nbr = 1
 
+    @injected_context
     def get_outfit_options(self, context=None) -> list:
         """Get a list of names of possible outfits for this human. Choosing
         a name and passing it to set_outfit() will add this outfit to your
@@ -504,11 +507,11 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, "outfit")
 
+    @injected_context
     def set_outfit(self, context=None, chosen_outfit_option=None):
         """Sets the active outfit of this human, importing it in Blender.
 
@@ -523,7 +526,6 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
 
@@ -534,6 +536,7 @@ class HG_Human:
 
         self.__set_active_in_pcoll(context, "outfit", chosen_outfit_option)
 
+    @injected_context
     def get_footwear_options(self, context=None) -> list:
         """Get a list of names of possible footwear for this human. Choosing
         a name and passing it to set_footwear() will add this outfit to your
@@ -550,11 +553,11 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, "footwear")
 
+    @injected_context
     def set_footwear(self, context=None, chosen_footwear_option=None):
         """Sets the active outfit of this human, importing it in Blender.
 
@@ -569,7 +572,6 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
 
@@ -580,6 +582,7 @@ class HG_Human:
 
         self.__set_active_in_pcoll(context, "footwear", chosen_footwear_option)
 
+    @injected_context
     def get_pose_options(self, context=None) -> list:
         """Get a list of names of possible poses for this human. Choosing
         a name and passing it to set_pose() will add this outfit to your
@@ -596,10 +599,10 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         return self.__get_pcoll_list(context, "poses")
 
+    @injected_context
     def set_pose(self, context=None, chosen_pose_option=None):
         """Sets the active pose of this human, importing it in Blender.
 
@@ -614,7 +617,6 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
 
@@ -623,6 +625,7 @@ class HG_Human:
 
         self.__set_active_in_pcoll(context, "poses", chosen_pose_option)
 
+    @injected_context
     def get_expression_options(self, context=None):
         """Get a list of names of possible expressions for this human. Choosing
         a name and passing it to set_expression() will add this outfit to your
@@ -639,11 +642,11 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
         return self.__get_pcoll_list(context, "expressions")
 
+    @injected_context
     def set_expression(self, context=None, chosen_expression_option=None):
         """Sets the active 1-click expression of this human, importing it in
         Blender.
@@ -659,7 +662,6 @@ class HG_Human:
             HumGenException: When this human is not in finalize phase, but
                 still in the creation phase.
         """
-        context = self.__check_passed_context(context)
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
 
@@ -738,7 +740,3 @@ class HG_Human:
             raise HumGenException(
                 "This HG_Human instance does not yet exist in Blender."
             )
-
-    def __check_passed_context(self, context):
-        context = context if context else bpy.context
-        return context

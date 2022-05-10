@@ -60,6 +60,7 @@ class ShapeKeySettings(PropCollection):
             sk for sk in self if sk.name.startswith("pr_")
         )
 
+    @injected_context
     def _load_external(self, human, context=None):
         """Imports external shapekeys from the models/shapekeys folder
 
@@ -67,9 +68,6 @@ class ShapeKeySettings(PropCollection):
             pref (AddonPreferences): HumGen preferences
             hg_body (Object): Humgen body object
         """
-        if not context:
-            context = bpy.context
-
         context.view_layer.objects.active = human.body_obj
         walker = os.walk(
             str(get_prefs().filepath) + str(Path("/models/shapekeys"))

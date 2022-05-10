@@ -16,6 +16,8 @@ from HumGen3D.human.base.shapekey_calculator import (
 from HumGen3D.human.finalize_phase import clothing
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
+from HumGen3D.human.base.decorators import injected_context
+
 
 def find_masks(obj) -> list:
     """Looks at the custom properties of the object, searching for custom tags
@@ -37,15 +39,13 @@ def find_masks(obj) -> list:
 
 
 class BaseClothing:
+    @injected_context
     def set(self, preset, context=None):
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
 
         Args:
             footwear (boolean): True if called by pcoll_footwear, else loads as outfit
         """
-        if not context:
-            context = bpy.context
-
         pref = get_prefs()
 
         self._human.hide_set(False)
@@ -241,6 +241,7 @@ class BaseClothing:
                     modifier=mod.name, index=0
                 )
 
+    @injected_context
     def _import_cloth_items(
         self,
         preset,
@@ -262,9 +263,6 @@ class BaseClothing:
         """
         # load the whole collection from the outfit file. It loads collections
         # instead of objects because this allows loading of linked objects
-
-        if not context:
-            context = bpy.context
 
         blendfile = str(get_prefs().filepath) + str(Path(preset))
         with bpy.data.libraries.load(blendfile, link=False) as (
@@ -428,9 +426,8 @@ class BaseClothing:
 
         img_node.image = pattern
 
+    @injected_context
     def randomize_colors(self, cloth_obj, context=None):
-        if not context:
-            context = bpy.context
         mat = cloth_obj.data.materials[0]
         if not mat:
             return

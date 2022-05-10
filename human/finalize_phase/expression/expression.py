@@ -10,17 +10,16 @@ from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
+from HumGen3D.human.base.decorators import injected_context
+
 
 class ExpressionSettings:
     def __init__(self, _human):
         self._human = _human
 
+    @injected_context
     def set(self, preset, context=None):
         """Loads the active expression in the preview collection"""
-
-        if not context:
-            context = bpy.context
-
         pref = get_prefs()
 
         if preset == "none":
@@ -118,10 +117,8 @@ class ExpressionSettings:
         hg_delete(source_copy)
         hg_delete(backup_rig_copy)
 
+    @injected_context
     def load_facial_rig(self, context=None):
-        if not context:
-            context = bpy.context
-
         frig_bones = self._get_frig_bones()
         for b_name in frig_bones:
             b = self._human.pose_bones[b_name]
@@ -218,10 +215,7 @@ class ExpressionSettings:
         sk.data.foreach_get("co", old_sk_data)
         new_sk.data.foreach_set("co", old_sk_data)
 
-    def remove_facial_rig(self, context=None):
-        if not context:
-            context = bpy.context
-
+    def remove_facial_rig(self):
         frig_bones = self._get_frig_bones()
         for b_name in frig_bones:
             b = self._human.pose_bones[b_name]

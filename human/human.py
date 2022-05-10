@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 from bpy.types import Object
 
-from .base.decorators import cached_property
+from .base.decorators import cached_property, injected_context
 from ..backend.preference_func import get_prefs
 from .base.collections import add_to_collection
 from .base.exceptions import HumGenException
@@ -50,10 +50,8 @@ class Human:
         self.rig_obj = rig_obj
 
     @staticmethod
+    @injected_context
     def get_preset_options(gender: str, context=None):
-        if not context:
-            context = bpy.context
-
         refresh_pcoll(None, context, "humans", gender_override=gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
@@ -80,6 +78,7 @@ class Human:
 
 
     @classmethod
+    @injected_context
     def from_preset(
         cls, preset: str, context: Context = None, prettify_eevee: bool = True
     ) -> Human:

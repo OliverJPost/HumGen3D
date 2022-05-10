@@ -3,16 +3,16 @@ from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preference_func import get_prefs
 
+from HumGen3D.human.base.decorators import injected_context
+
 
 class PoseSettings:
     def __init__(self, _human):
         self._human = _human
 
+    @injected_context
     def set(self, preset, context=None):
         """Gets called by pcoll_pose to add selected pose to human"""
-
-        if not context:
-            context = bpy.context
 
         sett = context.scene.HG3D
         pref = get_prefs()

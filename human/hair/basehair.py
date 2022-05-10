@@ -13,6 +13,8 @@ from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
+from HumGen3D.human.base.decorators import injected_context
+
 
 class BaseHair:
     def _add_quality_props(self, mod):
@@ -83,6 +85,7 @@ class BaseHair:
 
 
 class ImportableHair(BaseHair):
+    @injected_context
     def set(self, preset, context=None):
         """Loads hair system the user selected by reading the json that belongs to
         the selected hairstyle
@@ -90,9 +93,6 @@ class ImportableHair(BaseHair):
         Args:
             type (str): type of hair to load ('head' or 'facial_hair')
         """
-        if not context:
-            context = bpy.context
-
         pref = get_prefs()
 
         full_path = str(pref.filepath) + preset
@@ -428,10 +428,8 @@ class ImportableHair(BaseHair):
         for mod in modifiers:
             self._human.body_obj.modifiers.remove(mod)
 
+    @injected_context
     def randomize(self, context=None):
-        if not context:
-            context = bpy.context
-
         preset_options = self.get_preset_options()
         chosen_preset = random.choice(preset_options)
         self.set(chosen_preset, context)

@@ -7,6 +7,7 @@ import time
 import bpy  # type:ignore
 from HumGen3D.backend.preference_func import get_addon_root, get_prefs
 
+from HumGen3D.human.base.decorators import injected_context
 from ..backend.logging import hg_log
 from .human import HG_Human
 
@@ -69,6 +70,7 @@ class HG_Batch_Generator:
         self.apply_clothing_geometry_masks = apply_clothing_geometry_masks
         self.texture_resolution = texture_resolution
 
+    @injected_context
     def generate_in_background(
         self,
         context=None,
@@ -129,7 +131,6 @@ class HG_Batch_Generator:
             HG_Human: Python representation of a Human Generator Human. See
                 [[HG_Human]]
         """
-        context = context if context else bpy.context
 
         settings_dict = self.__construct_settings_dict_from_kwargs(locals())
 
