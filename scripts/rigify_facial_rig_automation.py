@@ -58,4 +58,9 @@ def rigify_with_drivers():
         add_driver(human, sks[target_sk_name], sett_dict)
 
 
-rigify_with_drivers()
+def main():
+    rigify_with_drivers()
+
+
+if __name__ == "__main__":
+    main()
