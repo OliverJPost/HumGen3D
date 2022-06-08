@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Tuple
 
 import bpy
-
+from bpy.types import bpy_prop_collection
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
@@ -21,7 +21,6 @@ if TYPE_CHECKING:
         Material,
         NodeInput,
         ShaderNode,
-        bpy_prop_collection,
     )
 
     from ..human import Human
@@ -87,7 +86,7 @@ class SkinSettings:
     def __init__(self, human: Human):
         self._human = human
 
-    @cached_property
+    @property  # TODO make cached
     def texture(self) -> TextureSettings:
         return TextureSettings(self._human)
 
@@ -103,7 +102,7 @@ class SkinSettings:
     def material(self) -> Material:
         return self._human.body_obj.data.materials[0]
 
-    @cached_property
+    @property  # TODO make cached
     def gender_specific(self) -> MaleSkin | FemaleSkin:
         if self._human.gender == "male":
             gender_specific_class = MaleSkin

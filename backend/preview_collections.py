@@ -13,9 +13,11 @@ import bpy
 from ..human.base.exceptions import HumGenException  # type: ignore
 from .logging import hg_log
 from .preference_func import get_prefs
+
 # from HumGen3D.human.human import Human
 
 preview_collections = {}  # global dictionary of all pcolls
+
 
 def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
     """Sets a random object in this preview collection as active
@@ -146,7 +148,7 @@ def _check_for_HumGen_filepath_issues(self):
 
 
 def _populate_pcoll(
-    self, context, pcoll_categ, ignore_genders, gender_override, hg_rig=None
+    self, context, pcoll_categ, ignore_genders, gender_override, hg_rig=None,
 ):
     """Populates the preview collection enum list with blend file filepaths and
     icons
@@ -164,8 +166,17 @@ def _populate_pcoll(
     sett["previews_list_{}".format(pcoll_categ)] = []
 
     # find category and subcategory in order to determine the dir to search
+
+    # TODO improve this
     if not hg_rig:
-        hg_rig = None # FIXME Human.from_existing(context.object).rig_obj
+        try:
+            hg_rig = (
+                context.object
+                if context.object.HG.ishuman
+                else context.object.parent
+            )
+        except AttributeError:
+            hg_rig = None
 
     if ignore_genders:
         gender = ""
@@ -175,7 +186,6 @@ def _populate_pcoll(
         gender = sett.gender
     else:
         gender = hg_rig.HG.gender
-
 
     categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(
         pcoll_categ, sett, gender
@@ -359,7 +369,7 @@ def _add_file_to_pcoll(
     else:
         thumb = pcoll[filepath_thumb]
 
-    short_path = full_path.replace(str(pref.filepath), "") # TODO
+    short_path = full_path.replace(str(pref.filepath), "")  # TODO
 
     display_name = _get_display_name(full_path)
 

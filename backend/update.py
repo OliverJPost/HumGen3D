@@ -2,11 +2,11 @@
 code updates"""
 
 import json
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
 
 import bpy  # type: ignore
 import requests  # type: ignore
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preference_func import get_prefs
 
 
 def check_update():

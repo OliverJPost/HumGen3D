@@ -152,7 +152,7 @@ class Human:
             human.shape_keys[sk_name].value = sk_value
 
         # Set skin material from preset
-        human.skin.texture._set_from_preset(preset_data["material"])
+        human.skin.texture._set_from_preset(preset_data["material"], context)
         human.skin._set_from_preset(preset_data["material"]["node_inputs"])
 
         # Set eyebrows from preset
@@ -189,7 +189,7 @@ class Human:
             else:
                 return None
         else:
-            if all(cls._is_batch_result(obj)):
+            if all(cls._obj_is_batch_result(obj)):
                 if include_applied_batch_results:
                     return obj
                 else:
@@ -197,8 +197,8 @@ class Human:
 
             return obj
 
-    @classmethod
-    def _is_batch_result(cls, obj) -> Tuple[bool, bool]:
+    @staticmethod
+    def _obj_is_batch_result(obj) -> Tuple[bool, bool]:
         return (
             obj.HG.batch_result,
             obj.HG.body_obj == obj,
@@ -225,6 +225,10 @@ class Human:
         return self.rig_obj.HG.body_obj
 
     @property
+    def eye_obj(self) -> Object:
+        return self.eyes.eye_obj
+
+    @property
     def phase(self) -> str:
         """String in ("creation", "finalize") to indicate what phase this human is in."""
         if self.props.phase in ["body", "face", "skin", "length"]:
@@ -240,7 +244,7 @@ class Human:
 
     # TODO as method?
     @property
-    def is_batch_result_tuple(self) -> Tuple[bool, bool]:
+    def is_batch_result(self) -> Tuple[bool, bool]:
         """Checks if this human was created with the batch system and if 'apply armature' was used.
         If apply armature was used, the human no longer has a rig object.
         """
@@ -294,7 +298,7 @@ class Human:
         gender, backup_human pointer, current phase, body_obj pointer. Points to rig_obj.HG"""
         return self.rig_obj.HG
 
-    @cached_property
+    @property  # TODO make cached
     def creation_phase(self) -> CreationPhaseSettings:
         """
         Subclass used to control aspects that can ONLY be changed
@@ -312,7 +316,7 @@ class Human:
             )
         return CreationPhaseSettings(self)
 
-    @cached_property
+    @property  # TODO make cached
     def finalize_phase(self) -> FinalizePhaseSettings:
         """
         Subclass used to control aspects that can ONLY be changed
@@ -330,7 +334,7 @@ class Human:
             )
         return FinalizePhaseSettings(self)
 
-    @cached_property
+    @property  # TODO make cached
     def skin(self) -> SkinSettings:
         """Subclass used to change the skin material of the human body."""
         return SkinSettings(self)
@@ -340,12 +344,12 @@ class Human:
         """Subclass used to access and change the shape keys of the body object. Iterating yields key_blocks."""
         return ShapeKeySettings(self)
 
-    @cached_property
+    @property  # TODO make cached
     def eyes(self) -> EyeSettings:
         """Subclass used to access and change the eye object and material of the human."""
         return EyeSettings(self)
 
-    @cached_property
+    @property  # TODO make cached
     def hair(self) -> HairSettings:
         """Subclass used to access and change the hair systems and materials of the human."""
         return HairSettings(self)

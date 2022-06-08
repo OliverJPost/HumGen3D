@@ -8,6 +8,7 @@ from bpy.types import Context
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.user_interface.feedback_func import show_message
 

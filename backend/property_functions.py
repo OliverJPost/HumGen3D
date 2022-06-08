@@ -4,12 +4,12 @@ functions used by properties
 
 import os
 from pathlib import Path
+
+import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.human import Human
-import bpy
 from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type:ignore
-
 
 
 def find_folders(
@@ -32,7 +32,7 @@ def find_folders(
     Returns:
         list: enum of folders
     """
-    human = Human.from_existing(context.active_object)
+    human = Human.from_existing(context.active_object, strict_check=False)
     pref = get_prefs()
 
     if gender_override:

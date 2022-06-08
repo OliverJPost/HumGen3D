@@ -1,3 +1,4 @@
+from calendar import c
 import bpy
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
@@ -61,7 +62,6 @@ class HG_RANDOM(bpy.types.Operator):
             human.creation_phase.face.randomize(ff_subcateg)
         elif random_type == "iris_color":
             human.eyes.randomize()
-
 
         return {"FINISHED"}
 
@@ -159,7 +159,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             "expression": ("expressions",),
         }
 
-        if not any(human.is_batch_result()):
+        if not any(human.is_batch_result):
             if self.section_name in categ_dict:
                 for item in categ_dict[self.section_name]:
                     refresh_pcoll(self, context, item)

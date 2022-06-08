@@ -50,10 +50,6 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.human = Human.from_existing(
             context.active_object, strict_check=False
         )
-        self.hg_rig = self.human.rig_obj
-
-        if self.hg_rig:
-            is_batch, is_applied_batch = self.human.is_batch_result
 
         found_problem = self.draw_info_and_warning_labels(context, layout)
         if found_problem:
@@ -61,21 +57,19 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         self._draw_top_widget()
 
-        hg_rig = self.hg_rig
-
-        if not hg_rig:
+        if not self.human:
             try:
                 context.object["hg_batch_marker"]
                 self._draw_batch_marker_notification(layout)
             except (KeyError, TypeError):
                 pass
             self._draw_starting_human_ui(layout)
-        elif is_batch:
+        elif self.human.is_batch_result[0]:
             self._draw_batch_result_ui()
         elif "cloth" in context.object or "shoe" in context.object:
             self._draw_cloth_material_ui(context, layout)
         # creation phase
-        elif in_creation_phase(hg_rig):
+        elif self.human.phase == "creation":
             self._draw_creation_section()
             self._draw_length_section()
             self._draw_face_section()
@@ -271,7 +265,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             layout.label(text="HumGen only works in Object Mode")
             return True
 
-        if self.hg_rig and "no_body" in self.hg_rig:
+        if self.human and "no_body" in self.human.rig_obj:
             layout.alert = True
             layout.label(text="No body object found for this rig")
             return True
@@ -279,26 +273,26 @@ class HG_PT_PANEL(bpy.types.Panel):
         return False
 
     def _draw_top_widget(self):
-        hg_rig = self.hg_rig
+        human = self.human
 
         col = self.layout.column(align=True)
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5
         subrow_h = row_h.row(align=True)
-        if hg_rig and hg_rig.HG.experimental:
+        if human and human.props.experimental:
             subrow_h.alert = True
 
         # button showing name and gender of human
         subrow_h.operator(
             "view3d.view_selected",
             text=self._get_header_label(),
-            depress=bool(hg_rig),
+            depress=bool(human),
         )
 
         # show button for switching to experimental
-        if hg_rig and in_creation_phase(hg_rig):
-            self._experimental_mode_button(hg_rig, row_h)
+        if human and human.phase == "creation":
+            self._experimental_mode_button(human.rig_obj, row_h)
 
         row = col.row(align=True)
         row.operator(
@@ -312,10 +306,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         row.operator("hg3d.deselect", icon="RESTRICT_SELECT_ON")
         row.operator("hg3d.delete", text="Delete", icon="TRASH")
 
-        if hg_rig:
+        if human:
             box = col.box()
             hair_systems = self._get_hair_systems(
-                self.hg_rig.HG.body_obj, eyesystems=True
+                human.body_obj, eyesystems=True
             )
             self._draw_hair_children_switch(hair_systems, box)
 
@@ -482,7 +476,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = box.column(align=True)
 
-        length_m = self.hg_rig.dimensions[2]
+        length_m = self.human.creation_phase.length.meters
         length_feet = length_m / 0.3048
         length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
         length_label = (
@@ -551,7 +545,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         flow_custom = self._get_ff_col(col, "Custom", "custom")
         flow_presets = self._get_ff_col(col, "Presets", "presets")
 
-        hg_body = self.hg_rig.HG.body_obj
+        hg_body = self.human.body_obj
         face_sks = [
             sk
             for sk in hg_body.data.shape_keys.key_blocks
@@ -680,7 +674,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         sett = self.sett
 
-        if "hg_baked" in self.hg_rig:
+        if "hg_baked" in self.human.rig_obj:
             box.label(text="Textures are baked", icon="INFO")
             return
 
@@ -691,7 +685,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         self._draw_beautyspots_subsection(sett, box)
         self._draw_age_subsection(sett, box)
 
-        gender = self.hg_rig.HG.gender
+        gender = self.human.gender
         if gender == "female":
             self._draw_makeup_subsection(sett, box)
         else:
@@ -826,7 +820,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not is_open:
             return
 
-        hg_body = self.hg_rig.HG.body_obj
+        hg_body = self.human.body_obj
         sk = hg_body.data.shape_keys.key_blocks
 
         nodes = self.human.skin.nodes
@@ -1062,14 +1056,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not spoiler_open:
             return
 
-        if "hg_baked" in self.hg_rig:
+        if "hg_baked" in self.human.rig_obj:
             box.label(text="Textures are baked", icon="INFO")
             self._draw_eyebrow_switch(box)
             return
 
-        hg_eyes = [
-            child for child in self.hg_rig.children if "hg_eyes" in child
-        ][0]
+        hg_eyes = self.human.eye_obj
+
         mat = hg_eyes.data.materials[1]
         nodes = mat.node_tree.nodes
 
@@ -1096,7 +1089,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         boxbox = self._draw_eyebrow_switch(box)
 
-        eye_systems = self._get_eye_systems(self.hg_rig.HG.body_obj)
+        eye_systems = self._get_eye_systems(self.human.body_obj)
 
         self._draw_hair_length_ui(eye_systems, box)
 
@@ -1291,7 +1284,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not self.sett.hair_mat_ui:
             return
 
-        gender = self.hg_rig.HG.gender
+        gender = self.human.gender
 
         categ = (
             self.sett.hair_mat_male
@@ -1306,7 +1299,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         }
         hair_mat = next(
             mat
-            for mat in self.hg_rig.HG.body_obj.data.materials
+            for mat in self.human.body_obj.data.materials
             if mat.name.startswith(mat_names[categ])
         )
         if "HG_Hair_V3" in [n.name for n in hair_mat.node_tree.nodes]:
@@ -1476,7 +1469,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         self._draw_main_skin_subsection(sett, boxbox)
 
-        if self.hg_rig.HG.gender == "female":
+        if self.human.gender == "female":
             self._draw_makeup_subsection(sett, boxbox)
 
         if not self.pref.hair_section == "creation":
@@ -1485,7 +1478,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         boxbox = box.box()
 
         hair_systems = self._get_hair_systems(
-            self.hg_rig.HG.body_obj, eyesystems=True
+            self.human.body_obj, eyesystems=True
         )
 
         row = boxbox.row()
@@ -1583,7 +1576,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         Args:
             box (UILayout): layout.box of pose section
         """
-        if "hg_rigify" in self.hg_rig.data:
+        if "hg_rigify" in self.human.rig_obj.data:
             box.label(text="Rigify rig active")
             box.label(text="Use Rigify add-on to adjust", icon="INFO")
         elif addon_utils.check("rigify"):
@@ -1603,7 +1596,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of pose section
         """
 
-        if "hg_rigify" in self.hg_rig.data:
+        if "hg_rigify" in self.human.rig_obj.data:
             row = box.row(align=True)
             row.label(text="Rigify not supported", icon="ERROR")
             row.operator(
@@ -1651,7 +1644,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             self._draw_frig_subsection(box)
 
     def _draw_oneclick_subsection(self, box, sett):
-        if "facial_rig" in self.hg_rig.HG.body_obj:
+        if "facial_rig" in self.human.body_obj:
             box.label(text="Library not compatible with face rig")
 
             col = box.column()
@@ -1682,7 +1675,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "expressions"
 
-        filtered_obj_sks = self.hg_rig.HG.body_obj.data.shape_keys
+        filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:
             self._draw_sk_sliders_subsection(sett, box, filtered_obj_sks)
 
@@ -1727,7 +1720,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of expression section
         """
         col = box.column()
-        if "facial_rig" in self.hg_rig.HG.body_obj:
+        if "facial_rig" in self.human.body_obj:
             col.label(text="Facial rig added")
             col.label(text="Use pose mode to adjust", icon="INFO")
             col_h = col.column()
@@ -1757,7 +1750,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             context (bpy.context): Blender context
             layout (UILayout): main HumGen panel layout
         """
-        if "hg_baked" in self.hg_rig:
+        if "hg_baked" in self.human.rig_obj:
             layout.label(text="Textures are baked", icon="INFO")
             return
 
@@ -1993,7 +1986,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         hair_systems = self._get_hair_systems(
-            self.hg_rig.HG.body_obj, eyesystems=True
+            self.human.body_obj, eyesystems=True
         )
 
         self._draw_hair_length_ui(hair_systems, box)

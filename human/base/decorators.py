@@ -1,11 +1,12 @@
 import functools
 import traceback
 
+import bpy
 from HumGen3D.backend.logging import hg_log
 
 
 def cached_property(func):
-    return cached_instance(property(func))
+    return property(cached_instance(func))
 
 
 def cached_instance(function):
