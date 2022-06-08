@@ -340,6 +340,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
 
         col = layout.column()
         col.scale_y = 1.5
+        # FIXME crash when spaces in name
         col.prop(sett, f"{tag}_name", text="Name")
 
         self._draw_save_button(

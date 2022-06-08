@@ -22,15 +22,15 @@ class CreationPhaseSettings:
     def __init__(self, human):
         self._human: Human = human
 
-    @cached_property
+    @property  # TODO make cached
     def body(self) -> BodySettings:
         return BodySettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def length(self) -> LengthSettings:
         return LengthSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def face(self) -> FaceKeys:
         return FaceKeys(self._human)
 

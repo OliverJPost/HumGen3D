@@ -665,7 +665,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         default="fast",
         update=lambda s, c: Human.from_existing(
             c.object
-        ).hair.update_hair_shader_type(s.hair_shader_type, c),
+        ).hair.update_hair_shader_type(s.hair_shader_type),
     )
 
     # baking

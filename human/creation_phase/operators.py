@@ -30,7 +30,7 @@ class HG_START_CREATION(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.ui_phase = "body"
 
-        human = Human.from_preset(sett.pcoll_humans)
+        human = Human.from_preset(sett.pcoll_humans, context)
         hg_rig = human.rig_obj
         hg_rig.select_set(True)
         context.view_layer.objects.active = hg_rig

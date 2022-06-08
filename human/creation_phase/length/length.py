@@ -30,7 +30,11 @@ class LengthSettings:
         self._human = human
 
     @property
-    def centimeters(self):
+    def centimeters(self) -> int:
+        return int(self.meters * 100)
+
+    @property
+    def meters(self) -> float:
         return self._human.rig_obj.dimensions[2]
 
     def set(self, value_cm: float, context: Context = None):

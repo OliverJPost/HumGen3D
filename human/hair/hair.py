@@ -2,6 +2,7 @@ import os
 
 import bpy
 from HumGen3D.backend.preference_func import get_addon_root
+from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.facial_hair import FacialHairSettings
@@ -9,34 +10,34 @@ from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
 from ..base.decorators import injected_context
 from ..hair.eyebrows import EyebrowSettings
-from HumGen3D.human.base.decorators import cached_property
+
 
 class HairSettings:
     def __init__(self, human):
         self._human = human
 
-    @cached_property
+    @property  # TODO make cached
     def eyebrows(self) -> EyebrowSettings:
         return EyebrowSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def eyelashes(self) -> EyelashSettings:
         return EyelashSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def facial_hair(self) -> FacialHairSettings:
         return FacialHairSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def regular_hair(self) -> RegularHairSettings:
         return RegularHairSettings(self._human)
 
     @property
     def children_ishidden(self) -> bool:
-        ishidden = False
+        ishidden = True
         for ps in self._human.hair.particle_systems:
             if ps.settings.child_nbr > 1:
-                ishidden = True
+                ishidden = False
 
         return ishidden
 

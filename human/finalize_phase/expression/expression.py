@@ -6,11 +6,10 @@ import bpy
 import numpy as np
 from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-
-from HumGen3D.human.base.decorators import injected_context
 
 
 class ExpressionSettings:
@@ -41,27 +40,23 @@ class ExpressionSettings:
             new_key = hg_body.data.shape_keys.key_blocks[
                 "expr_{}".format(sk_name)
             ]
-            exists = True
         else:
             backup_rig = hg_rig.HG.backup
             backup_body = next(
                 child for child in backup_rig.children if "hg_body" in child
             )
-            self._transfer_as_one_shapekey(
-                context, backup_body, hg_body, sett_dict, backup_rig
+            sks = backup_body.data.shape_keys.key_blocks
+            keys = [sks[k] for k in sett_dict.keys()]
+            values = [float(v) for v in sett_dict.values()]
+            print(keys, values)
+            new_key = self._transfer_multiple_as_one(
+                keys, values, hg_body, f"expr_{sk_name}"
             )
 
-            exists = False
-            new_key = None
-
         for sk in hg_body.data.shape_keys.key_blocks:
-            if sk.name.startswith(backup_body.name.split(".")[0]):
-                new_key = sk
-            else:
+            if not sk.name == f"expr_{sk_name}":
                 sk.value = 0
 
-        if not exists:
-            new_key.name = "expr_{}".format(sk_name)
         new_key.mute = False
         new_key.value = 1
 
@@ -214,6 +209,22 @@ class ExpressionSettings:
 
         sk.data.foreach_get("co", old_sk_data)
         new_sk.data.foreach_set("co", old_sk_data)
+
+    def _transfer_multiple_as_one(self, sks, values, to_obj, name):
+        new_sk = to_obj.shape_key_add(name=name, from_mix=False)
+        new_sk.interpolation = "KEY_LINEAR"
+        combined_sk_data = np.zeros(
+            len(to_obj.data.vertices) * 3, dtype=np.float64
+        )
+
+        for sk, value in zip(sks, values):
+            sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
+            sk.data.foreach_get("co", sk_data)
+            combined_sk_data += sk_data * value - combined_sk_data
+
+        new_sk.data.foreach_set("co", combined_sk_data)
+
+        return new_sk
 
     def remove_facial_rig(self):
         frig_bones = self._get_frig_bones()

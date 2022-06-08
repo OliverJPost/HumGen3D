@@ -20,9 +20,7 @@ from HumGen3D.utility_section.utility_functions import (
 
 from ..human.human import Human  # , bl_info  # type: ignore
 from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
-from ..user_interface.tips_suggestions_ui import (
-    update_tips_from_context,
-)  # type:ignore
+from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
 from .preview_collections import refresh_pcoll
 
 
@@ -154,7 +152,7 @@ def _context_specific_updates(self, sett, human, ui_phase):
         return
 
 
-def _refresh_body_scaling(self, sett, human):
+def _refresh_body_scaling(self, sett, human: Human):
     """This callback makes sure the sliders of scaling the bones are at the
     correct values of the selected human
 
@@ -164,7 +162,7 @@ def _refresh_body_scaling(self, sett, human):
     """
     bones = human.pose_bones
     sd = human.creation_phase.body._get_scaling_data(
-        "head", sett, return_whole_dict=True
+        1, "head", return_whole_dict=True
     ).items()
 
     bone_groups = {

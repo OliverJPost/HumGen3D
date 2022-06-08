@@ -2,7 +2,6 @@ import random
 from typing import TYPE_CHECKING
 
 import bpy
-
 from HumGen3D.human.base.decorators import injected_context
 
 if TYPE_CHECKING:
@@ -36,7 +35,7 @@ class BodySettings:
                 sk.slider_min = sk_min_value_body
                 sk.slider_max = sk_max_value
 
-        self._human.properties.experimental = turn_on
+        self._human.props.experimental = turn_on
 
     def randomize(self):
         """Randomizes the body type sliders of the active human

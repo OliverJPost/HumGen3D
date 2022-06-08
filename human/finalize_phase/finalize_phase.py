@@ -9,6 +9,7 @@ from .expression.expression import ExpressionSettings
 from .pose.pose import PoseSettings
 from HumGen3D.human.base.decorators import cached_property
 
+
 class FinalizePhaseSettings:
     def __init__(self, human):
         self._human = human
@@ -17,19 +18,19 @@ class FinalizePhaseSettings:
     def backup_rig(self):
         return self._human.props.backup
 
-    @cached_property
+    @property  # TODO make cached
     def pose(self) -> PoseSettings:
         return PoseSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def outfit(self) -> OutfitSettings:
         return OutfitSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def footwear(self) -> FootwearSettings:
         return FootwearSettings(self._human)
 
-    @cached_property
+    @property  # TODO make cached
     def expression(self) -> ExpressionSettings:
         return ExpressionSettings(self._human)
 

@@ -19,7 +19,6 @@ from HumGen3D.backend.preference_func import get_prefs
 from .preview_collections import preview_collections
 
 
-
 class HG_PREF(bpy.types.AddonPreferences):
     """HumGen user preferences"""
 
@@ -28,7 +27,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     # RELEASE remove default path
     filepath: StringProperty(
         name="Install Filepath",
-        default="/Users/olepost/Documents/Humgen_Files_Main/",
+        default="/Users/ole/Assets/Blender Assets/Human Generator/",
     )
 
     # update props
