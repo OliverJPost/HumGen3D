@@ -98,7 +98,7 @@ def draw_spoiler_box(self, ui_name) -> 'tuple[bool, bpy.types.UILayout]':
         'body'          : 'COMMUNITY',
         'face'          : 'COMMUNITY',
         'skin'          : 'COMMUNITY',
-        'hair'          : 'OUTLINER_OB_HAIR',
+        'hair'          : 'OUTLINER_OB_CURVES',
         'length'        : 'EMPTY_SINGLE_ARROW',
         'creation_phase': 'COMMUNITY',
         'clothing'      : 'MATCLOTH',

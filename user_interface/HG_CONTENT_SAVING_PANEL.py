@@ -545,7 +545,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         self._draw_header_box(
             layout,
             'Select particle systems \nto be included in this style.',
-            'OUTLINER_OB_HAIR'
+            'OUTLINER_OB_CURVES'
         )
         
         
