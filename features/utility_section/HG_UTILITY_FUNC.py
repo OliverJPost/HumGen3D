@@ -16,11 +16,11 @@ def refresh_modapply(self, context):
     header.mod_name = 'HEADER'
     header.count    = 1 if sett.modapply_search_modifiers == 'summary' else 0
     objs            = build_object_list(context, sett)
-    
+
     for obj in objs:
         for mod in obj.modifiers:
             if mod.type == 'PARTICLE_SYSTEM':
-                continue            
+                continue
             if sett.modapply_search_modifiers == 'individual':
                 build_full_list(col, mod, obj)
             else:
@@ -29,7 +29,7 @@ def refresh_modapply(self, context):
 def build_object_list(context, sett) -> list:
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
     if sett.modapply_search_objects != 'selected':
-        humans = ([find_human(context.object),] if sett.modapply_search_objects == 'full' 
+        humans = ([find_human(context.object),] if sett.modapply_search_objects == 'full'
                   else [obj for obj in bpy.data.objects if obj.HG.ishuman])
         for human in humans:
             if not human:
@@ -70,15 +70,18 @@ def build_summary_list(col, mod):
 def get_preset_thumbnail(self, context) -> list:
     sett = context.scene.HG3D
     img = sett.preset_thumbnail
-    return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []    
+    if img and img.preview:
+        return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)]
+    else:
+        return []
 
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.shapekeys_col
-    
+
     previously_enabled_items = [i.sk_name for i in col if i.enabled]
-    
+
     col.clear()
 
     existing_sks = find_existing_shapekeys(sett, pref)
@@ -86,7 +89,7 @@ def refresh_shapekeys_ul(self, context):
     hg_rig = find_human(context.object)
     if not hg_rig:
         return
-    
+
     for sk in hg_rig.HG.body_obj.data.shape_keys.key_blocks:
         if sk.name in existing_sks:
             continue
@@ -111,31 +114,31 @@ def find_existing_shapekeys(sett, pref):
                     continue
                 with open(os.path.join(root,fn)) as f:
                     data = json.load(f)
-                
+
                 existing_sks.extend(data)
     return existing_sks
-            
+
 
 
 def refresh_hair_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.savehair_col
-    
+
     previously_enabled_items = [i.ps_name for i in col if i.enabled]
-    
+
     col.clear()
 
     hg_rig = sett.content_saving_active_human
     if not hg_rig:
         return
-    
+
     for ps in hg_rig.HG.body_obj.particle_systems:
         if ps.name.startswith('Eye') and not sett.show_eyesystems:
             continue
         item = col.add()
         item.ps_name = ps.name
-        
+
         if ps.name in previously_enabled_items:
             item.enabled = True
 
@@ -144,15 +147,15 @@ def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
     col  = context.scene.saveoutfit_col
-    
+
     previously_enabled_items = [i.obj_name for i in col if i.enabled]
-    
+
     col.clear()
-    
+
     hg_rig = sett.content_saving_active_human
 
     for obj in [o for o in hg_rig.children
-            if o.type == 'MESH' 
+            if o.type == 'MESH'
             and not 'hg_body' in o
             and not 'hg_eyes' in o
             and not 'hg_teeth'in o
@@ -160,13 +163,13 @@ def refresh_outfit_ul(self, context):
 
         item = col.add()
         item.obj_name = obj.name
-        
+
         if obj.data.shape_keys:
-            item.cor_sks_present = next((True for sk in obj.data.shape_keys.key_blocks 
+            item.cor_sks_present = next((True for sk in obj.data.shape_keys.key_blocks
                                          if sk.name.startswith('cor')),
                                         False)
-        
-        item.weight_paint_present = 'spine' in [vg.name for vg in obj.vertex_groups] 
-        
+
+        item.weight_paint_present = 'spine' in [vg.name for vg in obj.vertex_groups]
+
         if obj.name in previously_enabled_items:
             item.enabled = True
