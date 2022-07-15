@@ -43,9 +43,7 @@ from HumGen3D.backend.content_packs.content_packs import (
 )
 
 from .backend.bpy_classes import _get_bpy_classes
-from .backend.preview_collections import (
-    preview_collections as _preview_collections,
-)
+from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .human.human import Human
@@ -103,10 +101,7 @@ def _initiate_custom_icons():
 def _initiate_ui_lists():
     # Import in local namespace to prevent cluttering package namespace
     from HumGen3D.backend import update
-    from HumGen3D.backend.content_packs import (
-        content_packs,
-        custom_content_packs,
-    )
+    from HumGen3D.backend.content_packs import content_packs, custom_content_packs
     from HumGen3D.user_interface import (
         batch_ui_lists,
         tips_suggestions_ui,
@@ -117,7 +112,7 @@ def _initiate_ui_lists():
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "batch_expressions_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
         "contentpacks_col": content_packs.HG_CONTENT_PACK,
-        "installpacks_col": content_packs.HG_CONTENT_PACK,
+        "installpacks_col": content_packs.HG_INSTALLPACK,
         "modapply_col": utility_ui_lists.MODAPPLY_ITEM,
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
@@ -140,7 +135,6 @@ hg_classes = _get_bpy_classes()
 
 def register():
     # RELEASE remove print statements
-
     for cls in hg_classes:
         bpy.utils.register_class(cls)
 

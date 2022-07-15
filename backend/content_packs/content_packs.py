@@ -430,8 +430,7 @@ class HG_CONTENT_PACK(bpy.types.PropertyGroup):
     weblink: bpy.props.StringProperty()
     icon_name: bpy.props.StringProperty(default="COMMUNITY")
 
-    # booleans for showing in the UI what categories are in this pack
-    humans: bpy.props.BoolProperty(default=False)
+    # booleans for showing in the UI what capassalse)
     human_textures: bpy.props.BoolProperty(default=False)
     shapekeys: bpy.props.BoolProperty(default=False)
     hair: bpy.props.BoolProperty(default=False)
