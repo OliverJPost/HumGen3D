@@ -27,7 +27,7 @@ class HG_PREF(bpy.types.AddonPreferences):
     # RELEASE remove default path
     filepath: StringProperty(
         name="Install Filepath",
-        default="/Users/ole/Assets/Blender Assets/Human Generator/",
+        default="/home/ole/Documents/HG/",
     )
 
     # update props

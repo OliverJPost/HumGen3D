@@ -1,8 +1,8 @@
 import inspect
 import os
 
-import HumGen3D
 import bpy
+import HumGen3D
 
 
 def _get_bpy_classes():
@@ -19,7 +19,7 @@ def _get_bpy_classes():
         bpy.types.UIList,
     )
 
-    skip_dirs = (".vscode", ".mypy", ".git", "tutorial_operator")
+    skip_dirs = (".vscode", ".mypy", ".git", "tutorial_operator", "tests")
     py_files = []
     for root, _, files in os.walk(dir_path):
         if any(dir in root for dir in skip_dirs):
