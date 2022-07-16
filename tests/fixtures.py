@@ -7,10 +7,10 @@ from HumGen3D import Human
 
 @pytest.fixture(scope="class")
 def creation_phase_human():
-    chosen_preset = random.choice(Human.get_preset_options("male"))
-    human = Human.from_preset(chosen_preset)
+    chosen_preset = random.choice(Human.get_preset_options("male", bpy.context))
+    human = Human.from_preset(chosen_preset, bpy.context)
     yield human
-    human.delete()
+    human.delete(bpy.context)
 
 
 @pytest.fixture(scope="class")

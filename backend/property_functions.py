@@ -63,7 +63,8 @@ def find_folders(
 
     enum_list = [("All", "All Categories", "", 0)] if include_all else []
     for i, name in enumerate(categ_list):
-        enum_list.append((name, name, "", i + 1))
+        idx = i if categ == "textures" else i + 1
+        enum_list.append((name, name, "", idx))
 
     if not enum_list:
         return [("ERROR", "ERROR", "", i) for i in range(99)]

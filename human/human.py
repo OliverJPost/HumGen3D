@@ -89,9 +89,7 @@ class Human:
         """
 
         if strict_check and not isinstance(existing_human, Object):
-            raise TypeError(
-                f"Expected a Blender object, got {type(existing_human)}"
-            )
+            raise TypeError(f"Expected a Blender object, got {type(existing_human)}")
 
         rig_obj = cls.find(existing_human)
 
@@ -124,9 +122,7 @@ class Human:
         preset_path = os.path.join(
             get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
         )
-        print(get_prefs().filepath)
-        print(preset.replace("jpg", "json"))
-        print(preset_path)
+
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
@@ -311,9 +307,7 @@ class Human:
             CreationPhaseSettings: Subclass containing creation_phase options
         """
         if self.phase != "creation":
-            raise HumGenException(
-                f"Human is in {self.phase}, not in creation phase."
-            )
+            raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
         return CreationPhaseSettings(self)
 
     @property  # TODO make cached
@@ -329,9 +323,7 @@ class Human:
             FinalizePhaseSettings: Subclass containing finalize_phase options
         """
         if self.phase != "finalize":
-            raise HumGenException(
-                f"Human is in {self.phase}, not in finalize phase."
-            )
+            raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
         return FinalizePhaseSettings(self)
 
     @property  # TODO make cached
@@ -437,9 +429,7 @@ class Human:
           A Human object
         """
         # import from HG_Human file
-        blendfile = os.path.join(
-            get_prefs().filepath, "models", "HG_HUMAN.blend"
-        )
+        blendfile = os.path.join(get_prefs().filepath, "models", "HG_HUMAN.blend")
         with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
             data_to.objects = [
                 "HG_Rig",
