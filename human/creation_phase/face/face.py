@@ -1,16 +1,13 @@
-from ...base.prop_collection import PropCollection
+import random
 
 import numpy as np
-import random
+
+from ...base.prop_collection import PropCollection
 
 
 class FaceKeys(PropCollection):
     def __init__(self, human):
         self._human = human
-        sks = human.shape_keys
-        ff_keys = [sk for sk in sks if sk.name.startswith("ff_")]
-        pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
-        super(FaceKeys, self).__init__(ff_keys + pr_keys)
 
     #     facekeys_dict = self._get_ff_prefix_dict()
 
@@ -27,14 +24,21 @@ class FaceKeys(PropCollection):
     #         setattr(self, f"_{type_name}", PropCollection(filtered_sks))
     #     return getattr(self, f"_{type_name}")
 
+    @property
+    def shape_keys(self) -> PropCollection:
+        sks = self._human.shape_keys
+        ff_keys = [sk for sk in sks if sk.name.startswith("ff_")]
+        pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
+        return PropCollection(ff_keys + pr_keys)
+
     def reset(self):
-        for sk in self:
+        for sk in self.shape_keys:
             sk.value = 0
 
     def randomize(self, ff_subcateg="all", use_bell_curve=False):
         prefix_dict = self._get_ff_prefix_dict()
         face_sk = [
-            sk for sk in self if sk.name.startswith(prefix_dict[ff_subcateg])
+            sk for sk in self.shape_keys if sk.name.startswith(prefix_dict[ff_subcateg])
         ]
         all_v = 0
         for sk in face_sk:
