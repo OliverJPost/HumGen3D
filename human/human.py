@@ -9,7 +9,7 @@ import bpy
 from bpy.types import Object
 
 from ..backend.logging import hg_log
-from ..backend.memory_management import hg_delete
+from ..backend.memory_management import hg_delete, remove_broken_drivers
 from ..backend.preference_func import get_prefs
 from ..backend.preview_collections import refresh_pcoll
 from .base.collections import add_to_collection
@@ -463,7 +463,6 @@ class Human:
         props.length = hg_rig.dimensions[2]
 
         human = cls(hg_rig)
-
         human.shape_keys._load_external(human, context)
         human.shape_keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
@@ -480,6 +479,8 @@ class Human:
 
         for mod in human.body_obj.modifiers:
             mod.show_expanded = False
+
+        remove_broken_drivers()
 
         return human
 
