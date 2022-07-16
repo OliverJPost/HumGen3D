@@ -6,7 +6,7 @@ from HumGen3D.human.base.exceptions import HumGenException
 from fixtures import context, creation_phase_human, finalize_phase_human
 
 
-def _vector_tuple_equality(vec, tup):
+def assert_vector_tuple_equality(vec, tup):
     for value_vec, value_tup in zip(vec, tup):
         assert round(value_vec, 1) == round(value_tup, 1)
 
@@ -68,11 +68,11 @@ class TestHumanCommonMethods:
 
         new_loc = (1.2, 5.8, 3.1)
         creation_phase_human.location = new_loc
-        assert creation_phase_human.location == new_loc
-        assert creation_phase_human.rig_obj.location == new_loc
+        assert_vector_tuple_equality(creation_phase_human.location, new_loc)
+        assert_vector_tuple_equality(creation_phase_human.rig_obj.location, new_loc)
 
         creation_phase_human.location = old_loc
-        assert creation_phase_human.rig_obj.location == old_loc
+        assert_vector_tuple_equality(creation_phase_human.rig_obj.location, old_loc)
     @staticmethod
     def test_rotation_euler(creation_phase_human):
         old_rot = creation_phase_human.rotation_euler
@@ -81,11 +81,11 @@ class TestHumanCommonMethods:
 
         new_rot = (35.1, 2.1, 84.9)
         creation_phase_human.rotation_euler = new_rot
-        assert creation_phase_human.rotation_euler == new_rot
-        assert creation_phase_human.rig_obj.rotation_euler == new_rot
+        assert_vector_tuple_equality(creation_phase_human.rotation_euler, new_rot)
+        assert_vector_tuple_equality(creation_phase_human.rig_obj.rotation_euler, new_rot)
 
         creation_phase_human.rotation_euler = old_rot
-        assert creation_phase_human.rig_obj.rotation_eulet == old_rot
+        assert_vector_tuple_equality(creation_phase_human.rig_obj.rotation_euler, old_rot)
     @staticmethod
     def test_props(creation_phase_human):
         assert creation_phase_human.props
