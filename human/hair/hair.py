@@ -66,14 +66,7 @@ class HairSettings:
 
         # TODO make into common func
         for ps_name in ps_delete_dict[gender]:
-            ps_idx = next(
-                i
-                for i, ps in enumerate(hg_body.particle_systems)
-                if ps.name == ps_name
-            )
-            hg_body.particle_systems.active_index = ps_idx
-
-            bpy.ops.object.particle_system_remove()
+            self.remove_system_by_name(ps_name)
 
     @property
     def particle_systems(self):
@@ -88,6 +81,10 @@ class HairSettings:
                 if mod.type == "PARTICLE_SYSTEM"
             ]
         )
+
+    def remove_system_by_name(self, name):
+        mod = next(m for m in self.modifiers if m.particle_system.name == name)
+        self._human.body_obj.modifiers.remove(mod)
 
     def _add_quality_props(self):
         for psys in self.particle_systems:
@@ -114,9 +111,7 @@ class HairSettings:
             return
 
         addon_folder = get_addon_root()
-        blendfile = os.path.join(
-            addon_folder, "human", "hair", "hair_shader_v3.blend"
-        )
+        blendfile = os.path.join(addon_folder, "human", "hair", "hair_shader_v3.blend")
 
         if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
             new_hair_group = bpy.data.node_groups["HG_Hair_V3"]
