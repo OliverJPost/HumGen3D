@@ -10,7 +10,7 @@ def creation_phase_human():
     chosen_preset = random.choice(Human.get_preset_options("male", bpy.context))
     human = Human.from_preset(chosen_preset, bpy.context)
     yield human
-    human.delete(bpy.context)
+    human.delete()
 
 
 @pytest.fixture(scope="class")

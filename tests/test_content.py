@@ -4,6 +4,7 @@ from HumGen3D.backend.memory_management import hg_delete
 
 import bpy
 from HumGen3D.backend.logging import hg_log
+from fixtures import context
 
 
 def test_starting_humans(context):
@@ -17,6 +18,7 @@ def test_starting_humans(context):
 
     context.scene.HG3D.gender = "male"
     __create_all_starting_humans(context)
+
 
 def __create_all_starting_humans(context):
     pcoll_list = context.scene.HG3D["previews_list_humans"]

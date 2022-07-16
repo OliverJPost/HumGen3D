@@ -90,12 +90,11 @@ class TestCreationPhase:
                 continue
 
             human.creation_phase.face.randomize(ff_subcateg=name)
-            assert (
-                mean(
-                    [sk.value for sk in human.shape_keys if sk.name.startswith(prefix)]
-                )
-                != 0
-            )
+            all_values = [
+                sk.value for sk in human.shape_keys if sk.name.startswith(prefix)
+            ]
+            if len(all_values) > 1:
+                assert mean(all_values) != 0
 
         human.creation_phase.face.randomize(use_bell_curve=False)
         human.creation_phase.face.randomize(use_bell_curve=True)
@@ -104,6 +103,7 @@ class TestCreationPhase:
     ######## Length #########
     #########################
 
+    @staticmethod
     def test_length(human, context):
         old_length = human.creation_phase.length.centimeters
         assert old_length
