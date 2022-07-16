@@ -18,6 +18,7 @@ def finalize_phase_human(creation_phase_human):
     creation_phase_human.creation_phase.finish(bpy.context)
     yield creation_phase_human
 
+
 @pytest.fixture
 def context():
     return bpy.context
