@@ -47,6 +47,9 @@ def find_folders(
     else:
         categ_folder = os.path.join(pref.filepath, categ)
 
+    if not os.path.isdir(categ_folder):
+        return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
+
     dirlist = os.listdir(categ_folder)
     dirlist.sort()
     categ_list = []
@@ -82,9 +85,7 @@ def find_item_amount(context, categ, gender, folder) -> int:
         ext = ".blend"
 
     if gender:
-        dir = str(pref.filepath) + str(
-            Path("/{}/{}/{}".format(categ, gender, folder))
-        )
+        dir = str(pref.filepath) + str(Path("/{}/{}/{}".format(categ, gender, folder)))
     else:
         dir = str(pref.filepath) + str(Path("/{}/{}".format(categ, folder)))
 
@@ -137,9 +138,7 @@ def thumbnail_saving_prop_update(self, context):
             ShowMessageBox("No render result found")
             return
         elif render_result.size[0] > 1024:
-            ShowMessageBox(
-                "Render result is too big! 256px by 256px is recommended."
-            )
+            ShowMessageBox("Render result is too big! 256px by 256px is recommended.")
             return
 
         full_imagepath = os.path.join(save_folder, "temp_render_thumbnail.jpg")
