@@ -15,6 +15,7 @@ from .length.length import LengthSettings, apply_armature
 
 if TYPE_CHECKING:
     from HumGen3D import Human
+
 from HumGen3D.human.base.decorators import cached_property
 
 
@@ -49,7 +50,7 @@ class CreationPhaseSettings:
             hg_rig (Object): HumGen armature
             hg_body (Object): HumGen body object
         """
-        t = time.perf_counter()
+
         human = self._human
         hg_rig = human.rig_obj
         hg_rig.select_set(True)
@@ -69,15 +70,11 @@ class CreationPhaseSettings:
         except AttributeError:
             old_shading = None
 
-        t = time_update("startup", t)
         human.hair.eyebrows.remove_unused(_internal=True)
-        t = time_update("remove eyebrows", t)
         self._create_backup_human(context)
-        t = time_update("create backup", t)
-        sk_vector_dict, driver_dict = human.shape_keys._extract_permanent_keys(
-            context
-        )
-        t = time_update("extract sk", t)
+
+        sk_vector_dict, driver_dict = human.shape_keys._extract_permanent_keys(context)
+
         apply_shapekeys(human.body_obj)
         apply_shapekeys(human.eyes.eye_obj)
 
@@ -90,16 +87,14 @@ class CreationPhaseSettings:
 
         for obj in human.children:
             self._add_applied_armature(obj)
-        t = time_update("apply", t)
-        human.shape_keys._reapply_permanent_keys(
-            sk_vector_dict, driver_dict, context
-        )
-        t = time_update("reapply sk", t)
+
+        human.shape_keys._reapply_permanent_keys(sk_vector_dict, driver_dict, context)
+
         context.view_layer.objects.active = hg_rig
 
         self._remove_teeth_constraint()
         self._set_teeth_parent()
-        t = time_update("teeth", t)
+
         refresh_pcoll(self, context, "poses")
 
         human.props.length = hg_rig.dimensions[2]
@@ -113,7 +108,6 @@ class CreationPhaseSettings:
             context.space_data.shading.type = old_shading
 
         hg_rig.HG.phase = "clothing"
-        t = time_update("ending", t)
 
     def remove_stretch_bones(self):
         """Removes all bones on this rig that have a stretch_to constraint
@@ -154,6 +148,7 @@ class CreationPhaseSettings:
         context.collection.objects.link(hg_backup)
         hg_backup.hide_viewport = True
         hg_backup.hide_render = True
+
         add_to_collection(
             context, hg_backup, collection_name="HumGen_Backup [Don't Delete]"
         )
@@ -168,11 +163,10 @@ class CreationPhaseSettings:
                 obj_copy,
                 collection_name="HumGen_Backup [Don't Delete]",
             )
+
             obj_copy.parent = hg_backup
 
-            armatures = [
-                mod for mod in obj_copy.modifiers if mod.type == "ARMATURE"
-            ]
+            armatures = [mod for mod in obj_copy.modifiers if mod.type == "ARMATURE"]
             if armatures:
                 armatures[0].object = hg_backup
             obj_copy.hide_viewport = True
@@ -199,9 +193,7 @@ class CreationPhaseSettings:
         # use old method for versions older than 2.90
         if (2, 90, 0) > bpy.app.version:
             while obj.modifiers.find("Armature") != 0:
-                bpy.ops.object.modifier_move_up(
-                    {"object": obj}, modifier="Armature"
-                )
+                bpy.ops.object.modifier_move_up({"object": obj}, modifier="Armature")
         else:
             bpy.ops.object.modifier_move_to_index(modifier="Armature", index=0)
 
@@ -217,9 +209,7 @@ class CreationPhaseSettings:
         p_bones["jaw"].constraints["Damped Track"].mute = False
 
         for bone in [p_bones["jaw"], p_bones["jaw_upper"]]:
-            child_constraints = [
-                c for c in bone.constraints if c.type == "CHILD_OF"
-            ]
+            child_constraints = [c for c in bone.constraints if c.type == "CHILD_OF"]
             for c in child_constraints:
                 bone.constraints.remove(c)
 

@@ -3,6 +3,7 @@ from statistics import mean
 
 from HumGen3D.human.creation_phase.face.face import FaceKeys
 
+from fixtures import context
 from fixtures import creation_phase_human as human
 
 
@@ -19,21 +20,20 @@ class TestCreationPhase:
     def test_set_experimental(human):
         def check_min_max(max_all, min_bp):
             for sk in human.shape_keys:
-                if sk.name.startswith(("ff_","bp_", "pr_")):
+                if sk.name.startswith(("ff_", "bp_", "pr_")):
                     assert sk.slider_max == max_all
             for sk in human.creation_phase.body.shape_keys:
                 assert sk.slider_min == min_bp
 
-        human.set_experimental(True)
+        human.creation_phase.body.set_experimental(True)
         check_min_max(2, -0.5)
-
-        human.set_experimental(False)
+        human.creation_phase.body.set_experimental(False)
         check_min_max(1, 0)
 
     @staticmethod
     def test_randomize_body(human):
         human.creation_phase.body.randomize()
-        #FIXME might be affecting other tests
+        # FIXME might be affecting other tests
 
     @staticmethod
     def test_set_bone_scale(human, context):
@@ -49,7 +49,7 @@ class TestCreationPhase:
             "thigh",
             "shin",
             "foot",
-            "hand"
+            "hand",
         ]
 
         for bone_type in bone_types:
@@ -59,7 +59,7 @@ class TestCreationPhase:
             set_scale(5.2, bone_type, context)
             set_scale(0, bone_type, context)
             set_scale(1, bone_type, context)
-            #FIXME might be affecting other tests
+            # FIXME might be affecting other tests
 
     ##########################
     ########### Face #########
@@ -74,7 +74,7 @@ class TestCreationPhase:
     @staticmethod
     def test_reset_face(human):
         for sk in human.creation_phase.face.shape_keys:
-            sk.value= random.uniform(-.5, .5)
+            sk.value = random.uniform(-0.5, 0.5)
 
         human.creation_phase.face.reset()
 
@@ -90,7 +90,12 @@ class TestCreationPhase:
                 continue
 
             human.creation_phase.face.randomize(ff_subcateg=name)
-            assert mean(sk.value for sk in human.shape_keys if sk.name.startswith(prefix)) != 0
+            assert (
+                mean(
+                    [sk.value for sk in human.shape_keys if sk.name.startswith(prefix)]
+                )
+                != 0
+            )
 
         human.creation_phase.face.randomize(use_bell_curve=False)
         human.creation_phase.face.randomize(use_bell_curve=True)
