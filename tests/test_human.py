@@ -6,6 +6,10 @@ from HumGen3D.human.base.exceptions import HumGenException
 from fixtures import context, creation_phase_human, finalize_phase_human
 
 
+def _vector_tuple_equality(vec, tup):
+    for value_vec, value_tup in zip(vec, tup):
+        assert round(value_vec, 1) == round(value_tup, 1)
+
 @pytest.mark.parametrize("gender", ["male", "female"])
 def test_get_preset_options(gender, context):
     assert Human.get_preset_options(gender, context), "No preset options returned"
@@ -21,20 +25,7 @@ class TestHumanCommonMethods:
         for obj in creation_phase_human.objects:
             found_human = Human.from_existing(obj)
             assert found_human
-    @staticmethod
-    def test_from_existing_fail(creation_phase_human):
-        def assert_failure(obj):
-            try:
-                Human.from_existing(obj)
-                assert False, "Should throw exception"
-            except TypeError:
-                assert True
 
-        cube = ...
-        assert_failure(cube)
-
-        non_mesh = ...
-        assert_failure(non_mesh)
     @staticmethod
     def test_objects(creation_phase_human):
         assert creation_phase_human.objects, "No objects returned"
@@ -110,8 +101,8 @@ class TestHumanCommonMethods:
         def is_visible():
             creation_phase_human.hide_set(False)
             for obj in creation_phase_human.objects:
-                assert obj.hide_viewport
-                assert not obj.visible_get()
+                assert not obj.hide_viewport
+                assert obj.visible_get()
 
         is_hidden()
         is_hidden()
@@ -142,3 +133,16 @@ def test_finalize_phase(finalize_phase_human):
     except HumGenException:
         assert True
 
+def test_from_existing_fail():
+    def assert_failure(obj):
+        try:
+            Human.from_existing(obj)
+            assert False, "Should throw exception"
+        except TypeError:
+            assert True
+
+    cube = ...
+    assert_failure(cube)
+
+    non_mesh = ...
+    assert_failure(non_mesh)

@@ -49,7 +49,8 @@ class FaceKeys(PropCollection):
             all_v += new_value
             sk.value = new_value
 
-    def _get_ff_prefix_dict(self) -> dict:
+    @staticmethod
+    def _get_ff_prefix_dict() -> dict:
         """Returns facial features prefix dict
 
         Returns:
