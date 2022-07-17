@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 import bpy  # type: ignore
 from bpy.props import (  # type: ignore
     BoolProperty,
@@ -7,9 +9,7 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend.content_packs.custom_content_packs import (
-    build_content_collection,
-)
+from HumGen3D.backend.content_packs.custom_content_packs import build_content_collection
 from HumGen3D.human.human import Human
 from HumGen3D.utility_section.baking import make_path_absolute
 from HumGen3D.utility_section.utility_functions import (
@@ -29,6 +29,27 @@ from .property_functions import (
     poll_mtc_armature,
     thumbnail_saving_prop_update,
 )
+
+
+def get_items(attr):
+    retreiver = attrgetter(attr)
+    return lambda self, context: retreiver(
+        Human.from_existing(context.object)
+    )._get_full_options()
+
+
+def get_folders(attr):
+    retreiver = attrgetter(attr)
+    return lambda self, context: retreiver(
+        Human.from_existing(context.object)
+    ).get_categories()
+
+
+def update(attr):
+    retreiver = attrgetter(attr)
+    return lambda self, context: retreiver(Human.from_existing(context.object))._set(
+        context
+    )
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -160,9 +181,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         soft_max=200,
         min=120,
         max=250,
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).creation_phase.length.set(s.human_length, c),
+        update=lambda s, c: Human.from_existing(c.object).creation_phase.length.set(
+            s.human_length, c
+        ),
     )
 
     head_size: FloatProperty(
@@ -267,16 +288,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     ####### preview collections ########
     # creation
-    pcoll_humans: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "humans")
-    )
+    pcoll_humans: EnumProperty(items=lambda a, b: get_pcoll_enum_items(a, b, "humans"))
 
     # posing
     pcoll_poses: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "poses"),
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).finalize_phase.pose.set(s.pcoll_poses, c),
+        items=get_items("finalize_phase.pose"),
+        update=update("finalize_phase.pose"),
     )
     pose_sub: EnumProperty(
         name="Pose Library",
@@ -291,10 +308,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     # outfit
     pcoll_outfit: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "outfit"),
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).finalize_phase.outfit.set(s.pcoll_outfit, c),
+        items=get_items("finalize_phase.outfit"), update=update("finalize_phase.outfit")
     )
     outfit_sub: EnumProperty(
         name="Outfit Library",
@@ -309,10 +323,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     # hair
     pcoll_hair: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "hair"),
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).hair.regular_hair.set(s.pcoll_hair, c),
+        items=get_items("hair.regular_hair"),
+        update=update("hair.regular_hair"),
     )
     hair_sub: EnumProperty(
         name="Hair Library",
@@ -320,10 +332,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update=lambda a, b: refresh_pcoll(a, b, "hair"),
     )
     pcoll_face_hair: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "face_hair"),
-        update=lambda s, c: Human.from_existing(c.object).hair.facial_hair.set(
-            s.pcoll_face_hair, c
-        ),
+        items=update("hair.face_hair"),
+        update=update("hair.face_hair"),
     )
     face_hair_sub: EnumProperty(
         name="Facial Hair Library",
@@ -333,10 +343,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     # expression
     pcoll_expressions: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "expressions"),
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).finalize_phase.expression.set(s.pcoll_expressions, c),
+        items=get_items("finalize_phase.expression"),
+        update=update("finalize_phase.expression"),
     )
     expressions_sub: EnumProperty(
         name="Expressions Library",
@@ -352,9 +360,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     # footwear
     pcoll_footwear: EnumProperty(
         items=lambda a, b: get_pcoll_enum_items(a, b, "footwear"),
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).finalize_phase.footwear.set(s.pcoll_footwear, c),
+        update=lambda s, c: Human.from_existing(c.object).finalize_phase.footwear.set(
+            s.pcoll_footwear, c
+        ),
     )
     footwear_sub: EnumProperty(
         name="Footwear Library",
@@ -391,9 +399,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     )
     texture_library: EnumProperty(
         name="Texture Library",
-        items=lambda a, b: find_folders(
-            a, b, "textures", True, include_all=False
-        ),
+        items=lambda a, b: find_folders(a, b, "textures", True, include_all=False),
         update=lambda a, b: refresh_pcoll(a, b, "textures"),
     )
 
@@ -475,16 +481,12 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     batch_clothing_inside: BoolProperty(
         name="Inside",
         default=True,
-        update=lambda a, b: batch_ui_lists.batch_uilist_refresh(
-            a, b, "outfits"
-        ),
+        update=lambda a, b: batch_ui_lists.batch_uilist_refresh(a, b, "outfits"),
     )
     batch_clothing_outside: BoolProperty(
         name="Outside",
         default=True,
-        update=lambda a, b: batch_ui_lists.batch_uilist_refresh(
-            a, b, "outfits"
-        ),
+        update=lambda a, b: batch_ui_lists.batch_uilist_refresh(a, b, "outfits"),
     )
 
     batch_marker_selection: EnumProperty(
@@ -509,18 +511,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         name="Female [cm]", default=170, min=160, max=190
     )
 
-    batch_average_height_ft_male: IntProperty(
-        name="ft", default=5, min=4, max=6
-    )
-    batch_average_height_ft_female: IntProperty(
-        name="ft", default=5, min=4, max=6
-    )
-    batch_average_height_in_male: IntProperty(
-        name="in", default=10, min=0, max=12
-    )
-    batch_average_height_in_female: IntProperty(
-        name="in", default=10, min=0, max=12
-    )
+    batch_average_height_ft_male: IntProperty(name="ft", default=5, min=4, max=6)
+    batch_average_height_ft_female: IntProperty(name="ft", default=5, min=4, max=6)
+    batch_average_height_in_male: IntProperty(name="in", default=10, min=0, max=12)
+    batch_average_height_in_female: IntProperty(name="in", default=10, min=0, max=12)
 
     batch_standard_deviation: IntProperty(
         name="Standard deviation",
@@ -566,9 +560,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         ],
         default="none",
     )
-    batch_apply_poly_reduction: BoolProperty(
-        name="Apply poly reduction", default=True
-    )
+    batch_apply_poly_reduction: BoolProperty(name="Apply poly reduction", default=True)
 
     batch_hair_quality_particle: EnumProperty(
         name="Particle hair quality",
@@ -600,9 +592,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         ],
         default="top",
     )
-    dev_delete_unselected: BoolProperty(
-        name="Delete unselected objs", default=True
-    )
+    dev_delete_unselected: BoolProperty(name="Delete unselected objs", default=True)
     dev_tools_ui: BoolProperty(name="Developer tools", default=True)
     calc_gender: BoolProperty(name="Calculate both genders", default=False)
     dev_mask_name: EnumProperty(
@@ -663,9 +653,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("accurate", "Accurate (Cycles only)", "", 1),
         ],
         default="fast",
-        update=lambda s, c: Human.from_existing(
-            c.object
-        ).hair.update_hair_shader_type(s.hair_shader_type),
+        update=lambda s, c: Human.from_existing(c.object).hair.update_hair_shader_type(
+            s.hair_shader_type
+        ),
     )
 
     # baking
