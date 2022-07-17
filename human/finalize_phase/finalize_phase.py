@@ -2,12 +2,12 @@ import bpy
 from bpy.types import Context
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.human.base.collections import add_to_collection
+from HumGen3D.human.base.decorators import cached_property
 
 from .clothing.footwear import FootwearSettings
 from .clothing.outfit import OutfitSettings
 from .expression.expression import ExpressionSettings
 from .pose.pose import PoseSettings
-from HumGen3D.human.base.decorators import cached_property
 
 
 class FinalizePhaseSettings:

@@ -16,8 +16,9 @@ class ExpressionSettings:
     def __init__(self, _human):
         self._human = _human
 
-    @injected_context
-    def set(self, preset, context=None):
+    # FIXME add get_preset_options()
+
+    def set(self, preset):
         """Loads the active expression in the preview collection"""
         pref = get_prefs()
 
@@ -37,9 +38,7 @@ class ExpressionSettings:
         hg_body = hg_rig.HG.body_obj
         sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
         if "expr_{}".format(sk_name) in sk_names:
-            new_key = hg_body.data.shape_keys.key_blocks[
-                "expr_{}".format(sk_name)
-            ]
+            new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
             backup_rig = hg_rig.HG.backup
             backup_body = next(
@@ -60,9 +59,7 @@ class ExpressionSettings:
         new_key.mute = False
         new_key.value = 1
 
-    def _transfer_as_one_shapekey(
-        self, context, source, target, sk_dict, backup_rig
-    ):
+    def _transfer_as_one_shapekey(self, context, source, target, sk_dict, backup_rig):
         """Transfers multiple shapekeys as one shapekey
 
         Args:
@@ -213,9 +210,7 @@ class ExpressionSettings:
     def _transfer_multiple_as_one(self, sks, values, to_obj, name):
         new_sk = to_obj.shape_key_add(name=name, from_mix=False)
         new_sk.interpolation = "KEY_LINEAR"
-        combined_sk_data = np.zeros(
-            len(to_obj.data.vertices) * 3, dtype=np.float64
-        )
+        combined_sk_data = np.zeros(len(to_obj.data.vertices) * 3, dtype=np.float64)
 
         for sk, value in zip(sks, values):
             sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
@@ -232,7 +227,7 @@ class ExpressionSettings:
             b = self._human.pose_bones[b_name]
             b.bone.hide = True
 
-        # TODO make it only delete Frig sks instead of all outside naming scheme
+        # FIXME make it only delete Frig sks instead of all outside naming scheme
         for sk in [
             sk
             for sk in self._human.shape_keys
