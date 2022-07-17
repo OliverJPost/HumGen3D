@@ -8,15 +8,16 @@ from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
 
-class ExpressionSettings:
+class ExpressionSettings(PreviewCollectionContent):
     def __init__(self, _human):
         self._human = _human
-
-    # FIXME add get_preset_options()
+        self._pcoll_name = "expressions"
+        self._pcoll_gender_split = False
 
     def set(self, preset):
         """Loads the active expression in the preview collection"""

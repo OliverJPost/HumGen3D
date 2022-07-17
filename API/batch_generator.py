@@ -114,7 +114,7 @@ class HG_Batch_Generator:
                 Defaults to False.
             expressions_category (str, optional): Category to choose expression
                 from.
-                Use get_pcoll_categs('expression') to see options.
+                Use get_pcoll_categs('expressions') to see options.
                 Ignored if add_expression == False.
                 Defaults to 'All'.
             add_clothing (bool, optional): If True, an outfit and footwear will be
@@ -137,9 +137,7 @@ class HG_Batch_Generator:
         for obj in context.selected_objects:
             obj.select_set(False)
 
-        python_file = os.path.join(
-            get_addon_root(), "scripts", "batch_generate.py"
-        )
+        python_file = os.path.join(get_addon_root(), "scripts", "batch_generate.py")
 
         start_time_background_process = time.time()
 
@@ -199,9 +197,7 @@ class HG_Batch_Generator:
 
     def __import_generated_human(self):
         start_time_import = time.time()
-        batch_result_path = os.path.join(
-            get_prefs().filepath, "batch_result.blend"
-        )
+        batch_result_path = os.path.join(get_prefs().filepath, "batch_result.blend")
         with bpy.data.libraries.load(batch_result_path, link=False) as (
             data_from,
             data_to,
@@ -213,11 +209,7 @@ class HG_Batch_Generator:
             # toggle_hair_visibility(obj, show=True)
 
         human_parent = next(
-            (
-                obj
-                for obj in data_to.objects
-                if obj.HG.ishuman and obj.HG.backup
-            ),
+            (obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
             [obj for obj in data_to.objects if obj.HG.ishuman][0],
         )
 

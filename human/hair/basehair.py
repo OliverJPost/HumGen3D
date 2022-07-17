@@ -8,12 +8,12 @@ from HumGen3D.backend.logging import hg_log, print_context
 from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.human import hair
+from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-
-from HumGen3D.human.base.decorators import injected_context
 
 
 class BaseHair:
@@ -35,9 +35,7 @@ class BaseHair:
             "red": (3.0, 1.0, 0.0),
         }
 
-        hair_color = hair_color_dict[
-            random.choice([name for name in hair_color_dict])
-        ]
+        hair_color = hair_color_dict[random.choice([name for name in hair_color_dict])]
 
         for mat in self._human.body_obj.data.materials[1:]:
             nodes = mat.node_tree.nodes
@@ -58,9 +56,7 @@ class BaseHair:
         particle_mods = self._human.hair.modifiers
 
         modifiers = [
-            mod
-            for mod in particle_mods
-            if self._condition(mod.particle_system.name)
+            mod for mod in particle_mods if self._condition(mod.particle_system.name)
         ]
         return PropCollection(modifiers)
 
@@ -84,7 +80,7 @@ class BaseHair:
         raise NotImplementedError
 
 
-class ImportableHair(BaseHair):
+class ImportableHair(BaseHair, PreviewCollectionContent):
     @injected_context
     def set(self, preset, context=None):
         """Loads hair system the user selected by reading the json that belongs to
@@ -119,9 +115,7 @@ class ImportableHair(BaseHair):
             human.hair.regular_hair.remove_all()
         remove_broken_drivers()
 
-        mask_mods = [
-            m for m in self._human.body_obj.modifiers if m.type == "MASK"
-        ]
+        mask_mods = [m for m in self._human.body_obj.modifiers if m.type == "MASK"]
         for mod in mask_mods:
             mod.show_viewport = False
 
@@ -144,9 +138,7 @@ class ImportableHair(BaseHair):
         # iterate over hair systems that need to be transferred
 
         for ps_name in json_systems:
-            self._transfer_hair_system(
-                context, json_systems, hair_obj, ps_name
-            )
+            self._transfer_hair_system(context, json_systems, hair_obj, ps_name)
 
         for vg in hair_obj.vertex_groups:
             if vg.name.lower().startswith(("hair", "fh")):
@@ -179,9 +171,7 @@ class ImportableHair(BaseHair):
         hg_delete(hair_obj)
         remove_broken_drivers()
 
-    def _import_hair_obj(
-        self, context, hair_type, pref, blendfile
-    ) -> bpy.types.Object:
+    def _import_hair_obj(self, context, hair_type, pref, blendfile) -> bpy.types.Object:
         """Imports the object that contains the hair systems named in the json file
 
         Args:
@@ -236,9 +226,7 @@ class ImportableHair(BaseHair):
         hg_delete(body_copy)
 
     def _transfer_hair_system(self, context, json_systems, hair_obj, ps):
-        ps_mods = [
-            mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"
-        ]
+        ps_mods = [mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"]
         for mod in ps_mods:
             if mod.particle_system.name == ps:
                 self._set_particle_settings(json_systems, mod, ps)
@@ -285,9 +273,7 @@ class ImportableHair(BaseHair):
         vert_dict = {}
         for vert_idx, _ in enumerate(from_obj.data.vertices):
             try:
-                vert_dict[vert_idx] = from_obj.vertex_groups[vg_name].weight(
-                    vert_idx
-                )
+                vert_dict[vert_idx] = from_obj.vertex_groups[vg_name].weight(vert_idx)
             except:
                 pass
 
@@ -311,9 +297,7 @@ class ImportableHair(BaseHair):
 
         system_names = []
 
-        for mod in [
-            mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"
-        ]:
+        for mod in [mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"]:
             system_names.append(mod.particle_system.name)
 
         new_mod_dict = {}
@@ -379,9 +363,7 @@ class ImportableHair(BaseHair):
             hg_body (Object):
             hair_type (str): 'head' for normal, 'facial_hair' for facial hair
         """
-        search_mat = (
-            ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
-        )
+        search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
         # Search for current name of material to account for v1, v2 and v3
         mat_name = next(
             mat.name
@@ -407,18 +389,12 @@ class ImportableHair(BaseHair):
         for mod in new_systems:
             # Use old method when older than 2.90
             if (2, 90, 0) > bpy.app.version:
-                while (
-                    self._human.body_obj.modifiers.find(mod.name)
-                    > lowest_mask_index
-                ):
+                while self._human.body_obj.modifiers.find(mod.name) > lowest_mask_index:
                     bpy.ops.object.modifier_move_up(
                         {"object": self._human.body_obj}, modifier=mod.name
                     )
 
-            elif (
-                self._human.body_obj.modifiers.find(mod.name)
-                > lowest_mask_index
-            ):
+            elif self._human.body_obj.modifiers.find(mod.name) > lowest_mask_index:
                 bpy.ops.object.modifier_move_to_index(
                     modifier=mod.name, index=lowest_mask_index
                 )
