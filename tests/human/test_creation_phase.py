@@ -1,9 +1,9 @@
 import random
 from statistics import mean
 
-from fixtures import context
-from fixtures import creation_phase_human as human
 from HumGen3D.human.creation_phase.face.face import FaceKeys
+from HumGen3D.tests.fixtures import context
+from HumGen3D.tests.fixtures import creation_phase_human as human
 
 
 class TestCreationPhase:
