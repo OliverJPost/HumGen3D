@@ -66,7 +66,7 @@ def _initiate_preview_collections():
     pcoll_names = [
         "humans",
         "poses",
-        "outfit",
+        "outfits",
         "footwear",
         "hair",
         "face_hair",
@@ -76,19 +76,13 @@ def _initiate_preview_collections():
     ]
 
     for pcoll_name in pcoll_names:
-        _preview_collections.setdefault(
-            f"pcoll_{pcoll_name}", bpy.utils.previews.new()
-        )
+        _preview_collections.setdefault(f"pcoll_{pcoll_name}", bpy.utils.previews.new())
 
 
 def _initiate_custom_icons():
     """Load custom icons"""
-    hg_icons = _preview_collections.setdefault(
-        "hg_icons", bpy.utils.previews.new()
-    )
-    icon_dir = os.path.join(
-        os.path.dirname(__file__), "user_interface", "icons"
-    )
+    hg_icons = _preview_collections.setdefault("hg_icons", bpy.utils.previews.new())
+    icon_dir = os.path.join(os.path.dirname(__file__), "user_interface", "icons")
     for _, _, fns in os.walk(icon_dir):
         png_files = [f for f in fns if f.endswith(".png")]
         for fn in png_files:

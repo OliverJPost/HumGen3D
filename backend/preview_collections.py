@@ -39,9 +39,7 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
         setattr(sett, f"{pcoll_name}_sub", "All")
         refresh_pcoll(None, context, pcoll_name)
         pcoll_list = sett["previews_list_{}".format(pcoll_name)]
-        random_item = get_random_from_list(
-            pcoll_list, current_item, searchterm
-        )
+        random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
     setattr(sett, f"pcoll_{pcoll_name}", random_item)
 
@@ -60,9 +58,7 @@ def get_random_from_list(lst, current_item, searchterm) -> Any:
     """
 
     corrected_list = (
-        [item for item in lst if searchterm in item.lower()]
-        if searchterm
-        else lst
+        [item for item in lst if searchterm in item.lower()] if searchterm else lst
     )
     if not corrected_list:
         print("ERROR: Searchterm not found in pcoll: ", searchterm)
@@ -125,9 +121,7 @@ def refresh_pcoll(
         gender_override,
         hg_rig=hg_rig,
     )
-    sett[
-        "pcoll_{}".format(pcoll_name)
-    ] = "none"  # set the preview collection to
+    sett["pcoll_{}".format(pcoll_name)] = "none"  # set the preview collection to
     # the 'click here to select' item
 
     sett.load_exception = False
@@ -137,9 +131,7 @@ def _check_for_HumGen_filepath_issues(self):
     pref = get_prefs()
     if not pref.filepath:
         raise HumGenException("No filepath selected in HumGen preferences.")
-    base_humans_path = pref.filepath + str(
-        Path("content_packs/Base_Humans.json")
-    )
+    base_humans_path = pref.filepath + str(Path("content_packs/Base_Humans.json"))
 
     base_content = os.path.exists(base_humans_path)
 
@@ -148,7 +140,12 @@ def _check_for_HumGen_filepath_issues(self):
 
 
 def _populate_pcoll(
-    self, context, pcoll_categ, ignore_genders, gender_override, hg_rig=None,
+    self,
+    context,
+    pcoll_categ,
+    ignore_genders,
+    gender_override,
+    hg_rig=None,
 ):
     """Populates the preview collection enum list with blend file filepaths and
     icons
@@ -171,9 +168,7 @@ def _populate_pcoll(
     if not hg_rig:
         try:
             hg_rig = (
-                context.object
-                if context.object.HG.ishuman
-                else context.object.parent
+                context.object if context.object.HG.ishuman else context.object.parent
             )
         except AttributeError:
             hg_rig = None
@@ -187,15 +182,11 @@ def _populate_pcoll(
     else:
         gender = hg_rig.HG.gender
 
-    categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(
-        pcoll_categ, sett, gender
-    )
+    categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender)
 
     pcoll_full_dir = str(pref.filepath) + str(Path("/{}/".format(categ_dir)))
     if subcateg_dir != "All":
-        pcoll_full_dir = pcoll_full_dir + str(
-            Path("/{}/".format(subcateg_dir))
-        )
+        pcoll_full_dir = pcoll_full_dir + str(Path("/{}/".format(subcateg_dir)))
 
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
 
@@ -221,9 +212,7 @@ def _populate_pcoll(
     pcoll["previews_dir_{}".format(pcoll_categ)] = pcoll_full_dir
 
 
-def _get_categ_and_subcateg_dirs(
-    pcoll_categ, sett, gender
-) -> "tuple[str, str]":
+def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]":
     """Gets the directory name of the preview collection category and of the
     user selected subcategory
 
@@ -421,9 +410,7 @@ def _get_search_term(pcoll_type, sett) -> str:
         "footwear": sett.search_term_footwear,
     }
 
-    search_term = (
-        search_term_dict[pcoll_type] if pcoll_type in search_term_dict else ""
-    )
+    search_term = search_term_dict[pcoll_type] if pcoll_type in search_term_dict else ""
 
     return search_term
 
