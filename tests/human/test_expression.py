@@ -1,7 +1,9 @@
 import os
 import random
-from HumGen3D.tests.fixtures import finalize_phase_human as human, context
-from human.base.exceptions import HumGenException
+
+from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.tests.fixtures import context
+from HumGen3D.tests.fixtures import finalize_phase_human as human
 
 
 def test_facial_rig(human, context):
@@ -9,12 +11,12 @@ def test_facial_rig(human, context):
     human.finalize_phase.expression.load_facial_rig(context)
 
     for bone_name in human.finalize_phase.expression._get_frig_bones():
-        assert not human.pose_bones.get(bone_name).hide
+        assert not human.pose_bones.get(bone_name).bone.hide
 
     human.finalize_phase.expression.remove_facial_rig()
 
     for bone_name in human.finalize_phase.expression._get_frig_bones():
-        assert human.pose_bones.get(bone_name).hide
+        assert human.pose_bones.get(bone_name).bone.hide
 
     try:
         human.finalize_phase.expression.remove_facial_rig()

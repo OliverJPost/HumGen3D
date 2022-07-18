@@ -1,12 +1,8 @@
 import random
-from typing import TYPE_CHECKING
+from HumGen3D.tests.fixtures import finalize_phase_human as human, context
 
 
-if TYPE_CHECKING:
-    from human.human import Human
-
-
-def test_pose_set(human: Human, context):
+def test_pose_set(human, context):
     current_rots = [bone.rotation_euler for bone in human.pose_bones]
     options = human.finalize_phase.pose.get_options()
     chosen = random.choice(options)

@@ -377,8 +377,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
 
     # patterns
     pcoll_patterns: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "patterns"),
-        update=None,  # FIXME load_pattern,
+        items=get_items("finalize_phase.outfit.pattern"),
+        update=update("finalize_phase.outfit.pattern"),
     )
     patterns_sub: EnumProperty(
         name="Pattern Library",
