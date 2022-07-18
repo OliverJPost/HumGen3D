@@ -24,9 +24,9 @@ def human_with_outfit(human):
     yield human
 
 
-def test_remove_outfit(human_with_outfit):
+def test_remove_outfit(human_with_outfit, context):
     old_child_count = len(list(human_with_outfit.children))
-    human_with_outfit.finalize_phase.outfit.remove()
+    human_with_outfit.finalize_phase.outfit.remove(context)
 
     assert len(list(human_with_outfit.children)) < old_child_count
 
