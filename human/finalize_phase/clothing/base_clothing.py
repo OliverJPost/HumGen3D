@@ -9,15 +9,15 @@ from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
 from HumGen3D.human.base.collections import add_to_collection
+from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
 from HumGen3D.human.finalize_phase import clothing
+from HumGen3D.human.finalize_phase.clothing.pattern import PatternSettings
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 
 
 def find_masks(obj) -> list:
@@ -40,6 +40,10 @@ def find_masks(obj) -> list:
 
 
 class BaseClothing(PreviewCollectionContent):
+    @property
+    def pattern(self) -> PatternSettings:
+        return PatternSettings(self._human)
+
     @injected_context
     def set(self, preset, context=None):
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
@@ -387,29 +391,6 @@ class BaseClothing(PreviewCollectionContent):
             new_image = bpy.data.images.load(new_path, check_existing=True)
             node.image = new_image
             new_image.colorspace_settings.name = old_color_setting
-
-    def load_pattern(self, context):
-        """
-        Loads the pattern that is the current active item in the patterns preview_collection
-        """
-        pref = get_prefs()
-        mat = context.object.active_material
-
-        # finds image node, returns error if for some reason the node doesn't exist
-        try:
-            img_node = mat.node_tree.nodes["HG_Pattern"]
-        except KeyError:
-            self.report(
-                {"WARNING"},
-                "Couldn't find pattern node, click 'Remove pattern' and try to add it again",
-            )
-            return
-
-        filepath = str(pref.filepath) + str(Path(context.scene.HG3D.pcoll_patterns))
-        images = bpy.data.images
-        pattern = images.load(filepath, check_existing=True)
-
-        img_node.image = pattern
 
     @injected_context
     def randomize_colors(self, cloth_obj, context=None):

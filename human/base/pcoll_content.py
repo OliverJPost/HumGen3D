@@ -1,4 +1,5 @@
 import os
+import random
 from typing import List, Tuple
 
 from HumGen3D.backend.preference_func import get_prefs
@@ -21,8 +22,15 @@ class PreviewCollectionContent:
         except TypeError:
             self.set(active_item)
 
+    def set_random(self, context=None):
+        options = self.get_options()
+        chosen = random.choice(options)
+
+        # Use indirect way so the UI reflects the chosen item
+        setattr(context.HG3D, f"pcoll_{self.pcoll_name}", chosen)
+
     def get_options(self) -> List[Tuple[str, str, str, int]]:
-        return [option[0] for option in self._get_full_options(None)]
+        return [option[0] for option in self._get_full_options()]
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""

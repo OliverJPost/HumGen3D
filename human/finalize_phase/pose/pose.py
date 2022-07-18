@@ -9,6 +9,8 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 class PoseSettings(PreviewCollectionContent):
     def __init__(self, _human):
         self._human = _human
+        self._pcoll_name = "poses"
+        self._pcoll_gender_split = False
 
     @injected_context
     def set(self, preset, context=None):
