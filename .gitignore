@@ -13,3 +13,4 @@ mypy.ini
 debug.log
 /.idea
 /.pytest_cache
+.coverage
