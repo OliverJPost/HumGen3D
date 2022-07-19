@@ -24,7 +24,7 @@ def __create_all_starting_humans(context):
     pcoll_list = context.scene.HG3D["previews_list_humans"]
 
     for item_name in pcoll_list:
-        context.scene.HG3D.pcoll_humans = item_name
+        context.scene.HG3D.pcoll.humans = item_name
         bpy.ops.hg3d.startcreation()
 
         human = next(obj for obj in bpy.data.objects if obj.HG.ishuman)

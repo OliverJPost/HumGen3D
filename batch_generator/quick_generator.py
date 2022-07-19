@@ -104,9 +104,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         human = Human.from_preset(chosen_preset)
 
         human.creation_phase.body.randomize()
-        human.creation_phase.face.randomize(
-            use_bell_curve=self.gender == "female"
-        )
+        human.creation_phase.face.randomize(use_bell_curve=self.gender == "female")
 
         if self.texture_resolution in ("optimised", "performance"):
             self._set_body_texture_resolution(sett, human.body_obj)
@@ -134,17 +132,17 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         if self.add_clothing:
             try:
-                sett.outfit_sub = self.clothing_category
+                sett.pcoll.outfit_category = self.clothing_category
             except TypeError:
                 hg_log(
                     f'Reverting to "All" outfit category, because \
                     {self.clothing_category} could not be resolved.',
                     level="WARNING",
                 )
-                sett.outfit_sub = "All"
+                sett.pcoll.outfit_category = "All"
 
             set_random_active_in_pcoll(context, sett, "outfit")
-            sett.footwear_sub = "All"
+            sett.pcoll.footwear_cateogry = "All"
             set_random_active_in_pcoll(context, sett, "footwear")
             # FIXME
             # for cloth in human.finalize_phase.outfit.obj_settings:
@@ -160,7 +158,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         if self.add_expression:
             # TODO implement in OOP
-            sett.expressions_sub = self.expressions_category
+            sett.pcoll.expressions_category = self.expressions_category
             set_random_active_in_pcoll(context, sett, "expressions")
             expr_sk = next(
                 (sk for sk in human.shape_keys if sk.name.startswith("expr_")),
@@ -306,9 +304,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             obj.vertex_groups.remove(vg)
 
     def _set_body_texture_resolution(self, sett, hg_body):
-        resolution_tag = (
-            "1K" if self.texture_resolution == "optimised" else "512px"
-        )
+        resolution_tag = "1K" if self.texture_resolution == "optimised" else "512px"
         sett.texture_library = f"Default {resolution_tag}"
 
         nodes = hg_body.data.materials[0].node_tree.nodes
@@ -370,9 +366,9 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
     def _set_pose(self, context, sett, pose_type):
         if pose_type == "t_pose":
             refresh_pcoll(None, context, "poses")
-            sett.pcoll_poses = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
+            sett.pcoll.poses = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
         else:
-            sett.pose_sub = pose_type.capitalize().replace("_", " ")
+            sett.pose_category = pose_type.capitalize().replace("_", " ")
             set_random_active_in_pcoll(context, sett, "poses")
 
     def pick_library(self, context, categ, gender=None):
@@ -382,9 +378,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         if gender:
             library_list = [
-                i
-                for i in collection
-                if i.enabled and getattr(i, f"{gender}_items")
+                i for i in collection if i.enabled and getattr(i, f"{gender}_items")
             ]
         else:
             library_list = [
@@ -394,4 +388,4 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             ]
 
         categ_tag = "outfit" if categ == "clothing" else categ
-        setattr(sett, f"{categ_tag}_sub", random.choice(library_list))
+        setattr(sett.pcoll, f"{categ_tag}_category", random.choice(library_list))

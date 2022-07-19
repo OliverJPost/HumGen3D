@@ -54,6 +54,10 @@ def _get_bpy_classes():
                 if hasattr(obj, "bl_parent_id"):
                     waitlist.append(obj)
                     continue
+                # Register main properties class after subclasses
+                if obj.__name__ == "HG_SETTINGS":
+                    waitlist.append(obj)
+                    continue
 
                 yielded.append(name)
                 yield obj
