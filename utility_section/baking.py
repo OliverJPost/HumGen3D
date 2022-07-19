@@ -7,14 +7,13 @@ Texture baking operators
 import os
 from pathlib import Path
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 
 import bpy
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
 
 from HumGen3D.human.human import Human
-
 
 
 def status_text_callback(header, context):
@@ -165,8 +164,7 @@ class HG_BAKE(bpy.types.Operator):
             # check if next texture belongs to another object
             last_texture = (
                 True
-                if self.bake_enum[self.bake_idx]["texture_name"]
-                != texture_name
+                if self.bake_enum[self.bake_idx]["texture_name"] != texture_name
                 else False
             )
 
@@ -197,14 +195,9 @@ class HG_BAKE(bpy.types.Operator):
 def check_bake_render_settings(context, samples=4, force_cycles=False):
     switched_to_cuda = False
     switched_from_eevee = False
-    if (
-        context.preferences.addons["cycles"].preferences.compute_device_type
-        == "OPTIX"
-    ):
+    if context.preferences.addons["cycles"].preferences.compute_device_type == "OPTIX":
         switched_to_cuda = True
-        context.preferences.addons[
-            "cycles"
-        ].preferences.compute_device_type = "CUDA"
+        context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA"
     if context.scene.render.engine != "CYCLES":
         if force_cycles:
             switched_from_eevee = True
@@ -270,9 +263,7 @@ def get_solidify_state(obj, state):
     return return_value
 
 
-def bake_texture(
-    context, mat, bake_type, naming, image_ext, resolution, export_path
-):
+def bake_texture(context, mat, bake_type, naming, image_ext, resolution, export_path):
     pref = get_prefs()
     sett = context.scene.HG3D
     nodes = mat.node_tree.nodes
@@ -309,9 +300,7 @@ def bake_texture(
     bake_type = "NORMAL" if bake_type == "Normal" else "EMIT"
     bpy.ops.object.bake(type=bake_type)  # , pass_filter={'COLOR'}
 
-    image.filepath_raw = (
-        export_path + str(Path(f"/{image.name}")) + f".{image_ext}"
-    )
+    image.filepath_raw = export_path + str(Path(f"/{image.name}")) + f".{image_ext}"
     image.file_format = image_ext.upper()
     image.save()
 
@@ -361,9 +350,7 @@ def generate_bake_enum(context, selected_humans) -> list:
         )
 
         cloth_objs = [
-            child
-            for child in human.children
-            if "cloth" in child or "shoe" in child
+            child for child in human.children if "cloth" in child or "shoe" in child
         ]
 
         for cloth in cloth_objs:
@@ -389,9 +376,7 @@ def get_bake_export_path(sett, folder_name) -> str:
         if not os.path.exists(export_path):
             os.makedirs(export_path)
     else:
-        export_path = get_prefs().filepath + str(
-            Path(f"/bake_results/{folder_name}")
-        )
+        export_path = get_prefs().filepath + str(Path(f"/bake_results/{folder_name}"))
         if not os.path.exists(export_path):
             os.makedirs(export_path)
 

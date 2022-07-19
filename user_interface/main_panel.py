@@ -5,7 +5,7 @@ from sys import platform
 import addon_utils
 import bpy
 from HumGen3D import bl_info
-from HumGen3D.backend.preference_func import get_prefs  # type: ignore
+from HumGen3D.backend.preferences import get_prefs  # type: ignore
 
 from ..backend.preview_collections import preview_collections
 from ..human.human import Human  # type: ignore

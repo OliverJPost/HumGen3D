@@ -1,6 +1,6 @@
 import bpy
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.feedback_func import show_message
 from HumGen3D.utility_section.utility_functions import (
@@ -38,9 +38,7 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.content_saving_ui = False
 
-        update_tips_from_context(
-            context, sett, sett.content_saving_active_human
-        )
+        update_tips_from_context(context, sett, sett.content_saving_active_human)
         return {"FINISHED"}
 
 
@@ -104,9 +102,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                     "This object is already HG clothing, are you sure you want to redo this process?",
                 )
 
-        update_tips_from_context(
-            context, sett, sett.content_saving_active_human
-        )
+        update_tips_from_context(context, sett, sett.content_saving_active_human)
         return {"FINISHED"}
 
     def _check_if_human_uses_unsaved_shapekeys(self, sett) -> list:
@@ -243,9 +239,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             if tab_idx == 0:
                 self._draw_particle_system_selection_ui(context, layout)
             elif tab_idx == 1:
-                self._draw_thumbnail_selection_ui(
-                    context, layout, content_type
-                )
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 2:
                 self._draw_hairtype_ui(context, layout)
             elif tab_idx == 3:
@@ -254,9 +248,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
                 self._draw_name_ui(context, layout, content_type)
         elif content_type == "starting_human":
             if tab_idx == 0:
-                self._draw_thumbnail_selection_ui(
-                    context, layout, content_type
-                )
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 1:
                 self._draw_name_ui(context, layout, content_type)
         elif content_type == "shapekeys":
@@ -270,18 +262,14 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             elif tab_idx == 1:
                 self._draw_clothing_uilist_ui(context, layout)
             elif tab_idx == 2:
-                self._draw_thumbnail_selection_ui(
-                    context, layout, content_type
-                )
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 3:
                 self._draw_clothing_gender_ui(context, layout)
             elif tab_idx == 4:
                 self._draw_name_ui(context, layout, content_type)
         elif content_type == "pose":
             if tab_idx == 0:
-                self._draw_thumbnail_selection_ui(
-                    context, layout, content_type
-                )
+                self._draw_thumbnail_selection_ui(context, layout, content_type)
             elif tab_idx == 1:
                 self._draw_pose_category_ui(context, layout)
             elif tab_idx == 2:
@@ -295,9 +283,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
                 if sett.mtc_not_in_a_pose:
                     self._not_in_A_pose_ui(context, layout)
                 else:
-                    self._confirm_object_is_in_correct_position(
-                        context, layout
-                    )
+                    self._confirm_object_is_in_correct_position(context, layout)
             elif tab_idx == 3:
                 self._draw_mesh_to_cloth_mask_ui(context, layout)
             elif tab_idx == 4:
@@ -475,10 +461,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
 
         active_human = Human.from_existing(context.object).rig_obj
         try:
-            if (
-                active_human
-                and active_human != sett.content_saving_active_human
-            ):
+            if active_human and active_human != sett.content_saving_active_human:
                 row = layout.row()
                 row.alert = True
                 row.label(
@@ -527,9 +510,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         """
         sett = self.sett
 
-        self._draw_header_box(
-            layout, "Is this style facial hair?", "COMMUNITY"
-        )
+        self._draw_header_box(layout, "Is this style facial hair?", "COMMUNITY")
 
         col = layout.column()
         col.scale_y = 1.5
@@ -556,9 +537,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         row = col.row(align=True)
         hg_icons = preview_collections["hg_icons"]
 
-        row.operator(
-            "hg3d.ulrefresh", text="Refresh hairsystems"
-        ).type = "hair"
+        row.operator("hg3d.ulrefresh", text="Refresh hairsystems").type = "hair"
         row.prop(
             self.sett,
             "show_eyesystems",
@@ -697,15 +676,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             layout (UILayout): layout to draw tab in
         """
         sett = self.sett
-        self._draw_header_box(
-            layout, "Select shapekeys to save", "SHAPEKEY_DATA"
-        )
+        self._draw_header_box(layout, "Select shapekeys to save", "SHAPEKEY_DATA")
 
         col = layout.column(align=True)
 
-        col.operator(
-            "hg3d.ulrefresh", text="Refresh shapekeys"
-        ).type = "shapekeys"
+        col.operator("hg3d.ulrefresh", text="Refresh shapekeys").type = "shapekeys"
         col.template_list(
             "HG_UL_SHAPEKEYS",
             "",
@@ -736,9 +711,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             "CHECKMARK",
         )
 
-        layout.label(
-            text=sett.content_saving_object.name, icon="OBJECT_DATAMODE"
-        )
+        layout.label(text=sett.content_saving_object.name, icon="OBJECT_DATAMODE")
 
         layout.label(text="Is this correct?")
         col = layout.column()
@@ -829,9 +802,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         default = ("lower_short",)
 
         mask_props = [
-            f"mask_{i}"
-            for i in range(10)
-            if f"mask_{i}" in sett.content_saving_object
+            f"mask_{i}" for i in range(10) if f"mask_{i}" in sett.content_saving_object
         ]
         if mask_props:
             col.separator()
@@ -872,9 +843,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             col = box.column()
             col.use_property_split = True
             col.use_property_decorate = False
-            col.prop(
-                nodes["HG_Control"].inputs[4], "default_value", text="Color"
-            )
+            col.prop(nodes["HG_Control"].inputs[4], "default_value", text="Color")
 
             col.prop(nodes["Mapping"].inputs[3], "default_value", text="Scale")
 
@@ -893,15 +862,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             return
 
         layout.label(text=node_name)
-        layout.template_ID(
-            image_node, "image", new="image.new", open="image.open"
-        )
+        layout.template_ID(image_node, "image", new="image.new", open="image.open")
 
     def _mesh_to_cloth_corrective_shapekeys_ui(self, context, layout):
         """Show tab to add corrective shapekeys to the clothing."""
-        self._draw_header_box(
-            layout, "Add corrective shapekeys.", "SHAPEKEY_DATA"
-        )
+        self._draw_header_box(layout, "Add corrective shapekeys.", "SHAPEKEY_DATA")
         sett = context.scene.HG3D
 
         cloth_obj = sett.content_saving_object
@@ -927,9 +892,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             col = layout.column()
             col.scale_y = 1.5
             col.prop(sett, "shapekey_calc_type", text="")
-            col.operator(
-                "hg3d.addcorrective", text="Generate corrective shapekeys"
-            )
+            col.operator("hg3d.addcorrective", text="Generate corrective shapekeys")
             self._draw_next_button(layout, poll=False)
 
     def _mesh_to_cloth_weight_paint_ui(self, context, layout):
@@ -994,6 +957,4 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
 
         cloth_obj = context.scene.HG3D.content_saving_object
 
-        self._draw_next_button(
-            layout, poll="transformed_to_a_pose" in cloth_obj
-        )
+        self._draw_next_button(layout, poll="transformed_to_a_pose" in cloth_obj)

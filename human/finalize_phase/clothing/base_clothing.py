@@ -6,7 +6,7 @@ from typing import Tuple
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context

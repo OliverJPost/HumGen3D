@@ -6,7 +6,7 @@ from pathlib import Path
 
 import bpy
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.user_interface.feedback_func import show_message
@@ -203,9 +203,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
 class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     bl_idname = "hg3d.prepare_for_arkit"
     bl_label = "Prepare for ARKit"
-    bl_description = (
-        "Removes drivers and adds single keyframe to all FACS shapekeys"
-    )
+    bl_description = "Removes drivers and adds single keyframe to all FACS shapekeys"
     bl_options = {"UNDO"}
 
     suffix: bpy.props.EnumProperty(

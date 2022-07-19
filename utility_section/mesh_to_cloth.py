@@ -3,9 +3,12 @@ from pathlib import Path
 
 import bpy
 from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.human.base.shapekey_calculator import build_distance_dict, deform_obj_from_difference
+from HumGen3D.human.base.shapekey_calculator import (
+    build_distance_dict,
+    deform_obj_from_difference,
+)
 from HumGen3D.human.human import Human  # type: ignore
 from mathutils import Matrix
 
@@ -57,9 +60,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
                         {"object": cloth_obj}, modifier=armature.name
                     )
             else:
-                bpy.ops.object.modifier_move_to_index(
-                    modifier=armature.name, index=0
-                )
+                bpy.ops.object.modifier_move_to_index(modifier=armature.name, index=0)
 
         if self.sett.mtc_parent:
             cloth_obj.parent = self.hg_rig
@@ -118,8 +119,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
         if body_copy.data.shape_keys:
             remove_list = [
-                driver
-                for driver in body_copy.data.shape_keys.animation_data.drivers
+                driver for driver in body_copy.data.shape_keys.animation_data.drivers
             ]
             for driver in remove_list:
                 body_copy.data.shape_keys.animation_data.drivers.remove(driver)
@@ -154,7 +154,6 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
         cloth_sks = cloth_obj.data.shape_keys.key_blocks
         human.finalize_phase.outfit._set_cloth_corrective_drivers(cloth_obj, cloth_sks)
-
 
         hg_delete(body_copy)
         cloth_obj.select_set(True)
@@ -219,9 +218,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_idname = "hg3d.addclothmat"
     bl_label = "Add clothing material"
-    bl_description = (
-        "Adds the default HumGen clothing material for you to set up"
-    )
+    bl_description = "Adds the default HumGen clothing material for you to set up"
     bl_options = {"UNDO"}
 
     def execute(self, context):
@@ -333,9 +330,7 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
         for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.startswith("cor"):
                 sk.mute = True
-        distance_dict = (
-            build_distance_dict(hg_body_eval, cloth_obj)
-        )
+        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)
         deform_obj_from_difference(
             "Test sk", distance_dict, hg_body, cloth_obj, as_shapekey=False
         )

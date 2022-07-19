@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.human import Human
 
 from .panel_functions import (
@@ -179,9 +179,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
         col = layout.column()
         col.label(text="Select modifiers to be applied:")
-        col.operator(
-            "hg3d.ulrefresh", text="Refresh modifiers"
-        ).type = "modapply"
+        col.operator("hg3d.ulrefresh", text="Refresh modifiers").type = "modapply"
         col.template_list(
             "HG_UL_MODAPPLY",
             "",
@@ -211,9 +209,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
         col_h = col.column()
         col_h.scale_y = 1.5
-        col_h.operator(
-            "hg3d.modapply", text="Apply selected modifiers", depress=True
-        )
+        col_h.operator("hg3d.modapply", text="Apply selected modifiers", depress=True)
 
     def _draw_warning_labels(self, context, layout) -> bool:
         """Draws warning labels if no human selected or in creation phase

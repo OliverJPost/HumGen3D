@@ -1,6 +1,6 @@
 from calendar import c
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import refresh_pcoll
 
 from HumGen3D.user_interface.info_popups import HG_OT_INFO
@@ -146,9 +146,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         human = Human.from_existing(context.object)
         sett = context.scene.HG3D
         sett.ui_phase = (
-            "closed"
-            if sett.ui_phase == self.section_name
-            else self.section_name
+            "closed" if sett.ui_phase == self.section_name else self.section_name
         )
         # PCOLL add here
         categ_dict = {
@@ -360,9 +358,7 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
 
         sett.content_saving_tab_index += 1 if self.next else -1
 
-        update_tips_from_context(
-            context, sett, sett.content_saving_active_human
-        )
+        update_tips_from_context(context, sett, sett.content_saving_active_human)
 
         return {"FINISHED"}
 

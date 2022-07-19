@@ -1,6 +1,6 @@
 import time
 
-from .preference_func import get_prefs
+from .preferences import get_prefs
 
 
 def hg_log(*message, level="INFO"):

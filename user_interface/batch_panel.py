@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import (
     get_hg_icon,
     preview_collections,
@@ -51,9 +51,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
         col = col.column(align=True)
         if sett.batch_idx:
-            col.prop(
-                sett, "batch_progress", text=f"Building Human {sett.batch_idx}"
-            )
+            col.prop(sett, "batch_progress", text=f"Building Human {sett.batch_idx}")
         else:
             col.alert = True
             col.operator(
@@ -69,9 +67,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             "batch_performance_statistics",
             text="Performance statistics:",
             emboss=False,
-            icon="TRIA_DOWN"
-            if sett.batch_performance_statistics
-            else "TRIA_RIGHT",
+            icon="TRIA_DOWN" if sett.batch_performance_statistics else "TRIA_RIGHT",
         )
         if sett.batch_performance_statistics:
             box.separator()
@@ -224,9 +220,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
         if sett.batch_height_system == "imperial":
             length_feet = length_m / 0.3048
             length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
-            length_label = (
-                str(int(length_feet)) + "' " + str(length_inches) + '"'
-            )
+            length_label = str(int(length_feet)) + "' " + str(length_inches) + '"'
         else:
             # Add 0 for vertical alignment if float has 1 decimal
             alignment = "0 " if len(str(length_m)) == 3 else " "
@@ -273,21 +267,15 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         col_e = col_header.column()
         col_e.enabled = sett.batch_apply_shapekeys
         col_e.prop(sett, "batch_apply_armature_modifier", text="Armature")
-        col_e.prop(
-            sett, "batch_apply_clothing_geometry_masks", text="Geometry masks"
-        )
+        col_e.prop(sett, "batch_apply_clothing_geometry_masks", text="Geometry masks")
         # col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
 
         col.separator()
 
         col.label(text="Clothing:", icon="MOD_CLOTH")
         col_header = col.column(heading="Remove")
-        col_header.prop(
-            sett, "batch_remove_clothing_subdiv", text="Subdivisions"
-        )
-        col_header.prop(
-            sett, "batch_remove_clothing_solidify", text="Solidify"
-        )
+        col_header.prop(sett, "batch_remove_clothing_subdiv", text="Subdivisions")
+        col_header.prop(sett, "batch_remove_clothing_solidify", text="Solidify")
 
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
@@ -337,9 +325,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align=True)
         box = col.box().row()
         box.label(text="Select libraries:")
-        box.operator(
-            "hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH"
-        )
+        box.operator("hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH")
 
         # col.scale_y = 1.5
         row = col.row(align=False)
@@ -384,9 +370,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         col = layout.column(align=True)
         box = col.box().row()
         box.label(text="Select libraries:")
-        box.operator(
-            "hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH"
-        )
+        box.operator("hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH")
         col = col.column()
         col.template_list(
             "HG_UL_BATCH_EXPRESSIONS",
@@ -398,11 +382,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         )
 
         count = sum(
-            [
-                item.count
-                for item in context.scene.batch_expressions_col
-                if item.enabled
-            ]
+            [item.count for item in context.scene.batch_expressions_col if item.enabled]
         )
         if count == 0:
             col.alert = True
