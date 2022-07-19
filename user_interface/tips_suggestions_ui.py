@@ -2,7 +2,7 @@ import json
 import os
 
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import preview_collections
 from HumGen3D.user_interface.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
     get_batch_tips_from_context,
@@ -119,15 +119,11 @@ def _draw_tips_bloc(layout, tip_item):
             emboss=False,
         )
         if tip_item.operator_keyword:
-            setattr(
-                operator, tip_item.operator_keyword, tip_item.operator_argument
-            )
+            setattr(operator, tip_item.operator_keyword, tip_item.operator_argument)
 
 
 def update_tips_from_context(context, sett, hg_rig):
-    hg_area = (
-        "content_saving" if sett.content_saving_ui else sett.active_ui_tab
-    )
+    hg_area = "content_saving" if sett.content_saving_ui else sett.active_ui_tab
     if hg_rig:
         phase = in_creation_phase(hg_rig)
 

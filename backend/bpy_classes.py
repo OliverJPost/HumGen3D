@@ -31,9 +31,9 @@ def _get_bpy_classes():
     yielded = []
     for root, f in py_files:
         abspath = os.path.join(root, f)
-        rel_path_split = os.path.normpath(
-            os.path.relpath(abspath, dir_path)
-        ).split(os.sep)
+        rel_path_split = os.path.normpath(os.path.relpath(abspath, dir_path)).split(
+            os.sep
+        )
         module_import_path = ".".join(rel_path_split)
 
         mod = __import__(
@@ -44,6 +44,9 @@ def _get_bpy_classes():
         waitlist = []
         for name, obj in inspect.getmembers(mod):
             if inspect.isclass(obj) and issubclass(obj, bpy_classes):
+                # Check if the class is actually from the HumGen3D module
+                if not obj.__module__.split(".")[0] == "HumGen3D":
+                    continue
                 # Skip classes that have been yielded previously
                 if name in yielded:
                     continue

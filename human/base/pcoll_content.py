@@ -2,7 +2,7 @@ import os
 import random
 from typing import List, Tuple
 
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import preview_collections
 from HumGen3D.human.base.decorators import injected_context
 

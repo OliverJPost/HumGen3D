@@ -19,7 +19,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.backend.preview_collections import preview_collections
 from HumGen3D.backend.update import check_update
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
