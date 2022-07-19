@@ -151,20 +151,10 @@ def searchbox(sett, name, layout):
         layout (UILayout): layout to draw search box in
     """
     row = layout.row(align=True)
-    row.prop(sett, "search_term_{}".format(name), text="", icon="VIEWZOOM")
+    row.prop(sett.pcoll, "search_term_{}".format(name), text="", icon="VIEWZOOM")
 
-    sett_dict = {
-        "poses": sett.search_term_poses,
-        "outfit": sett.search_term_outfit,
-        "footwear": sett.search_term_footwear,
-        "expressions": sett.search_term_expressions,
-        "patterns": sett.search_term_patterns,
-    }
-
-    if sett_dict[name] != "":
-        row.operator(
-            "hg3d.clear_searchbox", text="", icon="X"
-        ).searchbox_name = name
+    if hasattr(sett.pcoll, f"search_term_{name}"):
+        row.operator("hg3d.clear_searchbox", text="", icon="X").searchbox_name = name
 
 
 def draw_resolution_box(sett, col, show_batch_comparison=False):

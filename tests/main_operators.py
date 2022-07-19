@@ -95,7 +95,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         context.scene.HG3D.gender = gender
         pcoll_list = context.scene.HG3D["previews_list_humans"]
 
-        context.scene.HG3D.pcoll_humans = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.humans = random.choice(pcoll_list)
 
         bpy.ops.hg3d.startcreation()
 
@@ -217,8 +217,8 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         bpy.ops.hg3d.section_toggle(section_name="hair")
 
         pcoll_list = context.scene.HG3D["previews_list_hair"]
-        context.scene.HG3D.pcoll_hair = random.choice(pcoll_list)
-        context.scene.HG3D.pcoll_hair = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.hair = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.hair = random.choice(pcoll_list)
 
         if self.human.HG.gender == "male":
             pcoll_list = context.scene.HG3D["previews_list_face_hair"]

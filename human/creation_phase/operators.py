@@ -22,7 +22,7 @@ class HG_START_CREATION(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return (
-            context.scene.HG3D.pcoll_humans != "none"
+            context.scene.HG3D.pcoll.humans != "none"
             or context.scene.HG3D.active_ui_tab == "BATCH"
         )
 
@@ -30,7 +30,7 @@ class HG_START_CREATION(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.ui_phase = "body"
 
-        human = Human.from_preset(sett.pcoll_humans, context)
+        human = Human.from_preset(sett.pcoll.humans, context)
         hg_rig = human.rig_obj
         hg_rig.select_set(True)
         context.view_layer.objects.active = hg_rig

@@ -333,7 +333,7 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
         if self.searchbox_name == "cpack_creator":
             get_prefs().cpack_content_search = ""
         else:
-            sett["search_term_{}".format(self.searchbox_name)] = ""
+            sett.pcoll["search_term_{}".format(self.searchbox_name)] = ""
             refresh_pcoll(self, context, self.searchbox_name)
 
         return {"FINISHED"}

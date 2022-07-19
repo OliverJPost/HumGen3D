@@ -30,18 +30,18 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
 
     refresh_pcoll(None, context, pcoll_name)
 
-    current_item = sett["pcoll_{}".format(pcoll_name)]
+    current_item = sett.pcoll[pcoll_name]
 
     pcoll_list = sett["previews_list_{}".format(pcoll_name)]
     random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
     if not random_item:
-        setattr(sett, f"{pcoll_name}_sub", "All")
+        setattr(sett.pcoll, f"{pcoll_name}_category", "All")
         refresh_pcoll(None, context, pcoll_name)
         pcoll_list = sett["previews_list_{}".format(pcoll_name)]
         random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
-    setattr(sett, f"pcoll_{pcoll_name}", random_item)
+    setattr(sett.pcoll, pcoll_name, random_item)
 
 
 def get_random_from_list(lst, current_item, searchterm) -> Any:
@@ -86,13 +86,13 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     Returns:
         list: enum with items for this preview collection
     """
-    pcoll = preview_collections.get("pcoll_{}".format(pcoll_type))
+    pcoll = preview_collections.get(pcoll_type)
     if not pcoll:
         return [
             ("none", "Reload category below", "", 0),
         ]
 
-    return pcoll["pcoll_{}".format(pcoll_type)]
+    return pcoll[pcoll_type]
 
 
 def refresh_pcoll(
@@ -121,7 +121,7 @@ def refresh_pcoll(
         gender_override,
         hg_rig=hg_rig,
     )
-    sett["pcoll_{}".format(pcoll_name)] = "none"  # set the preview collection to
+    sett.pcoll[pcoll_name] = "none"  # set the preview collection to
     # the 'click here to select' item
 
     sett.load_exception = False
@@ -193,8 +193,8 @@ def _populate_pcoll(
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equals None
-    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
-    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
+    pcoll = preview_collections.setdefault(pcoll_categ)
+    pcoll = preview_collections.setdefault(pcoll_categ)
 
     none_thumb = _load_thumbnail("pcoll_placeholder", pcoll)
     pcoll_enum = [("none", "", "", none_thumb.icon_id, 0)]
@@ -207,7 +207,7 @@ def _populate_pcoll(
         empty_thumb = _load_thumbnail("pcoll_empty", pcoll)
         pcoll_enum = [("none", "", "", empty_thumb.icon_id, 0)]
 
-    pcoll["pcoll_{}".format(pcoll_categ)] = pcoll_enum
+    pcoll[pcoll_categ] = pcoll_enum
     sett["previews_list_{}".format(pcoll_categ)] = path_list
     pcoll["previews_dir_{}".format(pcoll_categ)] = pcoll_full_dir
 
@@ -226,7 +226,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]"
             str: directory of preview collection items. Relative from HumGen filepath
             str: subdirectory, based on user selection. Relative from cateG_dir
     """
-    dir_categ_dict = {
+    pcoll_dir_dict = {
         "poses": "poses",
         "outfit": "outfits/{}".format(gender),
         "hair": "hair/head/{}".format(gender),
@@ -237,19 +237,19 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]"
         "patterns": "patterns",
         "textures": "textures/{}".format(gender),
     }
-    categ_dir = dir_categ_dict[pcoll_categ]
-    dir_sub_dict = {
-        "poses": sett.pose_sub,
-        "outfit": sett.outfit_sub,
-        "hair": sett.hair_sub,
-        "face_hair": sett.face_hair_sub,
-        "expressions": sett.expressions_sub,
+    categ_dir = pcoll_dir_dict[pcoll_categ]
+    dir_category_dict = {
+        "poses": sett.pcoll.pose_category,
+        "outfit": sett.pcoll.outfit_category,
+        "hair": sett.pcoll.hair_category,
+        "face_hair": sett.pcoll.face_hair_category,
+        "expressions": sett.pcoll.expressions_category,
         "humans": "All",
-        "footwear": sett.footwear_sub,
-        "patterns": sett.patterns_sub,
-        "textures": sett.texture_library,
+        "footwear": sett.pcoll.footwear_category,
+        "patterns": sett.pcoll.patterns_category,
+        "textures": sett.pcoll.texture_library,
     }
-    subcateg_dir = dir_sub_dict[pcoll_categ]
+    subcateg_dir = dir_category_dict[pcoll_categ]
 
     return categ_dir, subcateg_dir
 
@@ -402,17 +402,10 @@ def _get_search_term(pcoll_type, sett) -> str:
     Returns:
         str: search term, filenames that include this search term will be loaded
     """
-    search_term_dict = {
-        "poses": sett.search_term_poses,
-        "expressions": sett.search_term_expressions,
-        "outfit": sett.search_term_outfit,
-        "patterns": sett.search_term_patterns,
-        "footwear": sett.search_term_footwear,
-    }
-
-    search_term = search_term_dict[pcoll_type] if pcoll_type in search_term_dict else ""
-
-    return search_term
+    try:
+        return getattr(sett.pcoll, f"{pcoll_type}_category")
+    except AttributeError:
+        return ""
 
 
 def get_hg_icon(icon_name) -> int:

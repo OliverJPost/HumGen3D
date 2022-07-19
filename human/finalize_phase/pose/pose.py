@@ -65,7 +65,7 @@ class PoseSettings(PreviewCollectionContent):
         if not hg_pose:
             hg_log(
                 "Could not load pose:",
-                context.scene.HG3D.pcoll_poses,
+                context.scene.HG3D.pcoll.poses,
                 level="WARNING",
             )
 

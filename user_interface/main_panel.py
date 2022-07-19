@@ -47,9 +47,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         self.sett = context.scene.HG3D
         self.pref = get_prefs()
 
-        self.human = Human.from_existing(
-            context.active_object, strict_check=False
-        )
+        self.human = Human.from_existing(context.active_object, strict_check=False)
 
         found_problem = self.draw_info_and_warning_labels(context, layout)
         if found_problem:
@@ -148,9 +146,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         layout.alert = True
         layout.label(text="No filepath selected")
         layout.label(text="Select one in the preferences")
-        layout.operator(
-            "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
-        )
+        layout.operator("hg3d.openpref", text="Open preferences", icon="PREFERENCES")
 
         return True
 
@@ -230,9 +226,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     def _welcome_menu(self, layout):
         col = layout.column()
         col.scale_y = 4
-        col.operator(
-            "hg3d.showinfo", text="Welcome to Human Generator!", depress=True
-        )
+        col.operator("hg3d.showinfo", text="Welcome to Human Generator!", depress=True)
 
         col_h = col.column(align=True)
         col_h.scale_y = 0.5
@@ -308,9 +302,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         if human:
             box = col.box()
-            hair_systems = self._get_hair_systems(
-                human.body_obj, eyesystems=True
-            )
+            hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
             self._draw_hair_children_switch(hair_systems, box)
 
     def _experimental_mode_button(self, hg_rig, row_h):
@@ -354,8 +346,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="Select a starting human")
         col.template_icon_view(
-            self.sett,
-            "pcoll_humans",
+            self.sett.pcoll,
+            "humans",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -519,9 +511,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column()
         col.scale_y = 1.5
         row = col.row(align=True)
-        row.operator(
-            "hg3d.random", text="Randomize all"
-        ).random_type = "face_all"
+        row.operator("hg3d.random", text="Randomize all").random_type = "face_all"
         row.operator("hg3d.resetface", text="", icon="LOOP_BACK")
 
         col = box.column(align=True)
@@ -547,9 +537,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         hg_body = self.human.body_obj
         face_sks = [
-            sk
-            for sk in hg_body.data.shape_keys.key_blocks
-            if sk.name.startswith("ff")
+            sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith("ff")
         ]
         prefix_dict = {
             "ff_a": (flow_u_skull, sett.ui_u_skull),
@@ -578,9 +566,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         # menu for all shapekeys starting with pr_ (preset) prefix
         if sett.ui_presets:
             for sk in self.human.shape_keys.face_presets:
-                label = (
-                    sk.name.replace("pr_", "").replace("_", " ").capitalize()
-                )
+                label = sk.name.replace("pr_", "").replace("_", " ").capitalize()
                 flow_presets.prop(
                     sk,
                     "value",
@@ -605,9 +591,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         return sk_name.title()
 
-    def _get_ff_col(
-        self, layout, categ_name, is_open_propname
-    ) -> bpy.types.UILayout:
+    def _get_ff_col(self, layout, categ_name, is_open_propname) -> bpy.types.UILayout:
         """Creates a collapsable box for passed shapekey category
 
         Args:
@@ -699,9 +683,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "main_skin_ui", "Main settings"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "main_skin_ui", "Main settings")
         if not is_open:
             return
 
@@ -715,12 +697,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.separator()
         nodes = self.human.skin.nodes
         tone_node = nodes["Skin_tone"]
-        col.prop(
-            tone_node.inputs[1], "default_value", text="Tone", slider=True
-        )
-        col.prop(
-            tone_node.inputs[2], "default_value", text="Redness", slider=True
-        )
+        col.prop(tone_node.inputs[1], "default_value", text="Tone", slider=True)
+        col.prop(tone_node.inputs[2], "default_value", text="Redness", slider=True)
         if len(tone_node.inputs) > 3:
             col.prop(
                 tone_node.inputs[3],
@@ -733,9 +711,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         normal_node = nodes["Normal Map"]
         r_node = nodes["R_Multiply"]
-        col.prop(
-            normal_node.inputs[0], "default_value", text="Normal Strength"
-        )
+        col.prop(normal_node.inputs[0], "default_value", text="Normal Strength")
         col.prop(r_node.inputs[1], "default_value", text="Roughness mult.")
 
         col.separator()
@@ -761,17 +737,15 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
         """
 
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "texture_ui", "Texture sets"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "texture_ui", "Texture sets")
         if not is_open:
             return
 
         col = boxbox.column()
         col.template_icon_view(
-            sett, "pcoll_textures", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
         )
-        col.prop(sett, "texture_library", text="Library")
+        col.prop(sett.pcoll, "texture_library", text="Library")
 
     def _draw_light_dark_subsection(self, sett, box):
         """Collapsable section with sliders for dark and light areas on the skin
@@ -831,9 +805,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = boxbox.column(align=True)
         col.scale_y = 1.2
         col.prop(age_sk, "value", text="Skin sagging [Mesh]", slider=True)
-        col.prop(
-            age_node.inputs[1], "default_value", text="Wrinkles", slider=True
-        )
+        col.prop(age_node.inputs[1], "default_value", text="Wrinkles", slider=True)
 
     def _draw_freckles_subsection(self, sett, box):
         """Collapsable section with sliders for freckles
@@ -843,9 +815,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "freckles_ui", "Freckles"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "freckles_ui", "Freckles")
         if not is_open:
             return
 
@@ -907,9 +877,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
-        flow.prop(
-            makeup_node.inputs["Blush Color"], "default_value", text="Color"
-        )
+        flow.prop(makeup_node.inputs["Blush Color"], "default_value", text="Color")
 
         flow = self._get_skin_flow(boxbox, "Eyeshadow:")
         flow.prop(
@@ -931,9 +899,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
-        flow.prop(
-            makeup_node.inputs["Lipstick Color"], "default_value", text="Color"
-        )
+        flow.prop(makeup_node.inputs["Lipstick Color"], "default_value", text="Color")
 
         flow = self._get_skin_flow(boxbox, "Eyeliner:")
         flow.prop(
@@ -942,9 +908,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
-        flow.prop(
-            makeup_node.inputs["Eyeliner Color"], "default_value", text="Color"
-        )
+        flow.prop(makeup_node.inputs["Eyeliner Color"], "default_value", text="Color")
 
         return  # TODO hide eyebrow section until issue resolved
         flow = self.skin_section_flow(boxbox, "Eyebrows:")
@@ -955,9 +919,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
-        flow.prop(
-            makeup_node.inputs["Eyebrows Color"], "default_value", text="Color"
-        )
+        flow.prop(makeup_node.inputs["Eyebrows Color"], "default_value", text="Color")
 
     def _get_skin_flow(self, layout, label):
         """Generates a property split layout
@@ -987,14 +949,10 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
 
-        if (
-            platform == "darwin"
-        ):  # not compatible with MacOS 8-texture material
+        if platform == "darwin":  # not compatible with MacOS 8-texture material
             return
 
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beautyspots_ui", "Beauty Spots"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "beautyspots_ui", "Beauty Spots")
         if not is_open:
             return
 
@@ -1005,9 +963,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = boxbox.column(align=True)
         col.scale_y = 1.2
-        col.prop(
-            bs_node.inputs[2], "default_value", text="Amount", slider=True
-        )
+        col.prop(bs_node.inputs[2], "default_value", text="Amount", slider=True)
         col.prop(
             opacity_node.inputs[1],
             "default_value",
@@ -1024,9 +980,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beard_shadow_ui", "Beard Shadow"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "beard_shadow_ui", "Beard Shadow")
         if not is_open:
             return
 
@@ -1036,12 +990,8 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         flow = get_flow(sett, boxbox)
         flow.scale_y = 1.2
-        flow.prop(
-            beard_node.inputs[2], "default_value", text="Mustache", slider=True
-        )
-        flow.prop(
-            beard_node.inputs[3], "default_value", text="Beard", slider=True
-        )
+        flow.prop(beard_node.inputs[2], "default_value", text="Mustache", slider=True)
+        flow.prop(beard_node.inputs[3], "default_value", text="Beard", slider=True)
 
     #  ___________    ____  _______     _______.
     # |   ____\   \  /   / |   ____|   /       |
@@ -1075,9 +1025,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.use_property_split = True
         col.use_property_decorate = False
         row = col.row(align=True)
-        row.prop(
-            nodes["HG_Eye_Color"].inputs[2], "default_value", text="Iris Color"
-        )
+        row.prop(nodes["HG_Eye_Color"].inputs[2], "default_value", text="Iris Color")
         row.operator(
             "hg3d.random", text="", icon="FILE_REFRESH"
         ).random_type = "iris_color"
@@ -1131,9 +1079,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         for mod in body_obj.modifiers:
             if (
                 mod.type == "PARTICLE_SYSTEM"
-                and mod.particle_system.name.startswith(
-                    ("Eyebrows", "Eyelashes")
-                )
+                and mod.particle_system.name.startswith(("Eyebrows", "Eyelashes"))
                 and (mod.show_viewport or mod.show_render)
             ):
                 eye_systems.append(mod.particle_system)
@@ -1159,12 +1105,12 @@ class HG_PT_PANEL(bpy.types.Panel):
         hair_systems = self._get_hair_systems(body_obj)
 
         box.template_icon_view(
-            sett, "pcoll_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = box.column()
         col_h.scale_y = 1.5
-        col_h.prop(sett, "hair_sub", text="")
+        col_h.prop(sett.pcoll, "hair_category", text="")
         if hg_rig.HG.gender == "male":
             self._draw_facial_hair_section(box, sett)
 
@@ -1184,20 +1130,18 @@ class HG_PT_PANEL(bpy.types.Panel):
             sett (PropertyGroup): HumGen props
         """
 
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "face_hair_ui", "Face Hair"
-        )
+        is_open, boxbox = draw_sub_spoiler(box, sett, "face_hair_ui", "Face Hair")
         if not is_open:
             return
         col = box.column(align=True)
 
         col.template_icon_view(
-            sett, "pcoll_face_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "face_hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = col.column()
         col_h.scale_y = 1.5
-        col_h.prop(sett, "face_hair_sub", text="")
+        col_h.prop(sett.pcoll, "face_hair_category", text="")
 
     def _draw_hair_children_switch(self, hair_systems, layout):
         """Draws a switch for turning children to render amount or back to 1
@@ -1222,11 +1166,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         row.operator(
             "hg3d.togglechildren",
             text="",
-            icon=(
-                "HIDE_ON"
-                if hair_systems[0].settings.child_nbr <= 1
-                else "HIDE_OFF"
-            ),
+            icon=("HIDE_ON" if hair_systems[0].settings.child_nbr <= 1 else "HIDE_OFF"),
         )
 
         row.separator()
@@ -1263,9 +1203,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
             row = flow.row()
             row.prop(ps.settings, "child_length", text=ps_name)
-            row.operator(
-                "hg3d.removehair", text="", icon="TRASH"
-            ).hair_system = ps.name
+            row.operator("hg3d.removehair", text="", icon="TRASH").hair_system = ps.name
 
     def _draw_hair_material_ui(self, box):
         """draws subsection with sliders for the three hair materials
@@ -1287,9 +1225,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         gender = self.human.gender
 
         categ = (
-            self.sett.hair_mat_male
-            if gender == "male"
-            else self.sett.hair_mat_female
+            self.sett.hair_mat_male if gender == "male" else self.sett.hair_mat_female
         )
 
         mat_names = {
@@ -1333,9 +1269,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             text="Redness",
             slider=True,
         )
-        col.prop(
-            hair_node.inputs["Roughness"], "default_value", text="Roughness"
-        )
+        col.prop(hair_node.inputs["Roughness"], "default_value", text="Roughness")
 
         if "Hue" in hair_node.inputs:
             col.prop(
@@ -1411,9 +1345,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         for mod in body_obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM" and (
                 eyesystems
-                or not mod.particle_system.name.startswith(
-                    ("Eyebrows", "Eyelashes")
-                )
+                or not mod.particle_system.name.startswith(("Eyebrows", "Eyelashes"))
             ):
                 hair_systems.append(mod.particle_system)
 
@@ -1477,9 +1409,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         boxbox = box.box()
 
-        hair_systems = self._get_hair_systems(
-            self.human.body_obj, eyesystems=True
-        )
+        hair_systems = self._get_hair_systems(self.human.body_obj, eyesystems=True)
 
         row = boxbox.row()
         row.alignment = "CENTER"
@@ -1507,12 +1437,12 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_outfit", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "outfit", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "outfit_sub", text="")
+        row_h.prop(sett.pcoll, "outfit_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "outfit"
@@ -1536,12 +1466,12 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_footwear", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "footwear", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "footwear_sub", text="")
+        row_h.prop(sett.pcoll, "footwear_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "footwear"
@@ -1607,12 +1537,12 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "poses", box)
 
         box.template_icon_view(
-            sett, "pcoll_poses", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "poses", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "pose_sub", text="")
+        row_h.prop(sett.pcoll, "pose_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "poses"
@@ -1661,8 +1591,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "expressions", box)
 
         box.template_icon_view(
-            sett,
-            "pcoll_expressions",
+            sett.pcoll,
+            "expressions",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -1670,7 +1600,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "expressions_sub", text="")
+        row_h.prop(sett.pcoll, "expressions_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "expressions"
@@ -1709,9 +1639,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
             row = flow.row(align=True)
             row.prop(sk, "value", text=display_name.capitalize())
-            row.operator(
-                "hg3d.removesk", text="", icon="TRASH"
-            ).shapekey = sk.name
+            row.operator("hg3d.removesk", text="", icon="TRASH").shapekey = sk.name
 
     def _draw_frig_subsection(self, box):
         """draws subsection for adding facial rig
@@ -1845,9 +1773,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not color_group:
             return
 
-        c_random = row.operator(
-            "hg3d.color_random", text="", icon="FILE_REFRESH"
-        )
+        c_random = row.operator("hg3d.color_random", text="", icon="FILE_REFRESH")
         c_random.input_name = node_input.name
         c_random.color_group = color_group
 
@@ -1861,9 +1787,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         flow, _ = self.make_box_flow(layout, "Options", "OPTIONS")
 
         for input_idx, node_input in enumerate(control_node.inputs):
-            if (
-                input_idx > 13 and not node_input.is_linked
-            ) or node_input.name in [
+            if (input_idx > 13 and not node_input.is_linked) or node_input.name in [
                 "Roughness Multiplier",
                 "Normal Strength",
             ]:
@@ -1915,7 +1839,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = p_flow.column(align=False)
         col.scale_y = 0.8
         col.template_icon_view(
-            sett, "pcoll_patterns", show_labels=True, scale=5, scale_popup=6
+            sett.pcoll, "patterns", show_labels=True, scale=5, scale_popup=6
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):
@@ -1928,7 +1852,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         row_h = p_flow.row(align=True)
         row_h.scale_y = 1.5 * 0.8  # quick fix because history
-        row_h.prop(sett, "patterns_sub", text="")
+        row_h.prop(sett.pcoll, "patterns_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "patterns"
@@ -1985,9 +1909,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         if not spoiler_open:
             return
 
-        hair_systems = self._get_hair_systems(
-            self.human.body_obj, eyesystems=True
-        )
+        hair_systems = self._get_hair_systems(self.human.body_obj, eyesystems=True)
 
         self._draw_hair_length_ui(hair_systems, box)
         self._draw_hair_material_ui(box)
