@@ -69,9 +69,7 @@ class BodySettings:
                 z if sc["z"] else bone.scale[2],
             )
 
-    def _get_scaling_data(
-        self, scale, bone_type, return_whole_dict=False
-    ) -> dict:
+    def _get_scaling_data(self, scale, bone_type, return_whole_dict=False) -> dict:
         """Gets the scaling dict that determines how to scale this body part
 
         Args:

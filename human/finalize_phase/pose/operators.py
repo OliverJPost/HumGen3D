@@ -55,9 +55,7 @@ class HG_RIGIFY(bpy.types.Operator):
         self._iterate_children(hg_rig, rigify_rig)
         self._set_HG_props(hg_rig, rigify_rig)
 
-        armature_mod = next(
-            mod for mod in hg_body.modifiers if mod.type == "ARMATURE"
-        )
+        armature_mod = next(mod for mod in hg_body.modifiers if mod.type == "ARMATURE")
         armature_mod.object = rigify_rig
 
         sks = hg_body.data.shape_keys.key_blocks
@@ -109,9 +107,7 @@ class HG_RIGIFY(bpy.types.Operator):
         """
         for child in hg_rig.children:
             child.parent = rigify_rig
-            child_armature = [
-                mod for mod in child.modifiers if mod.type == "ARMATURE"
-            ]
+            child_armature = [mod for mod in child.modifiers if mod.type == "ARMATURE"]
             if child_armature:
                 child_armature[0].object = rigify_rig
                 self._rename_vertex_groups(child)
@@ -151,9 +147,7 @@ class HG_RIGIFY(bpy.types.Operator):
             var = driver.driver.variables[0]
             target = var.targets[0]
             target.id = rigify_rig
-            if target.bone_target.startswith(
-                ("forearm", "upper_arm", "thigh", "foot")
-            ):
+            if target.bone_target.startswith(("forearm", "upper_arm", "thigh", "foot")):
                 target.bone_target = "DEF-" + target.bone_target
 
     def _relink_constraints(self, bone, rigify_rig):

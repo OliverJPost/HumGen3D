@@ -86,9 +86,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         subrow = row
         self._draw_creator_column(item, hg_icons, header, subrow)
 
-        subrow.label(
-            text="Version:" if header else "%s.%s" % tuple(item.pack_version)
-        )
+        subrow.label(text="Version:" if header else "%s.%s" % tuple(item.pack_version))
         subrow.alignment = "LEFT"
 
         self._draw_update_label(item, subrow, header)
@@ -109,9 +107,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         # weblink button
         subrow.operator("wm.url_open", text="", icon="URL").url = item.weblink
         # delete button
-        subrow.operator(
-            "hg3d.cpackdel", text="", icon="TRASH"
-        ).item_name = item.name
+        subrow.operator("hg3d.cpackdel", text="", icon="TRASH").item_name = item.name
 
         # Edit pack button
         if item.creator != "HumGen" or get_prefs().dev_tools:
@@ -163,9 +159,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         if header:
             subrow.label(text="Creator:")
         elif item.creator == "HumGen":
-            subrow.label(
-                text=item.creator, icon_value=hg_icons["HG_icon"].icon_id
-            )
+            subrow.label(text=item.creator, icon_value=hg_icons["HG_icon"].icon_id)
         else:
             subrow.label(text=item.creator, icon=item.icon_name)
 
@@ -190,9 +184,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         subrow.alert = True if upd == "required" else False
         # format version number to string
         vnum = "%s.%s" % tuple(
-            item.latest_version
-            if upd == "available"
-            else item.required_version
+            item.latest_version if upd == "available" else item.required_version
         )
 
         subrow.label(
@@ -289,9 +281,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
             str: alert code
         """
         if not os.path.basename(filepath).startswith("HG_CP"):
-            return (
-                "not_cpack"  # return error code if the prefix is not correct
-            )
+            return "not_cpack"  # return error code if the prefix is not correct
 
         zf = zipfile.ZipFile(filepath)
 
@@ -305,11 +295,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
             # in the correct place
 
         json_path = next(
-            (
-                file
-                for file in cpack_json_files
-                if os.path.splitext(file)[1] == ".json"
-            ),
+            (file for file in cpack_json_files if os.path.splitext(file)[1] == ".json"),
             None,
         )
         if json_path:
@@ -321,9 +307,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
 
         try:
             dirlist = os.listdir(json_folder)
-            if [
-                fn for fn in dirlist if os.path.basename(item.json_path) == fn
-            ]:
+            if [fn for fn in dirlist if os.path.basename(item.json_path) == fn]:
                 return "already_installed"
                 # return error code if a .json already exists in the file
                 # structure with the same name
@@ -352,9 +336,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
     def execute(self, context):
         pref = get_prefs()
         self.files = [
-            file
-            for file in context.scene.installpacks_col
-            if file.alert == "None"
+            file for file in context.scene.installpacks_col if file.alert == "None"
         ]
 
         filepath = pref.filepath
@@ -611,9 +593,7 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
         # remove item from collection
         col.remove(index)
-        context.scene.contentpacks_col_index = min(
-            max(0, index - 1), len(col) - 1
-        )
+        context.scene.contentpacks_col_index = min(max(0, index - 1), len(col) - 1)
 
         self._removeEmptyFolders(pref.filepath)
 
@@ -670,7 +650,5 @@ class HG_DELETE_INSTALLPACK(bpy.types.Operator):
         index = context.scene.installpacks_col_index
 
         col.remove(index)
-        context.scene.installpacks_col_index = min(
-            max(0, index - 1), len(col) - 1
-        )
+        context.scene.installpacks_col_index = min(max(0, index - 1), len(col) - 1)
         return {"FINISHED"}

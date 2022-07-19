@@ -27,9 +27,7 @@ def main():
         if "humgen" in addon.module.lower()
     )
 
-    full_path = os.path.join(
-        hg_addon.preferences.filepath, "batch_result.blend"
-    )
+    full_path = os.path.join(hg_addon.preferences.filepath, "batch_result.blend")
     bpy.ops.wm.save_as_mainfile(filepath=full_path)
 
 
