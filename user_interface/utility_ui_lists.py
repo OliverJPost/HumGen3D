@@ -19,14 +19,10 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
     ):
         enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
         viewport_visible_icon = (
-            "RESTRICT_VIEW_OFF"
-            if item.viewport_visible
-            else "RESTRICT_VIEW_ON"
+            "RESTRICT_VIEW_OFF" if item.viewport_visible else "RESTRICT_VIEW_ON"
         )
         render_visible_icon = (
-            "RESTRICT_RENDER_OFF"
-            if item.render_visible
-            else "RESTRICT_RENDER_ON"
+            "RESTRICT_RENDER_OFF" if item.render_visible else "RESTRICT_RENDER_ON"
         )
 
         row = layout.row(align=True)
@@ -55,8 +51,7 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
             row.label(text="", icon=render_visible_icon)
 
     def _draw_header_row(self, item, row):
-        """header with label for uilists
-        """
+        """header with label for uilists"""
         row.label(text="", icon="BLANK1")
         row.label(text="Type:" if item.count else "Name:", icon="BLANK1")
         row.separator()
@@ -191,4 +186,3 @@ class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
     cor_sks_present: bpy.props.BoolProperty(default=False)
     weight_paint_present: bpy.props.BoolProperty(default=False)
     enabled: bpy.props.BoolProperty(default=False)
-

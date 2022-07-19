@@ -94,20 +94,14 @@ def _set_shader_switches(human, sett):
         return
 
     # body_obj.data.materials[0].node_tree.nodes
-    principled_bsdf = next(
-        node for node in nodes if node.type == "BSDF_PRINCIPLED"
-    )
+    principled_bsdf = next(node for node in nodes if node.type == "BSDF_PRINCIPLED")
     sett.skin_sss = (
-        "off"
-        if principled_bsdf.inputs["Subsurface"].default_value == 0
-        else "on"
+        "off" if principled_bsdf.inputs["Subsurface"].default_value == 0 else "on"
     )
 
     uw_node = nodes.get("Underwear_Opacity")
     if uw_node:
-        sett.underwear_toggle = (
-            "on" if uw_node.inputs[1].default_value == 1 else "off"
-        )
+        sett.underwear_toggle = "on" if uw_node.inputs[1].default_value == 1 else "off"
 
     _hair_shader_type_update(sett, body_obj)
 
@@ -165,9 +159,7 @@ def _refresh_body_scaling(self, sett, human: Human):
         1, "head", return_whole_dict=True
     ).items()
 
-    bone_groups = {
-        group_name: scaling_data["bones"] for group_name, scaling_data in sd
-    }
+    bone_groups = {group_name: scaling_data["bones"] for group_name, scaling_data in sd}
 
     for group_name, bone_group in bone_groups.items():
         if "head" in bone_group:

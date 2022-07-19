@@ -427,6 +427,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
                 icon="INFO",
             )
 
+
 class HG_PT_ICON_LEGEND(bpy.types.Panel):
     """
     Legend popover for the icons used in the ui_list

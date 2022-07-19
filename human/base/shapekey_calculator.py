@@ -6,6 +6,7 @@ from mathutils import Vector, kdtree
 
 import numpy as np
 
+
 def build_distance_dict(source_org, target, apply=True):
     """
     Returns a dict with a key for each vertex of the source and the value the closest vertex of the target and the distance to it
@@ -41,6 +42,7 @@ def build_distance_dict(source_org, target, apply=True):
 
     hg_delete(source)
     return distance_dict
+
 
 def deform_obj_from_difference(
     name,
@@ -85,9 +87,7 @@ def deform_obj_from_difference(
     for vertex_index in distance_dict:
         source_new_vert_loc = (
             deform_target_copy.matrix_world
-            @ deform_target_copy.data.vertices[
-                distance_dict[vertex_index][0]
-            ].co
+            @ deform_target_copy.data.vertices[distance_dict[vertex_index][0]].co
         )
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc = source_new_vert_loc - distance_to_vert

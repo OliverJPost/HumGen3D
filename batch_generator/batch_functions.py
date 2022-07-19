@@ -147,9 +147,7 @@ def calculate_batch_statistics(sett):
 
     cycles_time_total = to_percentage(4.40, cycles_time)
     cycles_time_tags = {"Fastest": 95, "Fast": 100, "Normal": 120, "Slow": 150}
-    cycles_time_tag = _get_tag_from_dict(
-        cycles_time_total, cycles_time_tags, "Slowest"
-    )
+    cycles_time_tag = _get_tag_from_dict(cycles_time_total, cycles_time_tags, "Slowest")
 
     cycles_memory_total = int((563 + cycles_memory) / 3)
     cycles_memory_tags = {
@@ -164,9 +162,7 @@ def calculate_batch_statistics(sett):
 
     eevee_time_total = to_percentage(6.57, eevee_time)
     eevee_time_tags = {"Fastest": 50, "Fast": 70, "Normal": 100, "Slow": 150}
-    eevee_time_tag = _get_tag_from_dict(
-        eevee_time_total, eevee_time_tags, "Slowest"
-    )
+    eevee_time_tag = _get_tag_from_dict(eevee_time_total, eevee_time_tags, "Slowest")
 
     eevee_memory_total = int((1450 + eevee_memory) / 3)
     eevee_memory_tags = {
@@ -206,9 +202,7 @@ def get_batch_marker_list(context) -> list:
         return all_markers
 
     elif marker_selection == "selected":
-        selected_markers = [
-            o for o in all_markers if o in context.selected_objects
-        ]
+        selected_markers = [o for o in all_markers if o in context.selected_objects]
         return selected_markers
 
     else:
@@ -241,4 +235,3 @@ def has_associated_human(marker) -> bool:
             marker["associated_human"].name
         )  # is the object in the current scene
     )
-

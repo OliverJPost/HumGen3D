@@ -113,9 +113,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
             ).run_immediately = True
             return
 
-        context.window_manager.popup_menu(
-            draw, title="This will delete these humans:"
-        )
+        context.window_manager.popup_menu(draw, title="This will delete these humans:")
 
     def modal(self, context, event):
         """Event handling."""
@@ -180,13 +178,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                     sett, f"batch_hair_quality_particle"
                 ),  # {sett.batch_hairtype}'),
                 add_expression=sett.batch_expression,
-                expressions_category=self._choose_category_list(
-                    context, "expressions"
-                ),
+                expressions_category=self._choose_category_list(context, "expressions"),
                 add_clothing=sett.batch_clothing,
-                clothing_category=self._choose_category_list(
-                    context, "outfit"
-                ),
+                clothing_category=self._choose_category_list(context, "outfit"),
                 pose_type=pose_type,
             )
             # FIXME repair return
@@ -222,9 +216,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
     def _cancel(self, sett, context):
         hg_log("Batch modal is cancelling")
-        sett.batch_progress = (
-            sett.batch_progress + (100 - sett.batch_progress) / 2.0
-        )
+        sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
 
         self.finish_modal = True
         context.workspace.status_text_set(status_text_callback)
