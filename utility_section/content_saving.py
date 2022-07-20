@@ -261,11 +261,11 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
 
     def invoke(self, context, event):
         pref = get_prefs()
-        self.sett = context.scene.HG3D
+        self.cc_sett = context.scene.HG3D.custom_content
         self.collection = context.scene.shapekeys_col
 
         self.folder = pref.filepath + str(Path("/models/shapekeys/"))
-        self.name = self.sett.sk_collection_name
+        self.name = self.cc_sett.sk_collection_name
         if os.path.isfile(str(Path(f"{self.folder}/{self.name}.blend"))):
             return context.window_manager.invoke_props_dialog(self)
 
@@ -275,7 +275,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         self.overwrite_warning()
 
     def execute(self, context):
-        hg_rig = self.sett.content_saving_active_human
+        hg_rig = self.cc_sett.content_saving_active_human
 
         data = [item.sk_name for item in self.collection if item.enabled]
 
@@ -310,7 +310,7 @@ class HG_OT_SAVE_SHAPEKEY(bpy.types.Operator, Content_Saving_Operator):
         self.report({"INFO"}, msg)
         ShowMessageBox(message=msg)
 
-        self.sett.content_saving_ui = False
+        self.cc_sett.content_saving_ui = False
 
         return {"FINISHED"}
 
@@ -325,17 +325,17 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
 
     def invoke(self, context, event):
         pref = get_prefs()
-        sett = context.scene.HG3D
-        self.sett = sett
+        cc_sett = context.scene.HG3D.custom_content
+        self.cc_sett = cc_sett
 
-        self.thumb = self.sett.preset_thumbnail_enum
-        if sett.pose_category_to_save_to == "existing":
-            category = sett.pose_chosen_existing_category
+        self.thumb = self.cc_sett.preset_thumbnail_enum
+        if cc_sett.pose_category_to_save_to == "existing":
+            category = cc_sett.pose_chosen_existing_category
         else:
-            category = sett.pose_new_category_name
+            category = cc_sett.pose_new_category_name
 
         self.folder = os.path.join(pref.filepath, "poses", category)
-        self.name = self.sett.pose_name
+        self.name = self.cc_sett.pose_name
 
         if os.path.isfile(os.path.join(self.folder, f"{self.name}.blend")):
             return context.window_manager.invoke_props_dialog(self)
@@ -346,7 +346,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         self.overwrite_warning()
 
     def execute(self, context):
-        hg_rig = self.sett.content_saving_active_human
+        hg_rig = self.cc_sett.content_saving_active_human
 
         pose_object = hg_rig.copy()
         pose_object.data = pose_object.data.copy()
@@ -362,7 +362,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
             self.name,
         )
 
-        if not self.sett.thumbnail_saving_enum == "none":
+        if not self.cc_sett.thumbnail_saving_enum == "none":
             self.save_thumb(self.folder, self.thumb, self.name)
 
         msg = f"Saved {self.name} to {self.folder}"
@@ -373,7 +373,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, "poses")
 
-        self.sett.content_saving_ui = False
+        self.cc_sett.content_saving_ui = False
 
         return {"FINISHED"}
 
@@ -401,13 +401,13 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
 
     def invoke(self, context, event):
         pref = get_prefs()
-        self.sett = context.scene.HG3D
-        self.hg_rig = self.sett.content_saving_active_human
+        self.cc_sett = context.scene.HG3D.custom_content
+        self.hg_rig = self.cc_sett.content_saving_active_human
 
-        self.thumb = self.sett.preset_thumbnail_enum
+        self.thumb = self.cc_sett.preset_thumbnail_enum
 
         self.folder = pref.filepath + str(Path(f"/models/{self.hg_rig.HG.gender}/"))
-        self.name = self.sett.preset_name
+        self.name = self.cc_sett.preset_name
         if os.path.isfile(str(Path(f"{self.folder}/{self.name}.json"))):
             return context.window_manager.invoke_props_dialog(self)
         return self.execute(context)
@@ -422,7 +422,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         hg_body = hg_rig.HG.body_obj
         hg_eyes = [obj for obj in hg_rig.children if "hg_eyes" in obj]
 
-        if not self.sett.thumbnail_saving_enum == "none":
+        if not self.cc_sett.thumbnail_saving_enum == "none":
             self.save_thumb(self.folder, self.thumb, self.name)
 
         preset_data = {}
@@ -455,7 +455,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         self.report({"INFO"}, f"Saved starting human {self.name} to {folder}")
         ShowMessageBox(message=f"Saved starting human {self.name} to {folder}")
 
-        self.sett.content_saving_ui = False
+        self.cc_sett.content_saving_ui = False
 
         context.view_layer.objects.active = hg_rig
         refresh_pcoll(self, context, "humans")
@@ -579,9 +579,9 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
     def invoke(self, context, event):
         pref = get_prefs()
-        self.sett = context.scene.HG3D
+        self.cc_sett = context.scene.HG3D.custom_content
 
-        self.hg_rig = self.sett.content_saving_active_human
+        self.hg_rig = self.cc_sett.content_saving_active_human
         try:
             pass  # TODO unhide_human(self.hg_rig)
         except Exception as e:
@@ -589,10 +589,10 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
             hg_log("Content saving failed, rig could not be found with error: ", e)
             return {"CANCELLED"}
 
-        self.thumb = self.sett.preset_thumbnail_enum
+        self.thumb = self.cc_sett.preset_thumbnail_enum
 
-        self.folder = pref.filepath + str(Path(f"/hair/{self.sett.save_hairtype}/"))
-        self.name = self.sett.hairstyle_name
+        self.folder = pref.filepath + str(Path(f"/hair/{self.cc_sett.save_hairtype}/"))
+        self.name = self.cc_sett.hairstyle_name
         if os.path.isfile(str(Path(f"{self.folder}/{self.name}.blend"))):
             return context.window_manager.invoke_props_dialog(self)
         return self.execute(context)
@@ -601,7 +601,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
         self.overwrite_warning()
 
     def execute(self, context):
-        sett = self.sett
+        sett = self.cc_sett
         pref = get_prefs()
 
         hg_rig = self.hg_rig
@@ -645,7 +645,7 @@ class HG_OT_SAVEHAIR(bpy.types.Operator, Content_Saving_Operator):
 
             if not os.path.exists(folder):
                 os.makedirs(folder)
-            if not self.sett.thumbnail_saving_enum == "none":
+            if not self.cc_sett.thumbnail_saving_enum == "none":
                 self.save_thumb(folder, self.thumb, self.name)
 
             self._make_hair_json(context, hair_obj, folder, self.name)
@@ -779,11 +779,11 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
 
     def invoke(self, context, event):
         self.pref = get_prefs()
-        self.sett = context.scene.HG3D
-        self.hg_rig = self.sett.content_saving_active_human
+        self.cc_sett = context.scene.HG3D.custom_content
+        self.hg_rig = self.cc_sett.content_saving_active_human
         self.col = context.scene.saveoutfit_col
 
-        self.thumb = self.sett.preset_thumbnail_enum
+        self.thumb = self.cc_sett.preset_thumbnail_enum
 
         obj_list_without_suffix = [
             self.remove_number_suffix(item.obj_name) for item in self.col
@@ -795,8 +795,8 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             )
             return {"CANCELLED"}
 
-        self.folder = os.path.join(self.pref.filepath, self.sett.saveoutfit_categ)
-        self.name = self.sett.clothing_name
+        self.folder = os.path.join(self.pref.filepath, self.cc_sett.saveoutfit_categ)
+        self.name = self.cc_sett.clothing_name
 
         if os.path.isfile(
             str(Path(f"{self.folder}/{self.hg_rig.HG.gender}/Custom/{self.name}.blend"))
@@ -810,7 +810,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         self.overwrite_warning()
 
     def execute(self, context):
-        sett = self.sett
+        sett = self.cc_sett
         col = self.col
         objs = [bpy.data.objects[item.obj_name] for item in col]
 
@@ -824,7 +824,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
             gender_folder = self.folder + str(Path(f"/{gender}/Custom"))
             if not os.path.isdir(gender_folder):
                 os.mkdir(gender_folder)
-            if not self.sett.thumbnail_saving_enum == "none":
+            if not self.cc_sett.thumbnail_saving_enum == "none":
                 self.save_thumb(gender_folder, self.thumb, self.name)
 
         body_copy = self.hg_rig.HG.body_obj.copy()
@@ -906,7 +906,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         refresh_pcoll(self, context, "footwear")
 
         show_message(self, "Succesfully exported outfits")
-        self.sett.content_saving_ui = False
+        self.cc_sett.content_saving_ui = False
 
         return {"FINISHED"}
 
@@ -961,7 +961,9 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         if img_name in saved_images:
             return saved_images[img_name], saved_images
 
-        path = self.pref.filepath + str(Path(f"{self.sett.saveoutfit_categ}/textures/"))
+        path = self.pref.filepath + str(
+            Path(f"{self.cc_sett.saveoutfit_categ}/textures/")
+        )
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -998,7 +1000,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
     thumbnail_type: bpy.props.StringProperty()
 
     def execute(self, context):
-        hg_rig = context.scene.HG3D.content_saving_active_human
+        hg_rig = context.scene.HG3D.custom_content.content_saving_active_human
 
         thumbnail_type = self.thumbnail_type
 
@@ -1079,7 +1081,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator, Content_Saving_Operator):
         bpy.data.scenes.remove(hg_thumbnail_scene)
 
         img = bpy.data.images.load(full_image_path)
-        context.scene.HG3D.preset_thumbnail = img
+        context.scene.HG3D.custom_content.preset_thumbnail = img
 
         return {"FINISHED"}
 

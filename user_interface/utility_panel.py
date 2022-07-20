@@ -2,6 +2,7 @@ import bpy
 from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.human import Human
 
+from ..backend.preview_collections import get_hg_icon, preview_collections
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,
@@ -9,10 +10,6 @@ from .panel_functions import (
     in_creation_phase,
 )
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..backend.preview_collections import (
-    get_hg_icon,
-    preview_collections,
-)
 
 
 class Tools_PT_Base:
@@ -58,7 +55,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.active_ui_tab == "TOOLS" and not sett.content_saving_ui
+        return sett.ui.active_tab == "TOOLS" and not sett.content_saving_ui
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)

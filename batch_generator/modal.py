@@ -20,7 +20,7 @@ from .batch_functions import get_batch_marker_list, has_associated_human
 
 
 def status_text_callback(header, context):
-    sett = context.scene.HG3D
+    batch_sett = context.scene.HG3D.batch
     layout = header.layout
 
     layout.separator_spacer()
@@ -29,11 +29,11 @@ def status_text_callback(header, context):
     row = layout.row(align=False)
     row.alignment = "CENTER"
 
-    layout.label(text=f"Building Human {sett.batch_idx}", icon="TIME")
+    layout.label(text=f"Building Human {batch_sett.idx}", icon="TIME")
 
     col = layout.column()
     col.scale_x = 1.6
-    col.prop(sett, "batch_progress")
+    col.prop(batch_sett, "progress")
 
     layout.label(text="Press ESC to cancel", icon="EVENT_ESC")
 
@@ -60,14 +60,14 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
         self.start_time = time.time()
 
     def invoke(self, context, event):
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         markers_with_associated_human = list(
             filter(has_associated_human, self.generate_queue)
         )
 
         if self.run_immediately or not markers_with_associated_human:
-            self._initiate_modal(context, sett)
+            self._initiate_modal(context, batch_sett)
             set_eevee_ao_and_strip(context)
 
             return {"RUNNING_MODAL"}
@@ -75,16 +75,16 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
             self._show_dialog_to_confirm_deleting_humans(context)
             return {"CANCELLED"}
 
-    def _initiate_modal(self, context, sett):
+    def _initiate_modal(self, context, batch_sett):
         wm = context.window_manager
         wm.modal_handler_add(self)
 
-        sett.batch_progress = 0
+        batch_sett.progress = 0
 
         self.human_idx = 0
         self.timer = wm.event_timer_add(0.01, window=context.window)
 
-        sett.batch_idx = 1
+        batch_sett.idx = 1
         context.workspace.status_text_set(status_text_callback)
         context.area.tag_redraw()
 
@@ -118,13 +118,13 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
     def modal(self, context, event):
         """Event handling."""
 
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         if self.finish_modal:
             context.area.tag_redraw()
             context.workspace.status_text_set(text=None)
 
-            sett.batch_idx = 0
+            batch_sett.idx = 0
 
             hg_log(
                 "Batch modal total running time: ",
@@ -135,7 +135,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
             return {"FINISHED"}
 
         elif event.type in ["ESC"]:
-            self._cancel(sett, context)
+            self._cancel(batch_sett, context)
 
             return {"RUNNING_MODAL"}
 
@@ -151,13 +151,13 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
             pose_type = current_marker["hg_batch_marker"]
 
-            generator = self._create_generator_instance(sett)
+            generator = self._create_generator_instance(batch_sett)
             result = generator.generate_in_background(
                 context=context,
                 gender=str(
                     random.choices(
                         ("male", "female"),
-                        weights=(sett.male_chance, sett.female_chance),
+                        weights=(batch_sett.male_chance, batch_sett.female_chance),
                         k=1,
                     )[0]
                 ),
@@ -165,21 +165,21 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                     random.choices(
                         ("caucasian", "black", "asian"),
                         weights=(
-                            sett.caucasian_chance,
-                            sett.black_chance,
-                            sett.asian_chance,
+                            batch_sett.caucasian_chance,
+                            batch_sett.black_chance,
+                            batch_sett.asian_chance,
                         ),
                         k=1,
                     )[0]
                 ),
-                add_hair=sett.batch_hair,
+                add_hair=batch_sett.hair,
                 hair_type="particle",  # sett.batch_hairtype,
                 hair_quality=getattr(
-                    sett, f"batch_hair_quality_particle"
+                    batch_sett, f"hair_quality_particle"
                 ),  # {sett.batch_hairtype}'),
-                add_expression=sett.batch_expression,
+                add_expression=batch_sett.expression,
                 expressions_category=self._choose_category_list(context, "expressions"),
-                add_clothing=sett.batch_clothing,
+                add_clothing=batch_sett.clothing,
                 clothing_category=self._choose_category_list(context, "outfit"),
                 pose_type=pose_type,
             )
@@ -198,9 +198,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
             if self.human_idx > 0:
                 progress = self.human_idx / (len(self.generate_queue))
-                sett.batch_progress = int(progress * 100)
+                batch_sett.progress = int(progress * 100)
 
-            sett.batch_idx += 1
+            batch_sett.idx += 1
             context.workspace.status_text_set(status_text_callback)
 
             return {"RUNNING_MODAL"}
@@ -214,9 +214,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
             hg_delete(child)
         hg_delete(associated_human)
 
-    def _cancel(self, sett, context):
+    def _cancel(self, batch_sett, context):
         hg_log("Batch modal is cancelling")
-        sett.batch_progress = sett.batch_progress + (100 - sett.batch_progress) / 2.0
+        batch_sett.progress = batch_sett.progress + (100 - batch_sett.progress) / 2.0
 
         self.finish_modal = True
         context.workspace.status_text_set(status_text_callback)
@@ -237,7 +237,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
         return random.choice(enabled_categories)
 
-    def _create_generator_instance(self, sett):
+    def _create_generator_instance(self, batch_sett):
         q_names = [
             "delete_backup",
             "apply_shapekeys",
@@ -248,7 +248,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
             "texture_resolution",
         ]
 
-        quality_dict = {n: getattr(sett, f"batch_{n}") for n in q_names}
+        quality_dict = {name: getattr(batch_sett, name) for name in q_names}
 
         generator = HG_Batch_Generator(**quality_dict)
 

@@ -123,7 +123,11 @@ def _draw_tips_bloc(layout, tip_item):
 
 
 def update_tips_from_context(context, sett, hg_rig):
-    hg_area = "content_saving" if sett.content_saving_ui else sett.active_ui_tab
+    hg_area = (
+        "content_saving"
+        if sett.custom_content.content_saving_ui
+        else sett.ui.active_tab
+    )
     if hg_rig:
         phase = in_creation_phase(hg_rig)
 

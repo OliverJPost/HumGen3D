@@ -160,11 +160,6 @@ class BodySettings:
             },
         }
 
-        # if experimental:
-        #     size = (context.scene.HG3D.chest_size + 0.5)
-        # else:
-        #     size = (context.scene.HG3D.chest_size + 2.5)/3
-
         sc = scaling_dict[bone_type]
         if return_whole_dict:
             return scaling_dict

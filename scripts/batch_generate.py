@@ -8,7 +8,7 @@ import bpy
 
 def main():
 
-    bpy.context.scene.HG3D.active_ui_tab = "BATCH"
+    bpy.context.scene.HG3D.ui.active_tab = "BATCH"
     settings_dict = json.loads(sys.argv[4])
 
     for obj in bpy.data.objects[:]:

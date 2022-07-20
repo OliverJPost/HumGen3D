@@ -1,9 +1,10 @@
 import json
 import os
 from pathlib import Path
+
+import bpy  # type: ignore
 from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.human.human import Human
-import bpy  # type: ignore
 
 
 def refresh_modapply(self, context):
@@ -115,7 +116,7 @@ def find_existing_shapekeys(sett, pref):
     existing_sks = [
         "Basis",
     ]
-    if not sett.show_saved_sks:
+    if not sett.custom_content.show_saved_sks:
         walker = os.walk(str(pref.filepath) + str(Path("/models/shapekeys")))
         for root, _, filenames in walker:
             for fn in filenames:
