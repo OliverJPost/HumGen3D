@@ -146,7 +146,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         human = Human.from_existing(context.object)
         sett = context.scene.HG3D
         sett.ui_phase = (
-            "closed" if sett.ui_phase == self.section_name else self.section_name
+            "closed" if sett.ui.phase == self.section_name else self.section_name
         )
         # PCOLL add here
         categ_dict = {

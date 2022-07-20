@@ -10,6 +10,8 @@ class RegularHairSettings(ImportableHair):
     def __init__(self, _human):
         self._human = _human
         self._notstartswith = ("Eye", "ff_")
+        self._pcoll_name = "hair"
+        self._pcoll_gender_split = True
 
     @injected_context
     def get_preset_options(self, context=None):

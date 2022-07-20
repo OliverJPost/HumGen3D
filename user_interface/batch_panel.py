@@ -34,24 +34,26 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.active_ui_tab == "BATCH" and not sett.content_saving_ui
+        return sett.ui.active_tab == "BATCH" and not sett.content_saving_ui
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         col = layout.column(align=True)
         col.scale_y = 1.5
-        col.prop(sett, "batch_marker_selection", text="")
+        col.prop(batch_sett, "marker_selection", text="")
 
         marker_total = len(get_batch_marker_list(context))
 
         col = col.column(align=True)
-        if sett.batch_idx:
-            col.prop(sett, "batch_progress", text=f"Building Human {sett.batch_idx}")
+        if batch_sett.idx:
+            col.prop(
+                batch_sett, "progress", text=f"Building Human {batch_sett.batch_idx}"
+            )
         else:
             col.alert = True
             col.operator(
@@ -63,13 +65,13 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
         box = layout.box().column(align=True)
         box.prop(
-            sett,
-            "batch_performance_statistics",
+            batch_sett,
+            "performance_statistics",
             text="Performance statistics:",
             emboss=False,
-            icon="TRIA_DOWN" if sett.batch_performance_statistics else "TRIA_RIGHT",
+            icon="TRIA_DOWN" if batch_sett.performance_statistics else "TRIA_RIGHT",
         )
-        if sett.batch_performance_statistics:
+        if batch_sett.performance_statistics:
             box.separator()
             row = box.row()
             row.alignment = "CENTER"
@@ -80,7 +82,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             col_l = split.column(align=True)
             col_r = split.column(align=True)
 
-            weight_dict = calculate_batch_statistics(sett)
+            weight_dict = calculate_batch_statistics(batch_sett)
 
             col_l.label(text="Cycles:")
             col_r.label(text=weight_dict["cycles_time"], icon="RENDER_STILL")
@@ -107,19 +109,19 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         col = layout.column(align=True)
 
-        flow = get_flow(sett, col)
+        flow = get_flow(batch_sett, col)
         flow.separator()
-        flow.prop(sett, "male_chance")
-        flow.prop(sett, "female_chance")
+        flow.prop(batch_sett, "male_chance")
+        flow.prop(batch_sett, "female_chance")
         flow.separator()
 
-        flow.prop(sett, "caucasian_chance")
-        flow.prop(sett, "black_chance")
-        flow.prop(sett, "asian_chance")
+        flow.prop(batch_sett, "caucasian_chance")
+        flow.prop(batch_sett, "black_chance")
+        flow.prop(batch_sett, "asian_chance")
 
 
 class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
@@ -136,41 +138,41 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         row = layout.box().row(align=True)
         row.scale_y = 1.5
-        row.prop(sett, "batch_height_system", expand=True)
+        row.prop(batch_sett, "height_system", expand=True)
 
         layout.label(text="Average height:", icon="EMPTY_SINGLE_ARROW")
 
-        self._draw_average_height_props(layout, sett)
+        self._draw_average_height_props(layout, batch_sett)
 
         layout.separator()
         layout.label(text="Bell curve settings:", icon="SMOOTHCURVE")
 
         col = layout.column(align=True)
-        col.prop(sett, "batch_standard_deviation", slider=False)
+        col.prop(batch_sett, "standard_deviation", slider=False)
 
         box = layout.box()
         box.prop(
-            sett,
+            batch_sett,
             "show_height_examples",
             text="Show height examples",
-            icon="TRIA_DOWN" if sett.show_height_examples else "TRIA_RIGHT",
+            icon="TRIA_DOWN" if batch_sett.show_height_examples else "TRIA_RIGHT",
             emboss=False,
             toggle=True,
         )
-        if sett.show_height_examples:
+        if batch_sett.show_height_examples:
             split = box.split()
             for gender in ["male", "female"]:
                 col_l = split.column()
                 col_l.separator()
                 col_l.label(text=f"{gender.capitalize()} examples:")
 
-                self._draw_examples_list(col_l, sett, gender)
+                self._draw_examples_list(col_l, batch_sett, gender)
 
-    def _draw_average_height_props(self, layout, sett):
+    def _draw_average_height_props(self, layout, batch_sett):
         """Draws props for the user to select the average height in either
         metric or imperial system
 
@@ -179,17 +181,17 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
             sett (PropertyGroup): addon props
         """
         col = layout.column(align=True)
-        if sett.batch_height_system == "metric":
+        if batch_sett.height_system == "metric":
             col.use_property_split = True
             col.use_property_decorate = False
-            col.prop(sett, "batch_average_height_cm_male")
-            col.prop(sett, "batch_average_height_cm_female")
+            col.prop(batch_sett, "average_height_cm_male")
+            col.prop(batch_sett, "average_height_cm_female")
         else:
             for gender in ["male", "female"]:
                 row = col.row(align=True)
                 row.label(text=gender.capitalize())
-                row.prop(sett, f"batch_average_height_ft_{gender}")
-                row.prop(sett, f"batch_average_height_in_{gender}")
+                row.prop(batch_sett, f"average_height_ft_{gender}")
+                row.prop(batch_sett, f"average_height_in_{gender}")
 
     def _draw_examples_list(self, layout, sett, gender):
         """Draws a list of example heights based on the settings the user selected.
@@ -239,14 +241,14 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
+        batch_sett = context.scene.HG3D.batch
 
         col = layout.column()
         col.use_property_split = True
         col.use_property_decorate = False
 
         col.label(text="Texture resolution:", icon="IMAGE_PLANE")
-        col.prop(sett, "batch_texture_resolution", text="")
+        col.prop(batch_sett, "texture_resolution", text="")
 
         # col.separator()
 
@@ -257,25 +259,25 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
         col.label(text="Objects:", icon="MESH_CUBE")
         col_header = col.column(heading="Delete")
-        col_header.prop(sett, "batch_delete_backup", text="Backup human")
+        col_header.prop(batch_sett, "delete_backup", text="Backup human")
 
         col.separator()
 
         col.label(text="Modifiers/effects:", icon="MODIFIER")
         col_header = col.column(heading="Apply")
-        col_header.prop(sett, "batch_apply_shapekeys", text="Shape keys")
+        col_header.prop(batch_sett, "apply_shapekeys", text="Shape keys")
         col_e = col_header.column()
-        col_e.enabled = sett.batch_apply_shapekeys
-        col_e.prop(sett, "batch_apply_armature_modifier", text="Armature")
-        col_e.prop(sett, "batch_apply_clothing_geometry_masks", text="Geometry masks")
+        col_e.enabled = batch_sett.batch_apply_shapekeys
+        col_e.prop(batch_sett, "apply_armature_modifier", text="Armature")
+        col_e.prop(batch_sett, "apply_clothing_geometry_masks", text="Geometry masks")
         # col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
 
         col.separator()
 
         col.label(text="Clothing:", icon="MOD_CLOTH")
         col_header = col.column(heading="Remove")
-        col_header.prop(sett, "batch_remove_clothing_subdiv", text="Subdivisions")
-        col_header.prop(sett, "batch_remove_clothing_solidify", text="Solidify")
+        col_header.prop(batch_sett, "remove_clothing_subdiv", text="Subdivisions")
+        col_header.prop(batch_sett, "remove_clothing_solidify", text="Solidify")
 
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
@@ -289,16 +291,16 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
-        layout.enabled = sett.batch_hair
+        batch_sett = context.scene.HG3D.batch
+        layout.enabled = batch_sett.batch_hair
 
         row = layout.row(align=True)
         row.scale_y = 1.5
-        row.prop(sett, "batch_hairtype", expand=True)
-        if sett.batch_hairtype == "particle":
+        row.prop(batch_sett, "hairtype", expand=True)
+        if batch_sett.hairtype == "particle":
             layout.prop(
-                sett,
-                "batch_hair_quality_{}".format(sett.batch_hairtype),
+                batch_sett,
+                "hair_quality_{}".format(batch_sett.batch_hairtype),
                 text="Quality",
             )
         else:
@@ -318,8 +320,8 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
-        layout.enabled = sett.batch_clothing
+        batch_sett = context.scene.HG3D.batch
+        layout.enabled = batch_sett.clothing
         hg_icons = preview_collections["hg_icons"]
 
         col = layout.column(align=True)
@@ -364,8 +366,8 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
-        layout.enabled = sett.batch_expression
+        batch_sett = context.scene.HG3D.batch
+        layout.enabled = batch_sett.expression
 
         col = layout.column(align=True)
         box = col.box().row()

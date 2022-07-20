@@ -23,7 +23,7 @@ class HG_START_CREATION(bpy.types.Operator):
     def poll(cls, context):
         return (
             context.scene.HG3D.pcoll.humans != "none"
-            or context.scene.HG3D.active_ui_tab == "BATCH"
+            or context.scene.HG3D.ui.active_tab == "BATCH"
         )
 
     def execute(self, context):

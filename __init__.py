@@ -44,7 +44,8 @@ from HumGen3D.backend.content_packs.content_packs import (
 
 from .backend.auto_classes import _get_bpy_classes
 from .backend.preview_collections import preview_collections as _preview_collections
-from .backend.properties.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.properties.object_props import HG_OBJECT_PROPS
+from .backend.properties.properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .human.human import Human
 

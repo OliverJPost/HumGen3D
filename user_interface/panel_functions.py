@@ -21,15 +21,15 @@ def draw_sub_spoiler(
     """
     boxbox = layout.box()
     boxbox.prop(
-        sett,
+        sett.ui,
         prop_name,
-        icon="TRIA_DOWN" if getattr(sett, prop_name) else "TRIA_RIGHT",
+        icon="TRIA_DOWN" if getattr(sett.ui, prop_name) else "TRIA_RIGHT",
         text=label,
         emboss=False,
         toggle=True,
     )
 
-    spoiler_open = getattr(sett, prop_name)
+    spoiler_open = getattr(sett.ui, prop_name)
 
     return spoiler_open, boxbox
 
@@ -44,7 +44,7 @@ def draw_panel_switch_header(layout, sett):
     row = layout.row()
     row.scale_x = 1.5
     row.alignment = "EXPAND"
-    row.prop(sett, "active_ui_tab", expand=True, icon_only=True)
+    row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
 
 
 def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
@@ -138,7 +138,7 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
             "hg3d.section_toggle", text=label, icon=icon, emboss=False
         ).section_name = ui_name
 
-    is_open = True if self.sett.ui_phase == ui_name else False
+    is_open = True if self.sett.ui.phase == ui_name else False
     return is_open, box
 
 

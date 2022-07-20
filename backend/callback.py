@@ -72,7 +72,7 @@ def hg_callback(self):
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
-    ui_phase = sett.ui_phase
+    ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human.rig_obj)
@@ -119,7 +119,7 @@ def _context_specific_updates(self, sett, human, ui_phase):
     """
     sett.update_exception = False
     context = bpy.context
-    if sett.active_ui_tab == "TOOLS":
+    if sett.ui.active_tab == "TOOLS":
         refresh_modapply(self, context)
         try:
             refresh_shapekeys_ul(self, context)
@@ -167,7 +167,7 @@ def _refresh_body_scaling(self, sett, human: Human):
         else:
             slider_value = bones[bone_group[0]].scale[0] * 3 - 2.5
 
-        setattr(sett, f"{group_name}_size", slider_value)
+        setattr(sett.bone_sizes, group_name, slider_value)
 
 
 def tab_change_update(self, context):

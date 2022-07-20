@@ -15,7 +15,7 @@ from mathutils import Matrix
 
 class MESH_TO_CLOTH_TOOLS:
     def invoke(self, context, event):
-        self.sett = context.scene.HG3D
+        self.cc_sett = context.scene.HG3D.custom_content
         self.hg_rig = self.sett.content_saving_active_human
         return self.execute(context)
 
@@ -28,7 +28,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        cloth_obj = context.scene.HG3D.content_saving_object
+        cloth_obj = context.scene.HG3D.custom_content.content_saving_object
         context.view_layer.objects.active = cloth_obj
 
         for obj in context.selected_objects:
@@ -107,10 +107,10 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        self.sett = context.scene.HG3D
-        hg_rig = self.sett.content_saving_active_human
-        human = Human.from_existing(self.sett.content_saving_active_human)
-        sett = self.sett
+        self.cc_sett = context.scene.HG3D.custom_content
+        hg_rig = self.cc_sett.content_saving_active_human
+        human = Human.from_existing(self.cc_sett.content_saving_active_human)
+        sett = self.cc_sett
         cloth_obj = sett.content_saving_object
 
         body_copy = hg_rig.HG.body_obj.copy()
@@ -269,13 +269,13 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sett = context.scene.HG3D
+        cc_sett = context.scene.HG3D.custom_content
 
-        hg_rig = sett.content_saving_active_human
-        human = Human.from_existing(sett.content_saving_active_human)
+        hg_rig = cc_sett.content_saving_active_human
+        human = Human.from_existing(cc_sett.content_saving_active_human)
         hg_body = hg_rig.HG.body_obj
 
-        cloth_obj = sett.content_saving_object
+        cloth_obj = cc_sett.content_saving_object
 
         old_masks = human.finalize_phase.outfits.find_masks(cloth_obj)
 
@@ -290,12 +290,12 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
                 del cloth_obj[f"mask_{i}"]
 
         mask_dict = {
-            "mask_arms_long": sett.mask_long_arms,
-            "mask_arms_short": sett.mask_short_arms,
-            "mask_lower_long": sett.mask_long_legs,
-            "mask_lower_short": sett.mask_short_legs,
-            "mask_torso": sett.mask_torso,
-            "mask_foot": sett.mask_foot,
+            "mask_arms_long": cc_sett.mask_long_arms,
+            "mask_arms_short": cc_sett.mask_short_arms,
+            "mask_lower_long": cc_sett.mask_long_legs,
+            "mask_lower_short": cc_sett.mask_short_legs,
+            "mask_torso": cc_sett.mask_torso,
+            "mask_foot": cc_sett.mask_foot,
         }
         for i, mask_name in enumerate([k for k, v in mask_dict.items() if v]):
             cloth_obj[f"mask_{i}"] = mask_name
@@ -313,11 +313,11 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sett = context.scene.HG3D
-        hg_rig = sett.content_saving_active_human
+        cc_sett = context.scene.HG3D.custom_content
+        hg_rig = cc_sett.content_saving_active_human
         hg_body = hg_rig.HG.body_obj
 
-        cloth_obj = sett.content_saving_object
+        cloth_obj = cc_sett.content_saving_object
 
         hg_body_eval = hg_body.copy()
         hg_body_eval.data = hg_body_eval.data.copy()
