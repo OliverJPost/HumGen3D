@@ -29,7 +29,11 @@ def update(attr):
         context
     )
 
-
+def refresh(attr)
+    retreiver = attrgetter(attr)
+    return lambda self, context: retreiver(Human.from_existing(context.object))._refresh(
+        context
+    )
 class PreviewCollectionProps(bpy.types.PropertyGroup):
     ####### preview collections ########
     # creation
@@ -42,8 +46,8 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
     pose_category: EnumProperty(
         name="Pose Library",
-        items=lambda a, b: find_folders(a, b, "poses", False),
-        update=lambda a, b: refresh_pcoll(a, b, "poses"),
+        items=get_folders("finalize_phase.pose"),
+        update=refresh("finalize_phase.pose"),
     )
     search_term_poses: StringProperty(
         name="Search:",
