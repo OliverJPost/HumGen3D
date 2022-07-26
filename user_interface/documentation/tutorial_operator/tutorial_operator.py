@@ -4,7 +4,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.types import Operator  # type: ignore
 from HumGen3D.backend.callback import msgbus
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import refresh_pcoll
 from HumGen3D.backend.update import check_update
 
 from .bl_ui_button import *

@@ -1,9 +1,8 @@
 import os
 import time
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete, hg_log
 
 import bpy
-from HumGen3D.backend.logging import hg_log
 from fixtures import context
 
 

@@ -1,7 +1,6 @@
 from calendar import c
 import bpy
-from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import get_prefs, refresh_pcoll
 
 from HumGen3D.user_interface.info_popups import HG_OT_INFO
 from HumGen3D.user_interface.tips_suggestions_ui import (

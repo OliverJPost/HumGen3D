@@ -2,7 +2,7 @@ import random
 import time as timelib
 
 import bpy
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log
 
 
 class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):

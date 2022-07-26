@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 import bpy  # type: ignore
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 
 

@@ -8,8 +8,7 @@ import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import hg_log, get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore

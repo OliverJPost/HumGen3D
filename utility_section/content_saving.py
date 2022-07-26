@@ -8,10 +8,7 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preferences import get_addon_root, get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll  # type: ignore
+from HumGen3D.backend import hg_log, hg_delete, get_addon_root, get_prefs, refresh_pcoll
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,

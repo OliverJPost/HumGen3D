@@ -4,10 +4,7 @@ from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import hg_log, hg_delete, get_prefs, refresh_pcoll
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent

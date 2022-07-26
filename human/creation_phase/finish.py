@@ -4,8 +4,7 @@ Operator and corresponding functions for finishing the cration phase
 
 import bpy  # type: ignore
 
-from ...backend.preferences import get_prefs
-from ...backend.preview_collections import refresh_pcoll
+from ...backend import get_prefs, refresh_pcoll
 from ...user_interface.info_popups import HG_OT_INFO
 from ..human import Human
 

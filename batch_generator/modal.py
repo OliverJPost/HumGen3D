@@ -12,8 +12,7 @@ from pathlib import Path
 
 import bpy
 from HumGen3D.API import HG_Batch_Generator
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
 
 from .batch_functions import get_batch_marker_list, has_associated_human

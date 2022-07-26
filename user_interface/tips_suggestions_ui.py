@@ -2,8 +2,7 @@ import json
 import os
 
 import bpy
-from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preview_collections import preview_collections
+from HumGen3D.backend import get_prefs, preview_collections
 from HumGen3D.user_interface.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
     get_batch_tips_from_context,
 )
