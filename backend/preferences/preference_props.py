@@ -1,6 +1,6 @@
 from bpy.props import BoolProperty, EnumProperty, IntVectorProperty, StringProperty
 from bpy.types import AddonPreferences
-from HumGen3D.backend.content_packs.content_packs import cpacks_refresh
+from ..content_packs.content_packs import cpacks_refresh
 
 
 class HGPreferenceBackend(AddonPreferences):

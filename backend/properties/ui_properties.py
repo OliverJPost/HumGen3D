@@ -7,7 +7,7 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend.callback import tab_change_update
+from ..callback import tab_change_update
 
 
 def create_ui_toggles(ui_toggle_names):

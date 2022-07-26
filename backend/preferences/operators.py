@@ -3,7 +3,7 @@ import os
 import bpy
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import get_prefs
 
 
 class HG_PATHCHANGE(Operator, ImportHelper):

@@ -11,8 +11,7 @@ from typing import Any
 import bpy
 
 from ..human.base.exceptions import HumGenException  # type: ignore
-from .logging import hg_log
-from .preferences import get_prefs
+from . import hg_log, get_prefs
 
 # from HumGen3D.human.human import Human
 
