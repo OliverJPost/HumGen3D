@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 
 from ..backend.preview_collections import get_hg_icon, preview_collections

@@ -1,6 +1,5 @@
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.human import Human

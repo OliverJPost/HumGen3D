@@ -1,6 +1,6 @@
 from HumGen3D.human.hair.basehair import ImportableHair
 
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import refresh_pcoll
 import bpy
 
 from HumGen3D.human.base.decorators import injected_context

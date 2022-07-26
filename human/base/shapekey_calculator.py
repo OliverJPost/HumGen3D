@@ -1,4 +1,4 @@
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete
 import bpy
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys

@@ -4,9 +4,7 @@ import random
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend.logging import hg_log, print_context
-from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import hg_log, hg_delete, remove_broken_drivers, get_prefs
 from HumGen3D.human import hair
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException

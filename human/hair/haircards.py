@@ -1,7 +1,7 @@
 """UNDER CONSTRUCTION"""
 
 from pathlib import Path
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import get_prefs
 
 import bmesh  # type: ignore
 import bpy  # type: ignore

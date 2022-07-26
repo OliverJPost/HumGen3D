@@ -5,8 +5,7 @@ from mathutils import Euler, Vector
 
 from HumGen3D.human.base.decorators import injected_context
 
-from ..backend.logging import hg_log
-from ..backend.preview_collections import refresh_pcoll
+from ..backend import hg_log, refresh_pcoll
 from ..human.base.exceptions import HumGenException
 from ..human.human import Human  # type:ignore
 from ..user_interface.panel_functions import (

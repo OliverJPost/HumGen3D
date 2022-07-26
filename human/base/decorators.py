@@ -2,7 +2,7 @@ import functools
 import traceback
 
 import bpy
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log
 
 
 def cached_property(func):

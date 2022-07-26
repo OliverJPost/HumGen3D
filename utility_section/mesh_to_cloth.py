@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend import hg_delete, get_prefs
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,

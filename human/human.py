@@ -8,10 +8,7 @@ from typing import TYPE_CHECKING, Generator, List, Tuple
 import bpy
 from bpy.types import Object
 
-from ..backend.logging import hg_log
-from ..backend.memory_management import hg_delete, remove_broken_drivers
-from ..backend.preferences import get_prefs
-from ..backend.preview_collections import refresh_pcoll
+from ..backend import hg_log, hg_delete, remove_broken_drivers, get_prefs, refresh_pcoll
 from .base.collections import add_to_collection
 from .base.decorators import cached_property, injected_context
 from .base.exceptions import HumGenException

@@ -4,10 +4,9 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log, hg_delete, refresh_pcoll
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preview_collections import (
-    refresh_pcoll,
     set_random_active_in_pcoll,
 )
 from HumGen3D.human.human import Human

@@ -1,6 +1,6 @@
 import bpy  # type: ignore
 
-from ..backend.preview_collections import preview_collections
+from ..backend import preview_collections
 
 
 def draw_sub_spoiler(
