@@ -5,9 +5,7 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences import get_prefs
-
+from . import hg_log, get_prefs 
 
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack

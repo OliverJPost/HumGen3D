@@ -10,7 +10,7 @@ This callback has the following usages:
 """
 
 import bpy
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
