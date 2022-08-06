@@ -72,7 +72,7 @@ def hg_callback(self):
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
-    ui_phase = sett.ui_phase
+    ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human.rig_obj)
