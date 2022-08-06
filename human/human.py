@@ -428,7 +428,6 @@ class Human:
         """
         # import from HG_Human file
 
-        tt = t
         blendfile = os.path.join(get_prefs().filepath, "models", "HG_HUMAN.blend")
         with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
             data_to.objects = [
