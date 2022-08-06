@@ -428,7 +428,6 @@ class Human:
         """
         # import from HG_Human file
 
-        t = time_update("start", 0)
         tt = t
         blendfile = os.path.join(get_prefs().filepath, "models", "HG_HUMAN.blend")
         with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
@@ -439,16 +438,16 @@ class Human:
                 "HG_TeethUpper",
                 "HG_TeethLower",
             ]
-        t = time_update("import", t)
+
         # link to scene
         hg_rig, hg_body, hg_eyes, *hg_teeth = data_to.objects
         scene = context.scene
         for obj in data_to.objects:
             scene.collection.objects.link(obj)
             add_to_collection(context, obj)
-        t = time_update("collection", t)
+
         hg_rig.location = context.scene.cursor.location
-        t = time_update("location", t)
+
         # set custom properties for identifying
         hg_body["hg_body"] = hg_eyes["hg_eyes"] = 1
         for tooth in hg_teeth:
@@ -461,35 +460,25 @@ class Human:
         props.phase = "body"
         props.body_obj = hg_body
         props.length = hg_rig.dimensions[2]
-        t = time_update("props", t)
+
         human = cls(hg_rig)
         human.shape_keys._load_external(human, context)
-        t = time_update("sks ext", t)
         human.shape_keys._set_gender_specific(human)
-        t = time_update("sks gender", t)
         human.hair._delete_opposite_gender_specific()
-        t = time_update("del sks", t)
 
         if platform == "darwin":
             human.skin._mac_material_fix()
-            t = time_update("mac material fix", t)
 
         human.skin._set_gender_specific()
-        t = time_update("skin specific", t)
         human.skin._remove_opposite_gender_specific()
-        t = time_update("skin opp", t)
 
         # new hair shader?
-
         human.hair._add_quality_props()
-        t = time_update("hair qual", t)
 
         for mod in human.body_obj.modifiers:
             mod.show_expanded = False
 
         remove_broken_drivers()
-        t = time_update("rem brok", t)
-        t = time_update("full", tt)
 
         return human
 
