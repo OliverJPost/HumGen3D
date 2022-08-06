@@ -2,9 +2,9 @@ from operator import attrgetter
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
-from ..content_packs.custom_content_packs import build_content_collection
 from HumGen3D.human.human import Human
 
+from ..content_packs.custom_content_packs import build_content_collection
 from ..preview_collections import get_pcoll_enum_items, refresh_pcoll
 from .property_functions import find_folders
 
@@ -29,7 +29,7 @@ def update(attr):
         context
     )
 
-def refresh(attr)
+def refresh(attr):
     retreiver = attrgetter(attr)
     return lambda self, context: retreiver(Human.from_existing(context.object))._refresh(
         context

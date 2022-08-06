@@ -1,5 +1,6 @@
 from bpy.props import BoolProperty, EnumProperty, IntVectorProperty, StringProperty
 from bpy.types import AddonPreferences
+
 from ..content_packs.content_packs import cpacks_refresh
 
 
@@ -7,7 +8,7 @@ class HGPreferenceBackend(AddonPreferences):
     # RELEASE remove default path
     filepath: StringProperty(
         name="Install Filepath",
-        default="/home/ole/Documents/HG/",
+        default="/Users/ole/Documents/Human Generator/",
     )
 
     # update props

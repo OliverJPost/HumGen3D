@@ -3,10 +3,10 @@ import random
 import pytest
 from HumGen3D.human.skin.skin import SkinSettings
 from HumGen3D.tests.fixtures import (
+    context,
     creation_phase_human,
     finalize_phase_human,
     reverted_human,
-    context,
 )
 from pytest_lazyfixture import lazy_fixture
 
