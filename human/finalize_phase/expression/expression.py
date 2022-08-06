@@ -9,7 +9,7 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
 
 
 class ExpressionSettings(PreviewCollectionContent):
@@ -181,7 +181,7 @@ class ExpressionSettings(PreviewCollectionContent):
                 continue
             from_obj.active_shape_key_index = idx
             # bpy.ops.object.shape_key_transfer()
-            self._transfer(sk, to_obj)
+            transfer_shapekey(sk, to_obj)
 
         sks_on_target = to_obj.data.shape_keys.key_blocks
         for driver_shapekey in driver_dict:
@@ -198,14 +198,6 @@ class ExpressionSettings(PreviewCollectionContent):
         from_obj.select_set(False)
         hg_delete(from_obj)
         to_obj.show_only_shape_key = False
-
-    def _transfer(self, sk, to_obj):
-        new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
-        new_sk.interpolation = "KEY_LINEAR"
-        old_sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
-
-        sk.data.foreach_get("co", old_sk_data)
-        new_sk.data.foreach_set("co", old_sk_data)
 
     def _transfer_multiple_as_one(self, sks, values, to_obj, name):
         new_sk = to_obj.shape_key_add(name=name, from_mix=False)

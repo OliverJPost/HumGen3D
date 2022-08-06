@@ -13,6 +13,14 @@ from HumGen3D.user_interface.feedback_func import show_message
 from ..base.prop_collection import PropCollection
 
 
+def transfer_shapekey(sk, to_obj):
+    new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
+    new_sk.interpolation = "KEY_LINEAR"
+    old_sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
+
+    sk.data.foreach_get("co", old_sk_data)
+    new_sk.data.foreach_set("co", old_sk_data)
+
 # MODULE
 def apply_shapekeys(ob):
     """Applies all shapekeys on the given object, so modifiers on the object can
@@ -127,15 +135,10 @@ class ShapeKeySettings(PropCollection):
             hg_body (Object): HumGen body object
             imported_body (Object): imported body object that contains shapekeys
         """
-        for obj in context.selected_objects:
-            obj.select_set(False)
-        hg_body.select_set(True)
-        imported_body.select_set(True)
         for idx, sk in enumerate(imported_body.data.shape_keys.key_blocks):
             if sk.name in ["Basis", "Male"]:
                 continue
-            imported_body.active_shape_key_index = idx
-            bpy.ops.object.shape_key_transfer()
+            transfer_shapekey(sk, hg_body)
 
     def _set_gender_specific(self, human):
         """Renames shapekeys, removing Male_ and Female_ prefixes according to
