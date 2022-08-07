@@ -357,8 +357,6 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             self._draw_next_button(layout)
             return
 
-        img = sett.preset_thumbnail
-
         layout.template_icon_view(
             sett,
             "preset_thumbnail_enum",
@@ -367,7 +365,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             scale_popup=10,
         )
         if sett.thumbnail_saving_enum == "custom":
-            layout.template_ID(sett, "preset_thumbnail", open="image.open")
+            layout.template_ID(sett.custom_content, "preset_thumbnail", open="image.open")
             layout.label(text="256*256px recommended", icon="INFO")
         elif sett.thumbnail_saving_enum == "auto":
             self.__draw_auto_thumbnail_ui(layout, content_type)
@@ -375,7 +373,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         elif sett.thumbnail_saving_enum == "last_render":
             self.__draw_render_result_thumbnail_ui(layout)
 
-        self._draw_next_button(layout, poll=sett.preset_thumbnail)
+        self._draw_next_button(layout, poll=sett.custom_content.preset_thumbnail)
 
     def __draw_render_result_thumbnail_ui(self, layout):
         """Draw UI inside thumbnail tab for picking the last render result

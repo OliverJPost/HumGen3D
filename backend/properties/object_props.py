@@ -1,3 +1,10 @@
+"""
+object.HG
+Properties added to every object when Human Generator is installed. Used for storing
+information about the human in a way that doesn't get lost when transfering between
+files/computers.
+"""
+
 import bpy
 from bpy.props import (  # type: ignore
     BoolProperty,
@@ -10,6 +17,11 @@ from bpy.props import (  # type: ignore
 
 
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
+    """
+    Properties added to every Blender object as object.HG
+    Used for storing information about the human itself.
+    """
+
     ishuman: BoolProperty(name="Is Human", default=False)
     phase: EnumProperty(
         name="phase",

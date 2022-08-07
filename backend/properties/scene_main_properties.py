@@ -1,34 +1,41 @@
+"""
+context.scene.HG3D
+Main propertygroup of Human Generator, others are subclasses of this one.
+Contains top level properties.
+"""
+
 import bpy  # type: ignore
 from bpy.props import (  # type: ignore
     BoolProperty,
     EnumProperty,
     FloatProperty,
-    IntProperty,
     PointerProperty,
     StringProperty,
 )
 from HumGen3D.human.human import Human
-from HumGen3D.utility_section.baking import make_path_absolute
 from HumGen3D.utility_section.utility_functions import (
-    get_preset_thumbnail,
     refresh_modapply,
 )
+from .bake_props import BakeProps
 
 from ..preview_collections import refresh_pcoll
 from .batch_props import BatchProps
 from .bone_size_props import BoneSizeProps
 from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
-from .property_functions import add_image_to_thumb_enum, get_resolutions
 from .ui_properties import UserInterfaceProps
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
+    """Main property group of Human Generator. Contains top level properties and
+    pointers to lower level property groups."""
+
     pcoll: PointerProperty(type=PreviewCollectionProps)
     ui: PointerProperty(type=UserInterfaceProps)
     bone_sizes: PointerProperty(type=BoneSizeProps)
     custom_content: PointerProperty(type=CustomContentProps)
     batch: PointerProperty(type=BatchProps)
+    bake: PointerProperty(type=BakeProps)
 
     ######### back end #########
     load_exception: BoolProperty(name="load_exception", default=False)
@@ -56,15 +63,6 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update=lambda s, c: Human.from_existing(c.object).creation_phase.length.set(
             s.human_length, c
         ),
-    )
-
-    preset_thumbnail_enum: EnumProperty(
-        items=get_preset_thumbnail,
-    )
-    preset_thumbnail: PointerProperty(
-        type=bpy.types.Image,
-        description="Thumbnail image for starting human",
-        update=add_image_to_thumb_enum,
     )
 
     ######### skin props ###########

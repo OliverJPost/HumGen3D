@@ -76,12 +76,6 @@ def build_summary_list(col, mod):
             item.enabled = True
 
 
-def get_preset_thumbnail(self, context) -> list:
-    sett = context.scene.HG3D
-    img = sett.preset_thumbnail
-    return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []
-
-
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()

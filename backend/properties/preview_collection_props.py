@@ -1,5 +1,10 @@
-import inspect
+"""
+context.scene.HG3D.pcoll
+Stores the preview collections of Human Generator. These collections are used to allow
+the user to choose between different options by looking at thumbnail pictures.
+"""
 from operator import attrgetter
+from weakref import ref
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
@@ -12,6 +17,17 @@ from .property_functions import find_folders
 
 
 def get_items(attr):
+    """Populates the preview collection. As separate function to prevent repetitive
+    statements.
+
+    Args:
+        attr (str): Dot notation between Human and the method you want to access. For
+        example Human.creation_phase.length.set() would have "creation_phase.length" as
+        attr.
+
+    Returns:
+        func: Function in the format Blender expects it
+    """
     retreiver = attrgetter(attr)
     return lambda self, context: retreiver(
         Human.from_existing(context.object)
@@ -19,7 +35,10 @@ def get_items(attr):
 
 
 def get_folders(attr):
+    """Supplies function that populates the category collection.
+    For args & return see get_items()"""
     retreiver = attrgetter(attr)
+
     def func(self, context):
         human = Human.from_existing(context.object, strict_check=False)
         try:
@@ -32,19 +51,27 @@ def get_folders(attr):
 
 
 def update(attr):
+    """Supplies function for callback when the preview collection changes.
+    For args & return see get_items()"""
     retreiver = attrgetter(attr)
     return lambda self, context: retreiver(Human.from_existing(context.object))._set(
         context
     )
 
+
 def refresh(attr):
+    """Supplies function that refreshes the content of the preview collection.
+    For args & return see get_items()"""
     retreiver = attrgetter(attr)
-    return lambda self, context: retreiver(Human.from_existing(context.object))._refresh(
-        context
-    )
+    return lambda self, context: retreiver(
+        Human.from_existing(context.object)
+    )._refresh(context)
+
+
+# TODO create repetetive properties in loop
 class PreviewCollectionProps(bpy.types.PropertyGroup):
-    ####### preview collections ########
-    # creation
+    """Subclass of HG_SETTINGS, properties of and about the preview collections of HG"""
+
     humans: EnumProperty(items=lambda a, b: get_pcoll_enum_items(a, b, "humans"))
 
     # posing
@@ -60,7 +87,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     search_term_poses: StringProperty(
         name="Search:",
         default="",
-        update=lambda a, b: refresh_pcoll(a, b, "poses"),
+        update=refresh("finalize_phase.pose"),
     )
 
     # outfit
@@ -69,13 +96,13 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
     outfit_category: EnumProperty(
         name="Outfit Library",
-        items=lambda a, b: find_folders(a, b, "outfits", True),
-        update=lambda a, b: refresh_pcoll(a, b, "outfit"),
+        items=get_folders("finalize_phase.outfit"),
+        update=refresh("finalize_phase.outfit"),
     )
     search_term_outfit: StringProperty(
         name="Search:",
         default="",
-        update=lambda a, b: refresh_pcoll(a, b, "outfit"),
+        update=refresh("finalize_phase.outfit"),
     )
 
     # hair
@@ -85,17 +112,17 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
     hair_category: EnumProperty(
         name="Hair Library",
-        items=lambda a, b: find_folders(a, b, "hair/head", True),
-        update=lambda a, b: refresh_pcoll(a, b, "hair"),
+        items=get_folders("hair.regular_hair"),
+        update=refresh("hair.regular_hair"),
     )
     face_hair: EnumProperty(
-        items=update("hair.face_hair"),
+        items=get_items("hair.face_hair"),
         update=update("hair.face_hair"),
     )
     face_hair_category: EnumProperty(
         name="Facial Hair Library",
-        items=lambda a, b: find_folders(a, b, "hair/face_hair", False),
-        update=lambda a, b: refresh_pcoll(a, b, "face_hair"),
+        items=get_folders("hair.face_hair"),
+        update=refresh("hair.face_hair"),
     )
 
     # expression
@@ -105,31 +132,29 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
     expressions_category: EnumProperty(
         name="Expressions Library",
-        items=lambda a, b: find_folders(a, b, "expressions", False),
-        update=lambda a, b: refresh_pcoll(a, b, "expressions"),
+        items=get_folders("finalize_phase.expression"),
+        update=refresh("finalize_phase.expression"),
     )
     search_term_expressions: StringProperty(
         name="Search:",
         default="",
-        update=lambda a, b: refresh_pcoll(a, b, "expressions"),
+        update=refresh("finalize_phase.expression"),
     )
 
     # footwear
     footwear: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "footwear"),
-        update=lambda s, c: Human.from_existing(c.object).finalize_phase.footwear.set(
-            s.footwear, c
-        ),
+        items=get_items("finalize_phase.footwear"),
+        update=update("finalize_phase.footwear"),
     )
     footwear_category: EnumProperty(
         name="Footwear Library",
-        items=lambda a, b: find_folders(a, b, "footwear", True),
-        update=lambda a, b: refresh_pcoll(a, b, "footwear"),
+        items=get_folders("finalize_phase.footwear"),
+        update=refresh("finalize_phase.footwear"),
     )
     search_term_footwear: StringProperty(
         name="Search:",
         default="",
-        update=lambda a, b: refresh_pcoll(a, b, "footwear"),
+        update=refresh("finalize_phase.footwear"),
     )
 
     # patterns
@@ -139,21 +164,21 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
     patterns_category: EnumProperty(
         name="Pattern Library",
-        items=lambda a, b: find_folders(a, b, "patterns", False),
-        update=lambda a, b: refresh_pcoll(a, b, "patterns"),
+        items=get_folders("finalize_phase.outfit.pattern"),
+        update=refresh("finalize_phase.outfit.pattern"),
     )
     search_term_patterns: StringProperty(
         name="Search:",
         default="",
-        update=lambda a, b: refresh_pcoll(a, b, "patterns"),
+        update=refresh("finalize_phase.outfit.pattern"),
     )
 
     textures: EnumProperty(
-        items=lambda a, b: get_pcoll_enum_items(a, b, "textures"),
-        update=lambda s, c: Human.from_existing(c.object).skin.texture.set(s.textures),
+        items=get_items("creation_phase.skin.texture"),
+        update=update("creation_phase.skin.texture"),
     )
     texture_library: EnumProperty(
         name="Texture Library",
-        items=lambda a, b: find_folders(a, b, "textures", True, include_all=False),
-        update=lambda a, b: refresh_pcoll(a, b, "textures"),
+        items=get_folders("creation_phase.skin.texture"),
+        update=refresh("creation_phase.skin.texture"),
     )

@@ -1,3 +1,8 @@
+"""
+context.scene.HG3D.bake
+For storing properties related to texture baking of the Human Generator character
+"""
+
 import bpy
 
 from bpy.props import (  # type: ignore
@@ -5,14 +10,25 @@ from bpy.props import (  # type: ignore
     EnumProperty,
     IntProperty,
 )
-from .property_functions import get_resolutions
 
 from HumGen3D.utility_section.baking import make_path_absolute
 
 
-class BakeProps(bpy.types.PropertyGroup):
+def get_resolutions():
+    return [
+        ("128", "128 x 128", "", 0),
+        ("256", "256 x 256", "", 1),
+        ("512", "512 x 512", "", 2),
+        ("1024", "1024 x 1024", "", 3),
+        ("2048", "2048 x 2048", "", 4),
+        ("4096", "4096 x 4096", "", 5),
+    ]
 
-    # baking
+
+class BakeProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, contains properties related to texture baking"""
+
+    # Resolution props
     res_body: EnumProperty(
         items=get_resolutions(),
         default="1024",
@@ -55,10 +71,9 @@ class BakeProps(bpy.types.PropertyGroup):
         default="png",
     )
 
+    # Modal properties
     idx: IntProperty(default=0)
-
     total: IntProperty(default=0)
-
     progress: IntProperty(
         name="Progress", subtype="PERCENTAGE", min=0, max=100, default=0
     )
