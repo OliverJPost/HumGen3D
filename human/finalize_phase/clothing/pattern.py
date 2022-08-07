@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import random
 
 import bpy
 from HumGen3D.backend import get_prefs
@@ -37,6 +38,12 @@ class PatternSettings(PreviewCollectionContent):
 
         img_node.image = pattern
 
+    @injected_context
+    def set_random(self, obj, context=None):
+        options = self.get_options(context)
+        chosen = random.choice(options)
+        self.set(chosen, obj)
+
     def _set(self, context):
         obj = context.object
         active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
@@ -65,7 +72,7 @@ class PatternSettings(PreviewCollectionContent):
             node (ShaderNode): node that was being searched for
         """
         # try to find the node, returns it if it already exists
-        for node in self.nodes:
+        for node in self._human.skin.nodes:
             if node.name == name:
                 return node
 
@@ -76,7 +83,7 @@ class PatternSettings(PreviewCollectionContent):
             "HG_Pattern_Coordinates": "ShaderNodeTexCoord",
         }
 
-        node = self.nodes.new(type_dict[name])
+        node = self._human.skin.nodes.new(type_dict[name])
         node.name = name
 
         link_dict = {
@@ -84,8 +91,8 @@ class PatternSettings(PreviewCollectionContent):
             "HG_Pattern_Mapping": (0, "HG_Pattern", 0),
             "HG_Pattern_Coordinates": (2, "HG_Pattern_Mapping", 0),
         }
-        target_node = self.nodes[link_dict[name][1]]
-        self.links.new(
+        target_node = self._human.skin.nodes[link_dict[name][1]]
+        self._human.skin.links.new(
             node.outputs[link_dict[name][0]],
             target_node.inputs[link_dict[name][2]],
         )

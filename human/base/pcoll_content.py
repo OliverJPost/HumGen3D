@@ -24,6 +24,7 @@ class PreviewCollectionContent:
         except TypeError:
             self.set(active_item)
 
+    @injected_context
     def set_random(self, context=None):
         options = self.get_options(context)
         chosen = random.choice(options)

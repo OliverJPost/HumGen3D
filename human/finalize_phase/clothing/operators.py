@@ -117,9 +117,21 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
     color_group: bpy.props.StringProperty()
 
     def execute(self, context):
-        colorgroups_json = "colorgroups.json"
-        with open(colorgroups_json) as f:
-            color_dict = json.load(f)
+        #FIXME
+        color_dict = {
+            "C0": [
+                "88C1FF",
+                "5C97FF",
+                "F5FFFF",
+                "777C7F",
+                "2F3133",
+                "46787B",
+                "9EC4BD",
+                "7B366F",
+                "5B7728",
+                "1F3257"
+            ]
+        }
 
         color_hex = random.choice(color_dict[self.color_group])
         color_rgba = self._hex_to_rgba(color_hex)

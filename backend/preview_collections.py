@@ -188,7 +188,7 @@ def _populate_pcoll(
         pcoll_full_dir = pcoll_full_dir + str(Path("/{}/".format(subcateg_dir)))
 
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
-
+    print("looking in", pcoll_full_dir, pcoll_categ, "found", file_paths)
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equals None
@@ -274,7 +274,6 @@ def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
     for root, dirs, files in os.walk(dir):
         if pcoll_type == "textures" and "PBR" in root:
             continue  # don't show textures in PBR folder of texture sets
-
         found_files = [
             fn
             for fn in files
@@ -401,7 +400,7 @@ def _get_search_term(pcoll_type, sett) -> str:
         str: search term, filenames that include this search term will be loaded
     """
     try:
-        return getattr(sett.pcoll, f"{pcoll_type}_category")
+        return getattr(sett.pcoll, f"{pcoll_type}_search_term")
     except AttributeError:
         return ""
 
