@@ -35,7 +35,7 @@ def test_set(human, context):
     human.finalize_phase.expression.set(chosen)
     sk_name, _ = os.path.splitext(os.path.basename(chosen))
 
-    sk = human.shape_keys.get(sk_name)
+    sk = human.shape_keys.get(f"expr_{sk_name}")
     assert sk
     assert sk.value
     assert not sk.mute
