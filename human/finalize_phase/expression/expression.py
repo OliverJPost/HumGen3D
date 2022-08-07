@@ -10,6 +10,7 @@ from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
+from HumGen3D.human.base.exceptions import HumGenException
 
 
 class ExpressionSettings(PreviewCollectionContent):
@@ -214,6 +215,9 @@ class ExpressionSettings(PreviewCollectionContent):
         return new_sk
 
     def remove_facial_rig(self):
+        if not "facial_rig" in self._human.body_obj:
+            raise HumGenException("No facial rig found on this human")
+
         frig_bones = self._get_frig_bones()
         for b_name in frig_bones:
             b = self._human.pose_bones[b_name]
