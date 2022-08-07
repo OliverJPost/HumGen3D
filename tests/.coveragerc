@@ -1,0 +1,42 @@
+# .coveragerc to control coverage.py
+[run]
+branch = True
+omit =
+    # omit old API, because it is deprecated
+    */API/*
+    # omit user interface, directly used by Blender
+    /user_interface/*
+    # omit because non-relevant
+    setup.py
+    # omit because non-relevant
+    */namegen.py
+    # omit because directly used by Blender
+    */update.py
+    # omit properties classes directly used by Blender
+    */properties/*
+    # omit callback directly used by Blender
+    */callback.py
+    # omit registering function only used directly by Blender
+    */auto_classes.py
+    # omit all __init__ files since they are either imports only or run by Blender
+    */__init__.py
+    # omit logging functions that are only used for debugging
+    */logging.py
+    # omit preferences since they are run by Blender directly
+    */preferences/*
+    # omit all blender operators
+    */operators.py
+    # omit decorators that aren't picked up by coverage
+    */decorators.py
+    # omit abstract class
+    */pcoll_content.py
+    # omit prop collection since it's not picked up by coverage
+    */prop_collection.py
+
+
+[report]
+exclude_lines=
+    pragma: no cover
+    except Exception
+    except:
+    import
