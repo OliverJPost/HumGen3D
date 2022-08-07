@@ -1,9 +1,5 @@
 *.pyc
 .DS_Store
-fake_humgen3d.egg-info/dependency_links.txt
-fake_humgen3d.egg-info/PKG-INFO
-fake_humgen3d.egg-info/SOURCES.txt
-fake_humgen3d.egg-info/top_level.txt
 *.iml
 /.mypy_cache/
 /venv/
@@ -14,3 +10,4 @@ debug.log
 /.pytest_cache
 .coverage
 /htmlcov
+/.vscode
