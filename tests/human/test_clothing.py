@@ -1,7 +1,7 @@
 import random
 from typing import TYPE_CHECKING
 import bpy
-import pytest
+import pytest # type:ignore
 from HumGen3D.tests.fixtures import context
 from HumGen3D.tests.fixtures import finalize_phase_human as human
 

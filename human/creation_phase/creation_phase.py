@@ -2,7 +2,7 @@ import time
 from typing import TYPE_CHECKING
 
 import bpy
-from bpy.types import Context
+from bpy.types import Context # type:ignore
 from HumGen3D.human.base.prop_collection import PropCollection
 
 from HumGen3D.backend import refresh_pcoll

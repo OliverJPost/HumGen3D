@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty # type:ignore
 from HumGen3D.backend import hg_log, hg_delete, refresh_pcoll
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preview_collections import (

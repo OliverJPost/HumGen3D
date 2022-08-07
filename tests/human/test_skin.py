@@ -1,6 +1,6 @@
 import random
 
-import pytest
+import pytest # type:ignore
 from HumGen3D.human.skin.skin import SkinSettings
 from HumGen3D.tests.fixtures import (
     context,
@@ -8,7 +8,7 @@ from HumGen3D.tests.fixtures import (
     finalize_phase_human,
     reverted_human,
 )
-from pytest_lazyfixture import lazy_fixture
+from pytest_lazyfixture import lazy_fixture # type:ignore
 
 fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
 

@@ -6,7 +6,7 @@ from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
-from bpy.types import Object
+from bpy.types import Object # type:ignore
 
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
 from .base.collections import add_to_collection
@@ -22,8 +22,8 @@ from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty
-    from bpy.types import (
+    from bpy.props import FloatVectorProperty # type:ignore
+    from bpy.types import ( # type:ignore
         Context,
         EditBone,
         PoseBone,

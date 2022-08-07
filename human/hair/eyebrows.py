@@ -1,5 +1,5 @@
 import bpy
-from bpy.types import Context
+from bpy.types import Context # type:ignore
 from HumGen3D.human.hair.basehair import BaseHair
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
 

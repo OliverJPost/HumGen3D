@@ -5,7 +5,7 @@ phase.
 """
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty
+from bpy.props import BoolProperty, FloatProperty # type:ignore
 from HumGen3D.human.human import Human
 
 
