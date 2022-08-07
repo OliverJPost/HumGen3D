@@ -1,6 +1,6 @@
 import bpy  # type: ignore
 
-from ..backend.preview_collections import preview_collections
+from ..backend import preview_collections
 
 
 def draw_sub_spoiler(
@@ -21,15 +21,15 @@ def draw_sub_spoiler(
     """
     boxbox = layout.box()
     boxbox.prop(
-        sett,
+        sett.ui,
         prop_name,
-        icon="TRIA_DOWN" if getattr(sett, prop_name) else "TRIA_RIGHT",
+        icon="TRIA_DOWN" if getattr(sett.ui, prop_name) else "TRIA_RIGHT",
         text=label,
         emboss=False,
         toggle=True,
     )
 
-    spoiler_open = getattr(sett, prop_name)
+    spoiler_open = getattr(sett.ui, prop_name)
 
     return spoiler_open, boxbox
 
@@ -44,7 +44,7 @@ def draw_panel_switch_header(layout, sett):
     row = layout.row()
     row.scale_x = 1.5
     row.alignment = "EXPAND"
-    row.prop(sett, "active_ui_tab", expand=True, icon_only=True)
+    row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
 
 
 def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
@@ -138,7 +138,7 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
             "hg3d.section_toggle", text=label, icon=icon, emboss=False
         ).section_name = ui_name
 
-    is_open = True if self.sett.ui_phase == ui_name else False
+    is_open = True if self.sett.ui.phase == ui_name else False
     return is_open, box
 
 
@@ -151,20 +151,10 @@ def searchbox(sett, name, layout):
         layout (UILayout): layout to draw search box in
     """
     row = layout.row(align=True)
-    row.prop(sett, "search_term_{}".format(name), text="", icon="VIEWZOOM")
+    row.prop(sett.pcoll, "search_term_{}".format(name), text="", icon="VIEWZOOM")
 
-    sett_dict = {
-        "poses": sett.search_term_poses,
-        "outfit": sett.search_term_outfit,
-        "footwear": sett.search_term_footwear,
-        "expressions": sett.search_term_expressions,
-        "patterns": sett.search_term_patterns,
-    }
-
-    if sett_dict[name] != "":
-        row.operator(
-            "hg3d.clear_searchbox", text="", icon="X"
-        ).searchbox_name = name
+    if hasattr(sett.pcoll, f"search_term_{name}"):
+        row.operator("hg3d.clear_searchbox", text="", icon="X").searchbox_name = name
 
 
 def draw_resolution_box(sett, col, show_batch_comparison=False):

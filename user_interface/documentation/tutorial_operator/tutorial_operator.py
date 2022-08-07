@@ -4,7 +4,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from bpy.types import Operator  # type: ignore
 from HumGen3D.backend.callback import msgbus
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import refresh_pcoll
 from HumGen3D.backend.update import check_update
 
 from .bl_ui_button import *
@@ -40,15 +40,12 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
         highlight_color_hover = (0.598, 0.297, 0.453, 0.5)
 
         self.image_list = self.get_dir_images(
-            os.path.dirname(__file__)
-            + str(Path(f"/images/{self.tutorial_name}"))
+            os.path.dirname(__file__) + str(Path(f"/images/{self.tutorial_name}"))
         )
 
         self.sorted_image_list = sorted(self.image_list)
 
-        self.panel = BL_UI_Drag_Panel(
-            0, 0, self.image_width, self.image_height
-        )
+        self.panel = BL_UI_Drag_Panel(0, 0, self.image_width, self.image_height)
         self.panel.bg_color = (0.2, 0.2, 0.2, 0.9)
 
         self.image1 = BL_UI_Image()
@@ -57,9 +54,7 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
         self.image1.set_image_size((self.image_width, self.image_height))
         self.image1.set_image_position((0, 0))
 
-        self.button1 = BL_UI_Button(
-            0, self.image_height, self.image_width / 3, 30
-        )
+        self.button1 = BL_UI_Button(0, self.image_height, self.image_width / 3, 30)
         self.button1.bg_color = highlight_color
         self.button1.hover_bg_color = highlight_color_hover
         self.button1.text = "Exit Tutorial"

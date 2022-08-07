@@ -7,12 +7,10 @@ from typing import TYPE_CHECKING, Any, List, Tuple
 
 import bpy
 from bpy.types import bpy_prop_collection
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import get_prefs, refresh_pcoll
 from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.feedback_func import ShowMessageBox
-
-from ...backend.preview_collections import refresh_pcoll
 from ..base.decorators import injected_context
 
 if TYPE_CHECKING:

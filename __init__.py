@@ -42,9 +42,10 @@ from HumGen3D.backend.content_packs.content_packs import (
     cpacks_refresh as _cpacks_refresh,
 )
 
-from .backend.bpy_classes import _get_bpy_classes
+from .backend.auto_classes import _get_bpy_classes
 from .backend.preview_collections import preview_collections as _preview_collections
-from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.properties.object_props import HG_OBJECT_PROPS
+from .backend.properties.scene_main_properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .human.human import Human
 
@@ -76,7 +77,7 @@ def _initiate_preview_collections():
     ]
 
     for pcoll_name in pcoll_names:
-        _preview_collections.setdefault(f"pcoll_{pcoll_name}", bpy.utils.previews.new())
+        _preview_collections.setdefault(pcoll_name, bpy.utils.previews.new())
 
 
 def _initiate_custom_icons():

@@ -1,6 +1,6 @@
 import random
 from typing import TYPE_CHECKING
-
+import bpy
 import pytest
 from HumGen3D.tests.fixtures import context
 from HumGen3D.tests.fixtures import finalize_phase_human as human
@@ -20,7 +20,7 @@ def test_set_outfit(human, context):
 def human_with_outfit(human):
     options = human.finalize_phase.outfit.get_options()
     chosen = options[0]
-    human.finalize_phase.outfit.set(chosen)
+    human.finalize_phase.outfit.set(chosen, bpy.context)
     yield human
 
 

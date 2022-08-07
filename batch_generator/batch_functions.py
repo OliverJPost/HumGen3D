@@ -2,7 +2,7 @@ import bpy  # type:ignore
 import numpy as np  # type:ignore
 
 
-def length_from_bell_curve(sett, gender, random_seed=True, samples=1) -> list:
+def length_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> list:
     """Returns one or multiple samples from a bell curve generated from the
     batch_average_height and batch_standard_deviation properties.
 
@@ -19,14 +19,14 @@ def length_from_bell_curve(sett, gender, random_seed=True, samples=1) -> list:
             in centimeters, else it returns a list of length values in cm
     """
 
-    if sett.batch_height_system == "metric":
-        avg_height_cm = getattr(sett, f"batch_average_height_cm_{gender}")
+    if batch_sett.height_system == "metric":
+        avg_height_cm = getattr(batch_sett, f"average_height_cm_{gender}")
     else:
-        ft = getattr(sett, f"batch_average_height_ft_{gender}")
-        inch = getattr(sett, f"batch_average_height_in_{gender}")
+        ft = getattr(batch_sett, f"average_height_ft_{gender}")
+        inch = getattr(batch_sett, f"average_height_in_{gender}")
         avg_height_cm = ft * 30.48 + inch * 2.54
 
-    sd = sett.batch_standard_deviation / 100
+    sd = batch_sett.standard_deviation / 100
 
     if random_seed:
         np.random.seed()
@@ -40,7 +40,7 @@ def length_from_bell_curve(sett, gender, random_seed=True, samples=1) -> list:
     return length_list
 
 
-def calculate_batch_statistics(sett):
+def calculate_batch_statistics(batch_sett):
     """Returns values to show the user how their choices in the batch settings
     will impact the render times, memory usage and filesize. Good luck reading
     this function, it's a bit of a mess.
@@ -58,9 +58,9 @@ def calculate_batch_statistics(sett):
     scene_memory = 0
     storage_weight = 0
 
-    if sett.batch_hair:
+    if batch_sett.hair:
         storage_weight += 10
-        p_quality = sett.batch_hair_quality_particle
+        p_quality = batch_sett.hair_quality_particle
         if p_quality == "high":
             eevee_time += 1.58
             eevee_memory += 320
@@ -86,20 +86,20 @@ def calculate_batch_statistics(sett):
             cycles_memory += 10
             scene_memory += 122
 
-    if sett.batch_clothing:
+    if batch_sett.clothing:
         storage_weight += 8
         scene_memory += 180
-        if sett.batch_apply_clothing_geometry_masks:
+        if batch_sett.apply_clothing_geometry_masks:
             storage_weight -= 1
 
-    if sett.batch_texture_resolution == "high":
-        if sett.batch_clothing:
+    if batch_sett.texture_resolution == "high":
+        if batch_sett.clothing:
             eevee_time += 11.31
             eevee_memory += 2120
             cycles_time += 1.88
             cycles_memory += 1182
-    elif sett.batch_texture_resolution == "optimised":
-        if sett.batch_clothing:
+    elif batch_sett.texture_resolution == "optimised":
+        if batch_sett.clothing:
             eevee_time -= 1.81
             eevee_memory -= 310
             cycles_time += 0.31
@@ -109,8 +109,8 @@ def calculate_batch_statistics(sett):
             eevee_memory -= 654
             cycles_time -= 0.23
             cycles_memory -= 330
-    elif sett.batch_texture_resolution == "performance":
-        if sett.batch_clothing:
+    elif batch_sett.texture_resolution == "performance":
+        if batch_sett.clothing:
             eevee_time -= 2.86
             eevee_memory -= 523
             cycles_time += 0.11
@@ -121,18 +121,18 @@ def calculate_batch_statistics(sett):
             cycles_time -= 0.48
             cycles_memory -= 352
 
-    if sett.batch_delete_backup:
+    if batch_sett.delete_backup:
         storage_weight -= 42
         eevee_memory -= 250
         scene_memory -= 240
 
-    if sett.batch_apply_shapekeys:
+    if batch_sett.apply_shapekeys:
         storage_weight -= 6
         eevee_time -= 0.2
         eevee_memory -= 60
         cycles_memory -= 64
         scene_memory -= 47
-        if sett.batch_apply_armature_modifier:
+        if batch_sett.apply_armature_modifier:
             storage_weight -= 2
             scene_memory -= 27
 
@@ -147,9 +147,7 @@ def calculate_batch_statistics(sett):
 
     cycles_time_total = to_percentage(4.40, cycles_time)
     cycles_time_tags = {"Fastest": 95, "Fast": 100, "Normal": 120, "Slow": 150}
-    cycles_time_tag = _get_tag_from_dict(
-        cycles_time_total, cycles_time_tags, "Slowest"
-    )
+    cycles_time_tag = _get_tag_from_dict(cycles_time_total, cycles_time_tags, "Slowest")
 
     cycles_memory_total = int((563 + cycles_memory) / 3)
     cycles_memory_tags = {
@@ -164,9 +162,7 @@ def calculate_batch_statistics(sett):
 
     eevee_time_total = to_percentage(6.57, eevee_time)
     eevee_time_tags = {"Fastest": 50, "Fast": 70, "Normal": 100, "Slow": 150}
-    eevee_time_tag = _get_tag_from_dict(
-        eevee_time_total, eevee_time_tags, "Slowest"
-    )
+    eevee_time_tag = _get_tag_from_dict(eevee_time_total, eevee_time_tags, "Slowest")
 
     eevee_memory_total = int((1450 + eevee_memory) / 3)
     eevee_memory_tags = {
@@ -196,9 +192,9 @@ def calculate_batch_statistics(sett):
 
 
 def get_batch_marker_list(context) -> list:
-    sett = context.scene.HG3D
+    batch_sett = context.scene.HG3D.batch
 
-    marker_selection = sett.batch_marker_selection
+    marker_selection = batch_sett.marker_selection
 
     all_markers = [obj for obj in bpy.data.objects if "hg_batch_marker" in obj]
 
@@ -206,9 +202,7 @@ def get_batch_marker_list(context) -> list:
         return all_markers
 
     elif marker_selection == "selected":
-        selected_markers = [
-            o for o in all_markers if o in context.selected_objects
-        ]
+        selected_markers = [o for o in all_markers if o in context.selected_objects]
         return selected_markers
 
     else:
@@ -241,4 +235,3 @@ def has_associated_human(marker) -> bool:
             marker["associated_human"].name
         )  # is the object in the current scene
     )
-

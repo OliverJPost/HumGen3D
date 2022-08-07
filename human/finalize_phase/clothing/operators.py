@@ -1,9 +1,8 @@
 import json
 import random
 
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete
 import bpy
-from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
 from HumGen3D.human.human import Human
 
 from .base_clothing import find_masks

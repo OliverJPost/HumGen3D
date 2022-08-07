@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING
 
 import bpy
 from bpy.types import Context
-from HumGen3D.backend.logging import time_update
 from HumGen3D.human.base.prop_collection import PropCollection
 
-from ...backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import refresh_pcoll
 from ..base.collections import add_to_collection
 from ..shape_keys.shape_keys import apply_shapekeys
 from .body.body import BodySettings

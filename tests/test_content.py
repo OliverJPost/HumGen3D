@@ -1,9 +1,8 @@
 import os
 import time
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete, hg_log
 
 import bpy
-from HumGen3D.backend.logging import hg_log
 from fixtures import context
 
 
@@ -24,7 +23,7 @@ def __create_all_starting_humans(context):
     pcoll_list = context.scene.HG3D["previews_list_humans"]
 
     for item_name in pcoll_list:
-        context.scene.HG3D.pcoll_humans = item_name
+        context.scene.HG3D.pcoll.humans = item_name
         bpy.ops.hg3d.startcreation()
 
         human = next(obj for obj in bpy.data.objects if obj.HG.ishuman)

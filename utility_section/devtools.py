@@ -7,8 +7,6 @@ from HumGen3D.human.human import Human
 from mathutils import Matrix
 
 
-
-
 # REMOVE
 class HG_TESTOP(bpy.types.Operator):
     """Operator for testing bits of code"""
@@ -40,9 +38,7 @@ class HG_CONVERT_HAIR_SHADER(bpy.types.Operator):
 
     bl_idname = "hg3d.convert_hair_shader"
     bl_label = "Convert to new hair shader"
-    bl_description = (
-        "Convert human that still uses old hair to the new hair shader"
-    )
+    bl_description = "Convert human that still uses old hair to the new hair shader"
     bl_options = {"UNDO"}
 
     def execute(self, context):

@@ -5,9 +5,7 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
-
+from . import hg_log, get_prefs 
 
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack
@@ -27,28 +25,21 @@ def check_update():
     try:
         update_data = json.loads(resp.text)
     except Exception as e:
-        hg_log(
-            "Failed to load HumGen update data, with error:", level="WARNING"
-        )
+        hg_log("Failed to load HumGen update data, with error:", level="WARNING")
         print(e)
         return
 
     try:
         # only get 2 first version numbers for required cpacks, last number can
         # be updated without needing a new required cpack item
-        current_main_version = str(
-            [bl_info["version"][0], bl_info["version"][1]]
-        )
+        current_main_version = str([bl_info["version"][0], bl_info["version"][1]])
 
         pref.latest_version = tuple(update_data["latest_addon"])
 
         update_col = bpy.context.scene.hg_update_col
         update_col.clear()
         for version, update_types in update_data["addon_updates"].items():
-            if (
-                tuple([int(i) for i in version.split(",")])
-                <= bl_info["version"]
-            ):
+            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
                 continue
             for update_type, lines in update_types.items():
                 for line in lines:

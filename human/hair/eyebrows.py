@@ -32,9 +32,7 @@ class EyebrowSettings(BaseHair):
         )
 
         if not preset_eyebrows:
-            ShowMessageBox(
-                message=("Could not find eyebrows named " + preset_eyebrow)
-            )
+            ShowMessageBox(message=("Could not find eyebrows named " + preset_eyebrow))
         else:
             preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
 
@@ -43,9 +41,7 @@ class EyebrowSettings(BaseHair):
             context = bpy.context
 
         remove_list = [
-            mod.particle_system.name
-            for mod in self.modifiers
-            if not mod.show_render
+            mod.particle_system.name for mod in self.modifiers if not mod.show_render
         ]
 
         if _internal and len(self.modifiers) == len(remove_list):

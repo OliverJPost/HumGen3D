@@ -19,9 +19,7 @@ def build_driver_dict(obj, remove=True) -> dict:
 
     for driver in obj.data.shape_keys.animation_data.drivers:
 
-        target_sk = driver.data_path.replace('key_blocks["', "").replace(
-            '"].value', ""
-        )
+        target_sk = driver.data_path.replace('key_blocks["', "").replace('"].value', "")
         expression = driver.driver.expression
         var = driver.driver.variables[0]
         target = var.targets[0]

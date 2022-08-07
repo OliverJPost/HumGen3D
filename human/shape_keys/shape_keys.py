@@ -5,9 +5,7 @@ from typing import Dict
 import bpy
 import numpy as np
 from bpy.types import Context
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import hg_log, hg_delete, get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.user_interface.feedback_func import show_message
@@ -59,15 +57,11 @@ class ShapeKeySettings(PropCollection):
 
     @property
     def body_proportions(self):
-        return PropCollection(
-            sk for sk in self if sk.name.startswith("bp_")
-        )
+        return PropCollection(sk for sk in self if sk.name.startswith("bp_"))
 
     @property
     def face_presets(self):
-        return PropCollection(
-            sk for sk in self if sk.name.startswith("pr_")
-        )
+        return PropCollection(sk for sk in self if sk.name.startswith("pr_"))
 
     @injected_context
     def _load_external(self, human, context=None):
@@ -84,9 +78,7 @@ class ShapeKeySettings(PropCollection):
 
         for root, _, filenames in walker:
             for fn in filenames:
-                hg_log(
-                    f"Existing shapekeys, found {fn} in {root}", level="DEBUG"
-                )
+                hg_log(f"Existing shapekeys, found {fn} in {root}", level="DEBUG")
                 if not os.path.splitext(fn)[1] == ".blend":
                     continue
 
@@ -96,18 +88,14 @@ class ShapeKeySettings(PropCollection):
                 if not imported_body:
                     continue
 
-                self._transfer_shapekeys(
-                    context, human.body_obj, imported_body
-                )
+                self._transfer_shapekeys(context, human.body_obj, imported_body)
 
                 imported_body.select_set(False)
                 hg_delete(imported_body)
 
         human.body_obj.show_only_shape_key = False
 
-    def _import_external_sk_human(
-        self, context, pref, root, fn
-    ) -> bpy.types.Object:
+    def _import_external_sk_human(self, context, pref, root, fn) -> bpy.types.Object:
         """Imports the Humgen body from the passed file in order to import the
         shapekeys on that human
 
@@ -170,10 +158,7 @@ class ShapeKeySettings(PropCollection):
 
             opposite_gender = "male" if gender == "female" else "female"
 
-            if (
-                sk.name.lower().startswith(opposite_gender)
-                and sk.name != "Male"
-            ):
+            if sk.name.lower().startswith(opposite_gender) and sk.name != "Male":
                 hg_body.shape_key_remove(sk)
 
     def _extract_permanent_keys(
