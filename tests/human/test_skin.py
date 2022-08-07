@@ -40,7 +40,7 @@ def test_female_skin(human):
     node_data = [
         (name, name.replace("_", " ").title(), "Gender_Group") for name in attr_names
     ]
-    _assert_node_inputs(human, node_data)
+    _assert_node_inputs(human, node_data, True)
 
 
 @pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
@@ -61,10 +61,10 @@ def test_common_inputs(human):
         ("beautyspots_seed", 1, "BS_Control"),
     ]
 
-    _assert_node_inputs(human, node_data)
+    _assert_node_inputs(human, node_data, False)
 
 
-def _assert_node_inputs(human, node_data):
+def _assert_node_inputs(human, node_data, gender_specific):
     for attr_name, input_name, node_name in node_data:
         dtype = "tuple" if "color" in attr_name else "float"
 
@@ -76,8 +76,13 @@ def _assert_node_inputs(human, node_data):
             b = random.uniform(0.1, 0.9)
             value = (r, g, b, 1.0)
 
-        setattr(human.skin.gender_specific, attr_name, value)
-        assert human.nodes[node_name].inputs[input_name].default_value == value
+        if gender_specific:
+            interface = human.skin.gender_specific
+        else:
+            interface = human.skin
+        setattr(interface, attr_name, value)
+        found_value = human.skin.nodes[node_name].inputs[input_name].default_value
+        assert pytest.approx(found_value) == value
 
 
 @pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
