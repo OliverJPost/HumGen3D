@@ -1,8 +1,10 @@
+import inspect
 from operator import attrgetter
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
 from HumGen3D.human.human import Human
+from HumGen3D.human.base.exceptions import HumGenException
 
 from ..content_packs.custom_content_packs import build_content_collection
 from ..preview_collections import get_pcoll_enum_items, refresh_pcoll
@@ -18,9 +20,15 @@ def get_items(attr):
 
 def get_folders(attr):
     retreiver = attrgetter(attr)
-    return lambda self, context: retreiver(
-        Human.from_existing(context.object)
-    ).get_categories()
+    def func(self, context):
+        human = Human.from_existing(context.object, strict_check=False)
+        try:
+            return retreiver(human).get_categories()
+        # Catch for weird behaviour where pose_category refreshes early
+        except (AttributeError, HumGenException):
+            return [("ERROR", "ERROR", "", i) for i in range(99)]
+
+    return func
 
 
 def update(attr):
