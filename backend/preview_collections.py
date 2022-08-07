@@ -241,7 +241,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]"
         "outfits": sett.pcoll.outfit_category,
         "hair": sett.pcoll.hair_category,
         "face_hair": sett.pcoll.face_hair_category,
-        "expressions": sett.pcoll.expressions_category,
+        "expressions": sett.pcoll.expression_category,
         "humans": "All",
         "footwear": sett.pcoll.footwear_category,
         "patterns": sett.pcoll.patterns_category,
