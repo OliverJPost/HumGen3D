@@ -17,10 +17,10 @@ fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human
 def test_male_skin(human):
     skin_sett = human.skin.gender_specific
     skin_sett.mustache_shadows = 0.1
-    assert human.skin.nodes["Gender_Group"].inputs[2].default_value == 0.1
+    assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[2].default_value) == 0.1
     skin_sett.mustache_shadows = 28
     skin_sett.beard_shadow = 0.7
-    assert human.skin.nodes["Gender_Group"].inputs[3].default_value == 0.7
+    assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[3].default_value) == 0.7
     skin_sett.beard_shadow = 12
 
 
@@ -97,12 +97,12 @@ def test_subsurface_scattering(human, context):
             node for node in human.skin.nodes if node.type == "BSDF_PRINCIPLED"
         )
         sss_value = principled_bsdf.inputs["Subsurface"].default_value
-        assert sss_value == value
+        assert pytest.approx(sss_value) == value
 
     assert_sss(0, human)
 
     human.skin.set_subsurface_scattering(True, context)
-    assert_sss(0.15, human)
+    assert_sss(0.015, human)
 
     human.skin.set_subsurface_scattering(False, context)
     assert_sss(0, human)
