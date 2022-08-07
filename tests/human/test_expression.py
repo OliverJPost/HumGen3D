@@ -2,10 +2,10 @@ import os
 import random
 
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.tests.fixtures import context
-from HumGen3D.tests.fixtures import finalize_phase_human as human
+from HumGen3D.tests.fixtures import ALL_FINALIZE_FIXTURES, context
+from HumGen3D.tests.fixtures import *
 
-
+@pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_facial_rig(human, context):
     inital_sk_count = len(human.shape_keys)
     human.finalize_phase.expression.load_facial_rig(context)
@@ -26,7 +26,7 @@ def test_facial_rig(human, context):
 
     assert len(human.shape_keys) == inital_sk_count
 
-
+@pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_set(human):
     options = human.finalize_phase.expression.get_options()
     assert options
