@@ -114,11 +114,11 @@ def test_underwear(human, context):
         underwear_node = human.skin.nodes.get("Underwear_Opacity")
         assert underwear_node.inputs[1].default_value == int(on)
 
-    assert_underwear(False)
+    assert_underwear(False, human)
     human.skin.set_underwear(True)
-    assert_underwear(True)
+    assert_underwear(True, human)
     human.skin.set_underwear(False)
-    assert_underwear(False)
+    assert_underwear(False, human)
 
 
 @pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
