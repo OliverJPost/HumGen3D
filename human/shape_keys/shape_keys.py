@@ -4,7 +4,7 @@ from typing import Dict
 
 import bpy
 import numpy as np
-from bpy.types import Context
+from bpy.types import Context # type:ignore
 from HumGen3D.backend import hg_log, hg_delete, get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict

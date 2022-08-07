@@ -1,4 +1,4 @@
-from bpy.props import (
+from bpy.props import ( # type:ignore
     BoolProperty,
     EnumProperty,
     IntProperty,

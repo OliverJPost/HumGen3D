@@ -13,3 +13,4 @@ debug.log
 /.idea
 /.pytest_cache
 .coverage
+/htmlcov

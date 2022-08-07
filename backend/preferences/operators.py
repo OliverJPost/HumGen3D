@@ -1,8 +1,8 @@
 import os
 
 import bpy
-from bpy.types import Operator
-from bpy_extras.io_utils import ImportHelper
+from bpy.types import Operator # type:ignore
+from bpy_extras.io_utils import ImportHelper # type:ignore
 from HumGen3D.backend import get_prefs
 
 

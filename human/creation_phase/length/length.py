@@ -3,7 +3,7 @@ import os
 from typing import TYPE_CHECKING
 
 import bpy
-from bpy.types import Context
+from bpy.types import Context # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D import Human

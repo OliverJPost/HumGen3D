@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Tuple
 
 import bpy
-from bpy.types import bpy_prop_collection
+from bpy.types import bpy_prop_collection # type:ignore
 from HumGen3D.backend import get_prefs, refresh_pcoll
 from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
@@ -14,7 +14,7 @@ from HumGen3D.user_interface.feedback_func import ShowMessageBox
 from ..base.decorators import injected_context
 
 if TYPE_CHECKING:
-    from bpy.types import Context, FloatVectorProperty, Material, NodeInput, ShaderNode
+    from bpy.types import Context, FloatVectorProperty, Material, NodeInput, ShaderNode # type:ignore
 
     from ..human import Human
 

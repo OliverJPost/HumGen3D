@@ -1,6 +1,6 @@
 import random
 
-from bpy.types import Material, Object
+from bpy.types import Material, Object # type:ignore
 
 
 class EyeSettings:

@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from sys import platform
 
-import addon_utils
+import addon_utils # type:ignore
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend import get_prefs  # type: ignore

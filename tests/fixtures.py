@@ -4,7 +4,7 @@
 import random
 
 import bpy
-import pytest
+import pytest # type:ignore
 from HumGen3D.human.human import Human
 
 
