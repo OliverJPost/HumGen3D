@@ -188,7 +188,6 @@ def _populate_pcoll(
         pcoll_full_dir = pcoll_full_dir + str(Path("/{}/".format(subcateg_dir)))
 
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
-    print("looking in", pcoll_full_dir, pcoll_categ, "found", file_paths)
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equals None
