@@ -174,11 +174,11 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
 
     textures: EnumProperty(
-        items=get_items("creation_phase.skin.texture"),
-        update=update("creation_phase.skin.texture"),
+        items=get_items("skin.texture"),
+        update=update("skin.texture"),
     )
     texture_library: EnumProperty(
         name="Texture Library",
-        items=get_folders("creation_phase.skin.texture"),
-        update=refresh("creation_phase.skin.texture"),
+        items=get_folders("skin.texture"),
+        update=refresh("skin.texture"),
     )

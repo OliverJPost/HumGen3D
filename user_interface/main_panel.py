@@ -697,7 +697,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "main_skin_ui", "Main settings"
+            box, sett, "main_skin", "Main settings"
         )
         if not is_open:
             return
@@ -759,7 +759,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "texture_ui", "Texture sets"
+            box, sett, "texture", "Texture sets"
         )
         if not is_open:
             return
@@ -780,7 +780,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "light_dark_ui", "Light & dark areas"
+            box, sett, "light_dark", "Light & dark areas"
         )
         if not is_open:
             return
@@ -813,7 +813,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "age_ui", "Age")
+        is_open, boxbox = draw_sub_spoiler(box, sett, "age", "Age")
         if not is_open:
             return
 
@@ -841,7 +841,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "freckles_ui", "Freckles"
+            box, sett, "freckles", "Freckles"
         )
         if not is_open:
             return
@@ -875,7 +875,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
 
-        is_open, boxbox = draw_sub_spoiler(box, sett, "makeup_ui", "Makeup")
+        is_open, boxbox = draw_sub_spoiler(box, sett, "makeup", "Makeup")
         if not is_open:
             return
 
@@ -990,7 +990,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beautyspots_ui", "Beauty Spots"
+            box, sett, "beautyspots", "Beauty Spots"
         )
         if not is_open:
             return
@@ -1022,7 +1022,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beard_shadow_ui", "Beard Shadow"
+            box, sett, "beard_shadow", "Beard Shadow"
         )
         if not is_open:
             return
@@ -1182,7 +1182,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "face_hair_ui", "Face Hair"
+            box, sett, "face_hair", "Face Hair"
         )
         if not is_open:
             return
@@ -1695,7 +1695,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "expression_slider_ui", "Strength"
+            box, sett, "expression_slider", "Strength"
         )
         if not is_open:
             return

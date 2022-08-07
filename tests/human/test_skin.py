@@ -4,10 +4,10 @@ import pytest # type:ignore
 from HumGen3D.human.skin.skin import SkinSettings
 from HumGen3D.tests.fixtures import (
     context,
-    creation_phase_human,
-    finalize_phase_human,
-    reverted_human,
+    all_human_fixtures,
+    female_fixtures
 )
+from HumGen3D.tests.fixtures import *
 from pytest_lazyfixture import lazy_fixture # type:ignore
 
 fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
@@ -23,15 +23,14 @@ def test_male_skin(human):
     assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[3].default_value) == 0.7
     skin_sett.beard_shadow = 12
 
-
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", female_fixtures)
 def test_female_skin(human):
     attr_names = [
         "foundation_amount",
         "foundation_color",
         "blush_opacity",
-        "eyebrow_opacity",
-        "eyebrow_color",
+        "eyebrows_opacity",
+        "eyebrows_color",
         "lipstick_color",
         "lipstick_opacity",
         "eyeliner_opacity",
@@ -82,7 +81,7 @@ def _assert_node_inputs(human, node_data, gender_specific):
             interface = human.skin
         setattr(interface, attr_name, value)
         found_value = human.skin.nodes[node_name].inputs[input_name].default_value
-        assert pytest.approx(found_value) == value
+        assert pytest.approx(found_value) == value, f"{attr_name} failed for {input_name}"
 
 
 @pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
