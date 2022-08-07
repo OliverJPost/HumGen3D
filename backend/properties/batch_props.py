@@ -1,21 +1,30 @@
+"""
+context.scene.HG3D.batch
+Properties related to the Human Generator batch generator
+"""
+
+
 import bpy
 from bpy.props import BoolProperty, EnumProperty, IntProperty  # type: ignore
 from HumGen3D.user_interface.batch_ui_lists import batch_uilist_refresh
 
 
 class BatchProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, contains properties related to the batch generator"""
+
+    # Modal props
     progress: IntProperty(
         name="Progress", subtype="PERCENTAGE", min=0, max=100, default=0
     )
     idx: IntProperty(default=0)
 
+    # Statistics props
     male_chance: IntProperty(
         name="Male", subtype="PERCENTAGE", min=0, max=100, default=100
     )
     female_chance: IntProperty(
         name="Female", subtype="PERCENTAGE", min=0, max=100, default=100
     )
-
     caucasian_chance: IntProperty(
         name="Caucasian", subtype="PERCENTAGE", min=0, max=100, default=100
     )
@@ -28,6 +37,7 @@ class BatchProps(bpy.types.PropertyGroup):
 
     performance_statistics: BoolProperty(default=False)
 
+    # For enabling the different features
     pose: BoolProperty(default=False)
     clothing: BoolProperty(default=False)
     expression: BoolProperty(default=False)

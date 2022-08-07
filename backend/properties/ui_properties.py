@@ -1,16 +1,18 @@
+"""
+context.scene.HG3D.ui
+Properties related to the user interface of Human Generator.
+"""
+
 import bpy
 from bpy.props import (  # type: ignore
     BoolProperty,
     EnumProperty,
-    FloatProperty,
-    IntProperty,
-    PointerProperty,
-    StringProperty,
 )
 from ..callback import tab_change_update
 
 
 def create_ui_toggles(ui_toggle_names):
+    """Function for creating BoolProperties in a loop to prevent repetition."""
     prop_dict = {}
 
     for name in ui_toggle_names:
@@ -21,6 +23,8 @@ def create_ui_toggles(ui_toggle_names):
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, contains user interface properties"""
+
     # UI box toggles
     __annotations__.update(
         create_ui_toggles(

@@ -1,9 +1,16 @@
+"""
+context.scene.HG3D.bone_sizes
+Contains floatproperties for driving the scale of the different bones during creation
+phase.
+"""
+
 import bpy
 from bpy.props import BoolProperty, FloatProperty
 from HumGen3D.human.human import Human
 
 
 def create_bone_props(bone_names):
+    """Currently inactive, used for automatic generation of FloatProperties"""
     prop_dict = {}
     for name in bone_names:
         prop_dict[name] = FloatProperty(
@@ -19,6 +26,8 @@ def create_bone_props(bone_names):
 
 
 class BoneSizeProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, contains float properties for scaling bones"""
+
     # TODO automatic generation of properties
     # def __new__(cls, *args, **kwargs):
     #     cls.__annotations__.update(
