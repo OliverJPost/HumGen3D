@@ -5,7 +5,7 @@ from sys import platform
 import addon_utils
 import bpy
 from HumGen3D import bl_info
-from HumGen3D.backend.preference_func import get_prefs  # type: ignore
+from HumGen3D.backend import get_prefs  # type: ignore
 
 from ..backend.preview_collections import preview_collections
 from ..human.human import Human  # type: ignore
@@ -37,10 +37,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.active_ui_tab == "CREATE" and not sett.content_saving_ui
-
-    def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        return sett.ui.active_tab == "CREATE" and not sett.custom_content.content_saving_ui
 
     def draw(self, context):
         layout = self.layout
@@ -354,8 +351,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="Select a starting human")
         col.template_icon_view(
-            self.sett,
-            "pcoll_humans",
+            self.sett.pcoll,
+            "humans",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -432,7 +429,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             sett (Scene.HG3D): Humgen properties
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "indiv_scale_ui", "Individual scaling"
+            box, sett, "indiv_scale", "Individual scaling"
         )
         if not is_open:
             return
@@ -769,7 +766,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = boxbox.column()
         col.template_icon_view(
-            sett, "pcoll_textures", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
         )
         col.prop(sett, "texture_library", text="Library")
 
@@ -1159,7 +1156,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         hair_systems = self._get_hair_systems(body_obj)
 
         box.template_icon_view(
-            sett, "pcoll_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = box.column()
@@ -1192,7 +1189,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column(align=True)
 
         col.template_icon_view(
-            sett, "pcoll_face_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "face_hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = col.column()
@@ -1507,7 +1504,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_outfit", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "outfit", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
@@ -1536,7 +1533,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_footwear", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "footwear", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
@@ -1607,7 +1604,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "poses", box)
 
         box.template_icon_view(
-            sett, "pcoll_poses", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "poses", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
@@ -1661,8 +1658,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "expressions", box)
 
         box.template_icon_view(
-            sett,
-            "pcoll_expressions",
+            sett.pcoll,
+            "expressions",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -1915,7 +1912,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = p_flow.column(align=False)
         col.scale_y = 0.8
         col.template_icon_view(
-            sett, "pcoll_patterns", show_labels=True, scale=5, scale_popup=6
+            sett.pcoll, "patterns", show_labels=True, scale=5, scale_popup=6
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):

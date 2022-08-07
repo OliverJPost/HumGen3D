@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Context
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import cached_property
 

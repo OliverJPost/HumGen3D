@@ -2,17 +2,19 @@ import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import hg_delete, get_prefs
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.human.base.shapekey_calculator import build_distance_dict, deform_obj_from_difference
+from HumGen3D.human.base.shapekey_calculator import (
+    build_distance_dict,
+    deform_obj_from_difference,
+)
 from HumGen3D.human.human import Human  # type: ignore
 from mathutils import Matrix
 
 
 class MESH_TO_CLOTH_TOOLS:
     def invoke(self, context, event):
-        self.sett = context.scene.HG3D
+        self.cc_sett = context.scene.HG3D.custom_content
         self.hg_rig = self.sett.content_saving_active_human
         return self.execute(context)
 
@@ -25,7 +27,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        cloth_obj = context.scene.HG3D.content_saving_object
+        cloth_obj = context.scene.HG3D.custom_content.content_saving_object
         context.view_layer.objects.active = cloth_obj
 
         for obj in context.selected_objects:
@@ -57,9 +59,7 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
                         {"object": cloth_obj}, modifier=armature.name
                     )
             else:
-                bpy.ops.object.modifier_move_to_index(
-                    modifier=armature.name, index=0
-                )
+                bpy.ops.object.modifier_move_to_index(modifier=armature.name, index=0)
 
         if self.sett.mtc_parent:
             cloth_obj.parent = self.hg_rig
@@ -106,10 +106,10 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        self.sett = context.scene.HG3D
-        hg_rig = self.sett.content_saving_active_human
-        human = Human.from_existing(self.sett.content_saving_active_human)
-        sett = self.sett
+        self.cc_sett = context.scene.HG3D.custom_content
+        hg_rig = self.cc_sett.content_saving_active_human
+        human = Human.from_existing(self.cc_sett.content_saving_active_human)
+        sett = self.cc_sett
         cloth_obj = sett.content_saving_object
 
         body_copy = hg_rig.HG.body_obj.copy()
@@ -118,8 +118,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
         if body_copy.data.shape_keys:
             remove_list = [
-                driver
-                for driver in body_copy.data.shape_keys.animation_data.drivers
+                driver for driver in body_copy.data.shape_keys.animation_data.drivers
             ]
             for driver in remove_list:
                 body_copy.data.shape_keys.animation_data.drivers.remove(driver)
@@ -154,7 +153,6 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
         cloth_sks = cloth_obj.data.shape_keys.key_blocks
         human.finalize_phase.outfit._set_cloth_corrective_drivers(cloth_obj, cloth_sks)
-
 
         hg_delete(body_copy)
         cloth_obj.select_set(True)
@@ -219,9 +217,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_idname = "hg3d.addclothmat"
     bl_label = "Add clothing material"
-    bl_description = (
-        "Adds the default HumGen clothing material for you to set up"
-    )
+    bl_description = "Adds the default HumGen clothing material for you to set up"
     bl_options = {"UNDO"}
 
     def execute(self, context):
@@ -272,13 +268,13 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sett = context.scene.HG3D
+        cc_sett = context.scene.HG3D.custom_content
 
-        hg_rig = sett.content_saving_active_human
-        human = Human.from_existing(sett.content_saving_active_human)
+        hg_rig = cc_sett.content_saving_active_human
+        human = Human.from_existing(cc_sett.content_saving_active_human)
         hg_body = hg_rig.HG.body_obj
 
-        cloth_obj = sett.content_saving_object
+        cloth_obj = cc_sett.content_saving_object
 
         old_masks = human.finalize_phase.outfits.find_masks(cloth_obj)
 
@@ -293,12 +289,12 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
                 del cloth_obj[f"mask_{i}"]
 
         mask_dict = {
-            "mask_arms_long": sett.mask_long_arms,
-            "mask_arms_short": sett.mask_short_arms,
-            "mask_lower_long": sett.mask_long_legs,
-            "mask_lower_short": sett.mask_short_legs,
-            "mask_torso": sett.mask_torso,
-            "mask_foot": sett.mask_foot,
+            "mask_arms_long": cc_sett.mask_long_arms,
+            "mask_arms_short": cc_sett.mask_short_arms,
+            "mask_lower_long": cc_sett.mask_long_legs,
+            "mask_lower_short": cc_sett.mask_short_legs,
+            "mask_torso": cc_sett.mask_torso,
+            "mask_foot": cc_sett.mask_foot,
         }
         for i, mask_name in enumerate([k for k, v in mask_dict.items() if v]):
             cloth_obj[f"mask_{i}"] = mask_name
@@ -316,11 +312,11 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        sett = context.scene.HG3D
-        hg_rig = sett.content_saving_active_human
+        cc_sett = context.scene.HG3D.custom_content
+        hg_rig = cc_sett.content_saving_active_human
         hg_body = hg_rig.HG.body_obj
 
-        cloth_obj = sett.content_saving_object
+        cloth_obj = cc_sett.content_saving_object
 
         hg_body_eval = hg_body.copy()
         hg_body_eval.data = hg_body_eval.data.copy()
@@ -333,9 +329,7 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
         for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.startswith("cor"):
                 sk.mute = True
-        distance_dict = (
-            build_distance_dict(hg_body_eval, cloth_obj)
-        )
+        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)
         deform_obj_from_difference(
             "Test sk", distance_dict, hg_body, cloth_obj, as_shapekey=False
         )

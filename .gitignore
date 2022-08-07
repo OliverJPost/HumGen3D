@@ -5,7 +5,6 @@ fake_humgen3d.egg-info/PKG-INFO
 fake_humgen3d.egg-info/SOURCES.txt
 fake_humgen3d.egg-info/top_level.txt
 *.iml
-/.vscode/
 /.mypy_cache/
 /venv/
 /fake_humgen3d.egg-info/

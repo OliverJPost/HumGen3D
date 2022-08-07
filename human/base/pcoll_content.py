@@ -2,8 +2,7 @@ import os
 import random
 from typing import List, Tuple
 
-from HumGen3D.backend.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import preview_collections
+from HumGen3D.backend import get_prefs, preview_collections
 from HumGen3D.human.base.decorators import injected_context
 
 
@@ -16,7 +15,7 @@ class PreviewCollectionContent:
 
     def _set(self, context):
         """Internal way of setting content, only used by enum properties"""
-        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
+        active_item = getattr(context.scene.HG3D.pcoll, self._pcoll_name)
         try:
             self.set(active_item, context)
         except TypeError:
@@ -27,20 +26,20 @@ class PreviewCollectionContent:
         chosen = random.choice(options)
 
         # Use indirect way so the UI reflects the chosen item
-        setattr(context.HG3D, f"pcoll_{self.pcoll_name}", chosen)
+        setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
 
     def get_options(self) -> List[Tuple[str, str, str, int]]:
         return [option[0] for option in self._get_full_options()]
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""
-        pcoll = preview_collections.get(f"pcoll_{self._pcoll_name}")
+        pcoll = preview_collections.get(self._pcoll_name)
         if not pcoll:
             return [
                 ("none", "Reload category below", "", 0),
             ]
 
-        return pcoll[f"pcoll_{self._pcoll_name}"]
+        return pcoll[self._pcoll_name]
 
     def get_categories(self):
         if not self._human:

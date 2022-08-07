@@ -1,14 +1,12 @@
 """UNDER CONSTRUCTION"""
 
 from pathlib import Path
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import get_prefs
 
 import bmesh  # type: ignore
 import bpy  # type: ignore
 import numpy as np
 from mathutils import Vector
-
-
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -24,7 +22,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     def execute(self, context):
         pref = get_prefs()
 
-        hg_rig = None #find_human(context.object)
+        hg_rig = None  # find_human(context.object)
         hg_body = hg_rig.HG.body_obj
 
         for ps in hg_body.particle_systems:
@@ -40,17 +38,13 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             steps = ps_sett.display_step
 
             for mod in [
-                mod
-                for mod in hg_body.modifiers
-                if mod.type == "PARTICLE_SYSTEM"
+                mod for mod in hg_body.modifiers if mod.type == "PARTICLE_SYSTEM"
             ]:
                 if mod.particle_system.name == ps.name:
                     bpy.ops.object.modifier_convert(modifier=mod.name)
 
                     hc_obj = context.object
-            for obj in [
-                obj for obj in context.selected_objects if obj != hc_obj
-            ]:
+            for obj in [obj for obj in context.selected_objects if obj != hc_obj]:
                 obj.select_set(False)
 
             bpy.ops.object.convert(target="CURVE")
@@ -188,9 +182,7 @@ def build_hair_spline_distance_enum(hair_obj, body_obj) -> list:
     for spline in splines:
         distance_list = []
         for point in spline.points:
-            distance = find_distance_to_control_vert(
-                point, middle_vert_converted_loc
-            )
+            distance = find_distance_to_control_vert(point, middle_vert_converted_loc)
             distance_list.append(distance)
 
         assert distance_list

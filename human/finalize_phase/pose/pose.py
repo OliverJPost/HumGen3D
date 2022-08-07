@@ -1,7 +1,5 @@
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import hg_log, get_prefs, hg_delete
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 
@@ -65,7 +63,7 @@ class PoseSettings(PreviewCollectionContent):
         if not hg_pose:
             hg_log(
                 "Could not load pose:",
-                context.scene.HG3D.pcoll_poses,
+                context.scene.HG3D.pcoll.poses,
                 level="WARNING",
             )
 

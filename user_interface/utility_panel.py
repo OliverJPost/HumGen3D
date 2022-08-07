@@ -1,7 +1,8 @@
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 
+from ..backend.preview_collections import get_hg_icon, preview_collections
 from .panel_functions import (
     draw_panel_switch_header,
     draw_resolution_box,
@@ -9,10 +10,6 @@ from .panel_functions import (
     in_creation_phase,
 )
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..backend.preview_collections import (
-    get_hg_icon,
-    preview_collections,
-)
 
 
 class Tools_PT_Base:
@@ -58,7 +55,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.active_ui_tab == "TOOLS" and not sett.content_saving_ui
+        return sett.ui.active_tab == "TOOLS" and not sett.content_saving_ui
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -179,9 +176,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
         col = layout.column()
         col.label(text="Select modifiers to be applied:")
-        col.operator(
-            "hg3d.ulrefresh", text="Refresh modifiers"
-        ).type = "modapply"
+        col.operator("hg3d.ulrefresh", text="Refresh modifiers").type = "modapply"
         col.template_list(
             "HG_UL_MODAPPLY",
             "",
@@ -211,9 +206,7 @@ class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
 
         col_h = col.column()
         col_h.scale_y = 1.5
-        col_h.operator(
-            "hg3d.modapply", text="Apply selected modifiers", depress=True
-        )
+        col_h.operator("hg3d.modapply", text="Apply selected modifiers", depress=True)
 
     def _draw_warning_labels(self, context, layout) -> bool:
         """Draws warning labels if no human selected or in creation phase

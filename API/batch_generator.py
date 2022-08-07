@@ -5,7 +5,7 @@ import subprocess
 import time
 
 import bpy  # type:ignore
-from HumGen3D.backend.preference_func import get_addon_root, get_prefs
+from HumGen3D.backend import get_addon_root, get_prefs
 
 from HumGen3D.human.base.decorators import injected_context
 from ..backend.logging import hg_log

@@ -1039,4 +1039,3 @@ def _get_namelist(gender) -> list:
     ]
 
     return names_male if gender == "male" else names_female
-
