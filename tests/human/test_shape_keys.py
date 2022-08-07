@@ -12,5 +12,3 @@ def test_body_proportions(creation_phase_human, reverted_human, finalize_phase_h
     len_reverted = len(reverted_human.shape_keys.body_proportions)
     assert len_creation == len_reverted
 
-    sk = creation_phase_human.shape_keys.body_proportions[0]
-    creation_phase_human.shape_keys.body_proportions.remove(sk)

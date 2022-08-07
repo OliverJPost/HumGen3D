@@ -56,14 +56,20 @@ def _create_human(gender="male"):
 
 
 @pytest.fixture(scope="class")
-def reverted_human(finalize_phase_human) -> Human:
-    finalize_phase_human.finalize_phase.revert(bpy.context)
-    yield finalize_phase_human
+def reverted_human() -> Human:
+    human = _create_human("male")
+    human.creation_phase.finish(bpy.context)
+    human.finalize_phase.revert(bpy.context)
+    yield human
+    human.delete()
 
 @pytest.fixture(scope="class")
-def reverted_human_female(finalize_phase_human_female) -> Human:
-    finalize_phase_human_female.finalize_phase.revert(bpy.context)
-    yield finalize_phase_human_female
+def reverted_human_female() -> Human:
+    human = _create_human("female")
+    human.creation_phase.finish(bpy.context)
+    human.finalize_phase.revert(bpy.context)
+    yield human
+    human.delete()
 
 @pytest.fixture
 def context():

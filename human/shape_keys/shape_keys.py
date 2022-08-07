@@ -57,11 +57,11 @@ class ShapeKeySettings(PropCollection):
 
     @property
     def body_proportions(self):
-        return PropCollection(sk for sk in self if sk.name.startswith("bp_"))
+        return PropCollection([sk for sk in self if sk.name.startswith("bp_")])
 
     @property
     def face_presets(self):
-        return PropCollection(sk for sk in self if sk.name.startswith("pr_"))
+        return PropCollection([sk for sk in self if sk.name.startswith("pr_")])
 
     @injected_context
     def _load_external(self, human, context=None):
