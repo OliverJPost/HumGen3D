@@ -26,14 +26,14 @@ def human_with_outfit(finalize_phase_human):
 
 def test_remove_outfit(human_with_outfit, context):
     old_child_count = len(list(human_with_outfit.children))
-    human_with_outfit.finalize_phase.outfit.remove(context)
+    human_with_outfit.finalize_phase.outfit.remove()
 
     assert len(list(human_with_outfit.children)) < old_child_count
 
 
 def test_set_texture_resolution(human_with_outfit):
     for obj in human_with_outfit.finalize_phase.outfit.objects:
-        for res_categ in ("high", "performance", "medium"):
+        for res_categ in ("high", "performance", "optimised"):
             human_with_outfit.finalize_phase.outfit.set_texture_resolution(
                 obj, res_categ
             )
