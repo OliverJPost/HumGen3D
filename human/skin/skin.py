@@ -50,9 +50,9 @@ class FemaleSkin:
     blush_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Blush Color"
     )
-    eyebrow_opacity: float = create_node_property("Gender_Group", "Eyebrow Opacity")
-    eyebrow_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Eyebrow Color"
+    eyebrows_opacity: float = create_node_property("Gender_Group", "Eyebrows Opacity")
+    eyebrows_color: FloatVectorProperty = create_node_property(
+        "Gender_Group", "Eyebrows Color"
     )
     lipstick_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Lipstick Color"
@@ -240,7 +240,6 @@ class TextureSettings(PreviewCollectionContent):
     def _set_from_preset(self, mat_preset_data: dict, context=None) -> None:
 
         refresh_pcoll(None, context, "textures")
-
         texture_name = mat_preset_data["diffuse"]
         texture_library = mat_preset_data["texture_library"]
         gender = self._human.gender

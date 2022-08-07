@@ -123,7 +123,7 @@ class Human:
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-        gender = context.scene.HG3D.gender  # TODO fix this
+        gender = preset.split(os.sep)[2]
 
         human: Human = cls._import_human(context, gender)
         # remove broken drivers
