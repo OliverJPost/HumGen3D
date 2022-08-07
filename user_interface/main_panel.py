@@ -1824,13 +1824,29 @@ class HG_PT_PANEL(bpy.types.Panel):
             color_flow (UILayout): indented list where color pickers are placed
             node_input (ShaderNodeInput): input of the color value on group node
         """
-        # FIXME
-        # color_groups = tuple(["_{}".format(name) for name in color_dict])
-        # color_group = (
-        #     node_input.name[-2:]
-        #     if node_input.name.endswith(color_groups)
-        #     else None
-        # )
+
+        color_dict = {
+            "C0": [
+                "88C1FF",
+                "5C97FF",
+                "F5FFFF",
+                "777C7F",
+                "2F3133",
+                "46787B",
+                "9EC4BD",
+                "7B366F",
+                "5B7728",
+                "1F3257"
+            ]
+        }
+
+
+        color_groups = tuple(["_{}".format(name) for name in color_dict])
+        color_group = (
+            node_input.name[-2:]
+            if node_input.name.endswith(color_groups)
+            else None
+        )
 
         row = color_flow.row(align=False)
         row.prop(
