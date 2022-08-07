@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 import random
 from typing import List, Tuple
 
 from HumGen3D.backend import get_prefs, preview_collections
-from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.backend.preview_collections import _populate_pcoll
+from HumGen3D.human.base.exceptions import HumGenException
 
 
 class PreviewCollectionContent:
@@ -29,7 +31,9 @@ class PreviewCollectionContent:
         setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
 
     def get_options(self) -> List[Tuple[str, str, str, int]]:
-        return [option[0] for option in self._get_full_options()]
+        # Return only the name from the enum. Skip the first one
+        #FIXME check all pcolls if 0 is always skipped
+        return [option[0] for option in self._get_full_options()[1:]]
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""
@@ -48,6 +52,39 @@ class PreviewCollectionContent:
         return self._find_folders(
             self._pcoll_name, self._pcoll_gender_split, self._human.gender
         )
+
+    def _refresh(self, context):
+        """Refresh the items of this preview collection"""
+        sett = context.scene.HG3D
+        self._check_for_HumGen_filepath_issues()
+        pcoll_name = self._pcoll_name
+
+        sett.load_exception = False if pcoll_name == "poses" else True
+
+        _populate_pcoll(
+            self,
+            context,
+            pcoll_name,
+            not self._pcoll_gender_split,
+            None,
+            hg_rig=self._human.rig_obj,
+        )
+        sett.pcoll[pcoll_name] = "none"  # set the preview collection to
+        # the 'click here to select' item
+
+        sett.load_exception = False
+
+
+    def _check_for_HumGen_filepath_issues(self):
+        pref = get_prefs()
+        if not pref.filepath:
+            raise HumGenException("No filepath selected in HumGen preferences.")
+        base_humans_path = pref.filepath + str(Path("content_packs/Base_Humans.json"))
+
+        base_content = os.path.exists(base_humans_path)
+
+        if not base_content:
+            raise HumGenException("Filepath selected, but no humans found in path")
 
     @staticmethod
     def _find_folders(pcoll_name, gender_toggle, gender, include_all=True) -> list:

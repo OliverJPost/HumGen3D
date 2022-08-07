@@ -487,7 +487,7 @@ class HG_Human:
         """
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
-        return self.__get_pcoll_list(context, "outfit")
+        return self.__get_pcoll_list(context, "outfits")
 
     @injected_context
     def set_outfit(self, context=None, chosen_outfit_option=None):
@@ -510,7 +510,7 @@ class HG_Human:
         if not chosen_outfit_option:
             chosen_outfit_option = random.choice(self.get_outfit_options(context))
 
-        self.__set_active_in_pcoll(context, "outfit", chosen_outfit_option)
+        self.__set_active_in_pcoll(context, "outfits", chosen_outfit_option)
 
     @injected_context
     def get_footwear_options(self, context=None) -> list:
@@ -652,7 +652,7 @@ class HG_Human:
         Args:
             context (context): Blender context
             pcoll_name (str): Name of preview_collection in ('humans', 'poses',
-            'expressions', 'outfit', 'footwear', 'face_hair', 'hair', 'textures',
+            'expressions', 'outfits', 'footwear', 'face_hair', 'hair', 'textures',
             'patterns')
 
         Returns:
@@ -671,7 +671,7 @@ class HG_Human:
         Args:
             context (context): Blender context
             pcoll_name (str): Name of preview_collection in ('humans', 'poses',
-            'expressions', 'outfit', 'footwear', 'face_hair', 'hair', 'textures',
+            'expressions', 'outfits', 'footwear', 'face_hair', 'hair', 'textures',
             'patterns')
             item_to_set_as_active (str): Name of item to set as active
         """

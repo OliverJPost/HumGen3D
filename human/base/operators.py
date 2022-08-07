@@ -45,7 +45,7 @@ class HG_RANDOM(bpy.types.Operator):
         elif random_type in (
             "poses",
             "expressions",
-            "outfit",
+            "outfits",
             "patterns",
             "footwear",
             "hair",
@@ -144,12 +144,12 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         sett = context.scene.HG3D
-        sett.ui_phase = (
+        sett.ui.phase = (
             "closed" if sett.ui.phase == self.section_name else self.section_name
         )
         # PCOLL add here
         categ_dict = {
-            "clothing": ("outfit",),
+            "clothing": ("outfits",),
             "footwear": ("footwear",),
             "pose": ("poses",),
             "hair": ("hair", "face_hair"),

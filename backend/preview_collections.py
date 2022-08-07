@@ -108,7 +108,7 @@ def refresh_pcoll(
         pcoll_name (str): name of the preview collection to refresh
     """
     sett = context.scene.HG3D
-    _check_for_HumGen_filepath_issues(self)
+    _check_for_HumGen_filepath_issues()
 
     sett.load_exception = False if pcoll_name == "poses" else True
 
@@ -126,7 +126,7 @@ def refresh_pcoll(
     sett.load_exception = False
 
 
-def _check_for_HumGen_filepath_issues(self):
+def _check_for_HumGen_filepath_issues():
     pref = get_prefs()
     if not pref.filepath:
         raise HumGenException("No filepath selected in HumGen preferences.")
@@ -192,8 +192,7 @@ def _populate_pcoll(
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equals None
-    pcoll = preview_collections.setdefault(pcoll_categ)
-    pcoll = preview_collections.setdefault(pcoll_categ)
+    pcoll = preview_collections[pcoll_categ]
 
     none_thumb = _load_thumbnail("pcoll_placeholder", pcoll)
     pcoll_enum = [("none", "", "", none_thumb.icon_id, 0)]
@@ -227,7 +226,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]"
     """
     pcoll_dir_dict = {
         "poses": "poses",
-        "outfit": "outfits/{}".format(gender),
+        "outfits": "outfits/{}".format(gender),
         "hair": "hair/head/{}".format(gender),
         "face_hair": "hair/face_hair",
         "expressions": "expressions",
@@ -239,7 +238,7 @@ def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]"
     categ_dir = pcoll_dir_dict[pcoll_categ]
     dir_category_dict = {
         "poses": sett.pcoll.pose_category,
-        "outfit": sett.pcoll.outfit_category,
+        "outfits": sett.pcoll.outfit_category,
         "hair": sett.pcoll.hair_category,
         "face_hair": sett.pcoll.face_hair_category,
         "expressions": sett.pcoll.expressions_category,
