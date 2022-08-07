@@ -8,7 +8,7 @@ from HumGen3D.tests.fixtures import *
 @pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_set_outfit(human, context):
     old_child_count = len(list(human.children))
-    options = human.finalize_phase.outfit.get_options()
+    options = human.finalize_phase.outfit.get_options(context)
     chosen = random.choice(options)
     human.finalize_phase.outfit.set(chosen, context)
 
@@ -18,7 +18,7 @@ def test_set_outfit(human, context):
 
 @pytest.fixture(scope="class")
 def human_with_outfit(finalize_phase_human):
-    options = finalize_phase_human.finalize_phase.outfit.get_options()
+    options = finalize_phase_human.finalize_phase.outfit.get_options(bpy.context)
     chosen = options[0]
     finalize_phase_human.finalize_phase.outfit.set(chosen, bpy.context)
     yield finalize_phase_human

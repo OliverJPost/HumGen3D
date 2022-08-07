@@ -6,6 +6,7 @@ from typing import List, Tuple
 from HumGen3D.backend import get_prefs, preview_collections
 from HumGen3D.backend.preview_collections import _populate_pcoll
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.base.decorators import injected_context
 
 
 class PreviewCollectionContent:
@@ -24,16 +25,22 @@ class PreviewCollectionContent:
             self.set(active_item)
 
     def set_random(self, context=None):
-        options = self.get_options()
+        options = self.get_options(context)
         chosen = random.choice(options)
 
         # Use indirect way so the UI reflects the chosen item
         setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
 
-    def get_options(self) -> List[Tuple[str, str, str, int]]:
+    @injected_context
+    def get_options(self, context=None) -> List[Tuple[str, str, str, int]]:
         # Return only the name from the enum. Skip the first one
         #FIXME check all pcolls if 0 is always skipped
-        return [option[0] for option in self._get_full_options()[1:]]
+        self._refresh(context)
+        options = [option[0] for option in self._get_full_options()[1:]]
+        if not options:
+            raise HumGenException("No options found, did you install the content packs?")
+
+        return options
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""

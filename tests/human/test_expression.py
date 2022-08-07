@@ -27,8 +27,8 @@ def test_facial_rig(human, context):
     assert len(human.shape_keys) == inital_sk_count
 
 @pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
-def test_set(human):
-    options = human.finalize_phase.expression.get_options()
+def test_set(human, context):
+    options = human.finalize_phase.expression.get_options(context)
     assert options
 
     chosen = random.choice(options)

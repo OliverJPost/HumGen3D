@@ -127,7 +127,7 @@ def test_underwear(human, context):
 
 @pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
 def test_set_texture(human, context):
-    options = human.skin.texture.get_options()
+    options = human.skin.texture.get_options(context)
     chosen = random.choice(options)
     human.skin.texture.set(chosen, context)
 
