@@ -396,7 +396,7 @@ def build_content_collection(self, context):
         "hairstyles": "hair",
         "face_hair": "face_hair",
         "poses": "poses",
-        "outfits": "outfit",
+        "outfits": "outfits",
         "footwear": "footwear",
     }
 

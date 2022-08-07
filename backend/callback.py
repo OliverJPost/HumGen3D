@@ -128,22 +128,22 @@ def _context_specific_updates(self, sett, human, ui_phase):
         except AttributeError:
             pass
         return
-    elif ui_phase == "body":
-        _refresh_body_scaling(self, sett, human)
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
-        return
+
     elif ui_phase == "clothing":
-        refresh_pcoll(self, context, "outfit")
-        return
+        refresh_pcoll(self, context, "outfits")
+
     elif ui_phase == "hair":
         refresh_pcoll(self, context, "hair")
         if human.gender == "male":
             refresh_pcoll(self, context, "face_hair")
-        return
+
     elif ui_phase == "expression":
         refresh_pcoll(self, context, "expressions")
-        return
+
+    elif ui_phase == "body":
+        _refresh_body_scaling(self, sett, human)
 
 
 def _refresh_body_scaling(self, sett, human: Human):

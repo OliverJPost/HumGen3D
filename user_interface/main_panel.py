@@ -1504,12 +1504,12 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett.pcoll, "outfit", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "outfits", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "outfit_sub", text="")
+        row_h.prop(sett.pcoll, "outfit_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "outfit"

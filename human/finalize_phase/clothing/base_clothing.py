@@ -85,7 +85,7 @@ class BaseClothing(PreviewCollectionContent):
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
-        refresh_pcoll(self, context, "outfit")
+        refresh_pcoll(self, context, "outfits")
 
     def _deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using

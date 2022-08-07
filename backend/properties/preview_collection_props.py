@@ -90,8 +90,8 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         update=refresh("finalize_phase.pose"),
     )
 
-    # outfit
-    outfit: EnumProperty(
+    # outfits
+    outfits: EnumProperty(
         items=get_items("finalize_phase.outfit"), update=update("finalize_phase.outfit")
     )
     outfit_category: EnumProperty(

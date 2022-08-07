@@ -179,7 +179,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                 add_expression=batch_sett.expression,
                 expressions_category=self._choose_category_list(context, "expressions"),
                 add_clothing=batch_sett.clothing,
-                clothing_category=self._choose_category_list(context, "outfit"),
+                clothing_category=self._choose_category_list(context, "outfits"),
                 pose_type=pose_type,
             )
             # FIXME repair return

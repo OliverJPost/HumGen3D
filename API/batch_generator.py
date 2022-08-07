@@ -121,7 +121,7 @@ class HG_Batch_Generator:
                 added to this human.
                 Defaults to False.
             clothing_category (str, optional): Category to choose outfit from.
-                Use get_pcoll_categs('outfit') to see options.
+                Use get_pcoll_categs('outfits') to see options.
                 Ignored if add_clothing == False.
                 Defaults to 'All'.
             pose_type (str, optional): Category to choose pose from.

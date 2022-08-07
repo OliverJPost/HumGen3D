@@ -236,7 +236,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
     def test_clothing_functions(self, context):
         bpy.ops.hg3d.section_toggle(section_name="clothing")
 
-        self.__test_pcoll(context, "outfit")
+        self.__test_pcoll(context, "outfits")
 
     def test_footwear_functions(self, context):
         bpy.ops.hg3d.section_toggle(section_name="footwear")
