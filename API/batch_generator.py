@@ -80,7 +80,7 @@ class HG_Batch_Generator:
         hair_type="particle",
         hair_quality="medium",
         add_expression=False,
-        expressions_category="All",
+        expression_category="All",
         add_clothing=False,
         clothing_category="All",
         pose_type="a_pose",
@@ -112,7 +112,7 @@ class HG_Batch_Generator:
             add_expression (bool, optional): If True, a 1-click expression will be
                 added to the human.
                 Defaults to False.
-            expressions_category (str, optional): Category to choose expression
+            expression_category (str, optional): Category to choose expression
                 from.
                 Use get_pcoll_categs('expressions') to see options.
                 Ignored if add_expression == False.

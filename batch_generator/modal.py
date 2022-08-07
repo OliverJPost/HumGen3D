@@ -177,7 +177,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                     batch_sett, f"hair_quality_particle"
                 ),  # {sett.batch_hairtype}'),
                 add_expression=batch_sett.expression,
-                expressions_category=self._choose_category_list(context, "expressions"),
+                expression_category=self._choose_category_list(context, "expressions"),
                 add_clothing=batch_sett.clothing,
                 clothing_category=self._choose_category_list(context, "outfits"),
                 pose_type=pose_type,

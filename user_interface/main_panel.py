@@ -1560,11 +1560,11 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "pose_choice", expand=True)
+        row_h.prop(sett.ui, "pose_tab_switch", expand=True)
 
-        if sett.pose_choice == "library":
+        if sett.ui.pose_tab_switch == "library":
             self._draw_pose_library(sett, box)
-        elif sett.pose_choice == "rigify":
+        elif sett.ui.pose_tab_switch == "rigify":
             self._draw_rigify_subsection(box)
 
     def _draw_rigify_subsection(self, box):
@@ -1609,7 +1609,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "pose_sub", text="")
+        row_h.prop(sett.pcoll, "pose_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "poses"
@@ -1633,9 +1633,9 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.scale_y = 1.5
-        row.prop(sett, "expression_type", expand=True)
+        row.prop(sett.ui, "expression_type", expand=True)
 
-        if sett.expression_type == "1click":
+        if sett.ui.expression_type == "1click":
             self._draw_oneclick_subsection(box, sett)
         else:
             self._draw_frig_subsection(box)
@@ -1667,7 +1667,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "expressions_sub", text="")
+        row_h.prop(sett.pcoll, "expression_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "expressions"

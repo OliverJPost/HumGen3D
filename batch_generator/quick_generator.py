@@ -80,7 +80,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
     clothing_category: StringProperty()
 
     add_expression: BoolProperty()
-    expressions_category: StringProperty()
+    expression_category: StringProperty()
 
     pose_type: StringProperty()
 
@@ -157,7 +157,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         if self.add_expression:
             # TODO implement in OOP
-            sett.pcoll.expressions_category = self.expressions_category
+            sett.pcoll.expression_category = self.expression_category
             set_random_active_in_pcoll(context, sett, "expressions")
             expr_sk = next(
                 (sk for sk in human.shape_keys if sk.name.startswith("expr_")),

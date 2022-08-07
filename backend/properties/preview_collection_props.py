@@ -130,7 +130,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_items("finalize_phase.expression"),
         update=update("finalize_phase.expression"),
     )
-    expressions_category: EnumProperty(
+    expression_category: EnumProperty(
         name="Expressions Library",
         items=get_folders("finalize_phase.expression"),
         update=refresh("finalize_phase.expression"),

@@ -46,6 +46,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "pattern_bool",
                 "decal_bool",
                 "thumb_ui",
+                "expression_slider"
             ]
         )
     )
