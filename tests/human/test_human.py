@@ -132,10 +132,10 @@ class TestHumanCommonMethods:
         is_visible()
         is_visible()
 
-
-def test_is_batch(batch_human):
-    rig_obj = batch_human.rig_obj
-    assert Human._is_applied_batch_result(rig_obj)
+# TODO implement batch_human
+# def test_is_batch(batch_human):
+#     rig_obj = batch_human.rig_obj
+#     assert Human._is_applied_batch_result(rig_obj)
 
 
 def test_creation_phase(creation_phase_human):
