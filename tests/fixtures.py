@@ -8,6 +8,17 @@ import pytest # type:ignore
 from HumGen3D.human.human import Human
 from pytest_lazyfixture import lazy_fixture # type:ignore
 
+_standard_fixtures = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
+_all_female_fixtures = [name+"_female" for name in _standard_fixtures]
+ALL_HUMAN_FIXTURES = [lazy_fixture(name) for name in _standard_fixtures+_all_female_fixtures]
+ALL_FEMALE_FIXTURES = [lazy_fixture(name) for name in _all_female_fixtures]
+
+ALL_FINALIZE_FIXTURES = [lazy_fixture(name) for name in ["finalize_phase_human", "finalize_phase_human_female"]]
+ALL_CREATION_FIXTURES = []
+for name in ["creation_phase_human", "reverted_human"]:
+    ALL_CREATION_FIXTURES.append(lazy_fixture(name))
+    ALL_CREATION_FIXTURES.append(lazy_fixture(name+"_female"))
+
 @pytest.fixture(scope="class")
 def creation_phase_human() -> Human:
     human = _create_human()
@@ -57,22 +68,3 @@ def reverted_human_female(finalize_phase_human_female) -> Human:
 @pytest.fixture
 def context():
     return bpy.context
-
-_standard_fixtures = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
-_female_fixtures = [name+"_female" for name in _standard_fixtures]
-all_human_fixtures = [lazy_fixture(name) for name in _standard_fixtures+_female_fixtures]
-female_fixtures = [lazy_fixture(name) for name in _female_fixtures]
-
-def parametrize_all_human_types(func, gender="all"):
-    fixture_names = []
-    default_fixture_names = [
-        "creation_phase_human",
-        "finalize_phase_human",
-        "reverted_human"
-    ]
-    if gender == "male" or gender == "all":
-        fixture_names.extend(default_fixture_names)
-    if gender == "female" or gender == "all":
-        fixture_names.extend([name+"_female" for name in default_fixture_names])
-
-    return pytest.mark.parametrize(func, "human", [lazy_fixture(name) for name in fixture_names])

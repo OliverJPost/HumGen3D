@@ -2,10 +2,10 @@ import random
 from typing import TYPE_CHECKING
 import bpy
 import pytest # type:ignore
-from HumGen3D.tests.fixtures import context
-from HumGen3D.tests.fixtures import finalize_phase_human as human
+from HumGen3D.tests.fixtures import ALL_FINALIZE_FIXTURES, context
+from HumGen3D.tests.fixtures import *
 
-
+@pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_set_outfit(human, context):
     old_child_count = len(list(human.children))
     options = human.finalize_phase.outfit.get_options()
@@ -17,11 +17,11 @@ def test_set_outfit(human, context):
 
 
 @pytest.fixture(scope="class")
-def human_with_outfit(human):
-    options = human.finalize_phase.outfit.get_options()
+def human_with_outfit(finalize_phase_human):
+    options = finalize_phase_human.finalize_phase.outfit.get_options()
     chosen = options[0]
-    human.finalize_phase.outfit.set(chosen, bpy.context)
-    yield human
+    finalize_phase_human.finalize_phase.outfit.set(chosen, bpy.context)
+    yield finalize_phase_human
 
 
 def test_remove_outfit(human_with_outfit, context):

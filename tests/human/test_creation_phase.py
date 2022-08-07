@@ -2,10 +2,10 @@ import random
 from statistics import mean
 
 from HumGen3D.human.creation_phase.face.face import FaceKeys
-from HumGen3D.tests.fixtures import context
-from HumGen3D.tests.fixtures import creation_phase_human as human
+from HumGen3D.tests.fixtures import ALL_CREATION_FIXTURES, context
+from HumGen3D.tests.fixtures import *
 
-
+@pytest.mark.parametrize("human", ALL_CREATION_FIXTURES)
 class TestCreationPhase:
     @staticmethod
     def test_stretch_bones(human):

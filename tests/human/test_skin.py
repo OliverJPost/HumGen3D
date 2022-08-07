@@ -4,8 +4,8 @@ import pytest # type:ignore
 from HumGen3D.human.skin.skin import SkinSettings
 from HumGen3D.tests.fixtures import (
     context,
-    all_human_fixtures,
-    female_fixtures
+    ALL_HUMAN_FIXTURES,
+    ALL_FEMALE_FIXTURES
 )
 from HumGen3D.tests.fixtures import *
 from pytest_lazyfixture import lazy_fixture # type:ignore
@@ -23,7 +23,7 @@ def test_male_skin(human):
     assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[3].default_value) == 0.7
     skin_sett.beard_shadow = 12
 
-@pytest.mark.parametrize("human", female_fixtures)
+@pytest.mark.parametrize("human", ALL_FEMALE_FIXTURES)
 def test_female_skin(human):
     attr_names = [
         "foundation_amount",
