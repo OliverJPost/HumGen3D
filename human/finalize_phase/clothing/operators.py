@@ -1,13 +1,11 @@
 import json
 import random
 
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete
 import bpy
-from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
 from HumGen3D.human.human import Human
 
 from .base_clothing import find_masks
-
 
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
@@ -81,69 +79,17 @@ class HG_OT_PATTERN(bpy.types.Operator):
     add: bpy.props.BoolProperty()  # True means the pattern is added, False means the pattern will be removed
 
     def execute(self, context):
-        mat = context.object.active_material
-        self.nodes = mat.node_tree.nodes
-        self.links = mat.node_tree.links
+        obj = context.object
 
-        # finds the nodes, adding them if they don't exist
-        img_node = self._create_node_if_doesnt_exist("HG_Pattern")
-        mapping_node = self._create_node_if_doesnt_exist("HG_Pattern_Mapping")
-        coord_node = self._create_node_if_doesnt_exist(
-            "HG_Pattern_Coordinates"
-        )
+        human = Human.from_existing(obj)
 
-        # deletes the nodes
-        if not self.add:
-            mat.node_tree.nodes.remove(img_node)
-            mat.node_tree.nodes.remove(mapping_node)
-            mat.node_tree.nodes.remove(coord_node)
-            self.nodes["HG_Control"].inputs["Pattern"].default_value = (
-                0,
-                0,
-                0,
-                1,
-            )
-            return {"FINISHED"}
+        if self.add:
+            human.finalize_phase.outfit.pattern.set_random(obj, context)
+        else:
+            human.finalize_phase.outfit.pattern.remove(obj)
 
-        set_random_active_in_pcoll(context, context.scene.HG3D, "patterns")
         return {"FINISHED"}
 
-    def _create_node_if_doesnt_exist(self, name) -> bpy.types.ShaderNode:
-        """Returns the node, creating it if it doesn't exist
-
-        Args:
-            name (str): name of node to check
-
-        Return
-            node (ShaderNode): node that was being searched for
-        """
-        # try to find the node, returns it if it already exists
-        for node in self.nodes:
-            if node.name == name:
-                return node
-
-        # adds the node, because it doesn't exist yet
-        type_dict = {
-            "HG_Pattern": "ShaderNodeTexImage",
-            "HG_Pattern_Mapping": "ShaderNodeMapping",
-            "HG_Pattern_Coordinates": "ShaderNodeTexCoord",
-        }
-
-        node = self.nodes.new(type_dict[name])
-        node.name = name
-
-        link_dict = {
-            "HG_Pattern": (0, "HG_Control", 9),
-            "HG_Pattern_Mapping": (0, "HG_Pattern", 0),
-            "HG_Pattern_Coordinates": (2, "HG_Pattern_Mapping", 0),
-        }
-        target_node = self.nodes[link_dict[name][1]]
-        self.links.new(
-            node.outputs[link_dict[name][0]],
-            target_node.inputs[link_dict[name][2]],
-        )
-
-        return node
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
     """
@@ -171,9 +117,21 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
     color_group: bpy.props.StringProperty()
 
     def execute(self, context):
-        colorgroups_json = "colorgroups.json"
-        with open(colorgroups_json) as f:
-            color_dict = json.load(f)
+        #FIXME
+        color_dict = {
+            "C0": [
+                "88C1FF",
+                "5C97FF",
+                "F5FFFF",
+                "777C7F",
+                "2F3133",
+                "46787B",
+                "9EC4BD",
+                "7B366F",
+                "5B7728",
+                "1F3257"
+            ]
+        }
 
         color_hex = random.choice(color_dict[self.color_group])
         color_rgba = self._hex_to_rgba(color_hex)

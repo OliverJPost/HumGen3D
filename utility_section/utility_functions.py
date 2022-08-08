@@ -1,10 +1,10 @@
 import json
 import os
 from pathlib import Path
-from HumGen3D.backend.preference_func import get_prefs
-from HumGen3D.human.human import Human
-import bpy  # type: ignore
 
+import bpy  # type: ignore
+from HumGen3D.backend import get_prefs
+from HumGen3D.human.human import Human
 
 
 def refresh_modapply(self, context):
@@ -76,16 +76,6 @@ def build_summary_list(col, mod):
             item.enabled = True
 
 
-def get_preset_thumbnail(self, context) -> list:
-    sett = context.scene.HG3D
-    img = sett.preset_thumbnail
-    return (
-        [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)]
-        if img
-        else []
-    )
-
-
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
@@ -120,7 +110,7 @@ def find_existing_shapekeys(sett, pref):
     existing_sks = [
         "Basis",
     ]
-    if not sett.show_saved_sks:
+    if not sett.custom_content.show_saved_sks:
         walker = os.walk(str(pref.filepath) + str(Path("/models/shapekeys")))
         for root, _, filenames in walker:
             for fn in filenames:
@@ -190,9 +180,7 @@ def refresh_outfit_ul(self, context):
                 False,
             )
 
-        item.weight_paint_present = "spine" in [
-            vg.name for vg in obj.vertex_groups
-        ]
+        item.weight_paint_present = "spine" in [vg.name for vg in obj.vertex_groups]
 
         if obj.name in previously_enabled_items:
             item.enabled = True

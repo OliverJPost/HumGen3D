@@ -2,7 +2,7 @@ import random
 import time as timelib
 
 import bpy
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log
 
 
 class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
@@ -95,7 +95,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         context.scene.HG3D.gender = gender
         pcoll_list = context.scene.HG3D["previews_list_humans"]
 
-        context.scene.HG3D.pcoll_humans = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.humans = random.choice(pcoll_list)
 
         bpy.ops.hg3d.startcreation()
 
@@ -122,12 +122,10 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         ]
 
         for scale_name in individual_scaling_names:
-            sk_name = scale_name + "_size"
-
             sett = context.scene.HG3D
-            setattr(sett, sk_name, 1.0)
-            setattr(sett, sk_name, 0.0)
-            setattr(sett, sk_name, 0.5)
+            setattr(sett.bone_sizes, scale_name, 1.0)
+            setattr(sett.bone_sizes, scale_name, 0.0)
+            setattr(sett.bone_sizes, scale_name, 0.5)
 
     def test_length_change(self, context):
         bpy.ops.hg3d.section_toggle(section_name="length")
@@ -217,8 +215,8 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         bpy.ops.hg3d.section_toggle(section_name="hair")
 
         pcoll_list = context.scene.HG3D["previews_list_hair"]
-        context.scene.HG3D.pcoll_hair = random.choice(pcoll_list)
-        context.scene.HG3D.pcoll_hair = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.hair = random.choice(pcoll_list)
+        context.scene.HG3D.pcoll.hair = random.choice(pcoll_list)
 
         if self.human.HG.gender == "male":
             pcoll_list = context.scene.HG3D["previews_list_face_hair"]
@@ -238,7 +236,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
     def test_clothing_functions(self, context):
         bpy.ops.hg3d.section_toggle(section_name="clothing")
 
-        self.__test_pcoll(context, "outfit")
+        self.__test_pcoll(context, "outfits")
 
     def test_footwear_functions(self, context):
         bpy.ops.hg3d.section_toggle(section_name="footwear")
@@ -263,11 +261,11 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         print("------------------------------------------------")
         print("------------------------------------------------")
         t = timelib.perf_counter()
-        context.scene.HG3D.expression_type = "frig"
+        context.scene.HG3D.ui.expression_type = "frig"
         bpy.ops.hg3d.addfrig()
         print("add first time", timelib.perf_counter() - t)
         t = timelib.perf_counter()
-        bpy.context.scene.HG3D.expression_type = "1click"
+        bpy.context.scene.HG3D.ui.expression_type = "1click"
         bpy.ops.hg3d.removefrig()
         print("remove", timelib.perf_counter() - t)
         t = timelib.perf_counter()
@@ -276,7 +274,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
         print("test pcoll", timelib.perf_counter() - t)
         t = timelib.perf_counter()
 
-        context.scene.HG3D.expression_type = "frig"
+        context.scene.HG3D.ui.expression_type = "frig"
         bpy.ops.hg3d.addfrig()
         print("add second time", timelib.perf_counter() - t)
         print("ending")
@@ -284,7 +282,7 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
     def test_rigify(self, context):
         bpy.ops.hg3d.section_toggle(section_name="pose")
         old_name = self.human.name
-        bpy.context.scene.HG3D.pose_choice = "rigify"
+        bpy.context.scene.HG3D.ui.pose_tab_switch = "rigify"
 
         bpy.ops.hg3d.rigify()
         self.human = context.scene.objects.get(f"{old_name}_RIGIFY")

@@ -4,20 +4,22 @@ from pathlib import Path
 
 import bpy
 import numpy as np
-from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import hg_delete, remove_broken_drivers, get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
+from HumGen3D.human.base.exceptions import HumGenException
 
 
-class ExpressionSettings:
+class ExpressionSettings(PreviewCollectionContent):
     def __init__(self, _human):
         self._human = _human
+        self._pcoll_name = "expressions"
+        self._pcoll_gender_split = False
 
-    @injected_context
-    def set(self, preset, context=None):
+    def set(self, preset):
         """Loads the active expression in the preview collection"""
         pref = get_prefs()
 
@@ -37,9 +39,7 @@ class ExpressionSettings:
         hg_body = hg_rig.HG.body_obj
         sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
         if "expr_{}".format(sk_name) in sk_names:
-            new_key = hg_body.data.shape_keys.key_blocks[
-                "expr_{}".format(sk_name)
-            ]
+            new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
             backup_rig = hg_rig.HG.backup
             backup_body = next(
@@ -60,9 +60,7 @@ class ExpressionSettings:
         new_key.mute = False
         new_key.value = 1
 
-    def _transfer_as_one_shapekey(
-        self, context, source, target, sk_dict, backup_rig
-    ):
+    def _transfer_as_one_shapekey(self, context, source, target, sk_dict, backup_rig):
         """Transfers multiple shapekeys as one shapekey
 
         Args:
@@ -184,7 +182,7 @@ class ExpressionSettings:
                 continue
             from_obj.active_shape_key_index = idx
             # bpy.ops.object.shape_key_transfer()
-            self._transfer(sk, to_obj)
+            transfer_shapekey(sk, to_obj)
 
         sks_on_target = to_obj.data.shape_keys.key_blocks
         for driver_shapekey in driver_dict:
@@ -202,20 +200,10 @@ class ExpressionSettings:
         hg_delete(from_obj)
         to_obj.show_only_shape_key = False
 
-    def _transfer(self, sk, to_obj):
-        new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
-        new_sk.interpolation = "KEY_LINEAR"
-        old_sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
-
-        sk.data.foreach_get("co", old_sk_data)
-        new_sk.data.foreach_set("co", old_sk_data)
-
     def _transfer_multiple_as_one(self, sks, values, to_obj, name):
         new_sk = to_obj.shape_key_add(name=name, from_mix=False)
         new_sk.interpolation = "KEY_LINEAR"
-        combined_sk_data = np.zeros(
-            len(to_obj.data.vertices) * 3, dtype=np.float64
-        )
+        combined_sk_data = np.zeros(len(to_obj.data.vertices) * 3, dtype=np.float64)
 
         for sk, value in zip(sks, values):
             sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
@@ -227,12 +215,15 @@ class ExpressionSettings:
         return new_sk
 
     def remove_facial_rig(self):
+        if not "facial_rig" in self._human.body_obj:
+            raise HumGenException("No facial rig found on this human")
+
         frig_bones = self._get_frig_bones()
         for b_name in frig_bones:
             b = self._human.pose_bones[b_name]
             b.bone.hide = True
 
-        # TODO make it only delete Frig sks instead of all outside naming scheme
+        # FIXME make it only delete Frig sks instead of all outside naming scheme
         for sk in [
             sk
             for sk in self._human.shape_keys

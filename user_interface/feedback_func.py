@@ -1,6 +1,6 @@
 import bpy
 
-from ..backend.logging import hg_log
+from ..backend import hg_log
 
 
 def show_message(self, msg):

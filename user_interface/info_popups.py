@@ -42,9 +42,7 @@ class HG_OT_INFO(bpy.types.Operator):
             layout = self.layout
             eval(message_txt_key + "(layout)")  # FIXME wtf dude
 
-        bpy.context.window_manager.popup_menu(
-            draw, title="Info", icon="QUESTION"
-        )
+        bpy.context.window_manager.popup_menu(draw, title="Info", icon="QUESTION")
 
 
 hair_children_txt = """Enabling hair children, especially at render density can really slow down

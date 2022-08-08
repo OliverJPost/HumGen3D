@@ -5,13 +5,12 @@ from .bl_ui_widget import *
 
 
 class BL_UI_Button(BL_UI_Widget):
-    
     def __init__(self, x, y, width, height):
         super().__init__(x, y, width, height)
-        self._text_color        = (1.0, 1.0, 1.0, 1.0)
-        self._hover_bg_color    = (0.5, 0.5, 0.5, 1.0)
-        self._select_bg_color   = (0.7, 0.7, 0.7, 1.0)
-        
+        self._text_color = (1.0, 1.0, 1.0, 1.0)
+        self._hover_bg_color = (0.5, 0.5, 0.5, 1.0)
+        self._select_bg_color = (0.7, 0.7, 0.7, 1.0)
+
         self._text = "Button"
         self._text_size = 16
         self._textpos = (x, y)
@@ -36,7 +35,7 @@ class BL_UI_Button(BL_UI_Widget):
     @text.setter
     def text(self, value):
         self._text = value
-                
+
     @property
     def text_size(self):
         return self._text_size
@@ -59,8 +58,8 @@ class BL_UI_Button(BL_UI_Widget):
 
     @select_bg_color.setter
     def select_bg_color(self, value):
-        self._select_bg_color = value 
-        
+        self._select_bg_color = value
+
     def set_image_size(self, imgage_size):
         self.__image_size = imgage_size
 
@@ -69,48 +68,50 @@ class BL_UI_Button(BL_UI_Widget):
 
     def set_image(self, rel_filepath):
         try:
-            self.__image = bpy.data.images.load(rel_filepath, check_existing=True)   
+            self.__image = bpy.data.images.load(rel_filepath, check_existing=True)
             self.__image.gl_load()
         except:
             pass
 
-    def update(self, x, y):        
+    def update(self, x, y):
         super().update(x, y)
         self._textpos = [x, y]
 
         area_height = self.get_area_height()
-        
+
         y_screen_flip = area_height - self.y_screen
-        
-        off_x, off_y =  self.__image_position
+
+        off_x, off_y = self.__image_position
         sx, sy = self.__image_size
-        
+
         # bottom left, top left, top right, bottom right
         vertices = (
-                    (self.x_screen + off_x, y_screen_flip - off_y), 
-                    (self.x_screen + off_x, y_screen_flip - sy - off_y), 
-                    (self.x_screen + off_x + sx, y_screen_flip - sy - off_y),
-                    (self.x_screen + off_x + sx, y_screen_flip - off_x))
-        
-        self.shader_img = gpu.shader.from_builtin('2D_IMAGE')
-        self.batch_img = batch_for_shader(self.shader_img, 'TRI_FAN', 
-        { "pos" : vertices, 
-          "texCoord": ((0, 1), (0, 0), (1, 0), (1, 1)) 
-        },)
-        
+            (self.x_screen + off_x, y_screen_flip - off_y),
+            (self.x_screen + off_x, y_screen_flip - sy - off_y),
+            (self.x_screen + off_x + sx, y_screen_flip - sy - off_y),
+            (self.x_screen + off_x + sx, y_screen_flip - off_x),
+        )
+
+        self.shader_img = gpu.shader.from_builtin("2D_IMAGE")
+        self.batch_img = batch_for_shader(
+            self.shader_img,
+            "TRI_FAN",
+            {"pos": vertices, "texCoord": ((0, 1), (0, 0), (1, 0), (1, 1))},
+        )
+
     def draw(self):
 
         area_height = self.get_area_height()
 
         self.shader.bind()
-        
+
         self.set_colors()
-        
+
         bgl.glEnable(bgl.GL_BLEND)
 
-        self.batch_panel.draw(self.shader) 
+        self.batch_panel.draw(self.shader)
 
-        self.draw_image()   
+        self.draw_image()
 
         bgl.glDisable(bgl.GL_BLEND)
 
@@ -136,7 +137,9 @@ class BL_UI_Button(BL_UI_Widget):
         size = blf.dimensions(0, self._text)
 
         textpos_y = area_height - self._textpos[1] - (self.height + size[1]) / 2.0
-        blf.position(0, self._textpos[0] + (self.width - size[0]) / 2.0, textpos_y + 2, 0)
+        blf.position(
+            0, self._textpos[0] + (self.width - size[0]) / 2.0, textpos_y + 2, 0
+        )
 
         r, g, b, a = self._text_color
         blf.color(0, r, g, b, a)
@@ -147,44 +150,43 @@ class BL_UI_Button(BL_UI_Widget):
         if self.__image is not None:
             try:
                 bgl.glActiveTexture(bgl.GL_TEXTURE0)
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, 
-                self.__image.bindcode)
+                bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.__image.bindcode)
 
                 self.shader_img.bind()
                 self.shader_img.uniform_int("image", 0)
-                self.batch_img.draw(self.shader_img) 
+                self.batch_img.draw(self.shader_img)
                 return True
             except:
                 pass
 
-        return False     
-        
+        return False
+
     def set_mouse_down(self, mouse_down_func):
-        self.mouse_down_func = mouse_down_func   
-                 
-    def mouse_down(self, x, y):    
-        if self.is_in_rect(x,y):
+        self.mouse_down_func = mouse_down_func
+
+    def mouse_down(self, x, y):
+        if self.is_in_rect(x, y):
             self.__state = 1
             try:
                 self.mouse_down_func(self)
             except:
                 pass
-                
+
             return True
-        
+
         return False
-    
+
     def mouse_move(self, x, y):
-        if self.is_in_rect(x,y):
-            if(self.__state != 1):
-                
+        if self.is_in_rect(x, y):
+            if self.__state != 1:
+
                 # hover state
                 self.__state = 2
         else:
             self.__state = 0
- 
+
     def mouse_up(self, x, y):
-        if self.is_in_rect(x,y):
+        if self.is_in_rect(x, y):
             self.__state = 2
         else:
             self.__state = 0

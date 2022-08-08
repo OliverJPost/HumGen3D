@@ -1,6 +1,6 @@
 import random
 
-from bpy.types import Material, Object
+from bpy.types import Material, Object # type:ignore
 
 
 class EyeSettings:
@@ -9,9 +9,7 @@ class EyeSettings:
 
     @property
     def eye_obj(self) -> Object:
-        return next(
-            child for child in self._human.objects if "hg_eyes" in child
-        )
+        return next(child for child in self._human.objects if "hg_eyes" in child)
 
     @property
     def inner_material(self) -> Material:

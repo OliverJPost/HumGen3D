@@ -1,10 +1,11 @@
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend import hg_delete
 import bpy
 from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from mathutils import Vector, kdtree
+from mathutils import Vector, kdtree # type:ignore
 
 import numpy as np
+
 
 def build_distance_dict(source_org, target, apply=True):
     """
@@ -41,6 +42,7 @@ def build_distance_dict(source_org, target, apply=True):
 
     hg_delete(source)
     return distance_dict
+
 
 def deform_obj_from_difference(
     name,
@@ -85,9 +87,7 @@ def deform_obj_from_difference(
     for vertex_index in distance_dict:
         source_new_vert_loc = (
             deform_target_copy.matrix_world
-            @ deform_target_copy.data.vertices[
-                distance_dict[vertex_index][0]
-            ].co
+            @ deform_target_copy.data.vertices[distance_dict[vertex_index][0]].co
         )
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc = source_new_vert_loc - distance_to_vert

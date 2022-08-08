@@ -6,12 +6,9 @@ from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
-from bpy.types import Object
+from bpy.types import Object # type:ignore
 
-from ..backend.logging import hg_log
-from ..backend.memory_management import hg_delete
-from ..backend.preference_func import get_prefs
-from ..backend.preview_collections import refresh_pcoll
+from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import cached_property, injected_context
 from .base.exceptions import HumGenException
@@ -25,8 +22,8 @@ from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty
-    from bpy.types import (
+    from bpy.props import FloatVectorProperty # type:ignore
+    from bpy.types import ( # type:ignore
         Context,
         EditBone,
         PoseBone,
@@ -89,9 +86,7 @@ class Human:
         """
 
         if strict_check and not isinstance(existing_human, Object):
-            raise TypeError(
-                f"Expected a Blender object, got {type(existing_human)}"
-            )
+            raise TypeError(f"Expected a Blender object, got {type(existing_human)}")
 
         rig_obj = cls.find(existing_human)
 
@@ -124,13 +119,11 @@ class Human:
         preset_path = os.path.join(
             get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
         )
-        print(get_prefs().filepath)
-        print(preset.replace("jpg", "json"))
-        print(preset_path)
+
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-        gender = context.scene.HG3D.gender  # TODO fix this
+        gender = preset.split(os.sep)[2]
 
         human: Human = cls._import_human(context, gender)
         # remove broken drivers
@@ -311,9 +304,7 @@ class Human:
             CreationPhaseSettings: Subclass containing creation_phase options
         """
         if self.phase != "creation":
-            raise HumGenException(
-                f"Human is in {self.phase}, not in creation phase."
-            )
+            raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
         return CreationPhaseSettings(self)
 
     @property  # TODO make cached
@@ -329,9 +320,7 @@ class Human:
             FinalizePhaseSettings: Subclass containing finalize_phase options
         """
         if self.phase != "finalize":
-            raise HumGenException(
-                f"Human is in {self.phase}, not in finalize phase."
-            )
+            raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
         return FinalizePhaseSettings(self)
 
     @property  # TODO make cached
@@ -424,6 +413,7 @@ class Human:
             if "no_body" in self.rig_obj:
                 del self.rig_obj["no_body"]
 
+    # TODO this method is too broad
     @classmethod
     def _import_human(cls, context: Context, gender: str) -> Human:
         """
@@ -437,9 +427,8 @@ class Human:
           A Human object
         """
         # import from HG_Human file
-        blendfile = os.path.join(
-            get_prefs().filepath, "models", "HG_HUMAN.blend"
-        )
+
+        blendfile = os.path.join(get_prefs().filepath, "models", "HG_HUMAN.blend")
         with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
             data_to.objects = [
                 "HG_Rig",
@@ -451,7 +440,6 @@ class Human:
 
         # link to scene
         hg_rig, hg_body, hg_eyes, *hg_teeth = data_to.objects
-
         scene = context.scene
         for obj in data_to.objects:
             scene.collection.objects.link(obj)
@@ -473,7 +461,6 @@ class Human:
         props.length = hg_rig.dimensions[2]
 
         human = cls(hg_rig)
-
         human.shape_keys._load_external(human, context)
         human.shape_keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
@@ -485,11 +472,12 @@ class Human:
         human.skin._remove_opposite_gender_specific()
 
         # new hair shader?
-
         human.hair._add_quality_props()
 
         for mod in human.body_obj.modifiers:
             mod.show_expanded = False
+
+        remove_broken_drivers()
 
         return human
 

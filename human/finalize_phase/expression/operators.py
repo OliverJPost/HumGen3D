@@ -1,8 +1,7 @@
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend.memory_management import hg_delete, remove_broken_drivers
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend import hg_delete, remove_broken_drivers, get_prefs
 from HumGen3D.human.base.drivers import build_driver_dict
 
 from HumGen3D.human.human import Human

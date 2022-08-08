@@ -4,19 +4,17 @@ from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import hg_log, hg_delete, get_prefs, refresh_pcoll
 from HumGen3D.human.base.collections import add_to_collection
+from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
 from HumGen3D.human.finalize_phase import clothing
+from HumGen3D.human.finalize_phase.clothing.pattern import PatternSettings
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-
-from HumGen3D.human.base.decorators import injected_context
 
 
 def find_masks(obj) -> list:
@@ -38,7 +36,11 @@ def find_masks(obj) -> list:
     return mask_list
 
 
-class BaseClothing:
+class BaseClothing(PreviewCollectionContent):
+    @property
+    def pattern(self) -> PatternSettings:
+        return PatternSettings(self._human)
+
     @injected_context
     def set(self, preset, context=None):
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
@@ -74,9 +76,7 @@ class BaseClothing:
             for mod in obj.modifiers:
                 mod.show_expanded = False  # collapse modifiers
 
-            self._set_cloth_corrective_drivers(
-                obj, obj.data.shape_keys.key_blocks
-            )
+            self._set_cloth_corrective_drivers(obj, obj.data.shape_keys.key_blocks)
 
         # remove collection that was imported along with the cloth objects
         for col in collections:
@@ -85,7 +85,7 @@ class BaseClothing:
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
-        refresh_pcoll(self, context, "outfit")
+        refresh_pcoll(self, context, "outfits")
 
     def _deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using
@@ -100,15 +100,11 @@ class BaseClothing:
         cloth_obj.parent = backup_rig
 
         backup_rig.HG.body_obj.hide_viewport = False
-        backup_body = [obj for obj in backup_rig.children if "hg_body" in obj][
-            0
-        ]
+        backup_body = [obj for obj in backup_rig.children if "hg_body" in obj][0]
 
         backup_body_copy = self._copy_backup_with_gender_sk(backup_body)
 
-        distance_dict = build_distance_dict(
-            backup_body_copy, cloth_obj, apply=False
-        )
+        distance_dict = build_distance_dict(backup_body_copy, cloth_obj, apply=False)
 
         cloth_obj.parent = self._human.rig_obj
 
@@ -207,9 +203,7 @@ class BaseClothing:
             hg_rig (Object): HumGen armature
         """
         # checks if the cloth object already has an armature modifier, adds one if it doesnt
-        armature_mods = [
-            mod for mod in obj.modifiers if mod.type == "ARMATURE"
-        ]
+        armature_mods = [mod for mod in obj.modifiers if mod.type == "ARMATURE"]
 
         if not armature_mods:
             armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
@@ -233,13 +227,9 @@ class BaseClothing:
                 0,
             ) > bpy.app.version:  # use old method for versions older than 2.90
                 while obj.modifiers.find(mod.name) != 0:
-                    bpy.ops.object.modifier_move_up(
-                        {"object": obj}, modifier=mod.name
-                    )
+                    bpy.ops.object.modifier_move_up({"object": obj}, modifier=mod.name)
             else:
-                bpy.ops.object.modifier_move_to_index(
-                    modifier=mod.name, index=0
-                )
+                bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
 
     @injected_context
     def _import_cloth_items(
@@ -331,9 +321,7 @@ class BaseClothing:
         except AttributeError:
             pass
 
-        body_drivers = (
-            self._human.body_obj.data.shape_keys.animation_data.drivers
-        )
+        body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
 
         for driver in body_drivers:
             target_sk = driver.data_path.replace('key_blocks["', "").replace(
@@ -401,31 +389,6 @@ class BaseClothing:
             node.image = new_image
             new_image.colorspace_settings.name = old_color_setting
 
-    def load_pattern(self, context):
-        """
-        Loads the pattern that is the current active item in the patterns preview_collection
-        """
-        pref = get_prefs()
-        mat = context.object.active_material
-
-        # finds image node, returns error if for some reason the node doesn't exist
-        try:
-            img_node = mat.node_tree.nodes["HG_Pattern"]
-        except KeyError:
-            self.report(
-                {"WARNING"},
-                "Couldn't find pattern node, click 'Remove pattern' and try to add it again",
-            )
-            return
-
-        filepath = str(pref.filepath) + str(
-            Path(context.scene.HG3D.pcoll_patterns)
-        )
-        images = bpy.data.images
-        pattern = images.load(filepath, check_existing=True)
-
-        img_node.image = pattern
-
     @injected_context
     def randomize_colors(self, cloth_obj, context=None):
         mat = cloth_obj.data.materials[0]
@@ -452,7 +415,9 @@ class BaseClothing:
         for input_socket in control_node.inputs:
             color_groups = tuple(["_{}".format(name) for name in color_dict])
             color_group = (
-                input_socket.name[-2:] if input_socket.name.endswith(color_groups) else None
+                input_socket.name[-2:]
+                if input_socket.name.endswith(color_groups)
+                else None
             )
 
             if not color_group:

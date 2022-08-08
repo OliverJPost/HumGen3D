@@ -36,9 +36,7 @@ def _get_mats_and_images(obj):
         for mat in obj.data.materials:
             materials.append(mat)
             nodes = mat.node_tree.nodes
-            for node in [
-                n for n in nodes if n.bl_idname == "ShaderNodeTexImage"
-            ]:
+            for node in [n for n in nodes if n.bl_idname == "ShaderNodeTexImage"]:
                 images.append(node.image)
     except:
         raise
