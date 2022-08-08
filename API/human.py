@@ -5,8 +5,7 @@ from mathutils import Euler, Vector
 
 from HumGen3D.human.base.decorators import injected_context
 
-from ..backend.logging import hg_log
-from ..backend.preview_collections import refresh_pcoll
+from ..backend import hg_log, refresh_pcoll
 from ..human.base.exceptions import HumGenException
 from ..human.human import Human  # type:ignore
 from ..user_interface.panel_functions import (
@@ -234,9 +233,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return next(
-            child for child in self.rig_object.children if "hg_eyes" in child
-        )
+        return next(child for child in self.rig_object.children if "hg_eyes" in child)
 
     @property
     def teeth_objects(self) -> "list[bpy.types.Object]":
@@ -247,9 +244,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return [
-            child for child in self.rig_object.children if "hg_teeth" in child
-        ]
+        return [child for child in self.rig_object.children if "hg_teeth" in child]
 
     @property
     def clothing_objects(self) -> "list[bpy.types.Object]":
@@ -261,9 +256,7 @@ class HG_Human:
         Raises:
             HumGenException: When this human does not yet exist in Blender.
         """
-        return [
-            child for child in self.rig_object.children if "cloth" in child
-        ]
+        return [child for child in self.rig_object.children if "cloth" in child]
 
     @property
     def footwear_objects(self) -> "list[bpy.types.Object]":
@@ -323,15 +316,11 @@ class HG_Human:
         sett = context.scene.HG3D
 
         if self._rig_object:
-            raise HumGenException(
-                "This HG_Human instance already exists in Blender."
-            )
+            raise HumGenException("This HG_Human instance already exists in Blender.")
 
         if gender:
             if gender not in ("male", "female"):
-                raise ValueError(
-                    f'Gender {gender} not found in ("male", "female")'
-                )
+                raise ValueError(f'Gender {gender} not found in ("male", "female")')
             self._gender = gender
         else:
             self._gender = random.choice(("male", "female"))
@@ -341,9 +330,7 @@ class HG_Human:
         return sett["previews_list_humans"]
 
     @injected_context
-    def create(
-        self, context=None, chosen_starting_human=None
-    ) -> bpy.types.Object:
+    def create(self, context=None, chosen_starting_human=None) -> bpy.types.Object:
         """Adds a new human to the active Blender scene. Required for most
         functionality if you didn't pass an existing_human when creating your
         HG_Human instance.
@@ -361,9 +348,7 @@ class HG_Human:
                 already exists in Blender.
         """
         if self._rig_object:
-            raise HumGenException(
-                "This HG_Human instance already exists in Blender."
-            )
+            raise HumGenException("This HG_Human instance already exists in Blender.")
 
         self.human = Human.from_preset(chosen_starting_human, context=context)
 
@@ -473,9 +458,7 @@ class HG_Human:
         """
         hg_body = self._body_object
         hair_systems = [
-            m.particle_system
-            for m in hg_body.modifiers
-            if m.type == "PARTICLE_SYSTEM"
+            m.particle_system for m in hg_body.modifiers if m.type == "PARTICLE_SYSTEM"
         ]
 
         for ps in hair_systems:
@@ -504,7 +487,7 @@ class HG_Human:
         """
         self.__check_if_rig_exists()
         self.__check_if_in_finalize_phase()
-        return self.__get_pcoll_list(context, "outfit")
+        return self.__get_pcoll_list(context, "outfits")
 
     @injected_context
     def set_outfit(self, context=None, chosen_outfit_option=None):
@@ -525,11 +508,9 @@ class HG_Human:
         self.__check_if_in_finalize_phase()
 
         if not chosen_outfit_option:
-            chosen_outfit_option = random.choice(
-                self.get_outfit_options(context)
-            )
+            chosen_outfit_option = random.choice(self.get_outfit_options(context))
 
-        self.__set_active_in_pcoll(context, "outfit", chosen_outfit_option)
+        self.__set_active_in_pcoll(context, "outfits", chosen_outfit_option)
 
     @injected_context
     def get_footwear_options(self, context=None) -> list:
@@ -571,9 +552,7 @@ class HG_Human:
         self.__check_if_in_finalize_phase()
 
         if not chosen_footwear_option:
-            chosen_footwear_option = random.choice(
-                self.get_footwear_options(context)
-            )
+            chosen_footwear_option = random.choice(self.get_footwear_options(context))
 
         self.__set_active_in_pcoll(context, "footwear", chosen_footwear_option)
 
@@ -665,9 +644,7 @@ class HG_Human:
                 self.get_expression_options(context)
             )
 
-        self.__set_active_in_pcoll(
-            context, "expressions", chosen_expression_option
-        )
+        self.__set_active_in_pcoll(context, "expressions", chosen_expression_option)
 
     def __get_pcoll_list(self, context, pcoll_name) -> "list[str]":
         """Internal method that's used to retreive preview collection options.
@@ -675,7 +652,7 @@ class HG_Human:
         Args:
             context (context): Blender context
             pcoll_name (str): Name of preview_collection in ('humans', 'poses',
-            'expressions', 'outfit', 'footwear', 'face_hair', 'hair', 'textures',
+            'expressions', 'outfits', 'footwear', 'face_hair', 'hair', 'textures',
             'patterns')
 
         Returns:
@@ -688,22 +665,20 @@ class HG_Human:
 
         return pcoll_list
 
-    def __set_active_in_pcoll(
-        self, context, pcoll_name, item_to_set_as_active
-    ):
+    def __set_active_in_pcoll(self, context, pcoll_name, item_to_set_as_active):
         """Internal method for setting the active item in a preview collection
 
         Args:
             context (context): Blender context
             pcoll_name (str): Name of preview_collection in ('humans', 'poses',
-            'expressions', 'outfit', 'footwear', 'face_hair', 'hair', 'textures',
+            'expressions', 'outfits', 'footwear', 'face_hair', 'hair', 'textures',
             'patterns')
             item_to_set_as_active (str): Name of item to set as active
         """
         sett = context.scene.HG3D
 
         refresh_pcoll(None, context, pcoll_name, hg_rig=self._rig_object)
-        setattr(sett, f"pcoll_{pcoll_name}", item_to_set_as_active)
+        setattr(sett.pcoll, pcoll_name, item_to_set_as_active)
 
     def __check_if_in_creation_phase(self):
         """Internal method to show HumGenException when human is not in creation

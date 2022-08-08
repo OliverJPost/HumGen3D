@@ -6,19 +6,16 @@ Texture baking operators
 
 import os
 from pathlib import Path
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
 
 import bpy
+from HumGen3D.backend import hg_log, get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
-
 from HumGen3D.human.human import Human
-
+from HumGen3D.user_interface.feedback_func import ShowMessageBox  # type: ignore
 
 
 def status_text_callback(header, context):
-    sett = context.scene.HG3D
+    bake_sett = context.scene.HG3D.bake
     layout = header.layout
 
     layout.separator_spacer()
@@ -28,13 +25,13 @@ def status_text_callback(header, context):
     row.alignment = "CENTER"
 
     layout.label(
-        text=f"Rendering texture {sett.bake_idx}/{sett.bake_total}",
+        text=f"Rendering texture {bake_sett.idx}/{bake_sett.total}",
         icon="TIME",
     )
 
     col = layout.column()
     col.scale_x = 1.6
-    col.prop(sett, "bake_progress")
+    col.prop(bake_sett, "bake_progress")
 
     layout.label(text="Press ESC to cancel", icon="EVENT_ESC")
 
@@ -57,7 +54,7 @@ class HG_BAKE(bpy.types.Operator):
         self.finish_modal = False
 
     def invoke(self, context, event):
-        sett = context.scene.HG3D
+        bake_sett = context.scene.HG3D.bake
         selected_humans = set(
             [
                 Human.from_existing(obj).rig_obj
@@ -66,8 +63,8 @@ class HG_BAKE(bpy.types.Operator):
             ]
         )
         self.bake_enum = generate_bake_enum(context, selected_humans)
-        sett.bake_total = len(self.bake_enum)
-        sett.bake_idx = 1
+        bake_sett.total = len(self.bake_enum)
+        bake_sett.idx = 1
 
         (
             cancelled,
@@ -75,7 +72,7 @@ class HG_BAKE(bpy.types.Operator):
             self.old_samples,
             _,
         ) = check_bake_render_settings(
-            context, samples=int(sett.bake_samples), force_cycles=False
+            context, samples=int(bake_sett.samples), force_cycles=False
         )
 
         if cancelled:
@@ -90,12 +87,12 @@ class HG_BAKE(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        sett = context.scene.HG3D
+        bake_sett = context.scene.HG3D.bake
 
         if self.finish_modal:
             context.area.tag_redraw()
             context.workspace.status_text_set(text=None)
-            sett.bake_idx = 0
+            bake_sett.idx = 0
 
             if self.switched_to_cuda:
                 context.preferences.addons[
@@ -114,7 +111,7 @@ class HG_BAKE(bpy.types.Operator):
 
         elif event.type == "TIMER":
             # Check if all textures in the list are already baked
-            if self.bake_idx == sett.bake_total:
+            if self.bake_idx == bake_sett.total:
                 self.finish_modal = True
                 return {"RUNNING_MODAL"}
 
@@ -139,13 +136,13 @@ class HG_BAKE(bpy.types.Operator):
             img_name = f"{human_name}_{texture_name}_{tex_type}"
 
             if texture_name == "body":
-                resolution = int(sett.bake_res_body)
+                resolution = int(bake_sett.res_body)
             elif texture_name == "eyes":
-                resolution = int(sett.bake_res_eyes)
+                resolution = int(bake_sett.res_eyes)
             else:
-                resolution = int(sett.bake_res_clothes)
+                resolution = int(bake_sett.res_clothes)
 
-            export_path = get_bake_export_path(sett, hg_rig.name)
+            export_path = get_bake_export_path(bake_sett, hg_rig.name)
 
             hg_rig.select_set(False)
             img = bake_texture(
@@ -153,7 +150,7 @@ class HG_BAKE(bpy.types.Operator):
                 current_mat,
                 tex_type,
                 img_name,
-                sett.bake_file_type,
+                bake_sett.file_type,
                 resolution,
                 export_path,
             )
@@ -165,8 +162,7 @@ class HG_BAKE(bpy.types.Operator):
             # check if next texture belongs to another object
             last_texture = (
                 True
-                if self.bake_enum[self.bake_idx]["texture_name"]
-                != texture_name
+                if self.bake_enum[self.bake_idx]["texture_name"] != texture_name
                 else False
             )
 
@@ -180,11 +176,11 @@ class HG_BAKE(bpy.types.Operator):
             hg_rig["hg_baked"] = 1
 
             self.bake_idx += 1
-            sett.bake_idx += 1
+            bake_sett.idx += 1
 
             if self.bake_idx > 0:
-                progress = self.bake_idx / sett.bake_total
-                sett.bake_progress = int(progress * 100)
+                progress = self.bake_idx / bake_sett.total
+                bake_sett.progress = int(progress * 100)
 
             context.workspace.status_text_set(status_text_callback)
 
@@ -197,14 +193,9 @@ class HG_BAKE(bpy.types.Operator):
 def check_bake_render_settings(context, samples=4, force_cycles=False):
     switched_to_cuda = False
     switched_from_eevee = False
-    if (
-        context.preferences.addons["cycles"].preferences.compute_device_type
-        == "OPTIX"
-    ):
+    if context.preferences.addons["cycles"].preferences.compute_device_type == "OPTIX":
         switched_to_cuda = True
-        context.preferences.addons[
-            "cycles"
-        ].preferences.compute_device_type = "CUDA"
+        context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA"
     if context.scene.render.engine != "CYCLES":
         if force_cycles:
             switched_from_eevee = True
@@ -270,11 +261,7 @@ def get_solidify_state(obj, state):
     return return_value
 
 
-def bake_texture(
-    context, mat, bake_type, naming, image_ext, resolution, export_path
-):
-    pref = get_prefs()
-    sett = context.scene.HG3D
+def bake_texture(context, mat, bake_type, naming, image_ext, resolution, export_path):
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
     # image_ext   = sett.bake_file_type
@@ -309,9 +296,7 @@ def bake_texture(
     bake_type = "NORMAL" if bake_type == "Normal" else "EMIT"
     bpy.ops.object.bake(type=bake_type)  # , pass_filter={'COLOR'}
 
-    image.filepath_raw = (
-        export_path + str(Path(f"/{image.name}")) + f".{image_ext}"
-    )
+    image.filepath_raw = export_path + str(Path(f"/{image.name}")) + f".{image_ext}"
     image.file_format = image_ext.upper()
     image.save()
 
@@ -361,9 +346,7 @@ def generate_bake_enum(context, selected_humans) -> list:
         )
 
         cloth_objs = [
-            child
-            for child in human.children
-            if "cloth" in child or "shoe" in child
+            child for child in human.children if "cloth" in child or "shoe" in child
         ]
 
         for cloth in cloth_objs:
@@ -381,17 +364,15 @@ def generate_bake_enum(context, selected_humans) -> list:
     return bake_enum
 
 
-def get_bake_export_path(sett, folder_name) -> str:
-    if sett.bake_export_folder:
-        export_path = sett.bake_export_folder + str(
+def get_bake_export_path(bake_sett, folder_name) -> str:
+    if bake_sett.export_folder:
+        export_path = bake_sett.export_folder + str(
             Path(f"/bake_results/{folder_name}")
         )
         if not os.path.exists(export_path):
             os.makedirs(export_path)
     else:
-        export_path = get_prefs().filepath + str(
-            Path(f"/bake_results/{folder_name}")
-        )
+        export_path = get_prefs().filepath + str(Path(f"/bake_results/{folder_name}"))
         if not os.path.exists(export_path):
             os.makedirs(export_path)
 

@@ -5,7 +5,7 @@ import subprocess
 import time
 
 import bpy  # type:ignore
-from HumGen3D.backend.preference_func import get_addon_root, get_prefs
+from HumGen3D.backend import get_addon_root, get_prefs
 
 from HumGen3D.human.base.decorators import injected_context
 from ..backend.logging import hg_log
@@ -80,7 +80,7 @@ class HG_Batch_Generator:
         hair_type="particle",
         hair_quality="medium",
         add_expression=False,
-        expressions_category="All",
+        expression_category="All",
         add_clothing=False,
         clothing_category="All",
         pose_type="a_pose",
@@ -112,16 +112,16 @@ class HG_Batch_Generator:
             add_expression (bool, optional): If True, a 1-click expression will be
                 added to the human.
                 Defaults to False.
-            expressions_category (str, optional): Category to choose expression
+            expression_category (str, optional): Category to choose expression
                 from.
-                Use get_pcoll_categs('expression') to see options.
+                Use get_pcoll_categs('expressions') to see options.
                 Ignored if add_expression == False.
                 Defaults to 'All'.
             add_clothing (bool, optional): If True, an outfit and footwear will be
                 added to this human.
                 Defaults to False.
             clothing_category (str, optional): Category to choose outfit from.
-                Use get_pcoll_categs('outfit') to see options.
+                Use get_pcoll_categs('outfits') to see options.
                 Ignored if add_clothing == False.
                 Defaults to 'All'.
             pose_type (str, optional): Category to choose pose from.
@@ -137,9 +137,7 @@ class HG_Batch_Generator:
         for obj in context.selected_objects:
             obj.select_set(False)
 
-        python_file = os.path.join(
-            get_addon_root(), "scripts", "batch_generate.py"
-        )
+        python_file = os.path.join(get_addon_root(), "scripts", "batch_generate.py")
 
         start_time_background_process = time.time()
 
@@ -199,9 +197,7 @@ class HG_Batch_Generator:
 
     def __import_generated_human(self):
         start_time_import = time.time()
-        batch_result_path = os.path.join(
-            get_prefs().filepath, "batch_result.blend"
-        )
+        batch_result_path = os.path.join(get_prefs().filepath, "batch_result.blend")
         with bpy.data.libraries.load(batch_result_path, link=False) as (
             data_from,
             data_to,
@@ -213,11 +209,7 @@ class HG_Batch_Generator:
             # toggle_hair_visibility(obj, show=True)
 
         human_parent = next(
-            (
-                obj
-                for obj in data_to.objects
-                if obj.HG.ishuman and obj.HG.backup
-            ),
+            (obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
             [obj for obj in data_to.objects if obj.HG.ishuman][0],
         )
 

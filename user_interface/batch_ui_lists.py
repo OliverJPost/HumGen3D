@@ -4,8 +4,8 @@ This file is currently inactive
 
 import bpy  # type: ignore
 
-from ..backend.preview_collections import preview_collections
-from ..backend.property_functions import (
+from ..backend import preview_collections
+from ..backend.properties.property_functions import (
     find_folders,
     find_item_amount,
 )
@@ -134,9 +134,7 @@ def batch_uilist_refresh(self, context, categ):
         if folder[0] in [n for n in enabled_dict]:
             item.enabled = enabled_dict[folder[0]]
         if gender:
-            item.male_items = find_item_amount(
-                context, categ, "male", folder[0]
-            )
+            item.male_items = find_item_amount(context, categ, "male", folder[0])
         else:
             item.count = find_item_amount(context, categ, False, folder[0])
 
@@ -159,9 +157,7 @@ def batch_uilist_refresh(self, context, categ):
             item = collection.add()
             item.name = folder[0]
             item.library_name = folder[0]
-        item.female_items = find_item_amount(
-            context, categ, "female", folder[0]
-        )
+        item.female_items = find_item_amount(context, categ, "female", folder[0])
 
 
 class HG_REFRESH_UILISTS(bpy.types.Operator):

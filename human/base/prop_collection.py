@@ -1,6 +1,6 @@
 import functools
 
-from bpy.types import bpy_prop_collection
+from bpy.types import bpy_prop_collection # type:ignore
 from HumGen3D.human.base.exceptions import HumGenException
 
 

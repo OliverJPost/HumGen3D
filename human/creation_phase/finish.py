@@ -4,8 +4,7 @@ Operator and corresponding functions for finishing the cration phase
 
 import bpy  # type: ignore
 
-from ...backend.preference_func import get_prefs
-from ...backend.preview_collections import refresh_pcoll
+from ...backend import get_prefs, refresh_pcoll
 from ...user_interface.info_popups import HG_OT_INFO
 from ..human import Human
 
@@ -74,9 +73,7 @@ class HG_FINISH_CREATION(bpy.types.Operator):
         hg_rig.HG.phase = "clothing"
 
         if not pref.auto_hide_hair_switch:
-            for mod in [
-                m for m in hg_body.modifiers if m.type == "PARTICLE_SYSTEM"
-            ]:
+            for mod in [m for m in hg_body.modifiers if m.type == "PARTICLE_SYSTEM"]:
                 ps_sett = mod.particle_system.settings
                 ps_sett.child_nbr = ps_sett.rendered_child_count
 

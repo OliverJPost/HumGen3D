@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 from sys import platform
 
-import addon_utils
+import addon_utils # type:ignore
 import bpy
 from HumGen3D import bl_info
-from HumGen3D.backend.preference_func import get_prefs  # type: ignore
+from HumGen3D.backend import get_prefs  # type: ignore
 
 from ..backend.preview_collections import preview_collections
 from ..human.human import Human  # type: ignore
@@ -37,10 +37,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.active_ui_tab == "CREATE" and not sett.content_saving_ui
-
-    def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        return sett.ui.active_tab == "CREATE" and not sett.custom_content.content_saving_ui
 
     def draw(self, context):
         layout = self.layout
@@ -354,8 +351,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = box.column(align=True)
         col.label(text="Select a starting human")
         col.template_icon_view(
-            self.sett,
-            "pcoll_humans",
+            self.sett.pcoll,
+            "humans",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -432,7 +429,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             sett (Scene.HG3D): Humgen properties
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "indiv_scale_ui", "Individual scaling"
+            box, sett, "indiv_scale", "Individual scaling"
         )
         if not is_open:
             return
@@ -700,7 +697,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "main_skin_ui", "Main settings"
+            box, sett, "main_skin", "Main settings"
         )
         if not is_open:
             return
@@ -762,14 +759,14 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "texture_ui", "Texture sets"
+            box, sett, "texture", "Texture sets"
         )
         if not is_open:
             return
 
         col = boxbox.column()
         col.template_icon_view(
-            sett, "pcoll_textures", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
         )
         col.prop(sett, "texture_library", text="Library")
 
@@ -783,7 +780,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "light_dark_ui", "Light & dark areas"
+            box, sett, "light_dark", "Light & dark areas"
         )
         if not is_open:
             return
@@ -816,7 +813,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "age_ui", "Age")
+        is_open, boxbox = draw_sub_spoiler(box, sett, "age", "Age")
         if not is_open:
             return
 
@@ -844,7 +841,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "freckles_ui", "Freckles"
+            box, sett, "freckles", "Freckles"
         )
         if not is_open:
             return
@@ -878,7 +875,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
 
-        is_open, boxbox = draw_sub_spoiler(box, sett, "makeup_ui", "Makeup")
+        is_open, boxbox = draw_sub_spoiler(box, sett, "makeup", "Makeup")
         if not is_open:
             return
 
@@ -993,7 +990,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beautyspots_ui", "Beauty Spots"
+            box, sett, "beautyspots", "Beauty Spots"
         )
         if not is_open:
             return
@@ -1025,7 +1022,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "beard_shadow_ui", "Beard Shadow"
+            box, sett, "beard_shadow", "Beard Shadow"
         )
         if not is_open:
             return
@@ -1159,7 +1156,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         hair_systems = self._get_hair_systems(body_obj)
 
         box.template_icon_view(
-            sett, "pcoll_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = box.column()
@@ -1185,14 +1182,14 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "face_hair_ui", "Face Hair"
+            box, sett, "face_hair", "Face Hair"
         )
         if not is_open:
             return
         col = box.column(align=True)
 
         col.template_icon_view(
-            sett, "pcoll_face_hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "face_hair", show_labels=True, scale=10, scale_popup=6
         )
 
         col_h = col.column()
@@ -1507,12 +1504,12 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_outfit", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "outfits", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "outfit_sub", text="")
+        row_h.prop(sett.pcoll, "outfit_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "outfit"
@@ -1536,7 +1533,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.template_icon_view(
-            sett, "pcoll_footwear", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "footwear", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
@@ -1563,11 +1560,11 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "pose_choice", expand=True)
+        row_h.prop(sett.ui, "pose_tab_switch", expand=True)
 
-        if sett.pose_choice == "library":
+        if sett.ui.pose_tab_switch == "library":
             self._draw_pose_library(sett, box)
-        elif sett.pose_choice == "rigify":
+        elif sett.ui.pose_tab_switch == "rigify":
             self._draw_rigify_subsection(box)
 
     def _draw_rigify_subsection(self, box):
@@ -1607,12 +1604,12 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "poses", box)
 
         box.template_icon_view(
-            sett, "pcoll_poses", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "poses", show_labels=True, scale=10, scale_popup=6
         )
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "pose_sub", text="")
+        row_h.prop(sett.pcoll, "pose_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "poses"
@@ -1636,9 +1633,9 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = box.row(align=True)
         row.scale_y = 1.5
-        row.prop(sett, "expression_type", expand=True)
+        row.prop(sett.ui, "expression_type", expand=True)
 
-        if sett.expression_type == "1click":
+        if sett.ui.expression_type == "1click":
             self._draw_oneclick_subsection(box, sett)
         else:
             self._draw_frig_subsection(box)
@@ -1661,8 +1658,8 @@ class HG_PT_PANEL(bpy.types.Panel):
         searchbox(sett, "expressions", box)
 
         box.template_icon_view(
-            sett,
-            "pcoll_expressions",
+            sett.pcoll,
+            "expressions",
             show_labels=True,
             scale=10,
             scale_popup=6,
@@ -1670,7 +1667,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "expressions_sub", text="")
+        row_h.prop(sett.pcoll, "expression_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "expressions"
@@ -1698,7 +1695,7 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         is_open, boxbox = draw_sub_spoiler(
-            box, sett, "expression_slider_ui", "Strength"
+            box, sett, "expression_slider", "Strength"
         )
         if not is_open:
             return
@@ -1827,13 +1824,29 @@ class HG_PT_PANEL(bpy.types.Panel):
             color_flow (UILayout): indented list where color pickers are placed
             node_input (ShaderNodeInput): input of the color value on group node
         """
-        # FIXME
-        # color_groups = tuple(["_{}".format(name) for name in color_dict])
-        # color_group = (
-        #     node_input.name[-2:]
-        #     if node_input.name.endswith(color_groups)
-        #     else None
-        # )
+
+        color_dict = {
+            "C0": [
+                "88C1FF",
+                "5C97FF",
+                "F5FFFF",
+                "777C7F",
+                "2F3133",
+                "46787B",
+                "9EC4BD",
+                "7B366F",
+                "5B7728",
+                "1F3257"
+            ]
+        }
+
+
+        color_groups = tuple(["_{}".format(name) for name in color_dict])
+        color_group = (
+            node_input.name[-2:]
+            if node_input.name.endswith(color_groups)
+            else None
+        )
 
         row = color_flow.row(align=False)
         row.prop(
@@ -1915,7 +1928,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col = p_flow.column(align=False)
         col.scale_y = 0.8
         col.template_icon_view(
-            sett, "pcoll_patterns", show_labels=True, scale=5, scale_popup=6
+            sett.pcoll, "patterns", show_labels=True, scale=5, scale_popup=6
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):

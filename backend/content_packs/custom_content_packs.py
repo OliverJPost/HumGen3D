@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preference_func import get_prefs
+from HumGen3D.backend.preferences import get_prefs
 
 import bpy
 from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message  # type: ignore
@@ -40,7 +40,9 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
 
     bl_idname = "hg3d.create_cpack"
     bl_label = "Create custom content pack"
-    bl_description = """Creates a pack and changes the preferences window to the editing UI"""
+    bl_description = (
+        """Creates a pack and changes the preferences window to the editing UI"""
+    )
 
     def invoke(self, context, event):
         # confirmation checkbox
@@ -163,13 +165,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         pref = get_prefs()
 
         cpack = context.scene.contentpacks_col[pref.cpack_name]
-        content_to_export = [
-            c for c in context.scene.custom_content_col if c.include
-        ]
+        content_to_export = [c for c in context.scene.custom_content_col if c.include]
 
-        export_path_set, categ_set = self._build_export_set(
-            pref, content_to_export
-        )
+        export_path_set, categ_set = self._build_export_set(pref, content_to_export)
 
         self._write_json_file(pref, cpack, export_path_set, categ_set)
 
@@ -182,8 +180,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         if self.export:
             show_message(
                 self,
-                "Succesfully exported content pack to "
-                + pref.cpack_export_folder,
+                "Succesfully exported content pack to " + pref.cpack_export_folder,
             )
         else:
             show_message(self, "Succesfully saved content pack")
@@ -291,9 +288,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         )
 
         failed_exports = 0
-        zip_path = (
-            bpy.path.abspath(pref.cpack_export_folder) + export_name + ".zip"
-        )
+        zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + ".zip"
         if get_prefs().compress_zip:
             try:
                 cpack_zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
@@ -345,9 +340,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 data = json.load(f)
                 blendfile = data["blend_file"]
                 folder = "head" if categ == "hairstyles" else "face_hair"
-                associated_files.append(
-                    str(Path(f"/hair/{folder}/{blendfile}"))
-                )
+                associated_files.append(str(Path(f"/hair/{folder}/{blendfile}")))
 
         mapped_associated_files = map(
             lambda x: self._correct_relative_path(x, categ), associated_files
@@ -380,9 +373,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             path_split.insert(
                 0, categ
             )  # adds the category name to the start of the path
-        path = os.path.join(
-            *path_split
-        )  # rebuilds the path from the path_split
+        path = os.path.join(*path_split)  # rebuilds the path from the path_split
 
         return path
 
@@ -405,7 +396,7 @@ def build_content_collection(self, context):
         "hairstyles": "hair",
         "face_hair": "face_hair",
         "poses": "poses",
-        "outfits": "outfit",
+        "outfits": "outfits",
         "footwear": "footwear",
     }
 
@@ -477,13 +468,8 @@ def _iterate_items_to_collection(
     for categ in pcoll_dict:
         refresh_pcoll(self, context, pcoll_dict[categ], ignore_genders=True)
 
-        for content_item_enum in get_pcoll_enum_items(
-            self, context, pcoll_dict[categ]
-        ):
-            if (
-                categ == "starting_humans"
-                and "shapekeys" in content_item_enum[0]
-            ):
+        for content_item_enum in get_pcoll_enum_items(self, context, pcoll_dict[categ]):
+            if categ == "starting_humans" and "shapekeys" in content_item_enum[0]:
                 continue
 
             _add_to_collection(
@@ -549,8 +535,7 @@ def _add_to_collection(
     corrected_path = os.path.normpath(content_item[0])
     item.include = (
         corrected_path in current_file_set
-        or corrected_path[1:]
-        in current_file_set  # compatibility with old path saving
+        or corrected_path[1:] in current_file_set  # compatibility with old path saving
     )
     if not item.include:
         item.existing_content = (

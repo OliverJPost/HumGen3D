@@ -1,7 +1,6 @@
 from calendar import c
 import bpy
-from HumGen3D.backend.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
+from HumGen3D.backend import get_prefs, refresh_pcoll
 
 from HumGen3D.user_interface.info_popups import HG_OT_INFO
 from HumGen3D.user_interface.tips_suggestions_ui import (
@@ -46,7 +45,7 @@ class HG_RANDOM(bpy.types.Operator):
         elif random_type in (
             "poses",
             "expressions",
-            "outfit",
+            "outfits",
             "patterns",
             "footwear",
             "hair",
@@ -145,14 +144,12 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         sett = context.scene.HG3D
-        sett.ui_phase = (
-            "closed"
-            if sett.ui_phase == self.section_name
-            else self.section_name
+        sett.ui.phase = (
+            "closed" if sett.ui.phase == self.section_name else self.section_name
         )
         # PCOLL add here
         categ_dict = {
-            "clothing": ("outfit",),
+            "clothing": ("outfits",),
             "footwear": ("footwear",),
             "pose": ("poses",),
             "hair": ("hair", "face_hair"),
@@ -335,7 +332,7 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
         if self.searchbox_name == "cpack_creator":
             get_prefs().cpack_content_search = ""
         else:
-            sett["search_term_{}".format(self.searchbox_name)] = ""
+            sett.pcoll["search_term_{}".format(self.searchbox_name)] = ""
             refresh_pcoll(self, context, self.searchbox_name)
 
         return {"FINISHED"}
@@ -360,9 +357,7 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
 
         sett.content_saving_tab_index += 1 if self.next else -1
 
-        update_tips_from_context(
-            context, sett, sett.content_saving_active_human
-        )
+        update_tips_from_context(context, sett, sett.content_saving_active_human)
 
         return {"FINISHED"}
 

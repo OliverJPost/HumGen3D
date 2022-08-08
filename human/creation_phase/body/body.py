@@ -69,9 +69,7 @@ class BodySettings:
                 z if sc["z"] else bone.scale[2],
             )
 
-    def _get_scaling_data(
-        self, scale, bone_type, return_whole_dict=False
-    ) -> dict:
+    def _get_scaling_data(self, scale, bone_type, return_whole_dict=False) -> dict:
         """Gets the scaling dict that determines how to scale this body part
 
         Args:
@@ -161,11 +159,6 @@ class BodySettings:
                 "bones": ["hand.L", "hand.R"],
             },
         }
-
-        # if experimental:
-        #     size = (context.scene.HG3D.chest_size + 0.5)
-        # else:
-        #     size = (context.scene.HG3D.chest_size + 2.5)/3
 
         sc = scaling_dict[bone_type]
         if return_whole_dict:

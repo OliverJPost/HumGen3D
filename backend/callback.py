@@ -10,7 +10,7 @@ This callback has the following usages:
 """
 
 import bpy
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import hg_log
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
@@ -72,7 +72,7 @@ def hg_callback(self):
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
-    ui_phase = sett.ui_phase
+    ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human.rig_obj)
@@ -94,20 +94,14 @@ def _set_shader_switches(human, sett):
         return
 
     # body_obj.data.materials[0].node_tree.nodes
-    principled_bsdf = next(
-        node for node in nodes if node.type == "BSDF_PRINCIPLED"
-    )
+    principled_bsdf = next(node for node in nodes if node.type == "BSDF_PRINCIPLED")
     sett.skin_sss = (
-        "off"
-        if principled_bsdf.inputs["Subsurface"].default_value == 0
-        else "on"
+        "off" if principled_bsdf.inputs["Subsurface"].default_value == 0 else "on"
     )
 
     uw_node = nodes.get("Underwear_Opacity")
     if uw_node:
-        sett.underwear_toggle = (
-            "on" if uw_node.inputs[1].default_value == 1 else "off"
-        )
+        sett.underwear_toggle = "on" if uw_node.inputs[1].default_value == 1 else "off"
 
     _hair_shader_type_update(sett, body_obj)
 
@@ -125,7 +119,7 @@ def _context_specific_updates(self, sett, human, ui_phase):
     """
     sett.update_exception = False
     context = bpy.context
-    if sett.active_ui_tab == "TOOLS":
+    if sett.ui.active_tab == "TOOLS":
         refresh_modapply(self, context)
         try:
             refresh_shapekeys_ul(self, context)
@@ -134,22 +128,22 @@ def _context_specific_updates(self, sett, human, ui_phase):
         except AttributeError:
             pass
         return
-    elif ui_phase == "body":
-        _refresh_body_scaling(self, sett, human)
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
-        return
+
     elif ui_phase == "clothing":
-        refresh_pcoll(self, context, "outfit")
-        return
+        refresh_pcoll(self, context, "outfits")
+
     elif ui_phase == "hair":
         refresh_pcoll(self, context, "hair")
         if human.gender == "male":
             refresh_pcoll(self, context, "face_hair")
-        return
+
     elif ui_phase == "expression":
         refresh_pcoll(self, context, "expressions")
-        return
+
+    elif ui_phase == "body":
+        _refresh_body_scaling(self, sett, human)
 
 
 def _refresh_body_scaling(self, sett, human: Human):
@@ -165,9 +159,7 @@ def _refresh_body_scaling(self, sett, human: Human):
         1, "head", return_whole_dict=True
     ).items()
 
-    bone_groups = {
-        group_name: scaling_data["bones"] for group_name, scaling_data in sd
-    }
+    bone_groups = {group_name: scaling_data["bones"] for group_name, scaling_data in sd}
 
     for group_name, bone_group in bone_groups.items():
         if "head" in bone_group:
@@ -175,7 +167,7 @@ def _refresh_body_scaling(self, sett, human: Human):
         else:
             slider_value = bones[bone_group[0]].scale[0] * 3 - 2.5
 
-        setattr(sett, f"{group_name}_size", slider_value)
+        setattr(sett.bone_sizes, group_name, slider_value)
 
 
 def tab_change_update(self, context):

@@ -11,8 +11,7 @@ from typing import Any
 import bpy
 
 from ..human.base.exceptions import HumGenException  # type: ignore
-from .logging import hg_log
-from .preference_func import get_prefs
+from . import hg_log, get_prefs
 
 # from HumGen3D.human.human import Human
 
@@ -30,20 +29,18 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
 
     refresh_pcoll(None, context, pcoll_name)
 
-    current_item = sett["pcoll_{}".format(pcoll_name)]
+    current_item = sett.pcoll[pcoll_name]
 
     pcoll_list = sett["previews_list_{}".format(pcoll_name)]
     random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
     if not random_item:
-        setattr(sett, f"{pcoll_name}_sub", "All")
+        setattr(sett.pcoll, f"{pcoll_name}_category", "All")
         refresh_pcoll(None, context, pcoll_name)
         pcoll_list = sett["previews_list_{}".format(pcoll_name)]
-        random_item = get_random_from_list(
-            pcoll_list, current_item, searchterm
-        )
+        random_item = get_random_from_list(pcoll_list, current_item, searchterm)
 
-    setattr(sett, f"pcoll_{pcoll_name}", random_item)
+    setattr(sett.pcoll, pcoll_name, random_item)
 
 
 def get_random_from_list(lst, current_item, searchterm) -> Any:
@@ -60,9 +57,7 @@ def get_random_from_list(lst, current_item, searchterm) -> Any:
     """
 
     corrected_list = (
-        [item for item in lst if searchterm in item.lower()]
-        if searchterm
-        else lst
+        [item for item in lst if searchterm in item.lower()] if searchterm else lst
     )
     if not corrected_list:
         print("ERROR: Searchterm not found in pcoll: ", searchterm)
@@ -90,13 +85,13 @@ def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     Returns:
         list: enum with items for this preview collection
     """
-    pcoll = preview_collections.get("pcoll_{}".format(pcoll_type))
+    pcoll = preview_collections.get(pcoll_type)
     if not pcoll:
         return [
             ("none", "Reload category below", "", 0),
         ]
 
-    return pcoll["pcoll_{}".format(pcoll_type)]
+    return pcoll[pcoll_type]
 
 
 def refresh_pcoll(
@@ -113,7 +108,7 @@ def refresh_pcoll(
         pcoll_name (str): name of the preview collection to refresh
     """
     sett = context.scene.HG3D
-    _check_for_HumGen_filepath_issues(self)
+    _check_for_HumGen_filepath_issues()
 
     sett.load_exception = False if pcoll_name == "poses" else True
 
@@ -125,21 +120,17 @@ def refresh_pcoll(
         gender_override,
         hg_rig=hg_rig,
     )
-    sett[
-        "pcoll_{}".format(pcoll_name)
-    ] = "none"  # set the preview collection to
+    sett.pcoll[pcoll_name] = "none"  # set the preview collection to
     # the 'click here to select' item
 
     sett.load_exception = False
 
 
-def _check_for_HumGen_filepath_issues(self):
+def _check_for_HumGen_filepath_issues():
     pref = get_prefs()
     if not pref.filepath:
         raise HumGenException("No filepath selected in HumGen preferences.")
-    base_humans_path = pref.filepath + str(
-        Path("content_packs/Base_Humans.json")
-    )
+    base_humans_path = pref.filepath + str(Path("content_packs/Base_Humans.json"))
 
     base_content = os.path.exists(base_humans_path)
 
@@ -148,7 +139,12 @@ def _check_for_HumGen_filepath_issues(self):
 
 
 def _populate_pcoll(
-    self, context, pcoll_categ, ignore_genders, gender_override, hg_rig=None,
+    self,
+    context,
+    pcoll_categ,
+    ignore_genders,
+    gender_override,
+    hg_rig=None,
 ):
     """Populates the preview collection enum list with blend file filepaths and
     icons
@@ -171,9 +167,7 @@ def _populate_pcoll(
     if not hg_rig:
         try:
             hg_rig = (
-                context.object
-                if context.object.HG.ishuman
-                else context.object.parent
+                context.object if context.object.HG.ishuman else context.object.parent
             )
         except AttributeError:
             hg_rig = None
@@ -187,23 +181,17 @@ def _populate_pcoll(
     else:
         gender = hg_rig.HG.gender
 
-    categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(
-        pcoll_categ, sett, gender
-    )
+    categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender)
 
     pcoll_full_dir = str(pref.filepath) + str(Path("/{}/".format(categ_dir)))
     if subcateg_dir != "All":
-        pcoll_full_dir = pcoll_full_dir + str(
-            Path("/{}/".format(subcateg_dir))
-        )
+        pcoll_full_dir = pcoll_full_dir + str(Path("/{}/".format(subcateg_dir)))
 
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
-
     path_list = []
     # I don't know why, but putting this double fixes a recurring issue where
     # pcoll equals None
-    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
-    pcoll = preview_collections.setdefault("pcoll_{}".format(pcoll_categ))
+    pcoll = preview_collections[pcoll_categ]
 
     none_thumb = _load_thumbnail("pcoll_placeholder", pcoll)
     pcoll_enum = [("none", "", "", none_thumb.icon_id, 0)]
@@ -216,14 +204,12 @@ def _populate_pcoll(
         empty_thumb = _load_thumbnail("pcoll_empty", pcoll)
         pcoll_enum = [("none", "", "", empty_thumb.icon_id, 0)]
 
-    pcoll["pcoll_{}".format(pcoll_categ)] = pcoll_enum
+    pcoll[pcoll_categ] = pcoll_enum
     sett["previews_list_{}".format(pcoll_categ)] = path_list
     pcoll["previews_dir_{}".format(pcoll_categ)] = pcoll_full_dir
 
 
-def _get_categ_and_subcateg_dirs(
-    pcoll_categ, sett, gender
-) -> "tuple[str, str]":
+def _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender) -> "tuple[str, str]":
     """Gets the directory name of the preview collection category and of the
     user selected subcategory
 
@@ -237,9 +223,9 @@ def _get_categ_and_subcateg_dirs(
             str: directory of preview collection items. Relative from HumGen filepath
             str: subdirectory, based on user selection. Relative from cateG_dir
     """
-    dir_categ_dict = {
+    pcoll_dir_dict = {
         "poses": "poses",
-        "outfit": "outfits/{}".format(gender),
+        "outfits": "outfits/{}".format(gender),
         "hair": "hair/head/{}".format(gender),
         "face_hair": "hair/face_hair",
         "expressions": "expressions",
@@ -248,19 +234,19 @@ def _get_categ_and_subcateg_dirs(
         "patterns": "patterns",
         "textures": "textures/{}".format(gender),
     }
-    categ_dir = dir_categ_dict[pcoll_categ]
-    dir_sub_dict = {
-        "poses": sett.pose_sub,
-        "outfit": sett.outfit_sub,
-        "hair": sett.hair_sub,
-        "face_hair": sett.face_hair_sub,
-        "expressions": sett.expressions_sub,
+    categ_dir = pcoll_dir_dict[pcoll_categ]
+    dir_category_dict = {
+        "poses": sett.pcoll.pose_category,
+        "outfits": sett.pcoll.outfit_category,
+        "hair": sett.pcoll.hair_category,
+        "face_hair": sett.pcoll.face_hair_category,
+        "expressions": sett.pcoll.expression_category,
         "humans": "All",
-        "footwear": sett.footwear_sub,
-        "patterns": sett.patterns_sub,
-        "textures": sett.texture_library,
+        "footwear": sett.pcoll.footwear_category,
+        "patterns": sett.pcoll.patterns_category,
+        "textures": sett.pcoll.texture_library,
     }
-    subcateg_dir = dir_sub_dict[pcoll_categ]
+    subcateg_dir = dir_category_dict[pcoll_categ]
 
     return categ_dir, subcateg_dir
 
@@ -287,7 +273,6 @@ def list_pcoll_files_in_dir(dir, pcoll_type) -> list:
     for root, dirs, files in os.walk(dir):
         if pcoll_type == "textures" and "PBR" in root:
             continue  # don't show textures in PBR folder of texture sets
-
         found_files = [
             fn
             for fn in files
@@ -413,19 +398,10 @@ def _get_search_term(pcoll_type, sett) -> str:
     Returns:
         str: search term, filenames that include this search term will be loaded
     """
-    search_term_dict = {
-        "poses": sett.search_term_poses,
-        "expressions": sett.search_term_expressions,
-        "outfit": sett.search_term_outfit,
-        "patterns": sett.search_term_patterns,
-        "footwear": sett.search_term_footwear,
-    }
-
-    search_term = (
-        search_term_dict[pcoll_type] if pcoll_type in search_term_dict else ""
-    )
-
-    return search_term
+    try:
+        return getattr(sett.pcoll, f"{pcoll_type}_search_term")
+    except AttributeError:
+        return ""
 
 
 def get_hg_icon(icon_name) -> int:

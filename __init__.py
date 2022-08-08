@@ -42,11 +42,10 @@ from HumGen3D.backend.content_packs.content_packs import (
     cpacks_refresh as _cpacks_refresh,
 )
 
-from .backend.bpy_classes import _get_bpy_classes
-from .backend.preview_collections import (
-    preview_collections as _preview_collections,
-)
-from .backend.properties import HG_OBJECT_PROPS, HG_SETTINGS
+from .backend.auto_classes import _get_bpy_classes
+from .backend.preview_collections import preview_collections as _preview_collections
+from .backend.properties.object_props import HG_OBJECT_PROPS
+from .backend.properties.scene_main_properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .human.human import Human
 
@@ -68,7 +67,7 @@ def _initiate_preview_collections():
     pcoll_names = [
         "humans",
         "poses",
-        "outfit",
+        "outfits",
         "footwear",
         "hair",
         "face_hair",
@@ -78,19 +77,13 @@ def _initiate_preview_collections():
     ]
 
     for pcoll_name in pcoll_names:
-        _preview_collections.setdefault(
-            f"pcoll_{pcoll_name}", bpy.utils.previews.new()
-        )
+        _preview_collections.setdefault(pcoll_name, bpy.utils.previews.new())
 
 
 def _initiate_custom_icons():
     """Load custom icons"""
-    hg_icons = _preview_collections.setdefault(
-        "hg_icons", bpy.utils.previews.new()
-    )
-    icon_dir = os.path.join(
-        os.path.dirname(__file__), "user_interface", "icons"
-    )
+    hg_icons = _preview_collections.setdefault("hg_icons", bpy.utils.previews.new())
+    icon_dir = os.path.join(os.path.dirname(__file__), "user_interface", "icons")
     for _, _, fns in os.walk(icon_dir):
         png_files = [f for f in fns if f.endswith(".png")]
         for fn in png_files:
@@ -103,10 +96,7 @@ def _initiate_custom_icons():
 def _initiate_ui_lists():
     # Import in local namespace to prevent cluttering package namespace
     from HumGen3D.backend import update
-    from HumGen3D.backend.content_packs import (
-        content_packs,
-        custom_content_packs,
-    )
+    from HumGen3D.backend.content_packs import content_packs, custom_content_packs
     from HumGen3D.user_interface import (
         batch_ui_lists,
         tips_suggestions_ui,
@@ -117,7 +107,7 @@ def _initiate_ui_lists():
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "batch_expressions_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
         "contentpacks_col": content_packs.HG_CONTENT_PACK,
-        "installpacks_col": content_packs.HG_CONTENT_PACK,
+        "installpacks_col": content_packs.HG_INSTALLPACK,
         "modapply_col": utility_ui_lists.MODAPPLY_ITEM,
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
@@ -140,7 +130,6 @@ hg_classes = _get_bpy_classes()
 
 def register():
     # RELEASE remove print statements
-
     for cls in hg_classes:
         bpy.utils.register_class(cls)
 

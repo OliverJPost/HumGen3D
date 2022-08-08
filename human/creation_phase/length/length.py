@@ -3,7 +3,7 @@ import os
 from typing import TYPE_CHECKING
 
 import bpy
-from bpy.types import Context
+from bpy.types import Context # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D import Human
@@ -18,9 +18,7 @@ def apply_armature(obj):
         obj (Object): object to apply armature modifiers on
     """
     bpy.context.view_layer.objects.active = obj
-    armature_mods = [
-        mod.name for mod in obj.modifiers if mod.type == "ARMATURE"
-    ]
+    armature_mods = [mod.name for mod in obj.modifiers if mod.type == "ARMATURE"]
     for mod_name in armature_mods:
         bpy.ops.object.modifier_apply(modifier=mod_name)
 
@@ -53,9 +51,7 @@ class LengthSettings:
         bones = self._human.rig_obj.pose.bones
 
         for stretch_bone, bone_data in stretch_bone_dict.items():
-            self._set_stretch_bone_position(
-                multiplier, bones, stretch_bone, bone_data
-            )
+            self._set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
 
         context.view_layer.update()  # Requires update to get new length of rig
         hg_rig = (
@@ -66,9 +62,7 @@ class LengthSettings:
             old_length
         ) - self._origin_correction(new_length)
 
-    def _set_stretch_bone_position(
-        self, multiplier, bones, stretch_bone, bone_data
-    ):
+    def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between
         'max_loc' and 'min_loc', based on passed multiplier
 
@@ -92,9 +86,7 @@ class LengthSettings:
                 bones[stretch_bone],
             ]
 
-        xyz_substracted = np.subtract(
-            bone_data["max_loc"], bone_data["min_loc"]
-        )
+        xyz_substracted = np.subtract(bone_data["max_loc"], bone_data["min_loc"])
         xyz_multiplied = tuple([multiplier * x for x in xyz_substracted])
         x_y_z_location = np.subtract(bone_data["max_loc"], xyz_multiplied)
 
@@ -120,9 +112,7 @@ class LengthSettings:
         bpy.ops.pose.armature_apply(selected=False)
 
         bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.transform_apply(
-            location=False, rotation=False, scale=True
-        )
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
         for obj in bpy.context.selected_objects:
             obj.select_set(False)
