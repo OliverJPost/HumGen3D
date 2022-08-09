@@ -117,7 +117,7 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
     box = layout.box()
 
     row = box.row(align=True)
-    row.scale_y = 2
+    row.scale_y = 1.3
     row.alignment = "LEFT"
 
     label = ui_name.capitalize().replace("_", " ")

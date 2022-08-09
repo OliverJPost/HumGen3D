@@ -1,9 +1,10 @@
 import random
 from statistics import mean
 
-from HumGen3D.human.creation_phase.face.face import FaceKeys
+from HumGen3D.human.face.face import FaceKeys
 from HumGen3D.tests.fixtures import ALL_CREATION_FIXTURES, context
 from HumGen3D.tests.fixtures import *
+
 
 @pytest.mark.parametrize("human", ALL_CREATION_FIXTURES)
 class TestCreationPhase:
@@ -113,6 +114,6 @@ class TestCreationPhase:
         human.creation_phase.length.set(new_length_cm, context)
 
         # FIXME this fails due to impressision
-        #assert human.creation_phase.length.centimeters == new_length_cm
+        # assert human.creation_phase.length.centimeters == new_length_cm
 
         human.creation_phase.length.set(old_length, context)

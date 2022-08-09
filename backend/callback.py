@@ -155,9 +155,7 @@ def _refresh_body_scaling(self, sett, human: Human):
         hg_rig (Object): Armature object of HumGen human
     """
     bones = human.pose_bones
-    sd = human.creation_phase.body._get_scaling_data(
-        1, "head", return_whole_dict=True
-    ).items()
+    sd = human.body._get_scaling_data(1, "head", return_whole_dict=True).items()
 
     bone_groups = {group_name: scaling_data["bones"] for group_name, scaling_data in sd}
 

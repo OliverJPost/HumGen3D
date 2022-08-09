@@ -3,7 +3,12 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty # type:ignore
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    IntProperty,
+    StringProperty,
+)  # type:ignore
 from HumGen3D.backend import hg_log, hg_delete, refresh_pcoll
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preview_collections import (
@@ -102,8 +107,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         chosen_preset = random.choice(presets)
         human = Human.from_preset(chosen_preset)
 
-        human.creation_phase.body.randomize()
-        human.creation_phase.face.randomize(use_bell_curve=self.gender == "female")
+        human.body.randomize()
+        human.face.randomize(use_bell_curve=self.gender == "female")
 
         if self.texture_resolution in ("optimised", "performance"):
             self._set_body_texture_resolution(sett, human.body_obj)
@@ -125,7 +130,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         sett.human_length = int(length_from_bell_curve(sett, self.gender))
 
-        human.creation_phase.finish(context)
+        human.finish(context)
 
         #### Finalize Phase #####
 

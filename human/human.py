@@ -6,18 +6,24 @@ from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
-from bpy.types import Object  # type:ignore
+from bpy.types import Object
 
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
 from .base.namegen import get_name
+from .base.prop_collection import PropCollection
 from .base.render import set_eevee_ao_and_strip
-from .creation_phase.creation_phase import CreationPhaseSettings
+from .body.body import BodySettings
+from .clothing.footwear import FootwearSettings
+from .clothing.outfit import OutfitSettings
+from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
-from .finalize_phase.finalize_phase import FinalizePhaseSettings
+from .face.face import FaceKeys
 from .hair.hair import HairSettings
+from .length.length import LengthSettings
+from .pose.pose import PoseSettings  # type:ignore
 from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
@@ -141,14 +147,14 @@ class Human:
             set_eevee_ao_and_strip(context)
 
         # Set to experimental mode from preset
-        human.creation_phase.body.set_experimental(preset_data["experimental"])
+        human.body.set_experimental(preset_data["experimental"])
 
         # Set length from preset
         preset_length = preset_data["body_proportions"]["length"] * 100
         if 181 < preset_length < 182:
             # Fix for old presets that use wrong default length
             preset_length = 183.15
-        human.creation_phase.length.set(preset_length, context)
+        human.length.set(preset_length, context)
 
         # Set shape key values from preset
         for sk_name, sk_value in preset_data["shapekeys"].items():
@@ -211,6 +217,42 @@ class Human:
 
     # endregion
     # region Properties
+
+    @property  # TODO make cached
+    def body(self) -> BodySettings:
+        return BodySettings(self)
+
+    @property  # TODO make cached
+    def length(self) -> LengthSettings:
+        return LengthSettings(self)
+
+    @property  # TODO make cached
+    def face(self) -> FaceKeys:
+        return FaceKeys(self)
+
+    @property
+    def stretch_bones(self):
+        stretch_bones = []
+        for bone in self._human.pose_bones:
+            if [c for c in bone.constraints if c.type == "STRETCH_TO"]:
+                stretch_bones.append(bone)
+        return PropCollection(stretch_bones)
+
+    @property  # TODO make cached
+    def pose(self) -> PoseSettings:
+        return PoseSettings(self)
+
+    @property  # TODO make cached
+    def outfit(self) -> OutfitSettings:
+        return OutfitSettings(self)
+
+    @property  # TODO make cached
+    def footwear(self) -> FootwearSettings:
+        return FootwearSettings(self)
+
+    @property  # TODO make cached
+    def expression(self) -> ExpressionSettings:
+        return ExpressionSettings(self)
 
     @property
     def objects(self) -> Generator[Object]:
@@ -301,38 +343,6 @@ class Human:
         """Custom object properties of the human, used by the add-on for storing metadata like
         gender, backup_human pointer, current phase, body_obj pointer. Points to rig_obj.HG"""
         return self.rig_obj.HG
-
-    @property  # TODO make cached
-    def creation_phase(self) -> CreationPhaseSettings:
-        """
-        Subclass used to control aspects that can ONLY be changed
-        during the creation phase like human length, face proportions and body proportions.
-
-        Raises:
-            HumGenException: Raised if accessing on a human that is not in creation phase
-
-        Returns:
-            CreationPhaseSettings: Subclass containing creation_phase options
-        """
-        if self.phase != "creation":
-            raise HumGenException(f"Human is in {self.phase}, not in creation phase.")
-        return CreationPhaseSettings(self)
-
-    @property  # TODO make cached
-    def finalize_phase(self) -> FinalizePhaseSettings:
-        """
-        Subclass used to control aspects that can ONLY be changed
-        during the finalize_phase like clothing and expression.
-
-        Raises:
-            HumGenException: Raised if accessing on a human that is not in finalize phase
-
-        Returns:
-            FinalizePhaseSettings: Subclass containing finalize_phase options
-        """
-        if self.phase != "finalize":
-            raise HumGenException(f"Human is in {self.phase}, not in finalize phase.")
-        return FinalizePhaseSettings(self)
 
     @property  # TODO make cached
     def skin(self) -> SkinSettings:

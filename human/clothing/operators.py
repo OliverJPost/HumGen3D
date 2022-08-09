@@ -84,9 +84,9 @@ class HG_OT_PATTERN(bpy.types.Operator):
         human = Human.from_existing(obj)
 
         if self.add:
-            human.finalize_phase.outfit.pattern.set_random(obj, context)
+            human.outfit.pattern.set_random(obj, context)
         else:
-            human.finalize_phase.outfit.pattern.remove(obj)
+            human.outfit.pattern.remove(obj)
 
         return {"FINISHED"}
 
@@ -117,7 +117,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
     color_group: bpy.props.StringProperty()
 
     def execute(self, context):
-        #FIXME
+        # FIXME
         color_dict = {
             "C0": [
                 "88C1FF",
@@ -129,7 +129,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
                 "9EC4BD",
                 "7B366F",
                 "5B7728",
-                "1F3257"
+                "1F3257",
             ]
         }
 

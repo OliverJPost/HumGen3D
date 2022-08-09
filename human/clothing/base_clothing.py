@@ -12,8 +12,8 @@ from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
-from HumGen3D.human.finalize_phase import clothing
-from HumGen3D.human.finalize_phase.clothing.pattern import PatternSettings
+from HumGen3D.human import clothing
+from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
 

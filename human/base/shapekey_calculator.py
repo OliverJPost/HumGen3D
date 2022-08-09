@@ -1,10 +1,11 @@
 from HumGen3D.backend import hg_delete
 import bpy
-from HumGen3D.human.creation_phase.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from mathutils import Vector, kdtree # type:ignore
+from mathutils import Vector, kdtree  # type:ignore
 
 import numpy as np
+
+from HumGen3D.human.length.length import apply_armature
 
 
 def build_distance_dict(source_org, target, apply=True):
