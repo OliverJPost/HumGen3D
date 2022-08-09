@@ -1,12 +1,207 @@
-"""UNDER CONSTRUCTION"""
+import json
+import math
+import os
+import random
+from collections import defaultdict
+from itertools import islice
+from typing import Dict, List, Tuple
 
-from pathlib import Path
-from HumGen3D.backend import get_prefs
-
-import bmesh  # type: ignore
 import bpy  # type: ignore
+import mathutils
 import numpy as np
-from mathutils import Vector
+from HumGen3D.backend import get_prefs
+from HumGen3D.human.human import Human
+from mathutils import Matrix, Vector
+
+
+class Hair:
+    key_coordinates: np.ndarray
+    location: Tuple[float]
+    rotation: Tuple[float]
+    nearest_vert_normals: np.ndarray
+    particle_sys: bpy.types.ParticleSystem
+    perpendicular_card: bpy.types.Object
+    parallel_card: bpy.types.Object
+
+    def __init__(self, mw, kd, guide_hair, particle_sys, verts):
+        self.location = guide_hair.location
+        self.rotation = guide_hair.rotation
+        self.key_coordinates = np.array([hk.co for hk in guide_hair.hair_keys])
+
+        self.nearest_vert_normals = np.empty(self.key_coordinates.shape)
+        for i, k_co in enumerate(self.key_coordinates):
+            nearest_vert_idx = kd.find(k_co)[1]
+            self.nearest_vert_normals[i] = verts[nearest_vert_idx].normal.normalized()
+
+        self.particle_system = particle_sys
+        self.perpendicular_card = None
+        self.parallel_card = None
+
+    def normalized(self, a, axis=-1, order=2):
+        l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
+        l2[l2 == 0] = 1
+        return a / np.expand_dims(l2, axis)
+
+    def matrix_multiplication(
+        self, matrix: Matrix, coordinates: np.ndarray
+    ) -> np.ndarray:
+        vert_count = coordinates.shape[0]
+        coords_4d = np.ones((vert_count, 4), "f")
+        coords_4d[:, :-1] = coordinates
+
+        coords: np.ndarray = np.einsum("ij,aj->ai", matrix, coords_4d)[:, :-1]
+
+        return coords
+
+    def to_mesh(self, mw, scene):
+        hk_len = len(self.key_coordinates)
+        head_normals = self.nearest_vert_normals
+        hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=1)
+        hair_key_vectors = self.normalized(hair_keys_next_coords - self.key_coordinates)
+
+        perpendicular = np.cross(head_normals, hair_key_vectors)
+
+        length_correction = np.arange(0.01, 0.03, 0.02 / hk_len, dtype=np.float32)
+
+        length_correction = length_correction[::-1]
+        length_correction = np.expand_dims(length_correction, axis=-1)
+
+        perpendicular_offset = length_correction * np.abs(perpendicular)
+        head_normal_offset = length_correction * np.abs(head_normals) * 0.3
+
+        self.perpendicular_card = self.__create_mesh_from_offset(
+            mw, scene, perpendicular_offset
+        )
+        self.parallel_card = self.__create_mesh_from_offset(
+            mw, scene, head_normal_offset, check=True
+        )
+
+    def __create_mesh_from_offset(self, mw, scene, offset, check=False):
+        mesh = bpy.data.meshes.new(name=f"hair_{self.location}")
+
+        vertices_right = self.key_coordinates + offset
+        vertices_left = np.flip(self.key_coordinates - offset, axis=0)
+
+        vertices = np.concatenate((vertices_left, vertices_right))
+        vertices_subdivided = self.__subdivide_coordinates(vertices, factor=1.3)
+        vertices_subdivided = self.matrix_multiplication(mw, vertices_subdivided)
+
+        edges = []
+
+        vert_count = vertices_subdivided.shape[0]
+        assert vert_count % 2 == 0
+
+        faces = []
+        for i in range(int(vert_count / 2)):
+            faces.append((i, i + 1, vert_count - i - 2, vert_count - i - 1))
+
+        mesh.from_pydata(vertices_subdivided, edges, faces)
+        mesh.update()
+
+        for f in mesh.polygons:
+            f.use_smooth = True
+
+        obj = bpy.data.objects.new(f"hair_{self.location}", mesh)
+
+        scene.collection.objects.link(obj)
+
+        return obj
+
+    def __subdivide_coordinates(self, coords: np.ndarray, factor: float = 2.0):
+        c_len = coords.shape[0]
+
+        # Round samples to nearest EVEN integer
+        samples = math.ceil(c_len * factor / 2.0) * 2
+
+        steps_new = np.linspace(0, 1, samples)
+        steps_old = np.linspace(0, 1, c_len)
+
+        co_interp = np.empty((samples, 3), dtype=np.float32)
+
+        for i in range(3):
+            axis_co = coords[:, i]
+            axis_interp = np.interp(steps_new, steps_old, axis_co)
+
+            co_interp[:, i] = axis_interp
+
+        return co_interp
+
+    def add_uv(self):
+        for obj in [self.perpendicular_card, self.parallel_card]:
+            poly_count = len(obj.data.polygons)
+
+            haircard_json = os.path.join(
+                get_prefs().filepath,
+                "hair",
+                "haircards",
+                "HairMediumLength_zones.json",
+            )
+            with open(haircard_json, "r") as f:
+                zone_dict = json.load(f)
+
+            uv_layer = obj.data.uv_layers.new()
+
+            vert_loop_dict: Dict[int, List[bpy.types.uvloop]] = {}
+
+            for poly in obj.data.polygons:
+                for vert_idx, loop_idx in zip(poly.vertices, poly.loop_indices):
+                    loop = uv_layer.data[loop_idx]
+                    if vert_idx not in vert_loop_dict:
+                        vert_loop_dict[vert_idx] = [
+                            loop,
+                        ]
+                    else:
+                        vert_loop_dict[vert_idx].append(loop)
+
+            flattened_hairzones = []
+            for hz in zone_dict["long"]["dense"]["wide"]:
+                flattened_hairzones.append(hz)
+            for hz in zone_dict["long"]["dense"]["narrow"]:
+                flattened_hairzones.append(hz)
+
+            vert_pairs = []
+            vert_count = len(obj.data.vertices)
+            half = len(obj.data.vertices) // 2
+            for vert in obj.data.vertices[:half]:
+                vert_pairs.append((vert.index, vert_count - vert.index - 1))
+
+            chosen_zone = random.choice(flattened_hairzones)
+            bottom_left, top_right = chosen_zone
+
+            for i, (vert_left, vert_right) in enumerate(vert_pairs):
+                left_loops = vert_loop_dict[vert_left]
+                right_loops = vert_loop_dict[vert_right]
+
+                x_min = bottom_left[0]
+                x_max = top_right[0]
+
+                y_min = bottom_left[1]
+                y_max = top_right[1]
+                y_diff = y_max - y_min
+
+                y_relative = i / (half - 1)
+                for loop in left_loops:
+                    loop.uv = (x_max, y_min + y_diff * y_relative)
+
+                for loop in right_loops:
+                    loop.uv = (x_min, y_min + y_diff * y_relative)
+
+    def add_material(self):
+        mat = bpy.data.materials.get("HG_Haircards")
+        if not mat:
+            blendpath = os.path.join(
+                get_prefs().filepath, "hair", "haircards", "haircards.blend"
+            )
+            with bpy.data.libraries.load(blendpath, link=False) as (
+                _,
+                data_to,
+            ):
+                data_to.materials = ["HG_Haircards"]
+
+            mat = data_to.materials[0]
+
+        self.perpendicular_card.data.materials.append(mat)
+        self.parallel_card.data.materials.append(mat)
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -20,222 +215,53 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        pref = get_prefs()
+        scene = context.scene
+        hg_rig = Human.from_existing(context.object)
+        dg = context.evaluated_depsgraph_get()
 
-        hg_rig = None  # find_human(context.object)
-        hg_body = hg_rig.HG.body_obj
+        hg_body = hg_rig.HG.body_obj.evaluated_get(dg)
 
+        vertices = hg_body.data.vertices
+        size = len(vertices)
+        kd = mathutils.kdtree.KDTree(size)
+
+        for i, v in enumerate(vertices):
+            kd.insert(v.co, i)
+        kd.balance()
+
+        mw = hg_body.matrix_world
+
+        hairs: Hair = []
         for ps in hg_body.particle_systems:
-            context.view_layer.objects.active = hg_body
-            if ps.name.startswith("Eye") or "fh" not in ps.name:
-                continue
-            ps_sett = ps.settings
-            p_amount = len(ps.particles)
+            for gh in ps.particles:
+                hairs.append(Hair(mw, kd, gh, ps, vertices))
 
-            ps_sett.child_nbr = 0
-            if ps_sett.display_step == 3:
-                ps_sett.display_step = 4
-            steps = ps_sett.display_step
+        hairs = self.downsample_to_size(hairs, 100)
 
-            for mod in [
-                mod for mod in hg_body.modifiers if mod.type == "PARTICLE_SYSTEM"
-            ]:
-                if mod.particle_system.name == ps.name:
-                    bpy.ops.object.modifier_convert(modifier=mod.name)
+        for hair in reversed(hairs):
+            hair.to_mesh(mw, scene)
+            hair.add_uv()
+            hair.add_material()
 
-                    hc_obj = context.object
-            for obj in [obj for obj in context.selected_objects if obj != hc_obj]:
-                obj.select_set(False)
+        hair_objs = [h.parallel_card for h in hairs] + [
+            h.perpendicular_card for h in hairs
+        ]
 
-            bpy.ops.object.convert(target="CURVE")
-            hc_obj.data.extrude = 0.008
+        c = {}
 
-            spline_distances = build_hair_spline_distance_enum(hc_obj, hg_body)
+        c["object"] = c["active_object"] = hair_objs[0]
+        c["selected_objects"] = c["selected_editable_objects"] = hair_objs
 
-            bpy.ops.object.mode_set(mode="EDIT")
-            for spline in hc_obj.data.splines:
-                for point in spline.points:
-                    point.select = False
+        bpy.ops.object.join(c)
 
-            points = []
-            for spline_idx, distance_to_center in enumerate(spline_distances):
-                spline = hc_obj.data.splines[spline_idx]
+        for mod in hg_body.modifiers:
+            mod.show_viewport = False
 
-                negative = distance_to_center < 0
-
-                tilt = -666 * abs(distance_to_center) + 70
-
-                if tilt <= 0:
-                    continue
-
-                for point in spline.points:
-                    point.select = True
-                if negative:
-                    points.append(point)
-                bpy.ops.transform.tilt(value=tilt * -1 if negative else 1)
-                for point in spline.points:
-                    point.select = False
-
-            for point in points:
-                point.select = True
-
-            continue
-            bpy.ops.object.mode_set(mode="OBJECT")
-            bpy.ops.object.convert(target="MESH")
-
-            continue
-            blendpath = str(pref.filepath) + str(
-                Path("/hair/haircards/haircards_material.blend")
-            )
-            with bpy.data.libraries.load(blendpath, link=False) as (
-                data_from,
-                data_to,
-            ):
-                data_to.materials = ["HG_Haircards"]
-
-            if hc_obj.data.materials:
-                # assign to 1st material slot
-                hc_obj.data.materials[0] = data_to.materials[0]
-            else:
-                # no slots
-                hc_obj.data.materials.append(data_to.materials[0])
-
-            bpy.ops.object.mode_set(mode="EDIT")
-            bpy.ops.mesh.select_all()
-            uv_islands = self.get_uv_islands2(hc_obj, steps)
-
-            self.set_uvs(hc_obj, uv_islands)
-            hc_obj.select_set(False)
         return {"FINISHED"}
 
-    def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
-
-    def get_uv_islands(self, context, haircard_obj):
-        start_uv_sync_mode = context.scene.tool_settings.use_uv_select_sync
-
-        bm = bmesh.from_edit_mesh(haircard_obj.data)
-        bm.faces.ensure_lookup_table()
-        uv_layer = bm.loops.layers.uv.active
-
-        found_list = []
-        all_islands = []
-
-        for f in bm.faces:
-            if f.index in found_list:
-                continue
-
-            bpy.ops.uv.select_all(action="DESELECT")
-            for loop in f.loops:
-                loop[uv_layer].select = True
-            bpy.ops.uv.select_linked()
-
-            island = [f.index for f in bm.faces if f.loops[0][uv_layer].select]
-
-            found_list.extend(island)
-            all_islands.append(island)
-            if f.index > 10:
-                break
-
-        context.scene.tool_settings.use_uv_select_sync = start_uv_sync_mode
-        return all_islands
-
-    def get_uv_islands2(self, haircard_obj, steps):
-        bm = bmesh.from_edit_mesh(haircard_obj.data)
-        bm.faces.ensure_lookup_table()
-
-        faces = [f.index for f in bm.faces]
-        n = pow(2, steps)
-        islands = [faces[i : i + n] for i in range(0, len(faces), n)]
-
-        # for i in range(0, len(faces), pow(2,steps)):
-        #    yield faces[i:i + n]
-
-        return islands
-
-    def set_uvs(self, hc_obj, islands):
-        me = hc_obj.data
-        uv_layer = me.uv_layers.active.data
-
-        island = [me.polygons[i] for i in islands[0]]
-        for poly in island:
-            for loop_index in poly.loop_indices:
-                uv_layer[loop_index].uv = (0, 0)
-            break
-
-
-def build_hair_spline_distance_enum(hair_obj, body_obj) -> list:
-    spline_distance_enum = []
-
-    # RELEASE check if these vert numbers are still correct
-    middle_vert_converted_loc = get_vert_loc_in_matrix_of_target_object(
-        hair_obj, body_obj, 9663
-    )
-    right_vert_converted_loc = get_vert_loc_in_matrix_of_target_object(
-        hair_obj, body_obj, 9669
-    )
-    left_vert_converted_loc = get_vert_loc_in_matrix_of_target_object(
-        hair_obj, body_obj, 9660
-    )
-
-    splines = hair_obj.data.splines
-    for spline in splines:
-        distance_list = []
-        for point in spline.points:
-            distance = find_distance_to_control_vert(point, middle_vert_converted_loc)
-            distance_list.append(distance)
-
-        assert distance_list
-
-        closest_point_index = np.argmin(distance_list)
-        closest_point = spline.points[closest_point_index]
-        side_of_head = get_side_of_head(
-            closest_point, right_vert_converted_loc, left_vert_converted_loc
-        )
-
-        positive_negative = -1 if side_of_head == "right" else 1
-
-        spline_distance_enum.append(
-            distance_list[closest_point_index] * positive_negative
-        )
-
-    return spline_distance_enum
-
-
-def get_vert_loc_in_matrix_of_target_object(
-    target_object, object_of_passed_vert, index
-):
-    control_vert = object_of_passed_vert.data.vertices[index]
-    control_vert_local_loc = control_vert.co
-    control_vert_global_loc = (
-        object_of_passed_vert.matrix_world @ control_vert_local_loc
-    )
-    control_node_converted_loc = (
-        target_object.matrix_world.inverted() @ control_vert_global_loc
-    )
-    return np.array(control_node_converted_loc)
-
-    # verts_within_distance = []
-    # for vert in hair_obj.data.vertices:
-    #     loc = vert.co
-    #     squared_dist = np.sum((loc-control_vert_loc)**2, axis=0)
-    #     dist = np.sqrt(squared_dist)
-
-    #     if dist < max_distance:
-    #         verts_within_distance.append(vert)
-
-
-def find_distance_to_control_vert(point, control_node_converted_loc):
-    loc = np.array(point.co[:3])
-    squared_dist = np.sum((loc - control_node_converted_loc) ** 2, axis=0)
-    return np.sqrt(squared_dist)
-
-
-def get_side_of_head(point_on_spline, right_vert, left_vert):
-    distance_right = find_distance_to_control_vert(point_on_spline, right_vert)
-    distance_left = find_distance_to_control_vert(point_on_spline, left_vert)
-
-    if distance_right > distance_left:
-        return "left"
-    else:
-        return "right"
+    def downsample_to_size(self, list_to_downsample, wanted_size):
+        ln = len(list_to_downsample)
+        if ln <= wanted_size:
+            return list_to_downsample
+        proportion = wanted_size / ln
+        return list(islice(list_to_downsample, 0, ln, int(1 / proportion)))
