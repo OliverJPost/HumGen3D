@@ -19,9 +19,7 @@ def build_driver_dict(obj, remove=True):
     remove_list = []
     for driver in obj.data.shape_keys.animation_data.drivers:
 
-        target_sk = driver.data_path.replace('key_blocks["', "").replace(
-            '"].value', ""
-        )
+        target_sk = driver.data_path.replace('key_blocks["', "").replace('"].value', "")
         expression = driver.driver.expression
         var = driver.driver.variables[0]
         target = var.targets[0]
@@ -58,4 +56,9 @@ def rigify_with_drivers():
         add_driver(human, sks[target_sk_name], sett_dict)
 
 
-rigify_with_drivers()
+def main():
+    rigify_with_drivers()
+
+
+if __name__ == "__main__":
+    main()
