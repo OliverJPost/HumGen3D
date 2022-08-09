@@ -5,7 +5,7 @@ phase.
 """
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty # type:ignore
+from bpy.props import BoolProperty, FloatProperty  # type:ignore
 from HumGen3D.human.human import Human
 
 
@@ -25,8 +25,46 @@ def create_bone_props(bone_names):
     return prop_dict
 
 
+def update_length(value, context):
+    human = Human.from_existing(context.object)
+    sk = human.shape_keys.get("tall")
+    sk.value = value
+
+    def interpolate_rig(value, human):
+        alternate_rig = bpy.data.objects["HG_Rig_TALL"]
+        old_rig = bpy.data.objects["OLD"]
+        rig = human.rig_obj
+        bpy.ops.object.mode_set(mode="EDIT")
+
+        for ebone in rig.data.edit_bones:
+            ebone_target = alternate_rig.data.edit_bones.get(ebone.name)
+            ebone_old = old_rig.data.edit_bones.get(ebone.name)
+
+            if not ebone_target or not ebone_old:
+                print("skipping", ebone.name)
+                continue
+
+            vec_head = ebone_target.head - ebone_old.head
+            vec_tail = ebone_target.tail - ebone_old.tail
+            print(vec_head, vec_tail)
+
+            ebone.head = ebone_old.head + vec_head * value
+            ebone.tail = ebone_old.tail + vec_tail * value
+
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+    interpolate_rig(value, human)
+
+
 class BoneSizeProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, contains float properties for scaling bones"""
+
+    tall: FloatProperty(
+        default=0.0,
+        soft_min=0,
+        soft_max=1,
+        update=lambda s, c: update_length(s.tall, c),
+    )
 
     # TODO automatic generation of properties
     # def __new__(cls, *args, **kwargs):
