@@ -275,14 +275,6 @@ class Human:
         return self.eyes.eye_obj
 
     @property
-    def phase(self) -> str:
-        """String in ("creation", "finalize") to indicate what phase this human is in."""
-        if self.props.phase in ["body", "face", "skin", "length"]:
-            return "creation"
-        else:
-            return "finalize"
-
-    @property
     def children(self) -> Generator[Object]:
         """A generator of all children of the rig object of the human. Does NOT yield subchildren."""
         for child in self.rig_obj.children:

@@ -276,10 +276,6 @@ class HG_PT_PANEL(bpy.types.Panel):
             depress=bool(human),
         )
 
-        # show button for switching to experimental
-        if human and human.phase == "creation":
-            self._experimental_mode_button(human.rig_obj, row_h)
-
         row = col.row(align=True)
         row.operator(
             "hg3d.next_prev_human", text="Previous", icon="TRIA_LEFT"
