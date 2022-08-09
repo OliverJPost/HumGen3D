@@ -16,8 +16,6 @@ from HumGen3D.user_interface.documentation.tips_and_suggestions.main_ui_tips_and
     get_main_ui_tips_from_context,
 )
 
-from .panel_functions import in_creation_phase
-
 lorum_ipsum = """
 Lorem ipsum dolor sit amet, consectetur
 adipiscing elit, sed do eiusmod tempor
@@ -127,8 +125,6 @@ def update_tips_from_context(context, sett, hg_rig):
         if sett.custom_content.content_saving_ui
         else sett.ui.active_tab
     )
-    if hg_rig:
-        phase = in_creation_phase(hg_rig)
 
     col = context.scene.hg_tips_and_suggestions
 

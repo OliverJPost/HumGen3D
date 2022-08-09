@@ -123,7 +123,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             for driver in remove_list:
                 body_copy.data.shape_keys.animation_data.drivers.remove(driver)
 
-        distance_dict = build_distance_dict(body_copy, cloth_obj, apply=False)
+        distance_dict = build_distance_dict(body_copy, cloth_obj, apply=False)  # FIXME
 
         if cloth_obj.data.shape_keys:
             for sk in [
@@ -328,7 +328,7 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
         for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.startswith("cor"):
                 sk.mute = True
-        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)
+        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)  # FIXME
         deform_obj_from_difference(
             "Test sk", distance_dict, hg_body, cloth_obj, as_shapekey=False
         )

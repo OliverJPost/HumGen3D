@@ -1,47 +1,25 @@
-from HumGen3D.backend import hg_delete
 import bpy
+import numpy as np
+from HumGen3D.backend import hg_delete
+from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from mathutils import Vector, kdtree  # type:ignore
 
-import numpy as np
 
-from HumGen3D.human.length.length import apply_armature
+def build_distance_dict(body_coordinates_world, target_coordinates_world):
+    kd = kdtree.KDTree(len(body_coordinates_world))
 
-
-def build_distance_dict(source_org, target, apply=True):
-    """
-    Returns a dict with a key for each vertex of the source and the value the closest vertex of the target and the distance to it
-    """
-    source = source_org.copy()
-    source.data = source.data.copy()
-    bpy.context.scene.collection.objects.link(source)
-
-    apply_shapekeys(source)
-    if apply:
-        apply_armature(source)
-
-    v_source = source.data.vertices
-    v_target = target.data.vertices
-
-    size = len(v_source)
-    kd = kdtree.KDTree(size)
-
-    for i, v in enumerate(v_source):
-        kd.insert(v.co, i)
+    for i, co in enumerate(body_coordinates_world):
+        kd.insert(co, i)
 
     kd.balance()
+
     distance_dict = {}
-    for vt in v_target:
-        vt_loc = target.matrix_world @ vt.co
+    for idx_target, co_target in enumerate(target_coordinates_world):
+        co_body, idx_body, _ = kd.find_n(co_target, 1)[0]
 
-        co_find = source.matrix_world.inverted() @ vt_loc
+        distance_dict[idx_target] = (idx_body, co_body - co_target)
 
-        for (co, index, _) in kd.find_n(co_find, 1):
-            v_dist = np.subtract(co, co_find)
-
-            distance_dict[vt.index] = (index, Vector(v_dist))
-
-    hg_delete(source)
     return distance_dict
 
 

@@ -3,12 +3,7 @@ from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 
 from ..backend.preview_collections import get_hg_icon, preview_collections
-from .panel_functions import (
-    draw_panel_switch_header,
-    draw_resolution_box,
-    get_flow,
-    in_creation_phase,
-)
+from .panel_functions import draw_panel_switch_header, draw_resolution_box, get_flow
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 
 

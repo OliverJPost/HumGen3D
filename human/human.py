@@ -360,15 +360,6 @@ class Human:
         """Delete the human from Blender. Will delete all meshes and objects that this human consists of, including
         the backup human.
         """
-        backup_obj = self.props.backup
-        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
-
-        copied_humans = [
-            human
-            for human in humans
-            if human.HG.backup == backup_obj and human != self.rig_obj
-        ]
-
         delete_list = [
             self.rig_obj,
         ]
@@ -377,10 +368,6 @@ class Human:
             for sub_child in child.children:
                 delete_list.append(sub_child)
 
-        if not copied_humans and backup_obj:
-            delete_list.append(backup_obj)
-            for child in backup_obj.children:
-                delete_list.append(child)
 
         for obj in delete_list:
             try:

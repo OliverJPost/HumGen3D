@@ -73,18 +73,6 @@ def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
     return flow
 
 
-def in_creation_phase(hg_rig) -> bool:
-    """Checks if this human is in creation phase
-
-    Args:
-        hg_rig (Object): HumGen human armature
-
-    Returns:
-        bool: True if human in creation phase
-    """
-    return hg_rig.HG.phase in ["body", "face", "skin", "length"]
-
-
 def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
     """Draws the spoiler box of the main sections (i.e. body, hair, face)
 
