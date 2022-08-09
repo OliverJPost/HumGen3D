@@ -165,3 +165,15 @@ class BodySettings:
             return scaling_dict
         else:
             return sc
+
+    def adapt_rig_to_proportions(self) -> None:
+        """Change the base pose of the rig to the new body proportions."""
+        rig_obj = self._human.rig_obj
+        body_obj = self._human.body_obj
+
+        bpy.ops.object.mode_set(mode="EDIT")
+        for ebone in rig_obj.edit_bones:
+            head = ebone.head
+            tail = ebone.tail
+
+        bpy.ops.object.mode_set(mode="OBJECT")

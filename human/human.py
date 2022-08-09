@@ -6,11 +6,11 @@ from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
-from bpy.types import Object # type:ignore
+from bpy.types import Object  # type:ignore
 
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
 from .base.collections import add_to_collection
-from .base.decorators import cached_property, injected_context
+from .base.decorators import injected_context
 from .base.exceptions import HumGenException
 from .base.namegen import get_name
 from .base.render import set_eevee_ao_and_strip
@@ -22,8 +22,8 @@ from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty # type:ignore
-    from bpy.types import ( # type:ignore
+    from bpy.props import FloatVectorProperty  # type:ignore
+    from bpy.types import (  # type:ignore
         Context,
         EditBone,
         PoseBone,
@@ -33,29 +33,40 @@ if TYPE_CHECKING:
 
 
 class Human:
-    """
-    Python representation of a Human Generator human. This class with its subclasses can be used to modify the
+    """Python representation of a Human Generator human.
+
+    This class with its subclasses can be used to modify the
     Human Generator human inside Blender.
     """
 
-    # region Magic Methods
-    def __init__(self, rig_obj, strict_check: bool = True):
+    def __init__(self, rig_obj: Object, strict_check: bool = True):
+        """Internal use only. Use .from_preset or .from_existing classmethods instead.
+
+        Args:
+            rig_obj (Object): Blender Armature object that is part of an existing human.
+            strict_check (bool, optional): If True, an exception will be thrown if the
+                rig_obj is incorrect. Defaults to True.
+
+        Raises:
+            HumGenException: Raised if the rig_obj is incorrect and strict_check is
+                False.
+        """
         if strict_check and not rig_obj.HG.ishuman:
             raise HumGenException("Did not pass a valid HG rig object")
 
         self.rig_obj = rig_obj
 
     def __repr__(self) -> str:
-        return f"Human {self.name} in {self.phase} phase."
-
-    # endregion
-    # region Class & Static Methods
+        """Return a string representation of this object."""
+        return f"Human '{self.name}' [{self.gender.capitalize()}]in {self.phase} phase."
 
     @staticmethod
     @injected_context
     def get_preset_options(gender: str, context: Context = None) -> List[str]:
         """
-        Returns a list of human possible presets for the given gender. Pass one of these to Human.from_preset()
+        Return a list of human possible presets for the given gender.
+
+        Choose one of the options to pass to Human.from_preset() constructor.
 
         Args:
           gender (str): string in ('male', 'female')
@@ -64,7 +75,6 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-
         refresh_pcoll(None, context, "humans", gender_override=gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
@@ -156,7 +166,9 @@ class Human:
         return human
 
     @classmethod
-    def find(cls, obj, include_applied_batch_results=False) -> Object:
+    def find(
+        cls, obj: Object, include_applied_batch_results: bool = False
+    ) -> Object | None:
         """Checks if the passed object is part of a HumGen human. Does NOT return an instance
 
         Args:
@@ -191,7 +203,7 @@ class Human:
             return obj
 
     @staticmethod
-    def _obj_is_batch_result(obj) -> Tuple[bool, bool]:
+    def _obj_is_batch_result(obj: Object) -> Tuple[bool, bool]:
         return (
             obj.HG.batch_result,
             obj.HG.body_obj == obj,
@@ -202,9 +214,7 @@ class Human:
 
     @property
     def objects(self) -> Generator[Object]:
-        """
-        A generator that yields all the Blender objects that the human consists of
-        """
+        """Yields all the Blender objects that the human consists of"""
         for child in self.rig_obj.children:
             for subchild in child.children:
                 yield subchild
@@ -214,11 +224,12 @@ class Human:
 
     @property
     def body_obj(self) -> Object:
-        """Points to the human body Blender object"""
+        """Returns the human body Blender object"""
         return self.rig_obj.HG.body_obj
 
     @property
     def eye_obj(self) -> Object:
+        """Returns the eye Blender object"""
         return self.eyes.eye_obj
 
     @property
@@ -343,9 +354,6 @@ class Human:
         """Subclass used to access and change the hair systems and materials of the human."""
         return HairSettings(self)
 
-    # endregion
-    # region Public Methods
-
     def delete(self) -> None:
         """Delete the human from Blender. Will delete all meshes and objects that this human consists of, including
         the backup human.
@@ -387,9 +395,6 @@ class Human:
         for obj in self.objects:
             obj.hide_set(state)
             obj.hide_viewport = state
-
-    # endregion
-    # region Protected Methods
 
     def _verify_body_object(self) -> None:
         """Update HG.body_obj if it's not a child of the rig. This would happen if
@@ -499,5 +504,3 @@ class Human:
             i += 1
 
         self.name = "HG_" + name
-
-    # endregion

@@ -86,7 +86,7 @@ class HG_DELETE_STRETCH(bpy.types.Operator):
     bl_idname = "hg3d.delstretch"
     bl_label = "Remove stretch bones"
     bl_description = "Removes all stretch bones"
-    bl_options = {"UNDO"}
+    bl_options = {"UNDO", "REGISTER"}
 
     def execute(self, context):
         human = Human.from_existing(context.object)
