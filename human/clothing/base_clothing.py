@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete, get_prefs, refresh_pcoll
+from HumGen3D.backend import get_prefs, hg_delete, hg_log, refresh_pcoll
+from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
@@ -12,7 +13,6 @@ from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
-from HumGen3D.human import clothing
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 
@@ -96,15 +96,19 @@ class BaseClothing(PreviewCollectionContent):
             hg_body (Object): HumGen body
             obj (Object): cloth object to deform
         """
-        backup_rig = self._human.props.backup
-        cloth_obj.parent = backup_rig
 
-        backup_rig.HG.body_obj.hide_viewport = False
-        backup_body = [obj for obj in backup_rig.children if "hg_body" in obj][0]
+        body_obj = self._human.body_obj
+        mx_body = body_obj.matrix_world
+        if self._human.gender == "female":
+            verts = body_obj.data.vertices
+        else:
+            verts = body_obj.data.shape_keys.key_blocks["Male"].data
+        body_coords_world = [mx_body @ v.co for v in verts]
 
-        backup_body_copy = self._copy_backup_with_gender_sk(backup_body)
+        mx_cloth = cloth_obj.matrix_world
+        cloth_coords_world = [mx_cloth @ v.co for v in cloth_obj.data.vertices]
 
-        distance_dict = build_distance_dict(backup_body_copy, cloth_obj, apply=False)
+        distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
 
         cloth_obj.parent = self._human.rig_obj
 
@@ -121,43 +125,6 @@ class BaseClothing(PreviewCollectionContent):
         context.view_layer.objects.active = cloth_obj
         self._set_armature(context, cloth_obj, self._human.rig_obj)
         context.view_layer.objects.active = self._human.rig_obj
-
-        hg_delete(backup_body_copy)
-
-    def _copy_backup_with_gender_sk(self, backup_body) -> bpy.types.Object:
-        """Creates a copy of the backup human with the correct gender settings and
-        all other shapekeys set to 0
-
-        Args:
-            backup_body (Object): body of the hidden backup human
-
-        Returns:
-            bpy.types.Object: copy of the backup body
-        """
-        copy = backup_body.copy()
-        copy.data = backup_body.data.copy()
-        bpy.context.scene.collection.objects.link(copy)
-
-        for sk in [
-            sk
-            for sk in copy.data.shape_keys.key_blocks
-            if sk.name not in ["Basis", "Male"]
-        ]:
-            sk.value = 0
-
-        gender = backup_body.parent.HG.gender
-
-        if gender == "female":
-            return copy
-
-        try:
-            sk = copy.data.shape_keys.key_blocks
-            sk["Male"].value = 1
-            apply_shapekeys(copy)
-        except:
-            pass
-
-        return copy
 
     def _set_geometry_masks(self, mask_remove_list, new_mask_list):
         """Adds geometry mask modifiers to hg_body based on custom properties on the

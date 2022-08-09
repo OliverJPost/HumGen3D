@@ -833,7 +833,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         self.save_material_textures(objs)
         obj_distance_dict = {}
         for obj in objs:
-            distance_dict = build_distance_dict(body_copy, obj, apply=False)
+            distance_dict = build_distance_dict(body_copy, obj, apply=False)  # FIXME
             obj_distance_dict[obj.name] = distance_dict
 
         for gender in genders:

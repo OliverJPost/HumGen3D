@@ -33,7 +33,6 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
         default="male",
     )
     body_obj: PointerProperty(name="hg_body", type=bpy.types.Object)
-    backup: PointerProperty(name="hg_backup", type=bpy.types.Object)
     length: FloatProperty()
     experimental: BoolProperty(default=False)
     batch_result: BoolProperty(default=False)
