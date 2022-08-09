@@ -3,7 +3,7 @@ import os
 from typing import TYPE_CHECKING
 
 import bpy
-from bpy.types import Context # type:ignore
+from bpy.types import Context  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D import Human
@@ -50,8 +50,9 @@ class LengthSettings:
 
         bones = self._human.rig_obj.pose.bones
 
-        for stretch_bone, bone_data in stretch_bone_dict.items():
-            self._set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
+        # TODO totally remove
+        # for stretch_bone, bone_data in stretch_bone_dict.items():
+        #    self._set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
 
         context.view_layer.update()  # Requires update to get new length of rig
         hg_rig = (
