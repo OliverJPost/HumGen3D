@@ -1,5 +1,5 @@
 """
-Operators and functions used for installing and managing HumGen's content packs
+Operators and functions used for installing and managing HumGen's content packs.
 
 Nomenclature:
 Installpack = a collection item that represents a zip file the user has selected.
@@ -18,16 +18,15 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D.backend import hg_log, get_prefs 
+from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.feedback_func import ShowMessageBox
+
 from ..preview_collections import preview_collections
 from ..update import check_update
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):
-    """
-    UIList showing cpacks to be installed
-    """
+    """UIList showing cpacks that are about to be installed by the user."""
 
     def draw_item(
         self,
@@ -40,6 +39,7 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
         active_propname,
         index,
     ):
+        """Draw code for each item in the collection."""
         alert_dict = {
             "not_cpack": "Not a content pack",
             "no_json": "No .json file in pack",
@@ -58,8 +58,8 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
 
 
 class HG_UL_CONTENTPACKS(bpy.types.UIList):
-    """UIList showing content packs, including icons on who made the pack,
-    what version it is, what items are included, a weblink and a delete button
+    """UIList showing content packs, including icons on who made the pack, what version
+    it is, what items are included, a weblink and a delete button
     """
 
     def draw_item(
@@ -73,7 +73,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         active_propname,
         index,
     ):
-
+        """Draw code for each item in the collection."""
         hg_icons = preview_collections["hg_icons"]
         header = True if item.name == "header" else False
         # header is true only for the first item in the list.
@@ -96,8 +96,8 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         self._draw_operator_buttons(item, header, subrow)
 
     def _draw_operator_buttons(self, item, header, subrow):
-        """Draws buttons to go to edit cpack, to cpack weblink and button to
-        delete cpack"""
+        """Draws buttons to go to edit cpack, to cpack weblink and button to delete
+        cpack"""
         if header:
             for i in range(3):
                 subrow.label(text="", icon="BLANK1")
@@ -117,12 +117,11 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             subrow.label(text="", icon="BLANK1")
 
     def _get_icon_dict(self) -> dict:
-        """Dictionary with custom icon names for each category
+        """Return dictionary with custom icon names for each category.
 
         Returns:
             dict: key: name of category, value: name of icon
         """
-
         icon_dict = {
             "humans": "humans",
             "human_textures": "textures",
@@ -137,7 +136,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         return icon_dict
 
     def _draw_category_dots(self, item, hg_icons, header, subrow):
-        """Draws grid of dots to show what kind of content is in this cpack"""
+        """Draw grid of dots to show what kind of content is in this cpack."""
         icon_dict = self._get_icon_dict()
 
         for categ, icon in icon_dict.items():
@@ -154,7 +153,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
                 )
 
     def _draw_creator_column(self, item, hg_icons, header, subrow):
-        """Draws a column with info about the creator of this cpack"""
+        """Draw a column with info about the creator of this cpack."""
         if header:
             subrow.label(text="Creator:")
         elif item.creator == "HumGen":
@@ -163,7 +162,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             subrow.label(text=item.creator, icon=item.icon_name)
 
     def _draw_update_label(self, item, subrow, header):
-        """Draws a column with info if the cpack is up to date"""
+        """Draw a column with info if the cpack is up to date."""
         if header:
             subrow.label(text="Update info:    ")
             return
@@ -206,11 +205,10 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
 
 class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
-    """Opens a filebrowser popup, allowing the user to select files. This
-    operator adds them to a collection property, meanwhile checking if any
-    problems arise that mean the pack should not be installed
+    """Opens a filebrowser popup, allowing the user to select files.
 
-    API: False
+    This operator adds them to a collection property, meanwhile checking if any
+    problems arise that mean the pack should not be installed
 
     Operator Type:
         HumGen installation
@@ -238,7 +236,6 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         directory = self.directory
-        pref = get_prefs()
 
         coll = context.scene.installpacks_col
 
