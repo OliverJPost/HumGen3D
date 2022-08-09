@@ -8,12 +8,12 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete, get_addon_root, get_prefs, refresh_pcoll
+from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log, refresh_pcoll
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
-from HumGen3D.human.creation_phase.length.length import apply_armature
+from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message
 from mathutils import Vector

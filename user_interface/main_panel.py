@@ -14,7 +14,6 @@ from .panel_functions import (
     draw_spoiler_box,
     draw_sub_spoiler,
     get_flow,
-    in_creation_phase,
     searchbox,
 )
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
@@ -66,19 +65,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         elif "cloth" in context.object or "shoe" in context.object:
             self._draw_cloth_material_ui(context, layout)
         # creation phase
-        elif self.human.phase == "creation":
+        else:
             self._draw_creation_section()
             self._draw_length_section()
             self._draw_face_section()
             self._draw_skin_section()
             self._draw_eyes_section()
             if self.pref.hair_section in ["both", "creation"]:
-                self._draw_hair_section(context)
-            self._draw_finish_creation_button(layout)
-        # finalize phase
-        else:
-            self.draw_creation_backup_section()
-            if self.pref.hair_section in ["both", "finalize"]:
                 self._draw_hair_section(context)
             self._draw_clothing_section()
             self._draw_footwear_section()
@@ -402,7 +395,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.separator()
         flow = get_flow(sett, col)
 
-        for sk in self.human.creation_phase.body.shape_keys:
+        for sk in self.human.body.shape_keys:
             flow.prop(
                 sk,
                 "value",
@@ -467,7 +460,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = box.column(align=True)
 
-        length_m = self.human.creation_phase.length.meters
+        length_m = self.human.length.meters
         length_feet = length_m / 0.3048
         length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
         length_label = (
@@ -541,17 +534,17 @@ class HG_PT_PANEL(bpy.types.Panel):
             sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith("ff")
         ]
         prefix_dict = {
-            "ff_a": (flow_u_skull, sett.ui_u_skull),
-            "ff_b": (flow_u_skull, sett.ui_u_skull),
-            "ff_c_eye": (flow_eyes, sett.ui_eyes),
-            "ff_d": (flow_l_skull, sett.ui_l_skull),
-            "ff_e_nose": (flow_nose, sett.ui_nose),
-            "ff_f_lip": (flow_mouth, sett.ui_mouth),
-            "ff_g_chin": (flow_chin, sett.ui_chin),
-            "ff_h_cheek": (flow_cheeks, sett.ui_cheeks),
-            "ff_i_jaw": (flow_jaw, sett.ui_jaw),
-            "ff_j_ear": (flow_ears, sett.ui_ears),
-            "ff_x": (flow_custom, sett.ui_custom),
+            "ff_a": (flow_u_skull, sett.ui.u_skull),
+            "ff_b": (flow_u_skull, sett.ui.u_skull),
+            "ff_c_eye": (flow_eyes, sett.ui.eyes),
+            "ff_d": (flow_l_skull, sett.ui.l_skull),
+            "ff_e_nose": (flow_nose, sett.ui.nose),
+            "ff_f_lip": (flow_mouth, sett.ui.mouth),
+            "ff_g_chin": (flow_chin, sett.ui.chin),
+            "ff_h_cheek": (flow_cheeks, sett.ui.cheeks),
+            "ff_i_jaw": (flow_jaw, sett.ui.jaw),
+            "ff_j_ear": (flow_ears, sett.ui.ears),
+            "ff_x": (flow_custom, sett.ui.custom),
         }
 
         # iterate over each collapsable menu, adding shapekey sliders to them
@@ -565,7 +558,7 @@ class HG_PT_PANEL(bpy.types.Panel):
                 )
 
         # menu for all shapekeys starting with pr_ (preset) prefix
-        if sett.ui_presets:
+        if sett.ui.presets:
             for sk in self.human.shape_keys.face_presets:
                 label = sk.name.replace("pr_", "").replace("_", " ").capitalize()
                 flow_presets.prop(
@@ -609,24 +602,24 @@ class HG_PT_PANEL(bpy.types.Panel):
         boxbox.scale_y = 1 if self.pref.compact_ff_ui else 1.5
 
         ui_bools = {
-            "nose": sett.ui_nose,
-            "u_skull": sett.ui_u_skull,
-            "chin": sett.ui_chin,
-            "mouth": sett.ui_mouth,
-            "eyes": sett.ui_eyes,
-            "cheeks": sett.ui_cheeks,
-            "l_skull": sett.ui_l_skull,
-            "jaw": sett.ui_jaw,
-            "ears": sett.ui_ears,
-            "other": sett.ui_other,
-            "custom": sett.ui_custom,
-            "presets": sett.ui_presets,
+            "nose": sett.ui.nose,
+            "u_skull": sett.ui.u_skull,
+            "chin": sett.ui.chin,
+            "mouth": sett.ui.mouth,
+            "eyes": sett.ui.eyes,
+            "cheeks": sett.ui.cheeks,
+            "l_skull": sett.ui.l_skull,
+            "jaw": sett.ui.jaw,
+            "ears": sett.ui.ears,
+            "other": sett.ui.other,
+            "custom": sett.ui.custom,
+            "presets": sett.ui.presets,
         }
 
         row = boxbox.row()
         row.prop(
-            sett,
-            "ui_{}".format(is_open_propname),
+            sett.ui,
+            is_open_propname,
             text=categ_name,
             icon="TRIA_DOWN" if ui_bools[is_open_propname] else "TRIA_RIGHT",
             toggle=True,
@@ -746,7 +739,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.template_icon_view(
             sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
         )
-        col.prop(sett, "texture_library", text="Library")
+        col.prop(sett.pcoll, "texture_library", text="Library")
 
     def _draw_light_dark_subsection(self, sett, box):
         """Collapsable section with sliders for dark and light areas on the skin
@@ -1055,7 +1048,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row = boxbox.row()
         row.alignment = "CENTER"
-        row.label(text="Eyebrows:", icon="OUTLINER_OB_HAIR")
+        row.label(text="Eyebrows:", icon="OUTLINER_OB_CURVES")
         row = boxbox.row(align=True)
         row.operator(
             "hg3d.eyebrowswitch", text="Previous", icon="TRIA_LEFT"
@@ -1111,7 +1104,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col_h = box.column()
         col_h.scale_y = 1.5
-        col_h.prop(sett, "hair_sub", text="")
+        col_h.prop(sett.pcoll, "hair_category", text="")
         if hg_rig.HG.gender == "male":
             self._draw_facial_hair_section(box, sett)
 
@@ -1142,7 +1135,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col_h = col.column()
         col_h.scale_y = 1.5
-        col_h.prop(sett, "face_hair_sub", text="")
+        col_h.prop(sett.pcoll, "face_hair_category", text="")
 
     def _draw_hair_children_switch(self, hair_systems, layout):
         """Draws a switch for turning children to render amount or back to 1
@@ -1185,13 +1178,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         boxbox = box.box()
         boxbox.prop(
-            self.sett,
-            "hair_length_ui",
-            icon="TRIA_DOWN" if self.sett.hair_length_ui else "TRIA_RIGHT",
+            self.sett.ui,
+            "hair_length",
+            icon="TRIA_DOWN" if self.sett.ui.hair_length else "TRIA_RIGHT",
             emboss=False,
             toggle=True,
         )
-        if not self.sett.hair_length_ui:
+        if not self.sett.ui.hair_length:
             return
 
         if not hair_systems:
@@ -1214,13 +1207,13 @@ class HG_PT_PANEL(bpy.types.Panel):
         """
         boxbox = box.box()
         boxbox.prop(
-            self.sett,
-            "hair_mat_ui",
-            icon="TRIA_DOWN" if self.sett.hair_mat_ui else "TRIA_RIGHT",
+            self.sett.ui,
+            "hair_mat",
+            icon="TRIA_DOWN" if self.sett.ui.hair_mat else "TRIA_RIGHT",
             emboss=False,
             toggle=True,
         )
-        if not self.sett.hair_mat_ui:
+        if not self.sett.ui.hair_mat:
             return
 
         gender = self.human.gender
@@ -1472,7 +1465,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         row_h = box.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett, "footwear_sub", text="")
+        row_h.prop(sett.pcoll, "footwear_category", text="")
         row_h.operator(
             "hg3d.random", text="Random", icon="FILE_REFRESH"
         ).random_type = "footwear"

@@ -41,7 +41,7 @@ class HG_RANDOM(bpy.types.Operator):
         human = Human.from_existing(context.active_object)
 
         if random_type == "body_type":
-            human.creation_phase.body.randomize()
+            human.body.randomize()
         elif random_type in (
             "poses",
             "expressions",
@@ -58,7 +58,7 @@ class HG_RANDOM(bpy.types.Operator):
                 5:
             ]  # facial subcategories follow the pattern face_{category}
             # where face_all does all facial features
-            human.creation_phase.face.randomize(ff_subcateg)
+            human.face.randomize(ff_subcateg)
         elif random_type == "iris_color":
             human.eyes.randomize()
 

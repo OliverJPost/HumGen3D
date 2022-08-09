@@ -8,7 +8,7 @@ from HumGen3D.backend import hg_delete, remove_broken_drivers, get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.creation_phase.length.length import apply_armature
+from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
 from HumGen3D.human.base.exceptions import HumGenException
 
@@ -96,7 +96,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
         apply_armature(source_copy)
 
-        self._human.creation_phase.length.apply(context)
+        self._human.length.apply(context)
 
         for obj in context.selected_objects:
             obj.select_set(False)

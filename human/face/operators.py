@@ -1,5 +1,6 @@
 import bpy
-from ...human import Human
+
+from ..human import Human
 
 
 class HG_RESET_FACE(bpy.types.Operator):

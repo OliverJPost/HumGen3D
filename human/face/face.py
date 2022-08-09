@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from ...base.prop_collection import PropCollection
+from ..base.prop_collection import PropCollection
 
 
 class FaceKeys(PropCollection):

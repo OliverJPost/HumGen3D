@@ -76,33 +76,31 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
 
     # posing
     poses: EnumProperty(
-        items=get_items("finalize_phase.pose"),
-        update=update("finalize_phase.pose"),
+        items=get_items("pose"),
+        update=update("pose"),
     )
     pose_category: EnumProperty(
         name="Pose Library",
-        items=get_folders("finalize_phase.pose"),
-        update=refresh("finalize_phase.pose"),
+        items=get_folders("pose"),
+        update=refresh("pose"),
     )
     search_term_poses: StringProperty(
         name="Search:",
         default="",
-        update=refresh("finalize_phase.pose"),
+        update=refresh("pose"),
     )
 
     # outfits
-    outfits: EnumProperty(
-        items=get_items("finalize_phase.outfit"), update=update("finalize_phase.outfit")
-    )
+    outfits: EnumProperty(items=get_items("outfit"), update=update("outfit"))
     outfit_category: EnumProperty(
         name="Outfit Library",
-        items=get_folders("finalize_phase.outfit"),
-        update=refresh("finalize_phase.outfit"),
+        items=get_folders("outfit"),
+        update=refresh("outfit"),
     )
     search_term_outfit: StringProperty(
         name="Search:",
         default="",
-        update=refresh("finalize_phase.outfit"),
+        update=refresh("outfit"),
     )
 
     # hair
@@ -127,50 +125,50 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
 
     # expression
     expressions: EnumProperty(
-        items=get_items("finalize_phase.expression"),
-        update=update("finalize_phase.expression"),
+        items=get_items("expression"),
+        update=update("expression"),
     )
     expression_category: EnumProperty(
         name="Expressions Library",
-        items=get_folders("finalize_phase.expression"),
-        update=refresh("finalize_phase.expression"),
+        items=get_folders("expression"),
+        update=refresh("expression"),
     )
     search_term_expressions: StringProperty(
         name="Search:",
         default="",
-        update=refresh("finalize_phase.expression"),
+        update=refresh("expression"),
     )
 
     # footwear
     footwear: EnumProperty(
-        items=get_items("finalize_phase.footwear"),
-        update=update("finalize_phase.footwear"),
+        items=get_items("footwear"),
+        update=update("footwear"),
     )
     footwear_category: EnumProperty(
         name="Footwear Library",
-        items=get_folders("finalize_phase.footwear"),
-        update=refresh("finalize_phase.footwear"),
+        items=get_folders("footwear"),
+        update=refresh("footwear"),
     )
     search_term_footwear: StringProperty(
         name="Search:",
         default="",
-        update=refresh("finalize_phase.footwear"),
+        update=refresh("footwear"),
     )
 
     # patterns
     patterns: EnumProperty(
-        items=get_items("finalize_phase.outfit.pattern"),
-        update=update("finalize_phase.outfit.pattern"),
+        items=get_items("outfit.pattern"),
+        update=update("outfit.pattern"),
     )
     patterns_category: EnumProperty(
         name="Pattern Library",
-        items=get_folders("finalize_phase.outfit.pattern"),
-        update=refresh("finalize_phase.outfit.pattern"),
+        items=get_folders("outfit.pattern"),
+        update=refresh("outfit.pattern"),
     )
     search_term_patterns: StringProperty(
         name="Search:",
         default="",
-        update=refresh("finalize_phase.outfit.pattern"),
+        update=refresh("outfit.pattern"),
     )
 
     textures: EnumProperty(
