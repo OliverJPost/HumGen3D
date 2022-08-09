@@ -1,2 +1,13 @@
 *.pyc
 .DS_Store
+*.iml
+/.mypy_cache/
+/venv/
+/fake_humgen3d.egg-info/
+mypy.ini
+debug.log
+/.idea
+/.pytest_cache
+.coverage
+/htmlcov
+/.vscode
