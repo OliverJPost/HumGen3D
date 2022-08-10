@@ -500,6 +500,8 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = box.column()
         col.scale_y = 1.5
+        col.prop(sett, "test1", slider=True)
+        col.prop(sett, "test2", slider=True)
         row = col.row(align=True)
         row.operator("hg3d.random", text="Randomize all").random_type = "face_all"
         row.operator("hg3d.resetface", text="", icon="LOOP_BACK")

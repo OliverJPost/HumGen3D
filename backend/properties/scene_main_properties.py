@@ -13,12 +13,10 @@ from bpy.props import (  # type: ignore
     StringProperty,
 )
 from HumGen3D.human.human import Human
-from HumGen3D.utility_section.utility_functions import (
-    refresh_modapply,
-)
-from .bake_props import BakeProps
+from HumGen3D.utility_section.utility_functions import refresh_modapply
 
 from ..preview_collections import refresh_pcoll
+from .bake_props import BakeProps
 from .batch_props import BatchProps
 from .bone_size_props import BoneSizeProps
 from .custom_content_properties import CustomContentProps
@@ -41,6 +39,21 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     load_exception: BoolProperty(name="load_exception", default=False)
     subscribed: BoolProperty(name="subscribed", default=False)
     update_exception: BoolProperty(default=False)
+
+    test1: FloatProperty(
+        soft_min=0,
+        soft_max=1,
+        update=lambda s, c: Human.from_existing(c.object).face.realtime_set(
+            r"face_proportions/jaw/jaw_location_horizontal.npy", s.test1
+        ),
+    )
+    test2: FloatProperty(
+        soft_min=0,
+        soft_max=1,
+        update=lambda s, c: Human.from_existing(c.object).face.realtime_set(
+            r"face_proportions/jaw/jaw_location_vertical.npy", s.test2
+        ),
+    )
 
     ############# creation ##############
     gender: EnumProperty(
