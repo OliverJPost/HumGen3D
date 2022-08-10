@@ -1,6 +1,8 @@
+import os
 import random
 
 import numpy as np
+from HumGen3D.backend.preferences.preference_func import get_prefs
 
 from ..base.prop_collection import PropCollection
 
@@ -25,11 +27,70 @@ class FaceKeys(PropCollection):
     #     return getattr(self, f"_{type_name}")
 
     @property
+    def temp_key(self):
+        return next(
+            (
+                sk
+                for sk in self._human.shape_keys
+                if sk.name.startswith("LIVE_KEY_TEMP_")
+            ),
+            None,
+        )
+
+    @property
+    def permanent_key(self):
+        return self._human.shape_keys.get("LIVE_KEY_PERMANENT")
+
+    @property
     def shape_keys(self) -> PropCollection:
         sks = self._human.shape_keys
         ff_keys = [sk for sk in sks if sk.name.startswith("ff_")]
         pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
         return PropCollection(ff_keys + pr_keys)
+
+    def realtime_set(self, preset, value):
+        name = os.path.basename(os.path.splitext(preset)[0])
+        temp_key = self.temp_key
+        if temp_key and temp_key.name.endswith(name):
+            temp_key.value = value
+            return
+
+        body = self._human.body_obj
+        vert_count = len(body.data.vertices)
+        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", obj_coords)
+
+        filepath = os.path.join(get_prefs().filepath, preset)
+        new_key_relative_coords = np.load(filepath)
+        new_key_coords = obj_coords + new_key_relative_coords
+
+        current_sk_values = self._human.props.sk_values
+
+        if temp_key:
+            permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+            self.permanent_key.data.foreach_get("co", permanent_key_coords)
+            temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+            self.temp_key.data.foreach_get("co", temp_key_coords)
+
+            relative_temp_coords = temp_key_coords - obj_coords
+            permanent_key_coords += relative_temp_coords
+
+            old_temp_key_name = temp_key.name.replace("LIVE_KEY_TEMP_", "")
+            current_sk_values[old_temp_key_name] = temp_key.value
+
+            if temp_key and name in current_sk_values:
+                old_value = current_sk_values[name]
+                permanent_key_coords -= new_key_relative_coords * old_value
+
+            self.permanent_key.data.foreach_set("co", permanent_key_coords)
+
+        if not temp_key:
+            temp_key = self._human.body_obj.shape_key_add(name="LIVE_KEY_TEMP_" + name)
+
+        self.temp_key.data.foreach_set("co", new_key_coords)
+        self.temp_key.name = "LIVE_KEY_TEMP_" + name
+
+        temp_key.value = value
 
     def reset(self):
         for sk in self.shape_keys:

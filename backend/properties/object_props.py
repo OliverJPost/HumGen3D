@@ -16,6 +16,10 @@ from bpy.props import (  # type: ignore
 )
 
 
+class HG_SK_VALUES(bpy.types.PropertyGroup):
+    testprop: BoolProperty()
+
+
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """
     Properties added to every Blender object as object.HG
@@ -36,3 +40,4 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     length: FloatProperty()
     experimental: BoolProperty(default=False)
     batch_result: BoolProperty(default=False)
+    sk_values: PointerProperty(type=HG_SK_VALUES)
