@@ -2,13 +2,14 @@ import os
 import random
 
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.tests.fixtures import ALL_FINALIZE_FIXTURES, context
 from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.fixtures import ALL_FINALIZE_FIXTURES, context
+
 
 @pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_facial_rig(human, context):
     inital_sk_count = len(human.shape_keys)
-    human.finalize_phase.expression.load_facial_rig(context)
+    human.expression.load_facial_rig(context)
 
     for bone_name in human.finalize_phase.expression._get_frig_bones():
         assert not human.pose_bones.get(bone_name).bone.hide
@@ -24,8 +25,9 @@ def test_facial_rig(human, context):
     except HumGenException:
         assert True
 
-    #FIXME not all shapekeys are deleted
-    #assert len(human.shape_keys) == inital_sk_count
+    # FIXME not all shapekeys are deleted
+    # assert len(human.shape_keys) == inital_sk_count
+
 
 @pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
 def test_set(human, context):

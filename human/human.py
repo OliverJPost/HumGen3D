@@ -275,6 +275,15 @@ class Human:
         return self.eyes.eye_obj
 
     @property
+    def lower_teeth_obj(self) -> Object:
+        """Returns the lower teeth Blender object"""
+        return next(
+            obj
+            for obj in self.children
+            if "hg_teeth" in obj and "lower" in obj.name.lower()
+        )
+
+    @property
     def children(self) -> Generator[Object]:
         """A generator of all children of the rig object of the human. Does NOT yield subchildren."""
         for child in self.rig_obj.children:
@@ -367,7 +376,6 @@ class Human:
             delete_list.append(child)
             for sub_child in child.children:
                 delete_list.append(sub_child)
-
 
         for obj in delete_list:
             try:

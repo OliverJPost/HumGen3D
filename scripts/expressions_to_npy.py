@@ -40,7 +40,7 @@ def main():
             values = [float(v) for v in sett_dict.values()]
 
             sk_coordinates = combine_multiple_sks_to_one_array(keys, values, body)
-            relative_coordinates: np.ndarray = sk_coordinates - base_coordinates
+            relative_coordinates = sk_coordinates - base_coordinates
 
             save_path = os.path.join(root, sk_name)
             np.save(save_path, relative_coordinates, allow_pickle=False)

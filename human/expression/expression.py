@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from pathlib import Path
@@ -116,46 +117,35 @@ class ExpressionSettings(PreviewCollectionContent):
         self._human.body_obj["facial_rig"] = 1
 
     def _load_FACS_sks(self, context):
-        """Imports the needed FACS shapekeys to be used by the rig
+        """Imports the needed FACS shapekeys to be used by the rig"""
 
-        Args:
-            hg_body (Object): HumGen body object to import shapekeys on
-        """
-        pref = get_prefs()
-        t = time.perf_counter()
-        blendfile = pref.filepath + str(Path("/models/FACS/HG_FACS.blend"))
-        with bpy.data.libraries.load(blendfile, link=False) as (
-            data_from,
-            data_to,
-        ):
-            data_to.objects = data_from.objects
+        json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
+        with open(json_path, "r") as f:
+            data = json.load(f)
 
-        print("import", time.perf_counter() - t)
-        t = time.perf_counter()
-        remove_broken_drivers()
-        print("remove broken", time.perf_counter() - t)
-        t = time.perf_counter()
-        # TODO make easier
-        hg_lower_teeth = next(
-            c
-            for c in self._human.children
-            if "hg_teeth" in c and "lower" in c.name.lower()
-        )
-        # hg_lower_teeth.data = bpy.data.objects['HG_FACS_TEETH'].data
-        # for driver in hg_lower_teeth.data.shape_keys.animation_data.drivers:
-        #     var    = driver.driver.variables[0]
-        #     var.targets[0].id = hg_rig
+        body = self._human.body_obj
+        teeth = self._human.lower_teeth_obj
 
-        hg_body = self._human.body_obj
-        from_obj = bpy.data.objects["HG_FACS_BODY"]
-        context.scene.collection.objects.link(from_obj)
-        context.view_layer.objects.active = hg_body
-        self._transfer_sk(context, hg_body, from_obj)
+        for obj, object_type in ((body, "body"), (teeth, "teeth")):
+            all_sks = data[object_type]
+            vert_co = np.empty(len(obj.data.vertices) * 3, dtype=np.float64)
+            obj.data.vertices.foreach_get("co", vert_co)
 
-        from_obj = bpy.data.objects["HG_FACS_TEETH"]
-        context.scene.collection.objects.link(from_obj)
-        context.view_layer.objects.active = hg_lower_teeth
-        self._transfer_sk(context, hg_lower_teeth, from_obj)
+            try:
+                obj.data.shape_keys.key_blocks["Basis"]
+            except AttributeError:
+                obj.shape_key_add(name="Basis")
+
+            for sk_name, sk_data in all_sks.items():
+                sk = obj.shape_key_add(name=sk_name)
+                sk.interpolation = "KEY_LINEAR"
+
+                relative_sk_co = np.array(sk_data["relative_coordinates"])
+                adjusted_vert_co = vert_co + relative_sk_co
+
+                sk.data.foreach_set("co", adjusted_vert_co)
+
+                self._human.shape_keys._add_driver(sk, sk_data)
 
     def _transfer_sk(self, context, to_obj, from_obj):
         # normalize objects
@@ -181,10 +171,6 @@ class ExpressionSettings(PreviewCollectionContent):
                 driver = self._human.shape_keys._add_driver(
                     sk, driver_dict[driver_shapekey]
                 )
-
-                # correction for mistake in expression
-                if driver_shapekey == "mouthClose":
-                    driver.expression = "var*100"
 
         from_obj.select_set(False)
         hg_delete(from_obj)
