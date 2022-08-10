@@ -1622,10 +1622,11 @@ class HG_PT_PANEL(bpy.types.Panel):
             return
 
         flow = get_flow(sett, box, animation=True)
-        for sk in [sk for sk in expr_sks if not sk.mute]:
+        for sk in self.human.expression.shape_keys:
             display_name = sk.name.replace("expr_", "").replace("_", " ") + ":"
 
             row = flow.row(align=True)
+            row.active = not sk.mute
             row.prop(sk, "value", text=display_name.capitalize())
             row.operator("hg3d.removesk", text="", icon="TRASH").shapekey = sk.name
 
