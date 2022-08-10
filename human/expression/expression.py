@@ -9,6 +9,7 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
 
@@ -19,6 +20,10 @@ class ExpressionSettings(PreviewCollectionContent):
         self._pcoll_name = "expressions"
         self._pcoll_gender_split = False
 
+    @property
+    def shape_keys(self) -> PropCollection:
+        return self._human.shape_keys.expressions
+
     def set(self, preset):
         """Loads the active expression in the preview collection"""
         pref = get_prefs()
@@ -27,13 +32,7 @@ class ExpressionSettings(PreviewCollectionContent):
             return
         sk_name, _ = os.path.splitext(os.path.basename(preset))
 
-        sett_dict = {}
-
         filepath = str(pref.filepath) + str(preset)
-        sett_file = open(filepath)
-        for line in sett_file:
-            key, value = line.split()
-            sett_dict[key] = value
 
         hg_rig = self._human.rig_obj
         hg_body = hg_rig.HG.body_obj
@@ -42,11 +41,11 @@ class ExpressionSettings(PreviewCollectionContent):
         if "expr_{}".format(sk_name) in sk_names:
             new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
-            new_key = self._human.shape_keys.load_from_json(filepath)
+            new_key = self._human.shape_keys.load_from_npy(filepath)
+            new_key.name = "expr_" + new_key.name
 
-        for sk in hg_body.data.shape_keys.key_blocks:
-            if not sk.name == f"expr_{sk_name}":
-                sk.value = 0
+        for sk in self.shape_keys:
+            sk.value = 0
 
         new_key.mute = False
         new_key.value = 1

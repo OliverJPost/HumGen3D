@@ -78,7 +78,7 @@ def find_item_amount(context, categ, gender, folder) -> int:
     pref = get_prefs()
 
     if categ == "expressions":
-        ext = ".txt"
+        ext = ".npy"
     else:
         ext = ".blend"
 

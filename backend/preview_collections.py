@@ -11,7 +11,7 @@ from typing import Any
 import bpy
 
 from ..human.base.exceptions import HumGenException  # type: ignore
-from . import hg_log, get_prefs
+from . import get_prefs, hg_log
 
 # from HumGen3D.human.human import Human
 
@@ -300,7 +300,7 @@ def _get_pcoll_files_extension(pcoll_type) -> str:
         str: extension, including dot (i.e. .json)
     """
     ext_dict = {
-        "expressions": ".txt",
+        "expressions": ".npy",
         "humans": ".json",  # CHECK if still works
         "patterns": ".png",
         "face_hair": ".json",
