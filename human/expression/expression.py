@@ -4,13 +4,13 @@ from pathlib import Path
 
 import bpy
 import numpy as np
-from HumGen3D.backend import hg_delete, remove_broken_drivers, get_prefs
+from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
+from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
-from HumGen3D.human.base.exceptions import HumGenException
 
 
 class ExpressionSettings(PreviewCollectionContent):
@@ -38,20 +38,11 @@ class ExpressionSettings(PreviewCollectionContent):
         hg_rig = self._human.rig_obj
         hg_body = hg_rig.HG.body_obj
         sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
+
         if "expr_{}".format(sk_name) in sk_names:
             new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
-            backup_rig = hg_rig.HG.backup
-            backup_body = next(
-                child for child in backup_rig.children if "hg_body" in child
-            )
-            sks = backup_body.data.shape_keys.key_blocks
-            keys = [sks[k] for k in sett_dict.keys()]
-            values = [float(v) for v in sett_dict.values()]
-            print(keys, values)
-            new_key = self._transfer_multiple_as_one(
-                keys, values, hg_body, f"expr_{sk_name}"
-            )
+            new_key = self._human.shape_keys.load_from_json(filepath)
 
         for sk in hg_body.data.shape_keys.key_blocks:
             if not sk.name == f"expr_{sk_name}":
