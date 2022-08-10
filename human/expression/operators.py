@@ -60,7 +60,7 @@ class HG_ADD_FRIG(bpy.types.Operator):
 
     def execute(self, context):
         human = Human.from_existing(context.object)
-        human.finalize_phase.expression.load_facial_rig()
+        human.expression.load_facial_rig()
         return {"FINISHED"}
 
 
