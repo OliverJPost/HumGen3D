@@ -86,5 +86,5 @@ class HG_REMOVE_FRIG(bpy.types.Operator):
 
     def execute(self, context):
         human = Human.from_existing(context.object)
-        human.finalize_phase.expression.remove_facial_rig()
+        human.expression.remove_facial_rig()
         return {"FINISHED"}

@@ -11,16 +11,16 @@ def test_facial_rig(human, context):
     inital_sk_count = len(human.shape_keys)
     human.expression.load_facial_rig(context)
 
-    for bone_name in human.finalize_phase.expression._get_frig_bones():
+    for bone_name in human.expression._get_frig_bones():
         assert not human.pose_bones.get(bone_name).bone.hide
 
-    human.finalize_phase.expression.remove_facial_rig()
+    human.expression.remove_facial_rig()
 
-    for bone_name in human.finalize_phase.expression._get_frig_bones():
+    for bone_name in human.expression._get_frig_bones():
         assert human.pose_bones.get(bone_name).bone.hide
 
     try:
-        human.finalize_phase.expression.remove_facial_rig()
+        human.expression.remove_facial_rig()
         assert False, "Should throw exception"
     except HumGenException:
         assert True
