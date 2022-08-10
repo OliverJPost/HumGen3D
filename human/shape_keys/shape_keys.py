@@ -1,11 +1,12 @@
+import json
 import os
 from pathlib import Path
 from typing import Dict
 
 import bpy
 import numpy as np
-from bpy.types import Context # type:ignore
-from HumGen3D.backend import hg_log, hg_delete, get_prefs
+from bpy.types import Context  # type:ignore
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.user_interface.feedback_func import show_message
@@ -20,6 +21,7 @@ def transfer_shapekey(sk, to_obj):
 
     sk.data.foreach_get("co", old_sk_data)
     new_sk.data.foreach_set("co", old_sk_data)
+
 
 # MODULE
 def apply_shapekeys(ob):
@@ -62,6 +64,32 @@ class ShapeKeySettings(PropCollection):
     @property
     def face_presets(self):
         return PropCollection([sk for sk in self if sk.name.startswith("pr_")])
+
+    def load_from_json(self, json_filepath, obj_override=None):
+        with open(json_filepath, "r") as f:
+            data = json.load(f)
+
+        vert_count = len(obj.data.vertices)
+
+        vert_co = np.empty((vert_count, 3))
+        obj.data.vertices.foreach_get("co", vert_co)
+
+        for sk_data in data:
+            name = sk_data["name"]
+
+            if obj_override:
+                obj = obj_override
+            else:
+                obj = self._human.body_obj
+
+            sk = obj.shape_key_add(name)
+            sk.interpolation = "KEY_LINEAR"
+
+            relative_sk_co = np.array(sk_data["relative_coordinates"])
+
+            adjusted_vert_co = vert_co + relative_sk_co
+
+            sk.data.foreach_set("co", adjusted_vert_co)
 
     @injected_context
     def _load_external(self, human, context=None):
