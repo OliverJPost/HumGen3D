@@ -194,17 +194,23 @@ class ExpressionSettings(PreviewCollectionContent):
         if not "facial_rig" in self._human.body_obj:
             raise HumGenException("No facial rig found on this human")
 
+        # TODO give bones custom property if they're part of the face rig
         frig_bones = self._get_frig_bones()
         for b_name in frig_bones:
             b = self._human.pose_bones[b_name]
             b.bone.hide = True
 
-        # FIXME make it only delete Frig sks instead of all outside naming scheme
-        for sk in [
-            sk
-            for sk in self._human.shape_keys
-            if not sk.name.startswith(("Basis", "cor_", "expr_", "eye"))
-        ]:
+        # TODO this is a bit heavy if we don't need the coordinates
+        json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        for sk_name in data["teeth"]:
+            sk = self._human.lower_teeth_obj.data.shape_keys.key_blocks.get(sk_name)
+            self._human.lower_teeth_obj.shape_key_remove(sk)
+
+        for sk_name in data["body"]:
+            sk = self._human.shape_keys.get(sk_name)
             self._human.body_obj.shape_key_remove(sk)
 
         del self._human.body_obj["facial_rig"]
