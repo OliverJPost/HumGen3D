@@ -1,7 +1,6 @@
 import random
 
 import pytest  # type:ignore
-from HumGen3D.human.skin.skin import SkinSettings
 from HumGen3D.tests.fixtures import *
 from HumGen3D.tests.fixtures import (
     ALL_HUMAN_FIXTURES,
@@ -9,7 +8,6 @@ from HumGen3D.tests.fixtures import (
     female_human,
     male_human,
 )
-from pytest_lazyfixture import lazy_fixture  # type:ignore
 
 
 def test_male_skin(male_human):

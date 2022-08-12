@@ -1,5 +1,4 @@
 import random
-from typing import TYPE_CHECKING
 import bpy
 import pytest  # type:ignore
 from HumGen3D.tests.fixtures import (
