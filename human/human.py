@@ -157,8 +157,8 @@ class Human:
         human.length.set(preset_length, context)
 
         # Set shape key values from preset
-        for sk_name, sk_value in preset_data["shapekeys"].items():
-            human.shape_keys[sk_name].value = sk_value
+        for name, value in preset_data["livekeys"].items():
+            human.shape_keys.livekey_set(name, value)
 
         # Set skin material from preset
         human.skin.texture._set_from_preset(preset_data["material"], context)

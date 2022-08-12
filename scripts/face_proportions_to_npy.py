@@ -38,7 +38,9 @@ def main():
         relative_coordinates = sk_coordinates - body_coordinates
 
         save_name = sk.name[5:]
-        path = os.path.join(get_prefs().filepath, "face_proportions", category)
+        path = os.path.join(
+            get_prefs().filepath, "livekeys", "face_proportions", category
+        )
 
         if not os.path.exists(path):
             os.makedirs(path)
