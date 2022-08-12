@@ -36,17 +36,16 @@ import bpy  # type: ignore
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
-from bpy.app.handlers import persistent as _persistent  # type: ignore
-
-from HumGen3D.backend.content_packs.content_packs import (
-    cpacks_refresh as _cpacks_refresh,
-)
+from bpy.app.handlers import persistent as _persistent
 
 from .backend.auto_classes import _get_bpy_classes
+from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
+from .backend.preferences.preference_func import get_prefs
 from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.properties.scene_main_properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
+from .human.base.live_keys import LiveKey
 from .human.human import Human
 
 if __name__ != "HG3D":
@@ -145,6 +144,9 @@ def register():
     from .user_interface.primitive_menu import add_hg_primitive_menu
 
     bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
+
+    face_livekeys_coll = bpy.props.CollectionProperty(type=LiveKey)
+    bpy.types.Scene.face_livekeys = face_livekeys_coll
 
     # load handler
     if not HG_start in bpy.app.handlers.load_post:

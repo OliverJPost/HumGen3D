@@ -68,7 +68,7 @@ class HG_PT_PANEL(bpy.types.Panel):
         else:
             self._draw_creation_section()
             self._draw_length_section()
-            self._draw_face_section()
+            self._draw_face_section(context)
             self._draw_skin_section()
             self._draw_eyes_section()
             if self.pref.hair_section in ["both", "creation"]:
@@ -488,7 +488,7 @@ class HG_PT_PANEL(bpy.types.Panel):
     # |  |    /  _____  \ |  `----.|  |____
     # |__|   /__/     \__\ \______||_______|
 
-    def _draw_face_section(self):
+    def _draw_face_section(self, context):
         """Section showing sliders for all facial shapekeys, all categorized
         in collapsable tabs.
         """
@@ -500,8 +500,7 @@ class HG_PT_PANEL(bpy.types.Panel):
 
         col = box.column()
         col.scale_y = 1.5
-        col.prop(sett, "test1", slider=True)
-        col.prop(sett, "test2", slider=True)
+
         row = col.row(align=True)
         row.operator("hg3d.random", text="Randomize all").random_type = "face_all"
         row.operator("hg3d.resetface", text="", icon="LOOP_BACK")
@@ -527,42 +526,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         flow_custom = self._get_ff_col(col, "Custom", "custom")
         flow_presets = self._get_ff_col(col, "Presets", "presets")
 
-        hg_body = self.human.body_obj
-        face_sks = [
-            sk for sk in hg_body.data.shape_keys.key_blocks if sk.name.startswith("ff")
-        ]
-        prefix_dict = {
-            "ff_a": (flow_u_skull, sett.ui.u_skull),
-            "ff_b": (flow_u_skull, sett.ui.u_skull),
-            "ff_c_eye": (flow_eyes, sett.ui.eyes),
-            "ff_d": (flow_l_skull, sett.ui.l_skull),
-            "ff_e_nose": (flow_nose, sett.ui.nose),
-            "ff_f_lip": (flow_mouth, sett.ui.mouth),
-            "ff_g_chin": (flow_chin, sett.ui.chin),
-            "ff_h_cheek": (flow_cheeks, sett.ui.cheeks),
-            "ff_i_jaw": (flow_jaw, sett.ui.jaw),
-            "ff_j_ear": (flow_ears, sett.ui.ears),
-            "ff_x": (flow_custom, sett.ui.custom),
-        }
-
-        # iterate over each collapsable menu, adding shapekey sliders to them
-        for prefix in prefix_dict:
-            is_open = prefix_dict[prefix][1]
-            if not is_open:
-                continue
-            for sk in [sk for sk in face_sks if sk.name.startswith(prefix)]:
-                prefix_dict[prefix][0].prop(
-                    sk, "value", text=self._build_sk_name(sk.name, prefix)
-                )
-
-        # menu for all shapekeys starting with pr_ (preset) prefix
-        if sett.ui.presets:
-            for sk in self.human.shape_keys.face_presets:
-                label = sk.name.replace("pr_", "").replace("_", " ").capitalize()
-                flow_presets.prop(
-                    sk,
-                    "value",
-                    text=label,
+        for item in context.scene.face_livekeys:
+            if getattr(sett.ui, item.category):
+                locals()[f"flow_{item.category}"].prop(
+                    item, "value", text=item.name, slider=True
                 )
 
     def _build_sk_name(self, sk_name, prefix) -> str:
