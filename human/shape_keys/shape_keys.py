@@ -12,6 +12,7 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.user_interface.feedback_func import show_message
 
+from ..base.exceptions import HumGenException
 from ..base.prop_collection import PropCollection
 
 
@@ -119,6 +120,39 @@ class ShapeKeySettings(PropCollection):
         sk.data.foreach_set("co", adjusted_vert_co)
 
         return sk
+
+    def livekey_set(self, name, value):
+        livekey_path = None
+        search_path = os.path.join(get_prefs().filepath, "livekeys")
+        for root, dirs, files in os.walk(search_path):
+            for file in files:
+                if os.path.splitext(file)[0] == name:
+                    livekey_path = os.path.join(root, file)
+                    break
+
+        if not livekey_path:
+            raise HumGenException(f"Livekey {name} not found in {search_path}")
+
+        # TODO repetition from set_livekey
+        body = self._human.body_obj
+        vert_count = len(body.data.vertices)
+        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", obj_coords)
+
+        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.shape_keys.permanent_key.data.foreach_get(
+            "co", permanent_key_coords
+        )
+
+        new_key_relative_coords = np.load(livekey_path)
+
+        current_sk_values = self._human.props.sk_values
+        old_value = current_sk_values[name] * -1 if name in current_sk_values else 0
+        permanent_key_coords += new_key_relative_coords * (old_value + value)
+
+        self._human.shape_keys.permanent_key.data.foreach_set(
+            "co", permanent_key_coords
+        )
 
     @injected_context
     def _load_external(self, human, context=None):

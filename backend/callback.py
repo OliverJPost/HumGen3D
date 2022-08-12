@@ -43,12 +43,11 @@ class HG_ACTIVATE(bpy.types.Operator):
         msgbus(self, context)
         refresh_pcoll(self, context, "humans")
         hg_log(f"Activating HumGen, version {bl_info['version']}")
-        # create_livekeys(context.scene.HG3D.face_livekeys, "face_proportions")
 
         bpy.context.scene.face_livekeys.clear()
 
         for root, dirs, files in os.walk(
-            os.path.join(get_prefs().filepath, "face_proportions")
+            os.path.join(get_prefs().filepath, "livekeys", "face_proportions")
         ):
             for file in files:
                 if not file.endswith(".npy"):
