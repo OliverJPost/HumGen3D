@@ -45,6 +45,7 @@ from .backend.preview_collections import preview_collections as _preview_collect
 from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.properties.scene_main_properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
+from .backend.vscode_reload import _post_vscode_reload
 from .human.base.live_keys import LiveKey
 from .human.human import Human
 
