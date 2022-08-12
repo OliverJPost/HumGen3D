@@ -1,14 +1,11 @@
 import pytest  # type:ignore
-from bpy.props import FloatVectorProperty  # type:ignore
 from HumGen3D import Human
-from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.tests.fixtures import (
     context,
     ALL_HUMAN_FIXTURES,
     male_human,
     female_human,
 )
-from pytest_lazyfixture import lazy_fixture  # type:ignore
 
 
 def assert_vector_tuple_equality(vec, tup):
