@@ -67,7 +67,7 @@ class HGPreferenceBackend(AddonPreferences):
     debug_mode: BoolProperty(default=False)
     silence_all_console_messages: BoolProperty(default=False)
 
-    skip_url_request: BoolProperty(default=False)
+    skip_url_request: BoolProperty(default=True)
 
     show_tips: BoolProperty(default=True)
     compress_zip: BoolProperty(default=True)
