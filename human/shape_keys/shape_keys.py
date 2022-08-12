@@ -70,6 +70,21 @@ class ShapeKeySettings(PropCollection):
     def expressions(self) -> PropCollection:
         return PropCollection([sk for sk in self if sk.name.startswith("expr_")])
 
+    @property
+    def temp_key(self):
+        return next(
+            (
+                sk
+                for sk in self._human.shape_keys
+                if sk.name.startswith("LIVE_KEY_TEMP_")
+            ),
+            None,
+        )
+
+    @property
+    def permanent_key(self):
+        return self._human.shape_keys.get("LIVE_KEY_PERMANENT")
+
     def load_from_npy(
         self, npy_filepath: str | os.PathLike, obj_override: Object = None
     ):

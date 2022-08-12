@@ -9,6 +9,8 @@ This callback has the following usages:
     a human is duplicated by the user
 """
 
+import os
+
 import bpy
 from HumGen3D.backend import hg_log
 from HumGen3D.utility_section.utility_functions import (
@@ -18,6 +20,7 @@ from HumGen3D.utility_section.utility_functions import (
     refresh_shapekeys_ul,
 )
 
+from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
 from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
 from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
@@ -40,6 +43,23 @@ class HG_ACTIVATE(bpy.types.Operator):
         msgbus(self, context)
         refresh_pcoll(self, context, "humans")
         hg_log(f"Activating HumGen, version {bl_info['version']}")
+        # create_livekeys(context.scene.HG3D.face_livekeys, "face_proportions")
+
+        bpy.context.scene.face_livekeys.clear()
+
+        for root, dirs, files in os.walk(
+            os.path.join(get_prefs().filepath, "face_proportions")
+        ):
+            for file in files:
+                if not file.endswith(".npy"):
+                    continue
+                item = bpy.context.scene.face_livekeys.add()
+                item.name = file[:-4].replace("_", " ").title()
+                abspath = os.path.join(root, file)
+                category = abspath.split(os.sep)[-2]
+                item.category = category
+                item.path = os.path.relpath(abspath, get_prefs().filepath)
+
         return {"FINISHED"}
 
 
