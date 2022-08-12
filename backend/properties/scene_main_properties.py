@@ -40,21 +40,6 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     subscribed: BoolProperty(name="subscribed", default=False)
     update_exception: BoolProperty(default=False)
 
-    test1: FloatProperty(
-        soft_min=0,
-        soft_max=1,
-        update=lambda s, c: Human.from_existing(c.object).face.realtime_set(
-            r"face_proportions/jaw/jaw_location_horizontal.npy", s.test1
-        ),
-    )
-    test2: FloatProperty(
-        soft_min=0,
-        soft_max=1,
-        update=lambda s, c: Human.from_existing(c.object).face.realtime_set(
-            r"face_proportions/jaw/jaw_location_vertical.npy", s.test2
-        ),
-    )
-
     ############# creation ##############
     gender: EnumProperty(
         name="Gender",
