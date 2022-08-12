@@ -1,14 +1,14 @@
-import pytest # type:ignore
-from bpy.props import FloatVectorProperty # type:ignore
+import pytest  # type:ignore
+from bpy.props import FloatVectorProperty  # type:ignore
 from HumGen3D import Human
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.tests.fixtures import (
     context,
-    creation_phase_human,
-    finalize_phase_human,
-    reverted_human,
+    ALL_HUMAN_FIXTURES,
+    male_human,
+    female_human,
 )
-from pytest_lazyfixture import lazy_fixture # type:ignore
+from pytest_lazyfixture import lazy_fixture  # type:ignore
 
 
 def assert_vector_tuple_equality(vec, tup):
@@ -21,11 +21,7 @@ def test_get_preset_options(gender, context):
     assert Human.get_preset_options(gender, context), "No preset options returned"
 
 
-fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
-
-
-@pytest.mark.usefixtures(*fixture_names)
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 class TestHumanCommonMethods:
     @staticmethod
     def test_repr(human):
@@ -132,32 +128,11 @@ class TestHumanCommonMethods:
         is_visible()
         is_visible()
 
+
 # TODO implement batch_human
 # def test_is_batch(batch_human):
 #     rig_obj = batch_human.rig_obj
 #     assert Human._is_applied_batch_result(rig_obj)
-
-
-def test_creation_phase(creation_phase_human):
-    assert creation_phase_human.phase == "creation"
-
-    assert creation_phase_human.creation_phase
-    try:
-        creation_phase_human.finalize_phase
-        assert False, "Should have thrown exception"
-    except HumGenException:
-        assert True
-
-
-def test_finalize_phase(finalize_phase_human):
-    assert finalize_phase_human.phase == "finalize"
-
-    assert finalize_phase_human.finalize_phase
-    try:
-        finalize_phase_human.creation_phase
-        assert False, "Should have thrown exception"
-    except HumGenException:
-        assert True
 
 
 def test_from_existing_fail():

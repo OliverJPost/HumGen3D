@@ -1,12 +1,17 @@
 import os
 import random
 
+import pytest
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.tests.fixtures import *
-from HumGen3D.tests.fixtures import ALL_FINALIZE_FIXTURES, context
+from HumGen3D.tests.fixtures import (
+    ALL_HUMAN_FIXTURES,
+    context,
+    female_human,
+    male_human,
+)
 
 
-@pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_facial_rig(human, context):
     inital_sk_count = len(human.shape_keys)
     human.expression.load_facial_rig(context)
@@ -29,13 +34,13 @@ def test_facial_rig(human, context):
     # assert len(human.shape_keys) == inital_sk_count
 
 
-@pytest.mark.parametrize("human", ALL_FINALIZE_FIXTURES)
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_set(human, context):
-    options = human.finalize_phase.expression.get_options(context)
+    options = human.expression.get_options(context)
     assert options
 
     chosen = random.choice(options)
-    human.finalize_phase.expression.set(chosen)
+    human.expression.set(chosen)
     sk_name, _ = os.path.splitext(os.path.basename(chosen))
 
     sk = human.shape_keys.get(f"expr_{sk_name}")

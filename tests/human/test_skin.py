@@ -1,30 +1,34 @@
 import random
 
-import pytest # type:ignore
+import pytest  # type:ignore
 from HumGen3D.human.skin.skin import SkinSettings
-from HumGen3D.tests.fixtures import (
-    context,
-    ALL_HUMAN_FIXTURES,
-    ALL_FEMALE_FIXTURES
-)
 from HumGen3D.tests.fixtures import *
-from pytest_lazyfixture import lazy_fixture # type:ignore
+from HumGen3D.tests.fixtures import (
+    ALL_HUMAN_FIXTURES,
+    context,
+    female_human,
+    male_human,
+)
+from pytest_lazyfixture import lazy_fixture  # type:ignore
 
-fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
 
-
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
-def test_male_skin(human):
-    skin_sett = human.skin.gender_specific
+def test_male_skin(male_human):
+    skin_sett = male_human.skin.gender_specific
     skin_sett.mustache_shadows = 0.1
-    assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[2].default_value) == 0.1
+    assert (
+        pytest.approx(male_human.skin.nodes["Gender_Group"].inputs[2].default_value)
+        == 0.1
+    )
     skin_sett.mustache_shadows = 28
     skin_sett.beard_shadow = 0.7
-    assert pytest.approx(human.skin.nodes["Gender_Group"].inputs[3].default_value) == 0.7
+    assert (
+        pytest.approx(male_human.skin.nodes["Gender_Group"].inputs[3].default_value)
+        == 0.7
+    )
     skin_sett.beard_shadow = 12
 
-@pytest.mark.parametrize("human", ALL_FEMALE_FIXTURES)
-def test_female_skin(human):
+
+def test_female_skin(female_human):
     attr_names = [
         "foundation_amount",
         "foundation_color",
@@ -39,10 +43,10 @@ def test_female_skin(human):
     node_data = [
         (name, name.replace("_", " ").title(), "Gender_Group") for name in attr_names
     ]
-    _assert_node_inputs(human, node_data, True)
+    _assert_node_inputs(female_human, node_data, True)
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_common_inputs(human):
     node_data = [
         ("tone", 1, "Skin_tone"),
@@ -81,20 +85,22 @@ def _assert_node_inputs(human, node_data, gender_specific):
             interface = human.skin
         setattr(interface, attr_name, value)
         found_value = human.skin.nodes[node_name].inputs[input_name].default_value
-        assert pytest.approx(found_value) == value, f"{attr_name} failed for {input_name}"
+        assert (
+            pytest.approx(found_value) == value
+        ), f"{attr_name} failed for {input_name}"
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_material(human):
     assert human.skin.material
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_randomize(human):
     human.skin.randomize()
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_subsurface_scattering(human, context):
     def assert_sss(value, human):
         principled_bsdf = next(
@@ -112,7 +118,7 @@ def test_subsurface_scattering(human, context):
     assert_sss(0, human)
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_underwear(human, context):
     def assert_underwear(on: bool, human):
         underwear_node = human.skin.nodes.get("Underwear_Opacity")
@@ -125,7 +131,7 @@ def test_underwear(human, context):
     assert_underwear(True, human)
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_set_texture(human, context):
     options = human.skin.texture.get_options(context)
     chosen = random.choice(options)
@@ -134,7 +140,7 @@ def test_set_texture(human, context):
     # TODO more extensive testing
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_nodes(human):
     node_len = len(human.skin.nodes)
     assert node_len
@@ -143,7 +149,7 @@ def test_nodes(human):
     assert [node.name for node in human.skin.nodes]
 
 
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_links(human):
     link_len = len(human.skin.links)
     assert link_len
