@@ -27,8 +27,8 @@ class HG_RANDOM(bpy.types.Operator):
     """
 
     bl_idname = "hg3d.random"
-    bl_label = "Redraw Random"
-    bl_description = "Randomize this property"
+    bl_label = "Randomize"
+    bl_description = "Randomize this category"
     bl_options = {"UNDO", "INTERNAL"}
 
     random_type: bpy.props.StringProperty()
