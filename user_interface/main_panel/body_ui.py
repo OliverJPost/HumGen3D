@@ -2,7 +2,7 @@ import bpy
 from HumGen3D.human.human import Human
 
 from ...backend.preview_collections import get_hg_icon
-from .main_panel_baseclass import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
@@ -49,7 +49,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
 
         col.separator()
 
-        self._individual_scale_ui(col, sett)
+        self._individual_scale_ui(col, self.sett)
 
     def _individual_scale_ui(self, box, sett):
         """Collapsable menu showing sliders to change bone scale of different

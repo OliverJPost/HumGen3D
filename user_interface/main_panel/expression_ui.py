@@ -1,7 +1,7 @@
 import bpy
 
 from ..panel_functions import draw_sub_spoiler
-from .main_panel_baseclass import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):

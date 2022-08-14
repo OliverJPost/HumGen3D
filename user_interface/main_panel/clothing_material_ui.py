@@ -2,7 +2,7 @@ import bpy
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
 
-from ..panel_functions import searchbox
+from ..panel_functions import get_flow, searchbox
 
 
 class HG_PT_CLOTHMAT(bpy.types.Panel):
@@ -229,3 +229,55 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
+
+    def make_box_flow(self, layout, name, icon):
+        """creates a box with title
+
+        Args:
+            layout (UILayout): layout to draw box in
+            name (str): name to show as title
+            icon (str): code for icon to display next to title
+
+        Returns:
+            tuple(flow, box):
+                UILayout: flow below box
+                UILayout: box itself
+        """
+        box = layout.box()
+
+        row = box.row()
+        row.alignment = "CENTER"
+        row.label(text=name, icon=icon)
+
+        flow = get_flow(self.sett, box)
+        flow.scale_y = 1.2
+
+        return flow, box
+
+
+# TODO incorrect naming per Blender scheme
+class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
+    """
+    Popover for the rot, loc and scale of the pattern
+    """
+
+    bl_label = "Pattern RotLocScale"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "HEADER"
+
+    def draw(self, context):
+        layout = self.layout
+
+        mat = context.object.active_material
+        mapping_node = mat.node_tree.nodes["HG_Pattern_Mapping"]
+
+        col = layout.column()
+
+        col.label(text="Location")
+        col.prop(mapping_node.inputs["Location"], "default_value", text="")
+
+        col.label(text="Rotation")
+        col.prop(mapping_node.inputs["Rotation"], "default_value", text="")
+
+        col.label(text="Scale")
+        col.prop(mapping_node.inputs["Scale"], "default_value", text="")
