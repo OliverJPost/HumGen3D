@@ -4,10 +4,9 @@ Properties related to the user interface of Human Generator.
 """
 
 import bpy
-from bpy.props import (  # type: ignore
-    BoolProperty,
-    EnumProperty,
-)
+from bpy.props import BoolProperty, EnumProperty
+from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
+
 from ..callback import tab_change_update
 
 
@@ -46,7 +45,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "pattern_bool",
                 "decal_bool",
                 "thumb_ui",
-                "expression_slider"
+                "expression_slider",
             ]
         )
     )
@@ -72,23 +71,19 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     )
 
     phase: EnumProperty(
-        name="phase",
+        name="Category",
         items=[
-            ("body", "body", "", 0),
-            ("face", "face", "", 1),
-            ("skin", "skin", "", 2),
-            ("hair", "hair", "", 3),
-            ("length", "length", "", 4),
-            ("creation_phase", "Creation Phase", "", 5),
-            ("clothing", "clothing", "", 6),
-            ("footwear", "footwear", "", 7),
-            ("pose", "pose", "", 8),
-            ("expression", "expression", "", 9),
-            ("simulation", "simulation", "", 10),
-            ("compression", "compression", "", 11),
-            ("closed", "closed", "", 12),
-            ("hair2", "Hair Length", "", 13),
-            ("eyes", "Eyes", "", 14),
+            ("closed", "All Categories", "", "COLLAPSEMENU", 0),
+            ("body", "Body", "", get_hg_icon("body"), 1),
+            ("face", "Face", "", get_hg_icon("face"), 3),
+            ("length", "Length", "", get_hg_icon("length"), 2),
+            ("skin", "Skin", "", get_hg_icon("skin"), 4),
+            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
+            ("hair", "Hair", "", get_hg_icon("hair"), 6),
+            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
+            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
+            ("pose", "Pose", "", get_hg_icon("pose"), 9),
+            ("expression", "Expression", "", get_hg_icon("expression"), 10),
         ],
         default="body",
     )

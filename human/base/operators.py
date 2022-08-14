@@ -1,13 +1,11 @@
 from calendar import c
+
 import bpy
 from HumGen3D.backend import get_prefs, refresh_pcoll
-
-from HumGen3D.user_interface.info_popups import HG_OT_INFO
-from HumGen3D.user_interface.tips_suggestions_ui import (
-    update_tips_from_context,
-)
-
 from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
+from HumGen3D.user_interface.info_popups import HG_OT_INFO
+from HumGen3D.user_interface.tips_suggestions_ui import update_tips_from_context
+
 from ..human import Human
 
 
@@ -29,8 +27,8 @@ class HG_RANDOM(bpy.types.Operator):
     """
 
     bl_idname = "hg3d.random"
-    bl_label = "Redraw Random"
-    bl_description = "Randomize this property"
+    bl_label = "Randomize"
+    bl_description = "Randomize this category"
     bl_options = {"UNDO", "INTERNAL"}
 
     random_type: bpy.props.StringProperty()
@@ -144,12 +142,11 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         sett = context.scene.HG3D
-        sett.ui.phase = (
-            "closed" if sett.ui.phase == self.section_name else self.section_name
-        )
+        sett.ui.phase = self.section_name
+
         # PCOLL add here
         categ_dict = {
-            "clothing": ("outfits",),
+            "outfit": ("outfits",),
             "footwear": ("footwear",),
             "pose": ("poses",),
             "hair": ("hair", "face_hair"),
