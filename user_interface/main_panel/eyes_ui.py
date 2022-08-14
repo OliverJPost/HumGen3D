@@ -1,6 +1,6 @@
 import bpy
 
-from .main_panel_baseclass import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_EYES(MainPanelPart, bpy.types.Panel):

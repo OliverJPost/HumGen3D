@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.human.human import Human
 
-from .main_panel_baseclass import MainPanelPart
+from ..ui_baseclasses import MainPanelPart
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
@@ -21,6 +21,10 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         Shows a template icon view of all 'starting humans', a switch for male
         and female genders and a pink button to add the selected human
         """
+        self.human = None
+        self.sett = context.scene.HG3D
+        if self.draw_info_and_warning_labels(context):
+            return
 
         box = self.layout.box()
 
