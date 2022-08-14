@@ -93,7 +93,7 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
         "hair": "OUTLINER_OB_HAIR",
         "length": "EMPTY_SINGLE_ARROW",
         "creation_phase": "COMMUNITY",
-        "clothing": "MATCLOTH",
+        "outfit": "MATCLOTH",
         "footwear": "MATCLOTH",
         "pose": "ARMATURE_DATA",
         "expression": "GHOST_ENABLED",
@@ -101,11 +101,11 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
         "compression": "FOLDER_REDIRECT",
     }
 
-    layout = self.layout
+    layout = self.col
     box = layout.box()
 
     row = box.row(align=True)
-    row.scale_y = 1.3
+    row.scale_y = 1.0
     row.alignment = "LEFT"
 
     label = ui_name.capitalize().replace("_", " ")

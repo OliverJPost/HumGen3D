@@ -46,7 +46,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "pattern_bool",
                 "decal_bool",
                 "thumb_ui",
-                "expression_slider"
+                "expression_slider",
             ]
         )
     )
@@ -80,7 +80,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("hair", "hair", "", 3),
             ("length", "length", "", 4),
             ("creation_phase", "Creation Phase", "", 5),
-            ("clothing", "clothing", "", 6),
+            ("outfit", "outfit", "", 6),
             ("footwear", "footwear", "", 7),
             ("pose", "pose", "", 8),
             ("expression", "expression", "", 9),

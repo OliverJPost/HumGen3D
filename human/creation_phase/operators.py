@@ -28,7 +28,7 @@ class HG_START_CREATION(bpy.types.Operator):
 
     def execute(self, context):
         sett = context.scene.HG3D
-        sett.ui.phase = "body"
+        sett.ui.phase = "closed"
 
         human = Human.from_preset(sett.pcoll.humans, context)
         hg_rig = human.rig_obj

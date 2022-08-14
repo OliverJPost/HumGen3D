@@ -171,7 +171,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             if expr_sk:
                 expr_sk.value = random.choice([0.5, 0.7, 0.8, 1, 1, 1])
 
-        human.props.phase = "clothing"  # TODO is this needed? Remove?
+        human.props.phase = "outfit"  # TODO is this needed? Remove?
 
         # if self.bake_textures:
         #     self._bake_all_textures(context, hg_rig)

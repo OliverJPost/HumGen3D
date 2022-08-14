@@ -150,7 +150,7 @@ def _context_specific_updates(self, sett, human, ui_phase):
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
 
-    elif ui_phase == "clothing":
+    elif ui_phase == "outfit":
         refresh_pcoll(self, context, "outfits")
 
     elif ui_phase == "hair":

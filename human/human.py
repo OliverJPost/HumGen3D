@@ -155,6 +155,8 @@ class Human:
             # Fix for old presets that use wrong default length
             preset_length = 183.15
         human.length.set(preset_length, context)
+        if gender == "male":
+            human.shape_keys["Male"].value = 1.0
 
         # Set shape key values from preset
         for name, value in preset_data["livekeys"].items():
