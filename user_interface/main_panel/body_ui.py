@@ -27,15 +27,11 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         # for i in range(8):
         #     row.label(text="", icon="KEYTYPE_KEYFRAME_VEC")
 
-        col = self.layout.column()
-        col.scale_y = 1.25
-
-        col_h = col.column()
-        col_h.scale_y = 1.5
-        col_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
+        self.col_aligned.operator(
+            "hg3d.random", icon="FILE_REFRESH"
         ).random_type = "body_type"
 
+        col = self.layout.column()
         col.separator()
         flow = self.get_flow(col)
 

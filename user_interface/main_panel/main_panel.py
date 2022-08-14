@@ -56,7 +56,8 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         if self.draw_info_and_warning_labels(context):
             return
 
-        self.draw_top_widget(self.human)
+        col = self.layout.column(align=True)
+        self.draw_top_widget(col, self.human)
 
         col = layout.column(align=True)
         for menu_title in self.menu_titles:

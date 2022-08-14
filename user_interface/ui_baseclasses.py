@@ -20,8 +20,12 @@ def subpanel_draw(draw_method):
         if self.draw_info_and_warning_labels(context):
             return
 
-        self.draw_top_widget(self.human)
-        self.draw_bold_title(self.layout, self.phase_name.capitalize(), self.phase_name)
+        self.col_aligned = self.layout.column(align=True)
+
+        self.draw_top_widget(self.col_aligned, self.human)
+        self.draw_bold_title(
+            self.col_aligned, self.phase_name.capitalize(), self.phase_name
+        )
 
         draw_method(self, context)
 
@@ -275,7 +279,10 @@ class MainPanelPart(HGPanel):
         ).section_name = "closed"
 
     def draw_bold_title(self, layout, text: str, icon=None):
-        row = layout.box().row()
+        box = layout.column()
+        box.separator()
+        box.separator()
+        row = box.row()
         row.scale_x = 0.3
         row.alignment = "CENTER"
         if icon:
@@ -294,8 +301,10 @@ class MainPanelPart(HGPanel):
         for _ in range(separators):
             row.separator()
 
-    def draw_top_widget(self, human):
-        col = self.layout.column(align=True)
+        box.separator()
+
+    def draw_top_widget(self, layout, human):
+        col = layout
 
         row = col.row(align=True)
         row.scale_y = 1.5
