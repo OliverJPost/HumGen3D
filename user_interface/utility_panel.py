@@ -314,7 +314,7 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
 
     def draw_header(self, context):
         hg_icons = preview_collections["hg_icons"]
-        self.layout.label(text="", icon_value=hg_icons["clothing"].icon_id)
+        self.layout.label(text="", icon_value=hg_icons["outfit"].icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -332,7 +332,7 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Make mesh into clothing",
-            icon_value=get_hg_icon("clothing"),
+            icon_value=get_hg_icon("outfit"),
         ).content_type = "mesh_to_cloth"
 
 
