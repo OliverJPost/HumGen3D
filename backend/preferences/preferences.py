@@ -448,7 +448,7 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
             "Shapekeys": "body",
             "Hairstyles": "hair",
             "Poses": "pose",
-            "Outfits": "clothing",
+            "Outfits": "outfit",
             "Footwear": "footwear",
             "Expressions": "expression",
         }

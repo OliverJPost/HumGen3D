@@ -313,7 +313,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             "hair": "hairstyle",
             "starting_human": "preset",
             "shapekeys": "sk_collection",
-            "clothing": "clothing",
+            "outfit": "outfit",
             "pose": "pose",
         }
         tag = tag_dict[content_type]
@@ -365,7 +365,9 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             scale_popup=10,
         )
         if sett.thumbnail_saving_enum == "custom":
-            layout.template_ID(sett.custom_content, "preset_thumbnail", open="image.open")
+            layout.template_ID(
+                sett.custom_content, "preset_thumbnail", open="image.open"
+            )
             layout.label(text="256*256px recommended", icon="INFO")
         elif sett.thumbnail_saving_enum == "auto":
             self.__draw_auto_thumbnail_ui(layout, content_type)

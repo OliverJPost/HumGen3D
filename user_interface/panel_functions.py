@@ -73,7 +73,7 @@ def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
     return flow
 
 
-def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
+def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]":
     """Draws the spoiler box of the main sections (i.e. body, hair, face)
 
     Args:
@@ -93,19 +93,17 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
         "hair": "OUTLINER_OB_HAIR",
         "length": "EMPTY_SINGLE_ARROW",
         "creation_phase": "COMMUNITY",
-        "clothing": "MATCLOTH",
+        "outfit": "MATCLOTH",
         "footwear": "MATCLOTH",
         "pose": "ARMATURE_DATA",
         "expression": "GHOST_ENABLED",
         "simulation": "NETWORK_DRIVE",
         "compression": "FOLDER_REDIRECT",
     }
-
-    layout = self.layout
     box = layout.box()
 
     row = box.row(align=True)
-    row.scale_y = 1.3
+    row.scale_y = 1.0
     row.alignment = "LEFT"
 
     label = ui_name.capitalize().replace("_", " ")

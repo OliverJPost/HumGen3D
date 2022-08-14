@@ -43,7 +43,6 @@ from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refre
 from .backend.preferences.preference_func import get_prefs
 from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties.object_props import HG_OBJECT_PROPS
-from .backend.properties.scene_main_properties import HG_SETTINGS
 from .backend.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload
 from .human.base.live_keys import LiveKey
@@ -129,17 +128,20 @@ hg_classes = _get_bpy_classes()
 
 
 def register():
+    _initiate_custom_icons()
+
     # RELEASE remove print statements
     for cls in hg_classes:
         bpy.utils.register_class(cls)
 
     # Main props
+    from .backend.properties.scene_main_properties import HG_SETTINGS
+
     bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS)
     # Object specific props
     bpy.types.Object.HG = bpy.props.PointerProperty(type=HG_OBJECT_PROPS)
 
     _initiate_preview_collections()
-    _initiate_custom_icons()
     _initiate_ui_lists()
 
     from .user_interface.primitive_menu import add_hg_primitive_menu
