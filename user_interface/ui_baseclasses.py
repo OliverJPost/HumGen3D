@@ -283,21 +283,18 @@ class MainPanelPart(HGPanel):
         box.separator()
         box.separator()
         row = box.row()
-        row.scale_x = 0.3
         row.alignment = "CENTER"
+        row.scale_x = 0.7
         if icon:
-            if icon_value := get_hg_icon(icon):
-                row.label(icon_value=icon_value)
-            else:
-                row.label(icon=icon)
-            row.separator()
-
+            row.prop(self.sett.ui, "phase", text="", emboss=False, icon_only=True)
+        row = row.row()
+        row.scale_x = 0.5
         for char in text:
             if char.islower():
                 char = f"{char}_lower"
             row.label(icon_value=get_hg_icon(char))
 
-        separators = 1 + bool(icon)
+        separators = 2 + bool(icon)
         for _ in range(separators):
             row.separator()
 
