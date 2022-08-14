@@ -27,7 +27,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         # for i in range(8):
         #     row.label(text="", icon="KEYTYPE_KEYFRAME_VEC")
 
-        self.col_aligned.operator(
+        self.layout.operator(
             "hg3d.random", icon="FILE_REFRESH"
         ).random_type = "body_type"
 
