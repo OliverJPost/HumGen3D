@@ -21,7 +21,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         if self.sett.ui.expression_type == "1click":
             self._draw_oneclick_subsection()
         else:
-            self._draw_frig_subsection()
+            self._draw_frig_subsection(self.layout)
 
     def _draw_oneclick_subsection(self):
         if "facial_rig" in self.human.body_obj:

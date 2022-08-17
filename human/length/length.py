@@ -3,7 +3,11 @@ import os
 from typing import TYPE_CHECKING
 
 import bpy
-from bpy.types import Context  # type:ignore
+from bpy.types import Context
+from mathutils import Vector
+
+from ...scripts.bone_vert_builder import centroid
+from ..base import live_keys  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D import Human
@@ -25,7 +29,7 @@ def apply_armature(obj):
 
 class LengthSettings:
     def __init__(self, human):
-        self._human = human
+        self._human: Human = human
 
     @property
     def centimeters(self) -> int:
@@ -35,33 +39,65 @@ class LengthSettings:
     def meters(self) -> float:
         return self._human.rig_obj.dimensions[2]
 
-    def set(self, value_cm: float, context: Context = None):
+    def set(self, value_cm: float, context: Context = None, realtime=False):
         if context.scene.HG3D.update_exception:
             return
 
-        multiplier = ((2 * value_cm) / 100 - 4) * -1
-        old_length = self._human.rig_obj.dimensions[2]
+        value = 0
 
-        __location__ = os.path.realpath(
-            os.path.join(os.getcwd(), os.path.dirname(__file__))
+        if value_cm > 184:
+            value = (value_cm - 184) / (200 - 184)
+            livekey_name = "hg_taller"
+        else:
+            value = -((value_cm - 150) / (184 - 150) - 1)
+            livekey_name = "hg_shorter"
+
+        if realtime and value:
+            self.name = livekey_name
+            self.path = os.path.join(
+                "livekeys", "body_proportions", livekey_name + ".npy"
+            )
+            live_keys.set_livekey(self, value)
+
+        body = self._human.body_obj
+        rig = self._human.rig_obj
+
+        vert_count = len(body.data.vertices)
+        body_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.body_obj.data.vertices.foreach_get("co", body_key_coords)
+
+        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.shape_keys.permanent_key.data.foreach_get(
+            "co", permanent_key_coords
         )
-        with open(os.path.join(__location__, "stretch_bones.json"), "r") as f:
-            stretch_bone_dict = json.load(f)
 
-        bones = self._human.rig_obj.pose.bones
+        temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.shape_keys.temp_key.data.foreach_get("co", temp_key_coords)
+        temp_value = self._human.shape_keys.temp_key.value
 
-        # TODO totally remove
-        # for stretch_bone, bone_data in stretch_bone_dict.items():
-        #    self._set_stretch_bone_position(multiplier, bones, stretch_bone, bone_data)
+        eval_coords = (
+            temp_key_coords - body_key_coords
+        ) * temp_value + permanent_key_coords
+        eval_coords = eval_coords.reshape((-1, 3))
 
-        context.view_layer.update()  # Requires update to get new length of rig
-        hg_rig = (
-            self._human.rig_obj
-        )  # Human.find(context.active_object).rig_obj  # Retrieve again
-        new_length = hg_rig.dimensions[2]
-        hg_rig.location[2] += self._origin_correction(
-            old_length
-        ) - self._origin_correction(new_length)
+        bpy.ops.object.mode_set(mode="EDIT")
+        for ebone in rig.data.edit_bones:
+            if not "head_verts" in ebone:
+                continue
+
+            target_verts_head = ebone["head_verts"]
+            centroid_co = centroid(eval_coords[target_verts_head])
+            vert_vec_head = Vector(ebone["head_relative_co"])
+
+            ebone.head = centroid_co + vert_vec_head
+
+            target_verts_tail = ebone["tail_verts"]
+            centroid_co = centroid(eval_coords[target_verts_tail])
+            vert_vec_tail = Vector(ebone["tail_relative_co"])
+
+            ebone.tail = centroid_co + vert_vec_tail
+
+        bpy.ops.object.mode_set(mode="OBJECT")
 
     def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between

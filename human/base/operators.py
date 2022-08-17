@@ -171,6 +171,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
 
                     if pref.auto_hide_popup:
                         HG_OT_INFO.ShowMessageBox(None, "autohide_hair")
+
         return {"FINISHED"}
 
 
