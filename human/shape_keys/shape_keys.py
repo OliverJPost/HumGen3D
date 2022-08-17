@@ -73,7 +73,7 @@ class ShapeKeySettings(PropCollection):
 
     @property
     def temp_key(self):
-        return next(
+        temp_key = next(
             (
                 sk
                 for sk in self._human.shape_keys
@@ -81,6 +81,12 @@ class ShapeKeySettings(PropCollection):
             ),
             None,
         )
+        if not temp_key:
+            temp_key = self._human.body_obj.shape_key_add(name="LIVE_KEY_TEMP_")
+            temp_key.slider_max = 10
+            temp_key.slider_min = -10
+
+        return temp_key
 
     @property
     def permanent_key(self):
