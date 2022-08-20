@@ -289,7 +289,9 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett = context.scene.HG3D
         
         
-        if self.next and sett.content_saving_type == 'mesh_to_cloth':
+        if (self.next 
+            and sett.content_saving_type == 'mesh_to_cloth' 
+            and sett.content_saving_tab_index >= 1):
             not_in_a_pose = self.check_if_in_A_pose(context, sett)
             
             if not_in_a_pose:
