@@ -1081,7 +1081,9 @@ class HG_PT_PANEL(bpy.types.Panel):
         
         row = boxbox.row()
         row.alignment = 'CENTER'
-        row.label(text = 'Eyebrows:', icon = 'OUTLINER_OB_HAIR')
+        hair_icon = ('OUTLINER_OB_CURVES' if bpy.app.version >= (3, 2, 0) 
+                    else "OUTLINER_OB_HAIR")
+        row.label(text = 'Eyebrows:', icon = hair_icon)
         row = boxbox.row(align = True)
         row.operator('hg3d.eyebrowswitch',
                      text = 'Previous',

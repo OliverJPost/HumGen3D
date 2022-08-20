@@ -542,10 +542,13 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
             layout (UILayout): layout to draw tab in
         """
         
+        hair_icon = ('OUTLINER_OB_CURVES' if bpy.app.version >= (3, 2, 0) 
+                else "OUTLINER_OB_HAIR")
+        
         self._draw_header_box(
             layout,
             'Select particle systems \nto be included in this style.',
-            'OUTLINER_OB_HAIR'
+            hair_icon
         )
         
         

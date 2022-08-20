@@ -94,11 +94,13 @@ def draw_spoiler_box(self, ui_name) -> 'tuple[bool, bpy.types.UILayout]':
     """
     
     #fallback icons for when custom ones don't load
+    hair_icon = ('OUTLINER_OB_CURVES' if bpy.app.version >= (3, 2, 0) 
+                 else "OUTLINER_OB_HAIR")
     icon_dict = {
         'body'          : 'COMMUNITY',
         'face'          : 'COMMUNITY',
         'skin'          : 'COMMUNITY',
-        'hair'          : 'OUTLINER_OB_HAIR',
+        'hair'          : hair_icon,
         'length'        : 'EMPTY_SINGLE_ARROW',
         'creation_phase': 'COMMUNITY',
         'clothing'      : 'MATCLOTH',
