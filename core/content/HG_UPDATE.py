@@ -19,7 +19,10 @@ def check_update():
         return
     
     url  = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
-    resp = requests.get(url)
+    resp = requests.get(url, timeout=2)
+
+    if not resp:
+        hg_log('Human Generator update check timed out after 2 seconds.', level = "INFO")
 
     pref.cpack_update_required  = False
     pref.cpack_update_available = False
