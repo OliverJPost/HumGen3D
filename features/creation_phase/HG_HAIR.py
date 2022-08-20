@@ -578,7 +578,7 @@ def _get_child_amount(hair_quality, max_children):
     }        
     new_children = max_children / division_dict[hair_quality]
     
-    return new_children
+    return int(new_children)
 
 def _get_root_and_tip(hair_quality, max_root, max_tip):
     multiplication_dict = {
