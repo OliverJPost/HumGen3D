@@ -166,10 +166,11 @@ class HG_Batch_Generator():
         return settings_dict
 
     def __run_hg_subprocess(self, python_file, settings_dict):
+        is_background = "--background" if get_prefs().batch_in_background else ""
         background_blender = subprocess.run(
             [
                 bpy.app.binary_path,
-                "--background",
+                is_background,
                 "--python",
                 python_file,
                 json.dumps({**settings_dict,

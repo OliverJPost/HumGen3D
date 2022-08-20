@@ -114,6 +114,8 @@ class HG_PREF(bpy.types.AddonPreferences):
     show_tips: bpy.props.BoolProperty(default = True)
     compress_zip: bpy.props.BoolProperty(default = True)
     full_height_menu: bpy.props.BoolProperty(default = False)
+    
+    batch_in_background: bpy.props.BoolProperty(default = True)
 
     def draw(self, context):  
         #check if base content is installed, otherwise show installation ui 
@@ -323,7 +325,7 @@ class HG_PREF(bpy.types.AddonPreferences):
         col.prop(self, 'silence_all_console_messages', text = 'Silence all console messages')
         col.prop(self, 'dev_tools')
         col.prop(self, 'skip_url_request', text = 'Skip URL request')
-
+        col.prop(self, 'batch_in_background', text = "Run Batch Generator in background")
         
         
     def _draw_warning(self, layout, message):
