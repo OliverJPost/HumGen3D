@@ -151,11 +151,12 @@ class HG_PREF(bpy.types.AddonPreferences):
             bool: True if base content is installed
         """
         base_content_found = (
-            os.path.exists(self.filepath + str(Path("content_packs/Base_Humans.json")))
+            os.path.exists(
+                os.path.join(self.filepath, "content_packs", "Base_Humans.json")
+            )
             if self.filepath
             else False
         )
-
         return base_content_found
 
     def _get_update_statuscode(self) -> str:
