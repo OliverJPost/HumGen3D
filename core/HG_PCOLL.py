@@ -49,10 +49,11 @@ def _check_for_HumGen_filepath_issues(self):
     pref = get_prefs()
     if not pref.filepath:
         raise HumGenException("No filepath selected in HumGen preferences.")
-    base_humans_path = (
-        pref.filepath
-        + str(Path('content_packs/Base_Humans.json'))
-        )
+    base_humans_path = os.path.join(
+        pref.filepath,
+        'content_packs',
+        'Base_Humans.json')
+
     
     base_content = os.path.exists(base_humans_path)
     
