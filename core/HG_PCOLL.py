@@ -219,11 +219,8 @@ def _load_thumbnail(thumb_name, pcoll) -> list:
     Returns:
         list: icon in enumarator
     """
+    filepath_thumb = os.path.join(get_addon_root(), 'icons', thumb_name+'.jpg')
 
-    filepath_thumb = (
-        str(Path(os.path.dirname(__file__)).parent) 
-        + str(Path(f'/icons/{thumb_name}.jpg'))
-    )
     if not pcoll.get(filepath_thumb):
         thumb = pcoll.load(filepath_thumb, filepath_thumb, 'IMAGE')
     else: 
