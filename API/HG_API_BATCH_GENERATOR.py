@@ -195,7 +195,7 @@ class HG_Batch_Generator:
         )
 
         for line in background_blender.stdout.decode("utf-8").splitlines():
-            if line.startswith(("HG_", "\033")):
+            if get_prefs().debug_mode or line.startswith(("HG_", "\033")):
                 print(line)
 
         if background_blender.stderr:
