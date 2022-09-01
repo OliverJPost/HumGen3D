@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, Union
 
 import bpy
 import numpy as np
@@ -93,7 +93,7 @@ class ShapeKeySettings(PropCollection):
         return self._human.shape_keys.get("LIVE_KEY_PERMANENT")
 
     def load_from_npy(
-        self, npy_filepath: str | os.PathLike, obj_override: Object = None
+        self, npy_filepath: Union[str, os.PathLike], obj_override: Object = None
     ):
         """Creates a new shapekey on the body or the passed obj_override from a npy file
 
