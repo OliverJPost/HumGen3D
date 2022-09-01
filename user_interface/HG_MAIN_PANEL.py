@@ -166,9 +166,10 @@ class HG_PT_PANEL(bpy.types.Panel):
         Returns:
             Bool: True if base content found, False causes panel to return
         """
-        base_humans_path = (
-            self.pref.filepath
-            + str(Path('content_packs/Base_Humans.json'))
+        base_humans_path = os.path.join(
+            self.pref.filepath,
+            'content_packs',
+            'Base_Humans.json'
             )
         
         base_content = os.path.exists(base_humans_path)
