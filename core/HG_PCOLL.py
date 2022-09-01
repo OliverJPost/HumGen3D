@@ -8,7 +8,7 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ..features.common.HG_COMMON_FUNC import (HumGenException, find_human,
+from ..features.common.HG_COMMON_FUNC import (HumGenException, find_human, get_addon_root,
                                               get_prefs, hg_log)
 
 preview_collections = {} #global dictionary of all pcolls
