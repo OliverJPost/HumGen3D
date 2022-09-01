@@ -70,8 +70,11 @@ def build_summary_list(col, mod):
 def get_preset_thumbnail(self, context) -> list:
     sett = context.scene.HG3D
     img = sett.preset_thumbnail
+
     if img and img.preview:
         return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)]
+    elif img:
+        return [(img.name, "Selected Thumbnail", "", 0)]
     else:
         return []  
 
