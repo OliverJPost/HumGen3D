@@ -37,7 +37,10 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
         default="male",
     )
     body_obj: PointerProperty(name="hg_body", type=bpy.types.Object)
-    length: FloatProperty()
-    experimental: BoolProperty(default=False)
     batch_result: BoolProperty(default=False)
     sk_values: PointerProperty(type=HG_SK_VALUES)
+    # Legacy props
+    is_legacy: BoolProperty(default=False)
+    experimental: BoolProperty(default=False)
+    length: FloatProperty()
+    backup_human: PointerProperty(type=bpy.types.Object)

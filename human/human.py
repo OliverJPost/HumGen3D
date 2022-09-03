@@ -107,6 +107,14 @@ class Human:
         rig_obj = cls.find(existing_human)
 
         if rig_obj:
+            # Cancel for legacy humans
+            if not hasattr(rig_obj.HG.is_legacy):
+                rig_obj.HG.is_legacy = True
+                if strict_check:
+                    raise HumGenException(
+                        "Passed human created with a version of HG older than 4.0.0"
+                    )
+                return None
             return cls(rig_obj, strict_check=strict_check)
         elif strict_check:
             raise HumGenException(
@@ -170,6 +178,7 @@ class Human:
         human.hair.eyebrows._set_from_preset(preset_data["eyebrows"])
 
         human._set_random_name()
+        human.props.is_legacy = False
 
         return human
 
