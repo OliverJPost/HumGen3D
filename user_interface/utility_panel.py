@@ -93,25 +93,26 @@ class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         sett = context.scene.HG3D
+        bake_sett = sett.bake
 
         found_problem = self._draw_warning_labels(context, layout)
         if found_problem:
             return
 
         col = get_flow(sett, layout.box())
-        col.prop(sett, "bake_samples", text="Quality")
+        col.prop(bake_sett, "samples", text="Quality")
 
         col = get_flow(sett, layout.box())
 
-        draw_resolution_box(sett, col)
+        draw_resolution_box(bake_sett, col)
 
         col = get_flow(sett, layout.box())
-        col.prop(sett, "bake_export_folder", text="Output Folder:")
+        col.prop(bake_sett, "export_folder", text="Output Folder:")
 
         row = col.row()
         row.alignment = "RIGHT"
         row.label(text="HumGen folder when left empty", icon="INFO")
-        col.prop(sett, "bake_file_type", text="Format:")
+        col.prop(bake_sett, "file_type", text="Format:")
 
         col = layout.column()
         col.scale_y = 1.5
@@ -255,7 +256,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         layout.label(text="Only during creation phase:", icon="RADIOBUT_OFF")
         col = layout.column()
         col.scale_y = 1.5
-        col.enabled = in_creation_phase(hg_rig)
+        # col.enabled = in_creation_phase(hg_rig)
 
         col.operator(
             "hg3d.open_content_saving_tab",
@@ -282,7 +283,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         layout.label(text="Only after creation phase:", icon="RADIOBUT_OFF")
         col = layout.column()
         col.scale_y = 1.5
-        col.enabled = not in_creation_phase(hg_rig)
+        # col.enabled = not in_creation_phase(hg_rig)
 
         col.operator(
             "hg3d.open_content_saving_tab",
