@@ -470,3 +470,13 @@ class MainPanelPart(HGPanel):
             row = flow.row()
             row.prop(ps.settings, "child_length", text=ps_name)
             row.operator("hg3d.removehair", text="", icon="TRASH").hair_system = ps.name
+
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)

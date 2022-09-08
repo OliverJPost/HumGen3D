@@ -73,6 +73,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     phase: EnumProperty(
         name="Category",
         items=[
+            ("", "Editing", ""),
             ("closed", "All Categories", "", "COLLAPSEMENU", 0),
             ("body", "Body", "", get_hg_icon("body"), 1),
             ("face", "Face", "", get_hg_icon("face"), 3),
@@ -84,6 +85,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
             ("pose", "Pose", "", get_hg_icon("pose"), 9),
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
+            ("", "Utility", ""),
+            ("baking", "Texture Baking", "", "RENDERLAYERS", 11),
         ],
         default="body",
     )
