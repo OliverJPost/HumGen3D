@@ -7,7 +7,7 @@ import bpy
 from bpy.props import BoolProperty, EnumProperty
 from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
 
-from ..callback import tab_change_update
+from ..callback import hg_callback, tab_change_update
 
 
 def create_ui_toggles(ui_toggle_names):
@@ -87,8 +87,10 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
             ("", "Utility", ""),
             ("baking", "Texture Baking", "", "RENDERLAYERS", 11),
+            ("apply", "Apply Modifiers", "", "MOD_SUBSURF", 12),
         ],
         default="body",
+        update=lambda self, context: hg_callback(self),
     )
 
     active_tab: EnumProperty(
