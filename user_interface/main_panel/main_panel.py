@@ -43,6 +43,8 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         "expression",
     ]
 
+    utility_titles = ["baking"]
+
     def draw_header(self, context):
         self.draw_panel_switch_header(self.layout, context.scene.HG3D)
 
@@ -61,6 +63,12 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
 
         col = layout.column(align=True)
         for menu_title in self.menu_titles:
+            draw_spoiler_box(self, col, menu_title)
+
+        col.separator()
+        col.separator()
+        self.draw_centered_subtitle("Utility", col, "TOOL_SETTINGS")
+        for menu_title in self.utility_titles:
             draw_spoiler_box(self, col, menu_title)
 
         if get_prefs().show_tips:

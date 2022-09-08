@@ -3,7 +3,7 @@ from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 
 from ..backend.preview_collections import get_hg_icon, preview_collections
-from .panel_functions import draw_panel_switch_header, draw_resolution_box, get_flow
+from .panel_functions import draw_panel_switch_header, get_flow
 from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 
 
@@ -70,79 +70,6 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
             col.label(text="No human selected, select a human")
             col.label(text="to see all options.")
             col.separator()
-
-
-class HG_PT_T_BAKE(Tools_PT_Base, bpy.types.Panel):
-    """subpanel with tools for texture baking
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-
-    bl_parent_id = "HG_PT_UTILITY"
-    bl_label = "Texture Baking"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    @classmethod
-    def poll(cls, context):
-        return Human.from_existing(context.object)
-
-    def draw_header(self, context):
-        self.layout.label(text="", icon="RENDER_RESULT")
-
-    def draw(self, context):
-        layout = self.layout
-        sett = context.scene.HG3D
-        bake_sett = sett.bake
-
-        found_problem = self._draw_warning_labels(context, layout)
-        if found_problem:
-            return
-
-        col = get_flow(sett, layout.box())
-        col.prop(bake_sett, "samples", text="Quality")
-
-        col = get_flow(sett, layout.box())
-
-        draw_resolution_box(bake_sett, col)
-
-        col = get_flow(sett, layout.box())
-        col.prop(bake_sett, "export_folder", text="Output Folder:")
-
-        row = col.row()
-        row.alignment = "RIGHT"
-        row.label(text="HumGen folder when left empty", icon="INFO")
-        col.prop(bake_sett, "file_type", text="Format:")
-
-        col = layout.column()
-        col.scale_y = 1.5
-        col.alert = True
-        col.operator("hg3d.bake", icon="OUTPUT", depress=True)
-
-    def _draw_warning_labels(self, context, layout) -> bool:
-        """Draws warning if no human is selected or textures are already baked
-
-        Args:
-            context (bpy.context): Blender context
-            layout (UILayout): layout to draw warning labels in
-
-        Returns:
-            bool: True if problem found, causing rest of ui to cancel
-        """
-        human = Human.from_existing(context.object)
-        if not human:
-            layout.label(text="No human selected")
-            return True
-
-        if "hg_baked" in human.rig_obj:
-            if context.scene.HG3D.batch_idx:
-                layout.label(text="Baking in progress")
-            else:
-                layout.label(text="Already baked")
-
-            return True
-
-        return False
 
 
 class HG_PT_T_MODAPPLY(Tools_PT_Base, bpy.types.Panel):
