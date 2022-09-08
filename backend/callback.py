@@ -139,7 +139,6 @@ def _context_specific_updates(self, sett, human, ui_phase):
     sett.update_exception = False
     context = bpy.context
     if sett.ui.active_tab == "TOOLS":
-        refresh_modapply(self, context)
         try:
             refresh_shapekeys_ul(self, context)
             refresh_hair_ul(self, context)
@@ -147,6 +146,9 @@ def _context_specific_updates(self, sett, human, ui_phase):
         except AttributeError:
             pass
         return
+    elif ui_phase == "apply":
+        refresh_modapply(self, context)
+
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
 

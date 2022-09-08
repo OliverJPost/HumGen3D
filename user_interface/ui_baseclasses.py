@@ -1,6 +1,7 @@
 import functools
 import os
 from pathlib import Path
+from re import L
 from tokenize import Triple
 
 import bpy
@@ -290,6 +291,9 @@ class MainPanelPart(HGPanel):
         row = row.row()
         row.scale_x = 0.5
         for char in text:
+            if char in (" ", "_"):
+                row.label(icon="BLANK1")
+                continue
             if char.islower():
                 char = f"{char}_lower"
             row.label(icon_value=get_hg_icon(char))

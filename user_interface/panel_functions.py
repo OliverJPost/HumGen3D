@@ -100,16 +100,21 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
         "simulation": "NETWORK_DRIVE",
         "compression": "FOLDER_REDIRECT",
         "baking": "RENDERLAYERS",
+        "apply": "MOD_SUBSURF",
     }
+
+    long_name_dict = {"baking": "Texture Baking", "apply": "Apply Modifiers"}
+
     box = layout.box()
 
     row = box.row(align=True)
     row.scale_y = 1.0
     row.alignment = "LEFT"
 
-    label = ui_name.capitalize().replace("_", " ")
-    if ui_name == "creation_phase":
-        label = "Creation Phase Backup"
+    if ui_name in long_name_dict:
+        label = long_name_dict[ui_name]
+    else:
+        label = ui_name.capitalize().replace("_", " ")
 
     try:
         hg_icons = preview_collections["hg_icons"]

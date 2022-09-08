@@ -43,7 +43,7 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         "expression",
     ]
 
-    utility_titles = ["baking"]
+    utility_titles = ["baking", "apply"]
 
     def draw_header(self, context):
         self.draw_panel_switch_header(self.layout, context.scene.HG3D)
