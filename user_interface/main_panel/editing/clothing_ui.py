@@ -1,6 +1,6 @@
 import bpy
 
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ...ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class ClothingPanel(MainPanelPart):
