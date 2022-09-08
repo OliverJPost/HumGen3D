@@ -3,6 +3,8 @@ context.scene.HG3D.bake
 For storing properties related to texture baking of the Human Generator character
 """
 
+import os
+
 import bpy
 from bpy.props import EnumProperty, IntProperty, StringProperty  # type: ignore
 
