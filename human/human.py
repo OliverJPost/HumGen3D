@@ -9,6 +9,7 @@ import bpy
 from bpy.types import Object
 
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
+from .baking.bake import BakeSettings
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
@@ -264,6 +265,10 @@ class Human:
     @property  # TODO make cached
     def expression(self) -> ExpressionSettings:
         return ExpressionSettings(self)
+
+    @property
+    def baking(self) -> BakeSettings:
+        return BakeSettings(self)
 
     @property
     def objects(self) -> Generator[Object]:
