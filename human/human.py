@@ -109,7 +109,7 @@ class Human:
 
         if rig_obj:
             # Cancel for legacy humans
-            if not hasattr(rig_obj.HG.is_legacy):
+            if not hasattr(rig_obj.HG, "is_legacy"):
                 rig_obj.HG.is_legacy = True
                 if strict_check:
                     raise HumGenException(
