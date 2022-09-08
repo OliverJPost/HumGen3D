@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.human.human import Human
 
-from ..ui_baseclasses import MainPanelPart
+from ...ui_baseclasses import MainPanelPart
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):

@@ -2,8 +2,8 @@ from sys import platform
 
 import bpy
 
-from ..panel_functions import draw_sub_spoiler
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ...panel_functions import draw_sub_spoiler
+from ...ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
