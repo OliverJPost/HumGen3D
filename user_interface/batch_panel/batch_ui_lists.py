@@ -4,8 +4,8 @@ This file is currently inactive
 
 import bpy  # type: ignore
 
-from ..backend import preview_collections
-from ..backend.properties.property_functions import (
+from ...backend import preview_collections
+from ...backend.properties.property_functions import (
     find_folders,
     find_item_amount,
 )

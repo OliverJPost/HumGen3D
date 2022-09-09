@@ -55,7 +55,11 @@ def _get_bpy_classes():
                     waitlist.append(obj)
                     continue
                 # Register main properties class after subclasses
-                if obj.__name__ in ("HG_SETTINGS", "HG_OBJECT_PROPS"):
+                if obj.__name__ in (
+                    "HG_SETTINGS",
+                    "HG_OBJECT_PROPS",
+                    "HG_PT_BATCH_TIPS",
+                ):
                     waitlist.append(obj)
                     continue
 

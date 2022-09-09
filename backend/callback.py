@@ -22,7 +22,7 @@ from HumGen3D.utility_section.utility_functions import (
 
 from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
+from ..user_interface.batch_panel.batch_ui_lists import batch_uilist_refresh  # type: ignore
 from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
 from .preview_collections import refresh_pcoll
 

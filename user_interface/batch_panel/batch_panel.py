@@ -6,8 +6,8 @@ from HumGen3D.batch_generator.batch_functions import (
     length_from_bell_curve,
 )
 
-from .panel_functions import draw_panel_switch_header, get_flow
-from .tips_suggestions_ui import draw_tips_suggestions_ui
+from ..panel_functions import draw_panel_switch_header, get_flow
+from ..tips_suggestions_ui import draw_tips_suggestions_ui
 
 
 class Batch_PT_Base:
@@ -26,7 +26,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.ui.active_tab == "BATCH" and not sett.content_saving_ui
+        return sett.ui.active_tab == "BATCH" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -420,7 +420,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 def header(self, context, categ):
     sett = context.scene.HG3D
     layout = self.layout
-    layout.prop(sett, "batch_{}".format(categ), text="")
+    layout.prop(sett.batch, categ, text="")
 
 
 class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
