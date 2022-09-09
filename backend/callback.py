@@ -22,7 +22,9 @@ from HumGen3D.utility_section.utility_functions import (
 
 from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..user_interface.batch_panel.batch_ui_lists import batch_uilist_refresh  # type: ignore
+from ..user_interface.batch_panel.batch_ui_lists import (
+    batch_uilist_refresh,  # type: ignore
+)
 from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
 from .preview_collections import refresh_pcoll
 
@@ -195,10 +197,14 @@ def tab_change_update(self, context):
 
     refresh_modapply(self, context)
 
+    human = Human.from_existing(context.object, strict_check=False)
+    if not human:
+        return
+
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        Human.from_existing(context.object).rig_obj,
+        human.rig_obj,
     )
 
     batch_uilist_refresh(self, context, "outfits")

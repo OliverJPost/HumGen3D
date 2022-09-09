@@ -30,13 +30,14 @@ def refresh_modapply(self, context):
 def build_object_list(context, sett) -> list:
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
     if sett.modapply_search_objects != "selected":
-        humans = (
-            [
-                Human.from_existing(context.object).rig_obj,
+        if sett.modapply_search_objects == "full":
+            human = Human.from_existing(context.object, strict_check=False)
+            humans = [
+                human,
             ]
-            if sett.modapply_search_objects == "full"
-            else [obj for obj in bpy.data.objects if obj.HG.ishuman]
-        )
+        else:
+            humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+
         for human in humans:
             if not human:
                 continue
