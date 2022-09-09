@@ -1,6 +1,6 @@
 import bpy  # type:ignore
 
-from ..backend import get_hg_icon
+from ...backend import get_hg_icon
 
 
 class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):

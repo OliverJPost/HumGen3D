@@ -16,16 +16,16 @@ class HG_BATCH_TESTS(bpy.types.Operator):
 
         bpy.ops.hg3d.generate("INVOKE_DEFAULT", run_immediately=True)
 
-        sett = context.scene.HG3D
-        sett.batch_hair = True
-        sett.batch_clothing = True
-        sett.batch_expression = True
+        batch_sett = context.scene.HG3D.batch
+        batch_sett.hair = True
+        batch_sett.clothing = True
+        batch_sett.expression = True
 
         bpy.ops.hg3d.generate("INVOKE_DEFAULT", run_immediately=True)
 
-        sett.batch_delete_backup = False
-        sett.batch_apply_shapekeys = False
-        sett.batch_remove_clothing_subdiv = False
+        batch_sett.delete_backup = False
+        batch_sett.apply_shapekeys = False
+        batch_sett.remove_clothing_subdiv = False
 
         bpy.ops.hg3d.generate("INVOKE_DEFAULT", run_immediately=True)
 
