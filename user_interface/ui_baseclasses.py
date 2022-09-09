@@ -322,12 +322,12 @@ class MainPanelPart(HGPanel):
             text=self._get_header_label(human),
             depress=bool(human),
         )
-        subrow = row.row(align=True)
-        subrow.alert = True
-        subrow.scale_x = 1.2
-        subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
-
         if human:
+            subrow = row.row(align=True)
+            subrow.alert = True
+            subrow.scale_x = 1.2
+            subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
+
             box = col.box()
             hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
             self._draw_hair_children_switch(hair_systems, box)
@@ -438,7 +438,7 @@ class MainPanelPart(HGPanel):
 
     def _get_header_label(self, human):
         if not human:
-            label = "No Human selected"
+            label = "No human selected"
         else:
             name = human.name.replace("HG_", "").replace("_RIGIFY", "")
             gender = human.gender.capitalize()
