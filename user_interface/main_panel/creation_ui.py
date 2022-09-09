@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.human.human import Human
 
-from ...ui_baseclasses import MainPanelPart
+from ..ui_baseclasses import MainPanelPart
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
@@ -26,21 +26,27 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         if self.draw_info_and_warning_labels(context):
             return
 
-        box = self.layout.box()
+        col = self.layout.column(align=True)
+
+        self.draw_top_widget(col, self.human)
+
+        box = col.box()
 
         col = box.column(align=True)
-        col.label(text="Select a starting human")
+        self.draw_centered_subtitle("Select a starting human", col)
         col.template_icon_view(
             context.scene.HG3D.pcoll,
             "humans",
             show_labels=True,
-            scale=10,
+            scale=8,
             scale_popup=6,
         )
 
-        row = col.row()
+        row = col.row(align=True)
         row.scale_y = 2
+        row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
+        row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "humans"
 
         col = box.column()
         col.scale_y = 2
