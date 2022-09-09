@@ -9,7 +9,8 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        return not Human.find(context.object)
+        ui_sett = context.scene.HG3D.ui
+        return not Human.find(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
         self.draw_panel_switch_header(self.layout, context.scene.HG3D)
