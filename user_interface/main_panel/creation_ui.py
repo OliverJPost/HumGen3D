@@ -32,23 +32,21 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         self.draw_top_widget(col, self.human)
 
         col.separator()
-        col = col.column(align=True)
-        self.draw_centered_subtitle("Select a starting human", col)
-        col.template_icon_view(
+        box = col.box().column(align=True)
+        self.draw_centered_subtitle("Select a starting human", box)
+        box.template_icon_view(
             context.scene.HG3D.pcoll,
             "humans",
             show_labels=True,
-            scale=8.4,
+            scale=8,
             scale_popup=6,
         )
 
-        row = col.row(align=True)
+        row = box.row(align=True)
         row.scale_y = 2
         row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
         row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "humans"
-
-        col.separator(factor=2)
 
         col = col.column()
         col.scale_y = 2
