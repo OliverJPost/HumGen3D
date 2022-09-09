@@ -50,7 +50,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.ui.active_tab == "TOOLS" and not sett.content_saving_ui
+        return sett.ui.active_tab == "TOOLS" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -63,7 +63,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
             layout.label(text="No filepath selected", icon="ERROR")
             return
 
-        human = Human.from_existing(context.object)
+        human = Human.from_existing(context.object, strict_check=False)
         if not human:
             col = layout.column()
             col.scale_y = 0.8
@@ -85,7 +85,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        human = Human.from_existing(context.object)
+        human = Human.from_existing(context.object, strict_check=False)
         return human
 
     def draw_header(self, context):
@@ -94,8 +94,6 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         hg_icons = preview_collections["hg_icons"]
-
-        hg_rig = Human.from_existing(context.object).rig_obj
 
         layout.label(text="Only during creation phase:", icon="RADIOBUT_OFF")
         col = layout.column()

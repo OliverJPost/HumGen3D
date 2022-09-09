@@ -1,5 +1,6 @@
 import inspect
 import os
+from re import L
 
 import bpy
 import HumGen3D
@@ -42,6 +43,7 @@ def _get_bpy_classes():
         )
 
         waitlist = []
+        waitlist_2nd_level = []
         for name, obj in inspect.getmembers(mod):
             if inspect.isclass(obj) and issubclass(obj, bpy_classes):
                 # Check if the class is actually from the HumGen3D module
@@ -58,16 +60,21 @@ def _get_bpy_classes():
                 if obj.__name__ in (
                     "HG_SETTINGS",
                     "HG_OBJECT_PROPS",
-                    "HG_PT_BATCH_TIPS",
                 ):
                     waitlist.append(obj)
                     continue
-
+                if obj.__name__ in (
+                    "HG_PT_BATCH_TIPS",
+                    "HG_PT_EXTRAS_TIPS",
+                ):
+                    waitlist_2nd_level.append(obj)
+                    continue
                 yielded.append(name)
                 yield obj
 
         # Yield UI classes that depend on parent last
         yield from waitlist
+        yield from waitlist_2nd_level
 
     from HumGen3D.user_interface.documentation.tutorial_operator import (
         tutorial_operator,
