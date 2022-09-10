@@ -8,8 +8,10 @@ from typing import TYPE_CHECKING, Generator, List, Tuple
 import bpy
 from bpy.types import Object
 
+from .process.process import ProcessSettings
+
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
-from .baking.bake import BakeSettings
+from .process.bake import BakeSettings
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
@@ -267,8 +269,8 @@ class Human:
         return ExpressionSettings(self)
 
     @property
-    def baking(self) -> BakeSettings:
-        return BakeSettings(self)
+    def process(self) -> ProcessSettings:
+        return ProcessSettings(self)
 
     @property
     def objects(self) -> Generator[Object]:

@@ -11,7 +11,9 @@ import bpy
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox  # type: ignore
+from HumGen3D.user_interface.documentation.feedback_func import (
+    ShowMessageBox,  # type: ignore
+)
 
 
 def status_text_callback(header, context):
@@ -55,7 +57,7 @@ class HG_BAKE(bpy.types.Operator):
 
     def invoke(self, context, event):
         self.human = Human.from_existing(context.object)
-        self.baketextures = self.human.baking.get_baking_list()
+        self.baketextures = self.human.process.baking.get_baking_list()
 
         bake_sett = context.scene.HG3D.bake
         bake_sett.total = len(self.baketextures)
@@ -66,7 +68,7 @@ class HG_BAKE(bpy.types.Operator):
             self.switched_to_cuda,
             self.old_samples,
             _,
-        ) = self.human.baking._check_bake_render_settings(
+        ) = self.human.process.baking._check_bake_render_settings(
             context, samples=int(bake_sett.samples), force_cycles=False
         )
 
@@ -85,7 +87,7 @@ class HG_BAKE(bpy.types.Operator):
         bake_sett = context.scene.HG3D.bake
 
         if self.finish_modal:
-            self.human.baking.set_up_new_materials(self.baketextures)
+            self.human.process.baking.set_up_new_materials(self.baketextures)
             context.area.tag_redraw()
             context.workspace.status_text_set(text=None)
             bake_sett.idx = 0
@@ -112,7 +114,7 @@ class HG_BAKE(bpy.types.Operator):
 
             baketexture = self.baketextures[self.bake_idx - 1]
 
-            self.human.baking.bake_single_texture(baketexture)
+            self.human.process.baking.bake_single_texture(baketexture)
             self.bake_idx += 1
             bake_sett.idx += 1
 
