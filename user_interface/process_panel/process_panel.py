@@ -24,4 +24,4 @@ class HG_PT_PROCESS(bpy.types.Panel):
         row = col.row(align=True)
         row.scale_x = 0.7
         row.alignment = "CENTER"
-        draw_icon_title("Process Humans", row, True)
+        draw_icon_title("Processing", row, True)
