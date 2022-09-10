@@ -257,6 +257,22 @@ class HGPanel:
             ).searchbox_name = name
 
 
+def draw_icon_title(text, row, has_icon):
+    row = row.row()
+    row.scale_x = 0.5
+    for char in text:
+        if char in (" ", "_"):
+            row.label(icon="BLANK1")
+            continue
+        if char.islower():
+            char = f"{char}_lower"
+        row.label(icon_value=get_hg_icon(char))
+
+    separators = 2 + has_icon
+    for _ in range(separators):
+        row.separator()
+
+
 class MainPanelPart(HGPanel):
     phase_name = None
 
@@ -277,19 +293,7 @@ class MainPanelPart(HGPanel):
         row.scale_x = 0.7
         if icon:
             row.prop(self.sett.ui, "phase", text="", emboss=False, icon_only=True)
-        row = row.row()
-        row.scale_x = 0.5
-        for char in text:
-            if char in (" ", "_"):
-                row.label(icon="BLANK1")
-                continue
-            if char.islower():
-                char = f"{char}_lower"
-            row.label(icon_value=get_hg_icon(char))
-
-        separators = 2 + bool(icon)
-        for _ in range(separators):
-            row.separator()
+        draw_icon_title(text, row, bool(icon))
 
         box.separator()
 
