@@ -278,11 +278,15 @@ class MainPanelPart(HGPanel):
 
     def draw_header(self, context):
         layout = self.layout
-        row = layout.row()
-        row.alert = True
-        row.operator(
+        row = layout.row(align=True)
+        subrow = row.row(align=True)
+        subrow.alert = True
+        subrow.operator(
             "hg3d.section_toggle", text="Back", depress=True, icon="BACK"
         ).section_name = "closed"
+
+        row.prop(context.scene.HG3D.ui, "phase", text="", icon_only=True)
+        # row.prop(context.scene.HG3D.ui, "active_tab", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
         box = layout.column()
