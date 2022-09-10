@@ -215,17 +215,6 @@ class HGPanel:
 
         return False
 
-    def draw_panel_switch_header(self, layout, sett):
-        """Draws a enum prop that switches between main humgen panel and extras panel
-        Args:
-            layout (UILayout): header layout to draw the switch in
-            sett (PropertyGroup): HumGen props
-        """
-        row = layout.row()
-        row.scale_x = 1.5
-        row.alignment = "EXPAND"
-        row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
-
     def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
         """Returns a property split enabled UILayout
 
