@@ -176,7 +176,37 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col.prop(sett, "modapply_apply_hidden", text="Apply hidden modifiers")
 
 
-class HG_PT_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
+class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_LOD"
+    bl_label = "Levels of Detail"
+    icon_name = "NORMALS_VERTEX"
+    enabled_propname = "lod_enabled"
+
+    def draw(self, context):
+        self.layout.label(text="test")
+
+
+class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_HAIRCARDS"
+    bl_label = "Haircards"
+    icon_name = "hair"
+    enabled_propname = "haircards_enabled"
+
+    def draw(self, context):
+        self.layout.label(text="test")
+
+
+class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_RIG"
+    bl_label = "Rig options"
+    icon_name = "MOD_ARMATURE"
+    enabled_propname = "rig_enabled"
+
+    def draw(self, context):
+        self.layout.label(text="test")
+
+
+class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
 
     def draw(self, context):
