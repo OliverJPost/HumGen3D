@@ -16,7 +16,7 @@ from ..panel_functions import (
     get_flow,
     searchbox,
 )
-from ..tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 

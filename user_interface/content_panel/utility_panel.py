@@ -3,9 +3,9 @@ from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
-from ..backend.preview_collections import get_hg_icon, preview_collections
-from .panel_functions import draw_panel_switch_header, get_flow
-from .tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
+from ...backend.preview_collections import get_hg_icon, preview_collections
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
+from ..panel_functions import draw_panel_switch_header, get_flow
 
 
 class Tools_PT_Base:

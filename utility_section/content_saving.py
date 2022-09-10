@@ -15,7 +15,10 @@ from HumGen3D.human.base.shapekey_calculator import (
 )
 from HumGen3D.human.length.length import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message
+from HumGen3D.user_interface.documentation.feedback_func import (
+    ShowMessageBox,
+    show_message,
+)
 from mathutils import Vector
 
 
