@@ -20,7 +20,7 @@ bl_info = {
     "author" : "OliverJPost",
     "description" : "Human Generator allows you to generate humans including clothing, poses and emotions",
     "blender" : (2, 83, 0),
-    "version" : (3, 0, 3), #RELEASE update version number
+    "version" : (3, 0, 4), #RELEASE update version number
     "location" : "Add-On Sidepanel > HumGen",
     "wiki_url": "http://humgen3d.com",
     "tracker_url": "http://humgen3d.com",
@@ -36,8 +36,11 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore # Has to be imported like this, otherwise returns error for some users
 from bpy.app.handlers import persistent  # type: ignore
 
-from .core.content.HG_CONTENT_PACKS import (HG_CONTENT_PACK, HG_INSTALLPACK,
-                                            cpacks_refresh)
+from .core.content.HG_CONTENT_PACKS import (
+    HG_CONTENT_PACK,
+    HG_INSTALLPACK,
+    cpacks_refresh,
+)
 from .core.content.HG_CUSTOM_CONTENT_PACKS import CUSTOM_CONTENT_ITEM
 from .core.content.HG_UPDATE import UPDATE_INFO_ITEM, check_update
 from .core.settings.HG_PROPS import HG_OBJECT_PROPS, HG_SETTINGS
