@@ -3,7 +3,11 @@ from operator import attrgetter
 import bpy
 from HumGen3D.backend.preview_collections import get_hg_icon
 from HumGen3D.human.human import Human
-from HumGen3D.user_interface.panel_functions import draw_panel_switch_header, get_flow
+from HumGen3D.user_interface.panel_functions import (
+    draw_panel_switch_header,
+    draw_paragraph,
+    get_flow,
+)
 
 from ..ui_baseclasses import HGPanel, draw_icon_title
 
@@ -49,6 +53,15 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row.scale_x = 0.7
         row.alignment = "CENTER"
         draw_icon_title("Processing", row, True)
+
+        col.separator(factor=0.3)
+
+        draw_paragraph(
+            col,
+            "Process for other programs, workflows, or results.",
+            alignment="CENTER",
+            enabled=False,
+        )
 
         col.separator()
 
