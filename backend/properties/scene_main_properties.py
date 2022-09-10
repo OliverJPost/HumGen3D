@@ -154,11 +154,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     modapply_search_objects: EnumProperty(
         name="Objects to apply",
         items=[
-            ("selected", "Selected objects", "", 0),
-            ("full", "Full human", "", 1),
-            ("all", "All humans", "", 2),
+            ("selected", "Selected objects only", "", 0),
+            ("all", "All selected humans", "", 2),
         ],
-        default="full",
+        default="all",
         update=refresh_modapply,
     )
 

@@ -129,6 +129,45 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
         return False
 
 
+class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_MODAPPLY"
+    bl_label = "Apply Modifiers"
+    icon_name = "MOD_SUBSURF"
+    enabled_propname = "modapply_enabled"
+
+    def draw(self, context):
+        layout = self.layout
+        sett = context.scene.HG3D
+
+        col = layout.column(align=True)
+        col.label(text="Select modifiers to be applied:")
+        col.template_list(
+            "HG_UL_MODAPPLY",
+            "",
+            context.scene,
+            "modapply_col",
+            context.scene,
+            "modapply_col_index",
+        )
+        col.prop(sett, "modapply_search_modifiers", text="")
+
+        row = col.row(align=True)
+        row.operator("hg3d.ulrefresh", text="Refresh").type = "modapply"
+        row.operator("hg3d.selectmodapply", text="All").all = True
+        row.operator("hg3d.selectmodapply", text="None").all = False
+
+        col = layout.column(align=True)
+        col.label(text="Objects to apply:")
+        row = col.row(align=True)
+        row.prop(sett, "modapply_search_objects", text="")
+
+        layout.separator()
+        col = layout.column(align=True)
+        self.draw_centered_subtitle("Options", col, "SETTINGS")
+        col.prop(sett, "modapply_keep_shapekeys", text="Keep shapekeys")
+        col.prop(sett, "modapply_apply_hidden", text="Apply hidden modifiers")
+
+
 class HG_PT_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
 
@@ -158,4 +197,4 @@ class HG_PT_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = 1.5
         row.alert = True
-        row.operator("hg3d.bake", text="Process", depress=True, icon=self.icon())
+        row.operator("hg3d.bake", text="Process", depress=True, icon="COMMUNITY")
