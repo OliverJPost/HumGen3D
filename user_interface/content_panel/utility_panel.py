@@ -51,7 +51,7 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.ui.active_tab == "TOOLS" and not sett.ui.content_saving
+        return sett.ui.active_tab == "CONTENT" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
