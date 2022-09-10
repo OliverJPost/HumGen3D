@@ -1,6 +1,7 @@
 import bpy
 from HumGen3D.human.human import Human
 
+from ..panel_functions import draw_panel_switch_header
 from ..ui_baseclasses import MainPanelPart
 
 
@@ -13,7 +14,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         return not Human.find(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
-        self.draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self, context):
         """UI that shows when no human is selected, with buttons for creating a
