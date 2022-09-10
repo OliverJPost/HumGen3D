@@ -95,11 +95,12 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     )
 
     active_tab: EnumProperty(
-        name="ui_tab",
+        name="Tab",
         items=[
-            ("CREATE", "Create", "", "OUTLINER_OB_ARMATURE", 0),
-            ("BATCH", "Batch", "", "COMMUNITY", 1),
-            ("TOOLS", "Tools", "", "SETTINGS", 2),
+            ("CREATE", "Create", "", get_hg_icon("create"), 0),
+            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
+            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
+            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
         ],
         default="CREATE",
         update=tab_change_update,
