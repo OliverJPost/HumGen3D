@@ -1,6 +1,7 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
 from ..backend.preview_collections import get_hg_icon, preview_collections
 from .panel_functions import draw_panel_switch_header, get_flow
@@ -57,6 +58,11 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+
+        row = self.layout.row(align=True)
+        row.scale_x = 0.7
+        row.alignment = "CENTER"
+        draw_icon_title("Custom Content", row, True)
 
         if not get_prefs().filepath:
             layout.alert = True
