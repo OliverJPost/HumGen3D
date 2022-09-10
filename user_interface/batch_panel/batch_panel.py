@@ -8,7 +8,7 @@ from HumGen3D.batch_generator.batch_functions import (
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
 from ..panel_functions import draw_panel_switch_header, get_flow
-from ..tips_suggestions_ui import draw_tips_suggestions_ui
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
 
 class Batch_PT_Base:

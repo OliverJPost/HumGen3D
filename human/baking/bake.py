@@ -9,7 +9,7 @@ from bpy.types import Material, Object
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 if TYPE_CHECKING:
     from ..human import Human

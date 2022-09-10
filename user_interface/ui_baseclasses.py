@@ -10,7 +10,7 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
 
 from ..backend.preview_collections import get_hg_icon
-from .tips_suggestions_ui import draw_tips_suggestions_ui
+from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
 
 def subpanel_draw(draw_method):
