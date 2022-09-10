@@ -190,38 +190,6 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         ).content_type = "mesh_to_cloth"
 
 
-class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
-    """developer tools subpanel
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-
-    bl_parent_id = "HG_PT_CONTENT"
-    bl_label = "Developer tools"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    def draw_header(self, context):
-        self.layout.label(text="", icon="PREFERENCES")
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column()
-        col.operator("hg3d.testop", text="Test Operator")
-        col.prop(context.scene.HG3D, "batch_texture_resolution")
-        col.operator("hg3d.delstretch")
-        col.operator("hg3d.prepare_for_arkit")
-        col.operator("hg3d.convert_hair_shader")
-        col.operator("hg3d.reset_batch_operator")
-        col.label(text="Tests")
-        col.operator("hg3d.content_tests")
-        col.operator("hg3d.main_operator_tests")
-        col.operator("hg3d.batch_tests")
-        col.operator("hg3d.utility_tests")
-        col.operator("hg3d.api_tests")
-
-
 class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Tips and suggestions!"
