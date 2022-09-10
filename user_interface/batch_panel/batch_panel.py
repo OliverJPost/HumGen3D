@@ -5,6 +5,7 @@ from HumGen3D.batch_generator.batch_functions import (
     get_batch_marker_list,
     length_from_bell_curve,
 )
+from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
 from ..panel_functions import draw_panel_switch_header, get_flow
 from ..tips_suggestions_ui import draw_tips_suggestions_ui
@@ -21,7 +22,7 @@ class Batch_PT_Base:
 
 class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     bl_idname = "HG_PT_Batch_Panel"
-    bl_label = "Batch Mode"  # Tab name
+    bl_label = "Batch"  # Tab name
 
     @classmethod
     def poll(cls, context):
@@ -36,6 +37,12 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         batch_sett = context.scene.HG3D.batch
 
         col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.scale_x = 0.7
+        row.alignment = "CENTER"
+        draw_icon_title("Batch Generator", row, True)
+
         col.scale_y = 1.5
         col.prop(batch_sett, "marker_selection", text="")
 
