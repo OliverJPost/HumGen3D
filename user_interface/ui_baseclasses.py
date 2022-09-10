@@ -256,6 +256,16 @@ class HGPanel:
                 "hg3d.clear_searchbox", text="", icon="X"
             ).searchbox_name = name
 
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
+
 
 def draw_icon_title(text, row, has_icon):
     row = row.row()
@@ -271,6 +281,16 @@ def draw_icon_title(text, row, has_icon):
     separators = 2 + has_icon
     for _ in range(separators):
         row.separator()
+
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
 
 
 class MainPanelPart(HGPanel):
@@ -471,13 +491,3 @@ class MainPanelPart(HGPanel):
             row = flow.row()
             row.prop(ps.settings, "child_length", text=ps_name)
             row.operator("hg3d.removehair", text="", icon="TRASH").hair_system = ps.name
-
-    @staticmethod
-    def draw_centered_subtitle(text, layout, icon=None):
-        """Draw a small title that is centered. Optional icon."""
-        row = layout.row()
-        row.alignment = "CENTER"
-        if icon:
-            row.label(text=text, icon=icon)
-        else:
-            row.label(text=text)

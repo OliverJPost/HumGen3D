@@ -8,10 +8,7 @@ from typing import TYPE_CHECKING, Generator, List, Tuple
 import bpy
 from bpy.types import Object
 
-from .process.process import ProcessSettings
-
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
-from .process.bake import BakeSettings
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
@@ -27,6 +24,8 @@ from .face.face import FaceKeys
 from .hair.hair import HairSettings
 from .length.length import LengthSettings
 from .pose.pose import PoseSettings  # type:ignore
+from .process.bake import BakeSettings
+from .process.process import ProcessSettings
 from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
@@ -184,6 +183,11 @@ class Human:
         human.props.is_legacy = False
 
         return human
+
+    # TODO return instances instead of rigs
+    @classmethod
+    def find_multiple_in_list(cls, objects):
+        return set([Human.find(obj) for obj in objects])
 
     @classmethod
     def find(
