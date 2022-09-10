@@ -86,7 +86,7 @@ def refresh_shapekeys_ul(self, context):
 
     col.clear()
 
-    existing_sks = find_existing_shapekeys(sett, pref)
+    existing_sks = find_existing_shapekeys(sett.custom_content, pref)
 
     human = Human.from_existing(context.object)
     if not human:
@@ -107,11 +107,11 @@ def refresh_shapekeys_ul(self, context):
             item.enabled = False
 
 
-def find_existing_shapekeys(sett, pref):
+def find_existing_shapekeys(cc_sett, pref):
     existing_sks = [
         "Basis",
     ]
-    if not sett.custom_content.show_saved_sks:
+    if not cc_sett.show_saved_sks:
         walker = os.walk(str(pref.filepath) + str(Path("/models/shapekeys")))
         for root, _, filenames in walker:
             for fn in filenames:
