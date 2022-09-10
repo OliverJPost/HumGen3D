@@ -2,6 +2,76 @@ import bpy  # type: ignore
 
 from ..backend import preview_collections
 
+CHAR_WIDTH_DICT = {
+    "c": 3.66,
+    "E": 3.96,
+    "f": 2.07,
+    "F": 3.66,
+    "G": 5.29,
+    "i": 1.83,
+    "I": 2.38,
+    "j": 1.83,
+    "J": 2.83,
+    "k": 3.66,
+    "l": 1.83,
+    "m": 6.80,
+    "M": 5.95,
+    "O": 5.29,
+    "r": 2.80,
+    "s": 3.40,
+    "S": 3.96,
+    "t": 2.83,
+    "T": 4.32,
+    "w": 5.60,
+    "W": 6.80,
+    "z": 3.40,
+}
+
+
+def char_width(char: str):
+    if char in CHAR_WIDTH_DICT:
+        return CHAR_WIDTH_DICT[char]
+    else:
+        if char.isupper():
+            return 4.76
+        else:
+            return 3.97
+
+
+def draw_paragraph(
+    layout, text, max_width_percentage=100, enabled=True, alignment="LEFT"
+):
+    words = text.split(" ")
+    length = 0
+    lines = [
+        list(),
+    ]
+    for word in words:
+        if "\n" in word:
+            length = 0
+            lines[-1].append(word)
+            lines.append("WHITESPACE")
+            lines.append(list())
+            continue
+        length += sum([char_width(char) for char in word]) + 3
+        if length >= max_width_percentage:
+            length = 0
+            lines.append(list())
+
+        lines[-1].append(word)
+
+    col = layout.column(align=True)
+    for line in lines:
+        row = col.row()
+        if line == "WHITESPACE":
+            row.scale_y = 0.3
+            row.label(text="")
+        else:
+            row.scale_y = 0.7
+            row.alignment = alignment
+            row.enabled = enabled
+            row.label(text=" ".join(line))
+
 
 def draw_sub_spoiler(
     layout, sett, prop_name, label

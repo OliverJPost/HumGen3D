@@ -7,8 +7,8 @@ from HumGen3D.batch_generator.batch_functions import (
 )
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
-from ..panel_functions import draw_panel_switch_header, get_flow
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
+from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
 
 
 class Batch_PT_Base:
@@ -42,7 +42,16 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         row.scale_x = 0.7
         row.alignment = "CENTER"
         draw_icon_title("Batch Generator", row, True)
+        col.separator(factor=0.5)
+        draw_paragraph(
+            col,
+            "Generate many humans in one go!",
+            alignment="CENTER",
+            enabled=False,
+        )
+        col.separator(factor=0.5)
 
+        col = col.column(align=True)
         col.scale_y = 1.5
         col.prop(batch_sett, "marker_selection", text="")
 

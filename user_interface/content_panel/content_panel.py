@@ -5,7 +5,7 @@ from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
 from ...backend.preview_collections import get_hg_icon, preview_collections
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..panel_functions import draw_panel_switch_header, get_flow
+from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
 
 
 class Tools_PT_Base:
@@ -63,7 +63,12 @@ class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
         row.scale_x = 0.7
         row.alignment = "CENTER"
         draw_icon_title("Custom Content", row, True)
-
+        draw_paragraph(
+            self.layout,
+            "Save and share your custom content.",
+            alignment="CENTER",
+            enabled=False,
+        )
         if not get_prefs().filepath:
             layout.alert = True
             layout.label(text="No filepath selected", icon="ERROR")
