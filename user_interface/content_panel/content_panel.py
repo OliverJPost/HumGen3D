@@ -37,7 +37,7 @@ class Tools_PT_Base:
             return False
 
 
-class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
+class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
     """Panel with extra functionality for HumGen that is not suitable for the
     main panel. Things like content pack creation, texture baking etc.
 
@@ -45,8 +45,8 @@ class HG_PT_UTILITY(Tools_PT_Base, bpy.types.Panel):
         Tools_PT_Base (class): Adds bl_info and commonly used tools
     """
 
-    bl_idname = "HG_PT_UTILITY"
-    bl_label = "Extras"
+    bl_idname = "HG_PT_CONTENT"
+    bl_label = "Content"
 
     @classmethod
     def poll(cls, context):
@@ -86,7 +86,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         Tools_PT_Poll (class): poll for checking if object is HumGen human
     """
 
-    bl_parent_id = "HG_PT_UTILITY"
+    bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Save custom content"
 
     @classmethod
@@ -153,7 +153,7 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         Tools_PT_Base (class): bl_info and common tools
     """
 
-    bl_parent_id = "HG_PT_UTILITY"
+    bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Mesh --> Clothing"
     bl_options = {"DEFAULT_CLOSED"}
 
@@ -192,7 +192,7 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
         Tools_PT_Base (class): bl_info and common tools
     """
 
-    bl_parent_id = "HG_PT_UTILITY"
+    bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Developer tools"
     bl_options = {"DEFAULT_CLOSED"}
 
@@ -218,7 +218,7 @@ class HG_PT_T_DEV(Tools_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
-    bl_parent_id = "HG_PT_UTILITY"
+    bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Tips and suggestions!"
     bl_options = {"HIDE_HEADER"}
 
