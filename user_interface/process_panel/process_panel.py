@@ -50,6 +50,14 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row.alignment = "CENTER"
         draw_icon_title("Processing", row, True)
 
+        col.separator()
+
+        col = col.column(align=True)
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(process_sett, "presets", text="")
+        row.operator("hg3d.bake", text="", icon="ADD")
+
         box = col.box()
         human_rigs = Human.find_multiple_in_list(context.selected_objects)
         row = box.row()
