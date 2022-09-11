@@ -3,6 +3,8 @@ context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.
 """
 
+from re import L
+
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
@@ -19,6 +21,14 @@ def create_ui_toggles(ui_toggle_names):
         prop_dict[name] = BoolProperty(name=display_name, default=False)
 
     return prop_dict
+
+
+def panel_update(self, context):
+    active_panel = self.phase
+    if active_panel in ("create", "batch", "content", "process"):
+        self.active_tab = active_panel.upper()
+        self.phase = "closed"
+    hg_callback(self)
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
@@ -86,12 +96,14 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
             ("pose", "Pose", "", get_hg_icon("pose"), 9),
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
-            ("", "Utility", ""),
-            ("baking", "Texture Baking", "", "RENDERLAYERS", 11),
-            ("apply", "Apply Modifiers", "", "MOD_SUBSURF", 12),
+            ("", "Tabs", ""),
+            ("create", "Create Humans", "", get_hg_icon("create"), 11),
+            ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
+            ("content", "Custom Content", "", get_hg_icon("custom_content"), 12),
+            ("process", "Processing", "", get_hg_icon("export"), 12),
         ],
         default="body",
-        update=lambda self, context: hg_callback(self),
+        update=panel_update,
     )
 
     active_tab: EnumProperty(
