@@ -9,6 +9,7 @@ from HumGen3D.backend import get_prefs
 
 from ...backend.preview_collections import preview_collections
 from ...human.human import Human  # type: ignore
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..panel_functions import (
     draw_panel_switch_header,
     draw_spoiler_box,
@@ -16,7 +17,6 @@ from ..panel_functions import (
     get_flow,
     searchbox,
 )
-from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 
@@ -43,8 +43,6 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         "expression",
     ]
 
-    utility_titles = ["baking", "apply"]
-
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
 
@@ -63,12 +61,6 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
 
         col = layout.column(align=True)
         for menu_title in self.menu_titles:
-            draw_spoiler_box(self, col, menu_title)
-
-        col.separator()
-        col.separator()
-        self.draw_centered_subtitle("Utility", col, "TOOL_SETTINGS")
-        for menu_title in self.utility_titles:
             draw_spoiler_box(self, col, menu_title)
 
         if get_prefs().show_tips:
