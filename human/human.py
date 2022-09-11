@@ -187,7 +187,8 @@ class Human:
     # TODO return instances instead of rigs
     @classmethod
     def find_multiple_in_list(cls, objects):
-        return set([Human.find(obj) for obj in objects])
+        rigs = set(r for r in [Human.find(obj) for obj in objects] if r)
+        return rigs
 
     @classmethod
     def find(
