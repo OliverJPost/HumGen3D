@@ -43,6 +43,7 @@ class LengthSettings:
 
     @injected_context
     def correct_armature(self, context=None):
+        # FIXME symmetry
         body = self._human.body_obj
         rig = self._human.rig_obj
 
@@ -115,7 +116,7 @@ class LengthSettings:
 
         if realtime and not context.scene.HG3D.slider_is_dragging:
             context.scene.HG3D.slider_is_dragging = True
-            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT").subscribe_type = "ARMATURE"
+            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
 
         self.name = livekey_name
         self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
