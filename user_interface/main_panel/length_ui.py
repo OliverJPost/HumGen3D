@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.human.human import Human
 
-from ...ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_LENGTH(MainPanelPart, bpy.types.Panel):

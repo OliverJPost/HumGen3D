@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.backend import get_prefs
 
-from ...ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
