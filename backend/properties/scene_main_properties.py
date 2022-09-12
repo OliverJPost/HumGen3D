@@ -175,3 +175,5 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     modapply_keep_shapekeys: BoolProperty(default=True)
 
     show_hidden_tips: BoolProperty(default=False)
+
+    slider_is_dragging: BoolProperty(default=False)
