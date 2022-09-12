@@ -67,9 +67,11 @@ class LengthSettings:
         # Context override for mode_set does not work, see #T88051
         old_active = context.view_layer.objects.active
         context.view_layer.objects.active = rig
-        for obj in context.selected_objects:
+        selected_objects = context.selected_objects
+        for obj in selected_objects:
             obj.select_set(False)
         rig.select_set(True)
+
         bpy.ops.object.mode_set(mode="EDIT")
         for ebone in rig.data.edit_bones:
             if not "head_verts" in ebone:
@@ -88,7 +90,11 @@ class LengthSettings:
             ebone.tail = centroid_co + vert_vec_tail
 
         bpy.ops.object.mode_set(mode="OBJECT")
+
         context.view_layer.objects.active = old_active
+        rig.select_set(False)
+        for obj in selected_objects:
+            obj.select_set(True)
 
     @injected_context
     def set(self, value_cm: float, context: Context = None, realtime=False):
