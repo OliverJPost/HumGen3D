@@ -2,7 +2,7 @@ import bpy
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
 
-from ...panel_functions import get_flow, searchbox
+from ..panel_functions import get_flow, searchbox
 
 
 class HG_PT_CLOTHMAT(bpy.types.Panel):
