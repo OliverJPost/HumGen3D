@@ -1,7 +1,7 @@
 import bpy
-from bpy.types import Context # type:ignore
+from bpy.types import Context  # type:ignore
 from HumGen3D.human.hair.basehair import BaseHair
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from ..base.prop_collection import PropCollection
 

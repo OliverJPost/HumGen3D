@@ -1,10 +1,13 @@
+import random
 from calendar import c
 
 import bpy
 from HumGen3D.backend import get_prefs, refresh_pcoll
 from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
-from HumGen3D.user_interface.info_popups import HG_OT_INFO
-from HumGen3D.user_interface.tips_suggestions_ui import update_tips_from_context
+from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
+from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
+    update_tips_from_context,
+)
 
 from ..human import Human
 
@@ -36,7 +39,7 @@ class HG_RANDOM(bpy.types.Operator):
     def execute(self, context):
         random_type = self.random_type
         sett = context.scene.HG3D
-        human = Human.from_existing(context.active_object)
+        human = Human.from_existing(context.active_object, strict_check=False)
 
         if random_type == "body_type":
             human.body.randomize()
@@ -49,6 +52,11 @@ class HG_RANDOM(bpy.types.Operator):
             "hair",
         ):
             set_random_active_in_pcoll(context, sett, random_type)
+        elif random_type == "humans":
+            sett.gender = random.choice(["male", "female"])
+            set_random_active_in_pcoll(
+                context, sett, random_type, gender_override=sett.gender
+            )
         elif random_type == "skin":
             human.skin.randomize()
         elif random_type.startswith("face"):

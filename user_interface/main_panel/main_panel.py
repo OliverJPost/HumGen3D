@@ -9,6 +9,7 @@ from HumGen3D.backend import get_prefs
 
 from ...backend.preview_collections import preview_collections
 from ...human.human import Human  # type: ignore
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..panel_functions import (
     draw_panel_switch_header,
     draw_spoiler_box,
@@ -16,7 +17,6 @@ from ..panel_functions import (
     get_flow,
     searchbox,
 )
-from ..tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 
@@ -44,7 +44,7 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
     ]
 
     def draw_header(self, context):
-        self.draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self, context):
         layout = self.layout
