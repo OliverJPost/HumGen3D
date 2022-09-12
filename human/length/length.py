@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import bpy
 from bpy.types import Context
+from HumGen3D.human.base.decorators import injected_context
 from mathutils import Vector
 
 from ...scripts.bone_vert_builder import centroid
@@ -39,26 +40,8 @@ class LengthSettings:
     def meters(self) -> float:
         return self._human.rig_obj.dimensions[2]
 
-    def set(self, value_cm: float, context: Context = None, realtime=False):
-        if context.scene.HG3D.update_exception:
-            return
-
-        value = 0
-
-        if value_cm > 184:
-            value = (value_cm - 184) / (200 - 184)
-            livekey_name = "hg_taller"
-        else:
-            value = -((value_cm - 150) / (184 - 150) - 1)
-            livekey_name = "hg_shorter"
-
-        if realtime and value:
-            self.name = livekey_name
-            self.path = os.path.join(
-                "livekeys", "body_proportions", livekey_name + ".npy"
-            )
-            live_keys.set_livekey(self, value)
-
+    @injected_context
+    def correct_armature(self, context=None):
         body = self._human.body_obj
         rig = self._human.rig_obj
 
@@ -80,6 +63,12 @@ class LengthSettings:
         ) * temp_value + permanent_key_coords
         eval_coords = eval_coords.reshape((-1, 3))
 
+        # Context override for mode_set does not work, see #T88051
+        old_active = context.view_layer.objects.active
+        context.view_layer.objects.active = rig
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        rig.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
         for ebone in rig.data.edit_bones:
             if not "head_verts" in ebone:
@@ -98,6 +87,35 @@ class LengthSettings:
             ebone.tail = centroid_co + vert_vec_tail
 
         bpy.ops.object.mode_set(mode="OBJECT")
+        context.view_layer.objects.active = old_active
+
+    def set(self, value_cm: float, context: Context = None, realtime=False):
+        if context.scene.HG3D.update_exception:
+            return
+
+        value = 0
+
+        if value_cm > 184:
+            value = (value_cm - 184) / (200 - 184)
+            livekey_name = "hg_taller"
+        else:
+            value = -((value_cm - 150) / (184 - 150) - 1)
+            livekey_name = "hg_shorter"
+
+        if realtime and value:
+            if not context.scene.HG3D.slider_is_dragging:
+                context.scene.HG3D.slider_is_dragging = True
+                bpy.ops.hg3d.slider_subscribe(
+                    "INVOKE_DEFAULT"
+                ).subscribe_type = "ARMATURE"
+
+            self.name = livekey_name
+            self.path = os.path.join(
+                "livekeys", "body_proportions", livekey_name + ".npy"
+            )
+            live_keys.set_livekey(self, value)
+
+        # TODO add for non-realtime
 
     def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between
