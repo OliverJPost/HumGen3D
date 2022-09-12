@@ -25,9 +25,9 @@ from ..human.human import Human  # , bl_info  # type: ignore
 from ..user_interface.batch_panel.batch_ui_lists import (
     batch_uilist_refresh,  # type: ignore
 )
-from ..user_interface.documentation.tips_suggestions_ui import (
+from ..user_interface.documentation.tips_suggestions_ui import (  # type:ignore
     update_tips_from_context,
-)  # type:ignore
+)
 from .preview_collections import refresh_pcoll
 
 
@@ -92,6 +92,7 @@ def hg_callback(self):
     if not human:
         return  # return immediately when the active object is not part of a human
 
+    bpy.context.scene.HG3D.slider_is_dragging = False
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
