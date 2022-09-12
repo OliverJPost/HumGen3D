@@ -872,13 +872,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     as_sk = False
 
                 deform_obj_from_difference(
-                    name,
-                    distance_dict,
-                    backup_human,
-                    obj_copy,
-                    as_shapekey=as_sk,
-                    apply_source_sks=False,
-                    ignore_cor_sk=True,
+                    name, distance_dict, backup_human, obj_copy, as_shapekey=as_sk
                 )
                 human = None  # FIXME
                 human.creation_phase.length._correct_origin(context, obj, backup_human)

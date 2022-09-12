@@ -71,7 +71,7 @@ class BaseClothing(PreviewCollectionContent):
             # adds a custom property to the cloth for identifying purposes
             obj[tag] = 1
 
-            self._deform_cloth_to_human(context, obj)
+            self.deform_cloth_to_human(context, obj)
 
             for mod in obj.modifiers:
                 mod.show_expanded = False  # collapse modifiers
@@ -87,7 +87,7 @@ class BaseClothing(PreviewCollectionContent):
         # refresh pcoll for consistent 'click here to select' icon
         refresh_pcoll(self, context, "outfits")
 
-    def _deform_cloth_to_human(self, context, cloth_obj):
+    def deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using
         HG_SHAPEKEY_CALCULATOR
 
@@ -113,14 +113,10 @@ class BaseClothing(PreviewCollectionContent):
         cloth_obj.parent = self._human.rig_obj
 
         deform_obj_from_difference(
-            "Body Proportions",
-            distance_dict,
-            self._human.body_obj,
-            cloth_obj,
-            as_shapekey=True,
+            "Body Proportions", distance_dict, body_obj, cloth_obj, as_shapekey=True
         )
 
-        cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
+        # cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
 
         context.view_layer.objects.active = cloth_obj
         self._set_armature(context, cloth_obj, self._human.rig_obj)

@@ -13,6 +13,14 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
             context.scene.HG3D.slider_is_dragging = False
             self.human.hide_set(False)
             self.human.length.correct_armature(context)
+
+            for mod in self.human.body_obj.modifiers:
+                if mod.type == "MASK":
+                    mod.show_viewport = True
+
+            for cloth_obj in self.human.outfit.objects:
+                self.human.outfit.deform_cloth_to_human(context, cloth_obj)
+
             return {"FINISHED"}
         if event.value == "RELEASE":
             self.stop = True
@@ -25,5 +33,10 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         self.human.hide_set(True)
         self.human.body_obj.hide_set(False)
         self.human.body_obj.hide_viewport = False
+
+        for mod in self.human.body_obj.modifiers:
+            if mod.type == "MASK":
+                mod.show_viewport = False
+
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
