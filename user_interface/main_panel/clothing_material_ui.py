@@ -20,6 +20,7 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
     def draw(self, context):
         """draws ui for changing the material of the active clothing object"""
         layout = self.layout
+        self.human = Human.from_existing(context.object, strict_check=False)
         if "hg_baked" in self.human.rig_obj:
             layout.label(text="Textures are baked", icon="INFO")
             return

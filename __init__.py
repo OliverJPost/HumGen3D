@@ -47,6 +47,8 @@ from .backend.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload
 from .human.base.live_keys import LiveKey
 from .human.human import Human
+from .user_interface.batch_panel import batch_ui_lists
+from .user_interface.content_panel import utility_ui_lists
 
 if __name__ != "HG3D":
     sys.modules["HG3D"] = sys.modules[__name__]
@@ -96,11 +98,7 @@ def _initiate_ui_lists():
     # Import in local namespace to prevent cluttering package namespace
     from HumGen3D.backend import update
     from HumGen3D.backend.content_packs import content_packs, custom_content_packs
-    from HumGen3D.user_interface import (
-        batch_ui_lists,
-        tips_suggestions_ui,
-        utility_ui_lists,
-    )
+    from HumGen3D.user_interface.documentation import tips_suggestions_ui
 
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
@@ -144,7 +142,7 @@ def register():
     _initiate_preview_collections()
     _initiate_ui_lists()
 
-    from .user_interface.primitive_menu import add_hg_primitive_menu
+    from .user_interface.batch_panel.primitive_menu import add_hg_primitive_menu
 
     bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
 
@@ -166,7 +164,7 @@ def unregister():
     if HG_start in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.remove(HG_start)
 
-    from .user_interface.primitive_menu import add_hg_primitive_menu
+    from .user_interface.batch_panel.primitive_menu import add_hg_primitive_menu
 
     bpy.types.VIEW3D_MT_add.remove(add_hg_primitive_menu)
 

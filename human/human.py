@@ -24,6 +24,8 @@ from .face.face import FaceKeys
 from .hair.hair import HairSettings
 from .length.length import LengthSettings
 from .pose.pose import PoseSettings  # type:ignore
+from .process.bake import BakeSettings
+from .process.process import ProcessSettings
 from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
@@ -108,7 +110,7 @@ class Human:
 
         if rig_obj:
             # Cancel for legacy humans
-            if not hasattr(rig_obj.HG.is_legacy):
+            if not hasattr(rig_obj.HG, "is_legacy"):
                 rig_obj.HG.is_legacy = True
                 if strict_check:
                     raise HumGenException(
@@ -181,6 +183,12 @@ class Human:
         human.props.is_legacy = False
 
         return human
+
+    # TODO return instances instead of rigs
+    @classmethod
+    def find_multiple_in_list(cls, objects):
+        rigs = set(r for r in [Human.find(obj) for obj in objects] if r)
+        return rigs
 
     @classmethod
     def find(
@@ -264,6 +272,10 @@ class Human:
     @property  # TODO make cached
     def expression(self) -> ExpressionSettings:
         return ExpressionSettings(self)
+
+    @property
+    def process(self) -> ProcessSettings:
+        return ProcessSettings(self)
 
     @property
     def objects(self) -> Generator[Object]:

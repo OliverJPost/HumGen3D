@@ -18,7 +18,9 @@ from . import get_prefs, hg_log
 preview_collections = {}  # global dictionary of all pcolls
 
 
-def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
+def set_random_active_in_pcoll(
+    context, sett, pcoll_name, searchterm=None, gender_override=None
+):
     """Sets a random object in this preview collection as active
 
     Args:
@@ -27,7 +29,7 @@ def set_random_active_in_pcoll(context, sett, pcoll_name, searchterm=None):
         searchterm (str): filter to only look for items in the pcoll that include this string
     """
 
-    refresh_pcoll(None, context, pcoll_name)
+    refresh_pcoll(None, context, pcoll_name, gender_override=gender_override)
 
     current_item = sett.pcoll[pcoll_name]
 
