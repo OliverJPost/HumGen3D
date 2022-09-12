@@ -102,20 +102,19 @@ class LengthSettings:
             value = -((value_cm - 150) / (184 - 150) - 1)
             livekey_name = "hg_shorter"
 
-        if realtime and value:
-            if not context.scene.HG3D.slider_is_dragging:
-                context.scene.HG3D.slider_is_dragging = True
-                bpy.ops.hg3d.slider_subscribe(
-                    "INVOKE_DEFAULT"
-                ).subscribe_type = "ARMATURE"
+        if not value:
+            return
 
-            self.name = livekey_name
-            self.path = os.path.join(
-                "livekeys", "body_proportions", livekey_name + ".npy"
-            )
-            live_keys.set_livekey(self, value)
+        if realtime and not context.scene.HG3D.slider_is_dragging:
+            context.scene.HG3D.slider_is_dragging = True
+            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT").subscribe_type = "ARMATURE"
 
-        # TODO add for non-realtime
+        self.name = livekey_name
+        self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
+        live_keys.set_livekey(self, value)
+
+        if not realtime:
+            self.correct_armature(context)
 
     def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between
