@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from typing import TYPE_CHECKING
 
 import bpy
@@ -89,6 +90,7 @@ class LengthSettings:
         bpy.ops.object.mode_set(mode="OBJECT")
         context.view_layer.objects.active = old_active
 
+    @injected_context
     def set(self, value_cm: float, context: Context = None, realtime=False):
         if context.scene.HG3D.update_exception:
             return
@@ -115,6 +117,11 @@ class LengthSettings:
 
         if not realtime:
             self.correct_armature(context)
+
+    @injected_context
+    def randomize(self, context=None):
+        chosen_length_cm = random.uniform(150, 200)
+        self.set(chosen_length_cm, context)
 
     def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between
