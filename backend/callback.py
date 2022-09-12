@@ -22,8 +22,12 @@ from HumGen3D.utility_section.utility_functions import (
 
 from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
-from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
+from ..user_interface.batch_panel.batch_ui_lists import (
+    batch_uilist_refresh,  # type: ignore
+)
+from ..user_interface.documentation.tips_suggestions_ui import (
+    update_tips_from_context,
+)  # type:ignore
 from .preview_collections import refresh_pcoll
 
 
@@ -139,7 +143,6 @@ def _context_specific_updates(self, sett, human, ui_phase):
     sett.update_exception = False
     context = bpy.context
     if sett.ui.active_tab == "TOOLS":
-        refresh_modapply(self, context)
         try:
             refresh_shapekeys_ul(self, context)
             refresh_hair_ul(self, context)
@@ -147,6 +150,9 @@ def _context_specific_updates(self, sett, human, ui_phase):
         except AttributeError:
             pass
         return
+    elif ui_phase == "apply":
+        refresh_modapply(self, context)
+
     elif ui_phase == "skin":
         refresh_pcoll(self, context, "textures")
 
@@ -193,10 +199,14 @@ def tab_change_update(self, context):
 
     refresh_modapply(self, context)
 
+    human = Human.from_existing(context.object, strict_check=False)
+    if not human:
+        return
+
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        Human.from_existing(context.object).rig_obj,
+        human.rig_obj,
     )
 
     batch_uilist_refresh(self, context, "outfits")

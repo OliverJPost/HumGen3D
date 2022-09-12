@@ -1,12 +1,11 @@
 import os
-from pathlib import Path
 import random
+from pathlib import Path
 
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 
 class PatternSettings(PreviewCollectionContent):

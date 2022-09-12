@@ -5,6 +5,7 @@ Properties for creating and managing custom content in Human Generator
 
 
 import os
+
 import bpy
 from bpy.props import (  # type: ignore
     BoolProperty,
@@ -14,17 +15,15 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend import hg_log, get_prefs
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
-from ..content_packs.custom_content_packs import build_content_collection
-from .property_functions import (
-    find_folders,
-)
-
+from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
 )
+
+from ..content_packs.custom_content_packs import build_content_collection
+from .property_functions import find_folders
 
 
 def poll_mtc_armature(self, obj):

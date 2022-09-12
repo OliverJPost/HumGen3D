@@ -10,7 +10,7 @@ from bpy.types import bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs, refresh_pcoll
 from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from ..base.decorators import injected_context
 

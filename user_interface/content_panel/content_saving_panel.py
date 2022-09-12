@@ -1,7 +1,7 @@
 import bpy
 from HumGen3D.backend import hg_log, get_prefs
 from HumGen3D.human.human import Human
-from HumGen3D.user_interface.feedback_func import show_message
+from HumGen3D.user_interface.documentation.feedback_func import show_message
 from HumGen3D.utility_section.utility_functions import (
     find_existing_shapekeys,
     refresh_hair_ul,
@@ -9,8 +9,8 @@ from HumGen3D.utility_section.utility_functions import (
     refresh_shapekeys_ul,
 )
 
-from ..backend.preview_collections import preview_collections
-from .tips_suggestions_ui import (
+from ...backend.preview_collections import preview_collections
+from ..documentation.tips_suggestions_ui import (
     draw_tips_suggestions_ui,
     update_tips_from_context,
 )

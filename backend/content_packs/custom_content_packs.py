@@ -13,18 +13,18 @@ import json
 import os
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences import get_prefs
 
 import bpy
-from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message  # type: ignore
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend.preview_collections import get_pcoll_enum_items, refresh_pcoll
+from HumGen3D.extern.blendfile import open_blend
+from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignore
+    ShowMessageBox,
+    show_message,
+)
 
 from .content_packs import cpacks_refresh
-from HumGen3D.backend.preview_collections import (
-    get_pcoll_enum_items,
-    refresh_pcoll,
-)
-from HumGen3D.extern.blendfile import open_blend
 
 
 class HG_OT_CREATE_CPACK(bpy.types.Operator):

@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D import Human
+from .human import Human
 
 
 class HG_START_CREATION(bpy.types.Operator):

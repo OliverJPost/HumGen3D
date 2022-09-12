@@ -1,6 +1,7 @@
 import functools
 import os
 from pathlib import Path
+from re import L
 from tokenize import Triple
 
 import bpy
@@ -9,7 +10,7 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
 
 from ..backend.preview_collections import get_hg_icon
-from .tips_suggestions_ui import draw_tips_suggestions_ui
+from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
 
 def subpanel_draw(draw_method):
@@ -214,17 +215,6 @@ class HGPanel:
 
         return False
 
-    def draw_panel_switch_header(self, layout, sett):
-        """Draws a enum prop that switches between main humgen panel and extras panel
-        Args:
-            layout (UILayout): header layout to draw the switch in
-            sett (PropertyGroup): HumGen props
-        """
-        row = layout.row()
-        row.scale_x = 1.5
-        row.alignment = "EXPAND"
-        row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
-
     def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
         """Returns a property split enabled UILayout
 
@@ -266,17 +256,57 @@ class HGPanel:
                 "hg3d.clear_searchbox", text="", icon="X"
             ).searchbox_name = name
 
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
+
+
+def draw_icon_title(text, row, has_icon):
+    row = row.row()
+    row.scale_x = 0.5
+    for char in text:
+        if char in (" ", "_"):
+            row.label(icon="BLANK1")
+            continue
+        if char.islower():
+            char = f"{char}_lower"
+        row.label(icon_value=get_hg_icon(char))
+
+    separators = 2 + has_icon
+    for _ in range(separators):
+        row.separator()
+
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
+
 
 class MainPanelPart(HGPanel):
     phase_name = None
 
     def draw_header(self, context):
         layout = self.layout
-        row = layout.row()
-        row.alert = True
-        row.operator(
+        row = layout.row(align=True)
+        subrow = row.row(align=True)
+        subrow.alert = True
+        subrow.operator(
             "hg3d.section_toggle", text="Back", depress=True, icon="BACK"
         ).section_name = "closed"
+
+        row.prop(context.scene.HG3D.ui, "phase", text="", icon_only=True)
+        # row.prop(context.scene.HG3D.ui, "active_tab", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
         box = layout.column()
@@ -287,16 +317,7 @@ class MainPanelPart(HGPanel):
         row.scale_x = 0.7
         if icon:
             row.prop(self.sett.ui, "phase", text="", emboss=False, icon_only=True)
-        row = row.row()
-        row.scale_x = 0.5
-        for char in text:
-            if char.islower():
-                char = f"{char}_lower"
-            row.label(icon_value=get_hg_icon(char))
-
-        separators = 2 + bool(icon)
-        for _ in range(separators):
-            row.separator()
+        draw_icon_title(text, row, bool(icon))
 
         box.separator()
 
@@ -318,12 +339,12 @@ class MainPanelPart(HGPanel):
             text=self._get_header_label(human),
             depress=bool(human),
         )
-        subrow = row.row(align=True)
-        subrow.alert = True
-        subrow.scale_x = 1.2
-        subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
-
         if human:
+            subrow = row.row(align=True)
+            subrow.alert = True
+            subrow.scale_x = 1.2
+            subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
+
             box = col.box()
             hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
             self._draw_hair_children_switch(hair_systems, box)
@@ -434,7 +455,7 @@ class MainPanelPart(HGPanel):
 
     def _get_header_label(self, human):
         if not human:
-            label = "No Human selected"
+            label = "No human selected"
         else:
             name = human.name.replace("HG_", "").replace("_RIGIFY", "")
             gender = human.gender.capitalize()
