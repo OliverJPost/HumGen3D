@@ -58,6 +58,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         soft_max=200,
         min=120,
         max=250,
+        precision=0,
         update=lambda s, c: Human.from_existing(c.object).length.set(
             s.human_length, c, realtime=True
         ),
