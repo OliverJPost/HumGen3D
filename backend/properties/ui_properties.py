@@ -3,11 +3,13 @@ context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.
 """
 
+from re import L
+
 import bpy
 from bpy.props import BoolProperty, EnumProperty
 from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
 
-from ..callback import tab_change_update
+from ..callback import hg_callback, tab_change_update
 
 
 def create_ui_toggles(ui_toggle_names):
@@ -19,6 +21,14 @@ def create_ui_toggles(ui_toggle_names):
         prop_dict[name] = BoolProperty(name=display_name, default=False)
 
     return prop_dict
+
+
+def panel_update(self, context):
+    active_panel = self.phase
+    if active_panel in ("create", "batch", "content", "process"):
+        self.active_tab = active_panel.upper()
+        self.phase = "closed"
+    hg_callback(self)
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
@@ -46,6 +56,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "decal_bool",
                 "thumb_ui",
                 "expression_slider",
+                "content_saving",
             ]
         )
     )
@@ -73,6 +84,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     phase: EnumProperty(
         name="Category",
         items=[
+            ("", "Editing", ""),
             ("closed", "All Categories", "", "COLLAPSEMENU", 0),
             ("body", "Body", "", get_hg_icon("body"), 1),
             ("face", "Face", "", get_hg_icon("face"), 3),
@@ -84,16 +96,23 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
             ("pose", "Pose", "", get_hg_icon("pose"), 9),
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
+            ("", "Tabs", ""),
+            ("create", "Create Humans", "", get_hg_icon("create"), 11),
+            ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
+            ("content", "Custom Content", "", get_hg_icon("custom_content"), 12),
+            ("process", "Processing", "", get_hg_icon("export"), 12),
         ],
         default="body",
+        update=panel_update,
     )
 
     active_tab: EnumProperty(
-        name="ui_tab",
+        name="Tab",
         items=[
-            ("CREATE", "Create", "", "OUTLINER_OB_ARMATURE", 0),
-            ("BATCH", "Batch", "", "COMMUNITY", 1),
-            ("TOOLS", "Tools", "", "SETTINGS", 2),
+            ("CREATE", "Create", "", get_hg_icon("create"), 0),
+            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
+            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
+            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
         ],
         default="CREATE",
         update=tab_change_update,

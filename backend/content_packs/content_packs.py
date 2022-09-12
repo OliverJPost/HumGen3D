@@ -18,10 +18,11 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D.backend import hg_log, get_prefs 
+from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+
 from ..preview_collections import preview_collections
 from ..update import check_update
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):

@@ -6,7 +6,7 @@ Properties related to the Human Generator batch generator
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, IntProperty  # type: ignore
-from HumGen3D.user_interface.batch_ui_lists import batch_uilist_refresh
+from HumGen3D.user_interface.batch_panel.batch_ui_lists import batch_uilist_refresh
 
 
 class BatchProps(bpy.types.PropertyGroup):

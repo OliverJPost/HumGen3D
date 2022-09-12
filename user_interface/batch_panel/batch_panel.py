@@ -1,17 +1,14 @@
 import bpy
-from HumGen3D.backend import get_prefs, get_hg_icon, preview_collections
+from HumGen3D.backend import get_hg_icon, get_prefs, preview_collections
 from HumGen3D.batch_generator.batch_functions import (
     calculate_batch_statistics,
     get_batch_marker_list,
     length_from_bell_curve,
 )
+from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
-from .panel_functions import (
-    draw_panel_switch_header,
-    draw_resolution_box,
-    get_flow,
-)
-from .tips_suggestions_ui import draw_tips_suggestions_ui
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
+from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
 
 
 class Batch_PT_Base:
@@ -25,12 +22,12 @@ class Batch_PT_Base:
 
 class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     bl_idname = "HG_PT_Batch_Panel"
-    bl_label = "Batch Mode"  # Tab name
+    bl_label = "Batch"  # Tab name
 
     @classmethod
     def poll(cls, context):
         sett = context.scene.HG3D
-        return sett.ui.active_tab == "BATCH" and not sett.content_saving_ui
+        return sett.ui.active_tab == "BATCH" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -40,6 +37,21 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         batch_sett = context.scene.HG3D.batch
 
         col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.scale_x = 0.7
+        row.alignment = "CENTER"
+        draw_icon_title("Batch Generator", row, True)
+        col.separator(factor=0.5)
+        draw_paragraph(
+            col,
+            "Generate many humans in one go!",
+            alignment="CENTER",
+            enabled=False,
+        )
+        col.separator(factor=0.5)
+
+        col = col.column(align=True)
         col.scale_y = 1.5
         col.prop(batch_sett, "marker_selection", text="")
 
@@ -387,44 +399,44 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         col.label(text="Total: {} Expressions".format(count))
 
 
-class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
-    bl_parent_id = "HG_PT_Batch_Panel"
-    bl_label = " Bake textures"
-    bl_options = {"DEFAULT_CLOSED"}
+# class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
+#     bl_parent_id = "HG_PT_Batch_Panel"
+#     bl_label = " Bake textures"
+#     bl_options = {"DEFAULT_CLOSED"}
 
-    @classmethod
-    def poll(cls, context):
-        return False
+#     @classmethod
+#     def poll(cls, context):
+#         return False
 
-    def draw_header(self, context):
-        header(self, context, "bake")
-        self.layout.label(text="", icon="RENDERLAYERS")
+#     def draw_header(self, context):
+#         header(self, context, "bake")
+#         self.layout.label(text="", icon="RENDERLAYERS")
 
-    def draw(self, context):
-        layout = self.layout
-        sett = context.scene.HG3D
-        layout.enabled = sett.batch_bake
+#     def draw(self, context):
+#         layout = self.layout
+#         sett = context.scene.HG3D
+#         layout.enabled = sett.batch_bake
 
-        col = get_flow(sett, layout.box())
-        col.prop(sett, "bake_samples", text="Quality")
+#         col = get_flow(sett, layout.box())
+#         col.prop(sett, "bake_samples", text="Quality")
 
-        col = get_flow(sett, layout.box())
+#         col = get_flow(sett, layout.box())
 
-        draw_resolution_box(sett, col, show_batch_comparison=True)
+#         draw_resolution_box(sett, col, show_batch_comparison=True)
 
-        col = get_flow(sett, layout.box())
-        col.prop(sett, "bake_export_folder", text="Output Folder:")
+#         col = get_flow(sett, layout.box())
+#         col.prop(sett, "bake_export_folder", text="Output Folder:")
 
-        row = col.row()
-        row.alignment = "RIGHT"
-        row.label(text="HumGen folder when left empty", icon="INFO")
-        col.prop(sett, "bake_file_type", text="Format:")
+#         row = col.row()
+#         row.alignment = "RIGHT"
+#         row.label(text="HumGen folder when left empty", icon="INFO")
+#         col.prop(sett, "bake_file_type", text="Format:")
 
 
 def header(self, context, categ):
     sett = context.scene.HG3D
     layout = self.layout
-    layout.prop(sett, "batch_{}".format(categ), text="")
+    layout.prop(sett.batch, categ, text="")
 
 
 class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
