@@ -34,5 +34,3 @@ class HG_PT_LENGTH(MainPanelPart, bpy.types.Panel):
         row.scale_x = 1.2
         row.prop(self.sett, "human_length", text="Length [cm]")
         row.operator("hg3d.randomlength", text="", icon="FILE_REFRESH")
-
-        col.prop(self.sett.bone_sizes, "tall")
