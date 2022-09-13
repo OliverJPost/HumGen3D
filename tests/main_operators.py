@@ -128,14 +128,14 @@ class HG_MAIN_OPERATORS_TESTS(bpy.types.Operator):
             setattr(sett.bone_sizes, scale_name, 0.5)
 
     def test_length_change(self, context):
-        bpy.ops.hg3d.section_toggle(section_name="length")
+        bpy.ops.hg3d.section_toggle(section_name="height")
         for _ in range(4):
-            bpy.ops.hg3d.randomlength()
+            bpy.ops.hg3d.randomheight()
 
-        context.scene.HG3D.human_length = 195.5
-        context.scene.HG3D.human_length = 154.2
+        context.scene.HG3D.human_height = 195.5
+        context.scene.HG3D.human_height = 154.2
 
-        context.scene.HG3D.human_length = 170.1
+        context.scene.HG3D.human_height = 170.1
 
     def assert_shape_keys(self, context):
         hg_body = self.human.HG.body_obj

@@ -13,7 +13,7 @@ from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
-from HumGen3D.human.length.length import apply_armature
+from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 from HumGen3D.user_interface.documentation.feedback_func import (
     ShowMessageBox,
@@ -875,7 +875,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     name, distance_dict, backup_human, obj_copy, as_shapekey=as_sk
                 )
                 human = None  # FIXME
-                human.creation_phase.length._correct_origin(context, obj, backup_human)
+                human.creation_phase.height._correct_origin(context, obj, backup_human)
                 export_list.append(obj_copy)
 
             if gender == "male":

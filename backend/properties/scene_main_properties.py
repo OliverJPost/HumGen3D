@@ -54,15 +54,15 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         update=lambda a, b: refresh_pcoll(a, b, "humans"),
     )
 
-    human_length: FloatProperty(
+    human_height: FloatProperty(
         default=183,
         soft_min=150,
         soft_max=200,
         min=120,
         max=250,
         precision=0,
-        update=lambda s, c: Human.from_existing(c.object).length.set(
-            s.human_length, c, realtime=True
+        update=lambda s, c: Human.from_existing(c.object).height.set(
+            s.human_height, c, realtime=True
         ),
     )
 

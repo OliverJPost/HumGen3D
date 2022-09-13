@@ -11,7 +11,7 @@ from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
-from HumGen3D.human.length.length import apply_armature
+from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
 
 
@@ -87,7 +87,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
         apply_armature(source_copy)
 
-        self._human.length.apply(context)
+        self._human.height.apply(context)
 
         for obj in context.selected_objects:
             obj.select_set(False)

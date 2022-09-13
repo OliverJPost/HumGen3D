@@ -32,7 +32,7 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
     phase_name = "closed"
     menu_titles = [
         "body",
-        "length",
+        "height",
         "face",
         "skin",
         "eyes",

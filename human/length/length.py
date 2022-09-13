@@ -29,7 +29,7 @@ def apply_armature(obj):
         bpy.ops.object.modifier_apply(modifier=mod_name)
 
 
-class LengthSettings:
+class HeightSettings:
     def __init__(self, human):
         self._human: Human = human
 
@@ -131,8 +131,8 @@ class LengthSettings:
 
     @injected_context
     def randomize(self, context=None):
-        chosen_length_cm = random.uniform(150, 200)
-        self.set(chosen_length_cm, context)
+        chosen_height_cm = random.uniform(150, 200)
+        self.set(chosen_height_cm, context)
 
     def _set_stretch_bone_position(self, multiplier, bones, stretch_bone, bone_data):
         """Sets the position of this stretch bone according along the axis between
@@ -165,9 +165,9 @@ class LengthSettings:
         for b in bone_list:
             b.location = x_y_z_location
 
-    def _origin_correction(self, length):
+    def _origin_correction(self, height):
         # TODO DOCUMENT
-        return -0.553 * length + 1.0114
+        return -0.553 * height + 1.0114
 
     def apply(self, context):
         """
@@ -177,7 +177,6 @@ class LengthSettings:
             hg_rig (Object): Armature of HumGen human
         """
         hg_rig = self._human.rig_obj
-        rig_length = hg_rig.dimensions[2]
 
         bpy.context.view_layer.objects.active = hg_rig
         bpy.ops.object.mode_set(mode="POSE")

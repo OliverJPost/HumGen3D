@@ -3,7 +3,7 @@ from HumGen3D.backend import get_hg_icon, get_prefs, preview_collections
 from HumGen3D.batch_generator.batch_functions import (
     calculate_batch_statistics,
     get_batch_marker_list,
-    length_from_bell_curve,
+    height_from_bell_curve,
 )
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
@@ -210,7 +210,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
             gender (str): 'male' or 'female', determines which average height to
                 sample from.
         """
-        length_list = length_from_bell_curve(
+        length_list = height_from_bell_curve(
             sett, gender, random_seed=False, samples=10
         )
 
