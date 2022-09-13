@@ -20,6 +20,8 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
             for cloth_obj in self.human.outfit.objects:
                 self.human.outfit.deform_cloth_to_human(context, cloth_obj)
+            for shoe_obj in self.human.footwear.objects:
+                self.human.footwear.deform_cloth_to_human(context, shoe_obj)
 
             return {"FINISHED"}
         if event.value == "RELEASE":
