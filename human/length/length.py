@@ -124,6 +124,10 @@ class LengthSettings:
 
         if not realtime:
             self.correct_armature(context)
+            for cloth_obj in self._human.outfit.objects:
+                self._human.outfit.deform_cloth_to_human(context, cloth_obj)
+            for shoe_obj in self._human.footwear.objects:
+                self._human.footwear.deform_cloth_to_human(context, shoe_obj)
 
     @injected_context
     def randomize(self, context=None):
