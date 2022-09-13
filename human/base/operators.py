@@ -67,8 +67,8 @@ class HG_RANDOM(bpy.types.Operator):
             human.face.randomize(ff_subcateg)
         elif random_type == "iris_color":
             human.eyes.randomize()
-        elif random_type == "length":
-            human.length.randomize()
+        elif random_type == "height":
+            human.height.randomize()
         return {"FINISHED"}
 
 

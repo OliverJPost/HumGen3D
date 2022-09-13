@@ -25,7 +25,7 @@ from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 #     get_solidify_state,
 #     material_setup,
 # )
-from .batch_functions import length_from_bell_curve
+from .batch_functions import height_from_bell_curve
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator):
@@ -128,7 +128,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         human.hair.children_set_hide(True)
 
-        sett.human_length = int(length_from_bell_curve(sett, self.gender))
+        sett.human_height = int(height_from_bell_curve(sett, self.gender))
 
         human.finish(context)
 

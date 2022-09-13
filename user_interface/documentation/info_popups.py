@@ -139,19 +139,6 @@ def rigify_library(layout):
         layout.label(text=line)
 
 
-length_hair_change_txt = """Changing the hairstyle is only possible
-when the character is at the default length of 1.83m.
-When you change the length to something else, the hair
-tab will be greyed out. To be able to change the style
-again, change the length of the character to 1.83m agian.
-"""
-
-
-def length_hair_change(layout):
-    for i, line in enumerate(length_hair_change_txt.splitlines()):
-        layout.label(text=line)
-
-
 autohide_hair_txt = """Hair children were hidden to improve performance.
 You can turn them back on at the top of the Human Generator interface.
 

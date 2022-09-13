@@ -22,7 +22,7 @@ from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
 from .hair.hair import HairSettings
-from .length.length import LengthSettings
+from .height.height import HeightSettings
 from .pose.pose import PoseSettings  # type:ignore
 from .process.bake import BakeSettings
 from .process.process import ProcessSettings
@@ -159,12 +159,12 @@ class Human:
         # Set to experimental mode from preset
         human.body.set_experimental(preset_data["experimental"])
 
-        # Set length from preset
-        preset_length = preset_data["body_proportions"]["length"] * 100
-        if 181 < preset_length < 182:
-            # Fix for old presets that use wrong default length
-            preset_length = 183.15
-        human.length.set(preset_length, context)
+        # Set height from preset
+        preset_height = preset_data["body_proportions"]["length"] * 100
+        if 181 < preset_height < 182:
+            # Fix for old presets that use wrong default height
+            preset_height = 183.15
+        human.height.set(preset_height, context)
         if gender == "male":
             human.shape_keys["Male"].value = 1.0
 
@@ -242,8 +242,8 @@ class Human:
         return BodySettings(self)
 
     @property  # TODO make cached
-    def length(self) -> LengthSettings:
-        return LengthSettings(self)
+    def height(self) -> HeightSettings:
+        return HeightSettings(self)
 
     @property  # TODO make cached
     def face(self) -> FaceKeys:
