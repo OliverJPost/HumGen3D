@@ -1,12 +1,13 @@
 import os
-from pathlib import Path
 import random
+from pathlib import Path
 from typing import List, Tuple
 
 from HumGen3D.backend import get_prefs, preview_collections
+from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preview_collections import _populate_pcoll
-from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.base.exceptions import HumGenException
 
 
 class PreviewCollectionContent:
@@ -35,11 +36,13 @@ class PreviewCollectionContent:
     @injected_context
     def get_options(self, context=None) -> List[Tuple[str, str, str, int]]:
         # Return only the name from the enum. Skip the first one
-        #FIXME check all pcolls if 0 is always skipped
+        # FIXME check all pcolls if 0 is always skipped
         self._refresh(context)
         options = [option[0] for option in self._get_full_options()[1:]]
         if not options:
-            raise HumGenException("No options found, did you install the content packs?")
+            raise HumGenException(
+                "No options found, did you install the content packs?"
+            )
 
         return options
 
@@ -82,7 +85,6 @@ class PreviewCollectionContent:
 
         sett.load_exception = False
 
-
     def _check_for_HumGen_filepath_issues(self):
         pref = get_prefs()
         if not pref.filepath:
@@ -122,6 +124,10 @@ class PreviewCollectionContent:
             categ_folder = os.path.join(pref.filepath, pcoll_name)
 
         if not os.path.isdir(categ_folder):
+            hg_log(
+                f"Can't find folder {categ_folder} for preview collection {pcoll_name}",
+                level="DEBUG",
+            )
             return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
 
         dirlist = os.listdir(categ_folder)
