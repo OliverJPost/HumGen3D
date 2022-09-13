@@ -185,9 +185,9 @@ def _populate_pcoll(
 
     categ_dir, subcateg_dir = _get_categ_and_subcateg_dirs(pcoll_categ, sett, gender)
 
-    pcoll_full_dir = str(pref.filepath) + str(Path("/{}/".format(categ_dir)))
+    pcoll_full_dir = os.path.join(pref.filepath, categ_dir)
     if subcateg_dir != "All":
-        pcoll_full_dir = pcoll_full_dir + str(Path("/{}/".format(subcateg_dir)))
+        pcoll_full_dir = os.path.join(pcoll_full_dir, subcateg_dir)
 
     file_paths = list_pcoll_files_in_dir(pcoll_full_dir, pcoll_categ)
     path_list = []
