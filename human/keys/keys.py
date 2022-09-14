@@ -150,7 +150,7 @@ class KeySettings:
         shapekeys = []
         for sk in self._human.body_obj.data.shape_keys.key_blocks:
             shapekeys.append(ShapeKeyItem(sk.name, "", self._human))
-            return shapekeys
+        return shapekeys
 
     @property
     def body_proportions(self):
@@ -167,14 +167,15 @@ class KeySettings:
     @property
     def temp_key(self):
         temp_key = next(
-            (sk for sk in self._human.keys if sk.name.startswith("LIVE_KEY_TEMP_")),
+            (sk for sk in self.all_shapekeys if sk.name.startswith("LIVE_KEY_TEMP_")),
             None,
         )
         if not temp_key:
             temp_key = self._human.body_obj.shape_key_add(name="LIVE_KEY_TEMP_")
             temp_key.slider_max = 10
             temp_key.slider_min = -10
-
+        else:
+            temp_key = temp_key.as_bpy(bpy.context)
         return temp_key
 
     @property
