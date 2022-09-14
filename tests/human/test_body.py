@@ -33,8 +33,5 @@ def test_set_bone_scale(human, context):
 
     for bone_type in bone_types:
         set_scale = human.body.set_bone_scale
-        set_scale(28, bone_type, context)
-        set_scale(-3, bone_type, context)
-        set_scale(5.2, bone_type, context)
-        set_scale(0, bone_type, context)
-        set_scale(1, bone_type, context)
+        for value in (28, -3, 5.2, 0, 1):
+            set_scale(value, bone_type, context)
