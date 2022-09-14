@@ -1,7 +1,7 @@
 import bpy
 import numpy as np
 from HumGen3D.backend import hg_delete
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix, Vector, kdtree  # type:ignore
 
 

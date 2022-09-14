@@ -30,7 +30,7 @@ from HumGen3D.tests.fixtures import (
 
 #         human.creation_phase.face.randomize(ff_subcateg=name)
 #         all_values = [
-#             sk.value for sk in human.shape_keys if sk.name.startswith(prefix)
+#             sk.value for sk in human.keys if sk.name.startswith(prefix)
 #         ]
 #         if len(all_values) > 1:
 #             assert mean(all_values) != 0

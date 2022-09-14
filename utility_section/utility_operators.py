@@ -7,7 +7,7 @@ from pathlib import Path
 import bpy
 from HumGen3D.backend import hg_log, get_prefs
 from HumGen3D.human.human import Human  # type: ignore
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.user_interface.documentation.feedback_func import show_message
 from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
 
@@ -100,7 +100,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         (
             sk_dict[obj.name],
             driver_dict[obj.name],
-        ) = self.human.shape_keys._extract_permanent_keys(
+        ) = self.human.keys._extract_permanent_keys(
             context, override_obj=obj, apply_armature=apply
         )
         pref.keep_all_shapekeys = keep_sk_pref
@@ -223,7 +223,7 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
 
-        for sk in human.shape_keys:
+        for sk in human.keys:
             if sk.name == "Basis" or sk.name.startswith("cor_"):
                 continue
             sk.driver_remove("value")

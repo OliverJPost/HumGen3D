@@ -1,15 +1,21 @@
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING, Dict, Generator, List, Union
 
 import bpy
 import numpy as np
-from bpy.types import Context  # type:ignore
 from bpy.types import Object  # type: ignore
+from bpy.types import Context, ShapeKey  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
+
+if TYPE_CHECKING:
+    from HumGen3D.human.base.live_keys import LiveKey
+
 from HumGen3D.user_interface.documentation.feedback_func import show_message
 
 from ..base.exceptions import HumGenException
@@ -51,13 +57,100 @@ def apply_shapekeys(ob):
     ob.shape_key_remove(ob.active_shape_key)
 
 
-class ShapeKeySettings(PropCollection):
-    def __init__(self, human):
-        try:
-            super().__init__(human.body_obj.data.shape_keys.key_blocks)
-        except AttributeError:
-            self._collection = None
+class KeyItem:
+    def __init__(self, name, category, human):
+        self.name = name
+        self.category = category
         self._human = human
+
+    @property
+    def value(self) -> float:
+        raise NotImplementedError
+
+    @value.setter
+    def value(self, value) -> None:
+        raise NotImplementedError
+
+    def as_bpy(self):
+        raise NotImplementedError
+
+
+class LiveKeyItem(KeyItem):
+    def __init__(self, name, category, path, human):
+        super().__init__(name, category, human)
+        self.path = path
+
+    def to_shapekey(self) -> ShapeKeyItem:
+        pass
+
+    @property
+    def value(self) -> float:
+        raise NotImplementedError
+
+    @value.setter
+    def value(self, value) -> None:
+        self._human.keys.livekey_set(self.name, value)
+
+    @injected_context
+    def as_bpy(self, context=None) -> LiveKey:
+        # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
+        livekey = context.scene.face_livekeys.get(self.name)
+        assert livekey
+        return livekey
+
+
+class ShapeKeyItem(KeyItem):
+    @property
+    def value(self) -> float:
+        return self._human.body_obj.data.shape_keys.key_blocks[self.name].value
+
+    @value.setter
+    def value(self, value) -> None:
+        self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
+
+    @injected_context
+    def as_bpy(self, context=None) -> ShapeKey:
+        return self._human.body_obj.data.shape_keys.key_blocks[self.name]
+
+
+class KeySettings:
+    def __init__(self, human):
+        self._human = human
+
+    def __getitem__(self, name) -> Union[LiveKeyItem, ShapeKeyItem]:
+        sk = self._human.body_obj.data.shape_keys.key_blocks.get(name)
+        if sk:
+            return ShapeKeyItem(sk.name, "face", self._human)
+        else:
+            return LiveKeyItem(name, "face", "", self._human)
+
+    def __iter__(self):
+        yield from self.all_keys
+
+    def get(self, name):
+        try:
+            self[name]
+        except ValueError as e:
+            raise e
+            return None
+
+    @property
+    def all_keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
+        return self.all_livekeys + self.all_shapekeys
+
+    @property
+    def all_livekeys(self) -> List[LiveKeyItem]:
+        livekeys = []
+        for key in bpy.context.scene.face_livekeys:
+            livekeys.append(LiveKeyItem(key.name, "face", key.path, self._human))
+        return livekeys
+
+    @property
+    def all_shapekeys(self) -> List[ShapeKeyItem]:
+        shapekeys = []
+        for sk in self._human.body_obj.data.shape_keys.key_blocks:
+            shapekeys.append(ShapeKeyItem(sk.name, "", self._human))
+            return shapekeys
 
     @property
     def body_proportions(self):
@@ -74,11 +167,7 @@ class ShapeKeySettings(PropCollection):
     @property
     def temp_key(self):
         temp_key = next(
-            (
-                sk
-                for sk in self._human.shape_keys
-                if sk.name.startswith("LIVE_KEY_TEMP_")
-            ),
+            (sk for sk in self._human.keys if sk.name.startswith("LIVE_KEY_TEMP_")),
             None,
         )
         if not temp_key:
@@ -90,7 +179,7 @@ class ShapeKeySettings(PropCollection):
 
     @property
     def permanent_key(self):
-        return self._human.shape_keys.get("LIVE_KEY_PERMANENT")
+        return self["LIVE_KEY_PERMANENT"].as_bpy(bpy.context)
 
     def load_from_npy(
         self, npy_filepath: Union[str, os.PathLike], obj_override: Object = None
@@ -146,9 +235,7 @@ class ShapeKeySettings(PropCollection):
         body.data.vertices.foreach_get("co", obj_coords)
 
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.shape_keys.permanent_key.data.foreach_get(
-            "co", permanent_key_coords
-        )
+        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
 
         new_key_relative_coords = np.load(livekey_path)
 
@@ -156,9 +243,7 @@ class ShapeKeySettings(PropCollection):
         old_value = current_sk_values[name] * -1 if name in current_sk_values else 0
         permanent_key_coords += new_key_relative_coords * (old_value + value)
 
-        self._human.shape_keys.permanent_key.data.foreach_set(
-            "co", permanent_key_coords
-        )
+        self._human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
 
     @injected_context
     def _load_external(self, human, context=None):
@@ -272,7 +357,7 @@ class ShapeKeySettings(PropCollection):
         sks = (
             override_obj.data.shape_keys.key_blocks
             if override_obj
-            else self._human.shape_keys
+            else self._human.keys
         )
         vert_count = len(obj.data.vertices)
 

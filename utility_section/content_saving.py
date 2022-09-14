@@ -14,7 +14,7 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
 )
 from HumGen3D.human.height.height import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.user_interface.documentation.feedback_func import (
     ShowMessageBox,
     show_message,
