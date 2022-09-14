@@ -9,8 +9,9 @@ from HumGen3D.tests.fixtures import (
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_randomize_body(human):
+    hash_before = hash(human.body)
     human.body.randomize()
-    # FIXME might be affecting other tests
+    assert hash(human.body) != hash_before, "Human body hash has not changed"
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)

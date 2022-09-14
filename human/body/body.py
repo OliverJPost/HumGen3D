@@ -160,11 +160,10 @@ class BodySettings:
             },
         }
 
-        sc = scaling_dict[bone_type]
         if return_whole_dict:
             return scaling_dict
         else:
-            return sc
+            return scaling_dict[bone_type]
 
     def adapt_rig_to_proportions(self) -> None:
         """Change the base pose of the rig to the new body proportions."""
@@ -177,3 +176,18 @@ class BodySettings:
             tail = ebone.tail
 
         bpy.ops.object.mode_set(mode="OBJECT")
+
+    def __hash__(self) -> int:
+        sk_values = [sk.value for sk in self._human.shape_keys.body_proportions]
+
+        def get_bone_scales():
+            sc = self._get_scaling_data(1, "", return_whole_dict=True)
+            for bone_group in sc.values():
+                for bone_name in bone_group["bones"]:
+                    bone = self._human.rig_obj.pose.bones[bone_name]
+                    yield tuple(bone.scale)
+
+        bone_scales = get_bone_scales()
+        all_values = tuple(sk_values + list(bone_scales))
+
+        return hash(all_values)
