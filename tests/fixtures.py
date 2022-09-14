@@ -24,6 +24,19 @@ def male_human() -> Human:
 
 
 @pytest.fixture(scope="class")
+def female_human() -> Human:
+    human = _create_human("female")
+    yield human
+    human.delete()
+
+
+def _create_human(gender="male"):
+    chosen_preset = random.choice(Human.get_preset_options(gender, bpy.context))
+    human = Human.from_preset(chosen_preset, bpy.context)
+    return human
+
+
+@pytest.fixture(scope="class")
 def legacy_male_human() -> Human:
     filepath = r"/Users/ole/Documents/Human Generator/legacy_test_male.blend"
     data_to = _import_old_testing_human(filepath)
@@ -50,19 +63,6 @@ def _import_old_testing_human(filepath):
     for obj in data_to.objects:
         bpy.context.scene.collection.objects.link(obj)
     return data_to
-
-
-@pytest.fixture(scope="class")
-def female_human() -> Human:
-    human = _create_human("female")
-    yield human
-    human.delete()
-
-
-def _create_human(gender="male"):
-    chosen_preset = random.choice(Human.get_preset_options(gender, bpy.context))
-    human = Human.from_preset(chosen_preset, bpy.context)
-    return human
 
 
 @pytest.fixture
