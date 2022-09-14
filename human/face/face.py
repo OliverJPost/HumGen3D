@@ -1,10 +1,12 @@
 import os
 import random
+from typing import Generator, List, Union
 
 import bpy
 import numpy as np
 from bpy.props import CollectionProperty
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
 from ..base.prop_collection import PropCollection
 
@@ -29,8 +31,12 @@ class FaceKeys(PropCollection):
     #     return getattr(self, f"_{type_name}")
 
     @property
+    def keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
+        return [key for key in self._human.keys.all_keys if key.category == "face"]
+
+    @property
     def shape_keys(self) -> PropCollection:
-        sks = self._human.shape_keys
+        sks = self._human.keys
         ff_keys = [sk for sk in sks if sk.name.startswith("ff_")]
         pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
         return PropCollection(ff_keys + pr_keys)

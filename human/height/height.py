@@ -52,13 +52,11 @@ class HeightSettings:
         self._human.body_obj.data.vertices.foreach_get("co", body_key_coords)
 
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.shape_keys.permanent_key.data.foreach_get(
-            "co", permanent_key_coords
-        )
+        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
 
         temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.shape_keys.temp_key.data.foreach_get("co", temp_key_coords)
-        temp_value = self._human.shape_keys.temp_key.value
+        self._human.keys.temp_key.data.foreach_get("co", temp_key_coords)
+        temp_value = self._human.keys.temp_key.value
 
         eval_coords = (
             temp_key_coords - body_key_coords
