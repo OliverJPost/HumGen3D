@@ -142,14 +142,12 @@ class Human:
         Returns:
           A Human instance
         """
-        preset_path = os.path.join(
-            get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
-        )
+        preset_path = os.path.join(get_prefs().filepath, preset.replace("jpg", "json"))
 
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-        gender = preset.split(os.sep)[2]
+        gender = preset.split(os.sep)[1]
 
         human: Human = cls._import_human(context, gender)
         # remove broken drivers
