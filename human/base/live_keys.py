@@ -104,7 +104,9 @@ class LiveKey(bpy.types.PropertyGroup):
 
     path: StringProperty()
     category: StringProperty()
+    subcategory: StringProperty()
     name: StringProperty()
+    gender: StringProperty()
     value: FloatProperty(
         default=0,
         min=-10,

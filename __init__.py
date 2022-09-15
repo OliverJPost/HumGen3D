@@ -146,8 +146,8 @@ def register():
 
     bpy.types.VIEW3D_MT_add.append(add_hg_primitive_menu)
 
-    face_livekeys_coll = bpy.props.CollectionProperty(type=LiveKey)
-    bpy.types.Scene.face_livekeys = face_livekeys_coll
+    livekeys_coll = bpy.props.CollectionProperty(type=LiveKey)
+    bpy.types.Scene.livekeys = livekeys_coll
 
     # load handler
     if not HG_start in bpy.app.handlers.load_post:

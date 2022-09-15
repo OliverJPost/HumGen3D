@@ -32,7 +32,7 @@ class FaceKeys(PropCollection):
 
     @property
     def keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
-        return [key for key in self._human.keys.all_keys if key.category == "face"]
+        return self._human.keys.filtered("face_proportions")
 
     @property
     def shape_keys(self) -> PropCollection:
