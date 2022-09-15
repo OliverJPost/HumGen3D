@@ -13,8 +13,8 @@ class BodySettings:
         self._human: Human = human
 
     @property
-    def shape_keys(self):
-        return self._human.keys.body_proportions
+    def keys(self):
+        return self._human.keys.filtered("body_proportions")
 
     def randomize(self):
         """Randomizes the body type sliders of the active human

@@ -35,11 +35,12 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         col.separator()
         flow = self.get_flow(col)
 
-        for sk in self.human.body.shape_keys:
+        for key in self.human.body.keys:
+            key_bpy = key.as_bpy()
             flow.prop(
-                sk,
+                key_bpy,
                 "value",
-                text=sk.name.replace("bp_", "").capitalize(),
+                text=key.name.capitalize(),
                 expand=True,
             )
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Generator, List, Union
 
@@ -58,10 +59,11 @@ def apply_shapekeys(ob):
 
 
 class KeyItem:
-    def __init__(self, name, category, human):
+    def __init__(self, name, category, human, subcategory=None):
         self.name = name
         self.category = category
         self._human = human
+        self.subcategory = subcategory
 
     @property
     def value(self) -> float:
@@ -76,8 +78,8 @@ class KeyItem:
 
 
 class LiveKeyItem(KeyItem):
-    def __init__(self, name, category, path, human):
-        super().__init__(name, category, human)
+    def __init__(self, name, category, path, human, subcategory=None):
+        super().__init__(name, category, human, subcategory)
         self.path = path
 
     def to_shapekey(self) -> ShapeKeyItem:
@@ -112,12 +114,24 @@ class LiveKeyItem(KeyItem):
     @injected_context
     def as_bpy(self, context=None) -> LiveKey:
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
-        livekey = context.scene.face_livekeys.get(self.name)
+        livekey = context.scene.livekeys.get(self.name)
         assert livekey
         return livekey
 
 
 class ShapeKeyItem(KeyItem):
+    def __init__(self, sk_name, human):
+        pattern = re.compile(
+            "^(\$(?P<category>[^_]+)_)?(\$(?P<subcategory>[^_]+)_)?(?P<name>.*)"
+        )
+        match = pattern.match(sk_name)
+        groupdict = match.groupdict()
+        category = groupdict.get("category")
+        subcategory = groupdict.get("subcategory")
+        name = groupdict.get("name")
+        assert name
+        super().__init__(name, category, human, subcategory=subcategory)
+
     @property
     def value(self) -> float:
         return self._human.body_obj.data.shape_keys.key_blocks[self.name].value
@@ -136,11 +150,7 @@ class KeySettings:
         self._human = human
 
     def __getitem__(self, name) -> Union[LiveKeyItem, ShapeKeyItem]:
-        sk = self._human.body_obj.data.shape_keys.key_blocks.get(name)
-        if sk:
-            return ShapeKeyItem(sk.name, "face", self._human)
-        else:
-            return LiveKeyItem(name, "face", "", self._human)
+        return next(key for key in self.all_keys if key.name == name)
 
     def __iter__(self):
         yield from self.all_keys
@@ -148,8 +158,7 @@ class KeySettings:
     def get(self, name):
         try:
             self[name]
-        except ValueError as e:
-            raise e
+        except ValueError:
             return None
 
     @property
@@ -159,15 +168,26 @@ class KeySettings:
     @property
     def all_livekeys(self) -> List[LiveKeyItem]:
         livekeys = []
-        for key in bpy.context.scene.face_livekeys:
-            livekeys.append(LiveKeyItem(key.name, "face", key.path, self._human))
+        for key in bpy.context.scene.livekeys:
+            # Skip gendered keys
+            if key.gender and key.gender != self._human.gender:
+                continue
+            livekeys.append(
+                LiveKeyItem(
+                    key.name,
+                    key.category,
+                    key.path,
+                    self._human,
+                    subcategory=key.subcategory,
+                )
+            )
         return livekeys
 
     @property
     def all_shapekeys(self) -> List[ShapeKeyItem]:
         shapekeys = []
         for sk in self._human.body_obj.data.shape_keys.key_blocks:
-            shapekeys.append(ShapeKeyItem(sk.name, "", self._human))
+            shapekeys.append(ShapeKeyItem(sk.name, self._human))
         return shapekeys
 
     @property
@@ -199,6 +219,16 @@ class KeySettings:
     @property
     def permanent_key(self):
         return self["LIVE_KEY_PERMANENT"].as_bpy(bpy.context)
+
+    def filtered(
+        self, category, subcategory=None
+    ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
+        keys = []
+        for key in self:
+            if key.category == category:
+                keys.append(key)
+
+        return keys
 
     def load_from_npy(
         self, npy_filepath: Union[str, os.PathLike], obj_override: Object = None
