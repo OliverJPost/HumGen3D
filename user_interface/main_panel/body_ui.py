@@ -35,9 +35,25 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         col.separator()
         flow = self.get_flow(col)
 
-        for key in self.human.body.keys:
+        keys = self.human.body.keys
+        subcategories = set(key.subcategory for key in keys)
+
+        self.box_main = col.column(align=True)
+        self.box_main.scale_y = 1.5
+
+        for subcategory in subcategories:
+            if not subcategory or subcategory == "main":
+                continue
+            setattr(self, f"box_{subcategory}", col.box().column(align=True))
+            getattr(self, f"box_{subcategory}").label(text=subcategory.title())
+            getattr(self, f"box_{subcategory}").scale_y = 1.3
+
+        self.box_ = col.box()
+        self.box_.label(text="Other")
+
+        for key in keys:
             key_bpy = key.as_bpy()
-            flow.prop(
+            getattr(self, f"box_{key.subcategory}").prop(
                 key_bpy,
                 "value",
                 text=key.name.capitalize(),
@@ -45,41 +61,3 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
             )
 
         col.separator()
-
-        self._individual_scale_ui(col, self.sett)
-
-    def _individual_scale_ui(self, box, sett):
-        """Collapsable menu showing sliders to change bone scale of different
-        body parts of the HumGen human
-
-        Args:
-            box (UILayout): Box layout of body section
-            sett (Scene.HG3D): Humgen properties
-        """
-        is_open, boxbox = self.draw_sub_spoiler(
-            box, sett, "indiv_scale", "Individual scaling"
-        )
-        if not is_open:
-            return
-
-        col = boxbox.column(align=True)
-        col.use_property_split = True
-        col.use_property_decorate = False
-
-        col.prop(sett, "head_size", text="Head", slider=True)
-        col.prop(sett, "neck_size", text="Neck", slider=True)
-        col.separator()
-        col.prop(sett, "chest_size", text="Chest", slider=True)
-        col.prop(sett, "shoulder_size", text="Shoulders", slider=True)
-        col.prop(sett, "breast_size", text="Breasts", slider=True)
-        col.prop(sett, "hips_size", text="Hips", slider=True)
-        col.separator()
-        col.prop(sett, "upper_arm_size", text="Upper Arm", slider=True)
-        col.prop(sett, "forearm_size", text="Forearm", slider=True)
-        col.prop(sett, "hand_size", text="Hands", slider=True)
-        col.separator()
-        col.prop(sett, "thigh_size", text="Thighs", slider=True)
-        col.prop(sett, "shin_size", text="Shins", slider=True)
-        col.separator()
-
-        col.label(text="Type number for stronger values", icon="INFO")
