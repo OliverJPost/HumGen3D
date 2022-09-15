@@ -86,22 +86,30 @@ class LiveKeyItem(KeyItem):
         filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
         new_key_relative_coords = np.load(filepath)
 
+        if self.category:
+            if self.subcategory:
+                name = f"${self.category}_${self.subcategory}_{self.name}"
+            else:
+                name = f"${self.category}_{self.name}"
+        else:
+            name = self.name
+
         body = self._human.body_obj
         vert_count = len(body.data.vertices)
         obj_coords = np.empty(vert_count * 3, dtype=np.float64)
         body.data.vertices.foreach_get("co", obj_coords)
 
         new_key_coords = obj_coords + new_key_relative_coords
-        key = self._human.body_obj.shape_key_add(name=self.name)
+        key = self._human.body_obj.shape_key_add(name=name)
         key.slider_max = 2
         key.slider_min = -2
 
         key.data.foreach_set("co", new_key_coords)
 
-        idx = bpy.context.scene.face_livekeys.find(self.name)
-        bpy.context.scene.face_livekeys.remove(idx)
+        idx = bpy.context.scene.livekeys.find(self.name)
+        bpy.context.scene.livekeys.remove(idx)
 
-        return ShapeKeyItem(self.name, self.category, self._human)
+        return ShapeKeyItem(name, self._human)
 
     @property
     def value(self) -> float:
