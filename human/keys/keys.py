@@ -10,6 +10,7 @@ import bpy
 import numpy as np
 from bpy.types import Object  # type: ignore
 from bpy.types import Context, ShapeKey  # type:ignore
+from human.base.savable_content import SavableContent
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
@@ -58,7 +59,7 @@ def apply_shapekeys(ob):
     ob.shape_key_remove(ob.active_shape_key)
 
 
-class KeyItem:
+class KeyItem(SavableContent):
     def __init__(self, name, category, human, subcategory=None):
         self.name = name
         self.category = category
