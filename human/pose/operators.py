@@ -59,7 +59,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
         sks = hg_body.data.shape_keys.key_blocks
         for target_sk_name, sett_dict in driver_dict.items():
-            human.shape_keys._add_driver(sks[target_sk_name], sett_dict)
+            human.keys._add_driver(sks[target_sk_name], sett_dict)
 
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)

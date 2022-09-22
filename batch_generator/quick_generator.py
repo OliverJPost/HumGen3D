@@ -15,7 +15,7 @@ from HumGen3D.backend.preview_collections import (
     set_random_active_in_pcoll,
 )
 from HumGen3D.human.human import Human
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 # from ..utility_section.baking import (  # type:ignore
 #     add_image_node,
@@ -165,7 +165,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             sett.pcoll.expression_category = self.expression_category
             set_random_active_in_pcoll(context, sett, "expressions")
             expr_sk = next(
-                (sk for sk in human.shape_keys if sk.name.startswith("expr_")),
+                (sk for sk in human.keys if sk.name.startswith("expr_")),
                 None,
             )
             if expr_sk:

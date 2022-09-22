@@ -25,10 +25,10 @@ from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
 from .hair.hair import HairSettings
 from .height.height import HeightSettings
+from .keys.keys import KeySettings
 from .pose.pose import PoseSettings  # type:ignore
 from .process.bake import BakeSettings
 from .process.process import ProcessSettings
-from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
@@ -145,21 +145,18 @@ class Human:
           A Human instance
         """
         preset_path = os.path.join(
-            get_prefs().filepath, preset.replace("jpg", "json")[1:]  # TODO
+            get_prefs().filepath, preset.replace("jpg", "json")  # TODO
         )
 
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-        gender = preset.split(os.sep)[2]
+        gender = preset.split(os.sep)[1]
 
         human: Human = cls._import_human(context, gender)
         # remove broken drivers
         if prettify_eevee:
             set_eevee_ao_and_strip(context)
-
-        # Set to experimental mode from preset
-        human.body.set_experimental(preset_data["experimental"])
 
         # Set height from preset
         preset_height = preset_data["body_proportions"]["length"] * 100
@@ -168,11 +165,11 @@ class Human:
             preset_height = 183.15
         human.height.set(preset_height, context)
         if gender == "male":
-            human.shape_keys["Male"].value = 1.0
+            human.keys["Male"].value = 1.0
 
         # Set shape key values from preset
         for name, value in preset_data["livekeys"].items():
-            human.shape_keys.livekey_set(name, value)
+            human.keys[name].value = value
 
         # Set skin material from preset
         human.skin.texture._set_from_preset(preset_data["material"], context)
@@ -376,9 +373,9 @@ class Human:
         return SkinSettings(self)
 
     @property
-    def shape_keys(self) -> ShapeKeySettings:
+    def keys(self) -> KeySettings:
         """Subclass used to access and change the shape keys of the body object. Iterating yields key_blocks."""
-        return ShapeKeySettings(self)
+        return KeySettings(self)
 
     @property  # TODO make cached
     def eyes(self) -> EyeSettings:
@@ -488,8 +485,8 @@ class Human:
         props.length = hg_rig.dimensions[2]
 
         human = cls(hg_rig)
-        human.shape_keys._load_external(human, context)
-        human.shape_keys._set_gender_specific(human)
+        human.keys._load_external(human, context)
+        human.keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
 
         if platform == "darwin":
