@@ -32,7 +32,7 @@ class Content_Saving_Operator:
         col.separator()
         col.label(text="Overwrite?")
 
-    def save_thumb(self, folder, current_name, save_name):
+    def save_thumb(self, folder, img_name, save_name):
         """Save the thumbnail with this content
 
         Args:
@@ -40,8 +40,7 @@ class Content_Saving_Operator:
             current_name (str): current name of the image
             save_name (str): name to save the image as
         """
-
-        img = bpy.data.images[current_name]
+        img = bpy.data.images[img_name]
         thumbnail_type = self.sett.thumbnail_saving_enum
 
         destination_path = os.path.join(folder, f"{save_name}.jpg")
@@ -66,8 +65,8 @@ class Content_Saving_Operator:
                 show_message(self, "Thumbnail image doesn't have any image data")
                 print(e)
 
+    @staticmethod
     def save_objects_optimized(
-        self,
         context,
         objs,
         folder,
@@ -105,14 +104,14 @@ class Content_Saving_Operator:
             if clear_vg:
                 obj.vertex_groups.clear()
             if clear_sk:
-                self._remove_shapekeys(obj)
+                Content_Saving_Operator._remove_shapekeys(obj)
             if clear_ps:
-                self._remove_particle_systems(context, obj)
+                Content_Saving_Operator._remove_particle_systems(context, obj)
             if clear_drivers:
-                self._remove_obj_drivers(obj)
+                Content_Saving_Operator._remove_obj_drivers(obj)
 
         if clear_drivers:
-            self._clear_sk_drivers()
+            Content_Saving_Operator._clear_sk_drivers()
 
         new_scene = bpy.data.scenes.new(name="test_scene")
         new_col = bpy.data.collections.new(name="HG")
