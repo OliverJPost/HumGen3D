@@ -1,12 +1,23 @@
+from __future__ import annotations
+
+import os
+from os import PathLike
+from typing import TYPE_CHECKING, Union
+
 import bpy
-from HumGen3D.backend import hg_log, get_prefs, hg_delete
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+
+if TYPE_CHECKING:
+    from human.human import Human
+
+from utility_section.content_saving import Content_Saving_Operator
 
 
 class PoseSettings(PreviewCollectionContent):
     def __init__(self, _human):
-        self._human = _human
+        self._human: Human = _human
         self._pcoll_name = "poses"
         self._pcoll_gender_split = False
 
@@ -43,6 +54,38 @@ class PoseSettings(PreviewCollectionContent):
 
         if not pref.debug_mode:
             hg_delete(hg_pose)
+
+    @injected_context
+    def save_current_to_library(
+        self,
+        name: str,
+        category: str = "Custom",
+        thumbnail: Union[None, str, PathLike] = "auto",
+        context=None,
+    ) -> None:
+        folder = os.path.join(get_prefs().filepath, "poses", category)
+
+        pose_object = self._human.rig_obj.copy()
+        pose_object.data = pose_object.data.copy()
+        pose_object.name = "HG_Pose"
+        context.collection.objects.link(pose_object)
+
+        Content_Saving_Operator.save_objects_optimized(
+            context,
+            [
+                pose_object,
+            ],
+            folder,
+            name,
+        )
+
+        if not thumbnail:
+            return
+
+        if thumbnail == "auto":
+            thumb_name = self._human.render_thumbnail()
+
+        self.save_thumb(folder, thumb_name, name)
 
     def _import_pose(self, preset, context) -> bpy.types.Object:
         """Import selected pose object
