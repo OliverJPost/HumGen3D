@@ -13,29 +13,8 @@ class BodySettings:
         self._human: Human = human
 
     @property
-    def shape_keys(self):
-        return self._human.shape_keys.body_proportions
-
-    def set_experimental(self, turn_on: bool) -> None:
-        sk_max_value = 2 if turn_on else 1
-        sk_min_value_ff = -2 if turn_on else -1
-        sk_min_value_body = -0.5 if turn_on else 0
-
-        for sk in self._human.shape_keys:
-            # Facial shape keys
-            if sk.name.startswith("ff_"):
-                sk.slider_min = sk_min_value_ff
-                sk.slider_max = sk_max_value
-            # Body proportion shape keys
-            elif sk.name.startswith("bp_"):
-                sk.slider_min = sk_min_value_body
-                sk.slider_max = sk_max_value
-            # Preset shape keys
-            elif sk.name.startswith("pr_"):
-                sk.slider_min = sk_min_value_body
-                sk.slider_max = sk_max_value
-
-        self._human.props.experimental = turn_on
+    def keys(self):
+        return self._human.keys.filtered("body_proportions")
 
     def randomize(self):
         """Randomizes the body type sliders of the active human
@@ -44,7 +23,7 @@ class BodySettings:
             hg_rig (Object): HumGen armature
         """
 
-        for sk in self._human.shape_keys.body_proportions:
+        for sk in self._human.keys.body_proportions:
             if sk.name.startswith("bp_skinny"):
                 sk.value = random.uniform(0, 0.7)
             else:

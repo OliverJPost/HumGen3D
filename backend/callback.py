@@ -48,19 +48,30 @@ class HG_ACTIVATE(bpy.types.Operator):
         refresh_pcoll(self, context, "humans")
         hg_log(f"Activating HumGen, version {bl_info['version']}")
 
-        bpy.context.scene.face_livekeys.clear()
+        bpy.context.scene.livekeys.clear()
 
-        for root, dirs, files in os.walk(
-            os.path.join(get_prefs().filepath, "livekeys", "face_proportions")
-        ):
+        folder = os.path.join(get_prefs().filepath, "livekeys")
+        for root, dirs, files in os.walk(folder):
             for file in files:
                 if not file.endswith(".npy"):
                     continue
-                item = bpy.context.scene.face_livekeys.add()
-                item.name = file[:-4].replace("_", " ").title()
+                item = bpy.context.scene.livekeys.add()
+                if file.startswith(("male_", "female_")):
+                    item.gender = file.split("_")[0]
+                    item.name = file[:-4].replace(f"{item.gender}_", "")
+                else:
+                    item.name = file[:-4]
                 abspath = os.path.join(root, file)
-                category = abspath.split(os.sep)[-2]
+                relpath = os.path.relpath(abspath, folder).split(os.sep)
+
+                if len(relpath) >= 3:
+                    category, subcategory, *_ = relpath
+                else:
+                    category = relpath[0]
+                    subcategory = ""
+
                 item.category = category
+                item.subcategory = subcategory
                 item.path = os.path.relpath(abspath, get_prefs().filepath)
 
         return {"FINISHED"}

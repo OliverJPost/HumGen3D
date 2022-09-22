@@ -179,7 +179,7 @@ class SkinSettings:
         # Age
         age_value = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5]) * 2
 
-        self._human.shape_keys["age_old.Transferred"].value = age_value
+        self._human.keys["age_old.Transferred"].value = age_value
         nodes["HG_Age"].inputs[1].default_value = age_value * 6
 
         if self._human.gender == "male":

@@ -92,7 +92,7 @@ def refresh_shapekeys_ul(self, context):
     if not human:
         return
 
-    for sk in human.shape_keys:
+    for sk in human.keys:
         if sk.name in existing_sks:
             continue
 

@@ -14,7 +14,7 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 def find_masks(obj) -> list:
