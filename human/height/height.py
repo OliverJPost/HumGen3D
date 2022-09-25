@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import bpy
 from bpy.types import Context
 from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
 from ..base import live_keys  # type:ignore
@@ -58,7 +59,7 @@ class HeightSettings:
         if not value:
             return
 
-        if realtime and not context.scene.HG3D.slider_is_dragging:
+        if realtime and not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
             context.scene.HG3D.slider_is_dragging = True
             bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
 
