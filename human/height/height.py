@@ -8,8 +8,8 @@ from bpy.types import Context
 from HumGen3D.human.base.decorators import injected_context
 from mathutils import Vector
 
-from ...scripts.bone_vert_builder import centroid
 from ..base import live_keys  # type:ignore
+from ..base.geometry import centroid
 
 if TYPE_CHECKING:
     from HumGen3D import Human
@@ -126,6 +126,41 @@ class HeightSettings:
                 self._human.outfit.deform_cloth_to_human(context, cloth_obj)
             for shoe_obj in self._human.footwear.objects:
                 self._human.footwear.deform_cloth_to_human(context, shoe_obj)
+
+    def correct_eyes(self):
+        eye_obj = self._human.eye_obj
+
+        eye_vert_count = len(eye_obj.data.vertices)
+        eye_verts = np.empty(eye_vert_count * 3, dtype=np.float64)
+        eye_obj.data.vertices.foreach_get("co", eye_verts)
+        eye_verts = eye_verts.reshape((-1, 3))
+
+        eye_verts_right, eye_verts_left = np.split(eye_verts, 2)
+
+        armature = self._human.rig_obj.data
+        left_head_co = armature.bones.get("eyeball.L").head_local
+        right_head_co = armature.bones.get("eyeball.R").head_local
+
+        reference_left = centroid(eye_verts_left) + Vector((0.001, 0.0035, 0.0))
+        reference_right = centroid(eye_verts_right) + Vector((-0.001, 0.0035, 0.0))
+
+        transformation_left = np.array(left_head_co - reference_left)
+        transformation_right = np.array(right_head_co - reference_right)
+
+        eye_verts_left += transformation_left
+        eye_verts_right += transformation_right
+
+        eye_verts_corrected = np.concatenate((eye_verts_right, eye_verts_left))
+        eye_verts_corrected = eye_verts_corrected.reshape((-1))
+
+        if eye_obj.data.shape_keys:
+            eye_obj.data.shape_keys.key_blocks["Basis"].data.foreach_set(
+                "co", eye_verts_corrected
+            )
+            eye_obj.data.shape_keys.key_blocks["Basis"].mute = True
+            eye_obj.data.shape_keys.key_blocks["Basis"].mute = False
+        else:
+            eye_obj.data.vertices.foreach_set("co", eye_verts_corrected)
 
     @injected_context
     def randomize(self, context=None):
