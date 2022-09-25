@@ -54,7 +54,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         col.alert = True
         col.operator("hg3d.startcreation", icon="COMMUNITY", depress=True)
 
-        if "hg_batch_marker" in context.object:
+        if context.object and "hg_batch_marker" in context.object:
             self._draw_batch_marker_notification(col)
 
     def _draw_batch_marker_notification(self, layout):
