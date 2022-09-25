@@ -13,6 +13,7 @@ import os
 
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
@@ -48,31 +49,7 @@ class HG_ACTIVATE(bpy.types.Operator):
         refresh_pcoll(self, context, "humans")
         hg_log(f"Activating HumGen, version {bl_info['version']}")
 
-        bpy.context.scene.livekeys.clear()
-
-        folder = os.path.join(get_prefs().filepath, "livekeys")
-        for root, dirs, files in os.walk(folder):
-            for file in files:
-                if not file.endswith(".npy"):
-                    continue
-                item = bpy.context.scene.livekeys.add()
-                if file.startswith(("male_", "female_")):
-                    item.gender = file.split("_")[0]
-                    item.name = file[:-4].replace(f"{item.gender}_", "")
-                else:
-                    item.name = file[:-4]
-                abspath = os.path.join(root, file)
-                relpath = os.path.relpath(abspath, folder).split(os.sep)
-
-                if len(relpath) >= 3:
-                    category, subcategory, *_ = relpath
-                else:
-                    category = relpath[0]
-                    subcategory = ""
-
-                item.category = category
-                item.subcategory = subcategory
-                item.path = os.path.relpath(abspath, get_prefs().filepath)
+        update_livekey_collection()
 
         return {"FINISHED"}
 
