@@ -6,9 +6,10 @@ import bpy
 class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     bl_idname = "hg3d.slider_subscribe"
     bl_label = ""
-    stop: bpy.props.BoolProperty()
     # bl_options = {"UNDO"}
 
+    stop: bpy.props.BoolProperty()
+    hide_armature: bpy.props.BoolProperty(default=False)
     _handler = None
 
     @classmethod
@@ -18,6 +19,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     def modal(self, context, event):
         if self.stop:
             self.human.hide_set(False)
+            self.armature_modifier.show_viewport = True
             self.human.height.correct_armature(context)
             self.human.height.correct_eyes()
             self.human.height.correct_teeth()
@@ -44,6 +46,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         # To prevent circular import
         from HumGen3D.human.human import Human
 
+        # Set handler property for checking if the modal is running
         cls = self.__class__
         if cls._handler is not None:
             return {"CANCELLED"}
@@ -55,6 +58,12 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         self.human.hide_set(True)
         self.human.body_obj.hide_set(False)
         self.human.body_obj.hide_viewport = False
+
+        self.armature_modifier = next(
+            mod for mod in self.human.body_obj.modifiers if mod.type == "ARMATURE"
+        )
+        if self.hide_armature:
+            self.armature_modifier.show_viewport = False
 
         for mod in self.human.body_obj.modifiers:
             if mod.type == "MASK":
