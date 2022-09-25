@@ -61,9 +61,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         min=120,
         max=250,
         precision=0,
-        update=lambda s, c: Human.from_existing(c.object).height.set(
-            s.human_height, c, realtime=True
+        set=lambda s, value: Human.from_existing(bpy.context.object).height.set(
+            value, realtime=True
         ),
+        get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
 
     ######### skin props ###########
