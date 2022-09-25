@@ -23,6 +23,38 @@ from ..base.exceptions import HumGenException
 from ..base.prop_collection import PropCollection
 
 
+def update_livekey_collection():
+    """Updates the livekeys collection inside context.window_manager to contain all
+    livekeys present in the Human Generator folder structure.
+    """
+    bpy.context.window_manager.livekeys.clear()
+
+    folder = os.path.join(get_prefs().filepath, "livekeys")
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            if not file.endswith(".npy"):
+                continue
+            item = bpy.context.window_manager.livekeys.add()
+            if file.startswith(("male_", "female_")):
+                item.gender = file.split("_")[0]
+                item.name = file[:-4].replace(f"{item.gender}_", "")
+            else:
+                item.name = file[:-4]
+            abspath = os.path.join(root, file)
+            relpath = os.path.relpath(abspath, folder).split(os.sep)
+
+            if len(relpath) >= 3:
+                category, subcategory, *_ = relpath
+            else:
+                category = relpath[0]
+                subcategory = ""
+
+            item.category = category
+            item.subcategory = subcategory
+            item.path = os.path.relpath(abspath, get_prefs().filepath)
+            print("adding", item)
+
+
 def transfer_shapekey(sk, to_obj):
     new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
     new_sk.interpolation = "KEY_LINEAR"
