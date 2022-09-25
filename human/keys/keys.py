@@ -106,8 +106,8 @@ class LiveKeyItem(KeyItem):
 
         key.data.foreach_set("co", new_key_coords)
 
-        idx = bpy.context.scene.livekeys.find(self.name)
-        bpy.context.scene.livekeys.remove(idx)
+        idx = bpy.context.window_manager.livekeys.find(self.name)
+        bpy.context.window_manager.livekeys.remove(idx)  # FIXME
 
         return ShapeKeyItem(name, self._human)
 
@@ -122,7 +122,7 @@ class LiveKeyItem(KeyItem):
     @injected_context
     def as_bpy(self, context=None) -> LiveKey:
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
-        livekey = context.scene.livekeys.get(self.name)
+        livekey = context.window_manager.livekeys.get(self.name)
         assert livekey
         return livekey
 
@@ -176,7 +176,7 @@ class KeySettings:
     @property
     def all_livekeys(self) -> List[LiveKeyItem]:
         livekeys = []
-        for key in bpy.context.scene.livekeys:
+        for key in bpy.context.window_manager.livekeys:
             # Skip gendered keys
             if key.gender and key.gender != self._human.gender:
                 continue
