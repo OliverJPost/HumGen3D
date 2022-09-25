@@ -61,7 +61,7 @@ class HeightSettings:
 
         if realtime and not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
             context.scene.HG3D.slider_is_dragging = True
-            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
+            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT", hide_armature=True)
 
         self.name = livekey_name
         self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
