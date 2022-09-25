@@ -162,6 +162,33 @@ class HeightSettings:
         else:
             eye_obj.data.vertices.foreach_set("co", eye_verts_corrected)
 
+    def correct_teeth(self):
+        armature = self._human.rig_obj.data
+        teeth_obj_lower = self._human.lower_teeth_obj
+        teeth_obj_upper = self._human.upper_teeth_obj
+
+        def correct_teeth_obj(obj, bone_name, reference_vector):
+            vert_count = len(obj.data.vertices)
+            verts = np.empty(vert_count * 3, dtype=np.float64)
+            obj.data.vertices.foreach_get("co", verts)
+            verts = verts.reshape((-1, 3))
+
+            reference_bone_tail_co = armature.bones.get(bone_name).tail_local
+            transformation = np.array(
+                reference_bone_tail_co - centroid(verts) + reference_vector
+            )
+
+            verts += transformation
+
+            verts = verts.reshape((-1))
+            obj.data.vertices.foreach_set("co", verts)
+            obj.data.update()
+
+        correct_teeth_obj(teeth_obj_lower, "jaw", Vector((-0.0000, 0.0128, 0.0075)))
+        correct_teeth_obj(
+            teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003))
+        )
+
     @injected_context
     def randomize(self, context=None):
         chosen_height_cm = random.uniform(150, 200)

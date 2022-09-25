@@ -14,6 +14,8 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
             self.human.hide_set(False)
             self.human.height.correct_armature(context)
             self.human.height.correct_eyes()
+            self.human.height.correct_teeth()
+
             for mod in self.human.body_obj.modifiers:
                 if mod.type == "MASK":
                     mod.show_viewport = True
