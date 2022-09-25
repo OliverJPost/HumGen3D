@@ -40,7 +40,12 @@ class HeightSettings:
 
     @property
     def meters(self) -> float:
-        return self._human.rig_obj.dimensions[2]
+        rig_obj = self._human.rig_obj
+
+        top_coord = rig_obj.data.bones["head"].tail_local.z
+        bottom_coord = rig_obj.data.bones["heel.02.L"].tail_local.z
+
+        return top_coord - bottom_coord
 
     @injected_context
     def set(self, value_cm: float, context: Context = None, realtime=False):
