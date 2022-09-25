@@ -304,6 +304,15 @@ class Human:
         )
 
     @property
+    def upper_teeth_obj(self) -> Object:
+        """Returns the lower teeth Blender object"""
+        return next(
+            obj
+            for obj in self.children
+            if "hg_teeth" in obj and "upper" in obj.name.lower()
+        )
+
+    @property
     def children(self) -> Generator[Object]:
         """A generator of all children of the rig object of the human. Does NOT yield subchildren."""
         for child in self.rig_obj.children:
