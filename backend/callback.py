@@ -80,7 +80,6 @@ def hg_callback(self):
     if not human:
         return  # return immediately when the active object is not part of a human
 
-    bpy.context.scene.HG3D.slider_is_dragging = False
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
