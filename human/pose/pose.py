@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D.backend import hg_log, get_prefs, hg_delete
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 

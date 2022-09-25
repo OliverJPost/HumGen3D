@@ -14,6 +14,9 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
+
         return "cloth" in context.object or "shoe" in context.object
 
     # TODO add compatibility with any material, not just standard material
