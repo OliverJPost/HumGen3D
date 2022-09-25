@@ -13,7 +13,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
             context.scene.HG3D.slider_is_dragging = False
             self.human.hide_set(False)
             self.human.height.correct_armature(context)
-
+            self.human.height.correct_eyes()
             for mod in self.human.body_obj.modifiers:
                 if mod.type == "MASK":
                     mod.show_viewport = True
