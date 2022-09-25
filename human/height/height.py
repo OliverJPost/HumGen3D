@@ -42,6 +42,38 @@ class HeightSettings:
         return self._human.rig_obj.dimensions[2]
 
     @injected_context
+    def set(self, value_cm: float, context: Context = None, realtime=False):
+        if context.scene.HG3D.update_exception:
+            return
+
+        value = 0
+
+        if value_cm > 184:
+            value = (value_cm - 184) / (200 - 184)
+            livekey_name = "hg_taller"
+        else:
+            value = -((value_cm - 150) / (184 - 150) - 1)
+            livekey_name = "hg_shorter"
+
+        if not value:
+            return
+
+        if realtime and not context.scene.HG3D.slider_is_dragging:
+            context.scene.HG3D.slider_is_dragging = True
+            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
+
+        self.name = livekey_name
+        self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
+        live_keys.set_livekey(self, value)
+
+        if not realtime:
+            self.correct_armature(context)
+            for cloth_obj in self._human.outfit.objects:
+                self._human.outfit.deform_cloth_to_human(context, cloth_obj)
+            for shoe_obj in self._human.footwear.objects:
+                self._human.footwear.deform_cloth_to_human(context, shoe_obj)
+
+    @injected_context
     def correct_armature(self, context=None):
         # FIXME symmetry
         body = self._human.body_obj
@@ -94,38 +126,6 @@ class HeightSettings:
         rig.select_set(False)
         for obj in selected_objects:
             obj.select_set(True)
-
-    @injected_context
-    def set(self, value_cm: float, context: Context = None, realtime=False):
-        if context.scene.HG3D.update_exception:
-            return
-
-        value = 0
-
-        if value_cm > 184:
-            value = (value_cm - 184) / (200 - 184)
-            livekey_name = "hg_taller"
-        else:
-            value = -((value_cm - 150) / (184 - 150) - 1)
-            livekey_name = "hg_shorter"
-
-        if not value:
-            return
-
-        if realtime and not context.scene.HG3D.slider_is_dragging:
-            context.scene.HG3D.slider_is_dragging = True
-            bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
-
-        self.name = livekey_name
-        self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
-        live_keys.set_livekey(self, value)
-
-        if not realtime:
-            self.correct_armature(context)
-            for cloth_obj in self._human.outfit.objects:
-                self._human.outfit.deform_cloth_to_human(context, cloth_obj)
-            for shoe_obj in self._human.footwear.objects:
-                self._human.footwear.deform_cloth_to_human(context, shoe_obj)
 
     def correct_eyes(self):
         eye_obj = self._human.eye_obj
