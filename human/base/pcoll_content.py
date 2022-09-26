@@ -118,10 +118,17 @@ class PreviewCollectionContent:
 
         pref = get_prefs()
 
-        if gender_toggle:
-            categ_folder = os.path.join(pref.filepath, pcoll_name, gender)
+        if pcoll_name == "hair":
+            folder = os.path.join("hair", "head")
+        elif pcoll_name == "face_hair":
+            folder = os.path.join("hair", "face_hair")
         else:
-            categ_folder = os.path.join(pref.filepath, pcoll_name)
+            folder = pcoll_name
+
+        if gender_toggle:
+            categ_folder = os.path.join(pref.filepath, folder, gender)
+        else:
+            categ_folder = os.path.join(pref.filepath, folder)
 
         if not os.path.isdir(categ_folder):
             hg_log(
@@ -134,6 +141,7 @@ class PreviewCollectionContent:
         dirlist.sort()
         categ_list = []
         ext = (".jpg", "png", ".jpeg", ".blend")
+        # FIXME
         for item in dirlist:
             if not item.endswith(ext) and ".DS_Store" not in item:
                 categ_list.append(item)
