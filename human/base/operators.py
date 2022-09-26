@@ -197,30 +197,3 @@ class HG_DELETE(bpy.types.Operator):
         human.delete()
 
         return {"FINISHED"}
-
-
-class HG_REVERT_TO_CREATION(bpy.types.Operator):
-    """
-    Reverts to creation phase by deleting the current human and making the
-    corresponding backup human the active human
-
-    Operator Type:
-        HumGen phase change
-        Object deletion
-
-    Prereq:
-        Active object is part of finalize phase
-    """
-
-    bl_idname = "hg3d.revert"
-    bl_label = "Revert: ALL changes made after creation phase will be discarded. This may break copied version of this human"
-    bl_description = "Revert to the creation phase. This discards any changes made after the creation phase"
-    bl_options = {"UNDO"}
-
-    def invoke(self, context, event):
-        # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
-
-    def execute(self, context):
-        Human.from_existing(context.object).finalize_phase.revert(context)
-        return {"FINISHED"}
