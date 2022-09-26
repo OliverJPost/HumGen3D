@@ -28,8 +28,8 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         #     row.label(text="", icon="KEYTYPE_KEYFRAME_VEC")
 
         self.layout.operator(
-            "hg3d.random", icon="FILE_REFRESH"
-        ).random_type = "body_type"
+            "hg3d.random_value", icon="FILE_REFRESH"
+        ).random_type = "body"
 
         col = self.layout.column()
         col.separator()

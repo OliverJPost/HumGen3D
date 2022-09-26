@@ -25,8 +25,8 @@ class ClothingPanel(MainPanelPart):
 
         row_h.prop(self.sett.pcoll, f"{category}_category", text="")
         row_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
-        ).random_type = category
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = category
 
 
 class HG_PT_OUTFIT(ClothingPanel, bpy.types.Panel):

@@ -3,17 +3,18 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import (
+from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
     IntProperty,
     StringProperty,
-)  # type:ignore
-from HumGen3D.backend import hg_log, hg_delete, refresh_pcoll
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preview_collections import (
-    set_random_active_in_pcoll,
 )
+from HumGen3D.backend import hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend.memory_management import hg_delete
+
+# from HumGen3D.backend.preview_collections import (
+#    set_random_active_in_pcoll,
+# )
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import apply_shapekeys
 
@@ -26,6 +27,8 @@ from HumGen3D.human.keys.keys import apply_shapekeys
 #     material_setup,
 # )
 from .batch_functions import height_from_bell_curve
+
+set_random_active_in_pcoll = None  # FIXME
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator):

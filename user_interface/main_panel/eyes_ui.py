@@ -33,8 +33,8 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
         row = col.row(align=True)
         row.prop(nodes["HG_Eye_Color"].inputs[2], "default_value", text="Iris Color")
         row.operator(
-            "hg3d.random", text="", icon="FILE_REFRESH"
-        ).random_type = "iris_color"
+            "hg3d.random_value", text="", icon="FILE_REFRESH"
+        ).random_type = "eyes"
         col.prop(
             nodes["HG_Scelera_Color"].inputs[2],
             "default_value",

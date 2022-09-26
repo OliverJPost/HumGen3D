@@ -19,19 +19,35 @@ class PreviewCollectionContent:
 
     def _set(self, context):
         """Internal way of setting content, only used by enum properties"""
-        active_item = getattr(context.scene.HG3D.pcoll, self._pcoll_name)
+        sett = context.scene.HG3D
+        if sett.update_exception:
+            return
+
+        active_item = getattr(sett.pcoll, self._pcoll_name)
         try:
             self.set(active_item, context)
         except TypeError:
             self.set(active_item)
 
     @injected_context
-    def set_random(self, context=None):
+    def set_random(self, context=None, update_ui=False):
         options = self.get_options(context)
         chosen = random.choice(options)
 
-        # Use indirect way so the UI reflects the chosen item
-        setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
+        # TODO make sure random is not the same as previous
+        # TODO add catch for empty pcoll
+
+        try:
+            self.set(chosen, context)
+        except TypeError:
+            self.set(chosen)
+
+        if update_ui:
+            # Use indirect way so the UI reflects the chosen item
+            sett = context.scene.HG3D
+            sett.update_exception = True
+            setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
+            sett.update_exception = False
 
     @injected_context
     def get_options(self, context=None) -> List[Tuple[str, str, str, int]]:
