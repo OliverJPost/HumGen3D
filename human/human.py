@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
 from bpy.types import Object
+from HumGen3D.backend import preview_collections
 
 from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
 from .base.collections import add_to_collection
@@ -86,6 +87,18 @@ class Human:
         refresh_pcoll(None, context, "humans", gender_override=gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
+
+    @staticmethod
+    @injected_context
+    def _get_full_options(self, context):
+        """Internal method for getting preview collection items."""
+        pcoll = preview_collections.get("humans")
+        if not pcoll:
+            return [
+                ("none", "Reload category below", "", 0),
+            ]
+
+        return pcoll["humans"]
 
     @classmethod
     def from_existing(

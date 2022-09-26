@@ -17,7 +17,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preview_collections import get_pcoll_enum_items, refresh_pcoll
+from HumGen3D.backend.preview_collections import refresh_pcoll
 from HumGen3D.extern.blendfile import open_blend
 from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignore
     ShowMessageBox,
@@ -468,7 +468,9 @@ def _iterate_items_to_collection(
     for categ in pcoll_dict:
         refresh_pcoll(self, context, pcoll_dict[categ], ignore_genders=True)
 
-        for content_item_enum in get_pcoll_enum_items(self, context, pcoll_dict[categ]):
+        for (
+            content_item_enum
+        ) in None:  # FIXME get_pcoll_enum_items(self, context, pcoll_dict[categ]):
             if categ == "starting_humans" and "shapekeys" in content_item_enum[0]:
                 continue
 
