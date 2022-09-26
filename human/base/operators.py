@@ -69,19 +69,3 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
         else:
             getattr(human, random_type).randomize()
         return {"FINISHED"}
-
-
-class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
-    """Turn hair children to 1 or back to render amount"""
-
-    bl_idname = "hg3d.togglechildren"
-    bl_label = "Toggle hair children"
-    bl_description = "Toggle between hidden and visible hair children"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        human = Human.from_existing(context.object)
-        current_state = human.hair.children_ishidden
-        human.hair.children_set_hide(not current_state)
-
-        return {"FINISHED"}
