@@ -12,7 +12,6 @@ from HumGen3D.human.human import Human
 from HumGen3D.human.base.exceptions import HumGenException
 
 from ..content_packs.custom_content_packs import build_content_collection
-from ..preview_collections import get_pcoll_enum_items, refresh_pcoll
 from .property_functions import find_folders
 
 
@@ -72,7 +71,9 @@ def refresh(attr):
 class PreviewCollectionProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties of and about the preview collections of HG"""
 
-    humans: EnumProperty(items=lambda a, b: get_pcoll_enum_items(a, b, "humans"))
+    humans: EnumProperty(
+        items=lambda self, context: Human._get_full_options(self, context)
+    )
 
     # posing
     poses: EnumProperty(

@@ -18,24 +18,6 @@ from . import get_prefs, hg_log
 preview_collections = {}  # global dictionary of all pcolls
 
 
-def get_pcoll_enum_items(self, context, pcoll_type) -> list:
-    """Returns an enum of the items in the passed preview collection
-
-    Args:
-        pcoll_type (str): name of preview collection
-
-    Returns:
-        list: enum with items for this preview collection
-    """
-    pcoll = preview_collections.get(pcoll_type)
-    if not pcoll:
-        return [
-            ("none", "Reload category below", "", 0),
-        ]
-
-    return pcoll[pcoll_type]
-
-
 def refresh_pcoll(
     self,
     context,
