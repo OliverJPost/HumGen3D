@@ -47,7 +47,9 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         row.scale_y = 2
         row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
-        row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "humans"
+        row.operator(
+            "hg3d.random_choice", text="", icon="FILE_REFRESH"
+        ).pcoll_name = "humans"
 
         col = col.column()
         col.scale_y = 2

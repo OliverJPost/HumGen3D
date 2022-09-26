@@ -52,8 +52,8 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         row_h.scale_y = 1.5
         row_h.prop(self.sett.pcoll, "expression_category", text="")
         row_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
-        ).random_type = "expressions"
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = "expression"
 
         filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:

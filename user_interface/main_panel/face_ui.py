@@ -16,7 +16,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col.scale_y = 1.5
 
         row = col.row(align=True)
-        row.operator("hg3d.random", text="Randomize all").random_type = "face_all"
+        row.operator("hg3d.random_value", text="Randomize all").random_type = "face_all"
         row.operator("hg3d.resetface", text="", icon="LOOP_BACK")
 
         col = self.layout.column(align=True)
@@ -113,7 +113,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         )
         if is_open_propname != "presets":
             row.operator(
-                "hg3d.random", text="", icon="FILE_REFRESH", emboss=False
+                "hg3d.random_value", text="", icon="FILE_REFRESH", emboss=False
             ).random_type = "face_{}".format(is_open_propname)
         else:
             row.operator("hg3d.showinfo", text="", icon="BLANK1", emboss=False)

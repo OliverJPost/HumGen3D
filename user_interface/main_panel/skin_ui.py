@@ -50,7 +50,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         col.scale_y = 1.2
 
         col.operator(
-            "hg3d.random", text="Randomize skin", icon="FILE_REFRESH"
+            "hg3d.random_value", text="Randomize skin", icon="FILE_REFRESH"
         ).random_type = "skin"
 
         col.separator()

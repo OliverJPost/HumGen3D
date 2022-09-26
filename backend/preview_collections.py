@@ -18,66 +18,6 @@ from . import get_prefs, hg_log
 preview_collections = {}  # global dictionary of all pcolls
 
 
-def set_random_active_in_pcoll(
-    context, sett, pcoll_name, searchterm=None, gender_override=None
-):
-    """Sets a random object in this preview collection as active
-
-    Args:
-        sett (PropertyGroup): HumGen props
-        pcoll_name (str): internal name of preview collection to pick random for
-        searchterm (str): filter to only look for items in the pcoll that include this string
-    """
-
-    refresh_pcoll(None, context, pcoll_name, gender_override=gender_override)
-
-    current_item = sett.pcoll[pcoll_name]
-
-    pcoll_list = sett["previews_list_{}".format(pcoll_name)]
-    random_item = get_random_from_list(pcoll_list, current_item, searchterm)
-
-    if not random_item:
-        setattr(sett.pcoll, f"{pcoll_name}_category", "All")
-        refresh_pcoll(None, context, pcoll_name)
-        pcoll_list = sett["previews_list_{}".format(pcoll_name)]
-        random_item = get_random_from_list(pcoll_list, current_item, searchterm)
-
-    setattr(sett.pcoll, pcoll_name, random_item)
-
-
-def get_random_from_list(lst, current_item, searchterm) -> Any:
-    """Gets a random item from passed list, trying max 6 times to prevent choosing
-    the currently active item
-
-    Args:
-        lst (list): list to choose item from
-        current_item (AnyType): currently active item
-        searchterm (str): filter to only look for items in the pcoll that include this string
-
-    Returns:
-        Any: randomly chosen item
-    """
-
-    corrected_list = (
-        [item for item in lst if searchterm in item.lower()] if searchterm else lst
-    )
-    if not corrected_list:
-        print("ERROR: Searchterm not found in pcoll: ", searchterm)
-        corrected_list = lst
-
-    try:
-        random_item = random.choice(corrected_list)
-    except IndexError:
-        return None
-
-    i = 0
-    while random_item == current_item and i < 5:
-        random_item = random.choice(corrected_list)
-        i += 1
-
-    return random_item
-
-
 def get_pcoll_enum_items(self, context, pcoll_type) -> list:
     """Returns an enum of the items in the passed preview collection
 

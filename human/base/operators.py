@@ -3,7 +3,6 @@ from calendar import c
 
 import bpy
 from HumGen3D.backend import get_prefs, refresh_pcoll
-from HumGen3D.backend.preview_collections import set_random_active_in_pcoll
 from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
 from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
     update_tips_from_context,
@@ -12,38 +11,24 @@ from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
 from ..human import Human
 
 
-class HG_RANDOM(bpy.types.Operator):
-    """randomizes this specific property, may it be a slider or a pcoll
-
-    API: True
-
-    Operator type:
-        Prop setter
-        Pcoll manipulation
-
-    Prereq:
-        Passed random_type
-        Active object is part of HumGen human
-
-    Args:
-        random_type (str): internal name of property to randomize
+class HG_RANDOM_CHOICE(bpy.types.Operator):
+    """Picks a random item to be active in this preview collection. For all pcolls
+    except "humans" it will also load the item onto the humna.
     """
 
-    bl_idname = "hg3d.random"
-    bl_label = "Randomize"
-    bl_description = "Randomize this category"
+    bl_idname = "hg3d.random_choice"
+    bl_label = "Random Choice"
+    bl_description = "Pick a random choice for this category"
     bl_options = {"UNDO", "INTERNAL"}
 
-    random_type: bpy.props.StringProperty()
+    pcoll_name: bpy.props.StringProperty()
 
     def execute(self, context):
         random_type = self.random_type
         sett = context.scene.HG3D
         human = Human.from_existing(context.active_object, strict_check=False)
 
-        if random_type == "body_type":
-            human.body.randomize()
-        elif random_type in (
+        if random_type in (
             "poses",
             "expressions",
             "outfits",
@@ -51,24 +36,38 @@ class HG_RANDOM(bpy.types.Operator):
             "footwear",
             "hair",
         ):
-            set_random_active_in_pcoll(context, sett, random_type)
+            getattr(human, random_type).set_random(update_ui=True)
         elif random_type == "humans":
             sett.gender = random.choice(["male", "female"])
-            set_random_active_in_pcoll(
-                context, sett, random_type, gender_override=sett.gender
-            )
-        elif random_type == "skin":
-            human.skin.randomize()
-        elif random_type.startswith("face"):
-            ff_subcateg = random_type[
-                5:
-            ]  # facial subcategories follow the pattern face_{category}
+            current = sett.pcoll.humans
+            options = human.get_preset_options(sett.gender, context)
+            chosen = random.choice([o for o in options if o != current])
+            sett.pcoll.humans = chosen
+
+        return {"FINISHED"}
+
+
+class HG_RANDOM_VALUE(bpy.types.Operator):
+    """randomizes this specific property"""
+
+    bl_idname = "hg3d.random_value"
+    bl_label = "Randomize"
+    bl_description = "Randomize this value"
+    bl_options = {"UNDO", "INTERNAL"}
+
+    random_type: bpy.props.StringProperty()
+
+    def execute(self, context):
+        random_type = self.random_type
+        human = Human.from_existing(context.active_object, strict_check=False)
+
+        if random_type.startswith("face"):
+            # facial subcategories follow the pattern face_{category}
+            ff_subcateg = random_type[5:]
             # where face_all does all facial features
             human.face.randomize(ff_subcateg)
-        elif random_type == "iris_color":
-            human.eyes.randomize()
-        elif random_type == "height":
-            human.height.randomize()
+        else:
+            getattr(human, random_type).randomize()
         return {"FINISHED"}
 
 
