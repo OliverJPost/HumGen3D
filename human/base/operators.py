@@ -72,14 +72,7 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
 
 
 class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
-    """Turn hair children to 1 or back to render amount
-
-    Operator type:
-        Particle system
-
-    Prereq:
-        Active object is part of HumGen human
-    """
+    """Turn hair children to 1 or back to render amount"""
 
     bl_idname = "hg3d.togglechildren"
     bl_label = "Toggle hair children"
@@ -124,11 +117,6 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
     Section tabs, pressing it will make that section the open/active one,
     closing any other opened sections
 
-    API: False
-
-    Operator Type:
-        HumGen UI manipulation
-
     Args:
         section_name (str): name of the section to toggle
     """
@@ -139,6 +127,14 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         Open this menu
         CTRL+Click to keep hair children turned on
         """
+
+    categ_dict = {
+        "outfit": ("outfits",),
+        "footwear": ("footwear",),
+        "pose": ("poses",),
+        "hair": ("hair", "face_hair"),
+        "expression": ("expressions",),
+    }
 
     section_name: bpy.props.StringProperty()
     children_hide_exception: bpy.props.BoolProperty(default=False)
@@ -152,50 +148,33 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.ui.phase = self.section_name
 
-        # PCOLL add here
-        categ_dict = {
-            "outfit": ("outfits",),
-            "footwear": ("footwear",),
-            "pose": ("poses",),
-            "hair": ("hair", "face_hair"),
-            "expression": ("expressions",),
-        }
-
-        if not any(human.is_batch_result):
-            if self.section_name in categ_dict:
-                for item in categ_dict[self.section_name]:
-                    refresh_pcoll(self, context, item)
+        for item in self.categ_dict.get(self.section_name):
+            refresh_pcoll(self, context, item)
 
         pref = get_prefs()
-        if pref.auto_hide_hair_switch and not self.children_hide_exception:
-            if not self.section_name in ("hair", "eyes"):
-                on_before = not human.hair.children_ishidden
-                human.hair.children_set_hide(True)
-                if on_before:
-                    self.report(
-                        {"INFO"},
-                        "Hair children were hidden to improve performance.",
-                    )
-
-                    if pref.auto_hide_popup:
-                        HG_OT_INFO.ShowMessageBox(None, "autohide_hair")
+        if (
+            pref.auto_hide_hair_switch  # Turned on in preferences
+            and not self.children_hide_exception  # User did not hold Ctrl
+            and not self.section_name in ("hair", "eyes")  # It's not the hair tab
+            and not human.hair.children_ishidden  # The children weren't already hidden
+        ):
+            self.hide_hair_and_show_notification(human, pref)
 
         return {"FINISHED"}
 
+    def hide_hair_and_show_notification(self, human, pref):
+        human.hair.children_set_hide(True)
+        self.report(
+            {"INFO"},
+            "Hair children were hidden to improve performance.",
+        )
+
+        if pref.auto_hide_popup:
+            HG_OT_INFO.ShowMessageBox(None, "autohide_hair")
+
 
 class HG_NEXT_PREV_HUMAN(bpy.types.Operator):
-    """Zooms in on next or previous human in the scene
-
-    Operator Type:
-        Selection
-        VIEW 3D (zoom)
-
-    Args:
-        forward (bool): True if go to next, False if go to previous
-
-    Prereq:
-        Humans in scene
-    """
+    """Zooms in on next or previous human in the scene"""
 
     bl_idname = "hg3d.next_prev_human"
     bl_label = "Next/Previous"
