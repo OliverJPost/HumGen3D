@@ -1,9 +1,9 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
-from ...backend.preview_collections import get_hg_icon, preview_collections
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
 
@@ -104,7 +104,6 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        hg_icons = preview_collections["hg_icons"]
 
         layout.label(text="Only during creation phase:", icon="RADIOBUT_OFF")
         col = layout.column()
@@ -114,7 +113,7 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Save as starting human",
-            icon_value=hg_icons["face"].icon_id,
+            icon_value=get_hg_icon("face"),
         ).content_type = "starting_human"
 
         layout.label(text="Always possible:", icon="RADIOBUT_OFF")
@@ -124,13 +123,13 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Save hairstyle",
-            icon_value=hg_icons["hair"].icon_id,
+            icon_value=get_hg_icon("hair"),
         ).content_type = "hair"
 
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Save custom shapekeys",
-            icon_value=hg_icons["body"].icon_id,
+            icon_value=get_hg_icon("body"),
         ).content_type = "shapekeys"
 
         layout.label(text="Only after creation phase:", icon="RADIOBUT_OFF")
@@ -141,13 +140,13 @@ class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Save outfit/footwear",
-            icon_value=hg_icons["clothing"].icon_id,
+            icon_value=get_hg_icon("clothing"),
         ).content_type = "clothing"
 
         col.operator(
             "hg3d.open_content_saving_tab",
             text="Save pose",
-            icon_value=hg_icons["pose"].icon_id,
+            icon_value=get_hg_icon("pose"),
         ).content_type = "pose"
 
 

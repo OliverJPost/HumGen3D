@@ -1,9 +1,9 @@
 import bpy
 from HumGen3D import Human
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
-from .documentation.tips_suggestions_ui import update_tips_from_context
+
 from .documentation.info_popups import HG_OT_INFO
+from .documentation.tips_suggestions_ui import update_tips_from_context
 
 
 class HG_SECTION_TOGGLE(bpy.types.Operator):
@@ -22,14 +22,6 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         CTRL+Click to keep hair children turned on
         """
 
-    categ_dict = {
-        "outfit": ("outfits",),
-        "footwear": ("footwear",),
-        "pose": ("poses",),
-        "hair": ("hair", "face_hair"),
-        "expression": ("expressions",),
-    }
-
     section_name: bpy.props.StringProperty()
     children_hide_exception: bpy.props.BoolProperty(default=False)
 
@@ -42,8 +34,14 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.ui.phase = self.section_name
 
-        for item in self.categ_dict.get(self.section_name):
-            refresh_pcoll(self, context, item)
+        if self.section_name == "hair":
+            human.hair.regular_hair.refresh_pcoll(context)
+            human.hair.facial_hair.refresh_pcoll(context)
+        else:
+            try:
+                getattr(human, self.section_name).refresh_pcoll(context)
+            except AttributeError:
+                pass
 
         pref = get_prefs()
         if (
@@ -121,11 +119,12 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
 
     def execute(self, context):
         sett = context.scene.HG3D
+        human = Human.from_existing(context.object)
         if self.searchbox_name == "cpack_creator":
             get_prefs().cpack_content_search = ""
         else:
-            sett.pcoll["search_term_{}".format(self.searchbox_name)] = ""
-            refresh_pcoll(self, context, self.searchbox_name)
+            sett.pcoll[f"search_term_{self.searchbox_name}"] = ""
+            getattr(human, self.searchbox_name).refresh_pcoll(context)
 
         return {"FINISHED"}
 
