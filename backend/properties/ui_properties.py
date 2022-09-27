@@ -7,7 +7,7 @@ from re import L
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
-from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
 

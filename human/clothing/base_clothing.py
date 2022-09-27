@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
@@ -85,7 +85,7 @@ class BaseClothing(PreviewCollectionContent):
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
-        refresh_pcoll(self, context, "outfits")
+        self.refresh_pcoll(context)
 
     def deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using

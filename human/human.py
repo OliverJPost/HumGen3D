@@ -9,7 +9,7 @@ import bpy
 from bpy.types import Object
 from HumGen3D.backend import preview_collections
 
-from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
+from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
@@ -84,7 +84,7 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-        refresh_pcoll(None, context, "humans", gender_override=gender)
+        preview_collections["humans"].populate(context, gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
 
@@ -92,7 +92,7 @@ class Human:
     @injected_context
     def _get_full_options(self, context):
         """Internal method for getting preview collection items."""
-        pcoll = preview_collections.get("humans")
+        pcoll = preview_collections.get("humans").pcoll
         if not pcoll:
             return [
                 ("none", "Reload category below", "", 0),

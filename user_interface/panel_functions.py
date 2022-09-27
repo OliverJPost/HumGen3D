@@ -1,6 +1,7 @@
-import bpy  # type: ignore
+import bpy
 
 from ..backend import preview_collections
+from .icons.icons import get_hg_icon  # type: ignore
 
 CHAR_WIDTH_DICT = {
     "c": 3.66,
@@ -187,11 +188,10 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
         label = ui_name.capitalize().replace("_", " ")
 
     try:
-        hg_icons = preview_collections["hg_icons"]
         row.operator(
             "hg3d.section_toggle",
             text=label,
-            icon_value=hg_icons[ui_name].icon_id,
+            icon_value=get_hg_icon(ui_name),
             emboss=False,
         ).section_name = ui_name
     except:
