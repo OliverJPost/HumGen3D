@@ -5,7 +5,6 @@ from typing import List, Tuple
 
 from HumGen3D.backend import get_prefs, preview_collections
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preview_collections import _populate_pcoll
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
 
@@ -50,10 +49,10 @@ class PreviewCollectionContent:
             sett.update_exception = False
 
     @injected_context
-    def get_options(self, context=None) -> List[Tuple[str, str, str, int]]:
+    def get_options(self, context=None) -> List[str]:
         # Return only the name from the enum. Skip the first one
         # FIXME check all pcolls if 0 is always skipped
-        self._refresh(context)
+        self.refresh_pcoll(context, ignore_category_and_searchterm=True)
         options = [option[0] for option in self._get_full_options()[1:]]
         if not options:
             raise HumGenException(
@@ -64,7 +63,7 @@ class PreviewCollectionContent:
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""
-        pcoll = preview_collections.get(self._pcoll_name)
+        pcoll = preview_collections.get(self._pcoll_name).pcoll
         if not pcoll:
             return [
                 ("none", "Reload category below", "", 0),
@@ -80,26 +79,21 @@ class PreviewCollectionContent:
             self._pcoll_name, self._pcoll_gender_split, self._human.gender
         )
 
-    def _refresh(self, context):
+    def refresh_pcoll(self, context, ignore_category_and_searchterm=False):
         """Refresh the items of this preview collection"""
         sett = context.scene.HG3D
         self._check_for_HumGen_filepath_issues()
         pcoll_name = self._pcoll_name
 
-        sett.load_exception = False if pcoll_name == "poses" else True
+        if ignore_category_and_searchterm:
+            preview_collections[self._pcoll_name].populate(
+                context, self._human.gender, use_search_term=False
+            )
+        else:
+            preview_collections[self._pcoll_name].refresh(context, self._human.gender)
 
-        _populate_pcoll(
-            self,
-            context,
-            pcoll_name,
-            not self._pcoll_gender_split,
-            None,
-            hg_rig=self._human.rig_obj,
-        )
         sett.pcoll[pcoll_name] = "none"  # set the preview collection to
         # the 'click here to select' item
-
-        sett.load_exception = False
 
     def _check_for_HumGen_filepath_issues(self):
         pref = get_prefs()

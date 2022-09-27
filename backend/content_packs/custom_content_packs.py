@@ -17,12 +17,12 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preview_collections import refresh_pcoll
 from HumGen3D.extern.blendfile import open_blend
 from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignore
     ShowMessageBox,
     show_message,
 )
+from HumGen3D.backend import preview_collections
 
 from .content_packs import cpacks_refresh
 
@@ -466,7 +466,7 @@ def _iterate_items_to_collection(
     """
     # add everything except shapekeys
     for categ in pcoll_dict:
-        refresh_pcoll(self, context, pcoll_dict[categ], ignore_genders=True)
+        preview_collections[pcoll_dict[categ]].refresh(context, None)
 
         for (
             content_item_enum

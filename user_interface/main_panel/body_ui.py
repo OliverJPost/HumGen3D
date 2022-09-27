@@ -1,7 +1,6 @@
 import bpy
 from HumGen3D.human.human import Human
 
-from ...backend.preview_collections import get_hg_icon
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 

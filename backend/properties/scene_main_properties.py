@@ -15,7 +15,6 @@ from bpy.props import (  # type: ignore
 from HumGen3D.human.human import Human
 from HumGen3D.utility_section.utility_functions import refresh_modapply
 
-from ..preview_collections import refresh_pcoll
 from .bake_props import BakeProps
 from .batch_props import BatchProps
 from .bone_size_props import BoneSizeProps
@@ -23,6 +22,7 @@ from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
+from HumGen3D.backend import preview_collections
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -51,7 +51,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("female", "Female", "", 1),
         ],
         default="male",
-        update=lambda a, b: refresh_pcoll(a, b, "humans"),
+        update=lambda self, context: preview_collections["humans"].refresh(
+            context, self.gender
+        ),
     )
 
     human_height: FloatProperty(

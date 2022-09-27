@@ -9,7 +9,7 @@ from bpy.props import (  # type:ignore
     IntProperty,
     StringProperty,
 )
-from HumGen3D.backend import hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.memory_management import hg_delete
 
 # from HumGen3D.backend.preview_collections import (
@@ -17,6 +17,7 @@ from HumGen3D.backend.memory_management import hg_delete
 # )
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.backend import preview_collections
 
 # from ..utility_section.baking import (  # type:ignore
 #     add_image_node,
@@ -372,7 +373,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     def _set_pose(self, context, sett, pose_type):
         if pose_type == "t_pose":
-            refresh_pcoll(None, context, "poses")
+            preview_collections["poses"].refresh(context)
             sett.pcoll.poses = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
         else:
             sett.pose_category = pose_type.capitalize().replace("_", " ")
