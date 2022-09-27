@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 Functions related to the preview_collections of human generator, including
 population of them

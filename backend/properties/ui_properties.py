@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.

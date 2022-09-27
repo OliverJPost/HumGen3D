@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 import numpy as np
 from HumGen3D.backend import hg_delete

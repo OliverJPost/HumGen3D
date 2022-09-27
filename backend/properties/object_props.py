@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 object.HG
 Properties added to every object when Human Generator is installed. Used for storing
