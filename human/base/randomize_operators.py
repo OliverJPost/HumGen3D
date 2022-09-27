@@ -1,11 +1,6 @@
 import random
-from calendar import c
 
 import bpy
-from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
-from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
-    update_tips_from_context,
-)
 
 from ..human import Human
 
