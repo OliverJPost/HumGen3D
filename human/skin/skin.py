@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, List, Tuple
 
 import bpy
 from bpy.types import bpy_prop_collection  # type:ignore
-from HumGen3D.backend import get_prefs, refresh_pcoll
+from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -247,7 +247,7 @@ class TextureSettings(PreviewCollectionContent):
     @injected_context
     def _set_from_preset(self, mat_preset_data: dict, context=None) -> None:
 
-        refresh_pcoll(None, context, "textures")
+        self.refresh_pcoll(context)
         texture_name = mat_preset_data["diffuse"]
         texture_library = mat_preset_data["texture_library"]
         gender = self._human.gender

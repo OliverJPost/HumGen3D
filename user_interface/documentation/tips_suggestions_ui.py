@@ -15,6 +15,7 @@ from HumGen3D.user_interface.documentation.tips_and_suggestions.extras_menu_tips
 from HumGen3D.user_interface.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 lorum_ipsum = """
 Lorem ipsum dolor sit amet, consectetur
@@ -37,8 +38,6 @@ def draw_tips_suggestions_ui(layout, context):
 
     col = layout.column(align=True)
 
-    hg_icons = preview_collections["hg_icons"]
-
     col.separator(factor=2)
 
     important_tip = True
@@ -48,7 +47,7 @@ def draw_tips_suggestions_ui(layout, context):
     light_state = "on" if important_tip else "off"
     box.label(
         text="Tips & Suggestions",
-        icon_value=hg_icons[f"light_{light_state}"].icon_id,
+        icon_value=get_hg_icon(f"light_{light_state}"),
     )
 
     tips_col = context.scene.hg_tips_and_suggestions

@@ -8,8 +8,8 @@ from weakref import ref
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
-from HumGen3D.human.human import Human
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.human import Human
 
 from ..content_packs.custom_content_packs import build_content_collection
 from .property_functions import find_folders
@@ -64,7 +64,7 @@ def refresh(attr):
     retreiver = attrgetter(attr)
     return lambda self, context: retreiver(
         Human.from_existing(context.object)
-    )._refresh(context)
+    ).refresh_pcoll(context)
 
 
 # TODO create repetetive properties in loop

@@ -1,10 +1,11 @@
 import bpy
-from HumGen3D.backend import get_hg_icon, get_prefs, preview_collections
+from HumGen3D.backend import get_prefs
 from HumGen3D.batch_generator.batch_functions import (
     calculate_batch_statistics,
     get_batch_marker_list,
     height_from_bell_curve,
 )
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
@@ -142,7 +143,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw_header(self, context):
-        self.layout.label(text="", icon_value=get_hg_icon("length"))
+        self.layout.label(text="", icon_value=get_hg_icon("height"))
 
     def draw(self, context):
         layout = self.layout
@@ -330,7 +331,6 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
         layout.enabled = batch_sett.clothing
-        hg_icons = preview_collections["hg_icons"]
 
         col = layout.column(align=True)
         box = col.box().row()
