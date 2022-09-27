@@ -25,11 +25,11 @@ class BodySettings:
             hg_rig (Object): HumGen armature
         """
 
-        for sk in self._human.keys.body_proportions:
-            if sk.name.startswith("bp_skinny"):
-                sk.value = random.uniform(0, 0.7)
+        for key in self.keys:
+            if key.name == "skinny":
+                key.value = random.uniform(0, 0.7)
             else:
-                sk.value = random.uniform(0, 1.0)
+                key.value = random.uniform(0, 1.0)
 
     @injected_context
     def set_bone_scale(self, scale, bone_type, context=None):
@@ -147,7 +147,7 @@ class BodySettings:
             return scaling_dict[bone_type]
 
     def __hash__(self) -> int:
-        sk_values = [sk.value for sk in self._human.shape_keys.body_proportions]
+        sk_values = [sk.value for sk in self._human.body.keys]
 
         def get_bone_scales():
             sc = self._get_scaling_data(1, "", return_whole_dict=True)
