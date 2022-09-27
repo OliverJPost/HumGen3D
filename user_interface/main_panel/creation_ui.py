@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.human.human import Human
 
@@ -47,14 +49,16 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         row.scale_y = 2
         row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
-        row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "humans"
+        row.operator(
+            "hg3d.random_choice", text="", icon="FILE_REFRESH"
+        ).pcoll_name = "humans"
 
         col = col.column()
         col.scale_y = 2
         col.alert = True
         col.operator("hg3d.startcreation", icon="COMMUNITY", depress=True)
 
-        if "hg_batch_marker" in context.object:
+        if context.object and "hg_batch_marker" in context.object:
             self._draw_batch_marker_notification(col)
 
     def _draw_batch_marker_notification(self, layout):

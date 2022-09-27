@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 import random
 
@@ -13,7 +15,7 @@ from HumGen3D.tests.fixtures import (
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_facial_rig(human, context):
-    inital_sk_count = len(human.shape_keys)
+    inital_sk_count = len(human.keys)
     human.expression.load_facial_rig(context)
 
     for bone_name in human.expression._get_frig_bones():
@@ -31,7 +33,7 @@ def test_facial_rig(human, context):
         assert True
 
     # FIXME not all shapekeys are deleted
-    # assert len(human.shape_keys) == inital_sk_count
+    # assert len(human.keys) == inital_sk_count
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
@@ -43,7 +45,7 @@ def test_set(human, context):
     human.expression.set(chosen)
     sk_name, _ = os.path.splitext(os.path.basename(chosen))
 
-    sk = human.shape_keys.get(f"expr_{sk_name}")
+    sk = human.keys.get(f"expr_{sk_name}")
     assert sk
     assert sk.value
     assert not sk.mute

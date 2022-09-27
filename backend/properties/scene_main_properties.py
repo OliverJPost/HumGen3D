@@ -1,3 +1,6 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+
 """
 context.scene.HG3D
 Main propertygroup of Human Generator, others are subclasses of this one.
@@ -15,7 +18,6 @@ from bpy.props import (  # type: ignore
 from HumGen3D.human.human import Human
 from HumGen3D.utility_section.utility_functions import refresh_modapply
 
-from ..preview_collections import refresh_pcoll
 from .bake_props import BakeProps
 from .batch_props import BatchProps
 from .bone_size_props import BoneSizeProps
@@ -23,6 +25,7 @@ from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
+from HumGen3D.backend import preview_collections
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -51,7 +54,9 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("female", "Female", "", 1),
         ],
         default="male",
-        update=lambda a, b: refresh_pcoll(a, b, "humans"),
+        update=lambda self, context: preview_collections["humans"].refresh(
+            context, self.gender
+        ),
     )
 
     human_height: FloatProperty(
@@ -61,9 +66,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         min=120,
         max=250,
         precision=0,
-        update=lambda s, c: Human.from_existing(c.object).height.set(
-            s.human_height, c, realtime=True
+        set=lambda s, value: Human.from_existing(bpy.context.object).height.set(
+            value, realtime=True
         ),
+        get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
 
     ######### skin props ###########
@@ -176,5 +182,3 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     modapply_keep_shapekeys: BoolProperty(default=True)
 
     show_hidden_tips: BoolProperty(default=False)
-
-    slider_is_dragging: BoolProperty(default=False)

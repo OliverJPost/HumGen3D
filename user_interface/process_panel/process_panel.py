@@ -1,8 +1,10 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from operator import attrgetter
 
 import bpy
-from HumGen3D.backend.preview_collections import get_hg_icon
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.panel_functions import (
     draw_panel_switch_header,
     draw_paragraph,

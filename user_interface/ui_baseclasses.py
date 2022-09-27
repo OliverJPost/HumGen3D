@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import functools
 import os
 from pathlib import Path
@@ -9,7 +11,7 @@ from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
 
-from ..backend.preview_collections import get_hg_icon
+from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
 

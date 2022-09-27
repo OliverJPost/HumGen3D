@@ -1,6 +1,8 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy  # type:ignore
 
-from ...backend import get_hg_icon
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):

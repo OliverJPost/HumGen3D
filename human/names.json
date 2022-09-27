@@ -1,36 +1,5 @@
-"""
-function that returns a random name for the given gender
-"""
-
-import random
-
-
-def get_name(gender) -> str:
-    """Chooses a random name from the Human Generator NameGen
-
-    Args:
-        gender (str): gender to pick name for
-
-    Returns:
-        str: random given name
-    """
-    rand_int = random.randrange(0, 499)
-
-    names = _get_namelist(gender)
-
-    return names[rand_int]
-
-
-def _get_namelist(gender) -> list:
-    """List of 500 names for each gender
-
-    Args:
-        gender (str): gender to return namelist for
-
-    Returns:
-        list: list with names
-    """
-    names_male = (
+{
+    "male": [
         "Josh",
         "Bobby",
         "Steven",
@@ -531,10 +500,9 @@ def _get_namelist(gender) -> list:
         "Santiago",
         "Sonny",
         "Gilbert",
-        "Delmar",
-    )
-
-    names_female = [
+        "Delmar"
+    ],
+    "female": [
         "Lucy",
         "Francisca",
         "Susan",
@@ -1035,7 +1003,6 @@ def _get_namelist(gender) -> list:
         "Elenor",
         "Belinda",
         "Harriet",
-        "Gertie",
+        "Gertie"
     ]
-
-    return names_male if gender == "male" else names_female
+}

@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from __future__ import annotations
 
 import os
@@ -15,7 +17,7 @@ def get_livekey(self):
     model."""
     human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
     name = self.name
-    temp_key = human.shape_keys.temp_key
+    temp_key = human.keys.temp_key
     current_sk_values = human.props.sk_values
     if temp_key and temp_key.name.endswith(name):
         return temp_key.value
@@ -37,7 +39,7 @@ def set_livekey(self, value: float):
     if not human:
         raise HumGenException("No active human")
 
-    temp_key = human.shape_keys.temp_key
+    temp_key = human.keys.temp_key
     # Change value of existing temp_key if it matches the changing key
     if temp_key and temp_key.name.endswith(name):
         temp_key.value = value
@@ -57,7 +59,7 @@ def set_livekey(self, value: float):
     # If there was a previous livekey on the temp_key, correct for it
     if temp_key:
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        human.shape_keys.permanent_key.data.foreach_get("co", permanent_key_coords)
+        human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
         permanent_key_coords = _add_temp_key_to_permanent_key_coords(
             human, temp_key, vert_count, obj_coords, permanent_key_coords
         )
@@ -69,7 +71,7 @@ def set_livekey(self, value: float):
             permanent_key_coords -= new_key_relative_coords * old_value
 
         # Write the coordinates to the permanent_key
-        human.shape_keys.permanent_key.data.foreach_set("co", permanent_key_coords)
+        human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
 
     # Add a new temp_key if it didn't exist already
     if not temp_key:
@@ -78,8 +80,8 @@ def set_livekey(self, value: float):
         temp_key.slider_min = -10
 
     # Write the coordinates to the temp_key
-    human.shape_keys.temp_key.data.foreach_set("co", new_key_coords)
-    human.shape_keys.temp_key.name = "LIVE_KEY_TEMP_" + name
+    human.keys.temp_key.data.foreach_set("co", new_key_coords)
+    human.keys.temp_key.name = "LIVE_KEY_TEMP_" + name
 
     temp_key.value = value
 
@@ -88,7 +90,7 @@ def _add_temp_key_to_permanent_key_coords(
     human, temp_key, vert_count, obj_coords, permanent_key_coords
 ):
     temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-    human.shape_keys.temp_key.data.foreach_get("co", temp_key_coords)
+    human.keys.temp_key.data.foreach_get("co", temp_key_coords)
 
     relative_temp_coords = temp_key_coords - obj_coords
     permanent_key_coords += relative_temp_coords * temp_key.value
@@ -104,7 +106,9 @@ class LiveKey(bpy.types.PropertyGroup):
 
     path: StringProperty()
     category: StringProperty()
+    subcategory: StringProperty()
     name: StringProperty()
+    gender: StringProperty()
     value: FloatProperty(
         default=0,
         min=-10,
