@@ -15,7 +15,7 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
 
 if TYPE_CHECKING:
-    from HumGen3D.human.base.live_keys import LiveKey
+    from .bpy_livekey import LiveKey
 
 from HumGen3D.user_interface.documentation.feedback_func import show_message
 

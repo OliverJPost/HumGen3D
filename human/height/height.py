@@ -9,8 +9,8 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
-from ..base import live_keys  # type:ignore
 from ..base.geometry import centroid
+from ..keys import bpy_livekey  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D import Human
@@ -70,7 +70,7 @@ class HeightSettings:
 
         self.name = livekey_name
         self.path = os.path.join("livekeys", "body_proportions", livekey_name + ".npy")
-        live_keys.set_livekey(self, value)
+        bpy_livekey.set_livekey(self, value)
 
         if not realtime:
             self.correct_armature(context)
