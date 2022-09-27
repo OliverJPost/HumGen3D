@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
@@ -5,9 +7,7 @@ from bpy.props import (  # type:ignore
     IntVectorProperty,
     StringProperty,
 )
-
 from HumGen3D.user_interface.icons.icons import get_hg_icon
-
 
 from ..preview_collections import preview_collections
 

@@ -1,5 +1,12 @@
-from bpy.props import BoolProperty, EnumProperty, IntVectorProperty, StringProperty # type:ignore
-from bpy.types import AddonPreferences # type:ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+from bpy.props import (  # type:ignore
+    BoolProperty,
+    EnumProperty,
+    IntVectorProperty,
+    StringProperty,
+)
+from bpy.types import AddonPreferences  # type:ignore
 
 from ..content_packs.content_packs import cpacks_refresh
 

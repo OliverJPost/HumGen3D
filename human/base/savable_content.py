@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 import re
 import subprocess
@@ -44,7 +46,7 @@ class SavableContent:
                 img.file_format = "JPEG"
                 img.save()
             except RuntimeError as e:
-                #show_message(self, "Thumbnail image doesn't have any image data") #FIXME
+                # show_message(self, "Thumbnail image doesn't have any image data") #FIXME
                 print(e)
 
 
@@ -121,13 +123,12 @@ def save_objects_optimized(
             stdout=subprocess.DEVNULL,
         )
     else:
-        subprocess.Popen(
-            [bpy.app.binary_path, blend_filepath, "--python", python_file]
-        )
+        subprocess.Popen([bpy.app.binary_path, blend_filepath, "--python", python_file])
 
     bpy.data.scenes.remove(new_scene)
     for obj in objs:
         hg_delete(obj)
+
 
 def clear_sk_drivers():
     for key in bpy.data.shape_keys:
@@ -138,6 +139,7 @@ def clear_sk_drivers():
         except AttributeError:
             pass
 
+
 def remove_obj_drivers(obj):
     try:
         drivers_data = obj.animation_data.drivers
@@ -146,6 +148,7 @@ def remove_obj_drivers(obj):
             obj.driver_remove(dr.data_path, -1)
     except AttributeError:
         return
+
 
 def remove_particle_systems(context, obj):
     """Remove particle systems from the passed object
@@ -158,6 +161,7 @@ def remove_particle_systems(context, obj):
         obj.particle_systems.active_index = i
         bpy.ops.object.particle_system_remove()
 
+
 def remove_shapekeys(obj):
     """Remove shapekeys from the passed object
 
@@ -168,6 +172,7 @@ def remove_shapekeys(obj):
         obj.shape_key_remove(sk)
     if obj.data.shape_keys:
         obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
+
 
 def remove_number_suffix(name) -> str:
     """Remove the number suffix from the passed name
