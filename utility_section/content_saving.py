@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import platform
@@ -8,18 +10,20 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
-from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
 from HumGen3D.human.height.height import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.user_interface.documentation.feedback_func import (
     ShowMessageBox,
     show_message,
 )
 from mathutils import Vector
+
+refresh_pcoll = None  # FIXME
 
 
 class Content_Saving_Operator:

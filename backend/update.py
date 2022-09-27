@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """Contains the check_update function for online checking for cpack and
 code updates"""
 
@@ -5,7 +7,8 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
-from . import hg_log, get_prefs 
+from . import hg_log, get_prefs
+
 
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack

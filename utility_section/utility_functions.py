@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 from pathlib import Path
@@ -92,7 +94,7 @@ def refresh_shapekeys_ul(self, context):
     if not human:
         return
 
-    for sk in human.shape_keys:
+    for sk in human.keys:
         if sk.name in existing_sks:
             continue
 

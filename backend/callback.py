@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 Contains operators and functions for the callback HG3D gets whenever
     the active object changes.
@@ -13,6 +15,7 @@ import os
 
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
     refresh_modapply,
@@ -28,7 +31,7 @@ from ..user_interface.batch_panel.batch_ui_lists import (
 from ..user_interface.documentation.tips_suggestions_ui import (  # type:ignore
     update_tips_from_context,
 )
-from .preview_collections import refresh_pcoll
+from HumGen3D.backend import preview_collections
 
 
 class HG_ACTIVATE(bpy.types.Operator):
@@ -45,23 +48,10 @@ class HG_ACTIVATE(bpy.types.Operator):
         sett.subscribed = False  # TODO is this even used?
 
         msgbus(self, context)
-        refresh_pcoll(self, context, "humans")
+        preview_collections["humans"].refresh(context, gender=sett.gender)
         hg_log(f"Activating HumGen, version {bl_info['version']}")
 
-        bpy.context.scene.face_livekeys.clear()
-
-        for root, dirs, files in os.walk(
-            os.path.join(get_prefs().filepath, "livekeys", "face_proportions")
-        ):
-            for file in files:
-                if not file.endswith(".npy"):
-                    continue
-                item = bpy.context.scene.face_livekeys.add()
-                item.name = file[:-4].replace("_", " ").title()
-                abspath = os.path.join(root, file)
-                category = abspath.split(os.sep)[-2]
-                item.category = category
-                item.path = os.path.relpath(abspath, get_prefs().filepath)
+        update_livekey_collection()
 
         return {"FINISHED"}
 
@@ -92,7 +82,6 @@ def hg_callback(self):
     if not human:
         return  # return immediately when the active object is not part of a human
 
-    bpy.context.scene.HG3D.slider_is_dragging = False
     human._verify_body_object()
 
     sett = bpy.context.scene.HG3D
@@ -155,19 +144,15 @@ def _context_specific_updates(self, sett, human, ui_phase):
         refresh_modapply(self, context)
 
     elif ui_phase == "skin":
-        refresh_pcoll(self, context, "textures")
-
+        preview_collections["textures"].refresh(context, human.gender)
     elif ui_phase == "outfit":
-        refresh_pcoll(self, context, "outfits")
-
+        preview_collections["outfits"].refresh(context, human.gender)
     elif ui_phase == "hair":
-        refresh_pcoll(self, context, "hair")
+        preview_collections["hair"].refresh(context, human.gender)
         if human.gender == "male":
-            refresh_pcoll(self, context, "face_hair")
-
+            preview_collections["face_hair"].refresh(context)
     elif ui_phase == "expression":
-        refresh_pcoll(self, context, "expressions")
-
+        preview_collections["expressions"].refresh(context)
     elif ui_phase == "body":
         _refresh_body_scaling(self, sett, human)
 

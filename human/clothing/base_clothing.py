@@ -1,10 +1,12 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
@@ -14,7 +16,7 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 def find_masks(obj) -> list:
@@ -85,7 +87,7 @@ class BaseClothing(PreviewCollectionContent):
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
-        refresh_pcoll(self, context, "outfits")
+        self.refresh_pcoll(context)
 
     def deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using

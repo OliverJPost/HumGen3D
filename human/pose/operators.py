@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.collections import add_to_collection
@@ -59,7 +61,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
         sks = hg_body.data.shape_keys.key_blocks
         for target_sk_name, sett_dict in driver_dict.items():
-            human.shape_keys._add_driver(sks[target_sk_name], sett_dict)
+            human.keys._add_driver(sks[target_sk_name], sett_dict)
 
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)

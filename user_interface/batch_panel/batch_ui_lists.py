@@ -1,14 +1,14 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 This file is currently inactive
 """
 
-import bpy  # type: ignore
+import bpy
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ...backend import preview_collections
-from ...backend.properties.property_functions import (
-    find_folders,
-    find_item_amount,
-)
+from ...backend.properties.property_functions import find_folders, find_item_amount
 
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
@@ -51,7 +51,6 @@ class HG_UL_BATCH_EXPRESSIONS(bpy.types.UIList):
 
 def uilist_layout(layout, context, item):
     enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
-    hg_icons = preview_collections["hg_icons"]
 
     # islockedicon = "LOCKED" if item.islocked else "BLANK1"
 
@@ -65,16 +64,20 @@ def uilist_layout(layout, context, item):
         subrow.scale_x = 0.7
         subrow.label(
             text=str(item.male_items),
-            icon_value=hg_icons["male_true"].icon_id
-            if item.male_items != 0
-            else hg_icons["male_false"].icon_id,
+            icon_value=(
+                get_hg_icon("male_true")
+                if item.male_items != 0
+                else get_hg_icon("male_false")
+            ),
         )
 
         subrow.label(
             text=str(item.female_items),
-            icon_value=hg_icons["female_true"].icon_id
-            if item.female_items != 0
-            else hg_icons["female_false"].icon_id,
+            icon_value=(
+                get_hg_icon("female_true")
+                if item.female_items != 0
+                else get_hg_icon("female_false")
+            ),
         )
     except AttributeError:
         # If the item doesn't have (fe)male_items attribute. Bad design

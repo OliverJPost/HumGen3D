@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.human.human import Human
 
@@ -33,4 +35,6 @@ class HG_PT_HEIGHT(MainPanelPart, bpy.types.Panel):
         row.scale_y = 2
         row.scale_x = 1.2
         row.prop(self.sett, "human_height", text="height [cm]")
-        row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "height"
+        row.operator(
+            "hg3d.random_value", text="", icon="FILE_REFRESH"
+        ).random_type = "height"

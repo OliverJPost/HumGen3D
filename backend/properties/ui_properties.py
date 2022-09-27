@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.
@@ -7,7 +9,7 @@ from re import L
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
-from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
 

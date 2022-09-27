@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 from pathlib import Path
 
@@ -8,7 +10,7 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
 )
 from HumGen3D.human.human import Human  # type: ignore
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix
 
 

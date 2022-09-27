@@ -1,27 +1,10 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import functools
 import traceback
 
 import bpy
 from HumGen3D.backend import hg_log
-
-
-def cached_property(func):
-    return property(cached_instance(func))
-
-
-def cached_instance(function):
-    @functools.wraps(function)
-    def wrapper(self, *args, **kwargs):
-
-        cached_attribute_name = f"_{function.__name__}"
-        if hasattr(self, cached_attribute_name):
-            return getattr(self, cached_attribute_name)
-        else:
-            result = function(self, *args, **kwargs)
-            setattr(self, cached_attribute_name, result)
-            return result
-
-    return wrapper
 
 
 def injected_context(func):

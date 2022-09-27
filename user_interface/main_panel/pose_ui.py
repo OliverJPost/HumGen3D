@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import addon_utils
 import bpy
 
@@ -67,5 +69,5 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
         row_h.scale_y = 1.5
         row_h.prop(sett.pcoll, "pose_category", text="")
         row_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
-        ).random_type = "poses"
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = "pose"

@@ -1,14 +1,19 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from __future__ import annotations
 
 import json
 import os
+import random
 from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
 from bpy.types import Object
+from HumGen3D.backend import preview_collections
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 
-from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
+from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
@@ -23,10 +28,10 @@ from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
 from .hair.hair import HairSettings
 from .height.height import HeightSettings
+from .keys.keys import KeySettings
 from .pose.pose import PoseSettings  # type:ignore
 from .process.bake import BakeSettings
 from .process.process import ProcessSettings
-from .shape_keys.shape_keys import ShapeKeySettings
 from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
@@ -83,9 +88,21 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-        refresh_pcoll(None, context, "humans", gender_override=gender)
+        preview_collections["humans"].populate(context, gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
+
+    @staticmethod
+    @injected_context
+    def _get_full_options(self, context):
+        """Internal method for getting preview collection items."""
+        pcoll = preview_collections.get("humans").pcoll
+        if not pcoll:
+            return [
+                ("none", "Reload category below", "", 0),
+            ]
+
+        return pcoll["humans"]
 
     @classmethod
     def from_existing(
@@ -142,7 +159,9 @@ class Human:
         Returns:
           A Human instance
         """
-        preset_path = os.path.join(get_prefs().filepath, preset.replace("jpg", "json"))
+        preset_path = os.path.join(
+            get_prefs().filepath, preset.replace("jpg", "json")  # TODO
+        )
 
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
@@ -154,9 +173,6 @@ class Human:
         if prettify_eevee:
             set_eevee_ao_and_strip(context)
 
-        # Set to experimental mode from preset
-        human.body.set_experimental(preset_data["experimental"])
-
         # Set height from preset
         preset_height = preset_data["body_proportions"]["length"] * 100
         if 181 < preset_height < 182:
@@ -164,11 +180,11 @@ class Human:
             preset_height = 183.15
         human.height.set(preset_height, context)
         if gender == "male":
-            human.shape_keys["Male"].value = 1.0
+            human.keys["Male"].value = 1.0
 
         # Set shape key values from preset
         for name, value in preset_data["livekeys"].items():
-            human.shape_keys.livekey_set(name, value)
+            human.keys[name].value = value
 
         # Set skin material from preset
         human.skin.texture._set_from_preset(preset_data["material"], context)
@@ -305,6 +321,15 @@ class Human:
         )
 
     @property
+    def upper_teeth_obj(self) -> Object:
+        """Returns the lower teeth Blender object"""
+        return next(
+            obj
+            for obj in self.children
+            if "hg_teeth" in obj and "upper" in obj.name.lower()
+        )
+
+    @property
     def children(self) -> Generator[Object]:
         """A generator of all children of the rig object of the human. Does NOT yield subchildren."""
         for child in self.rig_obj.children:
@@ -372,9 +397,9 @@ class Human:
         return SkinSettings(self)
 
     @property
-    def shape_keys(self) -> ShapeKeySettings:
+    def keys(self) -> KeySettings:
         """Subclass used to access and change the shape keys of the body object. Iterating yields key_blocks."""
-        return ShapeKeySettings(self)
+        return KeySettings(self)
 
     @property  # TODO make cached
     def eyes(self) -> EyeSettings:
@@ -484,8 +509,8 @@ class Human:
         props.length = hg_rig.dimensions[2]
 
         human = cls(hg_rig)
-        human.shape_keys._load_external(human, context)
-        human.shape_keys._set_gender_specific(human)
+        human.keys._load_external(human, context)
+        human.keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
 
         if platform == "darwin":
@@ -512,13 +537,16 @@ class Human:
                 continue
             taken_names.append(obj.name[4:])
 
-        # generate name
-        name = get_name(self.gender)
+        name_json_path = os.path.join(get_addon_root(), "human", "names.json")
+        with open(name_json_path, "r") as f:
+            names = json.load(f)[self.gender]
+
+        name = random.choice(names)
 
         # get new name if it's already taken
         i = 0
-        while i < 10 and name in taken_names:
-            name = get_name(self.gender)
+        while name in taken_names and i < 10:
+            name = random.choice(names)
             i += 1
 
         self.name = "HG_" + name

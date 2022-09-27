@@ -1,21 +1,25 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import (
+from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
     IntProperty,
     StringProperty,
-)  # type:ignore
-from HumGen3D.backend import hg_log, hg_delete, refresh_pcoll
-from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preview_collections import (
-    set_random_active_in_pcoll,
 )
+from HumGen3D.backend import hg_delete, hg_log
+from HumGen3D.backend.memory_management import hg_delete
+
+# from HumGen3D.backend.preview_collections import (
+#    set_random_active_in_pcoll,
+# )
 from HumGen3D.human.human import Human
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.backend import preview_collections
 
 # from ..utility_section.baking import (  # type:ignore
 #     add_image_node,
@@ -26,6 +30,8 @@ from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
 #     material_setup,
 # )
 from .batch_functions import height_from_bell_curve
+
+set_random_active_in_pcoll = None  # FIXME
 
 
 class HG_QUICK_GENERATE(bpy.types.Operator):
@@ -165,7 +171,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             sett.pcoll.expression_category = self.expression_category
             set_random_active_in_pcoll(context, sett, "expressions")
             expr_sk = next(
-                (sk for sk in human.shape_keys if sk.name.startswith("expr_")),
+                (sk for sk in human.keys if sk.name.startswith("expr_")),
                 None,
             )
             if expr_sk:
@@ -369,7 +375,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     def _set_pose(self, context, sett, pose_type):
         if pose_type == "t_pose":
-            refresh_pcoll(None, context, "poses")
+            preview_collections["poses"].refresh(context)
             sett.pcoll.poses = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
         else:
             sett.pose_category = pose_type.capitalize().replace("_", " ")

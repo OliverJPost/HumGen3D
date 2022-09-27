@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import time
@@ -12,7 +14,7 @@ from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.height.height import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys, transfer_shapekey
+from HumGen3D.human.keys.keys import apply_shapekeys, transfer_shapekey
 
 
 class ExpressionSettings(PreviewCollectionContent):
@@ -23,7 +25,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
     @property
     def shape_keys(self) -> PropCollection:
-        return self._human.shape_keys.expressions
+        return self._human.keys.expressions
 
     def set(self, preset):
         """Loads the active expression in the preview collection"""
@@ -42,7 +44,7 @@ class ExpressionSettings(PreviewCollectionContent):
         if "expr_{}".format(sk_name) in sk_names:
             new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
-            new_key = self._human.shape_keys.load_from_npy(filepath)
+            new_key = self._human.keys.load_from_npy(filepath)
             new_key.name = "expr_" + new_key.name
 
         for sk in self.shape_keys:
@@ -108,7 +110,7 @@ class ExpressionSettings(PreviewCollectionContent):
             b = self._human.pose_bones[b_name]
             b.bone.hide = False
 
-        for sk in self._human.shape_keys:
+        for sk in self._human.keys:
             if sk.name.startswith("expr"):
                 sk.mute = True
 
@@ -145,7 +147,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
                 sk.data.foreach_set("co", adjusted_vert_co)
 
-                self._human.shape_keys._add_driver(sk, sk_data)
+                self._human.keys._add_driver(sk, sk_data)
 
     def _transfer_sk(self, context, to_obj, from_obj):
         # normalize objects
@@ -168,9 +170,7 @@ class ExpressionSettings(PreviewCollectionContent):
         for driver_shapekey in driver_dict:
             if driver_shapekey in sks_on_target:
                 sk = to_obj.data.shape_keys.key_blocks[driver_shapekey]
-                driver = self._human.shape_keys._add_driver(
-                    sk, driver_dict[driver_shapekey]
-                )
+                driver = self._human.keys._add_driver(sk, driver_dict[driver_shapekey])
 
         from_obj.select_set(False)
         hg_delete(from_obj)
@@ -210,7 +210,7 @@ class ExpressionSettings(PreviewCollectionContent):
             self._human.lower_teeth_obj.shape_key_remove(sk)
 
         for sk_name in data["body"]:
-            sk = self._human.shape_keys.get(sk_name)
+            sk = self._human.keys.get(sk_name)
             self._human.body_obj.shape_key_remove(sk)
 
         del self._human.body_obj["facial_rig"]

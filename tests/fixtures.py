@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 # Not named conftest.py because that is run outside of Blender Python, so it
 # can't import from bpy
 
