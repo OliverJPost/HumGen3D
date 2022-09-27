@@ -2,7 +2,6 @@ import os
 
 import bpy
 from HumGen3D.backend import get_addon_root
-from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.facial_hair import FacialHairSettings

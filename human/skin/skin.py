@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, List, Tuple
 import bpy
 from bpy.types import bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs
-from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
