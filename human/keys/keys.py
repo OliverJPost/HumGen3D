@@ -153,10 +153,9 @@ class LiveKeyItem(KeyItem):
     def value(self, value) -> None:
         self._human.keys.livekey_set(self.name, value)
 
-    @injected_context
-    def as_bpy(self, context=None) -> LiveKey:
+    def as_bpy(self) -> LiveKey:
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
-        livekey = context.window_manager.livekeys.get(self.name)
+        livekey = bpy.context.window_manager.livekeys.get(self.name)
         assert livekey
         return livekey
 
@@ -182,8 +181,7 @@ class ShapeKeyItem(KeyItem):
     def value(self, value) -> None:
         self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
 
-    @injected_context
-    def as_bpy(self, context=None) -> ShapeKey:
+    def as_bpy(self) -> ShapeKey:
         return self._human.body_obj.data.shape_keys.key_blocks[self.name]
 
 
@@ -255,12 +253,12 @@ class KeySettings:
             temp_key.slider_max = 10
             temp_key.slider_min = -10
         else:
-            temp_key = temp_key.as_bpy(bpy.context)
+            temp_key = temp_key.as_bpy()
         return temp_key
 
     @property
     def permanent_key(self):
-        return self["LIVE_KEY_PERMANENT"].as_bpy(bpy.context)
+        return self["LIVE_KEY_PERMANENT"].as_bpy()
 
     def filtered(
         self, category, subcategory=None
