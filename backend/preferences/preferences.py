@@ -5,7 +5,8 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D import bl_info  # type: ignore
+from HumGen3D import bl_info
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 from .content_pack_saving_ui import CpackEditingSystem
 from .preference_props import HGPreferenceBackend
 
@@ -123,10 +124,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
             return
 
         update_info_dict = self._build_update_info_dict(context)
-        hg_icons = preview_collections["hg_icons"]
         for version, update_types in update_info_dict.items():
             version_label = "Human Generator V" + str(version)[1:-1].replace(", ", ".")
-            boxbox.label(text=version_label, icon_value=hg_icons["HG_icon"].icon_id)
+            boxbox.label(text=version_label, icon_value=get_hg_icon("HG_icon"))
             col = boxbox.column(align=True)
             for update_type, lines in update_types.items():
                 col.label(text=update_type)
@@ -440,7 +440,6 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        hg_icons = preview_collections["hg_icons"]
 
         icon_dict = {
             "Human Meshes": "humans",
@@ -454,4 +453,4 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
         }
 
         for icon_desc, icon in icon_dict.items():
-            layout.label(text=icon_desc, icon_value=hg_icons[icon].icon_id)
+            layout.label(text=icon_desc, icon_value=get_hg_icon(icon))

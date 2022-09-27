@@ -1,10 +1,12 @@
-from bpy.props import ( # type:ignore
+from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
     IntProperty,
     IntVectorProperty,
     StringProperty,
 )
+
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 from ..preview_collections import preview_collections
@@ -107,7 +109,6 @@ class CpackEditingSystem:
             sidebar (UILayout): layout to draw in
         """
         coll = context.scene.custom_content_col
-        hg_icons = preview_collections["hg_icons"]
 
         # Total
         sidebar.label(text=f"Total items: {len([c for c in coll if c.include])}")
@@ -115,7 +116,7 @@ class CpackEditingSystem:
         kwargs = (
             lambda c: {"icon": "BLANK1"}
             if c.gender == "none"
-            else {"icon_value": hg_icons[f"{c.gender}_true"].icon_id}
+            else {"icon_value": get_hg_icon(f"{c.gender}_true")}
         )
         # TODO these two can be joined into one function
         # Added
@@ -193,14 +194,13 @@ class CpackEditingSystem:
                 continue
             box = flow.box()
             box.label(text=item.name)
-            hg_icons = preview_collections["hg_icons"]
             gender = item.gender
             if gender == "none":
                 box.label(icon="BLANK1")
             else:
                 box.label(
                     text=gender.capitalize(),
-                    icon_value=hg_icons[f"{gender}_true"].icon_id,
+                    icon_value=get_hg_icon(f"{gender}_true"),
                 )
             try:
                 box.template_icon(item.icon_value, scale=5)

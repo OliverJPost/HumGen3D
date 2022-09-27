@@ -166,8 +166,7 @@ class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
         return context.object
 
     def draw_header(self, context):
-        hg_icons = preview_collections["hg_icons"]
-        self.layout.label(text="", icon_value=hg_icons["outfit"].icon_id)
+        self.layout.label(text="", icon_value=get_hg_icon("outfit"))
 
     def draw(self, context):
         layout = self.layout
