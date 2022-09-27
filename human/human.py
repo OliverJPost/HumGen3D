@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import random
 from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
 from bpy.types import Object
 from HumGen3D.backend import preview_collections
+from backend.preferences.preference_func import get_addon_root
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
@@ -533,13 +535,16 @@ class Human:
                 continue
             taken_names.append(obj.name[4:])
 
-        # generate name
-        name = get_name(self.gender)
+        name_json_path = os.path.join(get_addon_root(), "human", "names.json")
+        with open(name_json_path, "r") as f:
+            names = json.load(f)[self.gender]
+
+        name = random.choice(names)
 
         # get new name if it's already taken
         i = 0
-        while i < 10 and name in taken_names:
-            name = get_name(self.gender)
+        while name in taken_names and i < 10:
+            name = random.choice(names)
             i += 1
 
         self.name = "HG_" + name
