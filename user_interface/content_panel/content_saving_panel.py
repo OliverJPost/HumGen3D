@@ -8,6 +8,7 @@ from HumGen3D.utility_section.utility_functions import (
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 from ...backend.preview_collections import preview_collections
 from ..documentation.tips_suggestions_ui import (
@@ -534,14 +535,13 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
 
         col = layout.column(align=True)
         row = col.row(align=True)
-        hg_icons = preview_collections["hg_icons"]
 
         row.operator("hg3d.ulrefresh", text="Refresh hairsystems").type = "hair"
         row.prop(
             self.cc_sett,
             "show_eyesystems",
             text="",
-            icon_value=hg_icons["eyes"].icon_id,
+            icon_value=get_hg_icon("eyes"),
             toggle=True,
         )
 
