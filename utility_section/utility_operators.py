@@ -7,7 +7,7 @@ Operators and functions for experimental features and QoL automations
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend import hg_log, get_prefs
+from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.user_interface.documentation.feedback_func import show_message
