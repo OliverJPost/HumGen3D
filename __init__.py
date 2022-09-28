@@ -46,8 +46,8 @@ from .backend.preview_collections import preview_collections as _preview_collect
 from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload
-from .human.keys.bpy_livekey import LiveKey
 from .human.human import Human
+from .human.keys.bpy_livekey import LiveKey
 from .user_interface.batch_panel import batch_ui_lists
 from .user_interface.content_panel import utility_ui_lists
 from .user_interface.icons.icons import hg_icons
@@ -164,7 +164,7 @@ def unregister():
     # remove pcolls
     for pcoll_item in _preview_collections.values():
         bpy.utils.previews.remove(pcoll_item.pcoll)
-    bpy.utils.previews.remove(hg_icons[0])
+    bpy.utils.previews.remove(hg_icons[0].pcoll)
 
     _preview_collections.clear()
 
