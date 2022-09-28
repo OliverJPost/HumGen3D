@@ -2,6 +2,7 @@
 
 import json
 import os
+from math import acos, pi
 from pathlib import Path
 from typing import Tuple
 
@@ -395,3 +396,44 @@ class BaseClothing(PreviewCollectionContent):
             )
 
         context.view_layer.objects.active = old_active
+
+    @injected_context
+    def _calc_percentage_clipping_vertices(self, context=None) -> float:
+        depsgraph = context.evaluated_depsgraph_get()
+
+        body_obj = self._human.body_obj
+        for modifier in body_obj.modifiers:
+            if modifier.type != "ARMATURE":
+                modifier.show_viewport = False
+
+        body_eval = body_obj.evaluated_get(depsgraph)
+
+        def calc_if_inside(target_pt_global, mesh_obj, tolerance=0.02):
+
+            # Convert the point from global space to mesh local space
+            target_pt_local = mesh_obj.matrix_world.inverted() @ target_pt_global
+            # Find the nearest point on the mesh and the nearest face normal
+            _, pt_closest, face_normal, _ = mesh_obj.closest_point_on_mesh(
+                target_pt_local
+            )
+            # Get the target-closest pt vector
+            target_closest_pt_vec = (pt_closest - target_pt_local).normalized()
+            # Compute the dot product = |a||b|*cos(angle)
+            dot_prod = target_closest_pt_vec.dot(face_normal)
+            # Get the angle between the normal and the target-closest-pt vector (from the dot prod)
+            angle = acos(min(max(dot_prod, -1), 1)) * 180 / pi
+            # Allow for some rounding error
+            inside = angle < 90 - tolerance
+
+            return inside
+
+        is_inside_list = []
+        for obj in self.objects:
+            obj_eval = obj.evaluated_get(depsgraph)
+            mx_obj = obj.matrix_world
+            for vert in obj_eval.data.vertices:
+                vert_global = mx_obj @ vert.co
+                is_inside = calc_if_inside(vert_global, body_eval)
+                is_inside_list.append(is_inside)
+
+        return is_inside_list.count(True) / len(is_inside_list)
