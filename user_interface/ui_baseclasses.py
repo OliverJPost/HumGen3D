@@ -9,6 +9,7 @@ from tokenize import Triple
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -311,17 +312,50 @@ class MainPanelPart(HGPanel):
         # row.prop(context.scene.HG3D.ui, "active_tab", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
-        box = layout.column()
-        box.separator()
-        box.separator()
-        row = box.row()
-        row.alignment = "CENTER"
-        row.scale_x = 0.7
-        if icon:
-            row.prop(self.sett.ui, "phase", text="", emboss=False, icon_only=True)
-        draw_icon_title(text, row, bool(icon))
+        col = layout.column()
+        col.separator()
+        col.separator()
 
-        box.separator()
+        # Only align for expression because it's too long to fit otherwise
+        row = col.row(align=(text.lower() == "expression"))
+
+        # Get names of panels from PropertyGroup
+        sections_enum = UserInterfaceProps.__annotations__["phase"].keywords["items"]
+        section_names = [name for (name, *_, idx) in sections_enum if name and idx < 11]
+        section_names.remove("closed")
+
+        # Left button
+        row_l = row.row()
+        row_l.alignment = "LEFT"
+        prev_idx = section_names.index(self.phase_name) - 1
+        prev_section = section_names[
+            prev_idx if prev_idx > 0 else len(section_names) - 1
+        ]
+        row_l.operator(
+            "hg3d.section_toggle", text="", icon="BACK", emboss=False
+        ).section_name = prev_section
+
+        # Center title with icon prop
+        row_center = row.row()
+        row_center.alignment = "CENTER"
+        row_center.scale_x = 0.7
+        # row_center.scale_x = 0.07 * len(text)
+        if icon:
+            row_center.prop(
+                self.sett.ui, "phase", text="", emboss=False, icon_only=True
+            )
+        draw_icon_title(text, row_center, bool(icon))
+
+        # Right button
+        row_r = row.row()
+        row_r.alignment = "RIGHT"
+        next_idx = section_names.index(self.phase_name) + 1
+        next_section = section_names[next_idx if next_idx < len(section_names) else 0]
+        row_r.operator(
+            "hg3d.section_toggle", text="", icon="FORWARD", emboss=False
+        ).section_name = next_section
+
+        col.separator()
 
     def draw_top_widget(self, layout, human):
         col = layout
