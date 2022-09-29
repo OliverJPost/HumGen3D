@@ -19,7 +19,7 @@ class ClothingPanel(MainPanelPart):
 
         row = col.row(align=True)
         row.template_icon_view(
-            self.sett.pcoll, pcoll_name, show_labels=True, scale=10, scale_popup=6
+            self.sett.pcoll, pcoll_name, show_labels=True, scale=8.4, scale_popup=6
         )
 
         row_h = col.row(align=True)

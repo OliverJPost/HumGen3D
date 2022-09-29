@@ -46,7 +46,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             self.sett.pcoll,
             "expressions",
             show_labels=True,
-            scale=10,
+            scale=8.4,
             scale_popup=6,
         )
 
