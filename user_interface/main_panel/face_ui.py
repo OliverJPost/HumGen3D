@@ -43,7 +43,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         flow_presets = self._get_ff_col(col, "Presets", "presets")
 
         for key in self.human.face.keys:
-            bpy_key = key.as_bpy(context)
+            bpy_key = key.as_bpy()
             if getattr(self.sett.ui, bpy_key.subcategory):
                 row = locals()[f"flow_{bpy_key.subcategory}"].row(align=True)
                 row.prop(bpy_key, "value", text=bpy_key.name, slider=True)

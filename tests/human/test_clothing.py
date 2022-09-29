@@ -15,11 +15,11 @@ from HumGen3D.tests.fixtures import (
 def test_set_outfit(human, context):
     old_child_count = len(list(human.children))
     options = human.outfit.get_options(context)
-    chosen = random.choice(options)
-    human.outfit.set(chosen, context)
+    human.outfit.set(options[1], context)
 
     assert old_child_count != len(list(human.children))
     assert human.outfit.objects
+    assert human.outfit._calc_percentage_clipping_vertices(context) < 0.05
 
 
 @pytest.fixture(scope="class")
@@ -32,9 +32,10 @@ def human_with_outfit(male_human):
 
 def test_remove_outfit(human_with_outfit):
     old_child_count = len(list(human_with_outfit.children))
+    cloth_obj_len = len(human_with_outfit.outfit.objects)
     human_with_outfit.outfit.remove()
 
-    assert len(list(human_with_outfit.children)) < old_child_count
+    assert len(list(human_with_outfit.children)) == old_child_count - cloth_obj_len
 
 
 def test_set_texture_resolution(human_with_outfit):
