@@ -31,6 +31,8 @@ def update_livekey_collection():
     """
     bpy.context.window_manager.livekeys.clear()
 
+    subcategories = []
+
     folder = os.path.join(get_prefs().filepath, "livekeys")
     for root, dirs, files in os.walk(folder):
         for file in files:
@@ -51,10 +53,20 @@ def update_livekey_collection():
                 category = relpath[0]
                 subcategory = ""
 
+            subcategories.append(subcategory)
+
             item.category = category
             item.subcategory = subcategory
             item.path = os.path.relpath(abspath, get_prefs().filepath)
             print("adding", item)
+
+    from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
+
+    for category in set(subcategories):
+        if not category:
+            continue
+
+        setattr(UserInterfaceProps, category, bpy.props.BoolProperty(default=False))
 
 
 def transfer_shapekey(sk, to_obj):
