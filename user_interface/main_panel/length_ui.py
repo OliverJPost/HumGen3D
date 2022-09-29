@@ -34,7 +34,7 @@ class HG_PT_HEIGHT(MainPanelPart, bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = 2
         row.scale_x = 1.2
-        row.prop(self.sett, "human_height", text="height [cm]")
+        row.prop(self.sett, "human_height", text="Height [cm]")
         row.operator(
             "hg3d.random_value", text="", icon="FILE_REFRESH"
         ).random_type = "height"
