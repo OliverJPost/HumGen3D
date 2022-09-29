@@ -14,7 +14,7 @@ This callback has the following usages:
 import os
 
 import bpy
-from HumGen3D.backend import hg_log
+from HumGen3D.backend import hg_log, preview_collections
 from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.utility_section.utility_functions import (
     refresh_hair_ul,
@@ -31,7 +31,6 @@ from ..user_interface.batch_panel.batch_ui_lists import (
 from ..user_interface.documentation.tips_suggestions_ui import (  # type:ignore
     update_tips_from_context,
 )
-from HumGen3D.backend import preview_collections
 
 
 class HG_ACTIVATE(bpy.types.Operator):
@@ -142,41 +141,15 @@ def _context_specific_updates(self, sett, human, ui_phase):
         return
     elif ui_phase == "apply":
         refresh_modapply(self, context)
-
-    elif ui_phase == "skin":
-        preview_collections["textures"].refresh(context, human.gender)
-    elif ui_phase == "outfit":
-        preview_collections["outfits"].refresh(context, human.gender)
     elif ui_phase == "hair":
         preview_collections["hair"].refresh(context, human.gender)
         if human.gender == "male":
             preview_collections["face_hair"].refresh(context)
-    elif ui_phase == "expression":
-        preview_collections["expressions"].refresh(context)
-    elif ui_phase == "body":
-        _refresh_body_scaling(self, sett, human)
-
-
-def _refresh_body_scaling(self, sett, human: Human):
-    """This callback makes sure the sliders of scaling the bones are at the
-    correct values of the selected human
-
-    Args:
-        sett (PropertyGroup): HumGen props
-        hg_rig (Object): Armature object of HumGen human
-    """
-    bones = human.pose_bones
-    sd = human.body._get_scaling_data(1, "head", return_whole_dict=True).items()
-
-    bone_groups = {group_name: scaling_data["bones"] for group_name, scaling_data in sd}
-
-    for group_name, bone_group in bone_groups.items():
-        if "head" in bone_group:
-            slider_value = (bones["head"].scale[0] - 0.9) * 5
-        else:
-            slider_value = bones[bone_group[0]].scale[0] * 3 - 2.5
-
-        setattr(sett.bone_sizes, group_name, slider_value)
+    else:
+        try:
+            getattr(human, ui_phase).refresh_pcoll(context)
+        except (AttributeError, RecursionError):
+            pass
 
 
 def tab_change_update(self, context):
