@@ -1,12 +1,12 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
-
+import bpy
 import pytest  # type:ignore
 from HumGen3D import Human
 from HumGen3D.tests.fixtures import (
-    context,
     ALL_HUMAN_FIXTURES,
-    male_human,
+    context,
     female_human,
+    male_human,
 )
 
 
@@ -142,8 +142,12 @@ def test_from_existing_fail():
         except TypeError:
             assert True
 
-    cube = ...
+    mesh = bpy.data.meshes.new("Basic_Cube")
+    cube = bpy.data.objects.new("Basic_Cube", mesh)
+    bpy.context.scene.collection.objects.link(cube)
     assert_failure(cube)
 
-    non_mesh = ...
+    cam = bpy.data.cameras.new("Camera")
+    non_mesh = bpy.data.objects.new("Camera", cam)
+    bpy.context.scene.collection.objects.link(cube)
     assert_failure(non_mesh)
