@@ -123,3 +123,25 @@ class PoseSettings(PreviewCollectionContent):
 
         bpy.ops.pose.copy()
         bpy.ops.object.mode_set(mode="OBJECT")
+
+    def __hash__(self) -> int:
+        armature = self._human.rig_obj
+
+        SKIP_GROUPS = (
+            "eye_scale_grp",
+            "eye_settings_grp",
+            "eyeball_lookat_grp",
+            "facial_rig_grp",
+            "facial_rig_lips_grp",
+        )
+
+        bone_rotations = []
+        for bone in armature.pose.bones:
+            if bone.name.lower().startswith("eye"):
+                continue
+            if bone.bone_group and bone.bone_group.name in SKIP_GROUPS:
+                continue
+
+            bone_rotations.append(tuple(bone.rotation_euler))
+
+        return hash(tuple(bone_rotations))
