@@ -110,6 +110,9 @@ class KeyItem:
     def as_bpy(self):
         raise NotImplementedError
 
+    def __repr__(self) -> str:
+        return f"({self.name=}, {self.value=}, {self.category=}, {self.subcategory=})"
+
 
 class LiveKeyItem(KeyItem):
     def __init__(self, name, category, path, human, subcategory=None):
@@ -147,18 +150,48 @@ class LiveKeyItem(KeyItem):
 
     @property
     def value(self) -> float:
-        raise NotImplementedError
+        # TODO this is repetition from get_livekey
+        temp_key = self._human.keys.temp_key
+        current_sk_values = self._human.props.sk_values
+        if temp_key and temp_key.name.endswith(self.name):
+            return temp_key.value
+        elif self.name in current_sk_values:
+            return current_sk_values[self.name]
+        else:
+            return 0.0
 
     @value.setter
     def value(self, value) -> None:
-        self._human.keys.livekey_set(self.name, value)
+        # TODO repetition from set_livekey
+        body = self._human.body_obj
+        vert_count = len(body.data.vertices)
+        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", obj_coords)
 
-    @injected_context
-    def as_bpy(self, context=None) -> LiveKey:
+        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
+
+        npy_path = os.path.join(get_prefs().filepath, self.path)
+        new_key_relative_coords = np.load(npy_path)
+
+        current_sk_values = self._human.props.sk_values
+        old_value = (
+            current_sk_values[self.name] * -1 if self.name in current_sk_values else 0
+        )
+        permanent_key_coords += new_key_relative_coords * (old_value + value)
+
+        self._human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
+
+        self._human.props.sk_values[self.name] = value
+
+    def as_bpy(self) -> LiveKey:
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
-        livekey = context.window_manager.livekeys.get(self.name)
+        livekey = bpy.context.window_manager.livekeys.get(self.name)
         assert livekey
         return livekey
+
+    def __repr__(self) -> str:
+        return "LiveKey " + super().__repr__()
 
 
 class ShapeKeyItem(KeyItem):
@@ -182,9 +215,11 @@ class ShapeKeyItem(KeyItem):
     def value(self, value) -> None:
         self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
 
-    @injected_context
-    def as_bpy(self, context=None) -> ShapeKey:
+    def as_bpy(self) -> ShapeKey:
         return self._human.body_obj.data.shape_keys.key_blocks[self.name]
+
+    def __repr__(self) -> str:
+        return "ShapeKey " + super().__repr__()
 
 
 class KeySettings:
@@ -192,7 +227,11 @@ class KeySettings:
         self._human = human
 
     def __getitem__(self, name) -> Union[LiveKeyItem, ShapeKeyItem]:
-        return next(key for key in self.all_keys if key.name == name)
+        try:
+            return next(key for key in self.all_keys if key.name == name)
+        except StopIteration:
+            hg_log(f"{self.all_keys = }", level="DEBUG")
+            raise ValueError(f"Key '{name}' not found")
 
     def __iter__(self):
         yield from self.all_keys
@@ -223,6 +262,9 @@ class KeySettings:
                     subcategory=key.subcategory,
                 )
             )
+
+        if not livekeys:
+            update_livekey_collection()
         return livekeys
 
     @property
@@ -255,18 +297,20 @@ class KeySettings:
             temp_key.slider_max = 10
             temp_key.slider_min = -10
         else:
-            temp_key = temp_key.as_bpy(bpy.context)
+            temp_key = temp_key.as_bpy()
         return temp_key
 
     @property
     def permanent_key(self):
-        return self["LIVE_KEY_PERMANENT"].as_bpy(bpy.context)
+        return self["LIVE_KEY_PERMANENT"].as_bpy()
 
     def filtered(
         self, category, subcategory=None
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
         keys = []
         for key in self:
+            if key.name in ("hg_taller", "hg_shorter"):
+                continue
             if key.category == category:
                 keys.append(key)
 
@@ -306,35 +350,6 @@ class KeySettings:
         sk.data.foreach_set("co", adjusted_vert_co)
 
         return sk
-
-    def livekey_set(self, name, value):
-        livekey_path = None
-        search_path = os.path.join(get_prefs().filepath, "livekeys")
-        for root, dirs, files in os.walk(search_path):
-            for file in files:
-                if os.path.splitext(file)[0] == name:
-                    livekey_path = os.path.join(root, file)
-                    break
-
-        if not livekey_path:
-            raise HumGenException(f"Livekey {name} not found in {search_path}")
-
-        # TODO repetition from set_livekey
-        body = self._human.body_obj
-        vert_count = len(body.data.vertices)
-        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
-        body.data.vertices.foreach_get("co", obj_coords)
-
-        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
-
-        new_key_relative_coords = np.load(livekey_path)
-
-        current_sk_values = self._human.props.sk_values
-        old_value = current_sk_values[name] * -1 if name in current_sk_values else 0
-        permanent_key_coords += new_key_relative_coords * (old_value + value)
-
-        self._human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
 
     @injected_context
     def _load_external(self, human, context=None):
