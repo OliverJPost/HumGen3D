@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
+from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
 from HumGen3D.human.human import Human
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
@@ -44,9 +45,14 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         self.box_main.scale_y = 1.5
         col.separator()
 
+        any_without_category = False
         for subcategory in subcategories:
             if not subcategory or subcategory == "main":
                 continue
+            if not hasattr(sett.ui, subcategory):
+                any_without_category = True
+                continue
+
             is_open, box = self.draw_sub_spoiler(
                 col.column(align=True),
                 sett,
@@ -59,15 +65,32 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
             box_aligned.scale_y = 1.3
             setattr(self, f"box_{subcategory}", box_aligned)
 
+        if any_without_category:
+            is_open, box = self.draw_sub_spoiler(
+                col.column(align=True),
+                sett,
+                "other",
+                "Other",
+            )
+            if is_open:
+                box_other = box.column(align=True)
+                box_other.scale_y = 1.5
+
         for key in keys:
-            if (
+            if not hasattr(sett.ui, key.subcategory):
+                if not sett.ui.other:
+                    continue
+                section = box_other
+            elif (
                 key.subcategory
                 and not key.subcategory == "main"
                 and not getattr(sett.ui, key.subcategory)
             ):
                 continue
-            key_bpy = key.as_bpy(context)
-            getattr(self, f"box_{key.subcategory}").prop(
+            else:
+                section = getattr(self, f"box_{key.subcategory}")
+            key_bpy = key.as_bpy()
+            section.prop(
                 key_bpy,
                 "value",
                 text=key.name.capitalize(),

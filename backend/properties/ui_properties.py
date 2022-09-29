@@ -59,6 +59,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "thumb_ui",
                 "expression_slider",
                 "content_saving",
+                "other",
+                "main",
             ]
         )
     )
