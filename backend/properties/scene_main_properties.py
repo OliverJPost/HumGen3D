@@ -15,6 +15,7 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
+from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
 from HumGen3D.utility_section.utility_functions import refresh_modapply
 
@@ -25,7 +26,6 @@ from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
-from HumGen3D.backend import preview_collections
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -67,7 +67,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         max=250,
         precision=0,
         set=lambda s, value: Human.from_existing(bpy.context.object).height.set(
-            value, realtime=True
+            value, realtime=True, context=bpy.context
         ),
         get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
