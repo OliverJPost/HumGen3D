@@ -110,6 +110,9 @@ class KeyItem:
     def as_bpy(self):
         raise NotImplementedError
 
+    def __repr__(self) -> str:
+        return f"({self.name=}, {self.value=}, {self.category=}, {self.subcategory=})"
+
 
 class LiveKeyItem(KeyItem):
     def __init__(self, name, category, path, human, subcategory=None):
@@ -187,6 +190,9 @@ class LiveKeyItem(KeyItem):
         assert livekey
         return livekey
 
+    def __repr__(self) -> str:
+        return "LiveKey " + super().__repr__()
+
 
 class ShapeKeyItem(KeyItem):
     def __init__(self, sk_name, human):
@@ -212,13 +218,20 @@ class ShapeKeyItem(KeyItem):
     def as_bpy(self) -> ShapeKey:
         return self._human.body_obj.data.shape_keys.key_blocks[self.name]
 
+    def __repr__(self) -> str:
+        return "ShapeKey " + super().__repr__()
+
 
 class KeySettings:
     def __init__(self, human):
         self._human = human
 
     def __getitem__(self, name) -> Union[LiveKeyItem, ShapeKeyItem]:
-        return next(key for key in self.all_keys if key.name == name)
+        try:
+            return next(key for key in self.all_keys if key.name == name)
+        except StopIteration:
+            hg_log(f"{self.all_keys = }", level="DEBUG")
+            raise ValueError(f"Key '{name}' not found")
 
     def __iter__(self):
         yield from self.all_keys
@@ -249,6 +262,9 @@ class KeySettings:
                     subcategory=key.subcategory,
                 )
             )
+
+        if not livekeys:
+            update_livekey_collection()
         return livekeys
 
     @property
