@@ -70,7 +70,7 @@ class HeightSettings:
             bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT", hide_armature=True)
 
         self.name = livekey_name
-        self._human.keys[livekey_name].value = value
+        self._human.keys[livekey_name].as_bpy().value = value
 
         if not realtime:
             self.correct_armature(context)
