@@ -20,7 +20,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         col = self.layout.column()
 
         col.template_icon_view(
-            sett.pcoll, "hair", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "hair", show_labels=True, scale=8.4, scale_popup=6
         )
 
         col_h = col.column()
