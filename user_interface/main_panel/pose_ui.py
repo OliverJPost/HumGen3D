@@ -62,7 +62,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
         self.searchbox(sett, "poses", box)
 
         box.template_icon_view(
-            sett.pcoll, "poses", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "poses", show_labels=True, scale=8.4, scale_popup=6
         )
 
         row_h = box.row(align=True)
