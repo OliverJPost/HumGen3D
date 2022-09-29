@@ -40,9 +40,15 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             )
             return
 
-        self.searchbox(self.sett, "expressions", self.layout)
+        col = self.layout.column()
 
-        self.layout.template_icon_view(
+        col.separator()
+
+        top_col = col.column(align=True)
+
+        self.searchbox(self.sett, "expressions", top_col)
+
+        top_col.template_icon_view(
             self.sett.pcoll,
             "expressions",
             show_labels=True,
@@ -50,12 +56,14 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             scale_popup=6,
         )
 
-        row_h = self.layout.row(align=True)
+        row_h = top_col.row(align=True)
         row_h.scale_y = 1.5
         row_h.prop(self.sett.pcoll, "expression_category", text="")
         row_h.operator(
             "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
         ).pcoll_name = "expression"
+
+        col.separator()
 
         filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:

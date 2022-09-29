@@ -19,13 +19,14 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         col = self.layout.column()
 
-        col.template_icon_view(
+        top_col = col.column(align=True)
+        top_col.template_icon_view(
             sett.pcoll, "hair", show_labels=True, scale=8.4, scale_popup=6
         )
 
-        col_h = col.column()
-        col_h.scale_y = 1.5
-        col_h.prop(sett.pcoll, "hair_category", text="")
+        row = top_col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(sett.pcoll, "hair_category", text="")
         if hg_rig.HG.gender == "male":
             self._draw_facial_hair_section(col, sett)
 

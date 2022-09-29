@@ -102,11 +102,13 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        col = boxbox.column()
+        col = boxbox.column(align=True)
         col.template_icon_view(
-            sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
+            sett.pcoll, "textures", show_labels=True, scale=8, scale_popup=6
         )
-        col.prop(sett.pcoll, "texture_library", text="Library")
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(sett.pcoll, "texture_library", text="")
 
     def _draw_light_dark_subsection(self, sett, box):
         """Collapsable section with sliders for dark and light areas on the skin

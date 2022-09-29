@@ -12,7 +12,7 @@ class ClothingPanel(MainPanelPart):
 
         category = self.phase_name
 
-        col = self.layout.column()
+        col = self.layout.column(align=True)
         pcoll_name = "outfits" if category == "outfit" else "footwear"
 
         self.searchbox(self.sett, category, col)
