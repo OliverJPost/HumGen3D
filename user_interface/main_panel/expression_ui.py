@@ -63,7 +63,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
         ).pcoll_name = "expression"
 
-        col.separator()
+        col.separator(factor=0.5)
 
         filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:
