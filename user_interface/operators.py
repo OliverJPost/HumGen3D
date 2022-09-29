@@ -42,7 +42,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         else:
             try:
                 getattr(human, self.section_name).refresh_pcoll(context)
-            except AttributeError:
+            except (AttributeError, RecursionError):
                 pass
 
         pref = get_prefs()
