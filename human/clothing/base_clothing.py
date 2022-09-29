@@ -400,13 +400,12 @@ class BaseClothing(PreviewCollectionContent):
 
     @injected_context
     def _calc_percentage_clipping_vertices(self, context=None) -> float:
-        depsgraph = context.evaluated_depsgraph_get()
-
         body_obj = self._human.body_obj
         for modifier in body_obj.modifiers:
             if modifier.type != "ARMATURE":
                 modifier.show_viewport = False
 
+        depsgraph = context.evaluated_depsgraph_get()
         body_eval = body_obj.evaluated_get(depsgraph)
 
         def calc_if_inside(target_pt_global, mesh_obj, tolerance=0.02):
