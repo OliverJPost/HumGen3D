@@ -37,7 +37,7 @@ def female_human() -> Human:
 
 
 def _create_human(gender="male"):
-    chosen_preset = random.choice(Human.get_preset_options(gender, bpy.context))
+    chosen_preset = Human.get_preset_options(gender, bpy.context)[0]
     human = Human.from_preset(chosen_preset, bpy.context)
     return human
 
