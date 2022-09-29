@@ -18,5 +18,3 @@ class FacialHairSettings(ImportableHair):
 
         self._human = _human
         self._startswith = "ff_"
-        self._pcoll_name = "facial_hair"
-        self._pcoll_gender_split = False
