@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Tuple
 
 import bpy
+import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
@@ -437,3 +438,25 @@ class BaseClothing(PreviewCollectionContent):
                 is_inside_list.append(is_inside)
 
         return is_inside_list.count(True) / len(is_inside_list)
+
+    def __hash__(self):
+        hash_coll = 0
+        for obj in self.objects:
+            vert_count = len(obj.data.vertices)
+            vert_co = np.empty(vert_count * 3, dtype=np.float64)
+            obj.data.vertices.foreach_get("co", vert_co)
+
+            hash_coll += hash(tuple(map(tuple, vert_co)))
+
+            for sk in obj.data.shape_keys.key_blocks:
+                sk_co = np.empty(vert_count * 3, dtype=np.float64)
+                sk.data.foreach_get("co", sk_co)
+                hash_coll += hash(tuple(map(tuple, sk_co)))
+
+            mat = obj.active_material
+            if mat:
+                node_names = []
+                # TODO check effect of pattern loading
+                for node in mat.node_tree.nodes:
+                    node_names.append(node.name)
+                hash_coll += hash(tuple(node_names))
