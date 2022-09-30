@@ -20,29 +20,30 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
     def modal(self, context, event):
         if self.stop:
-            self.human.hide_set(False)
-            self.armature_modifier.show_viewport = True
-            self.human.height.correct_armature(context)
-            self.human.height.correct_eyes()
-            self.human.height.correct_teeth()
-
-            for mod in self.human.body_obj.modifiers:
-                if mod.type == "MASK":
-                    mod.show_viewport = True
-
-            for cloth_obj in self.human.outfit.objects:
-                self.human.outfit.deform_cloth_to_human(context, cloth_obj)
-            for shoe_obj in self.human.footwear.objects:
-                self.human.footwear.deform_cloth_to_human(context, shoe_obj)
+            self.correct_when_done(context)
 
             cls = self.__class__
             cls._handler = None
-
             return {"FINISHED"}
         if event.value == "RELEASE":
             self.stop = True
 
         return {"PASS_THROUGH"}
+
+    def correct_when_done(self, context):
+        self.human.hide_set(False)
+        self.armature_modifier.show_viewport = True
+        self.human.height.correct_armature(context)
+        self.human.height.correct_eyes()
+        self.human.height.correct_teeth()
+        for mod in self.human.body_obj.modifiers:
+            if mod.type == "MASK":
+                mod.show_viewport = True
+
+        for cloth_obj in self.human.outfit.objects:
+            self.human.outfit.deform_cloth_to_human(context, cloth_obj)
+        for shoe_obj in self.human.footwear.objects:
+            self.human.footwear.deform_cloth_to_human(context, shoe_obj)
 
     def invoke(self, context, event):
         # To prevent circular import
@@ -52,7 +53,6 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         cls = self.__class__
         if cls._handler is not None:
             return {"CANCELLED"}
-
         cls._handler = self
 
         self.stop = False
@@ -70,6 +70,11 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         for mod in self.human.body_obj.modifiers:
             if mod.type == "MASK":
                 mod.show_viewport = False
+
+        if event.type == "RET":
+            self.correct_when_done(context)
+            cls._handler = None
+            return {"FINISHED"}
 
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
