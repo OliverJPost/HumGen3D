@@ -1,3 +1,6 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+
 def build_driver_dict(obj, remove=True) -> dict:
     """Builds a dictionary of drivers on this object, saving their settings to
     be re-used later

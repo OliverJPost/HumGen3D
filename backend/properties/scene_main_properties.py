@@ -1,3 +1,6 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+
 """
 context.scene.HG3D
 Main propertygroup of Human Generator, others are subclasses of this one.
@@ -12,17 +15,16 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
+from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
-from HumGen3D.utility_section.utility_functions import (
-    refresh_modapply,
-)
-from .bake_props import BakeProps
+from HumGen3D.utility_section.utility_functions import refresh_modapply
 
-from ..preview_collections import refresh_pcoll
+from .bake_props import BakeProps
 from .batch_props import BatchProps
 from .bone_size_props import BoneSizeProps
 from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
+from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
 
 
@@ -36,6 +38,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     custom_content: PointerProperty(type=CustomContentProps)
     batch: PointerProperty(type=BatchProps)
     bake: PointerProperty(type=BakeProps)
+    process: PointerProperty(type=ProcessProps)
 
     ######### back end #########
     load_exception: BoolProperty(name="load_exception", default=False)
@@ -51,18 +54,22 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("female", "Female", "", 1),
         ],
         default="male",
-        update=lambda a, b: refresh_pcoll(a, b, "humans"),
+        update=lambda self, context: preview_collections["humans"].refresh(
+            context, self.gender
+        ),
     )
 
-    human_length: FloatProperty(
+    human_height: FloatProperty(
         default=183,
         soft_min=150,
         soft_max=200,
         min=120,
         max=250,
-        update=lambda s, c: Human.from_existing(c.object).creation_phase.length.set(
-            s.human_length, c
+        precision=0,
+        set=lambda s, value: Human.from_existing(bpy.context.object).height.set(
+            value, realtime=True, context=bpy.context
         ),
+        get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
 
     ######### skin props ###########
@@ -154,11 +161,10 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     modapply_search_objects: EnumProperty(
         name="Objects to apply",
         items=[
-            ("selected", "Selected objects", "", 0),
-            ("full", "Full human", "", 1),
-            ("all", "All humans", "", 2),
+            ("selected", "Selected objects only", "", 0),
+            ("all", "All selected humans", "", 2),
         ],
-        default="full",
+        default="all",
         update=refresh_modapply,
     )
 

@@ -1,6 +1,8 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import functools
 
-from bpy.types import bpy_prop_collection # type:ignore
+from bpy.types import bpy_prop_collection  # type:ignore
 from HumGen3D.human.base.exceptions import HumGenException
 
 

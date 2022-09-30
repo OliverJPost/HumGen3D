@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import random
@@ -10,8 +12,8 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
-from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.height.height import apply_armature
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 class BaseHair:

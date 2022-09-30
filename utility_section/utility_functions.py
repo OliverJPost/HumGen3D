@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 from pathlib import Path
@@ -30,13 +32,14 @@ def refresh_modapply(self, context):
 def build_object_list(context, sett) -> list:
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
     if sett.modapply_search_objects != "selected":
-        humans = (
-            [
-                Human.from_existing(context.object).rig_obj,
+        if sett.modapply_search_objects == "full":
+            human = Human.from_existing(context.object, strict_check=False)
+            humans = [
+                human,
             ]
-            if sett.modapply_search_objects == "full"
-            else [obj for obj in bpy.data.objects if obj.HG.ishuman]
-        )
+        else:
+            humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+
         for human in humans:
             if not human:
                 continue
@@ -85,13 +88,13 @@ def refresh_shapekeys_ul(self, context):
 
     col.clear()
 
-    existing_sks = find_existing_shapekeys(sett, pref)
+    existing_sks = find_existing_shapekeys(sett.custom_content, pref)
 
     human = Human.from_existing(context.object)
     if not human:
         return
 
-    for sk in human.shape_keys:
+    for sk in human.keys:
         if sk.name in existing_sks:
             continue
 
@@ -106,11 +109,11 @@ def refresh_shapekeys_ul(self, context):
             item.enabled = False
 
 
-def find_existing_shapekeys(sett, pref):
+def find_existing_shapekeys(cc_sett, pref):
     existing_sks = [
         "Basis",
     ]
-    if not sett.custom_content.show_saved_sks:
+    if not cc_sett.show_saved_sks:
         walker = os.walk(str(pref.filepath) + str(Path("/models/shapekeys")))
         for root, _, filenames in walker:
             for fn in filenames:

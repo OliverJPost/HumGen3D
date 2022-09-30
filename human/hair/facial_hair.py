@@ -1,11 +1,15 @@
-import bpy
-from HumGen3D.backend import refresh_pcoll
-from HumGen3D.human.hair.basehair import ImportableHair
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import bpy
+from HumGen3D.backend import preview_collections
 from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.hair.basehair import ImportableHair
 
 
 class FacialHairSettings(ImportableHair):
+    _pcoll_name = "face_hair"
+    _pcoll_gender_split = False
+
     def __init__(self, _human):
         if _human.gender == "female":
             raise NotImplementedError(
@@ -14,11 +18,3 @@ class FacialHairSettings(ImportableHair):
 
         self._human = _human
         self._startswith = "ff_"
-        self._pcoll_name = "facial_hair"
-        self._pcoll_gender_split = False
-
-    @injected_context
-    def get_preset_options(self, context=None):
-        refresh_pcoll(self, context, "face_hair", hg_rig=self._human.rig_obj)
-
-        return context.scene.HG3D["previews_list_face_hair"]
