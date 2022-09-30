@@ -70,7 +70,7 @@ class Human:
 
     def __repr__(self) -> str:
         """Return a string representation of this object."""
-        return f"Human '{self.name}' [{self.gender.capitalize()}]in {self.phase} phase."
+        return f"Human '{self.name}' [{self.gender.capitalize()}] instance."
 
     @staticmethod
     @injected_context
