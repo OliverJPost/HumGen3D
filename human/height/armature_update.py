@@ -45,6 +45,9 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         for shoe_obj in self.human.footwear.objects:
             self.human.footwear.deform_cloth_to_human(context, shoe_obj)
 
+        if not self.children_hidden_before:
+            self.human.hair.children_set_hide(False)
+
     def invoke(self, context, event):
         # To prevent circular import
         from HumGen3D.human.human import Human
@@ -60,6 +63,9 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         self.human.hide_set(True)
         self.human.body_obj.hide_set(False)
         self.human.body_obj.hide_viewport = False
+
+        self.children_hidden_before = self.human.hair.children_ishidden
+        self.human.hair.children_set_hide(True)
 
         self.armature_modifier = next(
             mod for mod in self.human.body_obj.modifiers if mod.type == "ARMATURE"
