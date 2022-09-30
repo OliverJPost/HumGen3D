@@ -9,7 +9,10 @@ from tokenize import Triple
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
+from HumGen3D.backend.properties.ui_properties import (
+    UserInterfaceProps,
+    active_phase_enum,
+)
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -320,7 +323,7 @@ class MainPanelPart(HGPanel):
         row = col.row(align=(text.lower() == "expression"))
 
         # Get names of panels from PropertyGroup
-        sections_enum = UserInterfaceProps.__annotations__["phase"].keywords["items"]
+        sections_enum = active_phase_enum(self, None)
         section_names = [name for (name, *_, idx) in sections_enum if name and idx < 11]
         section_names.remove("closed")
 
