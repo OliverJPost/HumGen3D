@@ -329,7 +329,7 @@ class MainPanelPart(HGPanel):
         row_l.alignment = "LEFT"
         prev_idx = section_names.index(self.phase_name) - 1
         prev_section = section_names[
-            prev_idx if prev_idx > 0 else len(section_names) - 1
+            prev_idx if prev_idx >= 0 else len(section_names) - 1
         ]
         row_l.operator(
             "hg3d.section_toggle", text="", icon="BACK", emboss=False
