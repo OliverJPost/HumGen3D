@@ -93,7 +93,7 @@ def set_livekey(self, value: float):
 
 def run_modal():
     if not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
-        bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT", hide_armature=True)
+        bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")  # , hide_armature=True)
 
 
 def _add_temp_key_to_permanent_key_coords(
