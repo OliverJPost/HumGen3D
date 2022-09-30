@@ -105,6 +105,8 @@ class HeightSettings:
 
         # Context override for mode_set does not work, see #T88051
         old_active = context.view_layer.objects.active
+        rig.hide_viewport = False
+        rig.hide_set(False)
         context.view_layer.objects.active = rig
         selected_objects = context.selected_objects
         for obj in selected_objects:
