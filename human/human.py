@@ -178,8 +178,8 @@ class Human:
             # Fix for old presets that use wrong default height
             preset_height = 183.15
         human.height.set(preset_height, context)
-        if gender == "male":
-            human.keys["Male"].value = 1.0
+
+        human.keys["Male"].value = 1.0 if gender == "male" else 0.0
 
         # Set shape key values from preset
         for name, value in preset_data["livekeys"].items():
