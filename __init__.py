@@ -164,7 +164,7 @@ def unregister():
     # remove pcolls
     for pcoll_item in _preview_collections.values():
         bpy.utils.previews.remove(pcoll_item.pcoll)
-    bpy.utils.previews.remove(hg_icons[0])
+    bpy.utils.previews.remove(hg_icons.pop())
 
     _preview_collections.clear()
 
