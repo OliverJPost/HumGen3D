@@ -87,7 +87,7 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
             sett = bpy.context.scene.HG3D
             sett.subscribed = False
             msgbus(self, context)
-            preview_collections["humans"].refresh(context, None, sett.gender)
+            preview_collections["humans"].refresh(context, None)
             check_update()
 
         widgets_panel = [self.button1, self.button2, self.button3, self.image1]
