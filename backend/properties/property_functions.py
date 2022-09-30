@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 Functions used by properties
 """
@@ -5,8 +7,9 @@ Functions used by properties
 import os
 from pathlib import Path
 
-from ..preferences import get_prefs
 from HumGen3D.human.human import Human
+
+from ..preferences import get_prefs
 
 
 def find_folders(
@@ -78,7 +81,7 @@ def find_item_amount(context, categ, gender, folder) -> int:
     pref = get_prefs()
 
     if categ == "expressions":
-        ext = ".txt"
+        ext = ".npy"
     else:
         ext = ".blend"
 
@@ -89,8 +92,8 @@ def find_item_amount(context, categ, gender, folder) -> int:
 
     if categ == "outfits":
         sett = context.scene.HG3D
-        inside = sett.batch_clothing_inside
-        outside = sett.batch_clothing_outside
+        inside = sett.batch.clothing_inside
+        outside = sett.batch.clothing_outside
         if inside and not outside:
             ext = "I.blend"
         elif outside and not inside:

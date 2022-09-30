@@ -1,14 +1,16 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend import hg_delete, get_prefs
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.backend import get_prefs, hg_delete
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
 from HumGen3D.human.human import Human  # type: ignore
+from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix
 
 
@@ -123,7 +125,7 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
             for driver in remove_list:
                 body_copy.data.shape_keys.animation_data.drivers.remove(driver)
 
-        distance_dict = build_distance_dict(body_copy, cloth_obj, apply=False)
+        distance_dict = build_distance_dict(body_copy, cloth_obj, apply=False)  # FIXME
 
         if cloth_obj.data.shape_keys:
             for sk in [
@@ -153,7 +155,6 @@ class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
 
         cloth_sks = cloth_obj.data.shape_keys.key_blocks
         human.finalize_phase.outfit._set_cloth_corrective_drivers(cloth_obj, cloth_sks)
-
         hg_delete(body_copy)
         cloth_obj.select_set(True)
         cloth_obj["cloth"] = 1
@@ -329,7 +330,7 @@ class HG_MTC_TO_A_POSE(bpy.types.Operator):
         for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.startswith("cor"):
                 sk.mute = True
-        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)
+        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)  # FIXME
         deform_obj_from_difference(
             "Test sk", distance_dict, hg_body, cloth_obj, as_shapekey=False
         )

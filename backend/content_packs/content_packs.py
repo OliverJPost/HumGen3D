@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 Operators and functions used for installing and managing HumGen's content packs
 
@@ -18,10 +20,12 @@ from pathlib import Path
 
 import bpy  # type: ignore
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D.backend import hg_log, get_prefs 
+from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.icons.icons import get_hg_icon
+
 from ..preview_collections import preview_collections
 from ..update import check_update
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
 
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):
@@ -74,7 +78,6 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         index,
     ):
 
-        hg_icons = preview_collections["hg_icons"]
         header = True if item.name == "header" else False
         # header is true only for the first item in the list.
         # This fakes a header for the items in the ui_list
@@ -83,13 +86,13 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         row.label(text="Name:" if header else item.pack_name)
 
         subrow = row
-        self._draw_creator_column(item, hg_icons, header, subrow)
+        self._draw_creator_column(item, header, subrow)
 
         subrow.label(text="Version:" if header else "%s.%s" % tuple(item.pack_version))
         subrow.alignment = "LEFT"
 
         self._draw_update_label(item, subrow, header)
-        self._draw_category_dots(item, hg_icons, header, subrow)
+        self._draw_category_dots(item, header, subrow)
 
         subrow.separator()
 
@@ -136,13 +139,13 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
         return icon_dict
 
-    def _draw_category_dots(self, item, hg_icons, header, subrow):
+    def _draw_category_dots(self, item, header, subrow):
         """Draws grid of dots to show what kind of content is in this cpack"""
         icon_dict = self._get_icon_dict()
 
         for categ, icon in icon_dict.items():
             if header:
-                subrow.label(text="", icon_value=hg_icons[icon].icon_id)
+                subrow.label(text="", icon_value=get_hg_icon(icon))
             else:
                 if categ not in item:
                     subrow.label(text="", icon="LAYER_USED")
@@ -153,12 +156,12 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
                     icon="LAYER_ACTIVE" if item[categ] else "LAYER_USED",
                 )
 
-    def _draw_creator_column(self, item, hg_icons, header, subrow):
+    def _draw_creator_column(self, item, header, subrow):
         """Draws a column with info about the creator of this cpack"""
         if header:
             subrow.label(text="Creator:")
         elif item.creator == "HumGen":
-            subrow.label(text=item.creator, icon_value=hg_icons["HG_icon"].icon_id)
+            subrow.label(text=item.creator, icon_value=get_hg_icon("HG_icon"))
         else:
             subrow.label(text=item.creator, icon=item.icon_name)
 

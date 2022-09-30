@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import platform
@@ -8,15 +10,20 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete, get_addon_root, get_prefs, refresh_pcoll
+from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
 )
-from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from HumGen3D.user_interface.feedback_func import ShowMessageBox, show_message
+from HumGen3D.human.height.height import apply_armature
+from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.user_interface.documentation.feedback_func import (
+    ShowMessageBox,
+    show_message,
+)
 from mathutils import Vector
+
+refresh_pcoll = None  # FIXME
 
 
 class Content_Saving_Operator:
@@ -833,7 +840,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         self.save_material_textures(objs)
         obj_distance_dict = {}
         for obj in objs:
-            distance_dict = build_distance_dict(body_copy, obj, apply=False)
+            distance_dict = build_distance_dict(body_copy, obj, apply=False)  # FIXME
             obj_distance_dict[obj.name] = distance_dict
 
         for gender in genders:
@@ -869,16 +876,10 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
                     as_sk = False
 
                 deform_obj_from_difference(
-                    name,
-                    distance_dict,
-                    backup_human,
-                    obj_copy,
-                    as_shapekey=as_sk,
-                    apply_source_sks=False,
-                    ignore_cor_sk=True,
+                    name, distance_dict, backup_human, obj_copy, as_shapekey=as_sk
                 )
                 human = None  # FIXME
-                human.creation_phase.length._correct_origin(context, obj, backup_human)
+                human.creation_phase.height._correct_origin(context, obj, backup_human)
                 export_list.append(obj_copy)
 
             if gender == "male":

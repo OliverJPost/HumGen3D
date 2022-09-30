@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 object.HG
 Properties added to every object when Human Generator is installed. Used for storing
@@ -16,6 +18,10 @@ from bpy.props import (  # type: ignore
 )
 
 
+class HG_SK_VALUES(bpy.types.PropertyGroup):
+    testprop: BoolProperty()
+
+
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """
     Properties added to every Blender object as object.HG
@@ -23,26 +29,6 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """
 
     ishuman: BoolProperty(name="Is Human", default=False)
-    phase: EnumProperty(
-        name="phase",
-        items=[
-            ("base_human", "base_human", "", 0),
-            ("body", "body", "", 1),
-            ("face", "face", "", 2),
-            ("skin", "skin", "", 3),
-            ("hair", "hair", "", 4),
-            ("length", "length", "", 5),
-            ("clothing", "clothing", "", 6),
-            ("footwear", "footwear", "", 7),
-            ("pose", "pose", "", 8),
-            ("expression", "expression", "", 9),
-            ("simulation", "simulation", "", 10),
-            ("compression", "compression", "", 11),
-            ("completed", "completed", "", 12),
-            ("creator", "creator", "", 13),
-        ],
-        default="base_human",
-    )
     gender: EnumProperty(
         name="gender",
         description="",
@@ -53,7 +39,10 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
         default="male",
     )
     body_obj: PointerProperty(name="hg_body", type=bpy.types.Object)
-    backup: PointerProperty(name="hg_backup", type=bpy.types.Object)
-    length: FloatProperty()
-    experimental: BoolProperty(default=False)
     batch_result: BoolProperty(default=False)
+    sk_values: PointerProperty(type=HG_SK_VALUES)
+    # Legacy props
+    is_legacy: BoolProperty(default=False)
+    experimental: BoolProperty(default=False)
+    length: FloatProperty()
+    backup_human: PointerProperty(type=bpy.types.Object)
