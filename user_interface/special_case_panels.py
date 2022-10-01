@@ -12,7 +12,7 @@ class HG_PT_LEGACYINSTALL(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         is_legacy = Human.is_legacy(context.object)
-        legacy_addon_not_installed = not context.user_preferences.addons.get(
+        legacy_addon_not_installed = not context.preferences.addons.get(
             "HumGen3D-Legacy"
         )
 
