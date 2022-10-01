@@ -17,16 +17,8 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         hair_systems = self._get_hair_systems(body_obj)
 
+        self.draw_content_selector(pcoll_name="hair")
         col = self.layout.column()
-
-        top_col = col.column(align=True)
-        top_col.template_icon_view(
-            sett.pcoll, "hair", show_labels=True, scale=8.4, scale_popup=6
-        )
-
-        row = top_col.row(align=True)
-        row.scale_y = 1.5
-        row.prop(sett.pcoll, "hair_category", text="")
         if hg_rig.HG.gender == "male":
             self._draw_facial_hair_section(col, sett)
 
@@ -51,13 +43,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             return
         col = box.column(align=True)
 
-        col.template_icon_view(
-            sett.pcoll, "face_hair", show_labels=True, scale=10, scale_popup=6
-        )
-
-        col_h = col.column()
-        col_h.scale_y = 1.5
-        col_h.prop(sett.pcoll, "face_hair_category", text="")
+        self.draw_content_selector(pcoll_name="face_hair")
 
     def _draw_hair_material_ui(self, box):
         """draws subsection with sliders for the three hair materials

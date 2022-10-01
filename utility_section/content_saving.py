@@ -521,9 +521,9 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         mat = hg_body.data.materials[0]
         nodes = mat.node_tree.nodes
 
-        mat_dict["texture_library"] = (
-            mat["texture_library"]
-            if getattr(mat, "texture_library", None)
+        mat_dict["texture_category"] = (
+            mat["texture_category"]
+            if getattr(mat, "texture_category", None)
             else "Default 4K"
         )
 

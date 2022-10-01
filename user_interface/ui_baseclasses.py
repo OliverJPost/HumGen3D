@@ -360,6 +360,28 @@ class MainPanelPart(HGPanel):
 
         col.separator()
 
+    def draw_content_selector(self, layout=None, pcoll_name=None):
+        pcoll_name = pcoll_name if pcoll_name else self.phase_name
+        layout = layout if layout else self.layout
+
+        col = layout.column(align=True)
+        self.searchbox(self.sett, pcoll_name, col)
+
+        col.template_icon_view(
+            self.sett.pcoll,
+            pcoll_name,
+            show_labels=True,
+            scale=8.4,
+            scale_popup=6,
+        )
+
+        row_h = col.row(align=True)
+        row_h.scale_y = 1.5
+        row_h.prop(self.sett.pcoll, f"{pcoll_name}_category", text="")
+        row_h.operator(
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = pcoll_name
+
     def draw_top_widget(self, layout, human):
         col = layout
 

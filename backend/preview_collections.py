@@ -49,7 +49,7 @@ PREVIEW_COLLECTION_DATA = {
         "pattern_category",
         "search_term_pattern",
     ),
-    "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_library", None),
+    "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_category", None),
 }
 
 
