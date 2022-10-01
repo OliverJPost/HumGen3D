@@ -1,5 +1,9 @@
+from tokenize import Triple
+
 import bpy
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.panel_functions import draw_paragraph
+from HumGen3D.user_interface.ui_baseclasses import HGPanel
 
 
 class HG_PT_LEGACYINSTALL(bpy.types.Panel):
@@ -19,5 +23,20 @@ class HG_PT_LEGACYINSTALL(bpy.types.Panel):
         return is_legacy and legacy_addon_not_installed
 
     def draw(self, context):
-        self.layout.alert = True
-        self.layout.label(text="Legacy human")
+        col = self.layout.column()
+        col.alert = True
+
+        message = (
+            "This human was created before HG V4. To edit it you need the Legacy "
+            + "version of the Human Generator add-on."
+        )
+
+        draw_paragraph(col, message)
+
+        col.separator()
+
+        row = col.row()
+        row.scale_y = 1.5
+        row.operator(
+            "wm.url_open", text="Download here", icon="URL"
+        ).url = "https://github.com/OliverJPost/HumGen3D-Legacy"
