@@ -46,7 +46,7 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     # Legacy props
     experimental: BoolProperty(default=False)
     length: FloatProperty()
-    backup_human: PointerProperty(type=bpy.types.Object)
+    backup: PointerProperty(type=bpy.types.Object)
     phase: EnumProperty(
         name="phase",
         items=[
