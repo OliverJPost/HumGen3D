@@ -315,7 +315,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     def _set_body_texture_resolution(self, sett, hg_body):
         resolution_tag = "1K" if self.texture_resolution == "optimised" else "512px"
-        sett.texture_library = f"Default {resolution_tag}"
+        sett.texture_category = f"Default {resolution_tag}"
 
         nodes = hg_body.data.materials[0].node_tree.nodes
         old_image = next(n.image.name for n in nodes if n.name == "Color")

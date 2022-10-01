@@ -243,17 +243,17 @@ class TextureSettings(PreviewCollectionContent):
             resolution_folder = "MEDIUM_RES" if library == "Default 1K" else "LOW_RES"
             self._change_peripheral_texture_resolution(resolution_folder)
 
-        self._human.skin.material["texture_library"] = library
+        self._human.skin.material["texture_category"] = library
 
     @injected_context
     def _set_from_preset(self, mat_preset_data: dict, context=None) -> None:
 
         self.refresh_pcoll(context)
         texture_name = mat_preset_data["diffuse"]
-        texture_library = mat_preset_data["texture_library"]
+        texture_category = mat_preset_data["texture_category"]
         gender = self._human.gender
 
-        self.set(os.path.join("textures", gender, texture_library, texture_name))
+        self.set(os.path.join("textures", gender, texture_category, texture_name))
 
     def _change_peripheral_texture_resolution(
         self, resolution_folder: Path | str

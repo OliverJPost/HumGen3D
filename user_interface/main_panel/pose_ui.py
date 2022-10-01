@@ -61,15 +61,4 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             ).info = "rigify_library"
             return
 
-        self.searchbox(sett, "pose", col)
-
-        col.template_icon_view(
-            sett.pcoll, "pose", show_labels=True, scale=8.4, scale_popup=6
-        )
-
-        row_h = col.row(align=True)
-        row_h.scale_y = 1.5
-        row_h.prop(sett.pcoll, "pose_category", text="")
-        row_h.operator(
-            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
-        ).pcoll_name = "pose"
+        self.draw_content_selector()
