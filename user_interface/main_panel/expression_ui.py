@@ -42,28 +42,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             )
             return
 
-        col = self.layout.column()
-
-        col.separator()
-
-        top_col = col.column(align=True)
-
-        self.searchbox(self.sett, "expressions", top_col)
-
-        top_col.template_icon_view(
-            self.sett.pcoll,
-            "expressions",
-            show_labels=True,
-            scale=8.4,
-            scale_popup=6,
-        )
-
-        row_h = top_col.row(align=True)
-        row_h.scale_y = 1.5
-        row_h.prop(self.sett.pcoll, "expression_category", text="")
-        row_h.operator(
-            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
-        ).pcoll_name = "expression"
+        self.draw_content_selector()
 
         layout.separator(factor=0.5)
 

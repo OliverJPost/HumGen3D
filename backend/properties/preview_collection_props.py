@@ -116,6 +116,11 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_folders("hair.regular_hair"),
         update=refresh("hair.regular_hair"),
     )
+    search_term_hair: StringProperty(
+        name="Search:",
+        default="",
+        update=refresh("hair"),
+    )
     face_hair: EnumProperty(
         items=get_items("hair.face_hair"),
         update=update("hair.face_hair"),
@@ -125,7 +130,11 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_folders("hair.face_hair"),
         update=refresh("hair.face_hair"),
     )
-
+    search_term_face_hair: StringProperty(
+        name="Search:",
+        default="",
+        update=refresh("hair.face_hair"),
+    )
     # expression
     expression: EnumProperty(
         items=get_items("expression"),
@@ -178,8 +187,13 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_items("skin.texture"),
         update=update("skin.texture"),
     )
-    texture_library: EnumProperty(
+    texture_category: EnumProperty(
         name="Texture Library",
         items=get_folders("skin.texture"),
+        update=refresh("skin.texture"),
+    )
+    search_term_texture: StringProperty(
+        name="Search:",
+        default="",
         update=refresh("skin.texture"),
     )
