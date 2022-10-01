@@ -125,11 +125,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         if self.add_hair:
             human.hair.regular_hair.randomize(context)
             if self.gender == "male":
-                human.hair.facial_hair.randomize(context)
+                human.hair.face_hair.randomize(context)
 
         human.hair.set_hair_quality(self.hair_quality, context)
         human.hair.regular_hair.randomize_color()
-        human.hair.facial_hair.randomize_color()
+        human.hair.face_hair.randomize_color()
         human.hair.eyebrows.randomize_color()
 
         human.hair.children_set_hide(True)
