@@ -14,16 +14,16 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
     def draw(self, context):
         sett = self.sett
 
-        col = self.layout.column()
-
-        row_h = col.row(align=True)
+        row_h = self.layout.row(align=True)
         row_h.scale_y = 1.5
         row_h.prop(sett.ui, "pose_tab_switch", expand=True)
 
+        self.layout.separator()
+
         if sett.ui.pose_tab_switch == "library":
-            self._draw_pose_library(sett, col)
+            self._draw_pose_library(sett, self.layout)
         elif sett.ui.pose_tab_switch == "rigify":
-            self._draw_rigify_subsection(col)
+            self._draw_rigify_subsection(self.layout)
 
     def _draw_rigify_subsection(self, box):
         """draws ui for adding rigify, context info if added
@@ -43,7 +43,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
         else:
             box.label(text="Rigify is not enabled")
 
-    def _draw_pose_library(self, sett, box):
+    def _draw_pose_library(self, sett, layout):
         """draws template_icon_view for selecting poses from the library
 
         Args:
@@ -51,21 +51,23 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of pose section
         """
 
+        col = layout.column(align=True)
+
         if "hg_rigify" in self.human.rig_obj.data:
-            row = box.row(align=True)
+            row = col.row(align=True)
             row.label(text="Rigify not supported", icon="ERROR")
             row.operator(
                 "hg3d.showinfo", text="", icon="QUESTION"
             ).info = "rigify_library"
             return
 
-        self.searchbox(sett, "poses", box)
+        self.searchbox(sett, "pose", col)
 
-        box.template_icon_view(
-            sett.pcoll, "poses", show_labels=True, scale=8.4, scale_popup=6
+        col.template_icon_view(
+            sett.pcoll, "pose", show_labels=True, scale=8.4, scale_popup=6
         )
 
-        row_h = box.row(align=True)
+        row_h = col.row(align=True)
         row_h.scale_y = 1.5
         row_h.prop(sett.pcoll, "pose_category", text="")
         row_h.operator(

@@ -14,7 +14,7 @@ class PatternSettings(PreviewCollectionContent):
     def __init__(self, _human) -> None:
         self._human = _human
         self._pcoll_gender_split = False
-        self._pcoll_name = "patterns"
+        self._pcoll_name = "pattern"
         self._node_names = (
             "HG_Pattern",
             "HG_Pattern_Mapping",

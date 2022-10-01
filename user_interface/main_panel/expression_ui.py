@@ -20,16 +20,18 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         row.scale_y = 1.5
         row.prop(self.sett.ui, "expression_type", expand=True)
 
+        self.layout.separator()
+
         if self.sett.ui.expression_type == "1click":
-            self._draw_oneclick_subsection()
+            self._draw_oneclick_subsection(self.layout)
         else:
             self._draw_frig_subsection(self.layout)
 
-    def _draw_oneclick_subsection(self):
+    def _draw_oneclick_subsection(self, layout):
         if "facial_rig" in self.human.body_obj:
-            self.layout.label(text="Library not compatible with face rig")
+            layout.label(text="Library not compatible with face rig")
 
-            col = self.layout.column()
+            col = layout.column()
             col.alert = True
             col.scale_y = 1.5
             col.operator(
@@ -63,7 +65,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
         ).pcoll_name = "expression"
 
-        col.separator(factor=0.5)
+        layout.separator(factor=0.5)
 
         filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:

@@ -3,9 +3,10 @@
 import os
 import random
 from pathlib import Path
+from re import L
 from typing import List, Tuple
 
-from HumGen3D.backend import get_prefs, preview_collections
+from HumGen3D.backend import PREVIEW_COLLECTION_DATA, get_prefs, preview_collections
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
@@ -130,12 +131,9 @@ class PreviewCollectionContent:
 
         pref = get_prefs()
 
-        if pcoll_name == "hair":
-            folder = os.path.join("hair", "head")
-        elif pcoll_name == "face_hair":
-            folder = os.path.join("hair", "face_hair")
-        else:
-            folder = pcoll_name
+        folder = PREVIEW_COLLECTION_DATA[pcoll_name][2]
+        if isinstance(folder, list):
+            folder = os.path.join(*folder)
 
         if gender_toggle:
             categ_folder = os.path.join(pref.filepath, folder, gender)
@@ -163,7 +161,7 @@ class PreviewCollectionContent:
 
         enum_list = [("All", "All Categories", "", 0)] if include_all else []
         for i, name in enumerate(categ_list):
-            idx = i if pcoll_name == "textures" else i + 1
+            idx = i if pcoll_name == "texture" else i + 1
             enum_list.append((name, name, "", idx))
 
         if not enum_list:
