@@ -104,7 +104,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         col = boxbox.column(align=True)
         col.template_icon_view(
-            sett.pcoll, "textures", show_labels=True, scale=8, scale_popup=6
+            sett.pcoll, "texture", show_labels=True, scale=8, scale_popup=6
         )
         row = col.row(align=True)
         row.scale_y = 1.5

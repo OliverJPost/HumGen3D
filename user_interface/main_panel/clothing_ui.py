@@ -13,13 +13,12 @@ class ClothingPanel(MainPanelPart):
         category = self.phase_name
 
         col = self.layout.column(align=True)
-        pcoll_name = "outfits" if category == "outfit" else "footwear"
 
         self.searchbox(self.sett, category, col)
 
         row = col.row(align=True)
         row.template_icon_view(
-            self.sett.pcoll, pcoll_name, show_labels=True, scale=8.4, scale_popup=6
+            self.sett.pcoll, category, show_labels=True, scale=8.4, scale_popup=6
         )
 
         row_h = col.row(align=True)

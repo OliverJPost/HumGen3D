@@ -115,9 +115,9 @@ def batch_uilist_refresh(self, context, categ):
     Refreshes uilist
     """
     scene = context.scene
-    if categ == "outfits":
+    if categ == "outfit":
         collection = scene.batch_clothing_col
-    elif categ == "poses":
+    elif categ == "pose":
         collection = scene.batch_pose_col
     else:
         collection = scene.batch_expressions_col
@@ -125,7 +125,7 @@ def batch_uilist_refresh(self, context, categ):
     enabled_dict = {i.name: i.enabled for i in collection}
     collection.clear()
 
-    gender = categ == "outfits"
+    gender = categ == "outfit"
     found_folders_male = find_folders(
         self, context, categ, gender, include_all=False, gender_override="male"
     )

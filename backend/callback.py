@@ -168,8 +168,8 @@ def tab_change_update(self, context):
         human.rig_obj,
     )
 
-    batch_uilist_refresh(self, context, "outfits")
-    batch_uilist_refresh(self, context, "expressions")
+    batch_uilist_refresh(self, context, "outfit")
+    batch_uilist_refresh(self, context, "expression")
 
 
 def _hair_shader_type_update(sett, hg_body):

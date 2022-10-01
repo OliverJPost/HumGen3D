@@ -63,7 +63,7 @@ def find_folders(
 
     enum_list = [("All", "All Categories", "", 0)] if include_all else []
     for i, name in enumerate(categ_list):
-        idx = i if categ == "textures" else i + 1
+        idx = i if categ == "texture" else i + 1
         enum_list.append((name, name, "", idx))
 
     if not enum_list:
@@ -80,7 +80,7 @@ def find_item_amount(context, categ, gender, folder) -> int:
     """
     pref = get_prefs()
 
-    if categ == "expressions":
+    if categ == "expression":
         ext = ".npy"
     else:
         ext = ".blend"
@@ -90,7 +90,7 @@ def find_item_amount(context, categ, gender, folder) -> int:
     else:
         dir = str(pref.filepath) + str(Path("/{}/{}".format(categ, folder)))
 
-    if categ == "outfits":
+    if categ == "outfit":
         sett = context.scene.HG3D
         inside = sett.batch.clothing_inside
         outside = sett.batch.clothing_outside

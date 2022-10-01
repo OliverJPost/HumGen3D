@@ -9,7 +9,7 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 class PoseSettings(PreviewCollectionContent):
     def __init__(self, _human):
         self._human = _human
-        self._pcoll_name = "poses"
+        self._pcoll_name = "pose"
         self._pcoll_gender_split = False
 
     @injected_context
@@ -65,7 +65,7 @@ class PoseSettings(PreviewCollectionContent):
         if not hg_pose:
             hg_log(
                 "Could not load pose:",
-                context.scene.HG3D.pcoll.poses,
+                context.scene.HG3D.pcoll.pose,
                 level="WARNING",
             )
 

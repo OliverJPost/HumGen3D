@@ -134,7 +134,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             "poses": "pose",
             "clothes": "clothing",
             "footwear": "footwear",
-            "expressions": "expression",
+            "expression": "expression",
         }
 
         return icon_dict
