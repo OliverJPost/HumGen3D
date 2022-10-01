@@ -25,10 +25,10 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
         human = Human.from_existing(context.active_object, strict_check=False)
 
         if random_type in (
-            "poses",
-            "expressions",
-            "outfits",
-            "patterns",
+            "pose",
+            "expression",
+            "outfit",
+            "pattern",
             "footwear",
             "hair",
         ):

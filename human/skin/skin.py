@@ -214,7 +214,7 @@ class SkinSettings:
 class TextureSettings(PreviewCollectionContent):
     def __init__(self, human: Human) -> None:
         self._human = human
-        self._pcoll_name = "textures"
+        self._pcoll_name = "texture"
         self._pcoll_gender_split = True
 
     def set(self, textureset_path: str, context: Context = None) -> None:

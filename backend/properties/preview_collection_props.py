@@ -45,7 +45,7 @@ def get_folders(attr):
         try:
             return retreiver(human).get_categories()
         # Catch for weird behaviour where pose_category refreshes early
-        except (AttributeError, HumGenException):
+        except (AttributeError, HumGenException) as e:
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
     return func
@@ -78,7 +78,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
 
     # posing
-    poses: EnumProperty(
+    pose: EnumProperty(
         items=get_items("pose"),
         update=update("pose"),
     )
@@ -87,14 +87,14 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_folders("pose"),
         update=refresh("pose"),
     )
-    search_term_poses: StringProperty(
+    search_term_pose: StringProperty(
         name="Search:",
         default="",
         update=refresh("pose"),
     )
 
     # outfits
-    outfits: EnumProperty(items=get_items("outfit"), update=update("outfit"))
+    outfit: EnumProperty(items=get_items("outfit"), update=update("outfit"))
     outfit_category: EnumProperty(
         name="Outfit Library",
         items=get_folders("outfit"),
@@ -127,7 +127,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
 
     # expression
-    expressions: EnumProperty(
+    expression: EnumProperty(
         items=get_items("expression"),
         update=update("expression"),
     )
@@ -136,7 +136,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         items=get_folders("expression"),
         update=refresh("expression"),
     )
-    search_term_expressions: StringProperty(
+    search_term_expression: StringProperty(
         name="Search:",
         default="",
         update=refresh("expression"),
@@ -159,22 +159,22 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
 
     # patterns
-    patterns: EnumProperty(
+    pattern: EnumProperty(
         items=get_items("outfit.pattern"),
         update=update("outfit.pattern"),
     )
-    patterns_category: EnumProperty(
+    pattern_category: EnumProperty(
         name="Pattern Library",
         items=get_folders("outfit.pattern"),
         update=refresh("outfit.pattern"),
     )
-    search_term_patterns: StringProperty(
+    search_term_pattern: StringProperty(
         name="Search:",
         default="",
         update=refresh("outfit.pattern"),
     )
 
-    textures: EnumProperty(
+    texture: EnumProperty(
         items=get_items("skin.texture"),
         update=update("skin.texture"),
     )

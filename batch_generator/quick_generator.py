@@ -375,11 +375,11 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     def _set_pose(self, context, sett, pose_type):
         if pose_type == "t_pose":
-            preview_collections["poses"].refresh(context)
-            sett.pcoll.poses = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
+            preview_collections["pose"].refresh(context)
+            sett.pcoll.pose = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
         else:
             sett.pose_category = pose_type.capitalize().replace("_", " ")
-            set_random_active_in_pcoll(context, sett, "poses")
+            set_random_active_in_pcoll(context, sett, "pose")
 
     def pick_library(self, context, categ, gender=None):
         sett = context.scene.HG3D

@@ -295,7 +295,7 @@ class KeySettings:
         return PropCollection([sk for sk in self if sk.name.startswith("pr_")])
 
     @property
-    def expressions(self) -> PropCollection:
+    def expression(self) -> PropCollection:
         return PropCollection([sk for sk in self if sk.name.startswith("expr_")])
 
     @property

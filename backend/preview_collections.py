@@ -24,8 +24,8 @@ preview_collections: Dict[PreviewCollection] = {}  # global dict of all pcolls
 # (extension, gender_dependent, folder, category_propname, search_term_propname)
 PREVIEW_COLLECTION_DATA = {
     "humans": (".json", True, "models", None, None),
-    "poses": (".blend", False, "poses", "pose_category", "search_term_poses"),
-    "outfits": (".blend", True, "outfits", "outfit_category", "search_term_outfit"),
+    "pose": (".blend", False, "poses", "pose_category", "search_term_pose"),
+    "outfit": (".blend", True, "outfits", "outfit_category", "search_term_outfit"),
     "footwear": (
         ".blend",
         True,
@@ -35,21 +35,21 @@ PREVIEW_COLLECTION_DATA = {
     ),
     "hair": (".json", True, ["hair", "head"], "hair_category", None),
     "face_hair": (".json", False, ["hair", "face_hair"], "face_hair_category", None),
-    "expressions": (
+    "expression": (
         ".npy",
         False,
         "expressions",
         "expression_category",
-        "search_term_expressions",
+        "search_term_expression",
     ),
-    "patterns": (
+    "pattern": (
         ".png",
         False,
         "patterns",
-        "patterns_category",
-        "search_term_patterns",
+        "pattern_category",
+        "search_term_pattern",
     ),
-    "textures": ((".png", ".tiff", ".tga"), True, "textures", "texture_library", None),
+    "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_library", None),
 }
 
 
@@ -107,7 +107,7 @@ class PreviewCollection:
             pcoll_categ (str): name of preview collection
         """
         sett = context.scene.HG3D
-        sett.load_exception = False if self.name == "poses" else True
+        sett.load_exception = False if self.name == "pose" else True
         pref = get_prefs()
 
         # clear previews list

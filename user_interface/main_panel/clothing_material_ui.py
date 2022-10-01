@@ -196,12 +196,12 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
             control_node (ShaderNodeGroup): control nodegroup of cloth material
             p_flow (UILayout): layout where the pattern stuff is drawn in
         """
-        searchbox(sett, "patterns", p_flow)
+        searchbox(sett, "pattern", p_flow)
 
         col = p_flow.column(align=False)
         col.scale_y = 0.8
         col.template_icon_view(
-            sett.pcoll, "patterns", show_labels=True, scale=5, scale_popup=6
+            sett.pcoll, "pattern", show_labels=True, scale=5, scale_popup=6
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):
@@ -214,10 +214,10 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
         """
         row_h = p_flow.row(align=True)
         row_h.scale_y = 1.5 * 0.8  # quick fix because history
-        row_h.prop(sett, "patterns_sub", text="")
+        row_h.prop(sett, "pattern_category", text="")
         row_h.operator(
             "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
-        ).pcoll_name = "patterns"
+        ).pcoll_name = "pattern"
 
         p_flow.separator()
 

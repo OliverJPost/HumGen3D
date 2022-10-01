@@ -394,11 +394,11 @@ def build_content_collection(self, context):
 
     pcoll_dict = {
         "starting_humans": "humans",
-        "texture_sets": "textures",
+        "texture_sets": "texture",
         "hairstyles": "hair",
         "face_hair": "face_hair",
         "poses": "poses",
-        "outfits": "outfits",
+        "outfits": "outfit",
         "footwear": "footwear",
     }
 
@@ -527,7 +527,7 @@ def _add_to_collection(
     dirname = os.path.dirname(content_item[0].lower())
 
     skip = content_item[0] == "none" or (
-        categ == "textures" and "male" not in dirname
+        categ == "texture" and "male" not in dirname
     )  # TODO better implementation
     if skip:  # skip 'click here to select' item
         return

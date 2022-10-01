@@ -375,7 +375,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         ShowMessageBox(message=msg)
 
         context.view_layer.objects.active = hg_rig
-        refresh_pcoll(self, context, "poses")
+        refresh_pcoll(self, context, "pose")
 
         self.cc_sett.content_saving_ui = False
 
