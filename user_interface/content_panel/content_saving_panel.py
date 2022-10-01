@@ -496,7 +496,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel, CONTENT_SAVING_BASE):
         col.scale_y = 1.5
         col.prop(sett, "savehair_male", text="Male", toggle=True)
         subrow = col.row(align=True)
-        subrow.enabled = False if sett.save_hairtype == "facial_hair" else True
+        subrow.enabled = False if sett.save_hairtype == "face_hair" else True
         subrow.prop(sett, "savehair_female", text="Female", toggle=True)
 
         poll = any((sett.savehair_male, sett.savehair_female))

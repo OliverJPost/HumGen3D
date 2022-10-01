@@ -6,7 +6,7 @@ import bpy
 from HumGen3D.backend import get_addon_root
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
-from HumGen3D.human.hair.facial_hair import FacialHairSettings
+from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
 from ..base.decorators import injected_context
@@ -26,7 +26,7 @@ class HairSettings:
         return EyelashSettings(self._human)
 
     @property  # TODO make cached
-    def facial_hair(self) -> FacialHairSettings:
+    def face_hair(self) -> FacialHairSettings:
         return FacialHairSettings(self._human)
 
     @property  # TODO make cached
