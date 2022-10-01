@@ -13,6 +13,7 @@ from bpy.props import (  # type: ignore
     EnumProperty,
     FloatProperty,
     IntProperty,
+    IntVectorProperty,
     PointerProperty,
     StringProperty,
 )
@@ -41,8 +42,8 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     body_obj: PointerProperty(name="hg_body", type=bpy.types.Object)
     batch_result: BoolProperty(default=False)
     sk_values: PointerProperty(type=HG_SK_VALUES)
+    version: IntVectorProperty(default=(3, 0, 0), min=0, max=99, size=3)
     # Legacy props
-    is_legacy: BoolProperty(default=False)
     experimental: BoolProperty(default=False)
     length: FloatProperty()
     backup_human: PointerProperty(type=bpy.types.Object)

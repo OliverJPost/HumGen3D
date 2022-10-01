@@ -39,7 +39,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         if self.section_name == "hair":
             human.hair.regular_hair.refresh_pcoll(context)
             if human.gender == "male":
-                human.hair.facial_hair.refresh_pcoll(context)
+                human.hair.face_hair.refresh_pcoll(context)
         else:
             try:
                 getattr(human, self.section_name).refresh_pcoll(context)

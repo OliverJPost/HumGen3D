@@ -4,20 +4,20 @@ import bpy
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
+from HumGen3D.user_interface.ui_baseclasses import HGPanel
 
 from ..panel_functions import get_flow, searchbox
 
 
-class HG_PT_CLOTHMAT(bpy.types.Panel):
+class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
     bl_idname = "HG_PT_CLOTHMAT"
-    bl_label = "HumGen"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "HumGen"
 
     @classmethod
     def poll(cls, context):
         if not context.object:
+            return False
+
+        if not HGPanel.poll(context):
             return False
 
         return "cloth" in context.object or "shoe" in context.object

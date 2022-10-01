@@ -45,6 +45,8 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        if not super().poll(context):
+            return False
         return context.scene.HG3D.ui.active_tab == "PROCESS"
 
     def draw(self, context):

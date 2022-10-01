@@ -72,6 +72,17 @@ class Human:
         """Return a string representation of this object."""
         return f"Human '{self.name}' [{self.gender.capitalize()}] instance."
 
+    @classmethod
+    def is_legacy(cls, obj) -> bool:
+        rig_obj = cls.find_hg_rig(obj, include_legacy=True)
+        if not rig_obj:
+            return False
+        return not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (
+            3,
+            0,
+            0,
+        )
+
     @staticmethod
     @injected_context
     def get_preset_options(gender: str, context: Context = None) -> List[str]:
@@ -122,18 +133,19 @@ class Human:
         if strict_check and not isinstance(existing_human, Object):
             raise TypeError(f"Expected a Blender object, got {type(existing_human)}")
 
-        rig_obj = cls.find(existing_human)
+        rig_obj = cls.find_hg_rig(existing_human, include_legacy=True)
 
         if rig_obj:
+            if not Human.is_legacy(rig_obj):
+                return cls(rig_obj, strict_check=strict_check)
             # Cancel for legacy humans
-            if not hasattr(rig_obj.HG, "is_legacy"):
-                rig_obj.HG.is_legacy = True
+            else:
                 if strict_check:
                     raise HumGenException(
                         "Passed human created with a version of HG older than 4.0.0"
                     )
                 return None
-            return cls(rig_obj, strict_check=strict_check)
+
         elif strict_check:
             raise HumGenException(
                 f"Passed object '{existing_human.name}' is not part of an existing human"
@@ -193,19 +205,25 @@ class Human:
         human.hair.eyebrows._set_from_preset(preset_data["eyebrows"])
 
         human._set_random_name()
-        human.props.is_legacy = False
+
+        from HumGen3D import bl_info
+
+        human.props.version = bl_info["version"]
 
         return human
 
     # TODO return instances instead of rigs
     @classmethod
     def find_multiple_in_list(cls, objects):
-        rigs = set(r for r in [Human.find(obj) for obj in objects] if r)
+        rigs = set(r for r in [Human.find_hg_rig(obj) for obj in objects] if r)
         return rigs
 
     @classmethod
-    def find(
-        cls, obj: Object, include_applied_batch_results: bool = False
+    def find_hg_rig(
+        cls,
+        obj: Object,
+        include_applied_batch_results: bool = False,
+        include_legacy: bool = False,
     ) -> Object | None:
         """Checks if the passed object is part of a HumGen human. Does NOT return an instance
 
@@ -223,22 +241,22 @@ class Human:
         """
         # TODO clean up this mess
 
-        if not obj:
-            return None
-        elif not obj.HG.ishuman:
-            if obj.parent:
-                if obj.parent.HG.ishuman:
-                    return obj.parent
-            else:
-                return None
+        if obj and obj.HG.ishuman:
+            rig_obj = obj
+        elif obj and obj.parent and obj.parent.HG.ishuman:
+            rig_obj = obj.parent
         else:
-            if all(cls._obj_is_batch_result(obj)):
-                if include_applied_batch_results:
-                    return obj
-                else:
-                    return None
+            return None
 
-            return obj
+        if all(cls._obj_is_batch_result(rig_obj)) and not include_applied_batch_results:
+            return None
+
+        if (
+            not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (3, 0, 0)
+        ) and not include_legacy:
+            return None
+
+        return rig_obj
 
     @staticmethod
     def _obj_is_batch_result(obj: Object) -> Tuple[bool, bool]:
