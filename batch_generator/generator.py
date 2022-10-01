@@ -14,7 +14,7 @@ from HumGen3D.human.human import Human
 from ..backend.logging import hg_log
 
 
-class HG_Batch_Generator:
+class BatchHumanGenerator:
     """Generator/factory (?) for making completed HG_Humans in the background, the
     same way as the batch panel in the Human Generator GUI does."""
 

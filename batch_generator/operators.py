@@ -13,7 +13,7 @@ import time
 from pathlib import Path
 
 import bpy
-from HumGen3D.API import HG_Batch_Generator
+from HumGen3D.API import BatchHumanGenerator
 from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
 from HumGen3D.backend.preferences.preference_func import get_addon_root
@@ -289,6 +289,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
         quality_dict = {name: getattr(batch_sett, name) for name in q_names}
 
-        generator = HG_Batch_Generator(**quality_dict)
+        generator = BatchHumanGenerator(**quality_dict)
 
         return generator
