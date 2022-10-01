@@ -8,10 +8,10 @@ import time
 
 import bpy  # type:ignore
 from HumGen3D.backend import get_addon_root, get_prefs
-
 from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.human import Human
+
 from ..backend.logging import hg_log
-from .human import HG_Human
 
 
 class HG_Batch_Generator:
@@ -86,7 +86,7 @@ class HG_Batch_Generator:
         add_clothing=False,
         clothing_category="All",
         pose_type="a_pose",
-    ) -> HG_Human:
+    ) -> Human:
         """Generate a new HG_Human in a background proces based on the settings
         of this HG_Batch_Generator instance and import the created human to
         Blender
