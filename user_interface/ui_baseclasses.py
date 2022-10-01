@@ -51,6 +51,12 @@ class HGPanel:
     def draw(self, context):
         raise NotImplementedError
 
+    @classmethod
+    def poll(cls, context):
+        filepath_error = False
+        is_legacy = Human.is_legacy(context.object)
+        return not is_legacy and not filepath_error
+
     def draw_info_and_warning_labels(self, context) -> bool:
         """Collection of all info and warning labels of HumGen
 
@@ -409,6 +415,8 @@ class MainPanelPart(HGPanel):
 
     @classmethod
     def poll(cls, context):
+        if not super().poll(context):
+            return False
         sett = context.scene.HG3D
         if not sett.ui.active_tab == "CREATE":
             return False

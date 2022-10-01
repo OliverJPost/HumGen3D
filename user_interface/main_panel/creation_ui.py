@@ -4,7 +4,7 @@ import bpy
 from HumGen3D.human.human import Human
 
 from ..panel_functions import draw_panel_switch_header
-from ..ui_baseclasses import MainPanelPart
+from ..ui_baseclasses import HGPanel, MainPanelPart
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
@@ -12,8 +12,10 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
+        if not HGPanel.poll(context):
+            return False
         ui_sett = context.scene.HG3D.ui
-        return not Human.find(context.object) and ui_sett.active_tab == "CREATE"
+        return not Human.find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
