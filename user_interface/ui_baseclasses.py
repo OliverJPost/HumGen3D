@@ -246,22 +246,6 @@ class HGPanel:
         )  # TODO is this even necessary now property split is used?
         return flow
 
-    def searchbox(self, sett, name, layout):
-        """draws a searchbox of the given preview collection
-
-        Arg:
-            sett (PropertyGroup): HumGen props
-            name (str): name of the preview collection to search
-            layout (UILayout): layout to draw search box in
-        """
-        row = layout.row(align=True)
-        row.prop(sett.pcoll, "search_term_{}".format(name), text="", icon="VIEWZOOM")
-
-        if hasattr(sett.pcoll, f"search_term_{name}"):
-            row.operator(
-                "hg3d.clear_searchbox", text="", icon="X"
-            ).searchbox_name = name
-
     @staticmethod
     def draw_centered_subtitle(text, layout, icon=None):
         """Draw a small title that is centered. Optional icon."""
@@ -365,7 +349,17 @@ class MainPanelPart(HGPanel):
         layout = layout if layout else self.layout
 
         col = layout.column(align=True)
-        self.searchbox(self.sett, pcoll_name, col)
+
+        row = col.row(align=True)
+        row.prop(
+            self.sett.pcoll,
+            "search_term_{}".format(pcoll_name),
+            text="",
+            icon="VIEWZOOM",
+        )
+        row.operator(
+            "hg3d.clear_searchbox", text="", icon="X"
+        ).searchbox_name = pcoll_name
 
         col.template_icon_view(
             self.sett.pcoll,
