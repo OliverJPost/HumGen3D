@@ -47,3 +47,23 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     experimental: BoolProperty(default=False)
     length: FloatProperty()
     backup_human: PointerProperty(type=bpy.types.Object)
+    phase: EnumProperty(
+        name="phase",
+        items=[
+            ("base_human", "base_human", "", 0),
+            ("body", "body", "", 1),
+            ("face", "face", "", 2),
+            ("skin", "skin", "", 3),
+            ("hair", "hair", "", 4),
+            ("length", "length", "", 5),
+            ("clothing", "clothing", "", 6),
+            ("footwear", "footwear", "", 7),
+            ("pose", "pose", "", 8),
+            ("expression", "expression", "", 9),
+            ("simulation", "simulation", "", 10),
+            ("compression", "compression", "", 11),
+            ("completed", "completed", "", 12),
+            ("creator", "creator", "", 13),
+        ],
+        default="base_human",
+    )
