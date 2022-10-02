@@ -1,17 +1,16 @@
 import json
 import os
+
 import bpy
-from backend.preferences.preference_func import get_addon_root
+from HumGen3D.backend.preferences.preference_func import get_addon_root
+from HumGen3D.human.base.exceptions import HumGenException  # type:ignore
+from HumGen3D.human.base.geometry import centroid
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
 )
 from mathutils import Matrix, Vector, kdtree
-
-from HumGen3D.human.base.geometry import centroid
-from HumGen3D.human.human import Human
-from human.base.exceptions import HumGenException  # type:ignore
 
 
 def correct_shape_to_a_pose(cloth_obj, hg_body, context):
@@ -82,5 +81,7 @@ def get_human_from_distance(cloth_obj):
 
     if human_distances[closest_human_rig] > 2.0:
         raise HumGenException("Clothing does not seem to be on a HG body object.")
+
+    from HumGen3D.human.human import Human
 
     return Human.from_existing(closest_human_rig)

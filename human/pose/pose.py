@@ -12,7 +12,7 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 if TYPE_CHECKING:
     from human.human import Human
 
-from utility_section.content_saving import Content_Saving_Operator
+from HumGen3D.utility_section.content_saving import Content_Saving_Operator
 
 
 class PoseSettings(PreviewCollectionContent):

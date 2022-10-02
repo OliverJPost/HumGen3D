@@ -13,7 +13,6 @@ from bpy.types import Object
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from mathutils import Vector
-from matplotlib import PathLike
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection

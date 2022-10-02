@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import EnumProperty
-from human.clothing.mesh_to_outfit import get_human_from_distance
+from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 
 
 class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
