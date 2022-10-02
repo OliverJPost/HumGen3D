@@ -1,16 +1,21 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
 import re
 import subprocess
 from shutil import copyfile
 
 import bpy
-from backend.logging import hg_log
-from backend.memory_management import hg_delete
-from backend.preferences.preference_func import get_addon_root, get_prefs
-from user_interface.documentation.feedback_func import show_message
+from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
+from HumGen3D.user_interface.documentation.feedback_func import show_message
 
 
 class SavableContent:
+    def save_to_library(self):
+        raise NotImplementedError
+
     def save_thumbnail(self, folder, img_name, save_name):
         """Save the thumbnail with this content
 

@@ -1,10 +1,14 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
+from math import acos, pi
 from pathlib import Path
 from typing import Tuple
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_delete, hg_log, refresh_pcoll
+import numpy as np
+from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
@@ -91,7 +95,7 @@ class BaseClothing(PreviewCollectionContent):
         self._set_geometry_masks(mask_remove_list, new_mask_list)
 
         # refresh pcoll for consistent 'click here to select' icon
-        refresh_pcoll(self, context, "outfits")
+        self.refresh_pcoll(context)
 
     def add_obj(self, cloth_obj, cloth_type, context):
         body_obj = self._human.body_obj
@@ -411,3 +415,65 @@ class BaseClothing(PreviewCollectionContent):
             )
 
         context.view_layer.objects.active = old_active
+
+    @injected_context
+    def _calc_percentage_clipping_vertices(self, context=None) -> float:
+        body_obj = self._human.body_obj
+        for modifier in body_obj.modifiers:
+            if modifier.type != "ARMATURE":
+                modifier.show_viewport = False
+
+        depsgraph = context.evaluated_depsgraph_get()
+        body_eval = body_obj.evaluated_get(depsgraph)
+
+        def calc_if_inside(target_pt_global, mesh_obj, tolerance=0.02):
+
+            # Convert the point from global space to mesh local space
+            target_pt_local = mesh_obj.matrix_world.inverted() @ target_pt_global
+            # Find the nearest point on the mesh and the nearest face normal
+            _, pt_closest, face_normal, _ = mesh_obj.closest_point_on_mesh(
+                target_pt_local
+            )
+            # Get the target-closest pt vector
+            target_closest_pt_vec = (pt_closest - target_pt_local).normalized()
+            # Compute the dot product = |a||b|*cos(angle)
+            dot_prod = target_closest_pt_vec.dot(face_normal)
+            # Get the angle between the normal and the target-closest-pt vector (from the dot prod)
+            angle = acos(min(max(dot_prod, -1), 1)) * 180 / pi
+            # Allow for some rounding error
+            inside = angle < 90 - tolerance
+
+            return inside
+
+        is_inside_list = []
+        for obj in self.objects:
+            obj_eval = obj.evaluated_get(depsgraph)
+            mx_obj = obj.matrix_world
+            for vert in obj_eval.data.vertices:
+                vert_global = mx_obj @ vert.co
+                is_inside = calc_if_inside(vert_global, body_eval)
+                is_inside_list.append(is_inside)
+
+        return is_inside_list.count(True) / len(is_inside_list)
+
+    def __hash__(self):
+        hash_coll = 0
+        for obj in self.objects:
+            vert_count = len(obj.data.vertices)
+            vert_co = np.empty(vert_count * 3, dtype=np.float64)
+            obj.data.vertices.foreach_get("co", vert_co)
+
+            hash_coll += hash(tuple(map(tuple, vert_co)))
+
+            for sk in obj.data.shape_keys.key_blocks:
+                sk_co = np.empty(vert_count * 3, dtype=np.float64)
+                sk.data.foreach_get("co", sk_co)
+                hash_coll += hash(tuple(map(tuple, sk_co)))
+
+            mat = obj.active_material
+            if mat:
+                node_names = []
+                # TODO check effect of pattern loading
+                for node in mat.node_tree.nodes:
+                    node_names.append(node.name)
+                hash_coll += hash(tuple(node_names))

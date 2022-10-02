@@ -1,8 +1,10 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.human.human import Human
 
 from ..panel_functions import draw_panel_switch_header
-from ..ui_baseclasses import MainPanelPart
+from ..ui_baseclasses import HGPanel, MainPanelPart
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
@@ -10,8 +12,10 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
+        if not HGPanel.poll(context):
+            return False
         ui_sett = context.scene.HG3D.ui
-        return not Human.find(context.object) and ui_sett.active_tab == "CREATE"
+        return not Human.find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
         draw_panel_switch_header(self.layout, context.scene.HG3D)
@@ -47,14 +51,16 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         row.scale_y = 2
         row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
-        row.operator("hg3d.random", text="", icon="FILE_REFRESH").random_type = "humans"
+        row.operator(
+            "hg3d.random_choice", text="", icon="FILE_REFRESH"
+        ).pcoll_name = "humans"
 
         col = col.column()
         col.scale_y = 2
         col.alert = True
         col.operator("hg3d.startcreation", icon="COMMUNITY", depress=True)
 
-        if "hg_batch_marker" in context.object:
+        if context.object and "hg_batch_marker" in context.object:
             self._draw_batch_marker_notification(col)
 
     def _draw_batch_marker_notification(self, layout):

@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.
@@ -7,7 +9,7 @@ from re import L
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty
-from HumGen3D.backend.preview_collections import get_hg_icon  # type: ignore
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
 
@@ -29,6 +31,45 @@ def panel_update(self, context):
         self.active_tab = active_panel.upper()
         self.phase = "closed"
     hg_callback(self)
+
+
+# As separate function so icon_id updates correctly
+def active_tab_enum(self, context):
+    try:
+        return [
+            ("CREATE", "Create", "", get_hg_icon("create"), 0),
+            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
+            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
+            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
+        ]
+    except IndexError:
+        return []
+
+
+# As separate function so icon_id updates correctly
+def active_phase_enum(self, context):
+    try:
+        return [
+            ("", "Editing", ""),
+            ("closed", "All Categories", "", "COLLAPSEMENU", 0),
+            ("body", "Body", "", get_hg_icon("body"), 1),
+            ("face", "Face", "", get_hg_icon("face"), 3),
+            ("height", "Height", "", get_hg_icon("height"), 2),
+            ("skin", "Skin", "", get_hg_icon("skin"), 4),
+            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
+            ("hair", "Hair", "", get_hg_icon("hair"), 6),
+            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
+            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
+            ("pose", "Pose", "", get_hg_icon("pose"), 9),
+            ("expression", "Expression", "", get_hg_icon("expression"), 10),
+            ("", "Tabs", ""),
+            ("create", "Create Humans", "", get_hg_icon("create"), 11),
+            ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
+            ("content", "Custom Content", "", get_hg_icon("custom_content"), 12),
+            ("process", "Processing", "", get_hg_icon("export"), 12),
+        ]
+    except IndexError:
+        return []
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
@@ -57,6 +98,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "thumb_ui",
                 "expression_slider",
                 "content_saving",
+                "other",
+                "main",
             ]
         )
     )
@@ -83,38 +126,13 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
 
     phase: EnumProperty(
         name="Category",
-        items=[
-            ("", "Editing", ""),
-            ("closed", "All Categories", "", "COLLAPSEMENU", 0),
-            ("body", "Body", "", get_hg_icon("body"), 1),
-            ("face", "Face", "", get_hg_icon("face"), 3),
-            ("height", "Height", "", get_hg_icon("height"), 2),
-            ("skin", "Skin", "", get_hg_icon("skin"), 4),
-            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
-            ("hair", "Hair", "", get_hg_icon("hair"), 6),
-            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
-            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
-            ("pose", "Pose", "", get_hg_icon("pose"), 9),
-            ("expression", "Expression", "", get_hg_icon("expression"), 10),
-            ("", "Tabs", ""),
-            ("create", "Create Humans", "", get_hg_icon("create"), 11),
-            ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
-            ("content", "Custom Content", "", get_hg_icon("custom_content"), 12),
-            ("process", "Processing", "", get_hg_icon("export"), 12),
-        ],
-        default="body",
+        items=active_phase_enum,
         update=panel_update,
     )
 
     active_tab: EnumProperty(
         name="Tab",
-        items=[
-            ("CREATE", "Create", "", get_hg_icon("create"), 0),
-            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
-            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
-            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
-        ],
-        default="CREATE",
+        items=active_tab_enum,
         update=tab_change_update,
     )
 

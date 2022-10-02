@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import random
@@ -85,7 +87,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         the selected hairstyle
 
         Args:
-            type (str): type of hair to load ('head' or 'facial_hair')
+            type (str): type of hair to load ('head' or 'face_hair')
         """
         pref = get_prefs()
 
@@ -97,8 +99,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         json_systems = hair_data["hair_systems"]
 
         hair_type = (
-            "facial_hair"
-            if isinstance(self, hair.facial_hair.FacialHairSettings)
+            "face_hair"
+            if isinstance(self, hair.face_hair.FacialHairSettings)
             else "head"
         )
 
@@ -107,8 +109,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         human = self._human
         human.hide_set(False)
 
-        if hair_type == "facial_hair":
-            human.hair.facial_hair.remove_all()
+        if hair_type == "face_hair":
+            human.hair.face_hair.remove_all()
         else:
             human.hair.regular_hair.remove_all()
         remove_broken_drivers()
@@ -359,7 +361,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         Args:
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
             hg_body (Object):
-            hair_type (str): 'head' for normal, 'facial_hair' for facial hair
+            hair_type (str): 'head' for normal, 'face_hair' for facial hair
         """
         search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
         # Search for current name of material to account for v1, v2 and v3

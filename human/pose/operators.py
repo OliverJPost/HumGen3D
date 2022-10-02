@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.collections import add_to_collection
