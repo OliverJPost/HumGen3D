@@ -20,7 +20,6 @@ class BatchHumanGenerator:
 
     def __init__(
         self,
-        delete_backup=True,
         apply_shapekeys=True,
         apply_armature_modifier=False,
         remove_clothing_subdiv=True,
@@ -64,7 +63,6 @@ class BatchHumanGenerator:
                 HUGE memory and Eevee impact.
                 Defaults to 'optimised'.
         """
-        self.delete_backup = delete_backup
         self.apply_shapekeys = apply_shapekeys
         self.apply_armature_modifier = apply_armature_modifier
         self.remove_clothing_subdiv = remove_clothing_subdiv
@@ -77,7 +75,6 @@ class BatchHumanGenerator:
         self,
         context=None,
         gender=None,
-        ethnicity=None,
         add_hair=False,
         hair_type="particle",
         hair_quality="medium",
@@ -155,9 +152,7 @@ class BatchHumanGenerator:
 
         hg_rig = self.__import_generated_human()
 
-        return hg_rig
-        # FIXME keep old API active
-        # return HG_Human(existing_human=hg_rig)
+        return Human.from_existing(hg_rig)
 
     def __construct_settings_dict_from_kwargs(self, settings_dict):
         del settings_dict["self"]
