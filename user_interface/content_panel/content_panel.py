@@ -4,42 +4,13 @@ import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
-from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
+from HumGen3D.user_interface.ui_baseclasses import HGPanel, draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
 
 
-class Tools_PT_Base:
-    """Bl_info and commonly used tools for Utility panels"""
-
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "HumGen"
-
-    def Header(self, context):
-        return True
-
-    def warning_if_not_creation_phase(self, hg_rig, layout) -> bool:
-        """Show a warning if the human is not in creation phase
-
-        Args:
-            hg_rig (Object): rig of HumGen human
-            layout (UILayout): layout to draw the warning in
-
-        Returns:
-            bool: returns True if warning raised, causing the layout this method
-            is called in to not draw the rest of the section
-        """
-        if not hg_rig.HG.phase in ["body", "face", "skin", "hair", "length"]:
-            layout.alert = True
-            layout.label(text="Human not in creation phase")
-            return True
-        else:
-            return False
-
-
-class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
+class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
     """Panel with extra functionality for HumGen that is not suitable for the
     main panel. Things like content pack creation, texture baking etc.
 
@@ -52,6 +23,9 @@ class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        if not super().poll(context):
+            return False
+
         sett = context.scene.HG3D
         return sett.ui.active_tab == "CONTENT" and not sett.ui.content_saving
 
@@ -61,12 +35,14 @@ class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        row = self.layout.row(align=True)
+        col = layout.column()
+
+        row = col.row(align=True)
         row.scale_x = 0.7
         row.alignment = "CENTER"
         draw_icon_title("Custom Content", row, True)
         draw_paragraph(
-            self.layout,
+            col,
             "Save and share your custom content.",
             alignment="CENTER",
             enabled=False,
@@ -78,119 +54,49 @@ class HG_PT_CONTENT(Tools_PT_Base, bpy.types.Panel):
 
         human = Human.from_existing(context.object, strict_check=False)
         if not human:
-            col = layout.column()
-            col.scale_y = 0.8
-            col.label(text="No human selected, select a human")
-            col.label(text="to see all options.")
-            col.separator()
+            box = col.box()
+            message = "No human selected, select a human to see greyed out options."
+            draw_paragraph(box, message, alignment="CENTER")
 
 
-class HG_PT_CUSTOM_CONTENT(Tools_PT_Base, bpy.types.Panel):
-    """Shows options for adding preset/starting humans
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-        Tools_PT_Poll (class): poll for checking if object is HumGen human
-    """
-
+class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
-    bl_label = "Save custom content"
+    bl_idname = "HG_PT_ADD_TO_HUMAN"
+    bl_label = "Add to human"
 
-    @classmethod
-    def poll(cls, context):
-        human = Human.from_existing(context.object, strict_check=False)
-        return human
-
-    def draw_header(self, context):
-        self.layout.label(text="", icon="OUTLINER_OB_ARMATURE")
+    def draw_header(self, context) -> None:
+        self.layout.label(icon="COMMUNITY")
 
     def draw(self, context):
-        layout = self.layout
-
-        layout.label(text="Only during creation phase:", icon="RADIOBUT_OFF")
-        col = layout.column()
-        col.scale_y = 1.5
-        # col.enabled = in_creation_phase(hg_rig)
-
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Save as starting human",
-            icon_value=get_hg_icon("face"),
-        ).content_type = "starting_human"
-
-        layout.label(text="Always possible:", icon="RADIOBUT_OFF")
-        col = layout.column()
-        col.scale_y = 1.5
-
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Save hairstyle",
-            icon_value=get_hg_icon("hair"),
-        ).content_type = "hair"
-
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Save custom shapekeys",
-            icon_value=get_hg_icon("body"),
-        ).content_type = "shapekeys"
-
-        layout.label(text="Only after creation phase:", icon="RADIOBUT_OFF")
-        col = layout.column()
-        col.scale_y = 1.5
-        # col.enabled = not in_creation_phase(hg_rig)
-
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Save outfit/footwear",
+        subcol = self.layout.column()
+        subcol.scale_y = 1.5
+        subcol.operator(
+            "hg3d.add_obj_to_outfit",
+            text="Add object as clothing",
             icon_value=get_hg_icon("clothing"),
-        ).content_type = "clothing"
-
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Save pose",
-            icon_value=get_hg_icon("pose"),
-        ).content_type = "pose"
+        )
 
 
-class HG_PT_T_CLOTH(Tools_PT_Base, bpy.types.Panel):
-    """Subpanel for making cloth objects from normal mesh objects
-
-    Args:
-        Tools_PT_Base (class): bl_info and common tools
-    """
-
+class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
-    bl_label = "Mesh --> Clothing"
-    bl_options = {"DEFAULT_CLOSED"}
+    bl_idname = "HG_PT_SAVE_TO_LIBRARY"
+    bl_label = "Save to library"
 
-    @classmethod
-    def poll(cls, context):
-        return context.object
-
-    def draw_header(self, context):
-        self.layout.label(text="", icon_value=get_hg_icon("outfit"))
+    def draw_header(self, context) -> None:
+        self.layout.label(icon_value=get_hg_icon("custom_content"))
 
     def draw(self, context):
-        layout = self.layout
-
-        col = layout.column()
-        col.scale_y = 0.8
-        col.enabled = False
-        col.label(text="Select the object you want to add")
-        col.label(text="to your human as clothing. ")
-        col.separator()
-        col.label(text="Then press:")
-
-        col = layout.column()
-        col.scale_y = 1.5
-        col.operator(
-            "hg3d.open_content_saving_tab",
-            text="Make mesh into clothing",
-            icon_value=get_hg_icon("outfit"),
-        ).content_type = "mesh_to_cloth"
+        self.layout.enabled = bool(Human.find_hg_rig(context.object))
+        subcol = self.layout.column()
+        subcol.scale_y = 1.5
+        subcol.operator(
+            "hg3d.add_obj_to_outfit",
+            text="Add object as clothing",
+            icon_value=get_hg_icon("clothing"),
+        )
 
 
-class HG_PT_EXTRAS_TIPS(Tools_PT_Base, bpy.types.Panel):
+class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Tips and suggestions!"
     bl_options = {"HIDE_HEADER"}
