@@ -23,9 +23,12 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        layout = self.layout
-        layout.label(text="Select type:")
-        layout.prop(self, "cloth_type")
+        col = self.layout
+        col.label(text="What type of clothing is this?")
+
+        col = col.column()
+        col.scale_y = 1.5
+        col.prop(self, "cloth_type", expand=True)
 
     def execute(self, context):
         cloth_obj = context.object
