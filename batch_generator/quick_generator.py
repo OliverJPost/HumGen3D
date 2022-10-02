@@ -11,7 +11,7 @@ from bpy.props import (  # type:ignore
     IntProperty,
     StringProperty,
 )
-from HumGen3D.backend import hg_delete, hg_log
+from HumGen3D.backend import hg_delete, hg_log, preview_collections
 from HumGen3D.backend.memory_management import hg_delete
 
 # from HumGen3D.backend.preview_collections import (
@@ -19,7 +19,6 @@ from HumGen3D.backend.memory_management import hg_delete
 # )
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import apply_shapekeys
-from HumGen3D.backend import preview_collections
 
 # from ..utility_section.baking import (  # type:ignore
 #     add_image_node,
