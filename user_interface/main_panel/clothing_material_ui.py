@@ -1,19 +1,25 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.icons.icons import get_hg_icon
+from HumGen3D.user_interface.ui_baseclasses import HGPanel
 
 from ..panel_functions import get_flow, searchbox
 
 
-class HG_PT_CLOTHMAT(bpy.types.Panel):
+class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
     bl_idname = "HG_PT_CLOTHMAT"
-    bl_label = "HumGen"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "HumGen"
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
+
+        if not HGPanel.poll(context):
+            return False
+
         return "cloth" in context.object or "shoe" in context.object
 
     # TODO add compatibility with any material, not just standard material
@@ -27,11 +33,10 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
             return
 
         sett = self.sett
-        hg_icons = preview_collections["hg_icons"]
 
         col = layout.column(align=True)
 
-        self._draw_clothmat_header(context, hg_icons, col)
+        self._draw_clothmat_header(context, col)
 
         nodes = context.object.data.materials[0].node_tree.nodes
         control_node = nodes["HG_Control"]
@@ -42,7 +47,7 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
         if "Pattern" in control_node.inputs:
             self._draw_pattern_subsection(sett, layout, control_node)
 
-    def _draw_clothmat_header(self, context, hg_icons, col):
+    def _draw_clothmat_header(self, context, col):
         """Draws header for the clothing material UI, with clothing name,
         button to go back to normal UI and button to delete clothing item
 
@@ -57,9 +62,9 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
         box.label(
             text=context.object.name.replace("_", " ").replace("HG", ""),
             icon_value=(
-                hg_icons["outfit"].icon_id
+                get_hg_icon("outfit")
                 if "cloth" in context.object
-                else hg_icons["footwear"].icon_id
+                else get_hg_icon("footwear")
             ),
         )
 
@@ -191,12 +196,12 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
             control_node (ShaderNodeGroup): control nodegroup of cloth material
             p_flow (UILayout): layout where the pattern stuff is drawn in
         """
-        searchbox(sett, "patterns", p_flow)
+        searchbox(sett, "pattern", p_flow)
 
         col = p_flow.column(align=False)
         col.scale_y = 0.8
         col.template_icon_view(
-            sett.pcoll, "patterns", show_labels=True, scale=5, scale_popup=6
+            sett.pcoll, "pattern", show_labels=True, scale=5, scale_popup=6
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):
@@ -209,10 +214,10 @@ class HG_PT_CLOTHMAT(bpy.types.Panel):
         """
         row_h = p_flow.row(align=True)
         row_h.scale_y = 1.5 * 0.8  # quick fix because history
-        row_h.prop(sett, "patterns_sub", text="")
+        row_h.prop(sett, "pattern_category", text="")
         row_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
-        ).random_type = "patterns"
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = "pattern"
 
         p_flow.separator()
 

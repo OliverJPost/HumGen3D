@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
@@ -15,17 +17,10 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         hair_systems = self._get_hair_systems(body_obj)
 
+        self.draw_content_selector(pcoll_name="hair")
         col = self.layout.column()
-
-        col.template_icon_view(
-            sett.pcoll, "hair", show_labels=True, scale=10, scale_popup=6
-        )
-
-        col_h = col.column()
-        col_h.scale_y = 1.5
-        col_h.prop(sett.pcoll, "hair_category", text="")
         if hg_rig.HG.gender == "male":
-            self._draw_facial_hair_section(col, sett)
+            self._draw_face_hair_section(col, sett)
 
         self._draw_hair_length_ui(hair_systems, col)
         self._draw_hair_material_ui(col)
@@ -35,7 +30,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         if hair_systems:
             self._draw_hair_cards_ui(box)
 
-    def _draw_facial_hair_section(self, box, sett):
+    def _draw_face_hair_section(self, box, sett):
         """shows template_icon_view for facial hair systems
 
         Args:
@@ -46,15 +41,8 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         is_open, boxbox = self.draw_sub_spoiler(box, sett, "face_hair", "Face Hair")
         if not is_open:
             return
-        col = box.column(align=True)
 
-        col.template_icon_view(
-            sett.pcoll, "face_hair", show_labels=True, scale=10, scale_popup=6
-        )
-
-        col_h = col.column()
-        col_h.scale_y = 1.5
-        col_h.prop(sett.pcoll, "face_hair_category", text="")
+        self.draw_content_selector(layout=boxbox, pcoll_name="face_hair")
 
     def _draw_hair_material_ui(self, box):
         """draws subsection with sliders for the three hair materials

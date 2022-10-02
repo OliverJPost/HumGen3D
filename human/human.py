@@ -1,20 +1,24 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from __future__ import annotations
 
 import json
 import os
+import random
 from sys import platform
 from typing import TYPE_CHECKING, Generator, List, Tuple
 
 import bpy
 from bpy.types import Object
+from HumGen3D.backend import preview_collections
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 from mathutils import Vector
 from matplotlib import PathLike
 
-from ..backend import get_prefs, hg_delete, hg_log, refresh_pcoll, remove_broken_drivers
+from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
-from .base.namegen import get_name
 from .base.prop_collection import PropCollection
 from .base.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
@@ -68,7 +72,18 @@ class Human:
 
     def __repr__(self) -> str:
         """Return a string representation of this object."""
-        return f"Human '{self.name}' [{self.gender.capitalize()}]in {self.phase} phase."
+        return f"Human '{self.name}' [{self.gender.capitalize()}] instance."
+
+    @classmethod
+    def is_legacy(cls, obj) -> bool:
+        rig_obj = cls.find_hg_rig(obj, include_legacy=True)
+        if not rig_obj:
+            return False
+        return not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (
+            3,
+            0,
+            0,
+        )
 
     @staticmethod
     @injected_context
@@ -85,9 +100,21 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-        refresh_pcoll(None, context, "humans", gender_override=gender)
+        preview_collections["humans"].populate(context, gender)
         # TODO more low level way
         return context.scene.HG3D["previews_list_humans"]
+
+    @staticmethod
+    @injected_context
+    def _get_full_options(self, context):
+        """Internal method for getting preview collection items."""
+        pcoll = preview_collections.get("humans").pcoll
+        if not pcoll:
+            return [
+                ("none", "Reload category below", "", 0),
+            ]
+
+        return pcoll["humans"]
 
     @classmethod
     def from_existing(
@@ -108,18 +135,19 @@ class Human:
         if strict_check and not isinstance(existing_human, Object):
             raise TypeError(f"Expected a Blender object, got {type(existing_human)}")
 
-        rig_obj = cls.find(existing_human)
+        rig_obj = cls.find_hg_rig(existing_human, include_legacy=True)
 
         if rig_obj:
+            if not Human.is_legacy(rig_obj):
+                return cls(rig_obj, strict_check=strict_check)
             # Cancel for legacy humans
-            if not hasattr(rig_obj.HG, "is_legacy"):
-                rig_obj.HG.is_legacy = True
+            else:
                 if strict_check:
                     raise HumGenException(
                         "Passed human created with a version of HG older than 4.0.0"
                     )
                 return None
-            return cls(rig_obj, strict_check=strict_check)
+
         elif strict_check:
             raise HumGenException(
                 f"Passed object '{existing_human.name}' is not part of an existing human"
@@ -164,8 +192,8 @@ class Human:
             # Fix for old presets that use wrong default height
             preset_height = 183.15
         human.height.set(preset_height, context)
-        if gender == "male":
-            human.keys["Male"].value = 1.0
+
+        human.keys["Male"].value = 1.0 if gender == "male" else 0.0
 
         # Set shape key values from preset
         for name, value in preset_data["livekeys"].items():
@@ -179,19 +207,25 @@ class Human:
         human.hair.eyebrows._set_from_preset(preset_data["eyebrows"])
 
         human._set_random_name()
-        human.props.is_legacy = False
+
+        from HumGen3D import bl_info
+
+        human.props.version = bl_info["version"]
 
         return human
 
     # TODO return instances instead of rigs
     @classmethod
     def find_multiple_in_list(cls, objects):
-        rigs = set(r for r in [Human.find(obj) for obj in objects] if r)
+        rigs = set(r for r in [Human.find_hg_rig(obj) for obj in objects] if r)
         return rigs
 
     @classmethod
-    def find(
-        cls, obj: Object, include_applied_batch_results: bool = False
+    def find_hg_rig(
+        cls,
+        obj: Object,
+        include_applied_batch_results: bool = False,
+        include_legacy: bool = False,
     ) -> Object | None:
         """Checks if the passed object is part of a HumGen human. Does NOT return an instance
 
@@ -209,22 +243,22 @@ class Human:
         """
         # TODO clean up this mess
 
-        if not obj:
-            return None
-        elif not obj.HG.ishuman:
-            if obj.parent:
-                if obj.parent.HG.ishuman:
-                    return obj.parent
-            else:
-                return None
+        if obj and obj.HG.ishuman:
+            rig_obj = obj
+        elif obj and obj.parent and obj.parent.HG.ishuman:
+            rig_obj = obj.parent
         else:
-            if all(cls._obj_is_batch_result(obj)):
-                if include_applied_batch_results:
-                    return obj
-                else:
-                    return None
+            return None
 
-            return obj
+        if all(cls._obj_is_batch_result(rig_obj)) and not include_applied_batch_results:
+            return None
+
+        if (
+            not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (3, 0, 0)
+        ) and not include_legacy:
+            return None
+
+        return rig_obj
 
     @staticmethod
     def _obj_is_batch_result(obj: Object) -> Tuple[bool, bool]:
@@ -303,6 +337,15 @@ class Human:
             obj
             for obj in self.children
             if "hg_teeth" in obj and "lower" in obj.name.lower()
+        )
+
+    @property
+    def upper_teeth_obj(self) -> Object:
+        """Returns the lower teeth Blender object"""
+        return next(
+            obj
+            for obj in self.children
+            if "hg_teeth" in obj and "upper" in obj.name.lower()
         )
 
     @property
@@ -513,13 +556,16 @@ class Human:
                 continue
             taken_names.append(obj.name[4:])
 
-        # generate name
-        name = get_name(self.gender)
+        name_json_path = os.path.join(get_addon_root(), "human", "names.json")
+        with open(name_json_path, "r") as f:
+            names = json.load(f)[self.gender]
+
+        name = random.choice(names)
 
         # get new name if it's already taken
         i = 0
-        while i < 10 and name in taken_names:
-            name = get_name(self.gender)
+        while name in taken_names and i < 10:
+            name = random.choice(names)
             i += 1
 
         self.name = "HG_" + name

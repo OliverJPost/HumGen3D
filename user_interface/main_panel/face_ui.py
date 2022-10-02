@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.keys.keys import LiveKeyItem
@@ -16,7 +18,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col.scale_y = 1.5
 
         row = col.row(align=True)
-        row.operator("hg3d.random", text="Randomize all").random_type = "face_all"
+        row.operator("hg3d.random_value", text="Randomize all").random_type = "face_all"
         row.operator("hg3d.resetface", text="", icon="LOOP_BACK")
 
         col = self.layout.column(align=True)
@@ -41,7 +43,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         flow_presets = self._get_ff_col(col, "Presets", "presets")
 
         for key in self.human.face.keys:
-            bpy_key = key.as_bpy(context)
+            bpy_key = key.as_bpy()
             if getattr(self.sett.ui, bpy_key.subcategory):
                 row = locals()[f"flow_{bpy_key.subcategory}"].row(align=True)
                 row.prop(bpy_key, "value", text=bpy_key.name, slider=True)
@@ -113,7 +115,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         )
         if is_open_propname != "presets":
             row.operator(
-                "hg3d.random", text="", icon="FILE_REFRESH", emboss=False
+                "hg3d.random_value", text="", icon="FILE_REFRESH", emboss=False
             ).random_type = "face_{}".format(is_open_propname)
         else:
             row.operator("hg3d.showinfo", text="", icon="BLANK1", emboss=False)

@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import functools
 import os
 from pathlib import Path
@@ -7,9 +9,13 @@ from tokenize import Triple
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.properties.ui_properties import (
+    UserInterfaceProps,
+    active_phase_enum,
+)
 from HumGen3D.human.human import Human
 
-from ..backend.preview_collections import get_hg_icon
+from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
 
@@ -44,6 +50,12 @@ class HGPanel:
 
     def draw(self, context):
         raise NotImplementedError
+
+    @classmethod
+    def poll(cls, context):
+        filepath_error = False
+        is_legacy = Human.is_legacy(context.object)
+        return not is_legacy and not filepath_error
 
     def draw_info_and_warning_labels(self, context) -> bool:
         """Collection of all info and warning labels of HumGen
@@ -240,22 +252,6 @@ class HGPanel:
         )  # TODO is this even necessary now property split is used?
         return flow
 
-    def searchbox(self, sett, name, layout):
-        """draws a searchbox of the given preview collection
-
-        Arg:
-            sett (PropertyGroup): HumGen props
-            name (str): name of the preview collection to search
-            layout (UILayout): layout to draw search box in
-        """
-        row = layout.row(align=True)
-        row.prop(sett.pcoll, "search_term_{}".format(name), text="", icon="VIEWZOOM")
-
-        if hasattr(sett.pcoll, f"search_term_{name}"):
-            row.operator(
-                "hg3d.clear_searchbox", text="", icon="X"
-            ).searchbox_name = name
-
     @staticmethod
     def draw_centered_subtitle(text, layout, icon=None):
         """Draw a small title that is centered. Optional icon."""
@@ -309,17 +305,82 @@ class MainPanelPart(HGPanel):
         # row.prop(context.scene.HG3D.ui, "active_tab", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
-        box = layout.column()
-        box.separator()
-        box.separator()
-        row = box.row()
-        row.alignment = "CENTER"
-        row.scale_x = 0.7
-        if icon:
-            row.prop(self.sett.ui, "phase", text="", emboss=False, icon_only=True)
-        draw_icon_title(text, row, bool(icon))
+        col = layout.column()
+        col.separator()
+        col.separator()
 
-        box.separator()
+        # Only align for expression because it's too long to fit otherwise
+        row = col.row(align=(text.lower() == "expression"))
+
+        # Get names of panels from PropertyGroup
+        sections_enum = active_phase_enum(self, None)
+        section_names = [name for (name, *_, idx) in sections_enum if name and idx < 11]
+        section_names.remove("closed")
+
+        # Left button
+        row_l = row.row()
+        row_l.alignment = "LEFT"
+        prev_idx = section_names.index(self.phase_name) - 1
+        prev_section = section_names[
+            prev_idx if prev_idx >= 0 else len(section_names) - 1
+        ]
+        row_l.operator(
+            "hg3d.section_toggle", text="", icon="BACK", emboss=False
+        ).section_name = prev_section
+
+        # Center title with icon prop
+        row_center = row.row()
+        row_center.alignment = "CENTER"
+        row_center.scale_x = 0.7
+        # row_center.scale_x = 0.07 * len(text)
+        if icon:
+            row_center.prop(
+                self.sett.ui, "phase", text="", emboss=False, icon_only=True
+            )
+        draw_icon_title(text, row_center, bool(icon))
+
+        # Right button
+        row_r = row.row()
+        row_r.alignment = "RIGHT"
+        next_idx = section_names.index(self.phase_name) + 1
+        next_section = section_names[next_idx if next_idx < len(section_names) else 0]
+        row_r.operator(
+            "hg3d.section_toggle", text="", icon="FORWARD", emboss=False
+        ).section_name = next_section
+
+        col.separator()
+
+    def draw_content_selector(self, layout=None, pcoll_name=None):
+        pcoll_name = pcoll_name if pcoll_name else self.phase_name
+        layout = layout if layout else self.layout
+
+        col = layout.column(align=True)
+
+        row = col.row(align=True)
+        row.prop(
+            self.sett.pcoll,
+            "search_term_{}".format(pcoll_name),
+            text="",
+            icon="VIEWZOOM",
+        )
+        row.operator(
+            "hg3d.clear_searchbox", text="", icon="X"
+        ).searchbox_name = pcoll_name
+
+        col.template_icon_view(
+            self.sett.pcoll,
+            pcoll_name,
+            show_labels=True,
+            scale=8.4,
+            scale_popup=6,
+        )
+
+        row_h = col.row(align=True)
+        row_h.scale_y = 1.5
+        row_h.prop(self.sett.pcoll, f"{pcoll_name}_category", text="")
+        row_h.operator(
+            "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
+        ).pcoll_name = pcoll_name
 
     def draw_top_widget(self, layout, human):
         col = layout
@@ -354,6 +415,8 @@ class MainPanelPart(HGPanel):
 
     @classmethod
     def poll(cls, context):
+        if not super().poll(context):
+            return False
         sett = context.scene.HG3D
         if not sett.ui.active_tab == "CREATE":
             return False

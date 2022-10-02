@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from __future__ import annotations
 
 import os
@@ -7,6 +9,7 @@ import numpy as np
 from bpy.props import BoolProperty, FloatProperty, PointerProperty, StringProperty
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from HumGen3D.human.human import Human
 
 
@@ -32,6 +35,7 @@ def set_livekey(self, value: float):
     the model until another live key's value is changed. This costs more performance
     for the first change, but much less for subsequent changes of the value.
     """
+
     name = self.name
     human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
     if not human:
@@ -41,6 +45,7 @@ def set_livekey(self, value: float):
     # Change value of existing temp_key if it matches the changing key
     if temp_key and temp_key.name.endswith(name):
         temp_key.value = value
+        run_modal()
         return
 
     # Get coordinates of base human mesh
@@ -82,6 +87,13 @@ def set_livekey(self, value: float):
     human.keys.temp_key.name = "LIVE_KEY_TEMP_" + name
 
     temp_key.value = value
+
+    run_modal()
+
+
+def run_modal():
+    if not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
+        bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")  # , hide_armature=True)
 
 
 def _add_temp_key_to_permanent_key_coords(

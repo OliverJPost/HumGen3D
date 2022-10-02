@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from sys import platform
 
 import bpy
@@ -50,7 +52,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         col.scale_y = 1.2
 
         col.operator(
-            "hg3d.random", text="Randomize skin", icon="FILE_REFRESH"
+            "hg3d.random_value", text="Randomize skin", icon="FILE_REFRESH"
         ).random_type = "skin"
 
         col.separator()
@@ -100,11 +102,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        col = boxbox.column()
-        col.template_icon_view(
-            sett.pcoll, "textures", show_labels=True, scale=10, scale_popup=6
-        )
-        col.prop(sett.pcoll, "texture_library", text="Library")
+        self.draw_content_selector(layout=boxbox, pcoll_name="texture")
 
     def _draw_light_dark_subsection(self, sett, box):
         """Collapsable section with sliders for dark and light areas on the skin

@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 
 from ..panel_functions import draw_sub_spoiler
@@ -18,16 +20,18 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         row.scale_y = 1.5
         row.prop(self.sett.ui, "expression_type", expand=True)
 
+        self.layout.separator()
+
         if self.sett.ui.expression_type == "1click":
-            self._draw_oneclick_subsection()
+            self._draw_oneclick_subsection(self.layout)
         else:
             self._draw_frig_subsection(self.layout)
 
-    def _draw_oneclick_subsection(self):
+    def _draw_oneclick_subsection(self, layout):
         if "facial_rig" in self.human.body_obj:
-            self.layout.label(text="Library not compatible with face rig")
+            layout.label(text="Library not compatible with face rig")
 
-            col = self.layout.column()
+            col = layout.column()
             col.alert = True
             col.scale_y = 1.5
             col.operator(
@@ -38,22 +42,9 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             )
             return
 
-        self.searchbox(self.sett, "expressions", self.layout)
+        self.draw_content_selector()
 
-        self.layout.template_icon_view(
-            self.sett.pcoll,
-            "expressions",
-            show_labels=True,
-            scale=10,
-            scale_popup=6,
-        )
-
-        row_h = self.layout.row(align=True)
-        row_h.scale_y = 1.5
-        row_h.prop(self.sett.pcoll, "expression_category", text="")
-        row_h.operator(
-            "hg3d.random", text="Random", icon="FILE_REFRESH"
-        ).random_type = "expressions"
+        layout.separator(factor=0.5)
 
         filtered_obj_sks = self.human.body_obj.data.shape_keys
         if filtered_obj_sks:

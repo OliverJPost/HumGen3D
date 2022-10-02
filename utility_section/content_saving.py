@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import platform
@@ -8,7 +10,7 @@ from pathlib import Path
 from shutil import copyfile
 
 import bpy
-from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log, refresh_pcoll
+from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
@@ -20,6 +22,8 @@ from HumGen3D.user_interface.documentation.feedback_func import (
     show_message,
 )
 from mathutils import Vector
+
+refresh_pcoll = None  # FIXME
 
 
 class Content_Saving_Operator:
@@ -370,7 +374,7 @@ class HG_OT_SAVE_POSE(bpy.types.Operator, Content_Saving_Operator):
         ShowMessageBox(message=msg)
 
         context.view_layer.objects.active = hg_rig
-        refresh_pcoll(self, context, "poses")
+        refresh_pcoll(self, context, "pose")
 
         self.cc_sett.content_saving_ui = False
 
@@ -516,9 +520,9 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
         mat = hg_body.data.materials[0]
         nodes = mat.node_tree.nodes
 
-        mat_dict["texture_library"] = (
-            mat["texture_library"]
-            if getattr(mat, "texture_library", None)
+        mat_dict["texture_category"] = (
+            mat["texture_category"]
+            if getattr(mat, "texture_category", None)
             else "Default 4K"
         )
 

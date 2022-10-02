@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import random
 from typing import TYPE_CHECKING
 
@@ -23,11 +25,11 @@ class BodySettings:
             hg_rig (Object): HumGen armature
         """
 
-        for sk in self._human.keys.body_proportions:
-            if sk.name.startswith("bp_skinny"):
-                sk.value = random.uniform(0, 0.7)
+        for key in self.keys:
+            if key.name == "skinny":
+                key.value = random.uniform(0, 0.7)
             else:
-                sk.value = random.uniform(0, 1.0)
+                key.value = random.uniform(0, 1.0)
 
     @injected_context
     def set_bone_scale(self, scale, bone_type, context=None):
@@ -139,20 +141,22 @@ class BodySettings:
             },
         }
 
-        sc = scaling_dict[bone_type]
         if return_whole_dict:
             return scaling_dict
         else:
-            return sc
+            return scaling_dict[bone_type]
 
-    def adapt_rig_to_proportions(self) -> None:
-        """Change the base pose of the rig to the new body proportions."""
-        rig_obj = self._human.rig_obj
-        body_obj = self._human.body_obj
+    def __hash__(self) -> int:
+        sk_values = [sk.value for sk in self._human.body.keys]
 
-        bpy.ops.object.mode_set(mode="EDIT")
-        for ebone in rig_obj.edit_bones:
-            head = ebone.head
-            tail = ebone.tail
+        def get_bone_scales():
+            sc = self._get_scaling_data(1, "", return_whole_dict=True)
+            for bone_group in sc.values():
+                for bone_name in bone_group["bones"]:
+                    bone = self._human.rig_obj.pose.bones[bone_name]
+                    yield tuple(bone.scale)
 
-        bpy.ops.object.mode_set(mode="OBJECT")
+        bone_scales = get_bone_scales()
+        all_values = tuple(sk_values + list(bone_scales))
+
+        return hash(all_values)

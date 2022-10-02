@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import time
@@ -18,12 +20,12 @@ from HumGen3D.human.keys.keys import apply_shapekeys, transfer_shapekey
 class ExpressionSettings(PreviewCollectionContent):
     def __init__(self, _human):
         self._human = _human
-        self._pcoll_name = "expressions"
+        self._pcoll_name = "expression"
         self._pcoll_gender_split = False
 
     @property
     def shape_keys(self) -> PropCollection:
-        return self._human.keys.expressions
+        return self._human.keys.expression
 
     def set(self, preset):
         """Loads the active expression in the preview collection"""

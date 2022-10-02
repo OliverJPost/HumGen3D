@@ -1,5 +1,10 @@
 {
     "python.analysis.extraPaths": [
         "/Users/ole/Library/Application Support/Blender/3.2/scripts/addons/"
-    ]
+    ],
+    "fileHeaderComment.template": {
+        "*": [
+            "${commentprefix} Copyright (c) ${year} Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE",
+        ]
+    }
 }
