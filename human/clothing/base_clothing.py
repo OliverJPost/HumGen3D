@@ -12,9 +12,15 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
+    world_coords_from_obj,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.keys.keys import apply_shapekeys
+from human.clothing.mesh_to_outfit import (
+    add_corrective_shapekeys,
+    auto_weight_paint,
+    correct_shape_to_a_pose,
+)
 
 
 def find_masks(obj) -> list:
@@ -87,6 +93,20 @@ class BaseClothing(PreviewCollectionContent):
         # refresh pcoll for consistent 'click here to select' icon
         refresh_pcoll(self, context, "outfits")
 
+    def add_obj(self, cloth_obj, cloth_type, context):
+        body_obj = self._human.body_obj
+        correct_shape_to_a_pose(cloth_obj, body_obj, context)
+        add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
+        auto_weight_paint(cloth_obj, body_obj)
+
+        rig_obj = self._human.rig_obj
+        armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
+        armature_mod.object = rig_obj
+        cloth_obj.parent = rig_obj
+        cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
+        tag = "shoe" if cloth_type == "footwear" else "cloth"
+        cloth_obj[tag] = 1
+
     def deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using
         HG_SHAPEKEY_CALCULATOR
@@ -98,15 +118,13 @@ class BaseClothing(PreviewCollectionContent):
         """
 
         body_obj = self._human.body_obj
-        mx_body = body_obj.matrix_world
         if self._human.gender == "female":
-            verts = body_obj.data.vertices
+            verts = cloth_obj.data.vertices
         else:
-            verts = body_obj.data.shape_keys.key_blocks["Male"].data
-        body_coords_world = [mx_body @ v.co for v in verts]
+            verts = cloth_obj.data.shape_keys.key_blocks["Male"].data
+        body_coords_world = world_coords_from_obj(cloth_obj, data=verts)
 
-        mx_cloth = cloth_obj.matrix_world
-        cloth_coords_world = [mx_cloth @ v.co for v in cloth_obj.data.vertices]
+        cloth_coords_world = world_coords_from_obj(cloth_obj)
 
         distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
 
