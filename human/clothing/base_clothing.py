@@ -18,13 +18,13 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
     world_coords_from_obj,
 )
-from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.keys.keys import apply_shapekeys
-from human.clothing.mesh_to_outfit import (
+from HumGen3D.human.clothing.add_obj_to_clothing import (
     add_corrective_shapekeys,
     auto_weight_paint,
     correct_shape_to_a_pose,
 )
+from HumGen3D.human.clothing.pattern import PatternSettings
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 def find_masks(obj) -> list:
