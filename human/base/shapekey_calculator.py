@@ -1,8 +1,26 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+from operator import attrgetter
+
 import bpy
 import numpy as np
 from HumGen3D.backend import hg_delete
 from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix, Vector, kdtree  # type:ignore
+
+
+def world_coords_from_obj(obj, data=None) -> np.array:
+    if not data:
+        data = obj.data.vertices
+
+    vert_count = len(data)
+    local_coords = np.empty(vert_count * 3, dtype=np.float64)
+    data.foreach_get("co", local_coords)
+
+    mx = obj.matrix_world
+    world_coords = matrix_multiplication(mx, local_coords)
+
+    return world_coords
 
 
 def build_distance_dict(body_coordinates_world, target_coordinates_world):

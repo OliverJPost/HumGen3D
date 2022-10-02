@@ -1,0 +1,37 @@
+import bpy
+from bpy.props import EnumProperty
+from human.clothing.mesh_to_outfit import get_human_from_distance
+
+
+class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
+    bl_idname = "hg3d.add_obj_to_outfit"
+    bl_label = "Add object to outfit"
+    bl_description = "Add object to outfit"
+    bl_options = {"UNDO"}
+
+    cloth_type: EnumProperty(
+        items=[
+            ("torso", "Torso", "", 0),
+            ("pants", "Pants", "", 1),
+            ("full", "Full Body", "", 2),
+            ("footwear", "Footwear", "", 3),
+        ],
+        default="torso",
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Select type:")
+        layout.prop(self, "cloth_type")
+
+    def execute(self, context):
+        cloth_obj = context.object
+        human = get_human_from_distance(cloth_obj)
+
+        if self.cloth_type == "footwear":
+            human.footwear.add_obj(cloth_obj, context)
+        else:
+            human.outfit.add_obj(cloth_obj, self.cloth_type, context)
