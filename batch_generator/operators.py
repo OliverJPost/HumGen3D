@@ -13,11 +13,49 @@ import time
 from pathlib import Path
 
 import bpy
-from HumGen3D.API import HG_Batch_Generator
+from HumGen3D.API import BatchHumanGenerator
 from HumGen3D.backend import hg_log, hg_delete
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
+from HumGen3D.backend.preferences.preference_func import get_addon_root
+from HumGen3D.human.base.collections import add_to_collection
 
 from .batch_functions import get_batch_marker_list, has_associated_human
+
+
+class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
+    bl_idname = "hg3d.add_batch_marker"
+    bl_label = "Add marker"
+    bl_description = "Adds this marker at the 3D cursor location"
+    bl_options = {"REGISTER", "UNDO"}
+
+    marker_type: bpy.props.StringProperty()
+
+    def execute(self, context):
+        blendfile = os.path.join(
+            get_addon_root(),
+            "batch_generator",
+            "data",
+            "hg_batch_markers.blend",
+        )
+
+        with bpy.data.libraries.load(blendfile, link=False) as (
+            _,
+            data_to,
+        ):
+            data_to.objects = [
+                f"HG_MARKER_{self.marker_type.upper()}",
+            ]
+
+        # link to scene
+        marker = data_to.objects[0]
+        context.scene.collection.objects.link(marker)
+        add_to_collection(context, marker, collection_name="HG Batch Markers")
+
+        marker.location = context.scene.cursor.location
+
+        marker["hg_batch_marker"] = self.marker_type
+
+        return {"FINISHED"}
 
 
 def status_text_callback(header, context):
@@ -251,6 +289,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
         quality_dict = {name: getattr(batch_sett, name) for name in q_names}
 
-        generator = HG_Batch_Generator(**quality_dict)
+        generator = BatchHumanGenerator(**quality_dict)
 
         return generator
