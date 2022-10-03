@@ -1,6 +1,7 @@
 import bpy
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, StringProperty, BoolProperty
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
+from HumGen3D.human.human import Human
 
 
 class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
@@ -39,6 +40,7 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         else:
             human.outfit.add_obj(cloth_obj, self.cloth_type, context)
 
+
 class HG_OT_SAVE_SK(bpy.types.Operator):
     bl_idname = "hg3d.save_sk_to_library"
     bl_label = "Save shapekey to library"
@@ -52,10 +54,32 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
         ],
         default="livekey",
     )
+    delete_original = BoolProperty(default=False, name="Delete original")
+
+    sk_name: StringProperty()
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
-    def
+    def draw(self, context):
+        layout = self.layout
+
+        layout.label(text="How do you want to save this key?")
+        col = layout.column(align=True)
+        col.prop(self, "save_type", expand=True)
+
+        if self.save_type == "livekey":
+            col.prop(self, "delete_original")
 
     def execute(self, context):
+        human = Human.from_existing(context.object)
+        bpy_key = human.body_obj.data.shape_keys.key_blocks[self.sk_name]
+
+        key = next(key for key in human.keys if key.as_bpy() == bpy_key)
+
+        delete_original = (
+            True if self.save_type == "livekey" and self.delete_original else False
+        )
+        key.save_to_library(
+            as_livekey=self.save_type == "livekey", delete_original=delete_original
+        )
