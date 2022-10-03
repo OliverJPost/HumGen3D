@@ -105,7 +105,7 @@ def apply_shapekeys(ob):
     ob.shape_key_remove(ob.active_shape_key)
 
 
-class KeyItem(SavableContent):
+class KeyItem:
     def __init__(self, name, category, human, subcategory=None):
         self.name = name
         self.category = category
@@ -207,7 +207,7 @@ class LiveKeyItem(KeyItem):
         return "LiveKey " + super().__repr__()
 
 
-class ShapeKeyItem(KeyItem):
+class ShapeKeyItem(KeyItem, SavableContent):
     def __init__(self, sk_name, human):
         pattern = re.compile(
             "^(\$(?P<category>[^_]+)_)?(\$(?P<subcategory>[^_]+)_)?(?P<name>.*)"
@@ -233,6 +233,31 @@ class ShapeKeyItem(KeyItem):
 
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
+
+    def save_to_library(self, delete_original=False):
+        body = self._human.body_obj
+        sk = self.as_bpy()
+        sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
+        sk.data.foreach_get("co", sk_coords)
+
+        vert_count = len(body.data.vertices)
+        body_coordinates = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", body_coordinates)
+
+        relative_coordinates = sk_coords - body_coordinates
+
+        subcateg = self.subcategory if self.subcategory else ""
+        path = os.path.join(get_prefs().filepath, "livekeys", self.category, subcateg)
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        np.save(os.path.join(path, self.name), relative_coordinates)
+
+        if delete_original:
+            body.shape_key_remove(sk)
+
+        update_livekey_collection()
 
 
 class KeySettings:
