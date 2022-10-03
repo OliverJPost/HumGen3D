@@ -8,6 +8,7 @@ import bpy
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.base.savable_content import SavableContent
 
 if TYPE_CHECKING:
     from human.human import Human
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 from HumGen3D.utility_section.content_saving import Content_Saving_Operator
 
 
-class PoseSettings(PreviewCollectionContent):
+class PoseSettings(PreviewCollectionContent, SavableContent):
     def __init__(self, _human):
         self._human: Human = _human
         self._pcoll_name = "poses"
@@ -56,7 +57,7 @@ class PoseSettings(PreviewCollectionContent):
             hg_delete(hg_pose)
 
     @injected_context
-    def save_current_to_library(
+    def save_to_library(
         self,
         name: str,
         category: str = "Custom",
