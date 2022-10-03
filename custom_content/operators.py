@@ -38,3 +38,24 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
             human.footwear.add_obj(cloth_obj, context)
         else:
             human.outfit.add_obj(cloth_obj, self.cloth_type, context)
+
+class HG_OT_SAVE_SK(bpy.types.Operator):
+    bl_idname = "hg3d.save_sk_to_library"
+    bl_label = "Save shapekey to library"
+    bl_description = "Saves this shape key to the library as a LiveKey"
+    bl_options = {"UNDO"}
+
+    save_type: EnumProperty(
+        items=[
+            ("shapekey", "Shape key by default", "", 0),
+            ("livekey", "LiveKey", "", 1),
+        ],
+        default="livekey",
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def
+
+    def execute(self, context):

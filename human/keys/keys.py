@@ -234,7 +234,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
 
-    def save_to_library(self, delete_original=False):
+    def save_to_library(self, as_livekey=True, delete_original=False):
         body = self._human.body_obj
         sk = self.as_bpy()
         sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
@@ -247,7 +247,8 @@ class ShapeKeyItem(KeyItem, SavableContent):
         relative_coordinates = sk_coords - body_coordinates
 
         subcateg = self.subcategory if self.subcategory else ""
-        path = os.path.join(get_prefs().filepath, "livekeys", self.category, subcateg)
+        folder = "livekeys" if as_livekey else "shapekeys"
+        path = os.path.join(get_prefs().filepath, folder, self.category, subcateg)
 
         if not os.path.exists(path):
             os.makedirs(path)
