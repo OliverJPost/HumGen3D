@@ -87,13 +87,6 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
 
     def draw(self, context):
         self.layout.enabled = bool(Human.find_hg_rig(context.object))
-        subcol = self.layout.column()
-        subcol.scale_y = 1.5
-        subcol.operator(
-            "hg3d.add_obj_to_outfit",
-            text="Add object as clothing",
-            icon_value=get_hg_icon("clothing"),
-        )
 
 
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
