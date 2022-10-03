@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import EnumProperty, StringProperty, BoolProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 

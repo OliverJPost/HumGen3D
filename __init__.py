@@ -37,7 +37,6 @@ import bpy  # type: ignore
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent
-
 from .backend.auto_classes import _get_bpy_classes
 from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
 from .backend.preferences.preference_func import get_prefs
@@ -93,6 +92,7 @@ def _initiate_ui_lists():
     from HumGen3D.backend import update
     from HumGen3D.backend.content_packs import content_packs, custom_content_packs
     from HumGen3D.user_interface.documentation import tips_suggestions_ui
+    from .custom_content.possible_content import POSSIBLE_CONTENT_ITEM
 
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
@@ -106,6 +106,7 @@ def _initiate_ui_lists():
         "custom_content_col": custom_content_packs.CUSTOM_CONTENT_ITEM,
         "hg_update_col": update.UPDATE_INFO_ITEM,
         "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
+        "possible_content_col": POSSIBLE_CONTENT_ITEM,
     }
 
     scene = bpy.types.Scene

@@ -88,6 +88,17 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
     def draw(self, context):
         self.layout.enabled = bool(Human.find_hg_rig(context.object))
 
+        self.layout.template_list(
+            "HG_UL_POSSIBLE_CONTENT",
+            "",
+            context.scene,
+            "possible_content_col",
+            context.scene,
+            "possible_content_col_index",
+            rows=len(context.scene.possible_content_col),
+            sort_lock=True,
+        )
+
 
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
