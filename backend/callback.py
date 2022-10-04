@@ -17,12 +17,12 @@ import bpy
 from HumGen3D.backend import hg_log, preview_collections
 from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
-from HumGen3D.utility_section.utility_functions import (
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
+from HumGen3D.utility_section.utility_functions import refresh_modapply
 
 from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
