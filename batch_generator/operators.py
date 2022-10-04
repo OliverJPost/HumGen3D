@@ -292,3 +292,16 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
         generator = BatchHumanGenerator(**quality_dict)
 
         return generator
+
+
+class HG_RESET_BATCH_OPERATOR(bpy.types.Operator):
+    """Operator for testing bits of code"""
+
+    bl_idname = "hg3d.reset_batch_operator"
+    bl_label = "Reset batch operator"
+    bl_description = "If an error occured during batch creation, use this to get the purple button back"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        context.scene.HG3D.batch_idx = 0
+        return {"FINISHED"}
