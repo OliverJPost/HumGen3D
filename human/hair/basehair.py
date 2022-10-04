@@ -6,12 +6,15 @@ import random
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete, remove_broken_drivers, get_prefs
+from bpy.types import Image
+from HumGen3D.backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from HumGen3D.human import hair
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
+from HumGen3D.human.base.savable_content import SavableContent
+from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
 
@@ -80,7 +83,7 @@ class BaseHair:
         raise NotImplementedError
 
 
-class ImportableHair(BaseHair, PreviewCollectionContent):
+class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     @injected_context
     def set(self, preset, context=None):
         """Loads hair system the user selected by reading the json that belongs to
@@ -170,6 +173,39 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
 
         hg_delete(hair_obj)
         remove_broken_drivers()
+
+    @injected_context
+    def save_to_library(
+        self,
+        particle_systems: list[str],
+        hairstyle_name: str,
+        for_male=True,
+        for_female=True,
+        thumb_override: Image = None,
+        context=None,
+    ):
+
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
+
+        if thumb_override:
+            thumb = thumb_override.name
+        else:
+            self._human.render_thumbnail()  # FIXME
+
+        hair_type = self._pcoll_name
+        save_hair(
+            self._human,
+            hairstyle_name,
+            genders,
+            particle_systems,
+            hair_type,
+            context,
+            thumb,
+        )
 
     def _import_hair_obj(self, context, hair_type, pref, blendfile) -> bpy.types.Object:
         """Imports the object that contains the hair systems named in the json file

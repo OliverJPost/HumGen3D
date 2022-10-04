@@ -22,32 +22,6 @@ from .utility_functions import (
 )
 
 
-class HG_MAKE_EXPERIMENTAL(bpy.types.Operator):
-    """
-    Makes human experimental, loosening limits on shapekeys and sliders
-    """
-
-    bl_idname = "hg3d.experimental"
-    bl_label = "Make human experimental"
-    bl_description = (
-        "Makes human experimental, loosening limits on shapekeys and sliders"
-    )
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        from HumGen3D import Human
-
-        human = Human.from_existing(context.object)
-
-        is_experimental = human.props.experimental
-
-        human.creation_phase.body.set_experimental(not is_experimental)
-
-        if not is_experimental:
-            HG_OT_INFO.ShowMessageBox(None, "experimental")
-        return {"FINISHED"}
-
-
 class HG_OT_MODAPPLY(bpy.types.Operator):
     bl_idname = "hg3d.modapply"
     bl_label = "Apply selected modifiers"
