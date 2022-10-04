@@ -17,7 +17,7 @@ from bpy.props import (  # type: ignore
 )
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
-from HumGen3D.utility_section.utility_functions import refresh_modapply
+from HumGen3D.human.process.apply_modifiers import refresh_modapply
 
 from .bake_props import BakeProps
 from .batch_props import BatchProps
