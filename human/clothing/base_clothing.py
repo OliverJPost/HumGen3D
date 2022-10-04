@@ -9,10 +9,12 @@ from typing import Tuple
 import bpy
 import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.base.savable_content import SavableContent
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
@@ -24,6 +26,7 @@ from HumGen3D.human.clothing.add_obj_to_clothing import (
     correct_shape_to_a_pose,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
+from HumGen3D.human.clothing.saving import save_clothing
 from HumGen3D.human.keys.keys import apply_shapekeys
 
 
@@ -46,7 +49,7 @@ def find_masks(obj) -> list:
     return mask_list
 
 
-class BaseClothing(PreviewCollectionContent):
+class BaseClothing(PreviewCollectionContent, SavableContent):
     @property
     def pattern(self) -> PatternSettings:
         return PatternSettings(self._human)
@@ -135,7 +138,11 @@ class BaseClothing(PreviewCollectionContent):
         cloth_obj.parent = self._human.rig_obj
 
         deform_obj_from_difference(
-            "Body Proportions", distance_dict, body_obj, cloth_obj, as_shapekey=True
+            "Body Proportions",
+            distance_dict,
+            body_coords_world,
+            cloth_obj,
+            as_shapekey=True,
         )
 
         # cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
@@ -477,3 +484,39 @@ class BaseClothing(PreviewCollectionContent):
                 for node in mat.node_tree.nodes:
                     node_names.append(node.name)
                 hash_coll += hash(tuple(node_names))
+
+    @injected_context
+    def save_to_library(
+        self,
+        name,
+        for_male=True,
+        for_female=True,
+        open_when_finished=False,
+        category="Custom",
+        override_thumbnail=None,
+        context=None,
+    ):
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
+
+        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
+        folder = os.path.join(get_prefs().filepath, pcoll_subfolder, category)
+
+        if not override_thumbnail:
+            thumb_name = self._human.render_thumb()  # FIXME
+        else:
+            thumb_name = override_thumbnail.name
+
+        save_clothing(
+            self._human,
+            folder,
+            name,
+            context,
+            self.objects,
+            genders,
+            open_when_finished,
+            thumb_name=thumb_name,
+        )

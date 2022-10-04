@@ -1,5 +1,10 @@
+import os
+import platform
+import subprocess
+
 import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 
@@ -83,3 +88,35 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
         key.save_to_library(
             as_livekey=self.save_type == "livekey", delete_original=delete_original
         )
+
+
+class HG_OT_OPEN_FOLDER(bpy.types.Operator):
+    """Open the folder that belongs to this section
+
+    API: False
+
+    Operator type:
+        Open subprocess
+
+    Prereq:
+        subpath passed
+    """
+
+    bl_idname = "hg3d.openfolder"
+    bl_label = "Open folder"
+    bl_description = "Opens the folder that belongs to this type of content"
+
+    subpath: bpy.props.StringProperty()
+
+    def execute(self, context):
+        pref = get_prefs()
+        path = os.path.join(pref.filepath, self.subpath)
+
+        if platform.system() == "Windows":
+            os.startfile(path)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+
+        return {"FINISHED"}

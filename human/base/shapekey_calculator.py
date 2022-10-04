@@ -72,9 +72,8 @@ def sum_shapekeys(obj, skip_corrective_keys=True):
 
 
 def deform_obj_from_difference(
-    name, distance_dict, body_obj, deform_obj, as_shapekey=False
+    name, distance_dict, body_coords_woorld, deform_obj, as_shapekey=False
 ):
-    body_coords_with_sks = sum_shapekeys(body_obj).reshape((-1, 3))
 
     sk = deform_obj.data.shape_keys.key_blocks.get(name)
     if as_shapekey:
@@ -83,10 +82,9 @@ def deform_obj_from_difference(
             sk.interpolation = "KEY_LINEAR"
             sk.value = 1
 
+    # TODO fully numpy
     for vertex_index in distance_dict:
-        source_new_vert_loc = body_obj.matrix_world @ Vector(
-            body_coords_with_sks[distance_dict[vertex_index][0]]
-        )
+        source_new_vert_loc = Vector(body_coords_woorld[distance_dict[vertex_index][0]])
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc = source_new_vert_loc - distance_to_vert
 
