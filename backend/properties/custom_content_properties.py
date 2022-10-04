@@ -18,11 +18,11 @@ from bpy.props import (  # type: ignore
     StringProperty,
 )
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from HumGen3D.utility_section.utility_functions import (
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
 )
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from ..content_packs.custom_content_packs import build_content_collection
 from .property_functions import find_folders

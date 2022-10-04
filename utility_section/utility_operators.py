@@ -10,16 +10,15 @@ import bpy
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.keys.keys import apply_shapekeys
-from HumGen3D.user_interface.documentation.feedback_func import show_message
-from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
-
-from .utility_functions import (
-    build_object_list,
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
+from HumGen3D.user_interface.documentation.feedback_func import show_message
+from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
+
+from .utility_functions import build_object_list, refresh_modapply
 
 
 class HG_OT_MODAPPLY(bpy.types.Operator):
