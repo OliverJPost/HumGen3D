@@ -6,7 +6,6 @@ import bpy
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.human import Human
-from HumGen3D.human.human import Human
 from HumGen3D.user_interface.documentation.feedback_func import show_message
 
 
