@@ -28,10 +28,16 @@ def _draw_name_ui(context, layout, content_type):
 
     col = layout.column()
     col.scale_y = 1.5
-    # FIXME crash when spaces in name
-    col.prop(sett, f"{tag}_name", text="Name")
 
-    _draw_save_button(layout, content_type, poll=bool(getattr(sett, f"{tag}_name")))
+    # FIXME crash when spaces in name
+    if content_type == "pose":
+        col.prop(sett.pose, "name", text="Name")
+        poll = bool(sett.pose.name)
+    else:
+        col.prop(sett, f"{tag}_name", text="Name")
+        poll = bool(getattr(sett, f"{tag}_name"))
+
+    _draw_save_button(layout, content_type, poll=poll)
 
 
 def _draw_thumbnail_selection_ui(context, layout, content_type):
@@ -146,7 +152,7 @@ def _draw_save_button(layout, content_type, poll=True):
     row.enabled = poll
     row.scale_y = 1.5
     row.operator(
-        f"hg3d.save_{content_type}",
+        "hg3d.save_to_library",
         text="Save",
         icon="FILEBROWSER",
         depress=True,

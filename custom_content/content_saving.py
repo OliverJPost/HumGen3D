@@ -36,7 +36,8 @@ class Content_Saving_Operator:
         col.separator()
         col.label(text="Overwrite?")
 
-    def save_thumb(self, folder, img_name, save_name):
+    @staticmethod
+    def save_thumb(folder, img_name, save_name):
         """Save the thumbnail with this content
 
         Args:
@@ -45,7 +46,7 @@ class Content_Saving_Operator:
             save_name (str): name to save the image as
         """
         img = bpy.data.images[img_name]
-        thumbnail_type = self.sett.thumbnail_saving_enum
+        thumbnail_type = bpy.context.scene.HG3D.custom_content.thumbnail_saving_enum
 
         destination_path = os.path.join(folder, f"{save_name}.jpg")
         if thumbnail_type in ("last_render", "auto"):
@@ -66,7 +67,7 @@ class Content_Saving_Operator:
                 img.file_format = "JPEG"
                 img.save()
             except RuntimeError as e:
-                show_message(self, "Thumbnail image doesn't have any image data")
+                # show_message(self, "Thumbnail image doesn't have any image data")
                 print(e)
 
     @staticmethod
@@ -129,29 +130,28 @@ class Content_Saving_Operator:
         blend_filepath = os.path.join(folder, f"{filename}.blend")
         bpy.data.libraries.write(blend_filepath, {new_scene})
 
-        python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
-        if run_in_background:
-            hg_log("STARTING HumGen background process", level="BACKGROUND")
-            background_blender = subprocess.Popen(
-                [
-                    bpy.app.binary_path,
-                    blend_filepath,
-                    "--background",
-                    "--python",
-                    python_file,
-                ],
-                stdout=subprocess.DEVNULL,
-            )
-        else:
-            subprocess.Popen(
-                [bpy.app.binary_path, blend_filepath, "--python", python_file]
-            )
+        # python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
+        # if run_in_background:
+        #     hg_log("STARTING HumGen background process", level="BACKGROUND")
+        #     background_blender = subprocess.Popen(
+        #         [
+        #             bpy.app.binary_path,
+        #             blend_filepath,
+        #             "--background",
+        #             "--python",
+        #             python_file,
+        #         ],
+        #         stdout=subprocess.DEVNULL,
+        #     )
+        # else:
+        #     subprocess.Popen(
+        #         [bpy.app.binary_path, blend_filepath, "--python", python_file]
+        #     )
 
         bpy.data.scenes.remove(new_scene)
-        for obj in objs:
-            hg_delete(obj)
 
-    def _clear_sk_drivers(self):
+    @staticmethod
+    def _clear_sk_drivers():
         for key in bpy.data.shape_keys:
             try:
                 fcurves = key.animation_data.drivers
@@ -160,7 +160,8 @@ class Content_Saving_Operator:
             except AttributeError:
                 pass
 
-    def _remove_obj_drivers(self, obj):
+    @staticmethod
+    def _remove_obj_drivers(obj):
         try:
             drivers_data = obj.animation_data.drivers
 
@@ -169,7 +170,8 @@ class Content_Saving_Operator:
         except AttributeError:
             return
 
-    def _remove_particle_systems(self, context, obj):
+    @staticmethod
+    def _remove_particle_systems(context, obj):
         """Remove particle systems from the passed object
 
         Args:
@@ -180,7 +182,8 @@ class Content_Saving_Operator:
             obj.particle_systems.active_index = i
             bpy.ops.object.particle_system_remove()
 
-    def _remove_shapekeys(self, obj):
+    @staticmethod
+    def _remove_shapekeys(obj):
         """Remove shapekeys from the passed object
 
         Args:
@@ -191,7 +194,8 @@ class Content_Saving_Operator:
         if obj.data.shape_keys:
             obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
 
-    def remove_number_suffix(self, name) -> str:
+    @staticmethod
+    def remove_number_suffix(name) -> str:
         """Remove the number suffix from the passed name
         (i.e. Box.004 becomes Box)
 

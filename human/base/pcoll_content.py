@@ -74,12 +74,15 @@ class PreviewCollectionContent:
 
         return pcoll[self._pcoll_name]
 
-    def get_categories(self):
+    def get_categories(self, include_all=True):
         if not self._human:
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
         return self._find_folders(
-            self._pcoll_name, self._pcoll_gender_split, self._human.gender
+            self._pcoll_name,
+            self._pcoll_gender_split,
+            self._human.gender,
+            include_all=include_all,
         )
 
     def refresh_pcoll(self, context, ignore_category_and_searchterm=False):
