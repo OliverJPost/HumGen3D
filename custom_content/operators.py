@@ -8,10 +8,11 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.possible_content import POSSIBLE_CONTENT_ITEM
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
-class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
-    bl_idname = "hg3d.save_to_library"
+class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
+    bl_idname = "hg3d.start_saving"
     bl_label = "Save to library"
     bl_description = "Save this item to the Human Generator content library"
     bl_options = {"UNDO"}
@@ -24,6 +25,40 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         cc_sett.content_saving_type = self.category
         cc_sett.content_saving_tab_index = 0
         cc_sett.content_saving_active_human = Human.find_hg_rig(context.object)
+        return {"FINISHED"}
+
+
+class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
+    bl_idname = "hg3d.save_to_library"
+    bl_label = "Save to library"
+    bl_description = "Save this item to the Human Generator content library"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        cc_sett = context.scene.HG3D.custom_content
+        category = cc_sett.content_saving_type
+        human = Human.from_existing(cc_sett.content_saving_active_human)
+
+        thumbnail = cc_sett.preset_thumbnail
+
+        if category == "key":
+            key_name = cc_sett.keys.name
+            as_livekey = cc_sett.keys.save_as == "livekey"
+            delete_original = as_livekey and cc_sett.keys.delete_original
+            human.keys[key_name].save_to_library(
+                as_livekey=as_livekey, delete_original=delete_original
+            )
+        elif category == "pose":
+            name = cc_sett.pose.name
+            if cc_sett.pose.category_to_save_to == "existing":
+                subcategory = cc_sett.pose.chosen_existing_category
+            else:
+                subcategory = cc_sett.pose.new_category_name
+
+            human.pose.save_to_library(name, subcategory, thumbnail, context)
+
+        cc_sett.content_saving_ui = False
+        ShowMessageBox("Succesfully saved!", title="HG Content Saving")
         return {"FINISHED"}
 
 

@@ -18,6 +18,7 @@ from bpy.props import (  # type: ignore
     StringProperty,
 )
 from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.human.human import Human
 from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
@@ -77,8 +78,40 @@ def add_image_to_thumb_enum(self, context):
     self.preset_thumbnail_enum = img.name
 
 
+# FIXME load order with class property instead of alphabetical
+class ACustomKeyProps(bpy.types.PropertyGroup):
+
+    name: StringProperty()
+    save_as: EnumProperty(
+        name="Save key as:",
+        items=[("livekey", "LiveKey", "", 0), ("shapekey", "Shape key", "", 1)],
+        default="livekey",
+    )
+    delete_original: BoolProperty(default=False)
+
+
+# FIXME load order with class property instead of alphabetical
+class ACustomPoseProps(bpy.types.PropertyGroup):
+    name: StringProperty()
+    category_to_save_to: EnumProperty(
+        name="Pose Category",
+        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
+        default="existing",
+    )
+    chosen_existing_category: EnumProperty(
+        name="Pose Library",
+        items=lambda self, context: Human.from_existing(
+            context.scene.HG3D.custom_content.content_saving_active_human
+        ).pose.get_categories(include_all=False),
+    )
+    new_category_name: StringProperty()
+
+
 class CustomContentProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
+
+    keys: PointerProperty(type=ACustomKeyProps)
+    pose: PointerProperty(type=ACustomPoseProps)
 
     sk_collection_name: StringProperty(default="")
     show_saved_sks: BoolProperty(default=False, update=refresh_shapekeys_ul)
@@ -130,16 +163,6 @@ class CustomContentProps(bpy.types.PropertyGroup):
     mask_foot: BoolProperty(default=False)
 
     pose_name: StringProperty()
-    pose_category_to_save_to: EnumProperty(
-        name="Pose Category",
-        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
-        default="existing",
-    )
-    pose_chosen_existing_category: EnumProperty(
-        name="Pose Library",
-        items=lambda a, b: find_folders(a, b, "pose", False),
-    )
-    pose_new_category_name: StringProperty()
 
     custom_content_categ: EnumProperty(
         name="Content type",
@@ -149,7 +172,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
             ("texture_sets", "Texture sets", "", 1),
             ("shapekeys", "Shapekeys", "", 2),
             ("hairstyles", "Hairstyles", "", 3),
-            ("poses", "Poses", "", 4),
+            ("pose", "Pose", "", 4),
             ("outfits", "Outfits", "", 5),
             ("footwear", "Footwear", "", 6),
         ],

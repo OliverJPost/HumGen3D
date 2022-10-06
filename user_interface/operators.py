@@ -173,5 +173,7 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
         sett = context.scene.HG3D
         sett.custom_content.content_saving_ui = False
 
-        update_tips_from_context(context, sett, sett.content_saving_active_human)
+        update_tips_from_context(
+            context, sett, sett.custom_content.content_saving_active_human
+        )
         return {"FINISHED"}

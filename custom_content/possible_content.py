@@ -40,7 +40,7 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
         right_alert_row = right_row.row(align=True)
         right_alert_row.alert = True
         right_alert_row.operator(
-            "hg3d.save_to_library", text="Save", icon="FILE_TICK", depress=True
+            "hg3d.start_saving", text="Save", icon="FILE_TICK", depress=True
         ).category = item.category
 
 

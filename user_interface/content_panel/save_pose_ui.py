@@ -20,16 +20,16 @@ def _draw_pose_category_ui(context, layout):
 
     row = col.row()
     cc_sett = context.scene.HG3D.custom_content
-    row.prop(cc_sett, "pose_category_to_save_to", expand=True)
+    row.prop(cc_sett.pose, "category_to_save_to", expand=True)
 
     col.separator()
 
-    if cc_sett.pose_category_to_save_to == "existing":
-        col.prop(cc_sett, "pose_chosen_existing_category", text="")
-        poll = cc_sett.pose_chosen_existing_category != "All"
+    if cc_sett.pose.category_to_save_to == "existing":
+        col.prop(cc_sett.pose, "chosen_existing_category", text="")
+        poll = cc_sett.pose.chosen_existing_category not in ("All", "")
     else:
-        col.prop(cc_sett, "pose_new_category_name", text="Name")
-        poll = cc_sett.pose_new_category_name
+        col.prop(cc_sett.pose, "new_category_name", text="Name")
+        poll = cc_sett.pose.new_category_name
 
     col.separator()
 

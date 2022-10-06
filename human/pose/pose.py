@@ -19,7 +19,7 @@ from HumGen3D.custom_content.content_saving import Content_Saving_Operator
 class PoseSettings(PreviewCollectionContent, SavableContent):
     def __init__(self, _human):
         self._human: Human = _human
-        self._pcoll_name = "poses"
+        self._pcoll_name = "pose"
         self._pcoll_gender_split = False
 
     @injected_context
@@ -80,13 +80,13 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
             name,
         )
 
-        if not thumbnail:
-            return
+        if thumbnail:
+            if thumbnail == "auto":
+                thumb_name = self._human.render_thumbnail()
 
-        if thumbnail == "auto":
-            thumb_name = self._human.render_thumbnail()
+            self.save_thumb(folder, thumb_name, name)
 
-        self.save_thumb(folder, thumb_name, name)
+        hg_delete(pose_object)
 
     def _import_pose(self, preset, context) -> bpy.types.Object:
         """Import selected pose object
