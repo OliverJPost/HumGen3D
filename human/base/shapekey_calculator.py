@@ -16,7 +16,7 @@ def world_coords_from_obj(obj, data=None) -> np.array:
     data.foreach_get("co", local_coords)
 
     mx = obj.matrix_world
-    world_coords = matrix_multiplication(mx, local_coords)
+    world_coords = matrix_multiplication(mx, local_coords.reshape((-1, 3)))
 
     return world_coords
 
@@ -33,7 +33,7 @@ def build_distance_dict(body_coordinates_world, target_coordinates_world):
     for idx_target, co_target in enumerate(target_coordinates_world):
         co_body, idx_body, _ = kd.find_n(co_target, 1)[0]
 
-        distance_dict[idx_target] = (idx_body, co_body - co_target)
+        distance_dict[idx_target] = (idx_body, co_body - Vector(co_target))
 
     return distance_dict
 
