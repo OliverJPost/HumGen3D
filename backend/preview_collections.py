@@ -38,7 +38,7 @@ PREVIEW_COLLECTION_DATA = {
     "expression": (
         ".npy",
         False,
-        "expressions",
+        ["shapekeys", "expressions"],
         "expression_category",
         "search_term_expression",
     ),
