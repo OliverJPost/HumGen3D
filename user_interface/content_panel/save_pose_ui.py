@@ -25,8 +25,8 @@ def _draw_pose_category_ui(context, layout):
     col.separator()
 
     if cc_sett.pose.category_to_save_to == "existing":
-        col.prop(cc_sett.pose, "chosen_existing_category", text="")
-        poll = cc_sett.pose.chosen_existing_category not in ("All", "")
+        col.prop(cc_sett.pose, "chosen_existing_subcategory", text="")
+        poll = cc_sett.pose.chosen_existing_subcategory not in ("All", "")
     else:
         col.prop(cc_sett.pose, "new_category_name", text="Name")
         poll = cc_sett.pose.new_category_name

@@ -1,6 +1,7 @@
 import os
 import platform
 import subprocess
+from ast import Str
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, PointerProperty, StringProperty
@@ -18,11 +19,14 @@ class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     category: StringProperty()
+    key_name: StringProperty()
 
     def execute(self, context):
         cc_sett = context.scene.HG3D.custom_content
         cc_sett.content_saving_ui = True
         cc_sett.content_saving_type = self.category
+        if self.category == "key":
+            cc_sett.key.key_to_save = self.key_name
         cc_sett.content_saving_tab_index = 0
         cc_sett.content_saving_active_human = Human.find_hg_rig(context.object)
         return {"FINISHED"}
@@ -42,16 +46,23 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         thumbnail = cc_sett.preset_thumbnail
 
         if category == "key":
-            key_name = cc_sett.keys.name
-            as_livekey = cc_sett.keys.save_as == "livekey"
-            delete_original = as_livekey and cc_sett.keys.delete_original
-            human.keys[key_name].save_to_library(
-                as_livekey=as_livekey, delete_original=delete_original
+            key_to_save = cc_sett.key.key_to_save
+            key_name = cc_sett.key.name
+            key_category = cc_sett.key.category_to_save_to
+            key_subcategory = cc_sett.key.subcategory
+            as_livekey = cc_sett.key.save_as == "livekey"
+            delete_original = as_livekey and cc_sett.key.delete_original
+            human.keys[key_to_save].save_to_library(
+                key_name,
+                key_category,
+                key_subcategory,
+                as_livekey=as_livekey,
+                delete_original=delete_original,
             )
         elif category == "pose":
             name = cc_sett.pose.name
             if cc_sett.pose.category_to_save_to == "existing":
-                subcategory = cc_sett.pose.chosen_existing_category
+                subcategory = cc_sett.pose.chosen_existing_subcategory
             else:
                 subcategory = cc_sett.pose.new_category_name
 

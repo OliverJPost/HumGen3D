@@ -7,6 +7,7 @@ Properties for creating and managing custom content in Human Generator
 
 
 import os
+from re import L
 
 import bpy
 from bpy.props import (  # type: ignore
@@ -17,6 +18,7 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
+from genericpath import isdir
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.content_panel.operators import (
@@ -24,6 +26,7 @@ from HumGen3D.user_interface.content_panel.operators import (
     refresh_shapekeys_ul,
 )
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.panel_functions import prettify
 
 from ..content_packs.custom_content_packs import build_content_collection
 from .property_functions import find_folders
@@ -78,16 +81,54 @@ def add_image_to_thumb_enum(self, context):
     self.preset_thumbnail_enum = img.name
 
 
+def get_key_subcategories(category_type):
+    folder_livekeys = os.path.join(get_prefs().filepath, "livekeys", category_type)
+    folder_shapekeys = os.path.join(get_prefs().filepath, "shapekeys", category_type)
+
+    categories = []
+    if os.path.isdir(folder_livekeys):
+        categories.extend([f.name for f in os.scandir(folder_livekeys) if f.is_dir()])
+
+    if os.path.isdir(folder_shapekeys):
+        categories.extend([f.name for f in os.scandir(folder_shapekeys) if f.is_dir()])
+
+    if ".DS_Store" in categories:
+        categories.remove(".DS_Store")
+
+    return [(categ, prettify(categ), "", i) for i, categ in enumerate(categories)]
+
+
 # FIXME load order with class property instead of alphabetical
 class ACustomKeyProps(bpy.types.PropertyGroup):
-
+    key_to_save: StringProperty()
     name: StringProperty()
     save_as: EnumProperty(
         name="Save key as:",
-        items=[("livekey", "LiveKey", "", 0), ("shapekey", "Shape key", "", 1)],
+        items=[("livekey", "Live Key", "", 0), ("shapekey", "Shape Key", "", 1)],
         default="livekey",
     )
-    delete_original: BoolProperty(default=False)
+    delete_original: BoolProperty(name="Delete original", default=False)
+
+    category_to_save_to: EnumProperty(
+        name="Category to save to",
+        items=[
+            ("body_proportions", "Body Proportions (Visible)", "", 0),
+            ("face_proportions", "Face Proportions (Visible)", "", 1),
+            ("face_presets", "Face Presets (Semi-hidden)", "", 2),
+            ("expressions", "Expressions (Visible)", "", 3),
+            ("special", "Special (Hidden)", "", 4),
+        ],
+    )
+
+    subcategory: EnumProperty(
+        name="Subcategory",
+        items=lambda self, _: get_key_subcategories(self.category_to_save_to),
+    )
+    existing_or_new_subcategory: EnumProperty(
+        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
+        default="existing",
+    )
+    new_category_name: StringProperty()
 
 
 # FIXME load order with class property instead of alphabetical
@@ -98,7 +139,7 @@ class ACustomPoseProps(bpy.types.PropertyGroup):
         items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
         default="existing",
     )
-    chosen_existing_category: EnumProperty(
+    chosen_existing_subcategory: EnumProperty(
         name="Pose Library",
         items=lambda self, context: Human.from_existing(
             context.scene.HG3D.custom_content.content_saving_active_human
@@ -110,7 +151,7 @@ class ACustomPoseProps(bpy.types.PropertyGroup):
 class CustomContentProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
 
-    keys: PointerProperty(type=ACustomKeyProps)
+    key: PointerProperty(type=ACustomKeyProps)
     pose: PointerProperty(type=ACustomPoseProps)
 
     sk_collection_name: StringProperty(default="")

@@ -3,6 +3,7 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.keys.keys import LiveKeyItem
+from HumGen3D.user_interface.panel_functions import prettify
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -44,16 +45,18 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
 
         for key in self.human.face.keys:
             bpy_key = key.as_bpy()
-            if getattr(self.sett.ui, bpy_key.subcategory):
-                row = locals()[f"flow_{bpy_key.subcategory}"].row(align=True)
-                row.prop(bpy_key, "value", text=bpy_key.name, slider=True)
-                if isinstance(key, LiveKeyItem):
-                    row.operator(
-                        "hg3d.livekey_to_shapekey",
-                        text="",
-                        icon="SHAPEKEY_DATA",
-                        emboss=False,
-                    ).livekey_name = key.name
+            if not getattr(self.sett.ui, key.subcategory):
+                continue
+
+            row = locals()[f"flow_{key.subcategory}"].row(align=True)
+            row.prop(bpy_key, "value", text=prettify(key.name), slider=True)
+            if isinstance(key, LiveKeyItem):
+                row.operator(
+                    "hg3d.livekey_to_shapekey",
+                    text="",
+                    icon="SHAPEKEY_DATA",
+                    emboss=False,
+                ).livekey_name = key.name
 
     def _build_sk_name(self, sk_name, prefix) -> str:
         """Builds a displayable name from internal shapekey names.

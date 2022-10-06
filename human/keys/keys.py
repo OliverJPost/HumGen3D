@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Generator, List, Union
+from unicodedata import category
 
 import bpy
 import numpy as np
@@ -138,9 +140,10 @@ class LiveKeyItem(KeyItem):
 
         if self.category:
             if self.subcategory:
-                name = f"${self.category}_${self.subcategory}_{self.name}"
+                # Tripe curly braces for result of f{chin}_chin_size
+                name = f"{self.category[0]}]_{{{self.subcategory}}}_{self.name}"
             else:
-                name = f"${self.category}_{self.name}"
+                name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
 
@@ -208,13 +211,21 @@ class LiveKeyItem(KeyItem):
 
 
 class ShapeKeyItem(KeyItem, SavableContent):
+    category_dict = {
+        "f": "face_proportions",
+        "b": "body_proportions",
+        "p": "presets",
+        "e": "expressions",
+    }
+
     def __init__(self, sk_name, human):
         pattern = re.compile(
-            "^(\$(?P<category>[^_]+)_)?(\$(?P<subcategory>[^_]+)_)?(?P<name>.*)"
+            "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"
         )
         match = pattern.match(sk_name)
         groupdict = match.groupdict()
-        category = groupdict.get("category")
+        category_code = groupdict.get("category")
+        category = self.category_dict[category_code] if category_code else None
         subcategory = groupdict.get("subcategory")
         name = groupdict.get("name")
         assert name
@@ -229,12 +240,27 @@ class ShapeKeyItem(KeyItem, SavableContent):
         self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
 
     def as_bpy(self) -> ShapeKey:
-        return self._human.body_obj.data.shape_keys.key_blocks[self.name]
+        if self.category:
+            if self.subcategory:
+                name = f"{self.category[0]}{{{self.subcategory}}}_{self.name}"
+            else:
+                name = f"{self.category[0]}_{self.name}"
+        else:
+            name = self.name
+        return self._human.body_obj.data.shape_keys.key_blocks[name]
 
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
 
-    def save_to_library(self, as_livekey=True, delete_original=False):
+    def __hash__(self) -> int:
+        data = self.as_bpy().data
+        coords = np.empty(len(data) * 3, dtype=np.float64)
+        data.foreach_get("co", coords)
+        return hashlib.sha1(data).hexdigest()
+
+    def save_to_library(
+        self, name, category, subcategory, as_livekey=True, delete_original=False
+    ):
         body = self._human.body_obj
         sk = self.as_bpy()
         sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
@@ -246,17 +272,18 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
         relative_coordinates = sk_coords - body_coordinates
 
-        subcateg = self.subcategory if self.subcategory else ""
         folder = "livekeys" if as_livekey else "shapekeys"
-        path = os.path.join(get_prefs().filepath, folder, self.category, subcateg)
+        path = os.path.join(get_prefs().filepath, folder, category, subcategory)
 
         if not os.path.exists(path):
             os.makedirs(path)
 
-        np.save(os.path.join(path, self.name), relative_coordinates)
+        np.save(os.path.join(path, name), relative_coordinates)
 
         if delete_original:
             body.shape_key_remove(sk)
+        else:
+            sk.name = f"$[{category}]_$[{subcategory}]_{name}"
 
         update_livekey_collection()
 

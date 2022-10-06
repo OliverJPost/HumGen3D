@@ -1,6 +1,7 @@
 import bpy
 from bpy.props import BoolProperty, EnumProperty, PointerProperty, StringProperty
 from bpy.types import Object
+from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -39,9 +40,12 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
         )
         right_alert_row = right_row.row(align=True)
         right_alert_row.alert = True
-        right_alert_row.operator(
+        operator = right_alert_row.operator(
             "hg3d.start_saving", text="Save", icon="FILE_TICK", depress=True
-        ).category = item.category
+        )
+        operator.category = item.category
+        if item.category == "key":
+            operator.key_name = item.name
 
 
 class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
@@ -61,7 +65,7 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
 
 def find_possible_content(context):
     coll = context.scene.possible_content_col
-
+    human = Human.from_existing(context.object)
     coll.clear()
 
     header = coll.add()
@@ -95,7 +99,8 @@ def find_possible_content(context):
     header.name = "Shape keys:"
     header.is_header = True
 
-    for i in range(7):
+    for key in human.keys.all_shapekeys:
+        # if hash(key) != key.stored_hash:
         item = coll.add()
-        item.name = f"sk {i}"
+        item.name = key.as_bpy().name
         item.category = "key"
