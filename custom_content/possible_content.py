@@ -86,6 +86,7 @@ def find_possible_content(context):
         item.name = "Hairstyle"
         item.category = "hair"
 
+    if str(hash(human.pose)) != human.props.hashes.get("$pose"):
         item = coll.add()
         item.name = "Pose"
         item.category = "pose"
@@ -103,7 +104,7 @@ def find_possible_content(context):
     header.name = "Shape keys:"
     header.is_header = True
 
-    for key in human.keys.all_shapekeys:
+    for key in human.keys.all_added_shapekeys:
         # if hash(key) != key.stored_hash:
         item = coll.add()
         item.name = key.as_bpy().name
