@@ -126,10 +126,10 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         body_obj = self._human.body_obj
         if self._human.gender == "female":
-            verts = cloth_obj.data.vertices
+            verts = body_obj.data.vertices
         else:
-            verts = cloth_obj.data.shape_keys.key_blocks["Male"].data
-        body_coords_world = world_coords_from_obj(cloth_obj, data=verts)
+            verts = body_obj.data.shape_keys.key_blocks["Male"].data
+        body_coords_world = world_coords_from_obj(body_obj, data=verts)
 
         cloth_coords_world = world_coords_from_obj(cloth_obj)
 
