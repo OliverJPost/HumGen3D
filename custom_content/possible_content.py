@@ -24,10 +24,12 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
         self.use_filter_show = False
 
         if item.is_header:
+            if item.name == "No changes found!":
+                layout.enabled = False
             layout.label(text=item.name)
             return
 
-        split_50 = layout.split(factor=0.5)
+        split_50 = layout.split(factor=0.6)
         name_row = split_50.row()
         try:
             name_row.label(text=item.name, icon_value=get_hg_icon(item.category))
@@ -35,14 +37,8 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
             name_row.label(text=item.name, icon="SHAPEKEY_DATA")
 
         right_row = split_50.row(align=True)
-        right_row.operator(
-            "hg3d.save_sk_to_library", text="", icon="ZOOM_SELECTED", depress=True
-        )
-        right_alert_row = right_row.row(align=True)
-        right_alert_row.alert = True
-        operator = right_alert_row.operator(
-            "hg3d.start_saving", text="Save", icon="FILE_TICK", depress=True
-        )
+        right_row.alert = True
+        operator = right_row.operator("hg3d.start_saving", text="Save", depress=True)
         operator.category = item.category
         if item.category == "key":
             operator.key_name = item.name
@@ -68,28 +64,36 @@ def find_possible_content(context):
     human = Human.from_existing(context.object)
     coll.clear()
 
+    show_unchanged = context.scene.HG3D.custom_content.show_unchanged
+
     header = coll.add()
     header.name = "Main categories:"
     header.is_header = True
 
-    item = coll.add()
-    item.name = "Human"
-    item.category = "human"
+    if show_unchanged:
+        item = coll.add()
+        item.name = "Human"
+        item.category = "human"
 
-    item = coll.add()
-    item.name = "Outfit"
-    item.category = "clothing"
-    item = coll.add()
-    item.name = "Footwear"
-    item.category = "clothing"
+        item = coll.add()
+        item.name = "Outfit"
+        item.category = "clothing"
+        item = coll.add()
+        item.name = "Footwear"
+        item.category = "clothing"
 
-    item = coll.add()
-    item.name = "Hairstyle"
-    item.category = "hair"
+        item = coll.add()
+        item.name = "Hairstyle"
+        item.category = "hair"
 
-    item = coll.add()
-    item.name = "Pose"
-    item.category = "pose"
+        item = coll.add()
+        item.name = "Pose"
+        item.category = "pose"
+
+    if len(coll) == 1:
+        header = coll.add()
+        header.name = "No changes found!"
+        header.is_header = True
 
     header = coll.add()
     header.name = " "

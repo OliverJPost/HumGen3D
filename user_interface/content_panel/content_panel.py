@@ -88,8 +88,22 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
     def draw(self, context):
         self.layout.enabled = bool(Human.find_hg_rig(context.object))
 
+        col = self.layout.column(align=True)
+        row = col.row(align=True)
+        row.scale_y = 1.2
+        row.operator(
+            "hg3d.refresh_possible_content", text="Refresh list", icon="FILE_REFRESH"
+        )
+        row.prop(
+            context.scene.HG3D.custom_content,
+            "show_unchanged",
+            toggle=True,
+            icon_only=True,
+            icon="HIDE_OFF",
+        )
+
         amount_of_items = len(context.scene.possible_content_col)
-        self.layout.template_list(
+        col.template_list(
             "HG_UL_POSSIBLE_CONTENT",
             "",
             context.scene,
