@@ -20,6 +20,7 @@ from bpy.props import (  # type: ignore
 )
 from genericpath import isdir
 from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
@@ -156,6 +157,9 @@ class CustomContentProps(bpy.types.PropertyGroup):
 
     sk_collection_name: StringProperty(default="")
     show_saved_sks: BoolProperty(default=False, update=refresh_shapekeys_ul)
+    show_unchanged: BoolProperty(
+        default=False, update=lambda self, context: find_possible_content(context)
+    )
 
     hairstyle_name: StringProperty(default="")
     save_hairtype: EnumProperty(
