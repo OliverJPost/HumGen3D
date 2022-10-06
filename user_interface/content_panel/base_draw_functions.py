@@ -42,15 +42,15 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         layout (UILayout): layout to draw in
         content_type (str): What type of content to get thumbnail for
     """
-    sett = context.scene.HG3D.custom_content
+    cc_sett = context.scene.HG3D.custom_content
 
     _draw_header_box(layout, "Select a thumbnail", icon="IMAGE")
 
     col = layout.column(align=True)
     col.scale_y = 1.5
-    col.prop(sett, "thumbnail_saving_enum", text="")
+    col.prop(cc_sett, "thumbnail_saving_enum", text="")
 
-    if sett.thumbnail_saving_enum == "none":
+    if cc_sett.thumbnail_saving_enum == "none":
         row = layout.row()
         row.alignment = "CENTER"
         row.scale_y = 3
@@ -60,22 +60,24 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         return
 
     layout.template_icon_view(
-        sett,
+        cc_sett,
         "preset_thumbnail_enum",
         show_labels=True,
         scale=8,
         scale_popup=10,
     )
-    if sett.thumbnail_saving_enum == "custom":
-        layout.template_ID(sett.custom_content, "preset_thumbnail", open="image.open")
+    if cc_sett.thumbnail_saving_enum == "custom":
+        layout.template_ID(
+            cc_sett.custom_content, "preset_thumbnail", open="image.open"
+        )
         layout.label(text="256*256px recommended", icon="INFO")
-    elif sett.thumbnail_saving_enum == "auto":
+    elif cc_sett.thumbnail_saving_enum == "auto":
         __draw_auto_thumbnail_ui(layout, content_type)
 
-    elif sett.thumbnail_saving_enum == "last_render":
+    elif cc_sett.thumbnail_saving_enum == "last_render":
         __draw_render_result_thumbnail_ui(layout)
 
-    _draw_next_button(layout, poll=sett.custom_content.preset_thumbnail)
+    _draw_next_button(layout, poll=cc_sett.preset_thumbnail)
 
 
 def __draw_render_result_thumbnail_ui(layout):
@@ -111,11 +113,11 @@ def __draw_auto_thumbnail_ui(layout, content_type):
         if content_type in c_type_set
     )
 
-    row.operator(
-        "hg3d.auto_render_thumbnail",
-        text="Render [Automatic]",
-        icon="RENDER_STILL",
-    ).thumbnail_type = thumbnail_type
+    # row.operator(
+    #     "hg3d.auto_render_thumbnail",
+    #     text="Render [Automatic]",
+    #     icon="RENDER_STILL",
+    # ).thumbnail_type = thumbnail_type #FIXME
 
 
 def _draw_save_button(layout, content_type, poll=True):

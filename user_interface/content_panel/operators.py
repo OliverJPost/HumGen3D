@@ -10,31 +10,6 @@ from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
 import bpy
 
 
-class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
-    """Takes the user our of the content saving UI, pack into the standard
-    interface
-
-    Prereq:
-    Currently in content saving UI
-    """
-
-    bl_idname = "hg3d.cancel_content_saving_ui"
-    bl_label = "Close this menu"
-    bl_description = "Close this menu"
-    bl_options = {"UNDO"}
-
-    def invoke(self, context, event):
-        # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
-
-    def execute(self, context):
-        sett = context.scene.HG3D.custom_content
-        sett.content_saving_ui = False
-
-        update_tips_from_context(context, sett, sett.content_saving_active_human)
-        return {"FINISHED"}
-
-
 def refresh_shapekeys_ul(self, context):
     sett = context.scene.HG3D
     pref = get_prefs()
