@@ -211,6 +211,8 @@ class Human:
 
         human.props.version = bl_info["version"]
         human.props.hashes["$pose"] = str(hash(human.pose))
+        human.props.hashes["$outfit"] = str(hash(human.outfit))
+        human.props.hashes["$footwear"] = str(hash(human.footwear))
 
         return human
 
