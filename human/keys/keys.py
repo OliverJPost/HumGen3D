@@ -341,6 +341,15 @@ class KeySettings:
         return shapekeys
 
     @property
+    def all_added_shapekeys(self) -> List[ShapeKeyItem]:
+        SKIP_SUFFIXES = ("LIVE_KEY", "Male", "Basis", "cor_", "eyeLook")
+        return [
+            sk
+            for sk in self.all_shapekeys
+            if not sk.as_bpy().name.startswith(SKIP_SUFFIXES)
+        ]
+
+    @property
     def body_proportions(self):
         return PropCollection([sk for sk in self if sk.name.startswith("bp_")])
 

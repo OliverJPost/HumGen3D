@@ -56,6 +56,8 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         if not pref.debug_mode:
             hg_delete(hg_pose)
 
+        self._human.props.hashes["$pose"] = str(hash(self))
+
     @injected_context
     def save_to_library(
         self,
@@ -184,6 +186,12 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
             if bone.bone_group and bone.bone_group.name in SKIP_GROUPS:
                 continue
 
-            bone_rotations.append(tuple(bone.rotation_euler))
+            rotation_mode = bone.rotation_mode
+            if rotation_mode == "QUATERNION":
+                rotation_attr = "rotation_quaternion"
+            else:
+                rotation_attr = "rotation_euler"
+
+            bone_rotations.append(tuple(getattr(bone, rotation_attr)))
 
         return hash(tuple(bone_rotations))

@@ -210,6 +210,7 @@ class Human:
         from HumGen3D import bl_info
 
         human.props.version = bl_info["version"]
+        human.props.hashes["$pose"] = str(hash(human.pose))
 
         return human
 
