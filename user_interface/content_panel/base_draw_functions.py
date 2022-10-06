@@ -10,12 +10,12 @@ def _draw_name_ui(context, layout, content_type):
         layout (UILayout): layout to draw in
         content_type (str): String about what content type this is
     """
-    sett = context.scene.HG3D.custom_content
+    cc_sett = context.scene.HG3D.custom_content
 
     tag_dict = {
         "hair": "hairstyle",
         "starting_human": "preset",
-        "shapekeys": "sk_collection",
+        "key": "sk_collection",
         "outfit": "outfit",
         "pose": "pose",
     }
@@ -30,12 +30,12 @@ def _draw_name_ui(context, layout, content_type):
     col.scale_y = 1.5
 
     # FIXME crash when spaces in name
-    if content_type == "pose":
-        col.prop(sett.pose, "name", text="Name")
-        poll = bool(sett.pose.name)
+    if content_type in ("pose", "key"):
+        col.prop(getattr(cc_sett, content_type), "name", text="Name")
+        poll = bool(getattr(cc_sett, content_type).name)
     else:
-        col.prop(sett, f"{tag}_name", text="Name")
-        poll = bool(getattr(sett, f"{tag}_name"))
+        col.prop(cc_sett, f"{tag}_name", text="Name")
+        poll = bool(getattr(cc_sett, f"{tag}_name"))
 
     _draw_save_button(layout, content_type, poll=poll)
 

@@ -88,6 +88,7 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
     def draw(self, context):
         self.layout.enabled = bool(Human.find_hg_rig(context.object))
 
+        amount_of_items = len(context.scene.possible_content_col)
         self.layout.template_list(
             "HG_UL_POSSIBLE_CONTENT",
             "",
@@ -95,7 +96,7 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
             "possible_content_col",
             context.scene,
             "possible_content_col_index",
-            rows=len(context.scene.possible_content_col),
+            rows=amount_of_items if amount_of_items <= 15 else 15,
             sort_lock=True,
         )
 

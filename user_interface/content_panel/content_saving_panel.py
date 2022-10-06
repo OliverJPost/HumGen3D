@@ -22,7 +22,7 @@ from .save_hair_ui import (
     _draw_hairtype_ui,
     _draw_particle_system_selection_ui,
 )
-from .save_keys import _draw_shapekey_selection_ui
+from .save_keys import _draw_key_category_ui, _draw_key_type_ui
 from .save_pose_ui import _draw_pose_category_ui
 
 
@@ -51,8 +51,9 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             _draw_thumbnail_selection_ui,
             _draw_name_ui
         ],
-        "shapekeys": [
-            _draw_shapekey_selection_ui,
+        "key": [
+            _draw_key_category_ui,
+            _draw_key_type_ui,
             _draw_name_ui
         ],
         "clothing": [
