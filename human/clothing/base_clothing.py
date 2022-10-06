@@ -1,5 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import hashlib
 import json
 import os
 from math import acos, pi
@@ -99,6 +100,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         # refresh pcoll for consistent 'click here to select' icon
         self.refresh_pcoll(context)
+
+        self._human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
 
     def add_obj(self, cloth_obj, cloth_type, context):
         body_obj = self._human.body_obj
@@ -464,18 +467,18 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         return is_inside_list.count(True) / len(is_inside_list)
 
     def __hash__(self):
-        hash_coll = 0
+        hash_coll = []
         for obj in self.objects:
             vert_count = len(obj.data.vertices)
             vert_co = np.empty(vert_count * 3, dtype=np.float64)
             obj.data.vertices.foreach_get("co", vert_co)
 
-            hash_coll += hash(tuple(map(tuple, vert_co)))
+            hash_coll.append(hashlib.sha1(vert_co).hexdigest())
 
             for sk in obj.data.shape_keys.key_blocks:
                 sk_co = np.empty(vert_count * 3, dtype=np.float64)
                 sk.data.foreach_get("co", sk_co)
-                hash_coll += hash(tuple(map(tuple, sk_co)))
+                hash_coll.append(hashlib.sha1(sk_co).hexdigest())
 
             mat = obj.active_material
             if mat:
@@ -483,7 +486,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 # TODO check effect of pattern loading
                 for node in mat.node_tree.nodes:
                     node_names.append(node.name)
-                hash_coll += hash(tuple(node_names))
+                hash_coll.append(hash(tuple(node_names)))
+
+        return hash(tuple(hash_coll))
 
     @injected_context
     def save_to_library(
