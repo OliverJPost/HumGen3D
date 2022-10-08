@@ -6,7 +6,9 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import Content_Saving_Operator
 
 
-def save_hair(human, name, genders, particle_systems, hair_type, context, thumb=None):
+def save_hair(
+    human, name, category, genders, particle_systems, hair_type, context, thumb=None
+):
     pref = get_prefs()
 
     hair_obj = human.body_obj.copy()
@@ -28,10 +30,10 @@ def save_hair(human, name, genders, particle_systems, hair_type, context, thumb=
 
         if hair_type == "hair":
             blend_folder = os.path.join(pref.filepath, "hair", "head")
-            json_folder = os.path.join(blend_folder, gender, "Custom")
+            json_folder = os.path.join(blend_folder, gender, category)
         else:
             blend_folder = os.path.join(pref.filepath, "hair", "face_hair")
-            json_folder = os.path.join(blend_folder, "Custom")
+            json_folder = os.path.join(blend_folder, category)
 
         if not os.path.exists(json_folder):
             os.makedirs(json_folder)

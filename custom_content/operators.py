@@ -58,28 +58,27 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         human = Human.from_existing(cc_sett.content_saving_active_human)
 
         thumbnail = cc_sett.preset_thumbnail
+        if category != "starting_human":
+            if getattr(cc_sett, category).existing_or_new_category == "existing":
+                subcategory = getattr(cc_sett, category).chosen_existing_subcategory
+            else:
+                subcategory = getattr(cc_sett, category).new_category_name
 
         if category == "key":
             key_to_save = cc_sett.key.key_to_save
             key_name = cc_sett.key.name
             key_category = cc_sett.key.category_to_save_to
-            key_subcategory = cc_sett.key.subcategory
             as_livekey = cc_sett.key.save_as == "livekey"
             delete_original = as_livekey and cc_sett.key.delete_original
             human.keys[key_to_save].save_to_library(
                 key_name,
                 key_category,
-                key_subcategory,
+                subcategory,
                 as_livekey=as_livekey,
                 delete_original=delete_original,
             )
         elif category == "pose":
             name = cc_sett.pose.name
-            if cc_sett.pose.category_to_save_to == "existing":
-                subcategory = cc_sett.pose.chosen_existing_subcategory
-            else:
-                subcategory = cc_sett.pose.new_category_name
-
             human.pose.save_to_library(name, subcategory, thumbnail, context)
         elif category == "starting_human":
             human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
@@ -88,6 +87,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             getattr(human.hair, attr).save_to_library(
                 [ps.ps_name for ps in context.scene.savehair_col if ps.enabled],
                 cc_sett.hair.name,
+                subcategory,
                 for_male=cc_sett.hair.save_for_male,
                 for_female=cc_sett.hair.save_for_female,
                 thumbnail=thumbnail,

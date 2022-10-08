@@ -196,6 +196,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         self,
         particle_systems: list[str],
         hairstyle_name: str,
+        category: str,
         for_male=True,
         for_female=True,
         thumbnail: Union[Image, None] = None,
@@ -215,6 +216,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         save_hair(
             self._human,
             hairstyle_name,
+            category,
             genders,
             particle_systems,
             hair_type,
