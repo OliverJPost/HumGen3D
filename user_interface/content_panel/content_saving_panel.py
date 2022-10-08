@@ -11,6 +11,7 @@ from .base_draw_functions import (
     _draw_name_ui,
     _draw_thumbnail_selection_ui,
     _draw_warning_if_different_active_human,
+    draw_category_ui,
 )
 from .save_clothing_ui import (
     _draw_clothing_gender_ui,
@@ -22,8 +23,7 @@ from .save_hair_ui import (
     _draw_hairtype_ui,
     _draw_particle_system_selection_ui,
 )
-from .save_keys import _draw_key_category_ui, _draw_key_type_ui
-from .save_pose_ui import _draw_pose_category_ui
+from .save_keys import _draw_key_type_ui
 
 
 class HG_PT_CONTENT_SAVING(bpy.types.Panel):
@@ -45,6 +45,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             _draw_thumbnail_selection_ui,
             _draw_hairtype_ui,
             _draw_hair_gender_ui,
+            draw_category_ui,
             _draw_name_ui,
         ],
         "starting_human": [
@@ -52,7 +53,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             _draw_name_ui
         ],
         "key": [
-            _draw_key_category_ui,
+            draw_category_ui,
             _draw_key_type_ui,
             _draw_name_ui
         ],
@@ -65,7 +66,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             ],
         "pose": [
             _draw_thumbnail_selection_ui,
-            _draw_pose_category_ui,
+            draw_category_ui,
             _draw_name_ui
         ]
     }
