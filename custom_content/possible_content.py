@@ -74,22 +74,23 @@ def find_possible_content(context):
     item.name = "Human"
     item.category = "starting_human"
 
-    if str(hash(human.hair.regular_hair)) != human.props.hashes.get("$hair"):
+    hashes = human.props.hashes
+    if str(hash(human.hair.regular_hair)) != hashes.get("$hair") or show_unchanged:
         item = coll.add()
         item.name = "Hairstyle"
         item.category = "hair"
 
-    if str(hash(human.outfit)) != human.props.hashes.get("$outfit"):
+    if str(hash(human.outfit)) != hashes.get("$outfit") or show_unchanged:
         item = coll.add()
         item.name = "Outfit"
         item.category = "clothing"
 
-    if str(hash(human.footwear)) != human.props.hashes.get("$footwear"):
+    if str(hash(human.footwear)) != hashes.get("$footwear") or show_unchanged:
         item = coll.add()
         item.name = "Footwear"
         item.category = "clothing"
 
-    if str(hash(human.pose)) != human.props.hashes.get("$pose"):
+    if str(hash(human.pose)) != hashes.get("$pose") or show_unchanged:
         item = coll.add()
         item.name = "Pose"
         item.category = "pose"

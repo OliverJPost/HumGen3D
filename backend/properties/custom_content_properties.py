@@ -184,7 +184,9 @@ class CustomContentProps(bpy.types.PropertyGroup):
     hair: PointerProperty(type=ACustomHairProps)
     starting_human_name: StringProperty()
     hair_name: StringProperty()
-    show_unchanged: BoolProperty()
+    show_unchanged: BoolProperty(
+        update=lambda self, context: find_possible_content(context)
+    )
 
     clothing_name: StringProperty(default="")
     saveoutfit_categ: EnumProperty(
