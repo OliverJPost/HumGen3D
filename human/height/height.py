@@ -11,7 +11,7 @@ from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
-from ..base.geometry import centroid
+from ..base.math import centroid
 
 if TYPE_CHECKING:
     from HumGen3D import Human
