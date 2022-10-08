@@ -53,13 +53,19 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     thumbnail_type: StringProperty()
+    white_material: BoolProperty()
 
     def execute(self, context):
         cc_sett = context.scene.HG3D.custom_content
         human = Human.from_existing(cc_sett.content_saving_active_human)
         folder = os.path.join(get_prefs().filepath, "temp_data")
 
-        human.render_thumbnail(folder, focus=self.thumbnail_type, context=context)
+        human.render_thumbnail(
+            folder,
+            focus=self.thumbnail_type,
+            context=context,
+            white_material=self.white_material,
+        )
         return {"FINISHED"}
 
 

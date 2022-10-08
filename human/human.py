@@ -581,6 +581,7 @@ class Human:
         focus: str = "full_body_front",
         context=None,
         resolution=256,
+        white_material=False,
     ) -> os.PathLike:
         if not folder:
             folder = os.path.join(get_prefs().filepath, "temp_data")
@@ -639,6 +640,12 @@ class Human:
             hg_thumbnail_scene.collection.objects.link(point_light_object)
             lights.append(point_light_object)
 
+        if white_material:
+            old_material = self.body_obj.data.materials[0]
+            self.body_obj.data.materials[0] = None
+            old_eye_material = self.eye_obj.data.materials[1]
+            self.eye_obj.data.materials[1] = None
+
         if not os.path.isdir(folder):
             os.makedirs(folder)
 
@@ -652,6 +659,10 @@ class Human:
             hg_delete(light)
 
         hg_delete(camera_object)
+
+        if white_material:
+            self.body_obj.data.materials[0] = old_material
+            self.eye_obj.data.materials[1] = old_eye_material
 
         context.window.scene = old_scene
 
