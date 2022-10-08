@@ -75,6 +75,7 @@ def find_possible_content(context):
         item.name = "Human"
         item.category = "human"
 
+    if str(hash(human.hair.regular_hair)) != human.props.hashes.get("$hair"):
         item = coll.add()
         item.name = "Hairstyle"
         item.category = "hair"

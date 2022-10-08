@@ -11,6 +11,7 @@ from HumGen3D.backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from HumGen3D.human import hair
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.base.geometry import round_vector_to_tuple
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.base.savable_content import SavableContent
@@ -81,6 +82,19 @@ class BaseHair:
 
     def delete_all(self):
         raise NotImplementedError
+
+    def __hash__(self) -> int:
+        key_data = []
+        for particle_system in self.particle_systems:
+            for particle in particle_system.particles:
+                key_data.extend(
+                    [round_vector_to_tuple(k.co_local) for k in particle.hair_keys]
+                )
+                key_data.append(round_vector_to_tuple(particle.location, precision=8))
+                key_data.append(round_vector_to_tuple(particle.rotation, precision=4))
+
+        print(key_data)
+        return hash(tuple(key_data))
 
 
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
@@ -173,6 +187,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
         hg_delete(hair_obj)
         remove_broken_drivers()
+
+        human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
 
     @injected_context
     def save_to_library(
