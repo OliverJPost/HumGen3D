@@ -581,7 +581,7 @@ class Human:
         focus: str = "full_body_front",
         context=None,
         resolution=256,
-    ) -> PathLike:
+    ) -> os.PathLike:
         if not folder:
             folder = os.path.join(get_prefs().filepath, "temp_data")
         hg_rig = self.rig_obj
@@ -622,9 +622,7 @@ class Human:
         hg_thumbnail_scene.render.resolution_y = resolution
         hg_thumbnail_scene.render.resolution_x = resolution
 
-        self._make_camera_look_at_human(
-            camera_object, hg_rig, type_sett["look_at_correction"]
-        )
+        self.make_camera_look_at_human(camera_object, type_sett["look_at_correction"])
         camera_data.lens = type_sett["focal_length"]
 
         lights = []

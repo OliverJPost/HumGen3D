@@ -5,6 +5,7 @@ from os import PathLike
 from typing import TYPE_CHECKING, Union
 
 import bpy
+from bpy.types import Image
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
@@ -63,7 +64,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         self,
         name: str,
         category: str = "Custom",
-        thumbnail: Union[None, str, PathLike] = "auto",
+        thumbnail: Union[None, str, Image] = "auto",
         context=None,
     ) -> None:
         folder = os.path.join(get_prefs().filepath, "poses", category)
@@ -85,8 +86,9 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         if thumbnail:
             if thumbnail == "auto":
                 thumb_name = self._human.render_thumbnail()
-
-            self.save_thumb(folder, thumb_name, name)
+            else:
+                thumb_name = thumbnail.name
+            Content_Saving_Operator.save_thumb(folder, thumb_name, name)
 
         hg_delete(pose_object)
 

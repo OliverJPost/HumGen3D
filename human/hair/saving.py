@@ -39,7 +39,7 @@ def save_hair(
         if not os.path.exists(json_folder):
             os.makedirs(json_folder)
         if thumb:
-            Content_Saving_Operator.save_thumb(json_folder, thumb, name)
+            Content_Saving_Operator.save_thumb(json_folder, thumb.name, name)
 
         _make_hair_json(hair_obj, json_folder, name)
 
