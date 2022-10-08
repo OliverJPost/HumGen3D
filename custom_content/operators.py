@@ -81,6 +81,8 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 subcategory = cc_sett.pose.new_category_name
 
             human.pose.save_to_library(name, subcategory, thumbnail, context)
+        elif category == "starting_human":
+            human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
 
         cc_sett.content_saving_ui = False
         ShowMessageBox("Succesfully saved!", title="HG Content Saving")

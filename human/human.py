@@ -723,3 +723,36 @@ class Human:
         rot_quat = direction.to_track_quat("-Z", "Y")
 
         obj_camera.rotation_euler = rot_quat.to_euler()
+
+    @injected_context
+    def save_to_library(self, name, thumbnail=None, context=None):
+        folder = os.path.join(get_prefs().filepath, "models", self.gender)
+
+        hg_body = self.body_obj
+
+        if thumbnail:
+            self.save_thumb(self.folder, thumbnail, name)
+
+        preset_data = {}
+        preset_data["gender"] = self.gender
+
+        eyebrows = self.hair.eyebrows.particle_systems
+        preset_data["eyebrows"] = next(
+            (
+                mod.particle_system.name
+                for mod in eyebrows
+                if (mod.show_viewport or mod.show_render)
+            ),
+            f"Eyebrows_{self.gender.capitalize()}",
+        )
+
+        preset_data.update(self.keys.as_dict())
+        # FIXME preset_data.update(self.skin.as_dict())
+        # FIXME preset_data.update(self.eyes.as_dict())
+
+        with open(os.path.join(folder, f"{self.name}.json"), "w") as f:
+            json.dump(preset_data, f, indent=4)
+
+        self.sett.content_saving_ui = False
+
+        preview_collections["humans"].refresh(context)

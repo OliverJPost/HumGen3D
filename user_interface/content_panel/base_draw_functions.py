@@ -12,17 +12,9 @@ def _draw_name_ui(context, layout, content_type):
     """
     cc_sett = context.scene.HG3D.custom_content
 
-    tag_dict = {
-        "hair": "hairstyle",
-        "starting_human": "preset",
-        "key": "sk_collection",
-        "outfit": "outfit",
-        "pose": "pose",
-    }
-    tag = tag_dict[content_type]
     _draw_header_box(
         layout,
-        f"Give your {tag.replace('sk_', '')} a name",
+        f"Give your {content_type.replace('sk_', '')} a name",
         "OUTLINER_OB_FONT",
     )
 
@@ -34,8 +26,8 @@ def _draw_name_ui(context, layout, content_type):
         col.prop(getattr(cc_sett, content_type), "name", text="Name")
         poll = bool(getattr(cc_sett, content_type).name)
     else:
-        col.prop(cc_sett, f"{tag}_name", text="Name")
-        poll = bool(getattr(cc_sett, f"{tag}_name"))
+        col.prop(cc_sett, f"{content_type}_name", text="Name")
+        poll = bool(getattr(cc_sett, f"{content_type}_name"))
 
     _draw_save_button(layout, content_type, poll=poll)
 

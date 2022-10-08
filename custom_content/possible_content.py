@@ -54,7 +54,7 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
             ("clothing", "Clothing", "", 1),
             ("hair", "Hairstyle", "", 2),
             ("pose", "Pose", "", 3),
-            ("human", "Human", "", 3),
+            ("starting_human", "Human", "", 4),
         ]
     )
 
@@ -70,10 +70,9 @@ def find_possible_content(context):
     header.name = "Main categories:"
     header.is_header = True
 
-    if show_unchanged:
-        item = coll.add()
-        item.name = "Human"
-        item.category = "human"
+    item = coll.add()
+    item.name = "Human"
+    item.category = "starting_human"
 
     if str(hash(human.hair.regular_hair)) != human.props.hashes.get("$hair"):
         item = coll.add()
