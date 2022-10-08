@@ -9,6 +9,7 @@ from HumGen3D.human.hair.basehair import ImportableHair
 class FacialHairSettings(ImportableHair):
     _pcoll_name = "face_hair"
     _pcoll_gender_split = False
+    _startswith = "fh"
 
     def __init__(self, _human):
         if _human.gender == "female":

@@ -213,6 +213,7 @@ class Human:
         human.props.hashes["$pose"] = str(hash(human.pose))
         human.props.hashes["$outfit"] = str(hash(human.outfit))
         human.props.hashes["$footwear"] = str(hash(human.footwear))
+        human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
 
         return human
 

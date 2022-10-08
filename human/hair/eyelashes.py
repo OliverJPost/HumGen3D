@@ -2,6 +2,8 @@
 
 
 class EyelashSettings:
+    _startswith = "Eyelashes"
+
     def __init__(self, _human):
         self._human = _human
         self._startswith = "Eyelash"

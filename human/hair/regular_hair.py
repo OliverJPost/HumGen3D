@@ -8,6 +8,7 @@ from HumGen3D.human.hair.basehair import ImportableHair
 class RegularHairSettings(ImportableHair):
     _pcoll_name: str = "hair"
     _pcoll_gender_split: bool = True
+    _notstartswith = ("Eye", "fh")
 
     def __init__(self, _human):
         self._human = _human
