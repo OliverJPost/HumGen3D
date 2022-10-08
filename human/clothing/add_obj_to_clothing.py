@@ -4,7 +4,7 @@ import os
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.base.exceptions import HumGenException  # type:ignore
-from HumGen3D.human.base.geometry import centroid
+from HumGen3D.human.base.math import centroid
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,

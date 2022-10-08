@@ -11,7 +11,7 @@ from HumGen3D.backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from HumGen3D.human import hair
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.human.base.geometry import round_vector_to_tuple
+from HumGen3D.human.base.math import round_vector_to_tuple
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.base.savable_content import SavableContent
