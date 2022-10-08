@@ -15,7 +15,7 @@ def _draw_particle_system_selection_ui(context, layout):
     _draw_header_box(
         layout,
         "Select particle systems \nto be included in this style.",
-        "OUTLINER_OB_HAIR",
+        "BLANK1",
     )
 
     col = layout.column(align=True)
@@ -51,7 +51,7 @@ def _draw_hair_gender_ui(context, layout):
         context (context): bl context
         layout (UIlayout): layout to draw tab in
     """
-    sett = context.scene.HG3D.custom_content
+    hair_sett = context.scene.HG3D.custom_content.hair
 
     _draw_header_box(
         layout,
@@ -61,12 +61,12 @@ def _draw_hair_gender_ui(context, layout):
 
     col = layout.column()
     col.scale_y = 1.5
-    col.prop(sett, "savehair_male", text="Male", toggle=True)
+    col.prop(hair_sett, "save_for_male", text="Male", toggle=True)
     subrow = col.row(align=True)
-    subrow.enabled = False if sett.save_hairtype == "face_hair" else True
-    subrow.prop(sett, "savehair_female", text="Female", toggle=True)
+    subrow.enabled = False if hair_sett.type == "face_hair" else True
+    subrow.prop(hair_sett, "save_for_female", text="Female", toggle=True)
 
-    poll = any((sett.savehair_male, sett.savehair_female))
+    poll = any((hair_sett.save_for_male, hair_sett.save_for_female))
     _draw_next_button(layout, poll=poll)
 
 
@@ -78,12 +78,12 @@ def _draw_hairtype_ui(context, layout):
         context (context):  bl context
         layout (UILayout): layout to draw tab in
     """
-    sett = context.scene.HG3D.custom_content
+    hair_sett = context.scene.HG3D.custom_content.hair
 
     _draw_header_box(layout, "Is this style facial hair?", "COMMUNITY")
 
     col = layout.column()
     col.scale_y = 1.5
-    col.prop(sett, "save_hairtype", expand=True)
+    col.prop(hair_sett, "type", expand=True)
 
     _draw_next_button(layout)

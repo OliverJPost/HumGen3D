@@ -1,5 +1,7 @@
 import json
 import os
+
+import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
@@ -7,7 +9,6 @@ from HumGen3D.user_interface.documentation.feedback_func import show_message
 from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
     update_tips_from_context,
 )
-import bpy
 
 
 def refresh_shapekeys_ul(self, context):
@@ -58,7 +59,7 @@ def find_existing_shapekeys(cc_sett, pref):
 
 
 def refresh_hair_ul(self, context):
-    sett = context.scene.HG3D
+    cc_sett = context.scene.HG3D.custom_content
     pref = get_prefs()
     col = context.scene.savehair_col
 
@@ -66,12 +67,12 @@ def refresh_hair_ul(self, context):
 
     col.clear()
 
-    hg_rig = sett.content_saving_active_human
+    hg_rig = cc_sett.content_saving_active_human
     if not hg_rig:
         return
 
     for ps in hg_rig.HG.body_obj.particle_systems:
-        if ps.name.startswith("Eye") and not sett.show_eyesystems:
+        if ps.name.startswith("Eye") and not cc_sett.hair.show_eyesystems:
             continue
         item = col.add()
         item.ps_name = ps.name

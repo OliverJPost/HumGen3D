@@ -22,7 +22,7 @@ def _draw_name_ui(context, layout, content_type):
     col.scale_y = 1.5
 
     # FIXME crash when spaces in name
-    if content_type in ("pose", "key"):
+    if content_type in ("pose", "key", "hair"):
         col.prop(getattr(cc_sett, content_type), "name", text="Name")
         poll = bool(getattr(cc_sett, content_type).name)
     else:

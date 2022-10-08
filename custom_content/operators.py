@@ -83,6 +83,16 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             human.pose.save_to_library(name, subcategory, thumbnail, context)
         elif category == "starting_human":
             human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
+        elif category == "hair":
+            attr = "regular_hair" if cc_sett.hair.type == "head" else "face_hair"
+            getattr(human.hair, attr).save_to_library(
+                [ps.ps_name for ps in context.scene.savehair_col if ps.enabled],
+                cc_sett.hair.name,
+                for_male=cc_sett.hair.save_for_male,
+                for_female=cc_sett.hair.save_for_female,
+                thumbnail=thumbnail,
+                context=context,
+            )
 
         cc_sett.content_saving_ui = False
         ShowMessageBox("Succesfully saved!", title="HG Content Saving")
