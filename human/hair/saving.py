@@ -2,6 +2,7 @@ import json
 import os
 
 import bpy
+from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import Content_Saving_Operator
 
@@ -57,6 +58,8 @@ def save_hair(
 
     human.hair.regular_hair.refresh_pcoll(context)
     human.hair.face_hair.refresh_pcoll(context)
+
+    hg_delete(hair_obj)
 
     return {"FINISHED"}
 
