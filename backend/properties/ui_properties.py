@@ -65,8 +65,8 @@ def active_phase_enum(self, context):
             ("", "Tabs", ""),
             ("create", "Create Humans", "", get_hg_icon("create"), 11),
             ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
-            ("content", "Custom Content", "", get_hg_icon("custom_content"), 12),
-            ("process", "Processing", "", get_hg_icon("export"), 12),
+            ("content", "Custom Content", "", get_hg_icon("custom_content"), 13),
+            ("process", "Processing", "", get_hg_icon("export"), 14),
         ]
     except IndexError:
         return []
