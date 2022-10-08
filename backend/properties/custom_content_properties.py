@@ -7,6 +7,7 @@ Properties for creating and managing custom content in Human Generator
 
 
 import os
+from codecs import ignore_errors
 
 import bpy
 from bpy.props import (  # type: ignore
@@ -98,10 +99,36 @@ def get_key_subcategories(category_type):
     return [(categ, prettify(categ), "", i) for i, categ in enumerate(categories)]
 
 
-# FIXME load order with class property instead of alphabetical
-class ACustomKeyProps(bpy.types.PropertyGroup):
-    key_to_save: StringProperty()
+def get_categories(self, context):
+    custom_content_saving_human = (
+        context.scene.HG3D.custom_content.content_saving_active_human
+    )
+    human = Human.from_existing(custom_content_saving_human)
+
+    attr = self.human_attr
+    if attr == "hair":
+        hair_type = "regular_hair" if self.type == "head" else "face_hair"
+        human_subclass = getattr(human.hair, hair_type)
+    else:
+        human_subclass = getattr(human, attr)
+
+    return human_subclass.get_categories(include_all=False, ignore_genders=True)
+
+
+class ContentSavingSubgroup:
     name: StringProperty()
+    existing_or_new_category: EnumProperty(
+        name="Category choice",
+        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
+    )
+    new_category_name: StringProperty()
+    chosen_existing_subcategory: EnumProperty(name="Library", items=get_categories)
+
+
+# FIXME load order with class property instead of alphabetical
+class ACustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    key_to_save: StringProperty()
+
     save_as: EnumProperty(
         name="Save key as:",
         items=[("livekey", "Live Key", "", 0), ("shapekey", "Shape Key", "", 1)],
@@ -120,36 +147,20 @@ class ACustomKeyProps(bpy.types.PropertyGroup):
         ],
     )
 
-    subcategory: EnumProperty(
+    chosen_existing_subcategory: EnumProperty(
         name="Subcategory",
         items=lambda self, _: get_key_subcategories(self.category_to_save_to),
     )
-    existing_or_new_subcategory: EnumProperty(
-        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
-        default="existing",
-    )
-    new_category_name: StringProperty()
 
 
 # FIXME load order with class property instead of alphabetical
-class ACustomPoseProps(bpy.types.PropertyGroup):
-    name: StringProperty()
-    category_to_save_to: EnumProperty(
-        name="Pose Category",
-        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
-        default="existing",
-    )
-    chosen_existing_subcategory: EnumProperty(
-        name="Pose Library",
-        items=lambda self, context: Human.from_existing(
-            context.scene.HG3D.custom_content.content_saving_active_human
-        ).pose.get_categories(include_all=False),
-    )
-    new_category_name: StringProperty()
+class ACustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "pose"
 
 
-class ACustomHairProps(bpy.types.PropertyGroup):
-    name: StringProperty()
+class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "hair"
+
     type: EnumProperty(
         name="Hairtype",
         items=[

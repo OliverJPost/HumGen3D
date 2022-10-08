@@ -2,6 +2,48 @@ import bpy
 from HumGen3D.human.human import Human
 
 
+def draw_category_ui(context, layout, content_type):
+    _draw_header_box(
+        layout,
+        f"What category should this \n{content_type} be saved to?",
+        "BLANK1",
+    )
+
+    cc_sett = context.scene.HG3D.custom_content
+    col = layout.column()
+    col.scale_y = 1.5
+
+    if content_type == "key":
+        row = col.row()
+        row.scale_y = 0.75
+        row.alignment = "CENTER"
+        row.label(text="Key category:")
+        row = col.row()
+        row.prop(cc_sett.key, "category_to_save_to", text="")
+
+        col.separator()
+
+        row = col.row()
+        row.scale_y = 0.75
+        row.alignment = "CENTER"
+        row.label(text="Subcategory:")
+
+    row = col.row()
+    category_sett = getattr(cc_sett, content_type)
+    row.prop(category_sett, "existing_or_new_category", expand=True)
+
+    if category_sett.existing_or_new_category == "existing":
+        col.prop(category_sett, "chosen_existing_subcategory", text="")
+        poll = category_sett.chosen_existing_subcategory not in ("All", "")
+    else:
+        col.prop(category_sett, "new_category_name", text="Name")
+        poll = category_sett.new_category_name
+
+    col.separator()
+
+    _draw_next_button(layout, poll=poll)
+
+
 def _draw_name_ui(context, layout, content_type):
     """Draws the tab to give the content a name
 

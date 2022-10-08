@@ -74,16 +74,27 @@ class PreviewCollectionContent:
 
         return pcoll[self._pcoll_name]
 
-    def get_categories(self, include_all=True):
+    def get_categories(self, include_all=True, ignore_genders=False):
         if not self._human:
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
-        return self._find_folders(
+        categories = self._find_folders(
             self._pcoll_name,
             self._pcoll_gender_split,
             self._human.gender,
             include_all=include_all,
         )
+        if ignore_genders:
+            other_gender_categories = self._find_folders(
+                self._pcoll_name,
+                self._pcoll_gender_split,
+                "male" if self._human.gender == "female" else "female",
+                include_all=include_all,
+            )
+            categories.extend(other_gender_categories)
+            categories = list(set(categories))
+
+        return categories
 
     def refresh_pcoll(self, context, ignore_category_and_searchterm=False):
         """Refresh the items of this preview collection"""
