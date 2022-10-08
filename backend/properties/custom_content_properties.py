@@ -154,6 +154,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
 
     key: PointerProperty(type=ACustomKeyProps)
     pose: PointerProperty(type=ACustomPoseProps)
+    starting_human_name: StringProperty()
 
     sk_collection_name: StringProperty(default="")
     show_saved_sks: BoolProperty(default=False, update=refresh_shapekeys_ul)

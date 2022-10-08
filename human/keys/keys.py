@@ -603,3 +603,10 @@ class KeySettings:
         target.transform_space = sett_dict["transform_space"]
 
         return driver
+
+    def as_dict(self) -> dict[str, float]:
+        key_dict = {}
+        key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
+        key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
+
+        return key_dict
