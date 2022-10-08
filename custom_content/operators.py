@@ -46,6 +46,23 @@ class HG_OT_REFRESH_POSSIBLE_CONTENT(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator):
+    bl_idname = "hg3d.auto_render_thumbnail"
+    bl_label = "Automatic thumbnail"
+    bl_description = "Automatic thumbnail"
+    bl_options = {"UNDO"}
+
+    thumbnail_type: StringProperty()
+
+    def execute(self, context):
+        cc_sett = context.scene.HG3D.custom_content
+        human = Human.from_existing(cc_sett.content_saving_active_human)
+        folder = os.path.join(get_prefs().filepath, "temp_data")
+
+        human.render_thumbnail(folder, focus=self.thumbnail_type, context=context)
+        return {"FINISHED"}
+
+
 class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
     bl_idname = "hg3d.save_to_library"
     bl_label = "Save to library"

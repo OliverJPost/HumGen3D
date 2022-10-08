@@ -153,11 +153,11 @@ def __draw_auto_thumbnail_ui(layout, content_type):
         if content_type in c_type_set
     )
 
-    # row.operator(
-    #     "hg3d.auto_render_thumbnail",
-    #     text="Render [Automatic]",
-    #     icon="RENDER_STILL",
-    # ).thumbnail_type = thumbnail_type #FIXME
+    row.operator(
+        "hg3d.auto_render_thumbnail",
+        text="Render [Automatic]",
+        icon="RENDER_STILL",
+    ).thumbnail_type = thumbnail_type
 
 
 def _draw_save_button(layout, content_type, poll=True):
