@@ -170,8 +170,8 @@ def tab_change_update(self, context):
     )
 
     find_possible_content(context)
-    batch_uilist_refresh(self, context, "outfit")
-    batch_uilist_refresh(self, context, "expression")
+    # batch_uilist_refresh(self, context, "outfit")
+    # FIXME batch_uilist_refresh(self, context, "expression")
 
 
 def _hair_shader_type_update(sett, hg_body):
