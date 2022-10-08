@@ -7,7 +7,6 @@ Properties for creating and managing custom content in Human Generator
 
 
 import os
-from re import L
 
 import bpy
 from bpy.props import (  # type: ignore
@@ -149,21 +148,9 @@ class ACustomPoseProps(bpy.types.PropertyGroup):
     new_category_name: StringProperty()
 
 
-class CustomContentProps(bpy.types.PropertyGroup):
-    """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
-
-    key: PointerProperty(type=ACustomKeyProps)
-    pose: PointerProperty(type=ACustomPoseProps)
-    starting_human_name: StringProperty()
-
-    sk_collection_name: StringProperty(default="")
-    show_saved_sks: BoolProperty(default=False, update=refresh_shapekeys_ul)
-    show_unchanged: BoolProperty(
-        default=False, update=lambda self, context: find_possible_content(context)
-    )
-
-    hairstyle_name: StringProperty(default="")
-    save_hairtype: EnumProperty(
+class ACustomHairProps(bpy.types.PropertyGroup):
+    name: StringProperty()
+    type: EnumProperty(
         name="Hairtype",
         items=[
             ("head", "Regular Hair", "", 0),
@@ -171,12 +158,22 @@ class CustomContentProps(bpy.types.PropertyGroup):
         ],
         default="head",
     )
-
-    savehair_male: BoolProperty(default=True)
-    savehair_female: BoolProperty(default=True)
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
     show_eyesystems: BoolProperty(
         name="Show eye hairsystems", default=False, update=refresh_hair_ul
     )
+
+
+class CustomContentProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
+
+    key: PointerProperty(type=ACustomKeyProps)
+    pose: PointerProperty(type=ACustomPoseProps)
+    hair: PointerProperty(type=ACustomHairProps)
+    starting_human_name: StringProperty()
+    hair_name: StringProperty()
+    show_unchanged: BoolProperty()
 
     clothing_name: StringProperty(default="")
     saveoutfit_categ: EnumProperty(

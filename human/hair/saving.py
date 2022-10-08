@@ -1,12 +1,12 @@
 import json
 import os
-import bpy
 
+import bpy
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import Content_Saving_Operator
 
 
-def save_hair(human, name, genders, particle_systems, hair_type, context, thumb):
+def save_hair(human, name, genders, particle_systems, hair_type, context, thumb=None):
     pref = get_prefs()
 
     hair_obj = human.body_obj.copy()
@@ -26,30 +26,32 @@ def save_hair(human, name, genders, particle_systems, hair_type, context, thumb)
         if hair_type == "face_hair" and gender == "female":
             continue
 
-        if hair_type == "head":
-            folder = os.path.join(pref.filepath, "hair", hair_type, gender, "Custom")
+        if hair_type == "hair":
+            blend_folder = os.path.join(pref.filepath, "hair", "head")
+            json_folder = os.path.join(blend_folder, gender, "Custom")
         else:
-            folder = os.path.join(pref.filepath, "hair", hair_type, "Custom")
+            blend_folder = os.path.join(pref.filepath, "hair", "face_hair")
+            json_folder = os.path.join(blend_folder, "Custom")
 
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+        if not os.path.exists(json_folder):
+            os.makedirs(json_folder)
         if thumb:
-            Content_Saving_Operator.save_thumb(folder, thumb, name)
+            Content_Saving_Operator.save_thumb(json_folder, thumb, name)
 
-        _make_hair_json(hair_obj, folder, name)
+        _make_hair_json(hair_obj, json_folder, name)
 
     Content_Saving_Operator.save_objects_optimized(
         context,
         [
             hair_obj,
         ],
-        folder,
+        blend_folder,
         name,
         clear_ps=False,
         clear_vg=False,
     )
 
-    msg = f"Saved {name} to {folder}"
+    msg = f"Saved {name} to {blend_folder}"
 
     human.hair.regular_hair.refresh_pcoll(context)
     human.hair.face_hair.refresh_pcoll(context)

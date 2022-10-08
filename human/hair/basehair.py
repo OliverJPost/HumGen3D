@@ -4,6 +4,7 @@ import json
 import os
 import random
 from pathlib import Path
+from typing import Union
 
 import bpy
 from bpy.types import Image
@@ -197,7 +198,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         hairstyle_name: str,
         for_male=True,
         for_female=True,
-        thumb_override: Image = None,
+        thumbnail: Union[Image, None] = None,
         context=None,
     ):
 
@@ -207,10 +208,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         if for_female:
             genders.append("female")
 
-        if thumb_override:
-            thumb = thumb_override.name
-        else:
-            self._human.render_thumbnail()  # FIXME
+        # else:
+        #     self._human.render_thumbnail()  # FIXME
 
         hair_type = self._pcoll_name
         save_hair(
@@ -220,7 +219,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             particle_systems,
             hair_type,
             context,
-            thumb,
+            thumbnail,
         )
 
     def _import_hair_obj(self, context, hair_type, pref, blendfile) -> bpy.types.Object:
