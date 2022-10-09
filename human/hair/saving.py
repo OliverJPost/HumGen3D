@@ -4,7 +4,7 @@ import os
 import bpy
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.custom_content.content_saving import Content_Saving_Operator
+from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
 def save_hair(
@@ -39,11 +39,11 @@ def save_hair(
         if not os.path.exists(json_folder):
             os.makedirs(json_folder)
         if thumb:
-            Content_Saving_Operator.save_thumb(json_folder, thumb.name, name)
+            save_thumb(json_folder, thumb.name, name)
 
         _make_hair_json(hair_obj, json_folder, name)
 
-    Content_Saving_Operator.save_objects_optimized(
+    save_objects_optimized(
         context,
         [
             hair_obj,
