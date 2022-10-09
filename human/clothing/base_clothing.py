@@ -77,6 +77,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # TODO as argument?
         mask_remove_list = self.remove() if pref.remove_clothes else []
 
+        hg_log("Importing cloth item", preset, level="DEBUG")
         cloth_objs, collections = self._import_cloth_items(preset, context)
 
         new_mask_list = []
@@ -132,6 +133,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             verts = body_obj.data.vertices
         else:
             verts = body_obj.data.shape_keys.key_blocks["Male"].data
+
         body_coords_world = world_coords_from_obj(body_obj, data=verts)
 
         cloth_coords_world = world_coords_from_obj(cloth_obj)
@@ -140,10 +142,15 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         cloth_obj.parent = self._human.rig_obj
 
+        body_eval_coords_world = world_coords_from_obj(
+            body_obj,
+            data=self._human.keys.all_deformation_shapekeys,
+        )
+
         deform_obj_from_difference(
             "Body Proportions",
             distance_dict,
-            body_coords_world,
+            body_eval_coords_world,
             cloth_obj,
             as_shapekey=True,
         )
