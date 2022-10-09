@@ -5,10 +5,6 @@ from pathlib import Path
 
 import bpy
 from HumGen3D.backend import get_prefs, hg_delete
-from HumGen3D.human.base.shapekey_calculator import (
-    build_distance_dict,
-    deform_obj_from_difference,
-)
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix
