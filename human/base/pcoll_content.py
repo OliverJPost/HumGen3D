@@ -1,12 +1,15 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
-from pathlib import Path
 import random
+from pathlib import Path
+from re import L
 from typing import List, Tuple
 
-from HumGen3D.backend import get_prefs, preview_collections
-from HumGen3D.backend.preview_collections import _populate_pcoll
-from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.backend import PREVIEW_COLLECTION_DATA, get_prefs, preview_collections
+from HumGen3D.backend.logging import hg_log
 from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.human.base.exceptions import HumGenException
 
 
 class PreviewCollectionContent:
@@ -18,34 +21,52 @@ class PreviewCollectionContent:
 
     def _set(self, context):
         """Internal way of setting content, only used by enum properties"""
-        active_item = getattr(context.scene.HG3D.pcoll, self._pcoll_name)
+        sett = context.scene.HG3D
+        if sett.update_exception:
+            return
+
+        active_item = getattr(sett.pcoll, self._pcoll_name)
         try:
             self.set(active_item, context)
         except TypeError:
             self.set(active_item)
 
     @injected_context
-    def set_random(self, context=None):
+    def set_random(self, context=None, update_ui=False):
         options = self.get_options(context)
         chosen = random.choice(options)
 
-        # Use indirect way so the UI reflects the chosen item
-        setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
+        # TODO make sure random is not the same as previous
+        # TODO add catch for empty pcoll
+
+        try:
+            self.set(chosen, context)
+        except TypeError:
+            self.set(chosen)
+
+        if update_ui:
+            # Use indirect way so the UI reflects the chosen item
+            sett = context.scene.HG3D
+            sett.update_exception = True
+            setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
+            sett.update_exception = False
 
     @injected_context
-    def get_options(self, context=None) -> List[Tuple[str, str, str, int]]:
+    def get_options(self, context=None) -> List[str]:
         # Return only the name from the enum. Skip the first one
-        #FIXME check all pcolls if 0 is always skipped
-        self._refresh(context)
+        # FIXME check all pcolls if 0 is always skipped
+        self.refresh_pcoll(context, ignore_category_and_searchterm=True)
         options = [option[0] for option in self._get_full_options()[1:]]
         if not options:
-            raise HumGenException("No options found, did you install the content packs?")
+            raise HumGenException(
+                "No options found, did you install the content packs?"
+            )
 
         return options
 
     def _get_full_options(self):
         """Internal way of getting content, only used by enum properties"""
-        pcoll = preview_collections.get(self._pcoll_name)
+        pcoll = preview_collections.get(self._pcoll_name).pcoll
         if not pcoll:
             return [
                 ("none", "Reload category below", "", 0),
@@ -53,35 +74,43 @@ class PreviewCollectionContent:
 
         return pcoll[self._pcoll_name]
 
-    def get_categories(self):
+    def get_categories(self, include_all=True, ignore_genders=False):
         if not self._human:
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
-        return self._find_folders(
-            self._pcoll_name, self._pcoll_gender_split, self._human.gender
+        categories = self._find_folders(
+            self._pcoll_name,
+            self._pcoll_gender_split,
+            self._human.gender,
+            include_all=include_all,
         )
+        if ignore_genders:
+            other_gender_categories = self._find_folders(
+                self._pcoll_name,
+                self._pcoll_gender_split,
+                "male" if self._human.gender == "female" else "female",
+                include_all=include_all,
+            )
+            categories.extend(other_gender_categories)
+            categories = list(set(categories))
 
-    def _refresh(self, context):
+        return categories
+
+    def refresh_pcoll(self, context, ignore_category_and_searchterm=False):
         """Refresh the items of this preview collection"""
         sett = context.scene.HG3D
         self._check_for_HumGen_filepath_issues()
         pcoll_name = self._pcoll_name
 
-        sett.load_exception = False if pcoll_name == "poses" else True
+        if ignore_category_and_searchterm:
+            preview_collections[self._pcoll_name].populate(
+                context, self._human.gender, use_search_term=False
+            )
+        else:
+            preview_collections[self._pcoll_name].refresh(context, self._human.gender)
 
-        _populate_pcoll(
-            self,
-            context,
-            pcoll_name,
-            not self._pcoll_gender_split,
-            None,
-            hg_rig=self._human.rig_obj,
-        )
         sett.pcoll[pcoll_name] = "none"  # set the preview collection to
         # the 'click here to select' item
-
-        sett.load_exception = False
-
 
     def _check_for_HumGen_filepath_issues(self):
         pref = get_prefs()
@@ -116,18 +145,27 @@ class PreviewCollectionContent:
 
         pref = get_prefs()
 
+        folder = PREVIEW_COLLECTION_DATA[pcoll_name][2]
+        if isinstance(folder, list):
+            folder = os.path.join(*folder)
+
         if gender_toggle:
-            categ_folder = os.path.join(pref.filepath, pcoll_name, gender)
+            categ_folder = os.path.join(pref.filepath, folder, gender)
         else:
-            categ_folder = os.path.join(pref.filepath, pcoll_name)
+            categ_folder = os.path.join(pref.filepath, folder)
 
         if not os.path.isdir(categ_folder):
+            hg_log(
+                f"Can't find folder {categ_folder} for preview collection {pcoll_name}",
+                level="DEBUG",
+            )
             return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
 
         dirlist = os.listdir(categ_folder)
         dirlist.sort()
         categ_list = []
         ext = (".jpg", "png", ".jpeg", ".blend")
+        # FIXME
         for item in dirlist:
             if not item.endswith(ext) and ".DS_Store" not in item:
                 categ_list.append(item)
@@ -137,7 +175,7 @@ class PreviewCollectionContent:
 
         enum_list = [("All", "All Categories", "", 0)] if include_all else []
         for i, name in enumerate(categ_list):
-            idx = i if pcoll_name == "textures" else i + 1
+            idx = i if pcoll_name == "texture" else i + 1
             enum_list.append((name, name, "", idx))
 
         if not enum_list:

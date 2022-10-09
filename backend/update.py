@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """Contains the check_update function for online checking for cpack and
 code updates"""
 
@@ -5,7 +7,9 @@ import json
 
 import bpy  # type: ignore
 import requests  # type: ignore
-from . import hg_log, get_prefs
+
+from . import get_prefs, hg_log
+
 
 def check_update():
     """Checks on HumGen github versions.json if there are any code or cpack
@@ -16,11 +20,11 @@ def check_update():
     if pref.skip_url_request:
         return
 
-    url  = 'https://raw.githubusercontent.com/HG3D/Public/main/versions.json'
+    url = "https://raw.githubusercontent.com/HG3D/Public/main/versions.json"
     resp = requests.get(url, timeout=2)
 
     if not resp:
-        hg_log('Human Generator update check timed out after 2 seconds.', level = "INFO")
+        hg_log("Human Generator update check timed out after 2 seconds.", level="INFO")
 
     pref.cpack_update_required = False
     pref.cpack_update_available = False

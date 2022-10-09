@@ -1,104 +1,128 @@
-from HumGen3D.backend import hg_delete
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+from typing import Iterable, Union
+
 import bpy
-from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
-from mathutils import Vector, kdtree # type:ignore
-
 import numpy as np
+from bpy.types import Object, bpy_prop_collection
+from HumGen3D.backend import hg_delete
+from HumGen3D.human.keys.keys import ShapeKeyItem, apply_shapekeys
+from mathutils import Matrix, Vector, kdtree  # type:ignore
 
 
-def build_distance_dict(source_org, target, apply=True):
-    """
-    Returns a dict with a key for each vertex of the source and the value the closest vertex of the target and the distance to it
-    """
-    source = source_org.copy()
-    source.data = source.data.copy()
-    bpy.context.scene.collection.objects.link(source)
+def world_coords_from_obj(
+    obj: Object, data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None
+) -> np.array:
+    iter = False
+    if not data:
+        data = obj.data.vertices
+    elif hasattr(data, "__iter__") and not isinstance(data, bpy_prop_collection):
+        if data and not isinstance(data[0], ShapeKeyItem):
+            raise ValueError(
+                "Data argument is iterable but does not contain ShapeKeyItem."
+            )
+        iter = True
 
-    apply_shapekeys(source)
-    if apply:
-        apply_armature(source)
+    if not iter:
+        world_coords = _get_world_co(obj, data)
+    else:
+        base_coords = _get_world_co(obj, obj.data.vertices)
+        world_coords = base_coords.copy()
+        for keyitem in data:
+            if not keyitem.value:
+                continue
 
-    v_source = source.data.vertices
-    v_target = target.data.vertices
+            sk_data = keyitem.as_bpy().data
+            sk_world_co = _get_world_co(obj, sk_data)
+            world_coords += (sk_world_co - base_coords) * keyitem.value
 
-    size = len(v_source)
-    kd = kdtree.KDTree(size)
+    return world_coords
 
-    for i, v in enumerate(v_source):
-        kd.insert(v.co, i)
+
+def _get_world_co(obj, data):
+    vert_count = len(data)
+    local_coords = np.empty(vert_count * 3, dtype=np.float64)
+    data.foreach_get("co", local_coords)
+
+    mx = obj.matrix_world
+    world_coords = matrix_multiplication(mx, local_coords.reshape((-1, 3)))
+    return world_coords
+
+
+def build_distance_dict(body_coordinates_world, target_coordinates_world):
+    kd = kdtree.KDTree(len(body_coordinates_world))
+
+    for i, co in enumerate(body_coordinates_world):
+        kd.insert(co, i)
 
     kd.balance()
+
     distance_dict = {}
-    for vt in v_target:
-        vt_loc = target.matrix_world @ vt.co
+    for idx_target, co_target in enumerate(target_coordinates_world):
+        co_body, idx_body, _ = kd.find_n(co_target, 1)[0]
 
-        co_find = source.matrix_world.inverted() @ vt_loc
+        distance_dict[idx_target] = (idx_body, co_body - Vector(co_target))
 
-        for (co, index, _) in kd.find_n(co_find, 1):
-            v_dist = np.subtract(co, co_find)
-
-            distance_dict[vt.index] = (index, Vector(v_dist))
-
-    hg_delete(source)
     return distance_dict
 
 
+def matrix_multiplication(matrix: Matrix, coordinates: np.ndarray) -> np.ndarray:
+    vert_count = coordinates.shape[0]
+    coords_4d = np.ones((vert_count, 4), "f")
+    coords_4d[:, :-1] = coordinates
+
+    coords: np.ndarray = np.einsum("ij,aj->ai", matrix, coords_4d)[:, :-1]
+
+    return coords
+
+
+def sum_shapekeys(obj, skip_corrective_keys=True):
+    vert_count = len(obj.data.vertices)
+    coords_eval = np.empty(vert_count * 3, dtype=np.float64)
+    temp_coords = np.empty(vert_count * 3, dtype=np.float64)
+
+    obj.data.vertices.foreach_get("co", coords_eval)
+
+    body_base_coords = coords_eval.copy()
+
+    for sk in obj.data.shape_keys.key_blocks:
+        if sk.name.startswith("cor_") and skip_corrective_keys:
+            continue
+
+        if sk.mute or not sk.value:
+            continue
+
+        sk.data.foreach_get("co", temp_coords)
+        temp_coords -= body_base_coords
+        coords_eval += temp_coords * sk.value
+
+    return coords_eval
+
+
 def deform_obj_from_difference(
-    name,
-    distance_dict,
-    deform_target,
-    obj_to_deform,
-    as_shapekey=True,
-    apply_source_sks=True,
-    ignore_cor_sk=False,
+    name, distance_dict, body_eval_coords_woorld, deform_obj, as_shapekey=False
 ):
-    """
-    Creates a shapekey from the difference between the distance_dict value and the current distance to that corresponding vertex
-    """
-    deform_target_copy = deform_target.copy()
-    deform_target_copy.data = deform_target_copy.data.copy()
-    bpy.context.scene.collection.objects.link(deform_target_copy)
 
-    if deform_target_copy.data.shape_keys and ignore_cor_sk:
-        for sk in [
-            sk
-            for sk in deform_target_copy.data.shape_keys.key_blocks
-            if sk.name.startswith("cor_")
-        ]:
-            deform_target_copy.shape_key_remove(sk)
-
-    if apply_source_sks:
-        apply_shapekeys(deform_target_copy)
-    # apply_armature(source_copy)
-
-    if "Female_" in name or "Male_" in name:
-        name = name.replace("Female_", "")
-        name = name.replace("Male_", "")
-
-    sk = None
+    sk = deform_obj.data.shape_keys.key_blocks.get(name)
     if as_shapekey:
-        sk = obj_to_deform.shape_key_add(name=name)
-        sk.interpolation = "KEY_LINEAR"
-        sk.value = 1
-    elif obj_to_deform.data.shape_keys:
-        sk = obj_to_deform.data.shape_keys.key_blocks["Basis"]
+        if not sk:
+            sk = deform_obj.shape_key_add(name=name)
+            sk.interpolation = "KEY_LINEAR"
+            sk.value = 1
 
+    # TODO fully numpy
     for vertex_index in distance_dict:
-        source_new_vert_loc = (
-            deform_target_copy.matrix_world
-            @ deform_target_copy.data.vertices[distance_dict[vertex_index][0]].co
+        source_new_vert_loc = Vector(
+            body_eval_coords_woorld[distance_dict[vertex_index][0]]
         )
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc = source_new_vert_loc - distance_to_vert
 
-        if sk:
+        if sk and as_shapekey:
             sk.data[vertex_index].co = (
-                obj_to_deform.matrix_world.inverted() @ world_new_loc
+                deform_obj.matrix_world.inverted() @ world_new_loc
             )
         else:
-            obj_to_deform.data.vertices[vertex_index].co = (
-                obj_to_deform.matrix_world.inverted() @ world_new_loc
+            deform_obj.data.vertices[vertex_index].co = (
+                deform_obj.matrix_world.inverted() @ world_new_loc
             )
-
-    hg_delete(deform_target_copy)

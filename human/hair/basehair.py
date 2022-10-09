@@ -1,17 +1,24 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import json
 import os
 import random
 from pathlib import Path
+from typing import Union
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete, remove_broken_drivers, get_prefs
+from bpy.types import Image
+from HumGen3D.backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from HumGen3D.human import hair
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.human.base.math import round_vector_to_tuple
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.prop_collection import PropCollection
-from HumGen3D.human.creation_phase.length.length import apply_armature
-from HumGen3D.human.shape_keys.shape_keys import apply_shapekeys
+from HumGen3D.human.base.savable_content import SavableContent
+from HumGen3D.human.hair.saving import save_hair
+from HumGen3D.human.height.height import apply_armature
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 class BaseHair:
@@ -77,15 +84,28 @@ class BaseHair:
     def delete_all(self):
         raise NotImplementedError
 
+    def __hash__(self) -> int:
+        key_data = []
+        for particle_system in self.particle_systems:
+            for particle in particle_system.particles:
+                key_data.extend(
+                    [round_vector_to_tuple(k.co_local) for k in particle.hair_keys]
+                )
+                key_data.append(round_vector_to_tuple(particle.location, precision=8))
+                key_data.append(round_vector_to_tuple(particle.rotation, precision=4))
 
-class ImportableHair(BaseHair, PreviewCollectionContent):
+        print(key_data)
+        return hash(tuple(key_data))
+
+
+class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     @injected_context
     def set(self, preset, context=None):
         """Loads hair system the user selected by reading the json that belongs to
         the selected hairstyle
 
         Args:
-            type (str): type of hair to load ('head' or 'facial_hair')
+            type (str): type of hair to load ('head' or 'face_hair')
         """
         pref = get_prefs()
 
@@ -97,8 +117,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         json_systems = hair_data["hair_systems"]
 
         hair_type = (
-            "facial_hair"
-            if isinstance(self, hair.facial_hair.FacialHairSettings)
+            "face_hair"
+            if isinstance(self, hair.face_hair.FacialHairSettings)
             else "head"
         )
 
@@ -107,8 +127,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         human = self._human
         human.hide_set(False)
 
-        if hair_type == "facial_hair":
-            human.hair.facial_hair.remove_all()
+        if hair_type == "face_hair":
+            human.hair.face_hair.remove_all()
         else:
             human.hair.regular_hair.remove_all()
         remove_broken_drivers()
@@ -168,6 +188,41 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
 
         hg_delete(hair_obj)
         remove_broken_drivers()
+
+        human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
+
+    @injected_context
+    def save_to_library(
+        self,
+        particle_systems: list[str],
+        hairstyle_name: str,
+        category: str,
+        for_male=True,
+        for_female=True,
+        thumbnail: Union[Image, None] = None,
+        context=None,
+    ):
+
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
+
+        # else:
+        #     self._human.render_thumbnail()  # FIXME
+
+        hair_type = self._pcoll_name
+        save_hair(
+            self._human,
+            hairstyle_name,
+            category,
+            genders,
+            particle_systems,
+            hair_type,
+            context,
+            thumbnail,
+        )
 
     def _import_hair_obj(self, context, hair_type, pref, blendfile) -> bpy.types.Object:
         """Imports the object that contains the hair systems named in the json file
@@ -359,7 +414,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent):
         Args:
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
             hg_body (Object):
-            hair_type (str): 'head' for normal, 'facial_hair' for facial hair
+            hair_type (str): 'head' for normal, 'face_hair' for facial hair
         """
         search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
         # Search for current name of material to account for v1, v2 and v3

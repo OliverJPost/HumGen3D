@@ -1,17 +1,27 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 context.scene.HG3D.bake
 For storing properties related to texture baking of the Human Generator character
 """
 
+import os
+
 import bpy
+from bpy.props import EnumProperty, IntProperty, StringProperty  # type: ignore
 
-from bpy.props import (  # type: ignore
-    StringProperty,
-    EnumProperty,
-    IntProperty,
-)
 
-from HumGen3D.utility_section.baking import make_path_absolute
+def make_path_absolute(key):
+    """Makes sure the passed path is absolute
+
+    Args:
+        key (str): path
+    """
+
+    props = bpy.context.scene.HG3D
+    sane_path = lambda p: os.path.abspath(bpy.path.abspath(p))
+    if key in props and props[key].startswith("//"):
+        props[key] = sane_path(props[key])
 
 
 def get_resolutions():

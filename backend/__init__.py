@@ -1,4 +1,6 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 from .logging import hg_log
-from .preferences.preference_func import get_prefs, get_addon_root
 from .memory_management import hg_delete, remove_broken_drivers
-from .preview_collections import refresh_pcoll, preview_collections, get_hg_icon
+from .preferences.preference_func import get_addon_root, get_prefs
+from .preview_collections import PREVIEW_COLLECTION_DATA, preview_collections
