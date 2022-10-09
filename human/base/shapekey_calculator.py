@@ -1,23 +1,51 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+from typing import Iterable, Union
+
 import bpy
 import numpy as np
+from bpy.types import Object, bpy_prop_collection
 from HumGen3D.backend import hg_delete
-from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.human.keys.keys import ShapeKeyItem, apply_shapekeys
 from mathutils import Matrix, Vector, kdtree  # type:ignore
 
 
-def world_coords_from_obj(obj, data=None) -> np.array:
+def world_coords_from_obj(
+    obj: Object, data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None
+) -> np.array:
+    iter = False
     if not data:
         data = obj.data.vertices
+    elif hasattr(data, "__iter__") and not isinstance(data, bpy_prop_collection):
+        if data and not isinstance(data[0], ShapeKeyItem):
+            raise ValueError(
+                "Data argument is iterable but does not contain ShapeKeyItem."
+            )
+        iter = True
 
+    if not iter:
+        world_coords = _get_world_co(obj, data)
+    else:
+        base_coords = _get_world_co(obj, obj.data.vertices)
+        world_coords = base_coords.copy()
+        for keyitem in data:
+            if not keyitem.value:
+                continue
+
+            sk_data = keyitem.as_bpy().data
+            sk_world_co = _get_world_co(obj, sk_data)
+            world_coords += (sk_world_co - base_coords) * keyitem.value
+
+    return world_coords
+
+
+def _get_world_co(obj, data):
     vert_count = len(data)
     local_coords = np.empty(vert_count * 3, dtype=np.float64)
     data.foreach_get("co", local_coords)
 
     mx = obj.matrix_world
     world_coords = matrix_multiplication(mx, local_coords.reshape((-1, 3)))
-
     return world_coords
 
 
