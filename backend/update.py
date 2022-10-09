@@ -5,16 +5,16 @@ code updates"""
 
 import json
 
-import bpy  # type: ignore
+import bpy
 import requests  # type: ignore
 
-from . import get_prefs, hg_log
+from . import get_prefs, hg_log  # type: ignore
 
 
-def check_update():
+def check_update() -> None:
     """Checks on HumGen github versions.json if there are any code or cpack
     updates available"""
-    from HumGen3D import bl_info  # type: ignore
+    from HumGen3D import bl_info
 
     pref = get_prefs()
     if pref.skip_url_request:
@@ -46,7 +46,7 @@ def check_update():
         update_col = bpy.context.scene.hg_update_col
         update_col.clear()
         for version, update_types in update_data["addon_updates"].items():
-            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
+            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:  # type: ignore
                 continue
             for update_type, lines in update_types.items():
                 for line in lines:

@@ -26,12 +26,7 @@ from HumGen3D.user_interface.content_panel.operators import (
 
 from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..user_interface.batch_panel.batch_ui_lists import (
-    batch_uilist_refresh,  # type: ignore
-)
-from ..user_interface.documentation.tips_suggestions_ui import (  # type:ignore
-    update_tips_from_context,
-)
+from ..user_interface.documentation.tips_suggestions_ui import update_tips_from_context
 
 
 class HG_ACTIVATE(bpy.types.Operator):
