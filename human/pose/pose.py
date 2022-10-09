@@ -14,7 +14,7 @@ from HumGen3D.human.base.savable_content import SavableContent
 if TYPE_CHECKING:
     from human.human import Human
 
-from HumGen3D.custom_content.content_saving import Content_Saving_Operator
+from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
 class PoseSettings(PreviewCollectionContent, SavableContent):
@@ -74,7 +74,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         pose_object.name = "HG_Pose"
         context.collection.objects.link(pose_object)
 
-        Content_Saving_Operator.save_objects_optimized(
+        save_objects_optimized(
             context,
             [
                 pose_object,
@@ -88,7 +88,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
                 thumb_name = self._human.render_thumbnail()
             else:
                 thumb_name = thumbnail.name
-            Content_Saving_Operator.save_thumb(folder, thumb_name, name)
+            save_thumb(folder, thumb_name, name)
 
         hg_delete(pose_object)
 

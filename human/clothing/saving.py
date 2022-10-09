@@ -5,7 +5,11 @@ from typing import TYPE_CHECKING, Union
 import bpy
 from bpy.types import Context, Image, Object
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.custom_content.content_saving import Content_Saving_Operator
+from HumGen3D.custom_content.content_saving import (
+    remove_number_suffix,
+    save_objects_optimized,
+    save_thumb,
+)
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
@@ -30,7 +34,7 @@ def save_clothing(
         if not os.path.isdir(gender_folder):
             os.mkdir(gender_folder)
         if thumbnail:
-            Content_Saving_Operator.save_thumb(gender_folder, thumbnail.name, name)
+            save_thumb(gender_folder, thumbnail.name, name)
 
     # TODO disable armature modifier
     depsgraph = context.evaluated_depsgraph_get()
@@ -109,7 +113,7 @@ def export_for_gender(
 
         export_list.append(obj_copy)
 
-    Content_Saving_Operator.save_objects_optimized(
+    save_objects_optimized(
         context,
         export_list,
         folder,
@@ -169,7 +173,7 @@ def _save_img(img, saved_images, folder) -> tuple[str, list]:
                 str: name of the image
                 str: path the image was saved to
     """
-    img_name = Content_Saving_Operator.remove_number_suffix(img.name)
+    img_name = remove_number_suffix(img.name)
     if img_name in saved_images:
         return saved_images[img_name], saved_images
 
