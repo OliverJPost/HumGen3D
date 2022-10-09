@@ -336,6 +336,7 @@ class KeySettings:
     @property
     def all_shapekeys(self) -> List[ShapeKeyItem]:
         shapekeys = []
+        # TODO Skip Basis?
         for sk in self._human.body_obj.data.shape_keys.key_blocks:
             shapekeys.append(ShapeKeyItem(sk.name, self._human))
         return shapekeys
@@ -343,6 +344,15 @@ class KeySettings:
     @property
     def all_added_shapekeys(self) -> List[ShapeKeyItem]:
         SKIP_SUFFIXES = ("LIVE_KEY", "Male", "Basis", "cor_", "eyeLook")
+        return [
+            sk
+            for sk in self.all_shapekeys
+            if not sk.as_bpy().name.startswith(SKIP_SUFFIXES)
+        ]
+
+    @property
+    def all_deformation_shapekeys(self) -> List[ShapeKeyItem]:
+        SKIP_SUFFIXES = ("Basis", "cor_", "eyeLook", "expr_")
         return [
             sk
             for sk in self.all_shapekeys
