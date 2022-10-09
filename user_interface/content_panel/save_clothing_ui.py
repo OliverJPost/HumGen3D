@@ -4,7 +4,7 @@ from HumGen3D.user_interface.content_panel.base_draw_functions import (
 )
 
 
-def _draw_clothing_gender_ui(context, layout):
+def _draw_clothing_gender_ui(context, layout, content_type):
     """Draws a tab for the user to select for which gender(s) this clothing
     item is meant.
 
@@ -20,12 +20,12 @@ def _draw_clothing_gender_ui(context, layout):
 
     col = layout.column(align=True)
     col.scale_y = 1.5
-    cc_sett = context.scene.HG3D.custom_content
+    clothing_type_sett = getattr(context.scene.HG3D.custom_content, content_type)
 
-    col.prop(cc_sett, "saveoutfit_male", text="Male", toggle=True)
-    col.prop(cc_sett, "saveoutfit_female", text="Female", toggle=True)
+    col.prop(clothing_type_sett, "save_for_male", text="Male", toggle=True)
+    col.prop(clothing_type_sett, "save_for_female", text="Female", toggle=True)
 
-    poll = any((cc_sett.saveoutfit_male, cc_sett.saveoutfit_female))
+    poll = any((clothing_type_sett.save_for_male, clothing_type_sett.save_for_female))
     _draw_next_button(layout, poll=poll)
 
 

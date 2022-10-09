@@ -116,6 +116,17 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 thumbnail=thumbnail,
                 context=context,
             )
+        elif category in ("outfit", "footwear"):
+            category_sett = getattr(cc_sett, category)
+            getattr(human, category).save_to_library(
+                category_sett.name,
+                for_male=category_sett.save_for_male,
+                for_female=category_sett.save_for_female,
+                open_when_finished=category_sett.save_when_finished,
+                category=subcategory,
+                thumbnail=thumbnail,
+                context=context,
+            )
 
         cc_sett.content_saving_ui = False
         ShowMessageBox("Succesfully saved!", title="HG Content Saving")

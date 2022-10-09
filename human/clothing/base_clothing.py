@@ -498,7 +498,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         for_female=True,
         open_when_finished=False,
         category="Custom",
-        override_thumbnail=None,
+        thumbnail=None,
         context=None,
     ):
         genders = []
@@ -508,20 +508,16 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             genders.append("female")
 
         pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
-        folder = os.path.join(get_prefs().filepath, pcoll_subfolder, category)
-
-        if not override_thumbnail:
-            thumb_name = self._human.render_thumb()  # FIXME
-        else:
-            thumb_name = override_thumbnail.name
+        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
 
         save_clothing(
             self._human,
             folder,
+            category,
             name,
             context,
             self.objects,
             genders,
             open_when_finished,
-            thumb_name=thumb_name,
+            thumbnail=thumbnail,
         )

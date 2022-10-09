@@ -176,20 +176,34 @@ class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     )
 
 
+class ACustomOutfitProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "outfit"
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
+    save_when_finished: BoolProperty(default=True)
+
+
+class ACustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "footwear"
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
+    save_when_finished: BoolProperty(default=True)
+
+
 class CustomContentProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
 
     key: PointerProperty(type=ACustomKeyProps)
     pose: PointerProperty(type=ACustomPoseProps)
     hair: PointerProperty(type=ACustomHairProps)
+    outfit: PointerProperty(type=ACustomOutfitProps)
+    footwear: PointerProperty(type=ACustomFootwearProps)
     starting_human_name: StringProperty()
     hair_name: StringProperty()
     show_unchanged: BoolProperty(
         update=lambda self, context: find_possible_content(context)
     )
-
-    clothing_name: StringProperty(default="")
-    saveoutfit_categ: EnumProperty(
+    clothing_type: EnumProperty(
         name="Clothing type",
         items=[
             ("outfit", "Outfit", "", 0),
@@ -197,6 +211,8 @@ class CustomContentProps(bpy.types.PropertyGroup):
         ],
         default="outfit",
     )
+
+    clothing_name: StringProperty(default="")
 
     saveoutfit_male: BoolProperty(default=True)
     saveoutfit_female: BoolProperty(default=True)

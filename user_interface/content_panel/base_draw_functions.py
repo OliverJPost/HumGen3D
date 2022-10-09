@@ -64,7 +64,7 @@ def _draw_name_ui(context, layout, content_type):
     col.scale_y = 1.5
 
     # FIXME crash when spaces in name
-    if content_type in ("pose", "key", "hair"):
+    if content_type in ("pose", "key", "hair", "footwear", "outfit"):
         col.prop(getattr(cc_sett, content_type), "name", text="Name")
         poll = bool(getattr(cc_sett, content_type).name)
     else:
@@ -143,8 +143,9 @@ def __draw_auto_thumbnail_ui(layout, content_type):
     row.scale_y = 1.5
     thumbnail_type_dict = {
         "head": ("hair", "starting_human"),
-        "full_body_front": ("clothing",),
+        "full_body_front": ("outfit",),
         "full_body_side": ("pose",),
+        "foot": ("footwear",),
     }
 
     thumbnail_type = next(
@@ -159,8 +160,10 @@ def __draw_auto_thumbnail_ui(layout, content_type):
         icon="RENDER_STILL",
     )
     operator.thumbnail_type = thumbnail_type
-    if content_type == "hair":
+    if content_type in ("hair", "outfit", "footwear"):
         operator.white_material = True
+    else:
+        operator.white_material = False
 
 
 def _draw_save_button(layout, content_type, poll=True):

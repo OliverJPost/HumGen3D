@@ -51,10 +51,11 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
     category: EnumProperty(
         items=[
             ("key", "Key", "", 0),
-            ("clothing", "Clothing", "", 1),
-            ("hair", "Hairstyle", "", 2),
-            ("pose", "Pose", "", 3),
-            ("starting_human", "Human", "", 4),
+            ("outfit", "Outfit", "", 1),
+            ("footwear", "Footwear", "", 2),
+            ("hair", "Hairstyle", "", 3),
+            ("pose", "Pose", "", 4),
+            ("starting_human", "Human", "", 5),
         ]
     )
 
@@ -83,12 +84,12 @@ def find_possible_content(context):
     if str(hash(human.outfit)) != hashes.get("$outfit") or show_unchanged:
         item = coll.add()
         item.name = "Outfit"
-        item.category = "clothing"
+        item.category = "outfit"
 
     if str(hash(human.footwear)) != hashes.get("$footwear") or show_unchanged:
         item = coll.add()
         item.name = "Footwear"
-        item.category = "clothing"
+        item.category = "footwear"
 
     if str(hash(human.pose)) != hashes.get("$pose") or show_unchanged:
         item = coll.add()
