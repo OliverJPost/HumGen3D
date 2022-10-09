@@ -614,7 +614,7 @@ class KeySettings:
 
         return driver
 
-    def as_dict(self) -> dict[str, float]:
+    def as_dict(self) -> dict[str, dict[str, float]]:
         key_dict = {}
         key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
         key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}

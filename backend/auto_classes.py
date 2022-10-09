@@ -2,9 +2,12 @@
 
 import inspect
 import os
+from types import ModuleType
+from typing import Generator, Type
 
 import bpy
 import HumGen3D
+from pyparsing import Iterator
 
 YIELD_LAST = (
     "HG_PT_BATCH_TIPS",
@@ -28,7 +31,7 @@ BPY_CLASSES = (
 )
 
 
-def _get_bpy_classes():
+def _get_bpy_classes() -> Iterator[Type]:
     dir_path = os.path.dirname(os.path.abspath(HumGen3D.__file__))
 
     py_files = get_python_files_from_dir(dir_path)
@@ -66,7 +69,7 @@ def _get_bpy_classes():
         yield from yield_last
 
 
-def import_pyfile_as_module(dir_path, root, filename):
+def import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleType:
     abspath = os.path.join(root, filename)
     rel_path_split = os.path.normpath(os.path.relpath(abspath, dir_path)).split(os.sep)
     module_import_path = ".".join(rel_path_split)
@@ -79,7 +82,7 @@ def import_pyfile_as_module(dir_path, root, filename):
     return module
 
 
-def get_python_files_from_dir(dir_path):
+def get_python_files_from_dir(dir_path: str) -> list[tuple[str, str]]:
     skip_dirs = (".vscode", ".mypy", ".git", "tests")
     py_files = []
     for root, _, files in os.walk(dir_path):
