@@ -57,11 +57,16 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             _draw_key_type_ui,
             _draw_name_ui
         ],
-        "clothing": [
-            _draw_outfit_type_selector,
-            _draw_clothing_uilist_ui,
+        "outfit": [
             _draw_thumbnail_selection_ui,
             _draw_clothing_gender_ui,
+            draw_category_ui,
+            _draw_name_ui,
+            ],
+        "footwear": [
+            _draw_thumbnail_selection_ui,
+            _draw_clothing_gender_ui,
+            draw_category_ui,
             _draw_name_ui,
             ],
         "pose": [

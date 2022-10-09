@@ -3,7 +3,7 @@ import shutil
 from typing import TYPE_CHECKING, Union
 
 import bpy
-from bpy.types import Context, Object
+from bpy.types import Context, Image, Object
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.custom_content.content_saving import Content_Saving_Operator
 from HumGen3D.human.base.shapekey_calculator import (
@@ -17,19 +17,20 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 def save_clothing(
     human,
     folder: str,
+    category: str,
     name: str,
     context: Context,
     objs: list[Object],
     genders: list[str],
     open_when_finished=False,
-    thumb_name: Union[str, None] = None,
+    thumbnail: Union[Image, None] = None,
 ):
     for gender in genders:
-        gender_folder = os.path.join(folder, gender, "Custom")
+        gender_folder = os.path.join(folder, gender, category)
         if not os.path.isdir(gender_folder):
             os.mkdir(gender_folder)
-        if thumb_name:
-            Content_Saving_Operator.save_thumb(gender_folder, thumb_name, name)
+        if thumbnail:
+            Content_Saving_Operator.save_thumb(gender_folder, thumbnail.name, name)
 
     # TODO disable armature modifier
     depsgraph = context.evaluated_depsgraph_get()
@@ -40,15 +41,17 @@ def save_clothing(
     save_material_textures(objs, texture_folder)
     obj_distance_dict = {}
     for obj in objs:
-        obj_world_coords = world_coords_from_obj(obj_world_coords)
+        obj_world_coords = world_coords_from_obj(obj)
         distance_dict = build_distance_dict(body_eval_coords_world, obj_world_coords)
         obj_distance_dict[obj.name] = distance_dict
 
     body_coords_world = world_coords_from_obj(human.body_obj)
     for gender in genders:
+        gender_folder = os.path.join(folder, gender, category)
         export_for_gender(
             human,
-            folder,
+            name,
+            gender_folder,
             context,
             objs,
             open_when_finished,
@@ -63,6 +66,7 @@ def save_clothing(
 
 def export_for_gender(
     human,
+    name,
     folder,
     context,
     objs,
@@ -88,15 +92,15 @@ def export_for_gender(
         context.collection.objects.link(obj_copy)
         distance_dict = obj_distance_dict[obj.name]
 
-        if gender != human.props.gender:
-            name = "Opposite gender"
+        if gender != human.gender:
+            sk_name = "Opposite gender"
             as_sk = True
         else:
-            name = ""
+            sk_name = ""
             as_sk = False
 
         deform_obj_from_difference(
-            name,
+            sk_name,
             distance_dict,
             body_with_gender_coords_global,
             obj_copy,
@@ -105,11 +109,10 @@ def export_for_gender(
 
         export_list.append(obj_copy)
 
-    gender_folder = os.path.join(folder, gender, "Custom")
     Content_Saving_Operator.save_objects_optimized(
         context,
         export_list,
-        gender_folder,
+        folder,
         name,
         clear_sk=False,
         clear_materials=False,
