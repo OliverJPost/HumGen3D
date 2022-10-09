@@ -6,5 +6,7 @@
         "*": [
             "${commentprefix} Copyright (c) ${year} Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE",
         ]
-    }
+    },
+    "python.linting.mypyEnabled": true,
+    "python.linting.enabled": true
 }
