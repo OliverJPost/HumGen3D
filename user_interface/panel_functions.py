@@ -1,6 +1,83 @@
-import bpy  # type: ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+import bpy
 
 from ..backend import preview_collections
+from .icons.icons import get_hg_icon  # type: ignore
+
+CHAR_WIDTH_DICT = {
+    "c": 3.66,
+    "E": 3.96,
+    "f": 2.07,
+    "F": 3.66,
+    "G": 5.29,
+    "i": 1.83,
+    "I": 2.38,
+    "j": 1.83,
+    "J": 2.83,
+    "k": 3.66,
+    "l": 1.83,
+    "m": 6.80,
+    "M": 5.95,
+    "O": 5.29,
+    "r": 2.80,
+    "s": 3.40,
+    "S": 3.96,
+    "t": 2.83,
+    "T": 4.32,
+    "w": 5.60,
+    "W": 6.80,
+    "z": 3.40,
+}
+
+
+def char_width(char: str):
+    if char in CHAR_WIDTH_DICT:
+        return CHAR_WIDTH_DICT[char]
+    else:
+        if char.isupper():
+            return 4.76
+        else:
+            return 3.97
+
+
+def draw_paragraph(
+    layout, text, max_width_percentage=100, enabled=True, alignment="LEFT"
+):
+    words = text.split(" ")
+    length = 0
+    lines = [
+        list(),
+    ]
+    for word in words:
+        if "\n" in word:
+            length = 0
+            lines[-1].append(word)
+            lines.append("WHITESPACE")
+            lines.append(list())
+            continue
+        length += sum([char_width(char) for char in word]) + 3
+        if length >= max_width_percentage:
+            length = 0
+            lines.append(list())
+
+        lines[-1].append(word)
+
+    col = layout.column(align=True)
+    for line in lines:
+        row = col.row()
+        if line == "WHITESPACE":
+            row.scale_y = 0.3
+            row.label(text="")
+        else:
+            row.scale_y = 0.7
+            row.alignment = alignment
+            row.enabled = enabled
+            row.label(text=" ".join(line))
+
+
+def prettify(string: str) -> str:
+    return string.replace("_", " ").title()
 
 
 def draw_sub_spoiler(
@@ -42,8 +119,8 @@ def draw_panel_switch_header(layout, sett):
         sett (PropertyGroup): HumGen props
     """
     row = layout.row()
-    row.scale_x = 1.5
-    row.alignment = "EXPAND"
+    row.scale_x = 1.2
+    # row.alignment = "EXPAND"
     row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
 
 
@@ -73,19 +150,7 @@ def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
     return flow
 
 
-def in_creation_phase(hg_rig) -> bool:
-    """Checks if this human is in creation phase
-
-    Args:
-        hg_rig (Object): HumGen human armature
-
-    Returns:
-        bool: True if human in creation phase
-    """
-    return hg_rig.HG.phase in ["body", "face", "skin", "length"]
-
-
-def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
+def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]":
     """Draws the spoiler box of the main sections (i.e. body, hair, face)
 
     Args:
@@ -105,31 +170,34 @@ def draw_spoiler_box(self, ui_name) -> "tuple[bool, bpy.types.UILayout]":
         "hair": "OUTLINER_OB_HAIR",
         "length": "EMPTY_SINGLE_ARROW",
         "creation_phase": "COMMUNITY",
-        "clothing": "MATCLOTH",
+        "outfit": "MATCLOTH",
         "footwear": "MATCLOTH",
         "pose": "ARMATURE_DATA",
         "expression": "GHOST_ENABLED",
         "simulation": "NETWORK_DRIVE",
         "compression": "FOLDER_REDIRECT",
+        "baking": "RENDERLAYERS",
+        "apply": "MOD_SUBSURF",
     }
 
-    layout = self.layout
+    long_name_dict = {"baking": "Texture Baking", "apply": "Apply Modifiers"}
+
     box = layout.box()
 
     row = box.row(align=True)
-    row.scale_y = 2
+    row.scale_y = 1.0
     row.alignment = "LEFT"
 
-    label = ui_name.capitalize().replace("_", " ")
-    if ui_name == "creation_phase":
-        label = "Creation Phase Backup"
+    if ui_name in long_name_dict:
+        label = long_name_dict[ui_name]
+    else:
+        label = ui_name.capitalize().replace("_", " ")
 
     try:
-        hg_icons = preview_collections["hg_icons"]
         row.operator(
             "hg3d.section_toggle",
             text=label,
-            icon_value=hg_icons[ui_name].icon_id,
+            icon_value=get_hg_icon(ui_name),
             emboss=False,
         ).section_name = ui_name
     except:
@@ -155,44 +223,3 @@ def searchbox(sett, name, layout):
 
     if hasattr(sett.pcoll, f"search_term_{name}"):
         row.operator("hg3d.clear_searchbox", text="", icon="X").searchbox_name = name
-
-
-def draw_resolution_box(sett, col, show_batch_comparison=False):
-    """box for selecting baking resolution
-
-    Args:
-        sett (PropertyGroup): HumGen props
-        col (UILayout): layout to draw in
-    """
-    row = col.row()
-    row.alignment = "CENTER"
-    row.label(text="Resolution", icon="IMAGE_PLANE")
-
-    batch_res_options = {
-        "high": {"body": 4096, "eyes": 4096, "teeth": 4096, "clothes": 4096},
-        "optimised": {
-            "body": 1024,
-            "eyes": 512,
-            "teeth": 512,
-            "clothes": 1024,
-        },
-        "performance": {
-            "body": 512,
-            "eyes": 128,
-            "teeth": 256,
-            "clothes": 512,
-        },
-    }
-    batch_res_dict = batch_res_options[sett.batch_texture_resolution]
-
-    for res_type in ["body", "eyes", "teeth", "clothes"]:
-        col.prop(sett, f"bake_res_{res_type}", text=res_type.capitalize())
-        if show_batch_comparison:
-            current_res = batch_res_dict[res_type]
-            if int(getattr(sett, f"bake_res_{res_type}")) > current_res:
-                row = col.row()
-                row.alert = True
-                row.label(text="Higher than source texture")
-                row.operator(
-                    "hg3d.showinfo", text="", icon="QUESTION", emboss=False
-                ).info = "batch_texture_bake_res"

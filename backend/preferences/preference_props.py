@@ -1,5 +1,12 @@
-from bpy.props import BoolProperty, EnumProperty, IntVectorProperty, StringProperty # type:ignore
-from bpy.types import AddonPreferences # type:ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+from bpy.props import (  # type:ignore
+    BoolProperty,
+    EnumProperty,
+    IntVectorProperty,
+    StringProperty,
+)
+from bpy.types import AddonPreferences  # type:ignore
 
 from ..content_packs.content_packs import cpacks_refresh
 
@@ -67,7 +74,7 @@ class HGPreferenceBackend(AddonPreferences):
     debug_mode: BoolProperty(default=False)
     silence_all_console_messages: BoolProperty(default=False)
 
-    skip_url_request: BoolProperty(default=False)
+    skip_url_request: BoolProperty(default=True)
 
     show_tips: BoolProperty(default=True)
     compress_zip: BoolProperty(default=True)

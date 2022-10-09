@@ -1,14 +1,17 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 context.scene.HG3D.ui
 Properties related to the user interface of Human Generator.
 """
 
+from re import L
+
 import bpy
-from bpy.props import (  # type: ignore
-    BoolProperty,
-    EnumProperty,
-)
-from ..callback import tab_change_update
+from bpy.props import BoolProperty, EnumProperty
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
+
+from ..callback import hg_callback, tab_change_update
 
 
 def create_ui_toggles(ui_toggle_names):
@@ -20,6 +23,53 @@ def create_ui_toggles(ui_toggle_names):
         prop_dict[name] = BoolProperty(name=display_name, default=False)
 
     return prop_dict
+
+
+def panel_update(self, context):
+    active_panel = self.phase
+    if active_panel in ("create", "batch", "content", "process"):
+        self.active_tab = active_panel.upper()
+        self.phase = "closed"
+    hg_callback(self)
+
+
+# As separate function so icon_id updates correctly
+def active_tab_enum(self, context):
+    try:
+        return [
+            ("CREATE", "Create", "", get_hg_icon("create"), 0),
+            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
+            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
+            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
+        ]
+    except IndexError:
+        return []
+
+
+# As separate function so icon_id updates correctly
+def active_phase_enum(self, context):
+    try:
+        return [
+            ("", "Editing", ""),
+            ("closed", "All Categories", "", "COLLAPSEMENU", 0),
+            ("body", "Body", "", get_hg_icon("body"), 1),
+            ("face", "Face", "", get_hg_icon("face"), 3),
+            ("height", "Height", "", get_hg_icon("height"), 2),
+            ("skin", "Skin", "", get_hg_icon("skin"), 4),
+            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
+            ("hair", "Hair", "", get_hg_icon("hair"), 6),
+            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
+            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
+            ("pose", "Pose", "", get_hg_icon("pose"), 9),
+            ("expression", "Expression", "", get_hg_icon("expression"), 10),
+            ("", "Tabs", ""),
+            ("create", "Create Humans", "", get_hg_icon("create"), 11),
+            ("batch", "Batch Generator", "", get_hg_icon("batch"), 12),
+            ("content", "Custom Content", "", get_hg_icon("custom_content"), 13),
+            ("process", "Processing", "", get_hg_icon("export"), 14),
+        ]
+    except IndexError:
+        return []
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
@@ -46,7 +96,10 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "pattern_bool",
                 "decal_bool",
                 "thumb_ui",
-                "expression_slider"
+                "expression_slider",
+                "content_saving",
+                "other",
+                "main",
             ]
         )
     )
@@ -72,35 +125,14 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     )
 
     phase: EnumProperty(
-        name="phase",
-        items=[
-            ("body", "body", "", 0),
-            ("face", "face", "", 1),
-            ("skin", "skin", "", 2),
-            ("hair", "hair", "", 3),
-            ("length", "length", "", 4),
-            ("creation_phase", "Creation Phase", "", 5),
-            ("clothing", "clothing", "", 6),
-            ("footwear", "footwear", "", 7),
-            ("pose", "pose", "", 8),
-            ("expression", "expression", "", 9),
-            ("simulation", "simulation", "", 10),
-            ("compression", "compression", "", 11),
-            ("closed", "closed", "", 12),
-            ("hair2", "Hair Length", "", 13),
-            ("eyes", "Eyes", "", 14),
-        ],
-        default="body",
+        name="Category",
+        items=active_phase_enum,
+        update=panel_update,
     )
 
     active_tab: EnumProperty(
-        name="ui_tab",
-        items=[
-            ("CREATE", "Create", "", "OUTLINER_OB_ARMATURE", 0),
-            ("BATCH", "Batch", "", "COMMUNITY", 1),
-            ("TOOLS", "Tools", "", "SETTINGS", 2),
-        ],
-        default="CREATE",
+        name="Tab",
+        items=active_tab_enum,
         update=tab_change_update,
     )
 

@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
 Contains operators and functions for the callback HG3D gets whenever
     the active object changes.
@@ -9,19 +11,27 @@ This callback has the following usages:
     a human is duplicated by the user
 """
 
+import os
+
 import bpy
-from HumGen3D.backend import hg_log
-from HumGen3D.utility_section.utility_functions import (
+from HumGen3D.backend import hg_log, preview_collections
+from HumGen3D.custom_content.possible_content import find_possible_content
+from HumGen3D.human.keys.keys import update_livekey_collection
+from HumGen3D.human.process.apply_modifiers import refresh_modapply
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
 
+from ..backend.preferences.preference_func import get_prefs
 from ..human.human import Human  # , bl_info  # type: ignore
-from ..user_interface.batch_ui_lists import batch_uilist_refresh  # type: ignore
-from ..user_interface.tips_suggestions_ui import update_tips_from_context  # type:ignore
-from .preview_collections import refresh_pcoll
+from ..user_interface.batch_panel.batch_ui_lists import (
+    batch_uilist_refresh,  # type: ignore
+)
+from ..user_interface.documentation.tips_suggestions_ui import (  # type:ignore
+    update_tips_from_context,
+)
 
 
 class HG_ACTIVATE(bpy.types.Operator):
@@ -38,8 +48,11 @@ class HG_ACTIVATE(bpy.types.Operator):
         sett.subscribed = False  # TODO is this even used?
 
         msgbus(self, context)
-        refresh_pcoll(self, context, "humans")
+        preview_collections["humans"].refresh(context, gender=sett.gender)
         hg_log(f"Activating HumGen, version {bl_info['version']}")
+
+        update_livekey_collection()
+
         return {"FINISHED"}
 
 
@@ -120,7 +133,6 @@ def _context_specific_updates(self, sett, human, ui_phase):
     sett.update_exception = False
     context = bpy.context
     if sett.ui.active_tab == "TOOLS":
-        refresh_modapply(self, context)
         try:
             refresh_shapekeys_ul(self, context)
             refresh_hair_ul(self, context)
@@ -128,46 +140,17 @@ def _context_specific_updates(self, sett, human, ui_phase):
         except AttributeError:
             pass
         return
-    elif ui_phase == "skin":
-        refresh_pcoll(self, context, "textures")
-
-    elif ui_phase == "clothing":
-        refresh_pcoll(self, context, "outfits")
-
+    elif ui_phase == "apply":
+        refresh_modapply(self, context)
     elif ui_phase == "hair":
-        refresh_pcoll(self, context, "hair")
+        preview_collections["hair"].refresh(context, human.gender)
         if human.gender == "male":
-            refresh_pcoll(self, context, "face_hair")
-
-    elif ui_phase == "expression":
-        refresh_pcoll(self, context, "expressions")
-
-    elif ui_phase == "body":
-        _refresh_body_scaling(self, sett, human)
-
-
-def _refresh_body_scaling(self, sett, human: Human):
-    """This callback makes sure the sliders of scaling the bones are at the
-    correct values of the selected human
-
-    Args:
-        sett (PropertyGroup): HumGen props
-        hg_rig (Object): Armature object of HumGen human
-    """
-    bones = human.pose_bones
-    sd = human.creation_phase.body._get_scaling_data(
-        1, "head", return_whole_dict=True
-    ).items()
-
-    bone_groups = {group_name: scaling_data["bones"] for group_name, scaling_data in sd}
-
-    for group_name, bone_group in bone_groups.items():
-        if "head" in bone_group:
-            slider_value = (bones["head"].scale[0] - 0.9) * 5
-        else:
-            slider_value = bones[bone_group[0]].scale[0] * 3 - 2.5
-
-        setattr(sett.bone_sizes, group_name, slider_value)
+            preview_collections["face_hair"].refresh(context)
+    else:
+        try:
+            getattr(human, ui_phase).refresh_pcoll(context)
+        except (AttributeError, RecursionError):
+            pass
 
 
 def tab_change_update(self, context):
@@ -176,14 +159,19 @@ def tab_change_update(self, context):
 
     refresh_modapply(self, context)
 
+    human = Human.from_existing(context.object, strict_check=False)
+    if not human:
+        return
+
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        Human.from_existing(context.object).rig_obj,
+        human.rig_obj,
     )
 
-    batch_uilist_refresh(self, context, "outfits")
-    batch_uilist_refresh(self, context, "expressions")
+    find_possible_content(context)
+    # batch_uilist_refresh(self, context, "outfit")
+    # FIXME batch_uilist_refresh(self, context, "expression")
 
 
 def _hair_shader_type_update(sett, hg_body):

@@ -1,8 +1,10 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy  # type:ignore
 import numpy as np  # type:ignore
 
 
-def length_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> list:
+def height_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> list:
     """Returns one or multiple samples from a bell curve generated from the
     batch_average_height and batch_standard_deviation properties.
 

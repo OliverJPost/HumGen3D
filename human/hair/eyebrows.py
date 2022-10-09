@@ -1,12 +1,16 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
-from bpy.types import Context # type:ignore
+from bpy.types import Context  # type:ignore
 from HumGen3D.human.hair.basehair import BaseHair
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from ..base.prop_collection import PropCollection
 
 
 class EyebrowSettings(BaseHair):
+    _startswith = "Eyebrows"
+
     def __init__(self, human):
         self._human = human
         self._startswith = "Eyebrow"

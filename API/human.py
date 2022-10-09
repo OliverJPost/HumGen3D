@@ -1,16 +1,15 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import random
 
 import bpy
+from HumGen3D.backend import preview_collections
+from HumGen3D.human.base.decorators import injected_context
 from mathutils import Euler, Vector
 
-from HumGen3D.human.base.decorators import injected_context
-
-from ..backend import hg_log, refresh_pcoll
+from ..backend import hg_log
 from ..human.base.exceptions import HumGenException
 from ..human.human import Human  # type:ignore
-from ..user_interface.panel_functions import (
-    in_creation_phase as _in_creation_phase,
-)
 
 
 class HG_Key_Blocks:
@@ -326,7 +325,7 @@ class HG_Human:
             self._gender = random.choice(("male", "female"))
 
         sett.gender = self._gender
-        refresh_pcoll(None, context, "humans")
+        preview_collections["humans"].refresh(context, self, gender=self._gender)
         return sett["previews_list_humans"]
 
     @injected_context
@@ -660,7 +659,7 @@ class HG_Human:
         """
         sett = context.scene.HG3D
 
-        refresh_pcoll(None, context, pcoll_name, hg_rig=self._rig_object)
+        preview_collections[pcoll_name].refresh(context, self)
         pcoll_list = sett["previews_list_{}".format(pcoll_name)]
 
         return pcoll_list
@@ -677,7 +676,7 @@ class HG_Human:
         """
         sett = context.scene.HG3D
 
-        refresh_pcoll(None, context, pcoll_name, hg_rig=self._rig_object)
+        # refresh_pcoll(None, context, pcoll_name, hg_rig=self._rig_object) #FIXME
         setattr(sett.pcoll, pcoll_name, item_to_set_as_active)
 
     def __check_if_in_creation_phase(self):
