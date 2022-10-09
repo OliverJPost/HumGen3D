@@ -1,5 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import hashlib
 import json
 import os
 from math import acos, pi
@@ -9,15 +10,24 @@ from typing import Tuple
 import bpy
 import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.base.savable_content import SavableContent
 from HumGen3D.human.base.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
+    world_coords_from_obj,
+)
+from HumGen3D.human.clothing.add_obj_to_clothing import (
+    add_corrective_shapekeys,
+    auto_weight_paint,
+    correct_shape_to_a_pose,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
+from HumGen3D.human.clothing.saving import save_clothing
 from HumGen3D.human.keys.keys import apply_shapekeys
 
 
@@ -40,7 +50,7 @@ def find_masks(obj) -> list:
     return mask_list
 
 
-class BaseClothing(PreviewCollectionContent):
+class BaseClothing(PreviewCollectionContent, SavableContent):
     @property
     def pattern(self) -> PatternSettings:
         return PatternSettings(self._human)
@@ -67,6 +77,7 @@ class BaseClothing(PreviewCollectionContent):
         # TODO as argument?
         mask_remove_list = self.remove() if pref.remove_clothes else []
 
+        hg_log("Importing cloth item", preset, level="DEBUG")
         cloth_objs, collections = self._import_cloth_items(preset, context)
 
         new_mask_list = []
@@ -91,6 +102,22 @@ class BaseClothing(PreviewCollectionContent):
         # refresh pcoll for consistent 'click here to select' icon
         self.refresh_pcoll(context)
 
+        self._human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
+
+    def add_obj(self, cloth_obj, cloth_type, context):
+        body_obj = self._human.body_obj
+        correct_shape_to_a_pose(cloth_obj, body_obj, context)
+        add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
+        auto_weight_paint(cloth_obj, body_obj)
+
+        rig_obj = self._human.rig_obj
+        armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
+        armature_mod.object = rig_obj
+        cloth_obj.parent = rig_obj
+        cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
+        tag = "shoe" if cloth_type == "footwear" else "cloth"
+        cloth_obj[tag] = 1
+
     def deform_cloth_to_human(self, context, cloth_obj):
         """Deforms the cloth object to the shape of the active HumGen human by using
         HG_SHAPEKEY_CALCULATOR
@@ -102,22 +129,30 @@ class BaseClothing(PreviewCollectionContent):
         """
 
         body_obj = self._human.body_obj
-        mx_body = body_obj.matrix_world
         if self._human.gender == "female":
             verts = body_obj.data.vertices
         else:
             verts = body_obj.data.shape_keys.key_blocks["Male"].data
-        body_coords_world = [mx_body @ v.co for v in verts]
 
-        mx_cloth = cloth_obj.matrix_world
-        cloth_coords_world = [mx_cloth @ v.co for v in cloth_obj.data.vertices]
+        body_coords_world = world_coords_from_obj(body_obj, data=verts)
+
+        cloth_coords_world = world_coords_from_obj(cloth_obj)
 
         distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
 
         cloth_obj.parent = self._human.rig_obj
 
+        body_eval_coords_world = world_coords_from_obj(
+            body_obj,
+            data=self._human.keys.all_deformation_shapekeys,
+        )
+
         deform_obj_from_difference(
-            "Body Proportions", distance_dict, body_obj, cloth_obj, as_shapekey=True
+            "Body Proportions",
+            distance_dict,
+            body_eval_coords_world,
+            cloth_obj,
+            as_shapekey=True,
         )
 
         # cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
@@ -439,18 +474,18 @@ class BaseClothing(PreviewCollectionContent):
         return is_inside_list.count(True) / len(is_inside_list)
 
     def __hash__(self):
-        hash_coll = 0
+        hash_coll = []
         for obj in self.objects:
             vert_count = len(obj.data.vertices)
             vert_co = np.empty(vert_count * 3, dtype=np.float64)
             obj.data.vertices.foreach_get("co", vert_co)
 
-            hash_coll += hash(tuple(map(tuple, vert_co)))
+            hash_coll.append(hashlib.sha1(vert_co).hexdigest())
 
             for sk in obj.data.shape_keys.key_blocks:
                 sk_co = np.empty(vert_count * 3, dtype=np.float64)
                 sk.data.foreach_get("co", sk_co)
-                hash_coll += hash(tuple(map(tuple, sk_co)))
+                hash_coll.append(hashlib.sha1(sk_co).hexdigest())
 
             mat = obj.active_material
             if mat:
@@ -458,4 +493,38 @@ class BaseClothing(PreviewCollectionContent):
                 # TODO check effect of pattern loading
                 for node in mat.node_tree.nodes:
                     node_names.append(node.name)
-                hash_coll += hash(tuple(node_names))
+                hash_coll.append(hash(tuple(node_names)))
+
+        return hash(tuple(hash_coll))
+
+    @injected_context
+    def save_to_library(
+        self,
+        name,
+        for_male=True,
+        for_female=True,
+        open_when_finished=False,
+        category="Custom",
+        thumbnail=None,
+        context=None,
+    ):
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
+
+        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
+        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
+
+        save_clothing(
+            self._human,
+            folder,
+            category,
+            name,
+            context,
+            self.objects,
+            genders,
+            open_when_finished,
+            thumbnail=thumbnail,
+        )

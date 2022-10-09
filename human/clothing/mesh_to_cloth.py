@@ -5,10 +5,6 @@ from pathlib import Path
 
 import bpy
 from HumGen3D.backend import get_prefs, hg_delete
-from HumGen3D.human.base.shapekey_calculator import (
-    build_distance_dict,
-    deform_obj_from_difference,
-)
 from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.keys.keys import apply_shapekeys
 from mathutils import Matrix
@@ -101,120 +97,6 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         return {"FINISHED"}
 
 
-class HG_OT_ADDCORRECTIVE(bpy.types.Operator):
-    bl_idname = "hg3d.addcorrective"
-    bl_label = "Add corrective shapekeys"
-    bl_description = "Automatic weight painting"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        self.cc_sett = context.scene.HG3D.custom_content
-        hg_rig = self.cc_sett.content_saving_active_human
-        human = Human.from_existing(self.cc_sett.content_saving_active_human)
-        sett = self.cc_sett
-        cloth_obj = sett.content_saving_object
-
-        body_copy = hg_rig.HG.body_obj.copy()
-        body_copy.data = body_copy.data.copy()
-        context.collection.objects.link(body_copy)
-
-        if body_copy.data.shape_keys:
-            remove_list = [
-                driver for driver in body_copy.data.shape_keys.animation_data.drivers
-            ]
-            for driver in remove_list:
-                body_copy.data.shape_keys.animation_data.drivers.remove(driver)
-
-        distance_dict = build_distance_dict(body_copy, cloth_obj, apply=False)  # FIXME
-
-        if cloth_obj.data.shape_keys:
-            for sk in [
-                sk
-                for sk in cloth_obj.data.shape_keys.key_blocks
-                if sk.name.startswith("cor")
-            ]:
-                cloth_obj.shape_key_remove(sk)
-
-        if not cloth_obj.data.shape_keys:
-            sk = cloth_obj.shape_key_add(name="Basis")
-            sk.interpolation = "KEY_LINEAR"
-
-        shapekey_list = self._build_cor_shapekey_list(sett)
-
-        sks = body_copy.data.shape_keys.key_blocks
-        for sk in sks:
-            if sk.name.startswith("cor"):
-                sk.value = 0
-
-        for sk in shapekey_list:
-            sks[sk].value = 1
-            deform_obj_from_difference(
-                sk, distance_dict, body_copy, cloth_obj, as_shapekey=True
-            )
-            sks[sk].value = 0
-
-        cloth_sks = cloth_obj.data.shape_keys.key_blocks
-        human.finalize_phase.outfit._set_cloth_corrective_drivers(cloth_obj, cloth_sks)
-        hg_delete(body_copy)
-        cloth_obj.select_set(True)
-        cloth_obj["cloth"] = 1
-        return {"FINISHED"}
-
-    def _build_cor_shapekey_list(self, sett) -> list:
-        shapekey_list = []
-        if sett.shapekey_calc_type == "pants":
-            shapekey_list.extend(
-                [
-                    "cor_LegFrontRaise_Rt",
-                    "cor_LegFrontRaise_Lt",
-                    "cor_FootDown_Lt",
-                    "cor_FootDown_Rt",
-                ]
-            )
-        elif sett.shapekey_calc_type == "top":
-            shapekey_list.extend(
-                [
-                    "cor_ElbowBend_Lt",
-                    "cor_ElbowBend_Rt",
-                    "cor_ShoulderSideRaise_Lt",
-                    "cor_ShoulderSideRaise_Rt",
-                    "cor_ShoulderFrontRaise_Lt",
-                    "cor_ShoulderFrontRaise_Rt",
-                ]
-            )
-        elif sett.shapekey_calc_type == "shoe":
-            shapekey_list.extend(["cor_FootDown_Lt", "cor_FootDown_Rt"])
-        else:
-            shapekey_list.extend(
-                [
-                    "cor_ElbowBend_Lt",
-                    "cor_ElbowBend_Rt",
-                    "cor_ShoulderSideRaise_Lt",
-                    "cor_ShoulderSideRaise_Rt",
-                    "cor_ShoulderFrontRaise_Lt",
-                    "cor_ShoulderFrontRaise_Rt",
-                    "cor_LegFrontRaise_Rt",
-                    "cor_LegFrontRaise_Lt",
-                    "cor_FootDown_Lt",
-                    "cor_FootDown_Rt",
-                ]
-            )
-
-        return shapekey_list
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.label(
-            text="Adding shapekeys for type: {}".format(
-                context.scene.HG3D.shapekey_calc_type.capitalize()
-            )
-        )
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
-
-
 class HG_OT_ADDCLOTHMATH(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_idname = "hg3d.addclothmat"
     bl_label = "Add clothing material"
@@ -303,46 +185,4 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
             mod.vertex_group = mask_name
             mod.invert_vertex_group = True
 
-        return {"FINISHED"}
-
-
-class HG_MTC_TO_A_POSE(bpy.types.Operator):
-    bl_idname = "hg3d.mtc_to_a_pose"
-    bl_label = "Transform clothing to A Pose"
-    bl_description = "Transform clothing to A Pose"
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
-        hg_rig = cc_sett.content_saving_active_human
-        hg_body = hg_rig.HG.body_obj
-
-        cloth_obj = cc_sett.content_saving_object
-
-        hg_body_eval = hg_body.copy()
-        hg_body_eval.data = hg_body_eval.data.copy()
-        context.scene.collection.objects.link(hg_body_eval)
-
-        apply_shapekeys(hg_body_eval)
-        bpy.context.view_layer.objects.active = hg_body_eval
-        bpy.ops.object.modifier_apply(modifier="Armature")
-
-        for sk in hg_body.data.shape_keys.key_blocks:
-            if sk.name.startswith("cor"):
-                sk.mute = True
-        distance_dict = build_distance_dict(hg_body_eval, cloth_obj)  # FIXME
-        deform_obj_from_difference(
-            "Test sk", distance_dict, hg_body, cloth_obj, as_shapekey=False
-        )
-
-        for pb in hg_rig.pose.bones:
-            pb.matrix_basis = Matrix()
-
-        for sk in hg_body.data.shape_keys.key_blocks:
-            if sk.name.startswith("cor"):
-                sk.mute = False
-
-        cloth_obj["transformed_to_a_pose"] = 1
-
-        hg_delete(hg_body_eval)
         return {"FINISHED"}

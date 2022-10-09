@@ -15,10 +15,11 @@ import os
 
 import bpy
 from HumGen3D.backend import hg_log, preview_collections
+from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
-from HumGen3D.utility_section.utility_functions import (
+from HumGen3D.human.process.apply_modifiers import refresh_modapply
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
@@ -168,8 +169,9 @@ def tab_change_update(self, context):
         human.rig_obj,
     )
 
-    batch_uilist_refresh(self, context, "outfit")
-    batch_uilist_refresh(self, context, "expression")
+    find_possible_content(context)
+    # batch_uilist_refresh(self, context, "outfit")
+    # FIXME batch_uilist_refresh(self, context, "expression")
 
 
 def _hair_shader_type_update(sett, hg_body):

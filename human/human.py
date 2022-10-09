@@ -12,6 +12,7 @@ import bpy
 from bpy.types import Object
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
+from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
@@ -209,6 +210,10 @@ class Human:
         from HumGen3D import bl_info
 
         human.props.version = bl_info["version"]
+        human.props.hashes["$pose"] = str(hash(human.pose))
+        human.props.hashes["$outfit"] = str(hash(human.outfit))
+        human.props.hashes["$footwear"] = str(hash(human.footwear))
+        human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
 
         return human
 
@@ -567,3 +572,196 @@ class Human:
             i += 1
 
         self.name = "HG_" + name
+
+    @injected_context
+    def render_thumbnail(
+        self,
+        folder=None,
+        name="temp_thumbnail",
+        focus: str = "full_body_front",
+        context=None,
+        resolution=256,
+        white_material=False,
+    ) -> os.PathLike:
+        if not folder:
+            folder = os.path.join(get_prefs().filepath, "temp_data")
+        hg_rig = self.rig_obj
+        type_sett = self._get_settings_dict_by_thumbnail_type(focus)
+
+        hg_thumbnail_scene = bpy.data.scenes.new("HG_Thumbnail_Scene")
+        old_scene = context.window.scene
+        context.window.scene = hg_thumbnail_scene
+
+        camera_data = bpy.data.cameras.new(name="Camera")
+        camera_object = bpy.data.objects.new("Camera", camera_data)
+        hg_thumbnail_scene.collection.objects.link(camera_object)
+
+        camera_object.location = (
+            Vector(
+                (
+                    type_sett["camera_x"],
+                    type_sett["camera_y"],
+                    hg_rig.dimensions[2],
+                )
+            )
+            + hg_rig.location
+        )
+
+        hg_thumbnail_scene.camera = camera_object
+        hg_thumbnail_scene.render.engine = "CYCLES"
+        hg_thumbnail_scene.cycles.samples = 16
+        try:
+            hg_thumbnail_scene.cycles.use_denoising = True
+        except Exception:
+            pass
+
+        new_coll = hg_thumbnail_scene.collection
+        new_coll.objects.link(hg_rig)
+        for child in hg_rig.children:
+            new_coll.objects.link(child)
+
+        hg_thumbnail_scene.render.resolution_y = resolution
+        hg_thumbnail_scene.render.resolution_x = resolution
+
+        self.make_camera_look_at_human(camera_object, type_sett["look_at_correction"])
+        camera_data.lens = type_sett["focal_length"]
+
+        lights = []
+        light_settings_enum = [
+            (100, (-0.3, -1, 2.2)),
+            (10, (0.38, 0.7, 1.83)),
+            (50, (0, -1.2, 0)),
+        ]
+        for energy, location in light_settings_enum:
+            point_light = bpy.data.lights.new(name=f"light_{energy}W", type="POINT")
+            point_light.energy = energy
+            point_light_object = bpy.data.objects.new("Light", point_light)
+            point_light_object.location = Vector(location) + self.location
+            hg_thumbnail_scene.collection.objects.link(point_light_object)
+            lights.append(point_light_object)
+
+        if white_material:
+            old_material = self.body_obj.data.materials[0]
+            self.body_obj.data.materials[0] = None
+            old_eye_material = self.eye_obj.data.materials[1]
+            self.eye_obj.data.materials[1] = None
+
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+
+        hg_thumbnail_scene.render.image_settings.file_format = "JPEG"
+        full_image_path = os.path.join(folder, f"{name}.jpg")
+        hg_thumbnail_scene.render.filepath = full_image_path
+
+        bpy.ops.render.render(write_still=True)
+
+        for light in lights:
+            hg_delete(light)
+
+        hg_delete(camera_object)
+
+        if white_material:
+            self.body_obj.data.materials[0] = old_material
+            self.eye_obj.data.materials[1] = old_eye_material
+
+        context.window.scene = old_scene
+
+        bpy.data.scenes.remove(hg_thumbnail_scene)
+
+        img = bpy.data.images.load(full_image_path)
+        context.scene.HG3D.custom_content.preset_thumbnail = img
+        return img.name
+
+    def _get_settings_dict_by_thumbnail_type(self, thumbnail_type) -> dict:
+        """Returns a dict with settings of how to configure the camera for this
+        automatic thumbnail
+
+        Args:
+            thumbnail_type (str): key to the dict inside this function
+
+        Returns:
+            dict[str, float]:
+                str: name of this property
+                float: setting for camera property
+        """
+        type_settings_dict = {
+            "head": {
+                "camera_x": -1.0,
+                "camera_y": -1.0,
+                "focal_length": 135,
+                "look_at_correction": 0.14,
+            },
+            "full_body_front": {
+                "camera_x": 0,
+                "camera_y": -2.0,
+                "focal_length": 50,
+                "look_at_correction": 0.9,
+            },
+            "full_body_side": {
+                "camera_x": -2.0,
+                "camera_y": -2.0,
+                "focal_length": 50,
+                "look_at_correction": 0.9,
+            },
+        }
+
+        type_sett = type_settings_dict[thumbnail_type]
+        return type_sett
+
+    def make_camera_look_at_human(self, obj_camera, look_at_correction=0.9):
+        """Makes the passed camera point towards a preset point on the human
+
+        Args:
+            obj_camera (bpy.types.Object): Camera object
+            hg_rig (Armature): Armature object of human
+            look_at_correction (float): Correction based on how much lower to
+                point the camera compared to the top of the armature
+        """
+
+        hg_loc = self.location
+        height_adjustment = (
+            self.rig_obj.dimensions[2]
+            - look_at_correction * 0.55 * self.rig_obj.dimensions[2]
+        )
+        hg_rig_loc_adjusted = Vector(
+            (hg_loc[0], hg_loc[1], hg_loc[2] + height_adjustment)
+        )
+        loc_camera = obj_camera.location
+
+        direction = hg_rig_loc_adjusted - loc_camera
+        rot_quat = direction.to_track_quat("-Z", "Y")
+
+        obj_camera.rotation_euler = rot_quat.to_euler()
+
+    @injected_context
+    def save_to_library(self, name, thumbnail=None, context=None):
+        folder = os.path.join(get_prefs().filepath, "models", self.gender)
+
+        hg_body = self.body_obj
+
+        if thumbnail:
+            self.save_thumb(self.folder, thumbnail, name)
+
+        preset_data = {}
+        preset_data["gender"] = self.gender
+
+        eyebrows = self.hair.eyebrows.particle_systems
+        preset_data["eyebrows"] = next(
+            (
+                mod.particle_system.name
+                for mod in eyebrows
+                if (mod.show_viewport or mod.show_render)
+            ),
+            f"Eyebrows_{self.gender.capitalize()}",
+        )
+
+        preset_data.update(self.keys.as_dict())
+        # FIXME preset_data.update(self.skin.as_dict())
+        # FIXME preset_data.update(self.eyes.as_dict())
+
+        with open(os.path.join(folder, f"{self.name}.json"), "w") as f:
+            json.dump(preset_data, f, indent=4)
+
+        self.sett.content_saving_ui = False
+
+        preview_collections["humans"].refresh(context)

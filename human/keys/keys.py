@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Generator, List, Union
+from unicodedata import category
 
 import bpy
 import numpy as np
@@ -15,6 +17,7 @@ from bpy.types import Context, ShapeKey  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.drivers import build_driver_dict
+from HumGen3D.human.base.savable_content import SavableContent
 
 if TYPE_CHECKING:
     from .bpy_livekey import LiveKey
@@ -137,9 +140,10 @@ class LiveKeyItem(KeyItem):
 
         if self.category:
             if self.subcategory:
-                name = f"${self.category}_${self.subcategory}_{self.name}"
+                # Tripe curly braces for result of f{chin}_chin_size
+                name = f"{self.category[0]}]_{{{self.subcategory}}}_{self.name}"
             else:
-                name = f"${self.category}_{self.name}"
+                name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
 
@@ -206,14 +210,22 @@ class LiveKeyItem(KeyItem):
         return "LiveKey " + super().__repr__()
 
 
-class ShapeKeyItem(KeyItem):
+class ShapeKeyItem(KeyItem, SavableContent):
+    category_dict = {
+        "f": "face_proportions",
+        "b": "body_proportions",
+        "p": "presets",
+        "e": "expressions",
+    }
+
     def __init__(self, sk_name, human):
         pattern = re.compile(
-            "^(\$(?P<category>[^_]+)_)?(\$(?P<subcategory>[^_]+)_)?(?P<name>.*)"
+            "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"
         )
         match = pattern.match(sk_name)
         groupdict = match.groupdict()
-        category = groupdict.get("category")
+        category_code = groupdict.get("category")
+        category = self.category_dict[category_code] if category_code else None
         subcategory = groupdict.get("subcategory")
         name = groupdict.get("name")
         assert name
@@ -228,10 +240,52 @@ class ShapeKeyItem(KeyItem):
         self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
 
     def as_bpy(self) -> ShapeKey:
-        return self._human.body_obj.data.shape_keys.key_blocks[self.name]
+        if self.category:
+            if self.subcategory:
+                name = f"{self.category[0]}{{{self.subcategory}}}_{self.name}"
+            else:
+                name = f"{self.category[0]}_{self.name}"
+        else:
+            name = self.name
+        return self._human.body_obj.data.shape_keys.key_blocks[name]
 
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
+
+    def __hash__(self) -> int:
+        data = self.as_bpy().data
+        coords = np.empty(len(data) * 3, dtype=np.float64)
+        data.foreach_get("co", coords)
+        return hashlib.sha1(data).hexdigest()
+
+    def save_to_library(
+        self, name, category, subcategory, as_livekey=True, delete_original=False
+    ):
+        body = self._human.body_obj
+        sk = self.as_bpy()
+        sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
+        sk.data.foreach_get("co", sk_coords)
+
+        vert_count = len(body.data.vertices)
+        body_coordinates = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", body_coordinates)
+
+        relative_coordinates = sk_coords - body_coordinates
+
+        folder = "livekeys" if as_livekey else "shapekeys"
+        path = os.path.join(get_prefs().filepath, folder, category, subcategory)
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        np.save(os.path.join(path, name), relative_coordinates)
+
+        if delete_original:
+            body.shape_key_remove(sk)
+        else:
+            sk.name = f"$[{category}]_$[{subcategory}]_{name}"
+
+        update_livekey_collection()
 
 
 class KeySettings:
@@ -282,9 +336,28 @@ class KeySettings:
     @property
     def all_shapekeys(self) -> List[ShapeKeyItem]:
         shapekeys = []
+        # TODO Skip Basis?
         for sk in self._human.body_obj.data.shape_keys.key_blocks:
             shapekeys.append(ShapeKeyItem(sk.name, self._human))
         return shapekeys
+
+    @property
+    def all_added_shapekeys(self) -> List[ShapeKeyItem]:
+        SKIP_SUFFIXES = ("LIVE_KEY", "Male", "Basis", "cor_", "eyeLook")
+        return [
+            sk
+            for sk in self.all_shapekeys
+            if not sk.as_bpy().name.startswith(SKIP_SUFFIXES)
+        ]
+
+    @property
+    def all_deformation_shapekeys(self) -> List[ShapeKeyItem]:
+        SKIP_SUFFIXES = ("Basis", "cor_", "eyeLook", "expr_")
+        return [
+            sk
+            for sk in self.all_shapekeys
+            if not sk.as_bpy().name.startswith(SKIP_SUFFIXES)
+        ]
 
     @property
     def body_proportions(self):
@@ -540,3 +613,10 @@ class KeySettings:
         target.transform_space = sett_dict["transform_space"]
 
         return driver
+
+    def as_dict(self) -> dict[str, float]:
+        key_dict = {}
+        key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
+        key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
+
+        return key_dict

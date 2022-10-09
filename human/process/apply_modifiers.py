@@ -1,51 +1,15 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
-Operators and functions for experimental features and QoL automations
-"""
-
 from pathlib import Path
 
-import bpy
+import bpy  # type: ignore
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.human import Human  # type: ignore
 from HumGen3D.human.keys.keys import apply_shapekeys
-from HumGen3D.user_interface.documentation.feedback_func import show_message
-from HumGen3D.user_interface.documentation.info_popups import HG_OT_INFO
-
-from .utility_functions import (
-    build_object_list,
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_modapply,
     refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
-
-
-class HG_MAKE_EXPERIMENTAL(bpy.types.Operator):
-    """
-    Makes human experimental, loosening limits on shapekeys and sliders
-    """
-
-    bl_idname = "hg3d.experimental"
-    bl_label = "Make human experimental"
-    bl_description = (
-        "Makes human experimental, loosening limits on shapekeys and sliders"
-    )
-    bl_options = {"UNDO"}
-
-    def execute(self, context):
-        from HumGen3D import Human
-
-        human = Human.from_existing(context.object)
-
-        is_experimental = human.props.experimental
-
-        human.creation_phase.body.set_experimental(not is_experimental)
-
-        if not is_experimental:
-            HG_OT_INFO.ShowMessageBox(None, "experimental")
-        return {"FINISHED"}
 
 
 class HG_OT_MODAPPLY(bpy.types.Operator):
@@ -57,7 +21,6 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
     def execute(self, context):
         sett = context.scene.HG3D
         col = context.scene.modapply_col
-        human = Human.from_existing(context.object)
         objs = build_object_list(context, sett)
 
         sk_dict = {}
@@ -201,37 +164,73 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
-    bl_idname = "hg3d.prepare_for_arkit"
-    bl_label = "Prepare for ARKit"
-    bl_description = "Removes drivers and adds single keyframe to all FACS shapekeys"
-    bl_options = {"UNDO"}
+def refresh_modapply(self, context):
+    sett = context.scene.HG3D
+    col = context.scene.modapply_col
+    col.clear()
 
-    suffix: bpy.props.EnumProperty(
-        name="Shapekey suffix",
-        items=[
-            ("long", "Left and Right (Default ARKit)", "", 0),
-            ("short", "_L and _R (FaceApp)", "", 1),
-        ],
-    )
+    header = col.add()
+    header.mod_name = "HEADER"
+    header.count = 1 if sett.modapply_search_modifiers == "summary" else 0
+    objs = build_object_list(context, sett)
 
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "suffix", text="Suffix")
-
-    def execute(self, context):
-        human = Human.from_existing(context.object)
-
-        for sk in human.keys:
-            if sk.name == "Basis" or sk.name.startswith("cor_"):
+    for obj in objs:
+        for mod in obj.modifiers:
+            if mod.type == "PARTICLE_SYSTEM":
                 continue
-            sk.driver_remove("value")
-            sk.keyframe_insert("value", frame=0)
-            if self.suffix == "long" and sk.name.endswith(("_L", "_R")):
-                sk.name = sk.name.replace("_L", "Left").replace("_R", "Right")
+            if sett.modapply_search_modifiers == "individual":
+                build_full_list(col, mod, obj)
+            else:
+                build_summary_list(col, mod)
 
-        show_message(self, "Succesfully removed drivers and added keyframes")
-        return {"FINISHED"}
+
+def build_object_list(context, sett) -> list:
+    from HumGen3D.human.human import Human
+
+    objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
+    if sett.modapply_search_objects != "selected":
+        if sett.modapply_search_objects == "full":
+            human = Human.from_existing(context.object, strict_check=False)
+            humans = [
+                human,
+            ]
+        else:
+            humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+
+        for human in humans:
+            if not human:
+                continue
+            objs.extend([child for child in human.children])
+    return list(set(objs))
+
+
+def build_full_list(col, mod, obj):
+    item = col.add()
+    item.mod_name = mod.name
+    item.mod_type = mod.type
+
+    item.viewport_visible = mod.show_viewport
+    item.render_visible = mod.show_render
+    item.count = 0
+    item.object = obj
+
+    if mod.type in ["ARMATURE", "SUBSURF"]:
+        item.enabled = False
+    else:
+        item.enabled = True
+
+
+def build_summary_list(col, mod):
+    existing = [item for item in col if item.mod_type == mod.type]
+    if existing:
+        item = existing[0]
+        item.count += 1
+    else:
+        item = col.add()
+        item.mod_name = mod.type.title().replace("_", " ")
+        item.mod_type = mod.type
+        item.count = 1
+        if mod.type in ["ARMATURE", "SUBSURF"]:
+            item.enabled = False
+        else:
+            item.enabled = True
