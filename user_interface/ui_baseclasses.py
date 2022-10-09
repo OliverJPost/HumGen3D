@@ -55,7 +55,8 @@ class HGPanel:
     def poll(cls, context):
         filepath_error = False
         is_legacy = Human.is_legacy(context.object)
-        return not is_legacy and not filepath_error
+        content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
+        return not is_legacy and not filepath_error and not content_saving_ui
 
     def draw_info_and_warning_labels(self, context) -> bool:
         """Collection of all info and warning labels of HumGen

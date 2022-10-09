@@ -9,6 +9,8 @@ from ..base.prop_collection import PropCollection
 
 
 class EyebrowSettings(BaseHair):
+    _startswith = "Eyebrows"
+
     def __init__(self, human):
         self._human = human
         self._startswith = "Eyebrow"

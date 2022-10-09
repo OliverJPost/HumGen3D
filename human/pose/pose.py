@@ -1,14 +1,25 @@
-# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+from __future__ import annotations
+
+import os
+from os import PathLike
+from typing import TYPE_CHECKING, Union
 
 import bpy
+from bpy.types import Image
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.base.savable_content import SavableContent
+
+if TYPE_CHECKING:
+    from human.human import Human
+
+from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
-class PoseSettings(PreviewCollectionContent):
+class PoseSettings(PreviewCollectionContent, SavableContent):
     def __init__(self, _human):
-        self._human = _human
+        self._human: Human = _human
         self._pcoll_name = "pose"
         self._pcoll_gender_split = False
 
@@ -45,6 +56,41 @@ class PoseSettings(PreviewCollectionContent):
 
         if not pref.debug_mode:
             hg_delete(hg_pose)
+
+        self._human.props.hashes["$pose"] = str(hash(self))
+
+    @injected_context
+    def save_to_library(
+        self,
+        name: str,
+        category: str = "Custom",
+        thumbnail: Union[None, str, Image] = "auto",
+        context=None,
+    ) -> None:
+        folder = os.path.join(get_prefs().filepath, "poses", category)
+
+        pose_object = self._human.rig_obj.copy()
+        pose_object.data = pose_object.data.copy()
+        pose_object.name = "HG_Pose"
+        context.collection.objects.link(pose_object)
+
+        save_objects_optimized(
+            context,
+            [
+                pose_object,
+            ],
+            folder,
+            name,
+        )
+
+        if thumbnail:
+            if thumbnail == "auto":
+                thumb_name = self._human.render_thumbnail()
+            else:
+                thumb_name = thumbnail.name
+            save_thumb(folder, thumb_name, name)
+
+        hg_delete(pose_object)
 
     def _import_pose(self, preset, context) -> bpy.types.Object:
         """Import selected pose object
@@ -142,6 +188,12 @@ class PoseSettings(PreviewCollectionContent):
             if bone.bone_group and bone.bone_group.name in SKIP_GROUPS:
                 continue
 
-            bone_rotations.append(tuple(bone.rotation_euler))
+            rotation_mode = bone.rotation_mode
+            if rotation_mode == "QUATERNION":
+                rotation_attr = "rotation_quaternion"
+            else:
+                rotation_attr = "rotation_euler"
+
+            bone_rotations.append(tuple(getattr(bone, rotation_attr)))
 
         return hash(tuple(bone_rotations))

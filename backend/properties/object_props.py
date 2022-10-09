@@ -23,6 +23,10 @@ class HG_SK_VALUES(bpy.types.PropertyGroup):
     testprop: BoolProperty()
 
 
+class HG_HASHES(bpy.types.PropertyGroup):
+    pass
+
+
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """
     Properties added to every Blender object as object.HG
@@ -42,6 +46,7 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     body_obj: PointerProperty(name="hg_body", type=bpy.types.Object)
     batch_result: BoolProperty(default=False)
     sk_values: PointerProperty(type=HG_SK_VALUES)
+    hashes: PointerProperty(type=HG_HASHES)
     version: IntVectorProperty(default=(3, 0, 0), min=0, max=99, size=3)
     # Legacy props
     experimental: BoolProperty(default=False)

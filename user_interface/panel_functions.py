@@ -76,6 +76,10 @@ def draw_paragraph(
             row.label(text=" ".join(line))
 
 
+def prettify(string: str) -> str:
+    return string.replace("_", " ").title()
+
+
 def draw_sub_spoiler(
     layout, sett, prop_name, label
 ) -> "tuple[bool, bpy.types.UILayout]":

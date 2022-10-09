@@ -7,6 +7,7 @@ Properties for creating and managing custom content in Human Generator
 
 
 import os
+from codecs import ignore_errors
 
 import bpy
 from bpy.props import (  # type: ignore
@@ -17,12 +18,16 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
+from genericpath import isdir
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from HumGen3D.utility_section.utility_functions import (
+from HumGen3D.custom_content.possible_content import find_possible_content
+from HumGen3D.human.human import Human
+from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
 )
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.panel_functions import prettify
 
 from ..content_packs.custom_content_packs import build_content_collection
 from .property_functions import find_folders
@@ -77,14 +82,86 @@ def add_image_to_thumb_enum(self, context):
     self.preset_thumbnail_enum = img.name
 
 
-class CustomContentProps(bpy.types.PropertyGroup):
-    """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
+def get_key_subcategories(category_type):
+    folder_livekeys = os.path.join(get_prefs().filepath, "livekeys", category_type)
+    folder_shapekeys = os.path.join(get_prefs().filepath, "shapekeys", category_type)
 
-    sk_collection_name: StringProperty(default="")
-    show_saved_sks: BoolProperty(default=False, update=refresh_shapekeys_ul)
+    categories = []
+    if os.path.isdir(folder_livekeys):
+        categories.extend([f.name for f in os.scandir(folder_livekeys) if f.is_dir()])
 
-    hairstyle_name: StringProperty(default="")
-    save_hairtype: EnumProperty(
+    if os.path.isdir(folder_shapekeys):
+        categories.extend([f.name for f in os.scandir(folder_shapekeys) if f.is_dir()])
+
+    if ".DS_Store" in categories:
+        categories.remove(".DS_Store")
+
+    return [(categ, prettify(categ), "", i) for i, categ in enumerate(categories)]
+
+
+def get_categories(self, context):
+    custom_content_saving_human = (
+        context.scene.HG3D.custom_content.content_saving_active_human
+    )
+    human = Human.from_existing(custom_content_saving_human)
+
+    attr = self.human_attr
+    if attr == "hair":
+        hair_type = "regular_hair" if self.type == "head" else "face_hair"
+        human_subclass = getattr(human.hair, hair_type)
+    else:
+        human_subclass = getattr(human, attr)
+
+    return human_subclass.get_categories(include_all=False, ignore_genders=True)
+
+
+class ContentSavingSubgroup:
+    name: StringProperty()
+    existing_or_new_category: EnumProperty(
+        name="Category choice",
+        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
+    )
+    new_category_name: StringProperty()
+    chosen_existing_subcategory: EnumProperty(name="Library", items=get_categories)
+
+
+# FIXME load order with class property instead of alphabetical
+class ACustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    key_to_save: StringProperty()
+
+    save_as: EnumProperty(
+        name="Save key as:",
+        items=[("livekey", "Live Key", "", 0), ("shapekey", "Shape Key", "", 1)],
+        default="livekey",
+    )
+    delete_original: BoolProperty(name="Delete original", default=False)
+
+    category_to_save_to: EnumProperty(
+        name="Category to save to",
+        items=[
+            ("body_proportions", "Body Proportions (Visible)", "", 0),
+            ("face_proportions", "Face Proportions (Visible)", "", 1),
+            ("face_presets", "Face Presets (Semi-hidden)", "", 2),
+            ("expressions", "Expressions (Visible)", "", 3),
+            ("special", "Special (Hidden)", "", 4),
+        ],
+    )
+
+    chosen_existing_subcategory: EnumProperty(
+        name="Subcategory",
+        items=lambda self, _: get_key_subcategories(self.category_to_save_to),
+    )
+
+
+# FIXME load order with class property instead of alphabetical
+class ACustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "pose"
+
+
+class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "hair"
+
+    type: EnumProperty(
         name="Hairtype",
         items=[
             ("head", "Regular Hair", "", 0),
@@ -92,15 +169,41 @@ class CustomContentProps(bpy.types.PropertyGroup):
         ],
         default="head",
     )
-
-    savehair_male: BoolProperty(default=True)
-    savehair_female: BoolProperty(default=True)
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
     show_eyesystems: BoolProperty(
         name="Show eye hairsystems", default=False, update=refresh_hair_ul
     )
 
-    clothing_name: StringProperty(default="")
-    saveoutfit_categ: EnumProperty(
+
+class ACustomOutfitProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "outfit"
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
+    save_when_finished: BoolProperty(default=True)
+
+
+class ACustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    human_attr = "footwear"
+    save_for_male: BoolProperty(default=True)
+    save_for_female: BoolProperty(default=True)
+    save_when_finished: BoolProperty(default=True)
+
+
+class CustomContentProps(bpy.types.PropertyGroup):
+    """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
+
+    key: PointerProperty(type=ACustomKeyProps)
+    pose: PointerProperty(type=ACustomPoseProps)
+    hair: PointerProperty(type=ACustomHairProps)
+    outfit: PointerProperty(type=ACustomOutfitProps)
+    footwear: PointerProperty(type=ACustomFootwearProps)
+    starting_human_name: StringProperty()
+    hair_name: StringProperty()
+    show_unchanged: BoolProperty(
+        update=lambda self, context: find_possible_content(context)
+    )
+    clothing_type: EnumProperty(
         name="Clothing type",
         items=[
             ("outfit", "Outfit", "", 0),
@@ -108,6 +211,8 @@ class CustomContentProps(bpy.types.PropertyGroup):
         ],
         default="outfit",
     )
+
+    clothing_name: StringProperty(default="")
 
     saveoutfit_male: BoolProperty(default=True)
     saveoutfit_female: BoolProperty(default=True)
@@ -130,16 +235,6 @@ class CustomContentProps(bpy.types.PropertyGroup):
     mask_foot: BoolProperty(default=False)
 
     pose_name: StringProperty()
-    pose_category_to_save_to: EnumProperty(
-        name="Pose Category",
-        items=[("existing", "Existing", "", 0), ("new", "Create new", "", 1)],
-        default="existing",
-    )
-    pose_chosen_existing_category: EnumProperty(
-        name="Pose Library",
-        items=lambda a, b: find_folders(a, b, "pose", False),
-    )
-    pose_new_category_name: StringProperty()
 
     custom_content_categ: EnumProperty(
         name="Content type",
@@ -149,7 +244,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
             ("texture_sets", "Texture sets", "", 1),
             ("shapekeys", "Shapekeys", "", 2),
             ("hairstyles", "Hairstyles", "", 3),
-            ("poses", "Poses", "", 4),
+            ("pose", "Pose", "", 4),
             ("outfits", "Outfits", "", 5),
             ("footwear", "Footwear", "", 6),
         ],
