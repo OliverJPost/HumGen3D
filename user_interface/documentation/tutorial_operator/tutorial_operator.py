@@ -84,7 +84,7 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
 
     def on_invoke(self, context, event):
         if self.first_time:
-            sett = bpy.context.scene.HG3D
+            sett = bpy.context.scene.HG3D  # type:ignore[attr-defined]
             sett.subscribed = False
             msgbus(self, context)
             preview_collections["humans"].refresh(context, None)

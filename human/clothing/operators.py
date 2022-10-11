@@ -1,10 +1,9 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
 import random
 
-from HumGen3D.backend import hg_delete
 import bpy
+from HumGen3D.backend import hg_delete
 from HumGen3D.human.human import Human
 
 from .base_clothing import find_masks
@@ -70,15 +69,15 @@ class HG_DELETE_CLOTH(bpy.types.Operator):
 
 
 class HG_OT_PATTERN(bpy.types.Operator):
-    """
-    Adds a pattern to the selected cloth material, adding the necessary nodes. Also used for removing the pattern
+    """n Adds a pattern to the selected cloth material, adding the necessary nodes.
+    Also used for removing the pattern
     """
 
     bl_idname = "hg3d.pattern"
     bl_label = "Cloth Pattern"
     bl_description = "Toggles pattern on and off"
 
-    add: bpy.props.BoolProperty()  # True means the pattern is added, False means the pattern will be removed
+    add: bpy.props.BoolProperty()  # True means the pattern is added, False means remove
 
     def execute(self, context):
         obj = context.object
@@ -154,7 +153,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
         Returns:
             tuple[float, float, float, 1]: rgba color
         """
-        color_rgb = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]
+        color_rgb = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]  # noqa E203
         float_color_rgb = [x / 255.0 for x in color_rgb]
         float_color_rgb.append(1)
 

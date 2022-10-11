@@ -1,20 +1,19 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
 import random
-from typing import Generator, List, Union
+from typing import TYPE_CHECKING, List, Union
 
-import bpy
 import numpy as np
-from bpy.props import CollectionProperty
-from HumGen3D.backend.preferences.preference_func import get_prefs
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
 from ..base.prop_collection import PropCollection
 
 
 class FaceKeys(PropCollection):
-    def __init__(self, human):
+    def __init__(self, human: "Human") -> None:
         self._human = human
 
     #     facekeys_dict = self._get_ff_prefix_dict()
@@ -43,16 +42,13 @@ class FaceKeys(PropCollection):
         pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
         return PropCollection(ff_keys + pr_keys)
 
-    def reset(self):
+    def reset(self) -> None:
         for sk in self.shape_keys:
             sk.value = 0
 
-    def randomize(self, ff_subcateg="all", use_bell_curve=False):
-        prefix_dict = self._get_ff_prefix_dict()
-        face_sk = [
-            sk for sk in self.shape_keys if sk.name.startswith(prefix_dict[ff_subcateg])
-        ]
-        all_v = 0
+    def randomize(self, subcategory: str = "all", use_bell_curve: bool = False) -> None:
+        face_sk = [key.as_bpy() for key in self.keys if key.subcategory == subcategory]
+        all_v = 0.0
         for sk in face_sk:
             if use_bell_curve:
                 new_value = np.random.normal(loc=0, scale=0.5)
@@ -60,27 +56,3 @@ class FaceKeys(PropCollection):
                 new_value = random.uniform(sk.slider_min, sk.slider_max)
             all_v += new_value
             sk.value = new_value
-
-    @staticmethod
-    def _get_ff_prefix_dict() -> dict:
-        """Returns facial features prefix dict
-
-        Returns:
-            dict: key: internal naming of facial feature category
-                value: naming prefix of shapekeys that belong to that category
-        """
-        prefix_dict = {
-            "all": "ff",
-            "u_skull": ("ff_a", "ff_b"),
-            "eyes": "ff_c",
-            "l_skull": "ff_d",
-            "nose": "ff_e",
-            "mouth": "ff_f",
-            "chin": "ff_g",
-            "cheeks": "ff_h",
-            "jaw": "ff_i",
-            "ears": "ff_j",
-            "custom": "ff_x",
-        }
-
-        return prefix_dict

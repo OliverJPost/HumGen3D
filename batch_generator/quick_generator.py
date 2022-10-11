@@ -1,3 +1,4 @@
+# type:ignore
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import os
@@ -5,29 +6,11 @@ import random
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.props import (  # type:ignore
-    BoolProperty,
-    EnumProperty,
-    IntProperty,
-    StringProperty,
-)
+from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 from HumGen3D.backend import hg_delete, hg_log, preview_collections
-from HumGen3D.backend.memory_management import hg_delete
-
-# from HumGen3D.backend.preview_collections import (
-#    set_random_active_in_pcoll,
-# )
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import apply_shapekeys
 
-# from ..utility_section.baking import (  # type:ignore
-#     add_image_node,
-#     bake_texture,
-#     check_bake_render_settings,
-#     generate_bake_enum,
-#     get_solidify_state,
-#     material_setup,
-# )
 from .batch_functions import height_from_bell_curve
 
 set_random_active_in_pcoll = None  # FIXME
@@ -94,19 +77,8 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     pose_type: StringProperty()
 
-    # bake_textures: BoolProperty()
-    # bake_samples: IntProperty()
-    # bake_extension: StringProperty()
-    # body_resolution: IntProperty()
-    # eyes_resolution: IntProperty()
-    # mouth_resolution: IntProperty()
-    # clothing_resolution: IntProperty()
-    # bake_export_folder: StringProperty()
-
     def execute(self, context):
-        sett = context.scene.HG3D
-
-        #### Creation Phase ####
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
 
         presets = Human.get_preset_options(self.gender)
         chosen_preset = random.choice(presets)
@@ -133,11 +105,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         human.hair.children_set_hide(True)
 
-        sett.human_height = int(height_from_bell_curve(sett, self.gender))
-
-        human.finish(context)
-
-        #### Finalize Phase #####
+        sett.human_height = int(height_from_bell_curve(sett, self.gender)[0])
 
         if self.add_clothing:
             try:
@@ -150,38 +118,28 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
                 )
                 sett.pcoll.outfit_category = "All"
 
-            set_random_active_in_pcoll(context, sett, "outfit")
+            human.outfit.set_random(context)
             sett.pcoll.footwear_cateogry = "All"
-            set_random_active_in_pcoll(context, sett, "footwear")
-            # FIXME
-            # for cloth in human.finalize_phase.outfit.obj_settings:
-            #     cloth.randomize_colors(context)
-            #     cloth.set_texture_resolution(self.texture_resolution)
+            human.footwear.set_random(context)
 
-            # for cloth in human.finalize_phase.footwear.obj_settings:
-            #     cloth.randomize_colors(context)
-            #     cloth.set_texture_resolution(self.texture_resolution)
+            for cloth in human.outfit.objects:
+                human.outfit.randomize_colors(cloth)
+                human.outfit.set_texture_resolution(cloth, self.texture_resolution)
+
+            for cloth in human.footwear.objects:
+                human.footwear.randomize_colors(cloth)
+                human.footwear.set_texture_resolution(cloth, self.texture_resolution)
 
         if self.pose_type != "a_pose":
             self._set_pose(context, sett, self.pose_type)
 
         if self.add_expression:
-            # TODO implement in OOP
-            sett.pcoll.expression_category = self.expression_category
-            set_random_active_in_pcoll(context, sett, "expressions")
-            expr_sk = next(
-                (sk for sk in human.keys if sk.name.startswith("expr_")),
-                None,
+            human.expression.set_random(context)
+            human.expression.shape_keys[0].value = random.choice(
+                [0.5, 0.7, 0.8, 1, 1, 1]
             )
-            if expr_sk:
-                expr_sk.value = random.choice([0.5, 0.7, 0.8, 1, 1, 1])
 
-        human.props.phase = "outfit"  # TODO is this needed? Remove?
-
-        # if self.bake_textures:
-        #     self._bake_all_textures(context, hg_rig)
-
-        #### Quality settings #####
+        # Quality settings
 
         hg_rig = human.rig_obj
         hg_body = human.body_obj
@@ -208,55 +166,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         hg_delete(hg_rig)
         hg_body.name = hg_rig_name
 
-    # def _bake_all_textures(self, context, hg_rig):
-    #     check_bake_render_settings(context, self.bake_samples, force_cycles=True)
-    #     bake_enum = generate_bake_enum(context, [hg_rig,])
-    #     hg_log("Bake enum", bake_enum)
-
-    #     image_dict = {}
-
-    #     for idx, sett_dict in enumerate(bake_enum):
-    #         human_name, texture_name, bake_obj, mat_slot, tex_type = sett_dict.values()
-
-    #         bake_obj.select_set(True)
-    #         context.view_layer.objects.active = bake_obj
-
-    #         solidify_state = get_solidify_state(bake_obj, False)
-    #         current_mat = bake_obj.data.materials[mat_slot]
-
-    #         img_name = f'{human_name}_{texture_name}_{tex_type}'
-
-    #         #TODO  teeth
-    #         if texture_name == 'body':
-    #             resolution = self.body_resolution
-    #         elif texture_name == 'eyes':
-    #             resolution = self.eyes_resolution
-    #         else:
-    #             resolution = self.clothing_resolution
-
-    #         hg_rig.select_set(False)
-    #         img = bake_texture(context, current_mat, tex_type, img_name, self.bake_extension, resolution, self.bake_export_folder)
-
-    #         assert img
-
-    #         image_dict[img] = tex_type
-
-    #         #check if next texture belongs to another object
-    #         try:
-    #             last_texture = True if bake_enum[idx+1]["texture_name"] != texture_name else False
-    #         except IndexError:
-    #             last_texture = True
-
-    #         if last_texture:
-    #             new_mat = material_setup(bake_obj, mat_slot)
-    #             for img,tex_type in image_dict.items():
-    #                 add_image_node(img, tex_type, new_mat)
-    #             image_dict.clear()
-
-    #         get_solidify_state(bake_obj, solidify_state)
-    #         hg_rig = bpy.data.objects.get(human_name)
-    #         hg_rig['hg_baked'] = 1
-
     def _set_quality_settings(self, context, hg_rig, hg_body):
 
         if self.delete_backup:
@@ -265,7 +174,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         hg_objects = [
             hg_rig,
         ]
-        hg_objects.extend([obj for obj in hg_rig.children])
+        hg_objects.extend(list(hg_rig.children))
 
         if self.apply_shapekeys:
             for obj in [o for o in hg_objects if o.type == "MESH"]:
@@ -319,7 +228,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         nodes = hg_body.data.materials[0].node_tree.nodes
         old_image = next(n.image.name for n in nodes if n.name == "Color")
         pcoll_options = sett["previews_list_textures"]
-        searchword = (
+        searchword = (  # FIXME
             os.path.splitext(old_image)[0]
             .replace("4K", "")
             .replace("MEDIUM", "")
@@ -339,20 +248,6 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         context.view_layer.objects.active = old_active_obj
 
-    # def _add_poly_reduction_modifier(self, obj) -> bpy.types.Modifier:
-    #     #TODO optimise polygon reduction, UV layout
-    #     if obj.type != 'MESH':
-    #         return None
-
-    #     decimate_mod = obj.modifiers.new('HG_POLY_REDUCTION', 'DECIMATE')
-
-    #     # if self.poly_reduction == 'medium':
-    #     #     decimate_mod.decimate_type = 'UNSUBDIV'
-    #     #     decimate_mod.iterations = 2
-    #     decimate_mod.ratio = 0.16 if self.poly_reduction == 'medium' else 0.08 if self.poly_reduction == 'high' else 0.025
-
-    #     return decimate_mod
-
     def _remove_modifier_by_type(self, obj, mod_type):
         for modifier in [m for m in obj.modifiers if m.type == mod_type]:
             obj.modifiers.remove(modifier)
@@ -363,7 +258,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
     def _delete_backup_human(self, hg_rig):
         backup_rig = hg_rig.HG.backup
-        backup_children = [obj for obj in backup_rig.children]
+        backup_children = list(backup_rig.children)
 
         for obj in backup_children:
             hg_log("Deleted", obj.name)
@@ -381,8 +276,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
             set_random_active_in_pcoll(context, sett, "pose")
 
     def pick_library(self, context, categ, gender=None):
-        sett = context.scene.HG3D
-
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         collection = getattr(context.scene, f"batch_{categ}_col")
 
         if gender:

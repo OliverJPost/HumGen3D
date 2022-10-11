@@ -1,16 +1,18 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import contextlib
 import hashlib
 import json
 import os
 from math import acos, pi
 from pathlib import Path
-from typing import Tuple
+from typing import Iterable, Optional, Tuple, Union
 
 import bpy
 import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
+from HumGen3D.backend.type_aliases import C
 from HumGen3D.human import clothing
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.decorators import injected_context
@@ -28,10 +30,10 @@ from HumGen3D.human.clothing.add_obj_to_clothing import (
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.clothing.saving import save_clothing
-from HumGen3D.human.keys.keys import apply_shapekeys
+from mathutils import Vector
 
 
-def find_masks(obj) -> list:
+def find_masks(obj: bpy.types.Object) -> list[str]:
     """Looks at the custom properties of the object, searching for custom tags
     that indicate mesh masks added for this cloth.
 
@@ -43,10 +45,9 @@ def find_masks(obj) -> list:
     """
     mask_list = []
     for i in range(10):
-        try:
-            mask_list.append(obj["mask_{}".format(i)])
-        except:
-            continue
+        with contextlib.suppress(AttributeError, KeyError):
+            mask_list.append(obj["mask_{}".format(i)])  # type:ignore[index]
+
     return mask_list
 
 
@@ -56,7 +57,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         return PatternSettings(self._human)
 
     @injected_context
-    def set(self, preset, context=None):
+    def set(self, preset: str, context: C = None) -> None:
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
 
         Args:
@@ -104,7 +105,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         self._human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
 
-    def add_obj(self, cloth_obj, cloth_type, context):
+    def add_obj(
+        self, cloth_obj: bpy.types.Object, cloth_type: str, context: bpy.types.Context
+    ) -> None:
         body_obj = self._human.body_obj
         correct_shape_to_a_pose(cloth_obj, body_obj, context)
         add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
@@ -116,9 +119,11 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         cloth_obj.parent = rig_obj
         cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
         tag = "shoe" if cloth_type == "footwear" else "cloth"
-        cloth_obj[tag] = 1
+        cloth_obj[tag] = 1  # type:ignore[index]
 
-    def deform_cloth_to_human(self, context, cloth_obj):
+    def deform_cloth_to_human(
+        self, context: bpy.types.Context, cloth_obj: bpy.types.Object
+    ) -> None:
         """Deforms the cloth object to the shape of the active HumGen human by using
         HG_SHAPEKEY_CALCULATOR
 
@@ -161,7 +166,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self._set_armature(context, cloth_obj, self._human.rig_obj)
         context.view_layer.objects.active = self._human.rig_obj
 
-    def _set_geometry_masks(self, mask_remove_list, new_mask_list):
+    def _set_geometry_masks(
+        self, mask_remove_list: list[str], new_mask_list: list[str]
+    ) -> None:
         """Adds geometry mask modifiers to hg_body based on custom properties on the
         imported clothing
 
@@ -184,12 +191,10 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         # remove modifiers used by old clothes
         for mask in mask_remove_list:
-            try:
+            with contextlib.suppress(Exception):
                 self._human.body_obj.modifiers.remove(
                     self._human.body_obj.modifiers.get(mask)
                 )
-            except Exception:
-                pass
 
         # add new masks used by new clothes
         for mask in new_mask_list:
@@ -197,23 +202,34 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             mod.vertex_group = mask
             mod.invert_vertex_group = True
 
-    def _set_armature(self, context, obj, hg_rig):
+    def _set_armature(
+        self,
+        context: bpy.types.Context,
+        obj: bpy.types.Object,
+        hg_rig: bpy.types.Object,
+    ) -> None:
         """Adds an armature modifier to this cloth object
 
         Args:
             obj (Object): cloth object to add armature to
             hg_rig (Object): HumGen armature
         """
-        # checks if the cloth object already has an armature modifier, adds one if it doesnt
+        # checks if the cloth object already has an armature modifier,
+        # adds one if it doesnt
         armature_mods = [mod for mod in obj.modifiers if mod.type == "ARMATURE"]
 
         if not armature_mods:
             armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
 
         armature_mods[0].object = hg_rig
-        self._move_armature_to_top(context, obj, armature_mods)
+        self._move_armature_to_top(context, obj, armature_mods)  # type:ignore[arg-type]
 
-    def _move_armature_to_top(self, context, obj, armature_mods):
+    def _move_armature_to_top(
+        self,
+        context: bpy.types.Context,
+        obj: bpy.types.Object,
+        armature_mods: Iterable[bpy.types.Modifier],
+    ) -> None:
         """Moves the armature modifier to the top of the stack
 
         Args:
@@ -229,16 +245,18 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 0,
             ) > bpy.app.version:  # use old method for versions older than 2.90
                 while obj.modifiers.find(mod.name) != 0:
-                    bpy.ops.object.modifier_move_up({"object": obj}, modifier=mod.name)
+                    bpy.ops.object.modifier_move_up(
+                        {"object": obj}, modifier=mod.name  # type:ignore
+                    )
             else:
                 bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
 
     @injected_context
     def _import_cloth_items(
         self,
-        preset,
-        context=None,
-    ) -> Tuple[list, list]:
+        preset: str,
+        context: C = None,
+    ) -> Tuple[list[bpy.types.Object], list[bpy.types.Collection]]:
         """Imports the cloth objects from an external file
 
         Args:
@@ -290,7 +308,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         return cloth_objs, collections
 
-    def remove(self) -> list:
+    def remove(self) -> list[str]:
         """Removes the cloth objects that were already on the human
 
         Args:
@@ -310,18 +328,18 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         return mask_remove_list
 
-    def _set_cloth_corrective_drivers(self, hg_cloth, sk):
+    def _set_cloth_corrective_drivers(
+        self, hg_cloth: bpy.types.Object, sk: bpy.types.ShapeKey
+    ) -> None:
         """Sets up the drivers of the corrective shapekeys on the clothes
 
         Args:
             hg_body (Object): HumGen body object
             sk (list): List of cloth object shapekeys #CHECK
         """
-        try:
+        with contextlib.suppress(AttributeError):
             for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
                 hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
-        except AttributeError:
-            pass
 
         body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
 
@@ -333,7 +351,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             if target_sk not in [shapekey.name for shapekey in sk]:
                 continue
 
-            new_driver = sk[target_sk].driver_add("value")
+            new_driver = sk[target_sk].driver_add("value")  # type:ignore[index]
             new_var = new_driver.driver.variables.new()
             new_var.type = "TRANSFORMS"
             new_target = new_var.targets[0]
@@ -347,7 +365,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             new_target.transform_space = old_target.transform_space
 
     # TODO item independent
-    def set_texture_resolution(self, clothing_item, resolution_category):
+    def set_texture_resolution(
+        self, clothing_item: bpy.types.Object, resolution_category: str
+    ) -> None:
         if resolution_category == "performance":
             resolution_tag = "low"
         elif resolution_category == "optimised":
@@ -392,7 +412,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             new_image.colorspace_settings.name = old_color_setting
 
     @injected_context
-    def randomize_colors(self, cloth_obj, context=None):
+    def randomize_colors(self, cloth_obj: bpy.types.Object, context: C = None) -> None:
         mat = cloth_obj.data.materials[0]
         if not mat:
             return
@@ -401,7 +421,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         control_node = nodes.get("HG_Control")
         if not control_node:
             hg_log(
-                f"Could not set random color for {cloth_obj.name}, control node not found",
+                f"Could not set random color for {cloth_obj.name}, control node not found",  # noqa E501
                 level="WARNING",
             )
             return
@@ -434,7 +454,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         context.view_layer.objects.active = old_active
 
     @injected_context
-    def _calc_percentage_clipping_vertices(self, context=None) -> float:
+    def _calc_percentage_clipping_vertices(self, context: C = None) -> float:
         body_obj = self._human.body_obj
         for modifier in body_obj.modifiers:
             if modifier.type != "ARMATURE":
@@ -443,19 +463,25 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         depsgraph = context.evaluated_depsgraph_get()
         body_eval = body_obj.evaluated_get(depsgraph)
 
-        def calc_if_inside(target_pt_global, mesh_obj, tolerance=0.02):
+        # TODO move outside
+        def calc_if_inside(
+            target_pt_global: Vector,
+            mesh_obj: bpy.types.Object,
+            tolerance: float = 0.02,
+        ) -> bool:
 
             # Convert the point from global space to mesh local space
             target_pt_local = mesh_obj.matrix_world.inverted() @ target_pt_global
             # Find the nearest point on the mesh and the nearest face normal
-            _, pt_closest, face_normal, _ = mesh_obj.closest_point_on_mesh(
+            _, pt_closest, normal, _ = mesh_obj.closest_point_on_mesh(  # type:ignore
                 target_pt_local
             )
             # Get the target-closest pt vector
             target_closest_pt_vec = (pt_closest - target_pt_local).normalized()
             # Compute the dot product = |a||b|*cos(angle)
-            dot_prod = target_closest_pt_vec.dot(face_normal)
-            # Get the angle between the normal and the target-closest-pt vector (from the dot prod)
+            dot_prod = target_closest_pt_vec.dot(normal)
+            # Get the angle between the normal and the target-closest-pt vector
+            # (from the dot prod)
             angle = acos(min(max(dot_prod, -1), 1)) * 180 / pi
             # Allow for some rounding error
             inside = angle < 90 - tolerance
@@ -473,19 +499,23 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         return is_inside_list.count(True) / len(is_inside_list)
 
-    def __hash__(self):
-        hash_coll = []
+    def __hash__(self) -> int:
+        hash_coll: list[Union[str, int]] = []
         for obj in self.objects:
             vert_count = len(obj.data.vertices)
             vert_co = np.empty(vert_count * 3, dtype=np.float64)
             obj.data.vertices.foreach_get("co", vert_co)
 
-            hash_coll.append(hashlib.sha1(vert_co).hexdigest())
+            hash_coll.append(
+                hashlib.sha1(vert_co).hexdigest()  # type:ignore[arg-type] # noqa DUO130
+            )
 
             for sk in obj.data.shape_keys.key_blocks:
-                sk_co = np.empty(vert_count * 3, dtype=np.float64)
-                sk.data.foreach_get("co", sk_co)
-                hash_coll.append(hashlib.sha1(sk_co).hexdigest())
+                co = np.empty(vert_count * 3, dtype=np.float64)
+                sk.data.foreach_get("co", co)
+                hash_coll.append(
+                    hashlib.sha1(co).hexdigest()  # type:ignore[arg-type] # noqa DUO130
+                )
 
             mat = obj.active_material
             if mat:
@@ -500,14 +530,14 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     @injected_context
     def save_to_library(
         self,
-        name,
-        for_male=True,
-        for_female=True,
-        open_when_finished=False,
-        category="Custom",
-        thumbnail=None,
-        context=None,
-    ):
+        name: str,
+        for_male: bool = True,
+        for_female: bool = True,
+        open_when_finished: bool = False,
+        category: str = "Custom",
+        thumbnail: Optional[bpy.types.Image] = None,
+        context: C = None,
+    ) -> None:
         genders = []
         if for_male:
             genders.append("male")

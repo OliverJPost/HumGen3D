@@ -1,20 +1,18 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+# type:ignore
+
 """
 context.scene.HG3D.pcoll
 Stores the preview collections of Human Generator. These collections are used to allow
 the user to choose between different options by looking at thumbnail pictures.
 """
 from operator import attrgetter
-from weakref import ref
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.human import Human
-
-from ..content_packs.custom_content_packs import build_content_collection
-from .property_functions import find_folders
 
 
 def get_items(attr):

@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from HumGen3D.human.human import Human
 import bpy
+from HumGen3D.human.human import Human
 
 
 class HG_REMOVE_HAIR(bpy.types.Operator):

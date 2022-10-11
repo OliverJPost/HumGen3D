@@ -1,19 +1,11 @@
+# type:ignore
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from bpy.props import (  # type:ignore
-    BoolProperty,
-    EnumProperty,
-    IntProperty,
-    IntVectorProperty,
-    StringProperty,
-)
+from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from HumGen3D.user_interface.icons.icons import get_hg_icon
-
-from ..preview_collections import preview_collections
 
 
 class CpackEditingSystem:
-
     # cpack editing props
     editing_cpack: StringProperty()
     cpack_content_search: StringProperty()
@@ -24,7 +16,7 @@ class CpackEditingSystem:
         description="",
         items=[
             ("starting_humans", "Starting Humans", "", 0),
-            # ("texture_sets",    "Texture sets",     "", 1),
+            # ("texture_sets",    "Texture sets",     "", 1), # noqa
             ("shapekeys", "Shapekeys", "", 2),
             ("hairstyles", "Hairstyles", "", 3),
             ("face_hair", "Facial hair", "", 4),
@@ -110,14 +102,8 @@ class CpackEditingSystem:
         """
         coll = context.scene.custom_content_col
 
-        # Total
         sidebar.label(text=f"Total items: {len([c for c in coll if c.include])}")
 
-        kwargs = (
-            lambda c: {"icon": "BLANK1"}
-            if c.gender == "none"
-            else {"icon_value": get_hg_icon(f"{c.gender}_true")}
-        )
         # TODO these two can be joined into one function
         # Added
         box = sidebar.box()
@@ -135,7 +121,11 @@ class CpackEditingSystem:
             col.scale_y = 0.5
             for c in newly_added_list:
                 row = col.row()
-                row.label(text=c.name, **kwargs(c))
+                if c.gender == "none":
+                    kwarg = {"icon_value": get_hg_icon(f"{c.gender}_true")}
+                else:
+                    kwarg = {"icon": "BLANK1"}
+                row.label(text=c.name, **kwarg)
                 row.prop(c, "include", text="")
 
         # Removed
@@ -158,8 +148,9 @@ class CpackEditingSystem:
                 row.prop(c, "include", text="")
 
     def _draw_main_topbar(self, main):
-        """Draws the top bar of the main section of the editing UI. This
-        contains the enum to swith categories and the filter items (search and
+        """Draws the top bar of the main section of the editing UI.
+
+        This contains the enum to swith categories and the filter items (search and
         hide others)
 
         Args:
@@ -188,7 +179,9 @@ class CpackEditingSystem:
         flow = col.grid_flow(row_major=True, even_columns=True, even_rows=True)
 
         categ = self.custom_content_categ
-        condition = lambda i: i.categ == categ and self.cpack_content_search in i.name
+        condition = (
+            lambda i: i.categ == categ and self.cpack_content_search in i.name
+        )  # FIXME
         for item in filter(condition, context.scene.custom_content_col):
             if self.hide_other_packs and item.existing_content:
                 continue

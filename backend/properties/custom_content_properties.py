@@ -1,36 +1,32 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
+# type:ignore
+
+""" # noqa D400
 context.scene.HG3D.custom_content
+
 Properties for creating and managing custom content in Human Generator
 """
 
 
 import os
-from codecs import ignore_errors
 
 import bpy
-from bpy.props import (  # type: ignore
+from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
-    FloatProperty,
     IntProperty,
     PointerProperty,
     StringProperty,
 )
-from genericpath import isdir
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.human import Human
-from HumGen3D.user_interface.content_panel.operators import (
-    refresh_hair_ul,
-    refresh_shapekeys_ul,
-)
+from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.user_interface.panel_functions import prettify
 
 from ..content_packs.custom_content_packs import build_content_collection
-from .property_functions import find_folders
 
 
 def poll_mtc_armature(self, obj):
@@ -54,7 +50,7 @@ def thumbnail_saving_prop_update(self, context):
 
     if switched_to == "last_render":
         render_result = bpy.data.images.get("Render Result")
-        hg_log([s for s in render_result.size])
+        hg_log(list(render_result.size))
         if not render_result:
             ShowMessageBox("No render result found")
             return
@@ -76,7 +72,7 @@ def get_preset_thumbnail(self, context) -> list:
 
 
 def add_image_to_thumb_enum(self, context):
-    """Adds the custom selected image to the enum"""
+    """Adds the custom selected image to the enum."""
     img = self.preset_thumbnail
 
     self.preset_thumbnail_enum = img.name
@@ -191,7 +187,7 @@ class ACustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
 
 
 class CustomContentProps(bpy.types.PropertyGroup):
-    """Subclass of HG_SETTINGS, properties related to custom_content in HG"""
+    """Subclass of HG_SETTINGS, properties related to custom_content in HG."""
 
     key: PointerProperty(type=ACustomKeyProps)
     pose: PointerProperty(type=ACustomPoseProps)

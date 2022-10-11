@@ -3,12 +3,12 @@
 """UNDER CONSTRUCTION"""
 
 from pathlib import Path
-from HumGen3D.backend import get_prefs
+from typing import no_type_check
 
 import bmesh  # type: ignore
 import bpy  # type: ignore
 import numpy as np
-from mathutils import Vector
+from HumGen3D.backend import get_prefs
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -21,6 +21,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     bl_description = "Converts this system to hair cards"
     bl_options = {"REGISTER", "UNDO"}
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
 
@@ -32,7 +33,6 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             if ps.name.startswith("Eye") or "fh" not in ps.name:
                 continue
             ps_sett = ps.settings
-            p_amount = len(ps.particles)
 
             ps_sett.child_nbr = 0
             if ps_sett.display_step == 3:
@@ -110,9 +110,11 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             hc_obj.select_set(False)
         return {"FINISHED"}
 
+    @no_type_check
     def invoke(self, context, event):
         return context.window_manager.invoke_confirm(self, event)
 
+    @no_type_check
     def get_uv_islands(self, context, haircard_obj):
         start_uv_sync_mode = context.scene.tool_settings.use_uv_select_sync
 
@@ -142,19 +144,18 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
         context.scene.tool_settings.use_uv_select_sync = start_uv_sync_mode
         return all_islands
 
+    @no_type_check
     def get_uv_islands2(self, haircard_obj, steps):
         bm = bmesh.from_edit_mesh(haircard_obj.data)
         bm.faces.ensure_lookup_table()
 
         faces = [f.index for f in bm.faces]
         n = pow(2, steps)
-        islands = [faces[i : i + n] for i in range(0, len(faces), n)]
-
-        # for i in range(0, len(faces), pow(2,steps)):
-        #    yield faces[i:i + n]
+        islands = [faces[i : i + n] for i in range(0, len(faces), n)]  # noqa E203
 
         return islands
 
+    @no_type_check
     def set_uvs(self, hc_obj, islands):
         me = hc_obj.data
         uv_layer = me.uv_layers.active.data
@@ -166,6 +167,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
             break
 
 
+@no_type_check
 def build_hair_spline_distance_enum(hair_obj, body_obj) -> list:
     spline_distance_enum = []
 
@@ -204,6 +206,7 @@ def build_hair_spline_distance_enum(hair_obj, body_obj) -> list:
     return spline_distance_enum
 
 
+@no_type_check
 def get_vert_loc_in_matrix_of_target_object(
     target_object, object_of_passed_vert, index
 ):
@@ -227,12 +230,14 @@ def get_vert_loc_in_matrix_of_target_object(
     #         verts_within_distance.append(vert)
 
 
+@no_type_check
 def find_distance_to_control_vert(point, control_node_converted_loc):
     loc = np.array(point.co[:3])
     squared_dist = np.sum((loc - control_node_converted_loc) ** 2, axis=0)
     return np.sqrt(squared_dist)
 
 
+@no_type_check
 def get_side_of_head(point_on_spline, right_vert, left_vert):
     distance_right = find_distance_to_control_vert(point_on_spline, right_vert)
     distance_left = find_distance_to_control_vert(point_on_spline, left_vert)

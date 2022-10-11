@@ -5,36 +5,35 @@ from __future__ import annotations
 import os
 import random
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Tuple
+from typing import TYPE_CHECKING, Any, Callable, List, Tuple, cast
 
 import bpy
 from bpy.types import bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs
+from HumGen3D.backend.type_aliases import C
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from ..base.decorators import injected_context
 
 if TYPE_CHECKING:
-    from bpy.types import (  # type:ignore
-        Context,
-        FloatVectorProperty,
-        Material,
-        NodeInput,
-        ShaderNode,
-    )
+    from bpy.types import FloatVectorProperty, Material, ShaderNode  # type:ignore
 
     from ..human import Human
 
 
-def create_node_property(node_name: str, input_name: str | int):
-    @property
-    def _property_function(self) -> float | FloatVectorProperty | Tuple[float]:
+def create_node_property(node_name: str, input_name: str | int) -> Callable[..., Any]:
+    @property  # type:ignore[misc]
+    def _property_function(  # type:ignore[no-untyped-def]
+        self,
+    ) -> float | FloatVectorProperty | Tuple[float]:
         tone_node = self.nodes[node_name]
         return tone_node.inputs[input_name].default_value
 
     @_property_function.setter
-    def _property_function(self, value: float | FloatVectorProperty | Tuple[float]):
+    def _property_function(  # type:ignore[no-untyped-def]
+        self, value: float | FloatVectorProperty | Tuple[float]
+    ) -> None:
         tone_node = self.nodes[node_name]
         tone_node.inputs[input_name].default_value = value
 
@@ -42,36 +41,46 @@ def create_node_property(node_name: str, input_name: str | int):
 
 
 class MaleSkin:
-    mustache_shadows: float = create_node_property("Gender_Group", 2)
-    beard_shadow: float = create_node_property("Gender_Group", 3)
+    mustache_shadows: float = create_node_property("Gender_Group", 2)  # type:ignore
+    beard_shadow: float = create_node_property("Gender_Group", 3)  # type:ignore
 
-    def __init__(self, nodes: bpy_prop_collection[ShaderNode]):
+    def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
 
 
 class FemaleSkin:
-    foundation_amount: float = create_node_property("Gender_Group", "Foundation Amount")
+    foundation_amount: float = create_node_property(
+        "Gender_Group", "Foundation Amount"
+    )  # type:ignore
     foundation_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Foundation Color"
     )
-    blush_opacity: float = create_node_property("Gender_Group", "Blush Opacity")
+    blush_opacity: float = create_node_property(
+        "Gender_Group", "Blush Opacity"
+    )  # type:ignore
     blush_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Blush Color"
     )
-    eyebrows_opacity: float = create_node_property("Gender_Group", "Eyebrows Opacity")
+    eyebrows_opacity: float = create_node_property(
+        "Gender_Group", "Eyebrows Opacity"
+    )  # type:ignore
     eyebrows_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Eyebrows Color"
     )
     lipstick_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Lipstick Color"
     )
-    lipstick_opacity: float = create_node_property("Gender_Group", "Lipstick Opacity")
-    eyeliner_opacity: float = create_node_property("Gender_Group", "Eyeliner Opacity")
+    lipstick_opacity: float = create_node_property(
+        "Gender_Group", "Lipstick Opacity"
+    )  # type:ignore
+    eyeliner_opacity: float = create_node_property(
+        "Gender_Group", "Eyeliner Opacity"
+    )  # type:ignore
     eyeliner_color: FloatVectorProperty = create_node_property(
         "Gender_Group", "Eyeliner Color"
     )
 
-    def __init__(self, nodes: bpy_prop_collection[ShaderNode]):
+    def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
 
 
@@ -90,7 +99,7 @@ class SkinSettings:
     beautyspots_opacity = create_node_property("BS_Opacity", 1)
     beautyspots_seed = create_node_property("BS_Control", 1)
 
-    def __init__(self, human: Human):
+    def __init__(self, human: "Human"):
         self._human = human
 
     @property  # TODO make cached
@@ -106,21 +115,21 @@ class SkinSettings:
         return SkinLinks(self._human)
 
     @property
-    def material(self) -> Material:
-        return self._human.body_obj.data.materials[0]
+    def material(self) -> "Material":
+        return cast("Material", self._human.body_obj.data.materials[0])
 
     @property  # TODO make cached
     def gender_specific(self) -> MaleSkin | FemaleSkin:
         if self._human.gender == "male":
             gender_specific_class = MaleSkin
         else:
-            gender_specific_class = FemaleSkin
+            gender_specific_class = FemaleSkin  # type:ignore[assignment]
         return gender_specific_class(self.nodes)
 
     def _mac_material_fix(self) -> None:
         self.links.new(
-            self.nodes["Mix_reroute_1"].outputs[0],
-            self.nodes["Mix_reroute_2"].inputs[1],
+            self.nodes["Mix_reroute_1"].outputs[0],  # type:ignore[index]
+            self.nodes["Mix_reroute_2"].inputs[1],  # type:ignore[index]
         )
 
     def _set_gender_specific(self) -> None:
@@ -128,28 +137,30 @@ class SkinSettings:
         group is different. This function ensures the right nodegroup is connected
         """
         gender = self._human.gender
-        uw_node = self.nodes.get("Underwear_Switch")
+        uw_node = self.nodes.get("Underwear_Switch")  # type:ignore[func-returns-value]
 
         if uw_node:
             uw_node.inputs[0].default_value = 1 if gender == "female" else 0
 
         if gender == "male":
-            gender_specific_node = self.nodes["Gender_Group"]
+            gender_specific_node = self.nodes["Gender_Group"]  # type:ignore[index]
             male_node_group = next(
                 ng for ng in bpy.data.node_groups if ".HG_Beard_Shadow" in ng.name
             )
             gender_specific_node.node_tree = male_node_group
 
     def _remove_opposite_gender_specific(self) -> None:
-        self.nodes.remove(self.nodes.get("Delete_node"))
+        self.nodes.remove(
+            self.nodes.get("Delete_node")  # type:ignore[func-returns-value]
+        )
 
-    def _set_from_preset(self, preset_data: dict) -> None:
+    def _set_from_preset(self, preset_data: dict[str, dict[str, float]]) -> None:
         for node_name, input_dict in preset_data.items():
-            node = self.nodes.get(node_name)
+            node = self.nodes.get(node_name)  # type:ignore[func-returns-value]
 
             for input_name, value in input_dict.items():
                 if input_name.isnumeric():
-                    input_name = int(input_name)
+                    input_name = int(input_name)  # type:ignore[assignment]
                 node.inputs[input_name].default_value = value
 
     def randomize(self) -> None:
@@ -158,22 +169,28 @@ class SkinSettings:
 
         # Tone, redness, saturation
         for input_idx in [1, 2, 3]:
-            if f"skin_tone_default_{input_idx}" in mat:
-                default_value = mat[f"skin_tone_default_{input_idx}"]
+            if f"skin_tone_default_{input_idx}" in mat:  # type:ignore[operator]
+                default_value = mat[f"skin_tone_default_{input_idx}"]  # type:ignore
             else:
-                default_value = nodes["Skin_tone"].inputs[input_idx].default_value
-                mat[f"skin_tone_default_{input_idx}"] = default_value
+                default_value = (
+                    nodes["Skin_tone"].inputs[input_idx].default_value  # type:ignore
+                )
+                mat[f"skin_tone_default_{input_idx}"] = default_value  # type:ignore
 
             new_value = random.uniform(default_value * 0.8, default_value * 1.2)
-            nodes["Skin_tone"].inputs[input_idx].default_value = new_value
+            nodes["Skin_tone"].inputs[  # type:ignore
+                input_idx
+            ].default_value = new_value
 
         probability_list = [0, 0, 0, 0, 0, 0, 0.2, 0.3, 0.5]
 
         # Freckles and splotches
-        nodes["Freckles_control"].inputs[3].default_value = random.choice(
-            probability_list
-        )
-        nodes["Splotches_control"].inputs[3].default_value = random.choice(
+        nodes["Freckles_control"].inputs[  # type:ignore
+            3
+        ].default_value = random.choice(probability_list)
+        nodes["Splotches_control"].inputs[  # type:ignore
+            3
+        ].default_value = random.choice(  # type:ignore
             probability_list
         )
 
@@ -181,15 +198,19 @@ class SkinSettings:
         age_value = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5]) * 2
 
         self._human.keys["age_old.Transferred"].value = age_value
-        nodes["HG_Age"].inputs[1].default_value = age_value * 6
+        nodes["HG_Age"].inputs[1].default_value = age_value * 6  # type:ignore[index]
 
         if self._human.gender == "male":
             beard_shadow_value = random.choice(probability_list) * 2
-            nodes["Gender_Group"].inputs[2].default_value = beard_shadow_value
-            nodes["Gender_Group"].inputs[3].default_value = beard_shadow_value
+            nodes["Gender_Group"].inputs[  # type:ignore[index]
+                2
+            ].default_value = beard_shadow_value
+            nodes["Gender_Group"].inputs[  # type:ignore[index]
+                3
+            ].default_value = beard_shadow_value
 
     @injected_context
-    def set_subsurface_scattering(self, turn_on: bool, context=None) -> None:
+    def set_subsurface_scattering(self, turn_on: bool, context: C = None) -> None:
         if context.scene.HG3D.update_exception:
             return
 
@@ -199,27 +220,27 @@ class SkinSettings:
 
         principled_bsdf.inputs["Subsurface"].default_value = 0.015 if turn_on else 0
 
-    def set_underwear(self, turn_on: bool, context: Context = None) -> None:
-        if not context:
-            context = bpy.context
+    @injected_context
+    def set_underwear(self, turn_on: bool, context: C = None) -> None:
 
         if context.scene.HG3D.update_exception:
             return
 
-        underwear_node = self.nodes.get("Underwear_Opacity")
+        underwear_node = self.nodes.get(
+            "Underwear_Opacity"
+        )  # type:ignore[func-returns-value]
 
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
 
 
 class TextureSettings(PreviewCollectionContent):
-    def __init__(self, human: Human) -> None:
+    def __init__(self, human: "Human") -> None:
         self._human = human
         self._pcoll_name = "texture"
         self._pcoll_gender_split = True
 
-    def set(self, textureset_path: str, context: Context = None) -> None:
-        if not context:
-            context = bpy.context
+    @injected_context
+    def set(self, textureset_path: str, context: C = None) -> None:
         diffuse_texture = textureset_path
         library = "Default 4K"  # TODO
 
@@ -231,8 +252,11 @@ class TextureSettings(PreviewCollectionContent):
         nodes = self._human.skin.nodes
         gender = self._human.gender
 
-        self._add_texture_to_node(nodes.get("Color"), diffuse_texture, "Color")
-
+        self._add_texture_to_node(
+            nodes.get("Color"),  # type:ignore[func-returns-value]
+            diffuse_texture,
+            "Color",
+        )
         for node in nodes.get_image_nodes():
             for tx_type in ["skin_rough_spec", "Normal"]:
                 if tx_type in node.name:
@@ -243,10 +267,12 @@ class TextureSettings(PreviewCollectionContent):
             resolution_folder = "MEDIUM_RES" if library == "Default 1K" else "LOW_RES"
             self._change_peripheral_texture_resolution(resolution_folder)
 
-        self._human.skin.material["texture_category"] = library
+        self._human.skin.material["texture_category"] = library  # type:ignore[index]
 
     @injected_context
-    def _set_from_preset(self, mat_preset_data: dict, context=None) -> None:
+    def _set_from_preset(
+        self, mat_preset_data: dict[str, str], context: C = None
+    ) -> None:
 
         self.refresh_pcoll(context)
         texture_name = mat_preset_data["diffuse"]
@@ -255,9 +281,7 @@ class TextureSettings(PreviewCollectionContent):
 
         self.set(os.path.join("textures", gender, texture_category, texture_name))
 
-    def _change_peripheral_texture_resolution(
-        self, resolution_folder: Path | str
-    ) -> None:
+    def _change_peripheral_texture_resolution(self, resolution_folder: str) -> None:
         # TODO cleanup
         for obj in self._human.children:
             for mat in obj.data.materials:
@@ -340,23 +364,24 @@ class TextureSettings(PreviewCollectionContent):
                 except TypeError:
                     pass
             if not found:
+                # TODO raise
                 ShowMessageBox(
-                    message="Could not find colorspace alternative for non-color data, default colorspace used"
+                    message="Could not find colorspace alternative for non-color data, default colorspace used"  # noqa
                 )
 
 
 class SkinNodes(bpy_prop_collection):
-    def __new__(cls, human: Human):
+    def __new__(cls, human: "Human") -> "SkinNodes":
         skin_mat = human.body_obj.data.materials[0]
         nodes = skin_mat.node_tree.nodes
-        return super().__new__(cls, nodes)
+        return super().__new__(cls, nodes)  # type:ignore[call-arg]
 
     def get_image_nodes(self) -> List[ShaderNode]:
         return [node for node in self if node.bl_idname == "ShaderNodeTexImage"]
 
 
 class SkinLinks(bpy_prop_collection):
-    def __new__(cls, human: Human):
+    def __new__(cls, human: "Human") -> "SkinLinks":
         skin_mat = human.body_obj.data.materials[0]
         links = skin_mat.node_tree.links
-        return super().__new__(cls, links)
+        return super().__new__(cls, links)  # type:ignore[call-arg]

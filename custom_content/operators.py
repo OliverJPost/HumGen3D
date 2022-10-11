@@ -1,15 +1,11 @@
 import os
 import platform
 import subprocess
-from ast import Str
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, PointerProperty, StringProperty
+from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.custom_content.possible_content import (
-    POSSIBLE_CONTENT_ITEM,
-    find_possible_content,
-)
+from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -206,16 +202,14 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
 
         key = next(key for key in human.keys if key.as_bpy() == bpy_key)
 
-        delete_original = (
-            True if self.save_type == "livekey" and self.delete_original else False
-        )
+        delete_original = self.save_type == "livekey" and self.delete_original
         key.save_to_library(
             as_livekey=self.save_type == "livekey", delete_original=delete_original
         )
 
 
 class HG_OT_OPEN_FOLDER(bpy.types.Operator):
-    """Open the folder that belongs to this section
+    """Open the folder that belongs to this section.
 
     API: False
 

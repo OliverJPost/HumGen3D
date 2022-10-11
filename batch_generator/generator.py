@@ -5,28 +5,34 @@ import os
 import random
 import subprocess
 import time
+from typing import Iterable, Optional, Union
 
-import bpy  # type:ignore
+import bpy
 from HumGen3D.backend import get_addon_root, get_prefs
+from HumGen3D.backend.type_aliases import C  # type:ignore
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.human import Human
 
 from ..backend.logging import hg_log
 
+SettingsDict = dict[str, Union[str, int, float]]
+
 
 class BatchHumanGenerator:
-    """Generator/factory (?) for making completed HG_Humans in the background, the
-    same way as the batch panel in the Human Generator GUI does."""
+    """Generator/factory (?) for making completed HG_Humans in the background.
+
+    Also used by the batch panel in the Human Generator GUI
+    """
 
     def __init__(
         self,
-        apply_shapekeys=True,
-        apply_armature_modifier=False,
-        remove_clothing_subdiv=True,
-        remove_clothing_solidify=True,
-        apply_clothing_geometry_masks=True,
-        texture_resolution="optimised",
-    ):
+        apply_shapekeys: bool = True,
+        apply_armature_modifier: bool = False,
+        remove_clothing_subdiv: bool = True,
+        remove_clothing_solidify: bool = True,
+        apply_clothing_geometry_masks: bool = True,
+        texture_resolution: str = "optimised",
+    ) -> None:
         """Creates a dictionary with settings to pass to generate_human_in_background
         if you want to change the quality settings from the default values.
 
@@ -73,23 +79,23 @@ class BatchHumanGenerator:
     @injected_context
     def generate_in_background(
         self,
-        context=None,
-        gender=None,
-        add_hair=False,
-        hair_type="particle",
-        hair_quality="medium",
-        add_expression=False,
-        expression_category="All",
-        add_clothing=False,
-        clothing_category="All",
-        pose_type="a_pose",
-    ) -> Human:
+        context: C = None,
+        gender: Optional[str] = None,
+        add_hair: bool = False,
+        hair_type: str = "particle",
+        hair_quality: str = "medium",
+        add_expression: bool = False,
+        expression_category: str = "All",
+        add_clothing: bool = False,
+        clothing_category: str = "All",
+        pose_type: str = "a_pose",
+    ) -> "Human":
         """Generate a new HG_Human in a background proces based on the settings
         of this HG_Batch_Generator instance and import the created human to
         Blender
 
         Args:
-            context (bl context, optional): Blender context, if None is passed
+            context (C): Blender context, if None is passed
                 bpy.context will be used.
             gender (str, optional): The gender of the human to create, either 'male'
                 or 'female'.
@@ -154,7 +160,9 @@ class BatchHumanGenerator:
 
         return Human.from_existing(hg_rig)
 
-    def __construct_settings_dict_from_kwargs(self, settings_dict):
+    def __construct_settings_dict_from_kwargs(
+        self, settings_dict: SettingsDict
+    ) -> SettingsDict:
         del settings_dict["self"]
         del settings_dict["context"]
         if not settings_dict["gender"]:
@@ -166,7 +174,9 @@ class BatchHumanGenerator:
 
         return settings_dict
 
-    def __run_hg_subprocess(self, python_file, settings_dict):
+    def __run_hg_subprocess(
+        self, python_file: str, settings_dict: SettingsDict
+    ) -> None:
         background_blender = subprocess.run(
             [
                 bpy.app.binary_path,
@@ -181,37 +191,38 @@ class BatchHumanGenerator:
 
         for line in background_blender.stdout.decode("utf-8").splitlines():
             if line.startswith(("HG_", "\033")):
-                print(line)
+                print(line)  # noqa T201
 
         if background_blender.stderr:
             hg_log(
                 "Exception occured while in background process",
                 level="WARNING",
             )
-            print(background_blender.stderr.decode("utf-8"))
+            print(background_blender.stderr.decode("utf-8"))  # noqa T201
             # ShowMessageBox(message =
-            #    f'''An error occured while generating human, check the console for error details''')
+            #    f'''An error occured while generating human, check the console for error details''') #noqa E501
 
-    def __import_generated_human(self):
+    def __import_generated_human(self) -> bpy.types.Object:
         start_time_import = time.time()
         batch_result_path = os.path.join(get_prefs().filepath, "batch_result.blend")
-        with bpy.data.libraries.load(batch_result_path, link=False) as (
+        with bpy.data.libraries.load(batch_result_path, link=False) as (  # type:ignore
             data_from,
             data_to,
         ):
             data_to.objects = data_from.objects
 
         for obj in data_to.objects:
-            bpy.context.scene.collection.objects.link(obj)
+            bpy.context.scene.collection.objects.link(obj)  # type:ignore
             # toggle_hair_visibility(obj, show=True)
 
-        human_parent = next(
+        human_parent: bpy.types.Object = next(
             (obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
             [obj for obj in data_to.objects if obj.HG.ishuman][0],
         )
 
+        name = human_parent.name  # type:ignore[attr-defined]
         hg_log(
-            f"Import succesful for human {human_parent.name}, import took: ",
+            f"Import succesful for human {name}, import took: ",
             round(time.time() - start_time_import, 2),
             "s",
         )

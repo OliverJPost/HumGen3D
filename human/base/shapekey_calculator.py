@@ -1,30 +1,31 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from typing import Iterable, Union
+from typing import Any, Iterable, NamedTuple, TypedDict, Union, cast
 
 import bpy
 import numpy as np
 from bpy.types import Object, bpy_prop_collection
 from HumGen3D.backend import hg_delete
+from HumGen3D.backend.type_aliases import DistanceDict  # type:ignore
 from HumGen3D.human.keys.keys import ShapeKeyItem, apply_shapekeys
-from mathutils import Matrix, Vector, kdtree  # type:ignore
+from mathutils import Matrix, Vector, kdtree
 
 
 def world_coords_from_obj(
     obj: Object, data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None
-) -> np.array:
+) -> np.ndarray[Any, Any]:
     iter = False
     if not data:
         data = obj.data.vertices
     elif hasattr(data, "__iter__") and not isinstance(data, bpy_prop_collection):
-        if data and not isinstance(data[0], ShapeKeyItem):
+        if data and not isinstance(data[0], ShapeKeyItem):  # type:ignore[index]
             raise ValueError(
                 "Data argument is iterable but does not contain ShapeKeyItem."
             )
         iter = True
 
     if not iter:
-        world_coords = _get_world_co(obj, data)
+        world_coords = _get_world_co(obj, data)  # type:ignore[arg-type]
     else:
         base_coords = _get_world_co(obj, obj.data.vertices)
         world_coords = base_coords.copy()
@@ -39,18 +40,23 @@ def world_coords_from_obj(
     return world_coords
 
 
-def _get_world_co(obj, data):
-    vert_count = len(data)
+def _get_world_co(
+    obj: bpy.types.Object, data: bpy_prop_collection
+) -> np.ndarray[Any, Any]:
+    vert_count = len(data)  # type:ignore[arg-type]
     local_coords = np.empty(vert_count * 3, dtype=np.float64)
     data.foreach_get("co", local_coords)
 
-    mx = obj.matrix_world
+    mx: Matrix = obj.matrix_world  # type:ignore[assignment]
     world_coords = matrix_multiplication(mx, local_coords.reshape((-1, 3)))
     return world_coords
 
 
-def build_distance_dict(body_coordinates_world, target_coordinates_world):
-    kd = kdtree.KDTree(len(body_coordinates_world))
+def build_distance_dict(
+    body_coordinates_world: np.ndarray[Any, Any],
+    target_coordinates_world: np.ndarray[Any, Any],
+) -> DistanceDict:
+    kd = kdtree.KDTree(len(body_coordinates_world))  # type:ignore[call-arg]
 
     for i, co in enumerate(body_coordinates_world):
         kd.insert(co, i)
@@ -66,49 +72,33 @@ def build_distance_dict(body_coordinates_world, target_coordinates_world):
     return distance_dict
 
 
-def matrix_multiplication(matrix: Matrix, coordinates: np.ndarray) -> np.ndarray:
+def matrix_multiplication(
+    matrix: Matrix, coordinates: np.ndarray[Any, Any]
+) -> np.ndarray[Any, Any]:
     vert_count = coordinates.shape[0]
     coords_4d = np.ones((vert_count, 4), "f")
     coords_4d[:, :-1] = coordinates
 
-    coords: np.ndarray = np.einsum("ij,aj->ai", matrix, coords_4d)[:, :-1]
+    coords = np.einsum("ij,aj->ai", matrix, coords_4d)[  # type:ignore[call-overload]
+        :, :-1
+    ]
 
-    return coords
-
-
-def sum_shapekeys(obj, skip_corrective_keys=True):
-    vert_count = len(obj.data.vertices)
-    coords_eval = np.empty(vert_count * 3, dtype=np.float64)
-    temp_coords = np.empty(vert_count * 3, dtype=np.float64)
-
-    obj.data.vertices.foreach_get("co", coords_eval)
-
-    body_base_coords = coords_eval.copy()
-
-    for sk in obj.data.shape_keys.key_blocks:
-        if sk.name.startswith("cor_") and skip_corrective_keys:
-            continue
-
-        if sk.mute or not sk.value:
-            continue
-
-        sk.data.foreach_get("co", temp_coords)
-        temp_coords -= body_base_coords
-        coords_eval += temp_coords * sk.value
-
-    return coords_eval
+    return cast(np.ndarray[Any, Any], coords)
 
 
 def deform_obj_from_difference(
-    name, distance_dict, body_eval_coords_woorld, deform_obj, as_shapekey=False
-):
+    name: str,
+    distance_dict: DistanceDict,
+    body_eval_coords_woorld: np.ndarray[Any, Any],
+    deform_obj: bpy.types.Object,
+    as_shapekey: bool = False,
+) -> None:
 
     sk = deform_obj.data.shape_keys.key_blocks.get(name)
-    if as_shapekey:
-        if not sk:
-            sk = deform_obj.shape_key_add(name=name)
-            sk.interpolation = "KEY_LINEAR"
-            sk.value = 1
+    if as_shapekey and not sk:
+        sk = deform_obj.shape_key_add(name=name)
+        sk.interpolation = "KEY_LINEAR"
+        sk.value = 1
 
     # TODO fully numpy
     for vertex_index in distance_dict:

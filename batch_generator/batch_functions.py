@@ -1,10 +1,17 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+from typing import TYPE_CHECKING, Union, no_type_check
+
 import bpy  # type:ignore
-import numpy as np  # type:ignore
+import numpy as np
+
+if TYPE_CHECKING:
+    from HumGen3D.backend.properties.batch_props import BatchProps
 
 
-def height_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> list:
+def height_from_bell_curve(
+    batch_sett: "BatchProps", gender: str, random_seed: bool = True, samples: int = 1
+) -> list[float]:
     """Returns one or multiple samples from a bell curve generated from the
     batch_average_height and batch_standard_deviation properties.
 
@@ -35,30 +42,43 @@ def height_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> l
     else:
         np.random.seed(0)
 
-    length_list = np.random.normal(
-        loc=avg_height_cm, scale=avg_height_cm * sd, size=samples
+    return list(
+        np.random.normal(loc=avg_height_cm, scale=avg_height_cm * sd, size=samples)
     )
 
-    return length_list
+
+def to_percentage(base: Union[int, float], end_result: Union[int, float]) -> int:
+    return int((base + end_result) / base * 100)
 
 
-def calculate_batch_statistics(batch_sett):
-    """Returns values to show the user how their choices in the batch settings
+def _get_tag_from_dict(
+    total: Union[int, float], tag_dict: dict[str, int], fallback: str
+) -> str:
+    return next(
+        (tag for tag, ubound in tag_dict.items() if total < ubound),
+        fallback,
+    )
+
+
+def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:
+    """Calculates performance statistidcs of batch generator settings.
+
+    Returns values to show the user how their choices in the batch settings
     will impact the render times, memory usage and filesize. Good luck reading
     this function, it's a bit of a mess.
 
     Args:
-        sett (PropertyGroup): Addon properties
+        batch_sett (BatchProps): Addon batch properties
 
     Returns:
         dict: Dict with strings that explain to the user what the impact is
     """
-    eevee_time = 0
-    eevee_memory = 0
-    cycles_time = 0
-    cycles_memory = 0
-    scene_memory = 0
-    storage_weight = 0
+    eevee_time = 0.0
+    eevee_memory = 0.0
+    cycles_time = 0.0
+    cycles_memory = 0.0
+    scene_memory = 0.0
+    storage_weight = 0.0
 
     if batch_sett.hair:
         storage_weight += 10
@@ -138,15 +158,6 @@ def calculate_batch_statistics(batch_sett):
             storage_weight -= 2
             scene_memory -= 27
 
-    def to_percentage(base, end_result) -> int:
-        return int((base + end_result) / base * 100)
-
-    def _get_tag_from_dict(total, tag_dict, fallback):
-        return next(
-            (tag for tag, ubound in tag_dict.items() if total < ubound),
-            fallback,
-        )
-
     cycles_time_total = to_percentage(4.40, cycles_time)
     cycles_time_tags = {"Fastest": 95, "Fast": 100, "Normal": 120, "Slow": 150}
     cycles_time_tag = _get_tag_from_dict(cycles_time_total, cycles_time_tags, "Slowest")
@@ -190,11 +201,12 @@ def calculate_batch_statistics(batch_sett):
         "storage": f"~{59+storage_weight} MB/human*",
     }
 
-    return statistics_dict
+    return statistics_dict  # noqa PIE781
 
 
-def get_batch_marker_list(context) -> list:
-    batch_sett = context.scene.HG3D.batch
+@no_type_check
+def get_batch_marker_list(context: bpy.types.Context) -> list[bpy.types.Object]:
+    batch_sett = context.scene.HG3D.batch  # type:ignore[attr-defined]
 
     marker_selection = batch_sett.marker_selection
 
@@ -204,17 +216,16 @@ def get_batch_marker_list(context) -> list:
         return all_markers
 
     elif marker_selection == "selected":
-        selected_markers = [o for o in all_markers if o in context.selected_objects]
-        return selected_markers
+        return [o for o in all_markers if o in context.selected_objects]
 
     else:
-        empty_markers = [o for o in all_markers if not has_associated_human(o)]
-        return empty_markers
+        # Empty markers
+        return [o for o in all_markers if not has_associated_human(o)]
 
 
-def has_associated_human(marker) -> bool:
-    """Check if this marker has an associated human and if that object still
-    exists
+@no_type_check
+def has_associated_human(marker: bpy.types.Object) -> bool:
+    """Check if this marker has an associated human and if that object still exists.
 
     Args:
         marker (Object): marker object to check for associated human
@@ -222,18 +233,14 @@ def has_associated_human(marker) -> bool:
     Returns:
         bool: True if associated human was found, False if not
     """
+    if "associated_human" not in marker or not bool(marker["associated_human"]):
+        return False
 
-    return (
-        "associated_human" in marker  # does it have the prop
-        and marker["associated_human"]  # is the prop not empty
-        and bpy.data.objects.get(
-            marker["associated_human"].name
-        )  # does the object still exist
-        and marker.location
-        == marker[
-            "associated_human"
-        ].location  # is the object at the same spot as the marker
-        and bpy.context.scene.objects.get(
-            marker["associated_human"].name
-        )  # is the object in the current scene
-    )
+    # Check if object still exists
+    if not bpy.data.objects.get(marker["associated_human"]):
+        return False
+
+    same_location = marker.location == marker["associated_human"].location
+    object_in_scene = bpy.context.scene.objects.get(marker["associated_human"].name)
+
+    return same_location and object_in_scene

@@ -12,7 +12,7 @@ from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
 
 
 def refresh_shapekeys_ul(self, context):
-    sett = context.scene.HG3D
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     pref = get_prefs()
     col = context.scene.shapekeys_col
 
@@ -83,7 +83,7 @@ def refresh_hair_ul(self, context):
 
 # TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
-    sett = context.scene.HG3D
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     pref = get_prefs()
     col = context.scene.saveoutfit_col
 

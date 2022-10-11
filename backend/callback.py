@@ -11,9 +11,11 @@ This callback has the following usages:
     a human is duplicated by the user
 """
 
-import os
+import contextlib
+from typing import no_type_check
 
 import bpy
+from bpy.types import Context  # type:ignore[import]
 from HumGen3D.backend import hg_log, preview_collections
 from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
@@ -24,22 +26,23 @@ from HumGen3D.user_interface.content_panel.operators import (
     refresh_shapekeys_ul,
 )
 
-from ..backend.preferences.preference_func import get_prefs
-from ..human.human import Human  # , bl_info  # type: ignore
+from ..human.human import Human
 from ..user_interface.documentation.tips_suggestions_ui import update_tips_from_context
 
 
-class HG_ACTIVATE(bpy.types.Operator):
-    """Activates the HumGen msgbus, also populates human pcoll"""
+class HG_ACTIVATE(bpy.types.Operator):  # noqa
+    """Activates the HumGen msgbus, also populates human pcoll."""
 
     bl_idname = "hg3d.activate"
     bl_label = "Activate"
     bl_description = "Activate HumGen"
 
-    def execute(self, context):
+    @no_type_check
+    def execute(self, context):  # noqa
         from HumGen3D import bl_info
 
         sett = bpy.context.scene.HG3D
+
         sett.subscribed = False  # TODO is this even used?
 
         msgbus(self, context)
@@ -51,9 +54,14 @@ class HG_ACTIVATE(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def msgbus(self, context):
-    """Activates the subscribtion to changes to the active object"""
-    sett = context.scene.HG3D
+def msgbus(self: bpy.types.Operator, context: Context) -> None:
+    """Activates the subscribtion to changes to the active object.
+
+    Args:
+        self: Operator to make owner of this subscription
+        context: Bpy context
+    """
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
 
     if sett.subscribed:
         return
@@ -68,40 +76,34 @@ def msgbus(self, context):
     sett.subscribed = True
 
 
-def hg_callback(self):
-    """
-    Runs every time the active object changes
-    """
-
+@no_type_check
+def hg_callback() -> None:
+    """Runs every time the active object changes."""
     human = Human.from_existing(bpy.context.object, strict_check=False)
     if not human:
         return  # return immediately when the active object is not part of a human
 
     human._verify_body_object()
 
-    sett = bpy.context.scene.HG3D
+    sett = bpy.context.scene.HG3D  # type: ignore[attr-defined]
     ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human.rig_obj)
-    _context_specific_updates(self, sett, human, ui_phase)
+    _context_specific_updates(sett, human, ui_phase)
 
 
+@no_type_check
 def _set_shader_switches(human, sett):
     """Sets the subsurface toggle to the correct position. Update_exception is
     used to prevent an endless loop of setting the toggle
-
-    Args:
-        hg_rig (Object): HumGen armature
-        sett (PropertyGroup): HumGen props
-    """
+    """  # noqa
     sett.update_exception = True
     body_obj = human.body_obj
     nodes = body_obj.data.materials[0].node_tree.nodes
     if not body_obj:
         return
 
-    # body_obj.data.materials[0].node_tree.nodes
     principled_bsdf = next(node for node in nodes if node.type == "BSDF_PRINCIPLED")
     sett.skin_sss = (
         "off" if principled_bsdf.inputs["Subsurface"].default_value == 0 else "on"
@@ -116,41 +118,36 @@ def _set_shader_switches(human, sett):
     sett.update_exception = False
 
 
-def _context_specific_updates(self, sett, human, ui_phase):
+@no_type_check
+def _context_specific_updates(sett, human, ui_phase):
     """Does all updates that are only necessary for a certain UI context. I.e.
     updating the preview collection of clothing when in the clothing section
-
-    Args:
-        sett (PropertyGroup): HumGen props
-        hg_rig (Ojbect): HumGen armature
-        ui_phase (str): Currently open ui tab
-    """
+    """  # noqa
     sett.update_exception = False
     context = bpy.context
     if sett.ui.active_tab == "TOOLS":
         try:
-            refresh_shapekeys_ul(self, context)
-            refresh_hair_ul(self, context)
-            refresh_outfit_ul(self, context)
+            refresh_shapekeys_ul(None, context)
+            refresh_hair_ul(None, context)
+            refresh_outfit_ul(None, context)
         except AttributeError:
             pass
         return
     elif ui_phase == "apply":
-        refresh_modapply(self, context)
+        refresh_modapply(None, context)
     elif ui_phase == "hair":
         preview_collections["hair"].refresh(context, human.gender)
         if human.gender == "male":
             preview_collections["face_hair"].refresh(context)
     else:
-        try:
+        with contextlib.suppress(AttributeError, RecursionError):
             getattr(human, ui_phase).refresh_pcoll(context)
-        except (AttributeError, RecursionError):
-            pass
 
 
+@no_type_check
 def tab_change_update(self, context):
     """Update function for when the user switches between the main tabs (Main UI,
-    Batch tab and Utility tab)"""
+    Batch tab and Utility tab)"""  # noqa
 
     refresh_modapply(self, context)
 
@@ -169,6 +166,7 @@ def tab_change_update(self, context):
     # FIXME batch_uilist_refresh(self, context, "expression")
 
 
+@no_type_check
 def _hair_shader_type_update(sett, hg_body):
     mat = hg_body.data.materials[1]
     hair_node = mat.node_tree.nodes.get("HG_Hair_V3")
