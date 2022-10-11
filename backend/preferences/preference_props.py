@@ -1,5 +1,9 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+# flake8: noqa F722
+
+from typing import no_type_check
+
 from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
@@ -11,7 +15,7 @@ from bpy.types import AddonPreferences  # type:ignore
 from ..content_packs.content_packs import cpacks_refresh
 
 
-class HGPreferenceBackend(AddonPreferences):
+class HGPreferenceBackend:
     # RELEASE remove default path
     filepath: StringProperty(
         name="Install Filepath",

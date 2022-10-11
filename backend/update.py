@@ -4,16 +4,19 @@
 code updates"""
 
 import json
+from typing import TYPE_CHECKING
 
 import bpy
-import requests  # type: ignore
+import requests  # type:ignore
+
+if TYPE_CHECKING:
+    from HumGen3D.backend.content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
 
 from . import get_prefs, hg_log  # type: ignore
 
 
 def check_update() -> None:
-    """Checks on HumGen github versions.json if there are any code or cpack
-    updates available"""
+    """Checks if there are any code or cpack updates available."""
     from HumGen3D import bl_info
 
     pref = get_prefs()
@@ -33,7 +36,7 @@ def check_update() -> None:
         update_data = json.loads(resp.text)
     except Exception as e:
         hg_log("Failed to load HumGen update data, with error:", level="WARNING")
-        print(e)
+        print(e)  # noqa T201
         return
 
     try:
@@ -43,10 +46,10 @@ def check_update() -> None:
 
         pref.latest_version = tuple(update_data["latest_addon"])
 
-        update_col = bpy.context.scene.hg_update_col
+        update_col = bpy.context.scene.hg_update_col  # type:ignore[attr-defined]
         update_col.clear()
         for version, update_types in update_data["addon_updates"].items():
-            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:  # type: ignore
+            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
                 continue
             for update_type, lines in update_types.items():
                 for line in lines:
@@ -55,7 +58,7 @@ def check_update() -> None:
                     item.categ = update_type
                     item.line = line
 
-        cpack_col = bpy.context.scene.contentpacks_col
+        cpack_col = bpy.context.scene.contentpacks_col  # type:ignore[attr-defined]
         req_cpacks = update_data["required_cpacks"][
             current_main_version
         ]  # TODO this is bound to break
@@ -63,25 +66,34 @@ def check_update() -> None:
 
         for cp in cpack_col:
             _check_cpack_update(cp, req_cpacks, latest_cpacks)
-    except Exception as e:
+    except Exception as e:  # FIXME
         hg_log(
             "Failed to compute HumGen update numbering, with error:",
             level="WARNING",
         )
-        print(e)
+        print(e)  # noqa T201
 
 
 class UPDATE_INFO_ITEM(bpy.types.PropertyGroup):
+    """Line item to show what features are included in new update."""
+
     categ: bpy.props.StringProperty()
     version: bpy.props.IntVectorProperty(default=(0, 0, 0))
     line: bpy.props.StringProperty()
 
 
-def _check_cpack_update(cp, req_cpacks, latest_cpacks):
-    """checks for updates of the passed cpack
+Version = tuple[int, int, int]
+
+
+def _check_cpack_update(
+    cp: "HG_CONTENT_PACK",
+    req_cpacks: dict[str, Version],
+    latest_cpacks: dict[str, Version],
+) -> None:
+    """Checks for updates of the passed cpack.
 
     Args:
-        cp (CollectionItem): HumGen content pack item
+        cp (HG_CONTENT_PACK): HumGen content pack item
         req_cpacks (dict):
             keys: (str) cpack names,
             values: (tuple) required version
@@ -99,10 +111,6 @@ def _check_cpack_update(cp, req_cpacks, latest_cpacks):
             cp.pack_name,
         )
         return
-
-    # compatibility with old string method of writing versions
-    if type(current_version) is str:
-        current_version = [int(current_version[0]), int(current_version[2])]
 
     if cp.pack_name in req_cpacks:
         cp.required_version = tuple(req_cpacks[cp.pack_name])

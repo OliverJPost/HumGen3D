@@ -1,15 +1,21 @@
+from typing import no_type_check
+
 import bpy
-from bpy.props import BoolProperty, EnumProperty, PointerProperty, StringProperty
-from bpy.types import Object
+from bpy.props import (  # type:ignore
+    BoolProperty,
+    EnumProperty,
+    PointerProperty,
+    StringProperty,
+)
+from bpy.types import Object  # type:ignore
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
-    """
-    UIList showing modifiers
-    """
+    """UIList showing modifiers."""
 
+    @no_type_check
     def draw_item(
         self,
         context,
@@ -60,7 +66,7 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
     )
 
 
-def find_possible_content(context):
+def find_possible_content(context: bpy.types.Context) -> None:
     coll = context.scene.possible_content_col
     human = Human.from_existing(context.object)
     coll.clear()

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Literal, Optional
 
 import bpy
-from bpy.types import Material, Object
+from HumGen3D.backend.properties.bake_props import BakeProps
+from HumGen3D.backend.type_aliases import C
+from bpy.types import Material, Object  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
@@ -17,20 +19,20 @@ if TYPE_CHECKING:
     from ..human import Human
 
 
-def follow_links(target_node, target_socket):
+def follow_links(
+    target_node: bpy.types.ShaderNode, target_socket: bpy.types.NodeSocket
+) -> Optional[bpy.types.NodeSocket]:
     """
     finds out what node is connected to a certain socket
     """
 
-    try:
-        source_socket = next(
+    return next(
+        (
             node_links.from_socket
-            for node_links in target_node.inputs[target_socket].links
-        )
-    except:
-        source_socket = None
-
-    return source_socket
+            for node_links in target_node.inputs[target_socket].links  # type:ignore
+        ),
+        None,
+    )
 
 
 @dataclass
@@ -41,7 +43,7 @@ class BakeTexture:
     material_slot: int
     texture_type: str
 
-    def get_resolution(self, bake_sett) -> int:
+    def get_resolution(self, bake_sett: BakeProps) -> int:
         if self.texture_name == "body":
             return int(bake_sett.res_body)
         elif self.texture_name == "eyes":
@@ -51,15 +53,17 @@ class BakeTexture:
 
     @property
     def output_image_name(self) -> str:
-        return f"{self.human_name}_{self.texture_name}_{self.texture_type}_{self.texture_type.lower()}"
+        return f"{self.human_name}_{self.texture_name}_{self.texture_type}_{self.texture_type.lower()}"  # noqa
 
     @property
     def material(self) -> Material:
-        return self.bake_object.material_slots[self.material_slot].material
+        return self.bake_object.material_slots[
+            self.material_slot  # type:ignore[index]
+        ].material
 
 
 class BakeSettings:
-    def __init__(self, human: Human) -> None:
+    def __init__(self, human: "Human") -> None:
         self._human = human
 
     def get_baking_list(self) -> List[BakeTexture]:
@@ -76,7 +80,7 @@ class BakeSettings:
         cloth_objs = [
             child
             for child in self._human.children
-            if "cloth" in child or "shoe" in child
+            if "cloth" in child or "shoe" in child  # type:ignore[operator]
         ]
 
         for cloth in cloth_objs:
@@ -88,7 +92,7 @@ class BakeSettings:
         return bake_list
 
     @injected_context
-    def bake_all(self, samples=4, context=None) -> None:
+    def bake_all(self, samples: int = 4, context: C = None) -> None:
         (
             _,
             was_optix,
@@ -102,7 +106,7 @@ class BakeSettings:
         self.set_up_new_materials(baketextures)
 
         if was_optix:
-            context.preferences.addons[
+            context.preferences.addons[  # type:ignore[index, call-overload]
                 "cycles"
             ].preferences.compute_device_type = "OPTIX"
         context.scene.cycles.samples = old_samples
@@ -110,7 +114,9 @@ class BakeSettings:
             context.scene.render.engine = "EEVEE"
 
     @injected_context
-    def bake_single_texture(self, baketexture: BakeTexture, context=None) -> None:
+    def bake_single_texture(
+        self, baketexture: BakeTexture, context: C = None
+    ) -> bpy.types.Image:
         bake_sett = context.scene.HG3D.bake
         bake_obj = baketexture.bake_object
         was_solidified = self._disable_solidify_if_enabled(bake_obj)
@@ -123,7 +129,7 @@ class BakeSettings:
             width=baketexture.get_resolution(bake_sett),
             height=baketexture.get_resolution(bake_sett),
         )
-        self._set_up_scene_for_baking(bake_obj, context)
+        self._set_up_scene_for_baking(bake_obj, context)  # type:ignore
         self._set_up_material_for_baking(baketexture, image)
 
         bake_type = "NORMAL" if baketexture.texture_type == "Normal" else "EMIT"
@@ -134,7 +140,7 @@ class BakeSettings:
                 bake_obj,
             ],
         }
-        bpy.ops.object.bake(override, type=bake_type)  # , pass_filter={'COLOR'}
+        bpy.ops.object.bake(override, type=bake_type)  # type:ignore[misc, arg-type]
 
         image_filename = f"{image.name}.{bake_sett.file_type}"
         image.filepath_raw = os.path.join(export_path, image_filename)
@@ -155,24 +161,30 @@ class BakeSettings:
             ]
         )
         for obj, slot in object_slot_set:
-            org_name = obj.material_slots[slot].material.name
+            org_name = obj.material_slots[slot].material.name  # type:ignore[index]
             mat = bpy.data.materials.new(f"{obj.name}_{org_name}_BAKED")
             mat.use_nodes = True
 
-            obj.material_slots[slot].material = mat
+            obj.material_slots[slot].material = mat  # type:ignore[index]
 
         for baketexture in baketextures:
             mat = baketexture.bake_object.material_slots[
-                baketexture.material_slot
+                baketexture.material_slot  # type:ignore[index]
             ].material
             image = bpy.data.images.get(baketexture.output_image_name)
-            self._add_image_node(image, baketexture.texture_type, mat)
+            self._add_image_node(image, baketexture.texture_type, mat)  # type:ignore
 
     @staticmethod
-    def _add_image_node(image, input_type, mat):
+    def _add_image_node(
+        image: bpy.types.Image,
+        input_type: Literal[
+            "Base Color", "Normal", "Roughness", "Metallic", "Specular"
+        ],
+        mat: bpy.types.Material,
+    ) -> None:
         nodes = mat.node_tree.nodes
         links = mat.node_tree.links
-        principled = nodes["Principled BSDF"]
+        principled = nodes["Principled BSDF"]  # type:ignore[index, call-overload]
 
         img_node = nodes.new("ShaderNodeTexImage")
         img_node.image = image
@@ -191,13 +203,18 @@ class BakeSettings:
             image.colorspace_settings.name = "Non-Color"
             normal_node = nodes.new("ShaderNodeNormalMap")
             normal_node.location = (-300, -200)
-            links.new(img_node.outputs[0], normal_node.inputs[1])
-            links.new(normal_node.outputs[0], principled.inputs[input_type])
+            links.new(img_node.outputs[0], normal_node.inputs[1])  # type:ignore[index]
+            links.new(
+                normal_node.outputs[0],  # type:ignore[index]
+                principled.inputs[input_type],  # type:ignore
+            )
         else:
-            links.new(img_node.outputs[0], principled.inputs[input_type])
+            links.new(
+                img_node.outputs[0], principled.inputs[input_type]  # type:ignore
+            )
 
     @staticmethod
-    def _disable_solidify_if_enabled(obj) -> bool:
+    def _disable_solidify_if_enabled(obj: bpy.types.Object) -> bool:
         return_value = False
         for mod in [m for m in obj.modifiers if m.type == "SOLIDIFY"]:
             if any((mod.show_viewport, mod.show_render)):
@@ -208,7 +225,7 @@ class BakeSettings:
         return return_value
 
     @staticmethod
-    def _get_bake_export_path(bake_sett, folder_name) -> str:
+    def _get_bake_export_path(bake_sett: BakeProps, folder_name: str) -> str:
         if bake_sett.export_folder:
             export_path = os.path.join(
                 bake_sett.export_folder, "bake_results", folder_name
@@ -223,14 +240,18 @@ class BakeSettings:
 
         return export_path
 
-    def _set_up_scene_for_baking(self, bake_obj, context):
+    def _set_up_scene_for_baking(
+        self, bake_obj: bpy.types.Object, context: bpy.types.Context
+    ) -> None:
         # TODO context override
         bake_obj.select_set(True)
         self._human.rig_obj.select_set(False)
         context.view_layer.objects.active = bake_obj
 
     @staticmethod
-    def _set_up_material_for_baking(baketexture, image) -> None:
+    def _set_up_material_for_baking(
+        baketexture: BakeTexture, image: bpy.types.Image
+    ) -> None:
         nodes = baketexture.material.node_tree.nodes
         links = baketexture.material.node_tree.links
 
@@ -242,13 +263,15 @@ class BakeSettings:
         )
         emit_node = nodes.new("ShaderNodeEmission")
         if baketexture.texture_type == "Normal":
-            links.new(principled.outputs[0], mat_output.inputs[0])
+            links.new(principled.outputs[0], mat_output.inputs[0])  # type:ignore
         else:
-            source_socket = follow_links(principled, baketexture.texture_type)
+            source_socket = follow_links(
+                principled, baketexture.texture_type  # type:ignore
+            )
             if not source_socket:
                 raise HumGenException("Can't find node", baketexture.texture_type)
-            links.new(source_socket, emit_node.inputs[0])
-            links.new(emit_node.outputs[0], mat_output.inputs[0])
+            links.new(source_socket, emit_node.inputs[0])  # type:ignore
+            links.new(emit_node.outputs[0], mat_output.inputs[0])  # type:ignore
 
         node = nodes.new("ShaderNodeTexImage")
         node.image = image
@@ -258,24 +281,22 @@ class BakeSettings:
         nodes.active = node
 
     @staticmethod
-    def _check_bake_render_settings(context, samples=4, force_cycles=False):
+    def _check_bake_render_settings(
+        context: bpy.types.Context, samples: int = 4, force_cycles: bool = False
+    ) -> tuple[bool, bool, bool, bool]:
         switched_to_cuda = False
         switched_from_eevee = False
-        if (
-            context.preferences.addons["cycles"].preferences.compute_device_type
-            == "OPTIX"
-        ):
+        cycles_addon = context.preferences.addons["cycles"]  # type:ignore
+        if cycles_addon.preferences.compute_device_type == "OPTIX":
             switched_to_cuda = True
-            context.preferences.addons[
-                "cycles"
-            ].preferences.compute_device_type = "CUDA"
+            cycles_addon.preferences.compute_device_type = "CUDA"
         if context.scene.render.engine != "CYCLES":
             if force_cycles:
                 switched_from_eevee = True
                 context.scene.render.engine = "CYCLES"
             else:
                 ShowMessageBox(message="You can only bake while in Cycles")
-                return True, None, None, None
+                return True, False, False, False
 
         old_samples = context.scene.cycles.samples
         context.scene.cycles.samples = samples

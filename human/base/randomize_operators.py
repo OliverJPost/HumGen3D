@@ -21,7 +21,7 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
 
     def execute(self, context):
         random_type = self.random_type
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         human = Human.from_existing(context.active_object, strict_check=False)
 
         if random_type in (

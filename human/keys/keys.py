@@ -3,32 +3,25 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import re
-from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Generator, List, Union
-from unicodedata import category
+from typing import TYPE_CHECKING, Iterable, List, Optional, Union, cast
 
 import bpy
 import numpy as np
-from bpy.types import Object  # type: ignore
-from bpy.types import Context, ShapeKey  # type:ignore
-from HumGen3D.backend import get_prefs, hg_delete, hg_log
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.drivers import build_driver_dict
+from bpy.types import Object, ShapeKey
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
+
+from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.base.savable_content import SavableContent
 
 if TYPE_CHECKING:
-    from .bpy_livekey import LiveKey
-
-from HumGen3D.user_interface.documentation.feedback_func import show_message
-
-from ..base.exceptions import HumGenException
-from ..base.prop_collection import PropCollection
+    from .bpy_livekey import BpyLiveKey
 
 
-def update_livekey_collection():
+def update_livekey_collection() -> None:
     """Updates the livekeys collection inside context.window_manager to contain all
     livekeys present in the Human Generator folder structure.
     """
@@ -37,7 +30,7 @@ def update_livekey_collection():
     subcategories = []
 
     folder = os.path.join(get_prefs().filepath, "livekeys")
-    for root, dirs, files in os.walk(folder):
+    for root, _, files in os.walk(folder):
         for file in files:
             if not file.endswith(".npy"):
                 continue
@@ -69,10 +62,14 @@ def update_livekey_collection():
         if not category:
             continue
 
-        setattr(UserInterfaceProps, category, bpy.props.BoolProperty(default=False))
+        setattr(
+            UserInterfaceProps,
+            category,
+            bpy.props.BoolProperty(default=False),  # type:ignore[func-returns-value]
+        )
 
 
-def transfer_shapekey(sk, to_obj):
+def transfer_shapekey(sk: bpy.types.ShapeKey, to_obj: bpy.types.Object) -> None:
     new_sk = to_obj.shape_key_add(name=sk.name, from_mix=False)
     new_sk.interpolation = "KEY_LINEAR"
     old_sk_data = np.empty(len(to_obj.data.vertices) * 3, dtype=np.float64)
@@ -82,7 +79,7 @@ def transfer_shapekey(sk, to_obj):
 
 
 # MODULE
-def apply_shapekeys(ob):
+def apply_shapekeys(ob: bpy.types.Object) -> None:
     """Applies all shapekeys on the given object, so modifiers on the object can
     be applied
 
@@ -99,7 +96,7 @@ def apply_shapekeys(ob):
 
     i = ob.active_shape_key_index
 
-    for n in range(1, i):
+    for _ in range(1, i):
         ob.active_shape_key_index = 1
         ob.shape_key_remove(ob.active_shape_key)
 
@@ -108,7 +105,13 @@ def apply_shapekeys(ob):
 
 
 class KeyItem:
-    def __init__(self, name, category, human, subcategory=None):
+    def __init__(
+        self,
+        name: str,
+        category: str,
+        human: "Human",
+        subcategory: Optional[str] = None,
+    ) -> None:
         self.name = name
         self.category = category
         self._human = human
@@ -119,10 +122,10 @@ class KeyItem:
         raise NotImplementedError
 
     @value.setter
-    def value(self, value) -> None:
+    def value(self, value: float) -> None:
         raise NotImplementedError
 
-    def as_bpy(self):
+    def as_bpy(self) -> Union[bpy.types.ShapeKey, "BpyLiveKey"]:
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -130,7 +133,14 @@ class KeyItem:
 
 
 class LiveKeyItem(KeyItem):
-    def __init__(self, name, category, path, human, subcategory=None):
+    def __init__(
+        self,
+        name: str,
+        category: str,
+        path: str,
+        human: "Human",
+        subcategory: Optional[str] = None,
+    ) -> None:
         super().__init__(name, category, human, subcategory)
         self.path = path
 
@@ -172,12 +182,12 @@ class LiveKeyItem(KeyItem):
         if temp_key and temp_key.name.endswith(self.name):
             return temp_key.value
         elif self.name in current_sk_values:
-            return current_sk_values[self.name]
+            return cast(float, current_sk_values[self.name])
         else:
             return 0.0
 
     @value.setter
-    def value(self, value) -> None:
+    def value(self, value: float) -> None:
         # TODO repetition from set_livekey
         body = self._human.body_obj
         vert_count = len(body.data.vertices)
@@ -200,11 +210,11 @@ class LiveKeyItem(KeyItem):
 
         self._human.props.sk_values[self.name] = value
 
-    def as_bpy(self) -> LiveKey:
+    def as_bpy(self) -> "BpyLiveKey":
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
         livekey = bpy.context.window_manager.livekeys.get(self.name)
         assert livekey
-        return livekey
+        return cast("BpyLiveKey", livekey)
 
     def __repr__(self) -> str:
         return "LiveKey " + super().__repr__()
@@ -218,14 +228,14 @@ class ShapeKeyItem(KeyItem, SavableContent):
         "e": "expressions",
     }
 
-    def __init__(self, sk_name, human):
+    def __init__(self, sk_name: str, human: "Human") -> None:
         pattern = re.compile(
-            "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"
+            "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
         )
         match = pattern.match(sk_name)
         groupdict = match.groupdict()
         category_code = groupdict.get("category")
-        category = self.category_dict[category_code] if category_code else None
+        category = self.category_dict[category_code] if category_code else ""
         subcategory = groupdict.get("subcategory")
         name = groupdict.get("name")
         assert name
@@ -233,10 +243,12 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
     @property
     def value(self) -> float:
-        return self._human.body_obj.data.shape_keys.key_blocks[self.name].value
+        return cast(
+            float, self._human.body_obj.data.shape_keys.key_blocks[self.name].value
+        )
 
     @value.setter
-    def value(self, value) -> None:
+    def value(self, value: float) -> None:
         self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
 
     def as_bpy(self) -> ShapeKey:
@@ -247,23 +259,30 @@ class ShapeKeyItem(KeyItem, SavableContent):
                 name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
-        return self._human.body_obj.data.shape_keys.key_blocks[name]
+        return cast(ShapeKey, self._human.body_obj.data.shape_keys.key_blocks[name])
 
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
 
     def __hash__(self) -> int:
         data = self.as_bpy().data
-        coords = np.empty(len(data) * 3, dtype=np.float64)
+        coords = np.empty(len(data) * 3, dtype=np.float64)  # type:ignore[arg-type]
         data.foreach_get("co", coords)
-        return hashlib.sha1(data).hexdigest()
+        return int(hashlib.sha1(data).hexdigest(), 16)  # type:ignore[arg-type] # noqa
 
     def save_to_library(
-        self, name, category, subcategory, as_livekey=True, delete_original=False
-    ):
+        self,
+        name: str,
+        category: str,
+        subcategory: str,
+        as_livekey: bool = True,
+        delete_original: bool = False,
+    ) -> None:
         body = self._human.body_obj
         sk = self.as_bpy()
-        sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
+        sk_coords = np.empty(
+            len(sk.data) * 3, dtype=np.float64  # type:ignore[arg-type]
+        )
         sk.data.foreach_get("co", sk_coords)
 
         vert_count = len(body.data.vertices)
@@ -289,28 +308,28 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
 
 class KeySettings:
-    def __init__(self, human):
+    def __init__(self, human: "Human") -> None:
         self._human = human
 
-    def __getitem__(self, name) -> Union[LiveKeyItem, ShapeKeyItem]:
+    def __getitem__(self, name: str) -> Union[LiveKeyItem, ShapeKeyItem]:
         try:
             return next(key for key in self.all_keys if key.name == name)
         except StopIteration:
             hg_log(f"{self.all_keys = }", level="DEBUG")
             raise ValueError(f"Key '{name}' not found")
 
-    def __iter__(self):
+    def __iter__(self) -> Iterable[Union[ShapeKeyItem, LiveKeyItem]]:
         yield from self.all_keys
 
-    def get(self, name):
+    def get(self, name: str) -> Optional[Union[ShapeKeyItem, LiveKeyItem]]:
         try:
-            self[name]
+            return self[name]
         except ValueError:
             return None
 
     @property
     def all_keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
-        return self.all_livekeys + self.all_shapekeys
+        return self.all_livekeys + self.all_shapekeys  # type:ignore[operator]
 
     @property
     def all_livekeys(self) -> List[LiveKeyItem]:
@@ -360,37 +379,27 @@ class KeySettings:
         ]
 
     @property
-    def body_proportions(self):
-        return PropCollection([sk for sk in self if sk.name.startswith("bp_")])
-
-    @property
-    def face_presets(self):
-        return PropCollection([sk for sk in self if sk.name.startswith("pr_")])
-
-    @property
-    def expression(self) -> PropCollection:
-        return PropCollection([sk for sk in self if sk.name.startswith("expr_")])
-
-    @property
-    def temp_key(self):
+    def temp_key(self) -> bpy.types.ShapeKey:
         temp_key = next(
             (sk for sk in self.all_shapekeys if sk.name.startswith("LIVE_KEY_TEMP_")),
             None,
         )
         if not temp_key:
-            temp_key = self._human.body_obj.shape_key_add(name="LIVE_KEY_TEMP_")
+            temp_key = self._human.body_obj.shape_key_add(
+                name="LIVE_KEY_TEMP_"
+            )  # type:ignore[assignment]
             temp_key.slider_max = 10
             temp_key.slider_min = -10
         else:
-            temp_key = temp_key.as_bpy()
-        return temp_key
+            temp_key = temp_key.as_bpy()  # type:ignore[assignment]
+        return cast(bpy.types.ShapeKey, temp_key)
 
     @property
-    def permanent_key(self):
-        return self["LIVE_KEY_PERMANENT"].as_bpy()
+    def permanent_key(self) -> bpy.types.ShapeKey:
+        return cast(bpy.types.ShapeKey, self["LIVE_KEY_PERMANENT"].as_bpy())
 
     def filtered(
-        self, category, subcategory=None
+        self, category: str, subcategory: Optional[str] = None  # FIXME
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
         keys = []
         for key in self:
@@ -402,8 +411,8 @@ class KeySettings:
         return keys
 
     def load_from_npy(
-        self, npy_filepath: Union[str, os.PathLike], obj_override: Object = None
-    ):
+        self, npy_filepath: str, obj_override: Optional[Object] = None
+    ) -> bpy.types.ShapeKey:
         """Creates a new shapekey on the body or the passed obj_override from a npy file
 
         This .npy file contains a one dimensional array with coordinates of the
@@ -436,84 +445,7 @@ class KeySettings:
 
         return sk
 
-    @injected_context
-    def _load_external(self, human, context=None):
-        """Imports external shapekeys from the models/shapekeys folder
-
-        Args:
-            pref (AddonPreferences): HumGen preferences
-            hg_body (Object): Humgen body object
-        """
-        context.view_layer.objects.active = human.body_obj
-        walker = os.walk(
-            str(get_prefs().filepath) + str(Path("/models/shapekeys"))
-        )  # TODO
-
-        for root, _, filenames in walker:
-            for fn in filenames:
-                hg_log(f"Existing shapekeys, found {fn} in {root}", level="DEBUG")
-                if not os.path.splitext(fn)[1] == ".blend":
-                    continue
-
-                imported_body = self._import_external_sk_human(
-                    context, get_prefs(), root, fn
-                )
-                if not imported_body:
-                    continue
-
-                self._transfer_shapekeys(context, human.body_obj, imported_body)
-
-                imported_body.select_set(False)
-                hg_delete(imported_body)
-
-        human.body_obj.show_only_shape_key = False
-
-    def _import_external_sk_human(self, context, pref, root, fn) -> bpy.types.Object:
-        """Imports the Humgen body from the passed file in order to import the
-        shapekeys on that human
-
-        Args:
-            pref (AddonPReferences): HumGen preferences
-            root (dir): Root directory the file is in
-            fn (str): Filename
-
-        Returns:
-            Object: Imported body object
-        """
-        blendfile = root + str(Path(f"/{fn}"))
-        try:
-            with bpy.data.libraries.load(blendfile, link=False) as (
-                data_from,
-                data_to,
-            ):
-                data_to.objects = data_from.objects
-        except OSError as e:
-            show_message(self, "Could not import " + blendfile)
-            print(e)
-            return None
-
-        hg_log("Existing shapekeys imported:", data_to.objects, level="DEBUG")
-        imported_body = [
-            obj for obj in data_to.objects if obj.name.lower() == "hg_shapekey"
-        ][0]
-
-        context.scene.collection.objects.link(imported_body)
-
-        return imported_body
-
-    def _transfer_shapekeys(self, context, hg_body, imported_body):
-        """Transfer all non-Basis shapekeys from the passed object to hg_body
-
-        Args:
-            hg_body (Object): HumGen body object
-            imported_body (Object): imported body object that contains shapekeys
-        """
-        for idx, sk in enumerate(imported_body.data.shape_keys.key_blocks):
-            if sk.name in ["Basis", "Male"]:
-                continue
-            transfer_shapekey(sk, hg_body)
-
-    def _set_gender_specific(self, human):
+    def _set_gender_specific(self, human: "Human") -> None:
         """Renames shapekeys, removing Male_ and Female_ prefixes according to
         the passed gender
 
@@ -524,76 +456,18 @@ class KeySettings:
         gender = human.gender
         hg_body = human.body_obj
         for sk in [sk for sk in hg_body.data.shape_keys.key_blocks]:
-            if sk.name.lower().startswith(gender):
-                if sk.name != "Male":
-                    GD = gender.capitalize()
-                    sk.name = sk.name.replace(f"{GD}_", "")
+            if sk.name.lower().startswith(gender) and sk.name != "Male":
+                GD = gender.capitalize()
+                sk.name = sk.name.replace(f"{GD}_", "")
 
             opposite_gender = "male" if gender == "female" else "female"
 
             if sk.name.lower().startswith(opposite_gender) and sk.name != "Male":
                 hg_body.shape_key_remove(sk)
 
-    def _extract_permanent_keys(
-        self,
-        context: Context = None,
-        override_obj=None,
-    ):
-        if not context:
-            context = bpy.context
-
-        pref = get_prefs()
-
-        obj = override_obj if override_obj else self._human.body_obj
-        sks = (
-            override_obj.data.shape_keys.key_blocks
-            if override_obj
-            else self._human.keys
-        )
-        vert_count = len(obj.data.vertices)
-
-        driver_dict = build_driver_dict(obj)
-
-        basis_data = np.empty(vert_count * 3, dtype=np.float64)
-        sks.get("Basis").data.foreach_get("co", basis_data)
-
-        sk_vector_dict: Dict[str, np.ndarray] = {}
-        for shapekey in sks:
-            if (
-                not shapekey.name.startswith(("cor_", "eyeLook"))
-                and not pref.keep_all_shapekeys
-            ):
-                continue
-
-            sk_data = np.empty(vert_count * 3, dtype=np.float64)
-            shapekey.data.foreach_get("co", sk_data)
-            sk_vectors = sk_data - basis_data
-            sk_vector_dict[shapekey.name] = sk_vectors
-
-        return sk_vector_dict, driver_dict
-
-    def _reapply_permanent_keys(
-        self, sk_vector_dict, driver_dict, context: Context = None
-    ):
-        if not context:
-            context = bpy.context
-        body_obj = self._human.body_obj
-        vert_count = len(body_obj.data.vertices)
-        body_obj.shape_key_add(name="Basis")
-
-        basis_data = np.empty(vert_count * 3, dtype=np.float64)
-        sks = body_obj.data.shape_keys.key_blocks
-        sks.get("Basis").data.foreach_get("co", basis_data)
-
-        for name, vectors in sk_vector_dict.items():
-            sk = body_obj.shape_key_add(name=name, from_mix=False)
-            sk.interpolation = "KEY_LINEAR"
-            sk.data.foreach_set("co", vectors + basis_data)
-
-            if name in driver_dict:
-                self._add_driver(sk, driver_dict[name])
-
-    def _add_driver(self, target_sk, sett_dict):
+    def _add_driver(
+        self, target_sk: bpy.types.ShapeKey, sett_dict: dict[str, str]
+    ) -> bpy.types.Driver:
         """Adds a new driver to the passed shapekey, using the passed dict as settings
 
         Args:
@@ -604,7 +478,7 @@ class KeySettings:
         driver = target_sk.driver_add("value").driver
         var = driver.variables.new()
         var.type = "TRANSFORMS"
-        target = var.targets[0]
+        target = var.targets[0]  # type:ignore[index]
         target.id = self._human.rig_obj
 
         driver.expression = sett_dict["expression"]
@@ -615,7 +489,7 @@ class KeySettings:
         return driver
 
     def as_dict(self) -> dict[str, dict[str, float]]:
-        key_dict = {}
+        key_dict = {}  # noqa SIM904
         key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
         key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
 

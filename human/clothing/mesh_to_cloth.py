@@ -1,13 +1,12 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+# type:ignore
 
 import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_delete
+from HumGen3D.backend import get_prefs
 from HumGen3D.human.human import Human  # type: ignore
-from HumGen3D.human.keys.keys import apply_shapekeys
-from mathutils import Matrix
 
 
 class MESH_TO_CLOTH_TOOLS:
@@ -162,10 +161,8 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
         old_masks = human.finalize_phase.outfits.find_masks(cloth_obj)
 
         for mask in old_masks:
-            try:
+            with contextlib.suppress(Exception):
                 hg_body.modifiers.remove(hg_body.modifiers.get(mask))
-            except:
-                pass
 
         for i in range(10):
             if f"mask_{i}" in cloth_obj:

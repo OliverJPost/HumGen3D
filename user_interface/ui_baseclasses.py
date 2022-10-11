@@ -23,7 +23,7 @@ def subpanel_draw(draw_method):
     @functools.wraps(draw_method)
     def wrapper(self: MainPanelPart, context):
         self.human = Human.from_existing(context.object)
-        self.sett = context.scene.HG3D
+        self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         if self.draw_info_and_warning_labels(context):
             return
 
@@ -418,7 +418,7 @@ class MainPanelPart(HGPanel):
     def poll(cls, context):
         if not super().poll(context):
             return False
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         if not sett.ui.active_tab == "CREATE":
             return False
         elif not sett.ui.phase == cls.phase_name:

@@ -23,14 +23,14 @@ ALL_FEMALE_FIXTURES = [lazy_fixture(name) for name in _all_female_fixtures]
 
 
 @pytest.fixture(scope="class")
-def male_human() -> Human:
+def male_human() -> "Human":
     human = _create_human("male")
     yield human
     human.delete()
 
 
 @pytest.fixture(scope="class")
-def female_human() -> Human:
+def female_human() -> "Human":
     human = _create_human("female")
     yield human
     human.delete()

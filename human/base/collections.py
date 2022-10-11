@@ -4,7 +4,9 @@ import bpy
 
 
 # MODULE
-def add_to_collection(context, obj, collection_name="HumGen") -> bpy.types.Collection:
+def add_to_collection(
+    context: bpy.types.Context, obj: bpy.types.Object, collection_name: str = "HumGen"
+) -> bpy.types.Collection:
     """Adds the giver object toa colleciton. By default added to HumGen collection
 
     Args:
@@ -19,10 +21,9 @@ def add_to_collection(context, obj, collection_name="HumGen") -> bpy.types.Colle
     if not collection:
         collection = bpy.data.collections.new(name=collection_name)
         if collection_name == "HumGen_Backup [Don't Delete]":
-            bpy.data.collections["HumGen"].children.link(collection)
-            context.view_layer.layer_collection.children["HumGen"].children[
-                collection_name
-            ].exclude = True
+            bpy.data.collections["HumGen"].children.link(collection)  # type:ignore
+            coll = context.view_layer.layer_collection.children["HumGen"]  # type:ignore
+            coll.children[collection_name].exclude = True  # type:ignore
         elif collection_name == "HG Batch Markers":
             hg_collection = bpy.data.collections.get("HumGen")
             if not hg_collection:

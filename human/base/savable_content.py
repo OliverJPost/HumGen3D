@@ -1,67 +1,34 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import contextlib
 import os
 import re
 import subprocess
-from shutil import copyfile
+from typing import Iterable
 
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.memory_management import hg_delete
-from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
-from HumGen3D.user_interface.documentation.feedback_func import show_message
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 
 
 class SavableContent:
-    def save_to_library(self):
+    def save_to_library(self) -> None:
         raise NotImplementedError
-
-    def save_thumbnail(self, folder, img_name, save_name):
-        """Save the thumbnail with this content
-
-        Args:
-            folder (Path): folder where to save it
-            current_name (str): current name of the image
-            save_name (str): name to save the image as
-        """
-        img = bpy.data.images[img_name]
-        thumbnail_type = self.sett.thumbnail_saving_enum
-
-        destination_path = os.path.join(folder, f"{save_name}.jpg")
-        if thumbnail_type in ("last_render", "auto"):
-            image_name = (
-                "temp_render_thumbnail"
-                if thumbnail_type == "last_render"
-                else "temp_thumbnail"
-            )
-            source_image = os.path.join(
-                get_prefs().filepath, "temp_data", f"{image_name}.jpg"
-            )
-            hg_log("Copying", source_image, "to", destination_path)
-            copyfile(source_image, destination_path)
-
-        else:
-            try:
-                img.filepath_raw = os.path.join(folder, f"{save_name}.jpg")
-                img.file_format = "JPEG"
-                img.save()
-            except RuntimeError as e:
-                show_message(self, "Thumbnail image doesn't have any image data")
-                print(e)
 
     @staticmethod
     def save_objects_optimized(
-        context,
-        objs,
-        folder,
-        filename,
-        clear_sk=True,
-        clear_materials=True,
-        clear_vg=True,
-        clear_ps=True,
-        run_in_background=True,
-        clear_drivers=True,
-    ):
+        context: bpy.types.Context,
+        objs: Iterable[bpy.types.Object],
+        folder: str,
+        filename: str,
+        clear_sk: bool = True,
+        clear_materials: bool = True,
+        clear_vg: bool = True,
+        clear_ps: bool = True,
+        run_in_background: bool = True,
+        clear_drivers: bool = True,
+    ) -> None:
         """Saves the passed objects as a new blend file, opening the file in the
         background to make it as small as possible
 
@@ -112,7 +79,7 @@ class SavableContent:
         python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
         if run_in_background:
             hg_log("STARTING HumGen background process", level="BACKGROUND")
-            background_blender = subprocess.Popen(
+            subprocess.Popen(
                 [
                     bpy.app.binary_path,
                     blend_filepath,
@@ -131,36 +98,41 @@ class SavableContent:
         for obj in objs:
             hg_delete(obj)
 
-    def _clear_sk_drivers(self):
+    @staticmethod
+    def _clear_sk_drivers() -> None:
         for key in bpy.data.shape_keys:
             try:
                 fcurves = key.animation_data.drivers
                 for _ in fcurves:
-                    fcurves.remove(fcurves[0])
+                    fcurves.remove(fcurves[0])  # type:ignore[index]
             except AttributeError:
                 pass
 
-    def _remove_obj_drivers(self, obj):
-        try:
+    @staticmethod
+    def _remove_obj_drivers(obj: bpy.types.Object) -> None:
+        with contextlib.suppress(AttributeError):
             drivers_data = obj.animation_data.drivers
 
-            for dr in drivers_data[:]:
+            for dr in drivers_data:
                 obj.driver_remove(dr.data_path, -1)
-        except AttributeError:
-            return
 
-    def _remove_particle_systems(self, context, obj):
+    @staticmethod
+    def _remove_particle_systems(
+        context: bpy.types.Context, obj: bpy.types.Object
+    ) -> None:
         """Remove particle systems from the passed object
 
         Args:
             obj (Object): obj to remove particle systems from
         """
         context.view_layer.objects.active = obj
-        for i, ps in enumerate(obj.particle_systems):
+        # TODO low level
+        for i, _ in enumerate(obj.particle_systems):  # type:ignore[arg-type]
             obj.particle_systems.active_index = i
             bpy.ops.object.particle_system_remove()
 
-    def _remove_shapekeys(self, obj):
+    @staticmethod
+    def _remove_shapekeys(obj: bpy.types.Object) -> None:
         """Remove shapekeys from the passed object
 
         Args:
@@ -171,7 +143,8 @@ class SavableContent:
         if obj.data.shape_keys:
             obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
 
-    def remove_number_suffix(self, name) -> str:
+    @staticmethod
+    def remove_number_suffix(name: str) -> str:
         """Remove the number suffix from the passed name
         (i.e. Box.004 becomes Box)
 

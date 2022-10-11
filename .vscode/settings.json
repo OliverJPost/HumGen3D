@@ -7,6 +7,7 @@
             "${commentprefix} Copyright (c) ${year} Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE",
         ]
     },
-    "python.linting.mypyEnabled": true,
-    "python.linting.enabled": true
+    //"python.linting.mypyEnabled": true,
+    "python.linting.enabled": false,
+    "python.linting.flake8Enabled": true,
 }

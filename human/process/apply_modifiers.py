@@ -1,8 +1,12 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from pathlib import Path
+from typing import TYPE_CHECKING, Any, no_type_check
 
 import bpy  # type: ignore
+
+if TYPE_CHECKING:
+    from HumGen3D.backend.properties.scene_main_properties import HG_SETTINGS
+
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.user_interface.content_panel.operators import (
@@ -18,8 +22,9 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
     bl_description = "Apply selected modifiers"
     bl_options = {"UNDO"}
 
+    @no_type_check
     def execute(self, context):
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = context.scene.modapply_col
         objs = build_object_list(context, sett)
 
@@ -49,6 +54,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         refresh_modapply(self, context)
         return {"FINISHED"}
 
+    @no_type_check
     def copy_shapekeys(self, context, col, sk_dict, driver_dict, obj):
         apply = False
         for item in col:
@@ -71,6 +77,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         pref.keep_all_shapekeys = keep_sk_pref
         return sk_dict, driver_dict
 
+    @no_type_check
     def apply_modifiers(self, context, sett, col, sk_dict, objs_to_apply):
         if sett.modapply_search_modifiers == "summary":
             mod_types = [
@@ -97,6 +104,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                         level="WARNING",
                     )
 
+    @no_type_check
     def add_shapekeys_again(self, context, objs, sk_dict, driver_dict):
         for obj in objs:
             if not sk_dict[obj.name]:
@@ -108,6 +116,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
             # )
             obj.select_set(False)
 
+    @no_type_check
     def apply(self, context, sett, mod, obj):
         apply = (
             False
@@ -133,6 +142,7 @@ class HG_OT_REFRESH_UL(bpy.types.Operator):
 
     type: bpy.props.StringProperty()
 
+    @no_type_check
     def execute(self, context):
         if self.type == "modapply":
             refresh_modapply(self, context)
@@ -153,6 +163,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
 
     all: bpy.props.BoolProperty()
 
+    @no_type_check
     def execute(self, context):
         col = context.scene.modapply_col
 
@@ -164,8 +175,8 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def refresh_modapply(self, context):
-    sett = context.scene.HG3D
+def refresh_modapply(self: Any, context: bpy.types.Context) -> None:
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     col = context.scene.modapply_col
     col.clear()
 
@@ -179,12 +190,14 @@ def refresh_modapply(self, context):
             if mod.type == "PARTICLE_SYSTEM":
                 continue
             if sett.modapply_search_modifiers == "individual":
-                build_full_list(col, mod, obj)
+                build_full_list(col, mod, obj)  # type:ignore[arg-type]
             else:
-                build_summary_list(col, mod)
+                build_summary_list(col, mod)  # type:ignore[arg-type]
 
 
-def build_object_list(context, sett) -> list:
+def build_object_list(
+    context: bpy.types.Context, sett: "HG_SETTINGS"
+) -> list[bpy.types.Object]:
     from HumGen3D.human.human import Human
 
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
@@ -204,7 +217,9 @@ def build_object_list(context, sett) -> list:
     return list(set(objs))
 
 
-def build_full_list(col, mod, obj):
+def build_full_list(
+    col: bpy.types.CollectionProperty, mod: bpy.types.Modifier, obj: bpy.types.Object
+) -> None:
     item = col.add()
     item.mod_name = mod.name
     item.mod_type = mod.type
@@ -220,7 +235,9 @@ def build_full_list(col, mod, obj):
         item.enabled = True
 
 
-def build_summary_list(col, mod):
+def build_summary_list(
+    col: bpy.types.CollectionProperty, mod: bpy.types.Modifier
+) -> None:
     existing = [item for item in col if item.mod_type == mod.type]
     if existing:
         item = existing[0]

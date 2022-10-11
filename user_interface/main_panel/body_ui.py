@@ -29,8 +29,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         # for i in range(8):
         #     row.label(text="", icon="KEYTYPE_KEYFRAME_VEC")
 
-        sett = context.scene.HG3D
-
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
         row = col.row()
         row.scale_y = 1.5

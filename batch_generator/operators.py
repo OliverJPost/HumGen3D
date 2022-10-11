@@ -1,23 +1,17 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
-Inactive file to be implemented later, batch mode for generating multiple
-humans at once
-"""
+"""Batch mode for generating multiple humans at once."""
 
-import json
 import os
 import random
-import subprocess
 import time
-from pathlib import Path
 
 import bpy
 from HumGen3D.API import BatchHumanGenerator
-from HumGen3D.backend import hg_log, hg_delete
-from HumGen3D.human.base.render import set_eevee_ao_and_strip
+from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.base.collections import add_to_collection
+from HumGen3D.human.base.render import set_eevee_ao_and_strip
 
 from .batch_functions import get_batch_marker_list, has_associated_human
 
@@ -79,11 +73,7 @@ def status_text_callback(header, context):
     layout.separator_spacer()
 
 
-class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
-    """
-    clears searchfield INACTIVE
-    """
-
+class HG_BATCH_GENERATE(bpy.types.Operator):
     bl_idname = "hg3d.generate"
     bl_label = "Generate"
     bl_description = "Generates specified amount of humans"
@@ -127,7 +117,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
         context.workspace.status_text_set(status_text_callback)
         context.area.tag_redraw()
 
-    def _show_dialog_to_confirm_deleting_humans(self, context):
+    def _show_dialog_to_confirm_deleting_humans(self, context):  # noqa CCE001
         generate_queue = self.generate_queue
 
         def draw(self, context):
@@ -135,10 +125,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
             nonlocal generate_queue
 
-            i = 0
-            for marker in filter(has_associated_human, generate_queue):
+            for i, marker in enumerate(filter(has_associated_human, generate_queue)):
                 layout.label(text=marker["associated_human"].name)
-                i += 1
 
                 if i > 9:
                     layout.label(text=f"+ {len(generate_queue) - 10} more")
@@ -154,9 +142,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
         context.window_manager.popup_menu(draw, title="This will delete these humans:")
 
-    def modal(self, context, event):
+    def modal(self, context, event):  # noqa CFQ004
         """Event handling."""
-
         batch_sett = context.scene.HG3D.batch
 
         if self.finish_modal:
@@ -213,9 +200,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
                 ),
                 add_hair=batch_sett.hair,
                 hair_type="particle",  # sett.batch_hairtype,
-                hair_quality=getattr(
-                    batch_sett, f"hair_quality_particle"
-                ),  # {sett.batch_hairtype}'),
+                hair_quality=batch_sett.hair_quality_particle,
                 add_expression=batch_sett.expression,
                 expression_category=self._choose_category_list(context, "expressions"),
                 add_clothing=batch_sett.clothing,
@@ -289,17 +274,15 @@ class HG_BATCH_GENERATE(bpy.types.Operator):  # ), HG_CREATION_BASE):
 
         quality_dict = {name: getattr(batch_sett, name) for name in q_names}
 
-        generator = BatchHumanGenerator(**quality_dict)
-
-        return generator
+        return BatchHumanGenerator(**quality_dict)
 
 
 class HG_RESET_BATCH_OPERATOR(bpy.types.Operator):
-    """Operator for testing bits of code"""
+    """Operator for testing bits of code."""
 
     bl_idname = "hg3d.reset_batch_operator"
     bl_label = "Reset batch operator"
-    bl_description = "If an error occured during batch creation, use this to get the purple button back"
+    bl_description = "If an error occured during batch creation, use this to get the purple button back"  # noqa E501
     bl_options = {"UNDO"}
 
     def execute(self, context):

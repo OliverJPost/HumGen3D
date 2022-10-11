@@ -1,9 +1,14 @@
 import os
 import shutil
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 import bpy
+import numpy as np
+from HumGen3D.backend.type_aliases import DistanceDict
 from bpy.types import Context, Image, Object
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.custom_content.content_saving import (
     remove_number_suffix,
@@ -15,20 +20,19 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
     world_coords_from_obj,
 )
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
 def save_clothing(
-    human,
+    human: "Human",
     folder: str,
     category: str,
     name: str,
     context: Context,
     objs: list[Object],
     genders: list[str],
-    open_when_finished=False,
-    thumbnail: Union[Image, None] = None,
-):
+    open_when_finished: bool = False,
+    thumbnail: Optional[Image] = None,
+) -> None:
     for gender in genders:
         gender_folder = os.path.join(folder, gender, category)
         if not os.path.isdir(gender_folder):
@@ -69,16 +73,16 @@ def save_clothing(
 
 
 def export_for_gender(
-    human,
-    name,
-    folder,
-    context,
-    objs,
-    open_when_finished,
-    gender,
-    obj_distance_dict,
-    body_coords_world,
-):
+    human: "Human",
+    name: str,
+    folder: str,
+    context: bpy.types.Context,
+    objs: Iterable[bpy.types.Object],
+    open_when_finished: bool,
+    gender: str,
+    obj_distance_dict: DistanceDict,
+    body_coords_world: np.ndarray[Any, Any],
+) -> None:
     export_list = []
     if gender == "female":
         body_with_gender_coords_global = body_coords_world
@@ -127,14 +131,16 @@ def export_for_gender(
 
 
 # CHECK naming adds .004 to file names, creating duplicates
-def save_material_textures(objs, texture_folder):
+def save_material_textures(
+    objs: Iterable[bpy.types.Object], texture_folder: str
+) -> None:
     """Save the textures used by the materials of these objects to the
     content folder
 
     Args:
         objs (list): List of objects to check for textures on
     """
-    saved_images = {}
+    saved_images: dict[str, str] = {}
 
     for obj in objs:
         for mat in obj.data.materials:
@@ -143,7 +149,9 @@ def save_material_textures(objs, texture_folder):
                 _process_image(saved_images, img_node, texture_folder)
 
 
-def _process_image(saved_images, img_node, texture_folder):
+def _process_image(
+    saved_images: dict[str, str], img_node: bpy.types.ShaderNode, texture_folder: str
+) -> None:
     """Prepare this image for saving and call _save_img on it
 
     Args:
@@ -163,7 +171,9 @@ def _process_image(saved_images, img_node, texture_folder):
         new_img.colorspace_settings.name = colorspace
 
 
-def _save_img(img, saved_images, folder) -> tuple[str, list]:
+def _save_img(
+    img: bpy.types.Image, saved_images: dict[str, str], folder: str
+) -> tuple[Optional[str], dict[str, str]]:
     """Save image to content folder
 
     Returns:

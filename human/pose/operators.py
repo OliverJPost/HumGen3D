@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.backend import hg_log, hg_delete
+from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.drivers import build_driver_dict
 from HumGen3D.human.human import Human
@@ -123,7 +123,7 @@ class HG_RIGIFY(bpy.types.Operator):
             if obj.type == "ARMATURE"
             and "rig_id" in obj.data
             and not obj.children
-            and not "hg_rigify" in obj.data
+            and "hg_rigify" not in obj.data
         ]
 
         for rig in unused_rigify_rigs:

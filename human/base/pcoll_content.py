@@ -3,11 +3,12 @@
 import os
 import random
 from pathlib import Path
-from re import L
-from typing import List, Tuple
+from typing import List
 
+import bpy
 from HumGen3D.backend import PREVIEW_COLLECTION_DATA, get_prefs, preview_collections
 from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend.type_aliases import BpyEnum, C
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
 
@@ -16,12 +17,13 @@ class PreviewCollectionContent:
     _pcoll_name: str
     _pcoll_gender_split: bool
 
-    def set(self, preset, context=None):
+    @injected_context
+    def set(self, preset: str, context: C = None) -> None:
         raise NotImplementedError
 
-    def _set(self, context):
+    def _set(self, context: bpy.types.Context) -> None:
         """Internal way of setting content, only used by enum properties"""
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         if sett.update_exception:
             return
 
@@ -32,7 +34,7 @@ class PreviewCollectionContent:
             self.set(active_item)
 
     @injected_context
-    def set_random(self, context=None, update_ui=False):
+    def set_random(self, context: C = None, update_ui: bool = False) -> None:
         options = self.get_options(context)
         chosen = random.choice(options)
 
@@ -46,13 +48,13 @@ class PreviewCollectionContent:
 
         if update_ui:
             # Use indirect way so the UI reflects the chosen item
-            sett = context.scene.HG3D
+            sett = context.scene.HG3D  # type:ignore[attr-defined]
             sett.update_exception = True
             setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
             sett.update_exception = False
 
     @injected_context
-    def get_options(self, context=None) -> List[str]:
+    def get_options(self, context: C = None) -> List[str]:
         # Return only the name from the enum. Skip the first one
         # FIXME check all pcolls if 0 is always skipped
         self.refresh_pcoll(context, ignore_category_and_searchterm=True)
@@ -64,7 +66,7 @@ class PreviewCollectionContent:
 
         return options
 
-    def _get_full_options(self):
+    def _get_full_options(self) -> BpyEnum:
         """Internal way of getting content, only used by enum properties"""
         pcoll = preview_collections.get(self._pcoll_name).pcoll
         if not pcoll:
@@ -74,7 +76,9 @@ class PreviewCollectionContent:
 
         return pcoll[self._pcoll_name]
 
-    def get_categories(self, include_all=True, ignore_genders=False):
+    def get_categories(
+        self, include_all: bool = True, ignore_genders: bool = False
+    ) -> BpyEnum:
         if not self._human:
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
@@ -96,9 +100,12 @@ class PreviewCollectionContent:
 
         return categories
 
-    def refresh_pcoll(self, context, ignore_category_and_searchterm=False):
+    @injected_context
+    def refresh_pcoll(
+        self, context: C = None, ignore_category_and_searchterm: bool = False
+    ) -> None:
         """Refresh the items of this preview collection"""
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         self._check_for_HumGen_filepath_issues()
         pcoll_name = self._pcoll_name
 
@@ -112,7 +119,7 @@ class PreviewCollectionContent:
         sett.pcoll[pcoll_name] = "none"  # set the preview collection to
         # the 'click here to select' item
 
-    def _check_for_HumGen_filepath_issues(self):
+    def _check_for_HumGen_filepath_issues(self) -> None:
         pref = get_prefs()
         if not pref.filepath:
             raise HumGenException("No filepath selected in HumGen preferences.")
@@ -124,7 +131,9 @@ class PreviewCollectionContent:
             raise HumGenException("Filepath selected, but no humans found in path")
 
     @staticmethod
-    def _find_folders(pcoll_name, gender_toggle, gender, include_all=True) -> list:
+    def _find_folders(
+        pcoll_name: str, gender_toggle: bool, gender: str, include_all: bool = True
+    ) -> BpyEnum:
         """Gets enum of folders found in a specific directory. T
         hese serve as categories for that specific pcoll
 

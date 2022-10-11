@@ -1,10 +1,19 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from .logging import hg_log
+from typing import no_type_check
+
 import bpy
 
+from .logging import hg_log
 
-def hg_delete(obj):
+
+@no_type_check
+def hg_delete(obj: bpy.types.Object) -> None:
+    """Deletes this object thorougly from Blender, also removing mesh data.
+
+    Args:
+        obj (bpy.types.Object): Object to remove
+    """
     me = obj.data if (obj and obj.type == "MESH") else None
 
     images, materials = _get_mats_and_images(obj)
@@ -29,25 +38,27 @@ def hg_delete(obj):
             pass
 
 
+@no_type_check
 def _get_mats_and_images(obj):
     images = []
     materials = []
     if obj.type != "MESH":
         return [], []
-    try:
-        for mat in obj.data.materials:
-            materials.append(mat)
-            nodes = mat.node_tree.nodes
-            for node in [n for n in nodes if n.bl_idname == "ShaderNodeTexImage"]:
-                images.append(node.image)
-    except:
-        raise
-        pass
+    for mat in obj.data.materials:
+        materials.append(mat)
+        nodes = mat.node_tree.nodes
+        for node in [n for n in nodes if n.bl_idname == "ShaderNodeTexImage"]:
+            images.append(node.image)
+
     return list(set(images)), materials
 
 
+@no_type_check
 def remove_broken_drivers():
-    """Credits to batFINGER for this solution"""
+    """Removes hanging drivers that cause console warnings.
+
+    Credits to batFINGER for this solution.
+    """
     for sk in bpy.data.shape_keys:
         if not sk.animation_data:
             continue

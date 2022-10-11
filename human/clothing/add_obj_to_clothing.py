@@ -1,7 +1,11 @@
 import json
 import os
+from typing import TYPE_CHECKING, cast
 
 import bpy
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.base.exceptions import HumGenException  # type:ignore
 from HumGen3D.human.base.math import centroid
@@ -13,7 +17,9 @@ from HumGen3D.human.base.shapekey_calculator import (
 from mathutils import Matrix, Vector, kdtree
 
 
-def correct_shape_to_a_pose(cloth_obj, hg_body, context):
+def correct_shape_to_a_pose(
+    cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
+) -> None:
     # TODO mask modifiers
     depsgraph = context.depsgraph_get()
 
@@ -28,7 +34,9 @@ def correct_shape_to_a_pose(cloth_obj, hg_body, context):
     )
 
 
-def add_corrective_shapekeys(cloth_obj, human, cloth_type, context):
+def add_corrective_shapekeys(
+    cloth_obj: bpy.types.Object, human: "Human", cloth_type: str
+) -> None:
     hg_body = human.body_obj
     hg_body_world_coords = world_coords_from_obj(hg_body)
     cloth_obj_world_coords = world_coords_from_obj(cloth_obj)
@@ -59,20 +67,11 @@ def add_corrective_shapekeys(cloth_obj, human, cloth_type, context):
         )
 
 
-def auto_weight_paint(cloth_obj, hg_body):
-    # hg_body_world_coords = world_coords_from_obj(hg_body)
-
-    # kd = kdtree.KDTree(len(hg_body_world_coords))
-
-    # for i, co in enumerate(hg_body_world_coords):
-    #     kd.insert(co, i)
-
-    # kd.balance()
-    # FIXME
-    pass
+def auto_weight_paint(cloth_obj: bpy.types.Object, hg_body: bpy.types.Object) -> None:
+    raise NotImplementedError
 
 
-def get_human_from_distance(cloth_obj):
+def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
     world_coords_cloth_obj = world_coords_from_obj(cloth_obj)
     centroid_cloth = centroid(world_coords_cloth_obj)
 
@@ -83,11 +82,11 @@ def get_human_from_distance(cloth_obj):
         world_body_coords = world_coords_from_obj(rig_obj.HG.body_obj)
         human_distances[rig_obj] = abs(centroid(world_body_coords) - centroid_cloth)
 
-    closest_human_rig = min(human_distances, key=human_distances.get)
+    closest_human_rig = min(human_distances, key=human_distances.get)  # type:ignore
 
     if human_distances[closest_human_rig] > 2.0:
         raise HumGenException("Clothing does not seem to be on a HG body object.")
 
     from HumGen3D.human.human import Human
 
-    return Human.from_existing(closest_human_rig)
+    return cast(Human, Human.from_existing(closest_human_rig))
