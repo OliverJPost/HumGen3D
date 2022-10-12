@@ -13,7 +13,7 @@ from typing import Dict, Optional, Union
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 
-from backend.type_aliases import GenderStr
+from HumGen3D.backend.type_aliases import GenderStr
 
 from ..human.base.exceptions import HumGenException  # type: ignore
 from . import get_prefs, hg_log
