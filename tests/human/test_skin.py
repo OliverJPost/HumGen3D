@@ -67,7 +67,7 @@ def test_common_inputs(human):
     _assert_node_inputs(human, node_data, False)
 
 
-def _assert_node_inputs(human, node_data, gender_specific):
+def _assert_node_inputs(human, node_data, gender_specific):  # noqa CCR001
     for attr_name, input_name, node_name in node_data:
         dtype = "tuple" if "color" in attr_name else "float"
 

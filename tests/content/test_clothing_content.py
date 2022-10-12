@@ -34,7 +34,7 @@ def test_clothing_with_heightchange(human, height, clothing_category, context):
     _test_all_clothing_options(human, clothing_category, context, all_tests=False)
 
 
-def _test_all_clothing_options(human, category, context, all_tests=True):
+def _test_all_clothing_options(human, category, context, all_tests=True):  # noqa CCR001
     for i, option in enumerate(getattr(human, category).get_options(context)):
         getattr(human, category).set(option)
 
