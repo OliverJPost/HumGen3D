@@ -14,7 +14,7 @@ from bpy.types import Object  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import XHG_OBJECT_PROPS
-from HumGen3D.backend.type_aliases import BpyEnum, C
+from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
@@ -372,7 +372,7 @@ class Human:
         return self.props.batch_result, self.body_obj == self.rig_obj
 
     @property
-    def gender(self) -> str:
+    def gender(self) -> GenderStr:
         """Gender of this human in ("male", "female")"""
         return cast(str, self.rig_obj.HG.gender)
 
