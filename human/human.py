@@ -15,6 +15,7 @@ from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import XHG_OBJECT_PROPS
 from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
+from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
@@ -275,6 +276,10 @@ class Human:
             obj.HG.batch_result,
             obj.HG.body_obj == obj,
         )
+
+    @staticmethod
+    def get_categories(gender: GenderStr):
+        return PreviewCollectionContent._find_folders("humans", True, gender)
 
     # endregion
     # region Properties
