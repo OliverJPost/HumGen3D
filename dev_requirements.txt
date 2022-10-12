@@ -12,7 +12,6 @@ flake8-print
 flake8-pie
 flake8-simplify
 flake8-useless-assert
-flake8-warnings
 flake8-class-attributes-order
 flake8-literal
 flake8-return
@@ -24,7 +23,7 @@ flake8-length
 flake8-copyright
 flake8-comments
 flake8-fixme
-darglint
+pylint
 # Formatting
 black
 isort
