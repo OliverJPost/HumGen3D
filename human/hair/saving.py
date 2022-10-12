@@ -1,15 +1,27 @@
 import json
 import os
+from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 import bpy
+from HumGen3D.backend.type_aliases import GenderStr
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
 def save_hair(
-    human, name, category, genders, particle_systems, hair_type, context, thumb=None
-):
+    human: "Human",
+    name: str,
+    category: str,
+    genders: Optional[Iterable[GenderStr]],
+    particle_systems: Iterable[str],
+    hair_type: Literal["face_hair", "hair"],
+    context: bpy.types.Context,
+    thumb: Optional[bpy.types.Image] = None,
+) -> None:
     pref = get_prefs()
 
     hair_obj = human.body_obj.copy()
@@ -54,17 +66,13 @@ def save_hair(
         clear_vg=False,
     )
 
-    msg = f"Saved {name} to {blend_folder}"
-
     human.hair.regular_hair.refresh_pcoll(context)
     human.hair.face_hair.refresh_pcoll(context)
 
     hg_delete(hair_obj)
 
-    return {"FINISHED"}
 
-
-def _find_vgs_used_by_hair(hair_obj) -> list:
+def _find_vgs_used_by_hair(hair_obj: bpy.types.Object) -> list[str]:
     """Get a list of all vertex groups used by the hair systems
 
     Args:
@@ -100,7 +108,7 @@ def _find_vgs_used_by_hair(hair_obj) -> list:
     return keep_vgs
 
 
-def _remove_other_systems(obj, keep_list):
+def _remove_other_systems(obj: bpy.types.Object, keep_list: Iterable[str]) -> None:
     """Remove particle systems that are nog going to be saved
 
     Args:
@@ -110,12 +118,16 @@ def _remove_other_systems(obj, keep_list):
     remove_list = [ps.name for ps in obj.particle_systems if ps.name not in keep_list]
 
     for ps_name in remove_list:
-        ps_idx = [i for i, ps in enumerate(obj.particle_systems) if ps.name == ps_name]
+        ps_idx = [
+            i
+            for i, ps in enumerate(obj.particle_systems)  # type:ignore[arg-type]
+            if ps.name == ps_name
+        ]
         obj.particle_systems.active_index = ps_idx[0]
         bpy.ops.object.particle_system_remove()
 
 
-def _make_hair_json(hair_obj, folder, style_name):
+def _make_hair_json(hair_obj: bpy.types.Object, folder: str, style_name: str) -> None:
     """Make a json that contains the settings for this hairstyle and save it
 
     Args:

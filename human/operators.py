@@ -30,7 +30,7 @@ class HG_START_CREATION(bpy.types.Operator):
         )
 
     def execute(self, context):
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         sett.ui.phase = "closed"
 
         human = Human.from_preset(sett.pcoll.humans, context)
@@ -86,7 +86,7 @@ class HG_NEXT_PREV_HUMAN(bpy.types.Operator):
 
         humans = []
         for obj in context.scene.objects:  # CHECK if works
-            if obj.HG.ishuman and not "backup" in obj.name.lower():
+            if obj.HG.ishuman and "backup" not in obj.name.lower():
                 humans.append(obj)
 
         if len(humans) == 0:

@@ -2,6 +2,7 @@
 import bpy
 import pytest  # type:ignore
 from HumGen3D import Human
+from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.tests.fixtures import (
     ALL_HUMAN_FIXTURES,
     context,
@@ -139,7 +140,7 @@ def test_from_existing_fail():
         try:
             Human.from_existing(obj)
             assert False, "Should throw exception"
-        except TypeError:
+        except HumGenException:
             assert True
 
     mesh = bpy.data.meshes.new("Basic_Cube")
@@ -149,5 +150,5 @@ def test_from_existing_fail():
 
     cam = bpy.data.cameras.new("Camera")
     non_mesh = bpy.data.objects.new("Camera", cam)
-    bpy.context.scene.collection.objects.link(cube)
+    bpy.context.scene.collection.objects.link(non_mesh)
     assert_failure(non_mesh)

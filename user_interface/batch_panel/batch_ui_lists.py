@@ -5,10 +5,8 @@ This file is currently inactive
 """
 
 import bpy
+from HumGen3D.batch_generator.batch_functions import find_folders, find_item_amount
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
-
-from ...backend import preview_collections
-from ...backend.properties.property_functions import find_folders, find_item_amount
 
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):

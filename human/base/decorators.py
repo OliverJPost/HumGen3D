@@ -2,16 +2,27 @@
 
 import functools
 import traceback
+from typing import Callable, TypeVar, cast
 
 import bpy
+from black import Any
 from HumGen3D.backend import hg_log
+from HumGen3D.backend.type_aliases import C
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
-def injected_context(func):
-    """Replaces keyword argument "context=None" with bpy.context if left at default None value"""
+def injected_context(func: F) -> F:
+    """Replaces keyword argument "context=None" with bpy.context if left at default. # noqa
+
+    Args:
+        func: Function that's decorated # noqa
+    Returns:
+        Function wrapper
+    """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # type:ignore[no-untyped-def]
         varnames = func.__code__.co_varnames
         if "context" not in varnames:
             raise TypeError("No argument 'context' in function arguments.")
@@ -23,10 +34,12 @@ def injected_context(func):
 
             hg_log(traceback.extract_stack()[-2])
             hg_log(
-                f"Argument 'context' for function '{func.__name__}' substituted with bpy.context. It's highly recommended to pass your own context!",
+                f"Argument 'context' for function '{func.__name__}'",
+                "substituted with bpy.context.",
+                " It's highly recommended to pass your own context!",
                 level="WARNING",
             )
 
         return func(*args, **kwargs)
 
-    return wrapper
+    return cast(F, wrapper)

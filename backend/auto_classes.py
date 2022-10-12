@@ -3,11 +3,10 @@
 import inspect
 import os
 from types import ModuleType
-from typing import Generator, Type
+from typing import Any, Iterator, Type
 
 import bpy
 import HumGen3D
-from pyparsing import Iterator
 
 YIELD_LAST = (
     "HG_PT_BATCH_TIPS",
@@ -31,14 +30,14 @@ BPY_CLASSES = (
 )
 
 
-def _get_bpy_classes() -> Iterator[Type]:
+def _get_bpy_classes() -> Iterator[Type[Any]]:
     dir_path = os.path.dirname(os.path.abspath(HumGen3D.__file__))
 
     py_files = get_python_files_from_dir(dir_path)
 
     already_yielded = []
     for root, filename in py_files:
-        module = import_pyfile_as_module(dir_path, root, filename)
+        module = _import_pyfile_as_module(dir_path, root, filename)
 
         yield_later = []
         yield_last = []
@@ -50,7 +49,7 @@ def _get_bpy_classes() -> Iterator[Type]:
                 continue
 
             # Check if the class is actually from the HumGen3D module
-            if not obj.__module__.split(".")[0] == "HumGen3D":
+            if obj.__module__.split(".")[0] != "HumGen3D":
                 continue
 
             if obj.__name__ in YIELD_LAST:
@@ -69,7 +68,7 @@ def _get_bpy_classes() -> Iterator[Type]:
         yield from yield_last
 
 
-def import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleType:
+def _import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleType:
     abspath = os.path.join(root, filename)
     rel_path_split = os.path.normpath(os.path.relpath(abspath, dir_path)).split(os.sep)
     module_import_path = ".".join(rel_path_split)
@@ -79,14 +78,14 @@ def import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleTy
         fromlist=[module_import_path[:-3]],
     )
 
-    return module
+    return module  # noqa
 
 
 def get_python_files_from_dir(dir_path: str) -> list[tuple[str, str]]:
     skip_dirs = (".vscode", ".mypy", ".git", "tests")
     py_files = []
     for root, _, files in os.walk(dir_path):
-        if any(dir in root for dir in skip_dirs):
+        if any(d in root for d in skip_dirs):
             continue
         for f in [f for f in files if f.endswith(".py")]:
             if f != "__init__.py" and f != "setup.py":

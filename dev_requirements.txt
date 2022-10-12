@@ -1,0 +1,34 @@
+# Linting
+mypy
+flake8
+flake8-docstrings
+flake8-bugbear
+flake8-builtins
+flake8-comprehensions
+flake8-eradicate
+flake8-pytest-style
+flake8-broken-line
+flake8-print
+flake8-pie
+flake8-simplify
+flake8-useless-assert
+flake8-class-attributes-order
+flake8-literal
+flake8-return
+flake8-annotations-complexity
+flake8-cognitive-complexity
+flake8-expression-complexity
+flake8-functions
+flake8-length
+flake8-copyright
+flake8-comments
+flake8-fixme
+pylint
+# Formatting
+black
+isort
+# Install these packages in BOTH your regular Python and Blender's internal Python
+pytest>=7.1.2
+pytest-blender>=3.0.3
+pytest-cov>=3.0.0
+pytest-lazy-fixture>=0.6.3

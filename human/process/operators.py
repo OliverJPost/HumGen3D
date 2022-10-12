@@ -6,16 +6,10 @@
 Texture baking operators
 """
 
-import os
-from pathlib import Path
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.backend import hg_log
 from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import (
-    ShowMessageBox,  # type: ignore
-)
 
 
 def status_text_callback(header, context):

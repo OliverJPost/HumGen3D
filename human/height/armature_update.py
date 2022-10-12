@@ -1,6 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import random
+from typing import Optional, no_type_check
 
 import bpy
 
@@ -12,12 +12,13 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
     stop: bpy.props.BoolProperty()
     hide_armature: bpy.props.BoolProperty(default=False)
-    _handler = None
+    _handler: Optional["HG3D_OT_SLIDER_SUBSCRIBE"] = None
 
     @classmethod
-    def is_running(cls):
+    def is_running(cls) -> bool:
         return cls._handler is not None
 
+    @no_type_check
     def modal(self, context, event):
         if self.stop:
             self.correct_when_done(context)
@@ -30,6 +31,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
         return {"PASS_THROUGH"}
 
+    @no_type_check
     def correct_when_done(self, context):
         self.human.hide_set(False)
         self.armature_modifier.show_viewport = True
@@ -48,6 +50,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         if not self.children_hidden_before:
             self.human.hair.children_set_hide(False)
 
+    @no_type_check
     def invoke(self, context, event):
         # To prevent circular import
         from HumGen3D.human.human import Human

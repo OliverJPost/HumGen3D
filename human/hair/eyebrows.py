@@ -1,7 +1,11 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+from typing import TYPE_CHECKING
 import bpy
-from bpy.types import Context  # type:ignore
+from HumGen3D.backend.type_aliases import C  # type:ignore
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 from HumGen3D.human.hair.basehair import BaseHair
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
@@ -11,11 +15,11 @@ from ..base.prop_collection import PropCollection
 class EyebrowSettings(BaseHair):
     _startswith = "Eyebrows"
 
-    def __init__(self, human):
+    def __init__(self, human: "Human") -> None:
         self._human = human
         self._startswith = "Eyebrow"
 
-    def _set_from_preset(self, preset_eyebrow):
+    def _set_from_preset(self, preset_eyebrow: str) -> None:
         """Sets the eyebrow named in preset_data as the only visible eyebrow
         system
 
@@ -40,10 +44,7 @@ class EyebrowSettings(BaseHair):
         else:
             preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
 
-    def remove_unused(self, context: Context = None, _internal: bool = False):
-        if not context:
-            context = bpy.context
-
+    def remove_unused(self, context: C = None, _internal: bool = False) -> None:
         remove_list = [
             mod.particle_system.name for mod in self.modifiers if not mod.show_render
         ]
@@ -65,7 +66,7 @@ class EyebrowSettings(BaseHair):
             bpy.ops.object.particle_system_remove()
         context.view_layer.objects.active = old_active
 
-    def _switch_eyebrows(self, forward=True, report=False):
+    def _switch_eyebrows(self, forward: bool = True, report: bool = False) -> None:
         eyebrows = self.modifiers
         if not eyebrows:
             if report:
@@ -76,7 +77,7 @@ class EyebrowSettings(BaseHair):
                 self.report({"WARNING"}, "Only one eyebrow system found")
             return
 
-        idx, current_ps = next(
+        idx, current_ps = next(  # FIXME
             (
                 (i, mod)
                 for i, mod in enumerate(eyebrows)
