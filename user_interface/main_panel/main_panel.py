@@ -46,11 +46,13 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
     ]
 
     def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         layout = self.layout
-        self.sett = context.scene.HG3D
+        self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         self.pref = get_prefs()
 
         self.human = Human.from_existing(context.active_object, strict_check=False)

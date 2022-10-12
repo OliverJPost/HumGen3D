@@ -14,9 +14,11 @@ be saved/exported
 import json
 import os
 from pathlib import Path
+from typing import no_type_check
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import bpy
+from HumGen3D.backend import preview_collections
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences import get_prefs
 from HumGen3D.extern.blendfile import open_blend
@@ -24,7 +26,6 @@ from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignor
     ShowMessageBox,
     show_message,
 )
-from HumGen3D.backend import preview_collections
 
 from .content_packs import cpacks_refresh
 
@@ -46,10 +47,12 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         """Creates a pack and changes the preferences window to the editing UI"""
     )
 
+    @no_type_check
     def invoke(self, context, event):
         # confirmation checkbox
         return context.window_manager.invoke_confirm(self, event)
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
         cpack_name = pref.cpack_name
@@ -65,6 +68,7 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         build_content_collection(self, context)
         return {"FINISHED"}
 
+    @no_type_check
     def _create_cpack_json(self, name, cpack_folder):
         """Creates a new json file as content pack, adding the basic info to it
 
@@ -101,6 +105,7 @@ class HG_OT_EDIT_CPACK(bpy.types.Operator):
 
     item_name: bpy.props.StringProperty()
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
         pref.editing_cpack = self.item_name
@@ -136,10 +141,12 @@ class HG_OT_EXIT_CPACK_EDIT(bpy.types.Operator):
     bl_label = "Exit the editing UI without saving changes"
     bl_description = """Changes the window back to the HumGen preferences"""
 
+    @no_type_check
     def invoke(self, context, event):
         # confirmation checkbox
         return context.window_manager.invoke_confirm(self, event)
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
         col = context.scene.custom_content_col
@@ -156,6 +163,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     export: bpy.props.BoolProperty()
 
+    @no_type_check
     def invoke(self, context, event):
         if self.export and not get_prefs().cpack_export_folder:
             ShowMessageBox(message="No export path selected")
@@ -163,6 +171,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         # confirmation checkbox
         return context.window_manager.invoke_confirm(self, event)
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
 
@@ -188,6 +197,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             show_message(self, "Succesfully saved content pack")
         return {"FINISHED"}
 
+    @no_type_check
     def _build_export_set(self, pref, items_to_export) -> "tuple[set, set]":
         """Returns two sets with the filepaths of the items to export and the
         categories of the items that will be exported
@@ -222,6 +232,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
         return set(export_list), set(categ_list)
 
+    @no_type_check
     def _write_json_file(self, pref, cpack, export_path_set, categ_set):
         """Write the metadata of this pack to the cpack json file
 
@@ -246,6 +257,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         with open(cpack.json_path, "w") as f:
             json.dump(data, f, indent=4)
 
+    @no_type_check
     def _build_categ_dict(self, categ_set, pack_name) -> dict:
         """Builds a dictionary of what kind of category content items are
         included in this cpack
@@ -272,6 +284,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
         return categ_dict
 
+    @no_type_check
     def _zip_files(self, pref, export_paths, json_path, cpack):
         """Zip all the files from the export_paths set to a zip file in the
         user given directory
@@ -315,6 +328,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
         hg_log("Failed exports ", failed_exports, level="WARNING")
 
+    @no_type_check
     def _find_associated_files(self, filepath, categ) -> set:
         """Create a set of relative paths of files that are associated with the
         passed files. For example linked textures and hair collection files
@@ -351,6 +365,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         returnv = list(mapped_associated_files)
         return returnv
 
+    @no_type_check
     def _correct_relative_path(self, path, categ) -> str:
         """Deals with Blender //..\..\ relative paths and converts any absolute
         paths to relative paths
@@ -380,9 +395,10 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         return path
 
 
+@no_type_check
 def build_content_collection(self, context):
     pref = get_prefs()
-    sett = context.scene.HG3D
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     sett.update_exception = True
 
     col = context.scene.custom_content_col
@@ -415,6 +431,7 @@ def build_content_collection(self, context):
     sett.update_exception = False
 
 
+@no_type_check
 def _get_current_file_set(context, pref):
     cpack = context.scene.contentpacks_col[pref.cpack_name]
     with open(os.path.join(pref.filepath, cpack.json_path), "r") as f:
@@ -426,6 +443,7 @@ def _get_current_file_set(context, pref):
     return current_file_set
 
 
+@no_type_check
 def _get_other_content_set(context, pref):
     other_cpacks_content = []
     for item in context.scene.contentpacks_col:
@@ -442,6 +460,7 @@ def _get_other_content_set(context, pref):
     return other_cpacks_content_set
 
 
+@no_type_check
 def _iterate_items_to_collection(
     self,
     context,
@@ -505,10 +524,11 @@ def _iterate_items_to_collection(
             )
 
 
+@no_type_check
 def _add_to_collection(
     col, current_file_set, categ, content_item, other_cpacks_content_set
 ):
-    """Adds the passed item to the custom_content collection
+    """Adds the passed item to the custom_content collection.
 
     Args:
         col (CollectionProperty): collection to add the item to
@@ -555,6 +575,7 @@ def _add_to_collection(
         item.gender = "male"
 
 
+@no_type_check
 def content_callback(self, context):
     """Gets called every time a content item's include boolean is changed,
     handles the newly_added and removed lists
@@ -564,17 +585,15 @@ def content_callback(self, context):
         return  # Don't update when building the list for the first time
 
     if self.include:
-        self.newly_added = False if self.removed else True
+        self.newly_added = not self.removed
         self.removed = False
     else:
-        self.removed = False if self.newly_added else True
+        self.removed = not self.newly_added
         self.newly_added = False
 
 
 class CUSTOM_CONTENT_ITEM(bpy.types.PropertyGroup):
-    """Item in scene.custom_content_col that represents a content item for
-    Human Generator
-    """
+    """Item in scene.custom_content_col that represents a content item."""
 
     name: bpy.props.StringProperty()
     path: bpy.props.StringProperty()  # relative path of this item

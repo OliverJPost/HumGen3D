@@ -1,7 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
+""" # noqa D400
 object.HG
+
 Properties added to every object when Human Generator is installed. Used for storing
 information about the human in a way that doesn't get lost when transfering between
 files/computers.
@@ -12,10 +13,8 @@ from bpy.props import (  # type: ignore
     BoolProperty,
     EnumProperty,
     FloatProperty,
-    IntProperty,
     IntVectorProperty,
     PointerProperty,
-    StringProperty,
 )
 
 
@@ -27,9 +26,10 @@ class HG_HASHES(bpy.types.PropertyGroup):
     pass
 
 
-class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
-    """
-    Properties added to every Blender object as object.HG
+# FIXME register order
+class XHG_OBJECT_PROPS(bpy.types.PropertyGroup):
+    """Properties added to every Blender object as object.HG.
+
     Used for storing information about the human itself.
     """
 

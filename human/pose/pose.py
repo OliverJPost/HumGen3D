@@ -2,32 +2,33 @@ from __future__ import annotations
 
 import os
 from os import PathLike
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Literal, Union
 
 import bpy
-from bpy.types import Image
+from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
+from HumGen3D.backend.type_aliases import C
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.base.savable_content import SavableContent
 
 if TYPE_CHECKING:
-    from human.human import Human
+    from HumGen3D.human.human import Human
 
 from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
 class PoseSettings(PreviewCollectionContent, SavableContent):
-    def __init__(self, _human):
-        self._human: Human = _human
+    def __init__(self, _human: "Human") -> None:
+        self._human: "Human" = _human
         self._pcoll_name = "pose"
         self._pcoll_gender_split = False
 
     @injected_context
-    def set(self, preset, context=None):
+    def set(self, preset: str, context: C = None) -> None:
         """Gets called by pcoll_pose to add selected pose to human"""
 
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         pref = get_prefs()
 
         if sett.load_exception:
@@ -64,8 +65,8 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         self,
         name: str,
         category: str = "Custom",
-        thumbnail: Union[None, str, Image] = "auto",
-        context=None,
+        thumbnail: Union[None, Literal["auto"], Image] = "auto",
+        context: C = None,
     ) -> None:
         folder = os.path.join(get_prefs().filepath, "poses", category)
 
@@ -92,7 +93,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         hg_delete(pose_object)
 
-    def _import_pose(self, preset, context) -> bpy.types.Object:
+    def _import_pose(self, preset: str, context: bpy.types.Context) -> bpy.types.Object:
         """Import selected pose object
 
         Returns:
@@ -107,7 +108,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         ):
             data_to.objects = ["HG_Pose"]
 
-        hg_pose = data_to.objects[0]
+        hg_pose: bpy.types.Object = data_to.objects[0]  # type:ignore[assignment]
         if not hg_pose:
             hg_log(
                 "Could not load pose:",
@@ -120,7 +121,12 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         return hg_pose
 
-    def _match_roll(self, hg_rig, hg_pose, context):
+    def _match_roll(
+        self,
+        hg_rig: bpy.types.Object,
+        hg_pose: bpy.types.Object,
+        context: bpy.types.Context,
+    ) -> None:
         """Some weird issue caused changed to the rig to change the roll values on
         bones. This caused imported poses that still use the original armature to
         not copy properly to the human
@@ -138,19 +144,24 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
                 bone.roll = hg_pose.data.edit_bones[b_name].roll
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    def _match_rotation_mode(self, hg_rig, hg_pose, context):
+    def _match_rotation_mode(
+        self,
+        hg_rig: bpy.types.Object,
+        hg_pose: bpy.types.Object,
+        context: bpy.types.Context,
+    ) -> None:
         context.view_layer.objects.active = hg_pose
         hg_rig.select_set(True)
         bpy.ops.object.mode_set(mode="POSE")
         for bone in hg_rig.pose.bones:
             b_name = bone.name if bone.name != "neck" else "spine.004"
-            if b_name in hg_pose.pose.bones:
-                bone.rotation_mode = hg_pose.pose.bones[
-                    b_name
+            if b_name in hg_pose.pose.bones:  # type:ignore # TODO does do anything?
+                bone.rotation_mode = hg_pose.pose.bones[  # type:ignore
+                    b_name  # type:ignore
                 ].rotation_mode = "QUATERNION"
         bpy.ops.object.mode_set(mode="OBJECT")
 
-    def _copy_pose(self, context, pose):
+    def _copy_pose(self, context: bpy.types.Context, pose: bpy.types.Object) -> None:
         """Copies pose from one human to the other
 
         Args:

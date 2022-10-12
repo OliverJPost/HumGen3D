@@ -18,7 +18,9 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         return not Human.find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         """UI that shows when no human is selected, with buttons for creating a
@@ -28,7 +30,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         and female genders and a pink button to add the selected human
         """
         self.human = None
-        self.sett = context.scene.HG3D
+        self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         if self.draw_info_and_warning_labels(context):
             return
 

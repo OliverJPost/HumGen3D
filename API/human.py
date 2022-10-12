@@ -312,7 +312,7 @@ class HG_Human:
         Raised:
             ValueError: If passed gender is not in ('male', 'female')
         """
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
 
         if self._rig_object:
             raise HumGenException("This HG_Human instance already exists in Blender.")
@@ -657,8 +657,7 @@ class HG_Human:
         Returns:
             list[str]: List of options in this preview collection
         """
-        sett = context.scene.HG3D
-
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         preview_collections[pcoll_name].refresh(context, self)
         pcoll_list = sett["previews_list_{}".format(pcoll_name)]
 
@@ -674,8 +673,7 @@ class HG_Human:
             'patterns')
             item_to_set_as_active (str): Name of item to set as active
         """
-        sett = context.scene.HG3D
-
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         # refresh_pcoll(None, context, pcoll_name, hg_rig=self._rig_object) #FIXME
         setattr(sett.pcoll, pcoll_name, item_to_set_as_active)
 

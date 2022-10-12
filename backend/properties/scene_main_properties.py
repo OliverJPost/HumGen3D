@@ -1,8 +1,9 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 
-"""
+""" # noqa D400
 context.scene.HG3D
+
 Main propertygroup of Human Generator, others are subclasses of this one.
 Contains top level properties.
 """
@@ -21,7 +22,6 @@ from HumGen3D.human.process.apply_modifiers import refresh_modapply
 
 from .bake_props import BakeProps
 from .batch_props import BatchProps
-from .bone_size_props import BoneSizeProps
 from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
@@ -29,23 +29,24 @@ from .ui_properties import UserInterfaceProps
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
-    """Main property group of Human Generator. Contains top level properties and
-    pointers to lower level property groups."""
+    """Main property group of Human Generator.
+
+    Contains top level properties and pointers to lower level property groups.
+    """
 
     pcoll: PointerProperty(type=PreviewCollectionProps)
     ui: PointerProperty(type=UserInterfaceProps)
-    bone_sizes: PointerProperty(type=BoneSizeProps)
     custom_content: PointerProperty(type=CustomContentProps)
     batch: PointerProperty(type=BatchProps)
     bake: PointerProperty(type=BakeProps)
     process: PointerProperty(type=ProcessProps)
 
-    ######### back end #########
+    # back end
     load_exception: BoolProperty(name="load_exception", default=False)
     subscribed: BoolProperty(name="subscribed", default=False)
     update_exception: BoolProperty(default=False)
 
-    ############# creation ##############
+    # creation
     gender: EnumProperty(
         name="Gender",
         description="Choose a gender",
@@ -72,7 +73,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
 
-    ######### skin props ###########
+    # skin props
     skin_sss: EnumProperty(
         description="Turns on/off subsurface scattering on the skin shader",
         items=[
@@ -97,7 +98,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         ),
     )
 
-    ######### Dev tools ########
+    # Dev tools
     shapekey_calc_type: EnumProperty(
         name="calc type",
         items=[

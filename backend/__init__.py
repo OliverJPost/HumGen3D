@@ -1,4 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+# flake8: noqa
 
 from .logging import hg_log
 from .memory_management import hg_delete, remove_broken_drivers

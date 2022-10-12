@@ -1,14 +1,16 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
+# type:ignore
+
+""" # noqa D400
 context.scene.HG3D.ui
+
 Properties related to the user interface of Human Generator.
 """
 
-from re import L
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty
+from bpy.props import BoolProperty, EnumProperty  # type:ignore
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
@@ -73,10 +75,10 @@ def active_phase_enum(self, context):
 
 
 class UserInterfaceProps(bpy.types.PropertyGroup):
-    """Subclass of HG_SETTINGS, contains user interface properties"""
+    """Subclass of HG_SETTINGS, contains user interface properties."""
 
     # UI box toggles
-    __annotations__.update(
+    __annotations__.update(  # noqa: CCE002,  CCE001
         create_ui_toggles(
             [
                 "indiv_scale",
@@ -105,7 +107,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     )
 
     # Face category toggles
-    __annotations__.update(
+    __annotations__.update(  # noqa: CCE002, CCE001
         create_ui_toggles(
             [
                 "nose",
@@ -136,7 +138,6 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
         update=tab_change_update,
     )
 
-    # pose
     pose_tab_switch: EnumProperty(
         name="posing",
         items=[

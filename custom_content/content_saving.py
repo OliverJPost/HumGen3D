@@ -1,37 +1,26 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
 import os
-import platform
 import re
-import shutil
-import subprocess
-from pathlib import Path
 from shutil import copyfile
+from typing import Iterable
 
 import bpy
-from HumGen3D.backend import get_addon_root, get_prefs, hg_delete, hg_log
-from HumGen3D.human.height.height import apply_armature
-from HumGen3D.human.keys.keys import apply_shapekeys
-from HumGen3D.user_interface.documentation.feedback_func import (
-    ShowMessageBox,
-    show_message,
-)
-from mathutils import Vector
-
-refresh_pcoll = None  # FIXME
+from HumGen3D.backend import get_prefs, hg_log
 
 
-def save_thumb(folder, img_name, save_name):
-    """Save the thumbnail with this content
+def save_thumb(folder: str, img_name: str, save_name: str) -> None:
+    """Save the thumbnail with this content.
 
     Args:
-        folder (Path): folder where to save it
-        current_name (str): current name of the image
+        folder (str): folder where to save it
+        img_name (str): current name of the image
         save_name (str): name to save the image as
     """
-    img = bpy.data.images[img_name]
-    thumbnail_type = bpy.context.scene.HG3D.custom_content.thumbnail_saving_enum
+    img = bpy.data.images[img_name]  # type:ignore[index, call-overload]
+    thumbnail_type = (
+        bpy.context.scene.HG3D.custom_content.thumbnail_saving_enum  # type:ignore[attr-defined] # noqa E501
+    )
 
     destination_path = os.path.join(folder, f"{save_name}.jpg")
     if thumbnail_type in ("last_render", "auto"):
@@ -53,21 +42,21 @@ def save_thumb(folder, img_name, save_name):
             img.save()
         except RuntimeError as e:
             # show_message(self, "Thumbnail image doesn't have any image data")
-            print(e)
+            hg_log(e, level="ERROR")
 
 
 def save_objects_optimized(
-    context,
-    objs,
-    folder,
-    filename,
-    clear_sk=True,
-    clear_materials=True,
-    clear_vg=True,
-    clear_ps=True,
-    run_in_background=True,
-    clear_drivers=True,
-):
+    context: bpy.types.Context,
+    objs: Iterable[bpy.types.Object],
+    folder: str,
+    filename: str,
+    clear_sk: bool = True,
+    clear_materials: bool = True,
+    clear_vg: bool = True,
+    clear_ps: bool = True,
+    run_in_background: bool = True,
+    clear_drivers: bool = True,
+) -> None:
     """Saves the passed objects as a new blend file, opening the file in the
     background to make it as small as possible
 
@@ -90,7 +79,7 @@ def save_objects_optimized(
         if obj.type != "MESH":
             continue
         if clear_materials:
-            obj.data.materials.clear()
+            obj.data.materials.clear()  # type:ignore[attr-defined]
         if clear_vg:
             obj.vertex_groups.clear()
         if clear_sk:
@@ -115,6 +104,7 @@ def save_objects_optimized(
     blend_filepath = os.path.join(folder, f"{filename}.blend")
     bpy.data.libraries.write(blend_filepath, {new_scene})
 
+    # FIXME
     # python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
     # if run_in_background:
     #     hg_log("STARTING HumGen background process", level="BACKGROUND")
@@ -136,40 +126,40 @@ def save_objects_optimized(
     bpy.data.scenes.remove(new_scene)
 
 
-def _clear_sk_drivers():
+def _clear_sk_drivers() -> None:
     for key in bpy.data.shape_keys:
         try:
             fcurves = key.animation_data.drivers
             for _ in fcurves:
-                fcurves.remove(fcurves[0])
+                fcurves.remove(fcurves[0])  # type:ignore[union-attr, index]
         except AttributeError:
             pass
 
 
-def _remove_obj_drivers(obj):
+def _remove_obj_drivers(obj: bpy.types.Object) -> None:
     try:
         drivers_data = obj.animation_data.drivers
 
-        for dr in drivers_data[:]:
+        for dr in drivers_data[:]:  # type:ignore[index]
             obj.driver_remove(dr.data_path, -1)
     except AttributeError:
         return
 
 
-def _remove_particle_systems(context, obj):
-    """Remove particle systems from the passed object
+def _remove_particle_systems(context: bpy.types.Context, obj: bpy.types.Object) -> None:
+    """Remove particle systems from the passed object.
 
     Args:
         obj (Object): obj to remove particle systems from
     """
     context.view_layer.objects.active = obj
-    for i, ps in enumerate(obj.particle_systems):
+    for i, _ in enumerate(obj.particle_systems):  # type:ignore[arg-type]
         obj.particle_systems.active_index = i
-        bpy.ops.object.particle_system_remove()
+        bpy.ops.object.particle_system_remove()  # TODO low level
 
 
-def _remove_shapekeys(obj):
-    """Remove shapekeys from the passed object
+def _remove_shapekeys(obj: bpy.types.Object) -> None:
+    """Remove shapekeys from the passed object.
 
     Args:
         obj (Object): obj to remove shapekeys from
@@ -180,8 +170,9 @@ def _remove_shapekeys(obj):
         obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
 
 
-def remove_number_suffix(name) -> str:
-    """Remove the number suffix from the passed name
+def remove_number_suffix(name: str) -> str:
+    """Remove the number suffix from the passed name.EE
+
     (i.e. Box.004 becomes Box)
 
     Args:

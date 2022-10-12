@@ -36,8 +36,7 @@ mollit anim id est laborum
 
 
 def draw_tips_suggestions_ui(layout, context):
-    sett = context.scene.HG3D
-
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     col = layout.column(align=True)
 
     col.separator(factor=2)

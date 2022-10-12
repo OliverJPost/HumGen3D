@@ -26,11 +26,13 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
         if not super().poll(context):
             return False
 
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         return sett.ui.active_tab == "CONTENT" and not sett.ui.content_saving
 
     def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         layout = self.layout

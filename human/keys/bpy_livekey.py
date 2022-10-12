@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import os
+from typing import Any, cast
 
 import bpy
 import numpy as np
-from bpy.props import BoolProperty, FloatProperty, PointerProperty, StringProperty
+from bpy.props import FloatProperty, StringProperty
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from HumGen3D.human.human import Human
 
 
-def get_livekey(self):
+def get_livekey(self: BpyLiveKey) -> float:
     """Get the value of the livekey from either the temp_key or the stored values on the
     model."""
     human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
@@ -21,14 +22,14 @@ def get_livekey(self):
     temp_key = human.keys.temp_key
     current_sk_values = human.props.sk_values
     if temp_key and temp_key.name.endswith(name):
-        return temp_key.value
+        return cast(float, temp_key.value)
     elif name in current_sk_values:
-        return current_sk_values[name]
+        return cast(float, current_sk_values[name])
     else:
         return 0.0
 
 
-def set_livekey(self, value: float):
+def set_livekey(self: BpyLiveKey, value: float) -> None:
     """Set the value of this live key in a way optimised for realtime changing.
 
     This method will load the live key into a temporary shape key that stays on
@@ -91,14 +92,18 @@ def set_livekey(self, value: float):
     run_modal()
 
 
-def run_modal():
+def run_modal() -> None:
     if not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
         bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")  # , hide_armature=True)
 
 
 def _add_temp_key_to_permanent_key_coords(
-    human, temp_key, vert_count, obj_coords, permanent_key_coords
-):
+    human: "Human",
+    temp_key: bpy.types.ShapeKey,
+    vert_count: int,
+    obj_coords: np.ndarray[Any, Any],
+    permanent_key_coords: np.ndarray[Any, Any],
+) -> np.ndarray[Any, Any]:
     temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
     human.keys.temp_key.data.foreach_get("co", temp_key_coords)
 
@@ -110,7 +115,7 @@ def _add_temp_key_to_permanent_key_coords(
     return permanent_key_coords
 
 
-class LiveKey(bpy.types.PropertyGroup):
+class BpyLiveKey(bpy.types.PropertyGroup):
     """Representation of a livekey, a shape key that is not on the model but loaded from
     an external file."""
 

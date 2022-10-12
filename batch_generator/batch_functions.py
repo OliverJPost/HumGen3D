@@ -1,10 +1,21 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import os
+from typing import TYPE_CHECKING, Optional, Union, cast, no_type_check
+
 import bpy  # type:ignore
-import numpy as np  # type:ignore
+import numpy as np
+from backend.preferences.preference_func import get_prefs
+from backend.type_aliases import BpyEnum, GenderStr
+from human.human import Human
+
+if TYPE_CHECKING:
+    from HumGen3D.backend.properties.batch_props import BatchProps
 
 
-def height_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> list:
+def height_from_bell_curve(
+    batch_sett: "BatchProps", gender: str, random_seed: bool = True, samples: int = 1
+) -> list[float]:
     """Returns one or multiple samples from a bell curve generated from the
     batch_average_height and batch_standard_deviation properties.
 
@@ -35,30 +46,43 @@ def height_from_bell_curve(batch_sett, gender, random_seed=True, samples=1) -> l
     else:
         np.random.seed(0)
 
-    length_list = np.random.normal(
-        loc=avg_height_cm, scale=avg_height_cm * sd, size=samples
+    return list(
+        np.random.normal(loc=avg_height_cm, scale=avg_height_cm * sd, size=samples)
     )
 
-    return length_list
+
+def to_percentage(base: Union[int, float], end_result: Union[int, float]) -> int:
+    return int((base + end_result) / base * 100)
 
 
-def calculate_batch_statistics(batch_sett):
-    """Returns values to show the user how their choices in the batch settings
+def _get_tag_from_dict(
+    total: Union[int, float], tag_dict: dict[str, int], fallback: str
+) -> str:
+    return next(
+        (tag for tag, ubound in tag_dict.items() if total < ubound),
+        fallback,
+    )
+
+
+def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:
+    """Calculates performance statistidcs of batch generator settings.
+
+    Returns values to show the user how their choices in the batch settings
     will impact the render times, memory usage and filesize. Good luck reading
     this function, it's a bit of a mess.
 
     Args:
-        sett (PropertyGroup): Addon properties
+        batch_sett (BatchProps): Addon batch properties
 
     Returns:
         dict: Dict with strings that explain to the user what the impact is
     """
-    eevee_time = 0
-    eevee_memory = 0
-    cycles_time = 0
-    cycles_memory = 0
-    scene_memory = 0
-    storage_weight = 0
+    eevee_time = 0.0
+    eevee_memory = 0.0
+    cycles_time = 0.0
+    cycles_memory = 0.0
+    scene_memory = 0.0
+    storage_weight = 0.0
 
     if batch_sett.hair:
         storage_weight += 10
@@ -138,15 +162,6 @@ def calculate_batch_statistics(batch_sett):
             storage_weight -= 2
             scene_memory -= 27
 
-    def to_percentage(base, end_result) -> int:
-        return int((base + end_result) / base * 100)
-
-    def _get_tag_from_dict(total, tag_dict, fallback):
-        return next(
-            (tag for tag, ubound in tag_dict.items() if total < ubound),
-            fallback,
-        )
-
     cycles_time_total = to_percentage(4.40, cycles_time)
     cycles_time_tags = {"Fastest": 95, "Fast": 100, "Normal": 120, "Slow": 150}
     cycles_time_tag = _get_tag_from_dict(cycles_time_total, cycles_time_tags, "Slowest")
@@ -190,11 +205,12 @@ def calculate_batch_statistics(batch_sett):
         "storage": f"~{59+storage_weight} MB/human*",
     }
 
-    return statistics_dict
+    return statistics_dict  # noqa PIE781
 
 
-def get_batch_marker_list(context) -> list:
-    batch_sett = context.scene.HG3D.batch
+@no_type_check
+def get_batch_marker_list(context: bpy.types.Context) -> list[bpy.types.Object]:
+    batch_sett = context.scene.HG3D.batch  # type:ignore[attr-defined]
 
     marker_selection = batch_sett.marker_selection
 
@@ -204,17 +220,16 @@ def get_batch_marker_list(context) -> list:
         return all_markers
 
     elif marker_selection == "selected":
-        selected_markers = [o for o in all_markers if o in context.selected_objects]
-        return selected_markers
+        return [o for o in all_markers if o in context.selected_objects]
 
     else:
-        empty_markers = [o for o in all_markers if not has_associated_human(o)]
-        return empty_markers
+        # Empty markers
+        return [o for o in all_markers if not has_associated_human(o)]
 
 
-def has_associated_human(marker) -> bool:
-    """Check if this marker has an associated human and if that object still
-    exists
+@no_type_check
+def has_associated_human(marker: bpy.types.Object) -> bool:
+    """Check if this marker has an associated human and if that object still exists.
 
     Args:
         marker (Object): marker object to check for associated human
@@ -222,18 +237,110 @@ def has_associated_human(marker) -> bool:
     Returns:
         bool: True if associated human was found, False if not
     """
+    if "associated_human" not in marker or not bool(marker["associated_human"]):
+        return False
 
-    return (
-        "associated_human" in marker  # does it have the prop
-        and marker["associated_human"]  # is the prop not empty
-        and bpy.data.objects.get(
-            marker["associated_human"].name
-        )  # does the object still exist
-        and marker.location
-        == marker[
-            "associated_human"
-        ].location  # is the object at the same spot as the marker
-        and bpy.context.scene.objects.get(
-            marker["associated_human"].name
-        )  # is the object in the current scene
-    )
+    # Check if object still exists
+    if not bpy.data.objects.get(marker["associated_human"]):
+        return False
+
+    same_location = marker.location == marker["associated_human"].location
+    object_in_scene = bpy.context.scene.objects.get(marker["associated_human"].name)
+
+    return same_location and object_in_scene
+
+
+def find_folders(  # TODO might be duplicate
+    context: bpy.types.Context,
+    categ: str,
+    gender_toggle: bool,
+    include_all: bool = True,
+    gender_override: Optional[GenderStr] = None,
+) -> BpyEnum:
+    """Gets enum of folders found in a specific directory. T
+    hese serve as categories for that specific pcoll
+
+    Args:
+        context (bpy.context): blender context
+        categ (str): preview collection name
+        gender_toggle (bool): Search for folders that are in respective male/female
+            folders.
+        include_all (bool, optional): include "All" as first item.
+            Defaults to True.
+        gender_override (str): Used by operations that are not linked to a single
+            human. Instead of getting the gender from hg_rig this allows for the
+            manual passing of the gender ('male' or 'female')
+
+    Returns:
+        list: enum of folders
+    """
+    human = Human.from_existing(context.active_object, strict_check=False)
+    pref = get_prefs()
+
+    if gender_override:
+        gender = gender_override
+    elif human:
+        gender = human.gender
+    else:
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
+
+    if gender_toggle:
+        categ_folder = os.path.join(pref.filepath, categ, gender)
+    else:
+        categ_folder = os.path.join(pref.filepath, categ)
+
+    if not os.path.isdir(categ_folder):
+        return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
+
+    dirlist = os.listdir(categ_folder)
+    dirlist.sort()
+    categ_list = []
+    ext = (".jpg", "png", ".jpeg", ".blend")
+    for item in dirlist:
+        if not item.endswith(ext) and ".DS_Store" not in item:
+            categ_list.append(item)
+
+    if not categ_list:
+        categ_list.append("No Category Found")
+
+    enum_list = [("All", "All Categories", "", 0)] if include_all else []
+    for i, name in enumerate(categ_list):
+        idx = i if categ == "texture" else i + 1
+        enum_list.append((name, name, "", idx))
+
+    if not enum_list:
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
+    else:
+        return cast(BpyEnum, enum_list)
+
+
+def find_item_amount(  # TODO might be redundant
+    context: bpy.types.Context, categ: str, gender: Optional[GenderStr], folder: str
+) -> int:
+    """used by batch menu, showing the total amount of items of the selected
+    categories
+
+    Batch menu currently disabled
+    """
+    pref = get_prefs()
+
+    if categ == "expression":  # FIXME
+        ext = ".npy"
+    else:
+        ext = ".blend"
+
+    if gender:
+        dir = os.path.join(pref.filepath, categ, gender, folder)
+    else:
+        dir = os.path.join(pref.filepath, categ, folder)
+
+    if categ == "outfit":
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        inside = sett.batch.clothing_inside
+        outside = sett.batch.clothing_outside
+        if inside and not outside:
+            ext = "I.blend"
+        elif outside and not inside:
+            ext = "O.blend"
+
+    return len([name for name in os.listdir(dir) if name.endswith(ext)])

@@ -1,7 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+from typing import Any
 
-def build_driver_dict(obj, remove=True) -> dict:
+import bpy
+
+
+def build_driver_dict(
+    obj: bpy.types.Object, remove: bool = True
+) -> dict[str, dict[str, Any]]:
     """Builds a dictionary of drivers on this object, saving their settings to
     be re-used later
 

@@ -29,11 +29,13 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         return sett.ui.active_tab == "BATCH" and not sett.ui.content_saving
 
     def draw_header(self, context):
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         layout = self.layout
@@ -416,7 +418,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 
 #     def draw(self, context):
 #         layout = self.layout
-#         sett = context.scene.HG3D
+#         sett = context.scene.HG3D  # type:ignore[attr-defined]
 #         layout.enabled = sett.batch_bake
 
 #         col = get_flow(sett, layout.box())
@@ -436,7 +438,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 
 
 def header(self, context, categ):
-    sett = context.scene.HG3D
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
     layout = self.layout
     layout.prop(sett.batch, categ, text="")
 

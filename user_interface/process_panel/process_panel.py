@@ -26,7 +26,7 @@ class ProcessPanel(HGPanel):
     def draw_header(self, context):
         if hasattr(self, "enabled_propname"):
             # retreiver = attrgetter(self.propspace)
-            # propgroup = retreiver(context.scene.HG3D)
+            # propgroup = retreiver(context.scene.HG3D  # type:ignore[attr-defined]
             print(context.scene.HG3D.bake, type(context.scene.HG3D.bake))
             print(context.scene.HG3D.process, type(context.scene.HG3D.process))
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
@@ -41,7 +41,9 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
     bl_label = "Process"
 
     def draw_header(self, context) -> None:
-        draw_panel_switch_header(self.layout, context.scene.HG3D)
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     @classmethod
     def poll(cls, context):
@@ -109,7 +111,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
         layout = self.layout
         layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         bake_sett = sett.bake
 
         if self._draw_baking_warning_labels(context, layout):
@@ -162,8 +164,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        sett = context.scene.HG3D
-
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = layout.column(align=True)
         col.label(text="Select modifiers to be applied:")
         col.template_list(
@@ -228,7 +229,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         box = self.layout.box()
-        sett = context.scene.HG3D
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
         process_sett = sett.process
 
         self.draw_centered_subtitle("Output", box, icon="SETTINGS")
