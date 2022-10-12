@@ -1,9 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from typing import TYPE_CHECKING, Union, no_type_check
+import os
+from typing import TYPE_CHECKING, Optional, Union, cast, no_type_check
 
 import bpy  # type:ignore
 import numpy as np
+from backend.preferences.preference_func import get_prefs
+from backend.type_aliases import BpyEnum, GenderStr
+from human.human import Human
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.batch_props import BatchProps
@@ -244,3 +248,99 @@ def has_associated_human(marker: bpy.types.Object) -> bool:
     object_in_scene = bpy.context.scene.objects.get(marker["associated_human"].name)
 
     return same_location and object_in_scene
+
+
+def find_folders(  # TODO might be duplicate
+    context: bpy.types.Context,
+    categ: str,
+    gender_toggle: bool,
+    include_all: bool = True,
+    gender_override: Optional[GenderStr] = None,
+) -> BpyEnum:
+    """Gets enum of folders found in a specific directory. T
+    hese serve as categories for that specific pcoll
+
+    Args:
+        context (bpy.context): blender context
+        categ (str): preview collection name
+        gender_toggle (bool): Search for folders that are in respective male/female
+            folders.
+        include_all (bool, optional): include "All" as first item.
+            Defaults to True.
+        gender_override (str): Used by operations that are not linked to a single
+            human. Instead of getting the gender from hg_rig this allows for the
+            manual passing of the gender ('male' or 'female')
+
+    Returns:
+        list: enum of folders
+    """
+    human = Human.from_existing(context.active_object, strict_check=False)
+    pref = get_prefs()
+
+    if gender_override:
+        gender = gender_override
+    elif human:
+        gender = human.gender
+    else:
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
+
+    if gender_toggle:
+        categ_folder = os.path.join(pref.filepath, categ, gender)
+    else:
+        categ_folder = os.path.join(pref.filepath, categ)
+
+    if not os.path.isdir(categ_folder):
+        return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
+
+    dirlist = os.listdir(categ_folder)
+    dirlist.sort()
+    categ_list = []
+    ext = (".jpg", "png", ".jpeg", ".blend")
+    for item in dirlist:
+        if not item.endswith(ext) and ".DS_Store" not in item:
+            categ_list.append(item)
+
+    if not categ_list:
+        categ_list.append("No Category Found")
+
+    enum_list = [("All", "All Categories", "", 0)] if include_all else []
+    for i, name in enumerate(categ_list):
+        idx = i if categ == "texture" else i + 1
+        enum_list.append((name, name, "", idx))
+
+    if not enum_list:
+        return [("ERROR", "ERROR", "", i) for i in range(99)]
+    else:
+        return cast(BpyEnum, enum_list)
+
+
+def find_item_amount(  # TODO might be redundant
+    context: bpy.types.Context, categ: str, gender: Optional[GenderStr], folder: str
+) -> int:
+    """used by batch menu, showing the total amount of items of the selected
+    categories
+
+    Batch menu currently disabled
+    """
+    pref = get_prefs()
+
+    if categ == "expression":  # FIXME
+        ext = ".npy"
+    else:
+        ext = ".blend"
+
+    if gender:
+        dir = os.path.join(pref.filepath, categ, gender, folder)
+    else:
+        dir = os.path.join(pref.filepath, categ, folder)
+
+    if categ == "outfit":
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        inside = sett.batch.clothing_inside
+        outside = sett.batch.clothing_outside
+        if inside and not outside:
+            ext = "I.blend"
+        elif outside and not inside:
+            ext = "O.blend"
+
+    return len([name for name in os.listdir(dir) if name.endswith(ext)])
