@@ -57,6 +57,9 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
             "hg3d.random_choice", text="", icon="FILE_REFRESH"
         ).pcoll_name = "humans"
 
+        row = box.row(align=True)
+        row.scale_y = 1.5
+        row.prop(context.scene.HG3D.pcoll, "humans_category", text="")
         col = col.column()
         col.scale_y = 2
         col.alert = True

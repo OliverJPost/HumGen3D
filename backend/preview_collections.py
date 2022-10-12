@@ -12,8 +12,7 @@ from typing import Dict, Optional, Union
 
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
-
-from backend.type_aliases import GenderStr
+from HumGen3D.backend.type_aliases import GenderStr
 
 from ..human.base.exceptions import HumGenException  # type: ignore
 from . import get_prefs, hg_log
@@ -24,7 +23,7 @@ preview_collections: Dict[str, PreviewCollection] = {}  # global dict of all pco
 # (extension, gender_dependent, folder, category_propname, search_term_propname) # noqa
 PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], str], Optional[str], Optional[str]]] #FIXME
 PREVIEW_COLLECTION_DATA: PcollDict = {
-    "humans": (".json", True, "models", None, None),
+    "humans": (".json", True, "models", "humans_category", None),
     "pose": (".blend", False, "poses", "pose_category", "search_term_pose"),
     "outfit": (".blend", True, "outfits", "outfit_category", "search_term_outfit"),
     "footwear": (".blend", True, "footwear", "footwear_category", "search_term_footwear"), # noqa

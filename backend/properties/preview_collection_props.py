@@ -11,6 +11,7 @@ from operator import attrgetter
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
+from HumGen3D.backend.preview_collections import preview_collections
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.human import Human
 
@@ -39,6 +40,8 @@ def get_folders(attr):
     retreiver = attrgetter(attr)
 
     def func(self, context):
+        if attr == "humans":
+            return Human.get_categories(context.scene.HG3D.gender)
         human = Human.from_existing(context.object, strict_check=False)
         try:
             return retreiver(human).get_categories()
@@ -73,6 +76,11 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
 
     humans: EnumProperty(
         items=lambda self, context: Human._get_full_options(self, context)
+    )
+    humans_category: EnumProperty(
+        name="Human Library",
+        items=get_folders("humans"),
+        update=lambda _, context: preview_collections["humans"].refresh(context),
     )
 
     # posing
