@@ -41,10 +41,10 @@ def get_folders(attr):
 
     def func(self, context):
         if attr == "humans":
-            return Human.get_categories(context.scene.HG3D.gender)
+            return Human._get_categories(context.scene.HG3D.gender)
         human = Human.from_existing(context.object, strict_check=False)
         try:
-            return retreiver(human).get_categories()
+            return retreiver(human)._get_categories()
         # Catch for weird behaviour where pose_category refreshes early
         except (AttributeError, HumGenException) as e:
             return [("ERROR", "ERROR", "", i) for i in range(99)]

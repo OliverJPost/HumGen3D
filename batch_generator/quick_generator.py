@@ -87,25 +87,28 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         human.body.randomize()
         human.face.randomize(use_bell_curve=self.gender == "female")
 
-        if self.texture_resolution in ("optimised", "performance"):
-            self._set_body_texture_resolution(sett, human.body_obj)
+        # if self.texture_resolution in ("optimised", "performance"):
+        #    self._set_body_texture_resolution(sett, human.body_obj)
 
         human.skin.randomize()
         human.eyes.randomize()
 
         if self.add_hair:
             human.hair.regular_hair.randomize(context)
-            if self.gender == "male":
+            if human.gender == "male":
                 human.hair.face_hair.randomize(context)
+                human.hair.face_hair.randomize_color()
 
-        human.hair.set_hair_quality(self.hair_quality, context)
+        human.hair.set_hair_quality(
+            self.hair_quality,
+        )
         human.hair.regular_hair.randomize_color()
-        human.hair.face_hair.randomize_color()
+
         human.hair.eyebrows.randomize_color()
 
         human.hair.children_set_hide(True)
 
-        sett.human_height = int(height_from_bell_curve(sett, self.gender)[0])
+        human.height.set(int(height_from_bell_curve(sett.batch, self.gender)[0]))
 
         if self.add_clothing:
             try:
@@ -131,7 +134,7 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
                 human.footwear.set_texture_resolution(cloth, self.texture_resolution)
 
         if self.pose_type != "a_pose":
-            self._set_pose(context, sett, self.pose_type)
+            self._set_pose(human, context, sett, self.pose_type)
 
         if self.add_expression:
             human.expression.set_random(context)
@@ -267,13 +270,13 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         hg_log("Deleted", backup_rig.name)
         hg_delete(backup_rig)
 
-    def _set_pose(self, context, sett, pose_type):
+    def _set_pose(self, human: Human, context, sett, pose_type):
         if pose_type == "t_pose":
-            preview_collections["pose"].refresh(context)
-            sett.pcoll.pose = str(Path("/poses/Base Poses/HG_T_Pose.blend"))
+            human.pose.set(os.path.join("poses", "Base Poses", "HG_T_Pose.blend"))
         else:
             sett.pose_category = pose_type.capitalize().replace("_", " ")
-            set_random_active_in_pcoll(context, sett, "pose")
+            options = human.pose.get_options(context)
+            human.pose.set(random.choice(options))
 
     def pick_library(self, context, categ, gender=None):
         sett = context.scene.HG3D  # type:ignore[attr-defined]

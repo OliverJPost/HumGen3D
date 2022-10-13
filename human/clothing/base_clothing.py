@@ -11,6 +11,7 @@ from typing import Iterable, Optional, Tuple, Union
 import bpy
 import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.backend.type_aliases import C
 from HumGen3D.human import clothing
@@ -429,7 +430,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # TODO Rewrite color_random so it doesn't need to be called as operator
         old_active = context.view_layer.objects.active
 
-        colorgroups_json = "colorgroups.json"
+        colorgroups_json = os.path.join(
+            get_addon_root(), "human", "clothing", "colorgroups.json"
+        )
 
         with open(colorgroups_json) as f:
             color_dict = json.load(f)
