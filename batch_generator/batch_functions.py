@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Optional, Union, cast, no_type_check
 
 import bpy  # type:ignore
 import numpy as np
-from backend.preferences.preference_func import get_prefs
-from backend.type_aliases import BpyEnum, GenderStr
-from human.human import Human
+from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.type_aliases import BpyEnum, GenderStr
+from HumGen3D.human.human import Human
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.batch_props import BatchProps
