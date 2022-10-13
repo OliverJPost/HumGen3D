@@ -101,7 +101,7 @@ class ExpressionSettings(PreviewCollectionContent):
         if "expr_{}".format(sk_name) in sk_names:
             new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
-            new_key = self._human.keys.load_from_npy(filepath)
+            new_key = self._human.keys.load_from_npz(filepath)
             new_key.name = "expr_" + new_key.name
 
         for sk in self.shape_keys:

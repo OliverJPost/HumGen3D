@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-from typing import TYPE_CHECKING, Iterable, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Union, cast
 
 import bpy
 import numpy as np
@@ -21,6 +21,15 @@ if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey
 
 
+def import_npz_key(
+    vert_count: int, filepath: str
+) -> np.ndarray[Any, np.dtype[np.float64]]:
+    npz_dict = np.load(filepath)
+    new_key_relative_coords = np.zeros(vert_count * 3, dtype=np.float64)
+    new_key_relative_coords[npz_dict["indices"]] = npz_dict["relative_coordinates"]
+    return new_key_relative_coords
+
+
 def update_livekey_collection() -> None:
     """Updates the livekeys collection inside context.window_manager to contain all
     livekeys present in the Human Generator folder structure.
@@ -32,7 +41,7 @@ def update_livekey_collection() -> None:
     folder = os.path.join(get_prefs().filepath, "livekeys")
     for root, _, files in os.walk(folder):
         for file in files:
-            if not file.endswith(".npy"):
+            if not file.endswith(".npz"):
                 continue
             item = bpy.context.window_manager.livekeys.add()
             if file.startswith(("male_", "female_")):
@@ -146,7 +155,9 @@ class LiveKeyItem(KeyItem):
 
     def to_shapekey(self) -> ShapeKeyItem:
         filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
-        new_key_relative_coords = np.load(filepath)
+        body = self._human.body_obj
+        vert_count = len(body.data.vertices)
+        new_key_relative_coords = import_npz_key(vert_count, filepath)
 
         if self.category:
             if self.subcategory:
@@ -156,9 +167,6 @@ class LiveKeyItem(KeyItem):
                 name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
-
-        body = self._human.body_obj
-        vert_count = len(body.data.vertices)
         obj_coords = np.empty(vert_count * 3, dtype=np.float64)
         body.data.vertices.foreach_get("co", obj_coords)
 
@@ -197,8 +205,8 @@ class LiveKeyItem(KeyItem):
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
         self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
 
-        npy_path = os.path.join(get_prefs().filepath, self.path)
-        new_key_relative_coords = np.load(npy_path)
+        npz_path = os.path.join(get_prefs().filepath, self.path)
+        new_key_relative_coords = import_npz_key(vert_count, npz_path)
 
         current_sk_values = self._human.props.sk_values
         old_value = (
@@ -297,7 +305,15 @@ class ShapeKeyItem(KeyItem, SavableContent):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        np.save(os.path.join(path, name), relative_coordinates)
+        # Only save nonzero values. NOTE: This operatates on a 1-dimensional array, it
+        # does not store vertex indices but individual vector member indices.
+        changed_idxs = np.where(relative_coordinates > 0.00001)
+
+        np.savez(
+            os.path.join(path, name),
+            indices=changed_idxs,
+            relative_coordinates=relative_coordinates[changed_idxs],
+        )
 
         if delete_original:
             body.shape_key_remove(sk)
@@ -410,20 +426,19 @@ class KeySettings:
 
         return keys
 
-    def load_from_npy(
-        self, npy_filepath: str, obj_override: Optional[Object] = None
+    def load_from_npz(
+        self, npz_filepath: str, obj_override: Optional[Object] = None
     ) -> bpy.types.ShapeKey:
-        """Creates a new shapekey on the body or the passed obj_override from a npy file
+        """Creates a new shapekey on the body or the passed obj_override from a npz file
 
         This .npy file contains a one dimensional array with coordinates of the
         shape key, RELATIVE to the base coordinates of the body.
 
         Args:
-            npy_filepath (str | os.PathLike): Path to the .npy file
+            npz_filepath (str | os.PathLike): Path to the .npz file
             obj_override (Object, optional): Add the shape key to this object instead of
                 to the body object. Defaults to None.
         """
-        relative_sk_co = np.load(npy_filepath)
 
         if obj_override:
             obj = obj_override
@@ -431,10 +446,12 @@ class KeySettings:
             obj = self._human.body_obj
 
         vert_count = len(obj.data.vertices)
+
+        relative_sk_co = import_npz_key(vert_count, npz_filepath)
         vert_co = np.empty(vert_count * 3, dtype=np.float64)
         obj.data.vertices.foreach_get("co", vert_co)
 
-        name = os.path.basename(os.path.splitext(npy_filepath)[0])
+        name = os.path.basename(os.path.splitext(npz_filepath)[0])
 
         sk = obj.shape_key_add(name=name)
         sk.interpolation = "KEY_LINEAR"
