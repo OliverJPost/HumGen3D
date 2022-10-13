@@ -5,8 +5,9 @@ This file is currently inactive
 """
 
 import bpy
-from HumGen3D.batch_generator.batch_functions import find_folders, find_item_amount
-from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
+from HumGen3D.backend import preview_collections  # type: ignore
+from HumGen3D.batch_generator.batch_functions import find_item_amount
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
@@ -118,14 +119,14 @@ def batch_uilist_refresh(self, context, categ):
     elif categ == "pose":
         collection = scene.batch_pose_col
     else:
-        collection = scene.batch_expressions_col
+        collection = scene.batch_expression_col
 
     enabled_dict = {i.name: i.enabled for i in collection}
     collection.clear()
 
     gender = categ == "outfit"
-    found_folders_male = find_folders(
-        self, context, categ, gender, include_all=False, gender_override="male"
+    found_folders_male = preview_collections[categ].find_folders(
+        "male", include_all=False
     )
 
     for folder in found_folders_male:
@@ -142,13 +143,8 @@ def batch_uilist_refresh(self, context, categ):
     if not gender:
         return
 
-    found_folders_female = find_folders(
-        self,
-        context,
-        categ,
-        gender,
-        include_all=False,
-        gender_override="female",
+    found_folders_female = preview_collections[categ].find_folders(
+        "female", include_all=False
     )
 
     for folder in found_folders_female:
@@ -172,7 +168,7 @@ class HG_REFRESH_UILISTS(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        batch_uilist_refresh(self, context, "outfits")
-        batch_uilist_refresh(self, context, "expressions")
+        batch_uilist_refresh(self, context, "outfit")
+        batch_uilist_refresh(self, context, "expression")
 
         return {"FINISHED"}

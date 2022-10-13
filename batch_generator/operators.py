@@ -7,13 +7,14 @@ import random
 import time
 
 import bpy
-from HumGen3D.API import BatchHumanGenerator
 from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
+from HumGen3D.human.human import Human
 
 from .batch_functions import get_batch_marker_list, has_associated_human
+from .generator import BatchHumanGenerator
 
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
@@ -98,7 +99,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         if self.run_immediately or not markers_with_associated_human:
             self._initiate_modal(context, batch_sett)
             set_eevee_ao_and_strip(context)
-
+            self.generator = BatchHumanGenerator()
+            self.set_generator_settings(batch_sett)
             return {"RUNNING_MODAL"}
         else:
             self._show_dialog_to_confirm_deleting_humans(context)
@@ -116,6 +118,37 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         batch_sett.idx = 1
         context.workspace.status_text_set(status_text_callback)
         context.area.tag_redraw()
+
+    def set_generator_settings(self, batch_sett):
+        generator = self.generator
+        generator.female_chance = batch_sett.female_chance
+        generator.male_chance = batch_sett.male_chance
+        # TODO generator.human_preset_category_chances
+        generator.add_clothing = batch_sett.clothing
+        generator.clothing_categories = self._choose_category_list()
+        generator.add_expression = batch_sett.expression
+        generator.add_hair = batch_sett.hair
+        generator.hair_quality = batch_sett.hair_quality_particle
+
+        if batch_sett.height_system == "metric":
+            avg_height_cm_male = batch_sett.average_height_cm_male
+            avg_height_cm_female = batch_sett.average_height_cm_female
+        else:
+            avg_height_cm_male = (
+                batch_sett.average_height_ft_male * 30.48
+                + batch_sett.average_height_in_male * 2.54
+            )
+            avg_height_cm_female = (
+                batch_sett.average_height_ft_female * 30.48
+                + batch_sett.average_height_in_female * 2.54
+            )
+
+        generator.average_height_female = avg_height_cm_male
+        generator.average_height_male = avg_height_cm_female
+
+        generator.height_one_standard_deviation = batch_sett.standard_deviation
+
+        generator.texture_resolution = batch_sett.texture_resolution
 
     def _show_dialog_to_confirm_deleting_humans(self, context):  # noqa CCE001
         generate_queue = self.generate_queue
@@ -177,46 +210,11 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
             pose_type = current_marker["hg_batch_marker"]
 
-            generator = self._create_generator_instance(batch_sett)
-            result = generator.generate_in_background(
-                context=context,
-                gender=str(
-                    random.choices(
-                        ("male", "female"),
-                        weights=(batch_sett.male_chance, batch_sett.female_chance),
-                        k=1,
-                    )[0]
-                ),
-                ethnicity=str(
-                    random.choices(
-                        ("caucasian", "black", "asian"),
-                        weights=(
-                            batch_sett.caucasian_chance,
-                            batch_sett.black_chance,
-                            batch_sett.asian_chance,
-                        ),
-                        k=1,
-                    )[0]
-                ),
-                add_hair=batch_sett.hair,
-                hair_type="particle",  # sett.batch_hairtype,
-                hair_quality=batch_sett.hair_quality_particle,
-                add_expression=batch_sett.expression,
-                expression_category=self._choose_category_list(context, "expressions"),
-                add_clothing=batch_sett.clothing,
-                clothing_category=self._choose_category_list(context, "outfits"),
-                pose_type=pose_type,
-            )
-            # FIXME repair return
-            # if not result:
-            #     self._cancel(sett, context)
-            #     return {"RUNNING_MODAL"}
-            # else:
-            hg_rig = result  # result.rig_object
+            human = self.generator.generate_human(context, pose_type)
 
-            hg_rig.location = current_marker.location
-            hg_rig.rotation_euler = current_marker.rotation_euler
-            current_marker["associated_human"] = hg_rig
+            human.location = current_marker.location
+            human.rotation_euler = current_marker.rotation_euler
+            current_marker["associated_human"] = human.rig_obj
 
             self.human_idx += 1
 
@@ -225,6 +223,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
                 batch_sett.progress = int(progress * 100)
 
             batch_sett.idx += 1
+
             context.workspace.status_text_set(status_text_callback)
 
             return {"RUNNING_MODAL"}
@@ -233,10 +232,9 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             return {"RUNNING_MODAL"}
 
     def _delete_old_associated_human(self, marker):
-        associated_human = marker["associated_human"]
-        for child in associated_human.children[:]:
-            hg_delete(child)
-        hg_delete(associated_human)
+        associated_rig = marker["associated_human"]
+        human = Human.from_existing(associated_rig)
+        human.delete()
 
     def _cancel(self, batch_sett, context):
         hg_log("Batch modal is cancelling")
@@ -246,12 +244,8 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         context.workspace.status_text_set(status_text_callback)
         return {"CANCELLED"}
 
-    def _choose_category_list(self, context, pcoll_name):
-
-        # TODO fix naming inconsistency
-        label = "expressions" if pcoll_name == "expressions" else "clothing"
-
-        collection = getattr(context.scene, f"batch_{label}_col")
+    def _choose_category_list(self):
+        collection = getattr(bpy.context.scene, f"batch_clothing_col")
 
         enabled_categories = [i.library_name for i in collection if i.enabled]
         if not enabled_categories:
@@ -259,22 +253,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
             enabled_categories = [i.library_name for i in collection]
 
-        return random.choice(enabled_categories)
-
-    def _create_generator_instance(self, batch_sett):
-        q_names = [
-            "delete_backup",
-            "apply_shapekeys",
-            "apply_armature_modifier",
-            "remove_clothing_subdiv",
-            "remove_clothing_solidify",
-            "apply_clothing_geometry_masks",
-            "texture_resolution",
-        ]
-
-        quality_dict = {name: getattr(batch_sett, name) for name in q_names}
-
-        return BatchHumanGenerator(**quality_dict)
+        return enabled_categories
 
 
 class HG_RESET_BATCH_OPERATOR(bpy.types.Operator):

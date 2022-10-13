@@ -8,7 +8,12 @@ Properties related to the Human Generator batch generator
 
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, IntProperty  # type: ignore
+from bpy.props import (  # type: ignore
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+)
 from HumGen3D.user_interface.batch_panel.batch_ui_lists import batch_uilist_refresh
 
 
@@ -27,15 +32,6 @@ class BatchProps(bpy.types.PropertyGroup):
     )
     female_chance: IntProperty(
         name="Female", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
-    caucasian_chance: IntProperty(
-        name="Caucasian", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
-    black_chance: IntProperty(
-        name="Black", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
-    asian_chance: IntProperty(
-        name="Asian", subtype="PERCENTAGE", min=0, max=100, default=100
     )
 
     performance_statistics: BoolProperty(default=False)
@@ -92,12 +88,12 @@ class BatchProps(bpy.types.PropertyGroup):
     average_height_in_male: IntProperty(name="in", default=10, min=0, max=12)
     average_height_in_female: IntProperty(name="in", default=10, min=0, max=12)
 
-    standard_deviation: IntProperty(
+    standard_deviation: FloatProperty(
         name="Standard deviation",
-        default=5,
+        default=0.05,
         subtype="PERCENTAGE",
         min=0,
-        max=10,
+        max=0.1,
     )
     show_height_examples: BoolProperty(default=False)
 

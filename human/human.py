@@ -89,7 +89,9 @@ class Human:
 
     @staticmethod
     @injected_context
-    def get_preset_options(gender: str, context: C = None) -> List[str]:
+    def get_preset_options(
+        gender: str, category: str = "All", context: C = None
+    ) -> List[str]:
         """
         Return a list of human possible presets for the given gender.
 
@@ -102,13 +104,13 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-        preview_collections["humans"].populate(context, gender)
-        # TODO more low level way
-        return cast(list[str], context.scene.HG3D["previews_list_humans"])
+        preview_collections["humans"].populate(context, gender, subcategory=category)
+        return [
+            option[0] for option in preview_collections["humans"].pcoll["humans"][1:]
+        ]
 
     # Do not remove unused arguments
     @staticmethod
-    @injected_context
     def _get_full_options(_self: Any, context: C = None) -> BpyEnum:
         """Internal method for getting preview collection items."""
         pcoll = preview_collections.get("humans").pcoll
@@ -278,8 +280,12 @@ class Human:
         )
 
     @staticmethod
-    def get_categories(gender: GenderStr):
-        return PreviewCollectionContent._find_folders("humans", True, gender)
+    def get_categories(gender: GenderStr) -> list[str]:
+        return [option[0] for option in Human._get_categories(gender)]
+
+    @staticmethod
+    def _get_categories(gender: GenderStr) -> BpyEnum:
+        return preview_collections["humans"].find_folders(gender)
 
     # endregion
     # region Properties

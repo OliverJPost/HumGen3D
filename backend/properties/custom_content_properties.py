@@ -108,7 +108,7 @@ def get_categories(self, context):
     else:
         human_subclass = getattr(human, attr)
 
-    return human_subclass.get_categories(include_all=False, ignore_genders=True)
+    return human_subclass._get_categories(include_all=False, ignore_genders=True)
 
 
 class ContentSavingSubgroup:
