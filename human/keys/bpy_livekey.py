@@ -12,6 +12,7 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from HumGen3D.human.human import Human
+from HumGen3D.human.keys.keys import import_npz_key
 
 
 def get_livekey(self: BpyLiveKey) -> float:
@@ -57,9 +58,9 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
     # Load coordinates of livekey that is being changed
     filepath = os.path.join(get_prefs().filepath, self.path)
-    new_key_relative_coords = np.load(filepath)
-    new_key_coords = obj_coords + new_key_relative_coords
+    new_key_relative_coords = import_npz_key(vert_count, filepath)
 
+    new_key_coords = obj_coords + new_key_relative_coords
     # If there was a previous livekey on the temp_key, correct for it
     if temp_key:
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
