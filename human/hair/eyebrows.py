@@ -9,8 +9,6 @@ if TYPE_CHECKING:
 from HumGen3D.human.hair.basehair import BaseHair
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
-from ..base.prop_collection import PropCollection
-
 
 class EyebrowSettings(BaseHair):
     _startswith = "Eyebrows"

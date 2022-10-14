@@ -1,24 +1,12 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
-from pathlib import Path
-from sys import platform
 
-import addon_utils  # type:ignore
 import bpy
-from HumGen3D import bl_info
 from HumGen3D.backend import get_prefs
 
-from ...backend.preview_collections import preview_collections
 from ...human.human import Human  # type: ignore
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..panel_functions import (
-    draw_panel_switch_header,
-    draw_spoiler_box,
-    draw_sub_spoiler,
-    get_flow,
-    searchbox,
-)
+from ..panel_functions import draw_panel_switch_header, draw_spoiler_box
 from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 

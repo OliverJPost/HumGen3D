@@ -1,13 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
-import os
 import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
 from HumGen3D.backend.type_aliases import C
-from bpy.types import Context
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
