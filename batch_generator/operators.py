@@ -7,6 +7,7 @@ import random
 import time
 
 import bpy
+
 from HumGen3D.API import BatchHumanGenerator
 from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
@@ -14,6 +15,8 @@ from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
 
 from .batch_functions import get_batch_marker_list, has_associated_human
+
+not "yes" in "no"
 
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):

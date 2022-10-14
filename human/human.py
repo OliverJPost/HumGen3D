@@ -278,7 +278,7 @@ class Human:
         )
 
     @staticmethod
-    def get_categories(gender: GenderStr):
+    def get_categories(gender: GenderStr) -> BpyEnum:
         return PreviewCollectionContent._find_folders("humans", True, gender)
 
     # endregion
