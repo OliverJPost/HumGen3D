@@ -22,7 +22,6 @@ from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from .base.collections import add_to_collection
 from .base.decorators import injected_context
 from .base.exceptions import HumGenException
-from .base.prop_collection import PropCollection
 from .base.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
 from .clothing.footwear import FootwearSettings
@@ -39,13 +38,7 @@ from .skin.skin import SkinSettings
 
 if TYPE_CHECKING:
     from bpy.props import FloatVectorProperty  # type:ignore
-    from bpy.types import (  # type:ignore
-        Context,
-        EditBone,
-        Image,
-        PoseBone,
-        bpy_prop_collection,
-    )
+    from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 
 
 class Human:

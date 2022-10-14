@@ -5,7 +5,7 @@ import os
 import random
 import subprocess
 import time
-from typing import Iterable, Optional, Union
+from typing import Optional, Union
 
 import bpy
 from HumGen3D.backend import get_addon_root, get_prefs

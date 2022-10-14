@@ -5,7 +5,6 @@ from HumGen3D.backend import get_prefs
 
 from ..documentation.tips_suggestions_ui import (
     draw_tips_suggestions_ui,
-    update_tips_from_context,
 )
 from .base_draw_functions import (
     _draw_name_ui,
@@ -15,8 +14,6 @@ from .base_draw_functions import (
 )
 from .save_clothing_ui import (
     _draw_clothing_gender_ui,
-    _draw_clothing_uilist_ui,
-    _draw_outfit_type_selector,
 )
 from .save_hair_ui import (
     _draw_hair_gender_ui,

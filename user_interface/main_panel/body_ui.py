@@ -1,8 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
-from HumGen3D.human.human import Human
+
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 

@@ -3,7 +3,6 @@
 # Not named conftest.py because that is run outside of Blender Python, so it
 # can't import from bpy
 
-import random
 
 import bpy
 import pytest  # type:ignore

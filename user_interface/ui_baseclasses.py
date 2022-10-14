@@ -3,14 +3,12 @@
 import functools
 import os
 from pathlib import Path
-from re import L
-from tokenize import Triple
+
 
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import (
-    UserInterfaceProps,
     active_phase_enum,
 )
 from HumGen3D.human.human import Human

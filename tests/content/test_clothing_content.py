@@ -1,6 +1,5 @@
-import bpy
 import pytest
-from HumGen3D.tests.fixtures import (
+from HumGen3D.tests.fixtures import (  # noqa
     ALL_HUMAN_FIXTURES,
     context,
     female_human,

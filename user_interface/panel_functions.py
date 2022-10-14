@@ -2,7 +2,6 @@
 
 import bpy
 
-from ..backend import preview_collections
 from .icons.icons import get_hg_icon  # type: ignore
 
 CHAR_WIDTH_DICT = {

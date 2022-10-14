@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from os import PathLike
 from typing import TYPE_CHECKING, Literal, Union
 
 import bpy

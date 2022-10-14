@@ -1,6 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from operator import attrgetter
 
 import bpy
 from HumGen3D.human.human import Human
