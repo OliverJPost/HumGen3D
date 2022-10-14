@@ -6,6 +6,7 @@ import os
 import random
 import time
 
+import bmesh
 import bpy
 from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
@@ -199,14 +200,13 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             return {"RUNNING_MODAL"}
 
         elif event.type == "TIMER":
+
             # Check if all humans in the list are already generated
             if self.human_idx == len(self.generate_queue):
                 self.finish_modal = True
                 return {"RUNNING_MODAL"}
 
             current_marker = self.generate_queue[self.human_idx]
-            if has_associated_human(current_marker):
-                self._delete_old_associated_human(current_marker)
 
             pose_type = current_marker["hg_batch_marker"]
 

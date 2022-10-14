@@ -64,9 +64,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
         col = col.column(align=True)
         if batch_sett.idx:
-            col.prop(
-                batch_sett, "progress", text=f"Building Human {batch_sett.batch_idx}"
-            )
+            col.prop(batch_sett, "progress", text=f"Building Human {batch_sett.idx}")
         else:
             col.alert = True
             col.operator(
