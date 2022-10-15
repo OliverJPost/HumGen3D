@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import contextlib
+
 import bpy
 from HumGen3D import Human
 from HumGen3D.backend.preferences.preference_func import get_prefs
@@ -41,10 +43,8 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
             if human.gender == "male":
                 human.hair.face_hair.refresh_pcoll(context)
         else:
-            try:
+            with contextlib.suppress(AttributeError, RecursionError):
                 getattr(human, self.section_name).refresh_pcoll(context)
-            except (AttributeError, RecursionError):
-                pass
 
         pref = get_prefs()
         if (

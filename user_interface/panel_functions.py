@@ -187,7 +187,7 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
     row.scale_y = 1.0
     row.alignment = "LEFT"
 
-    if ui_name in long_name_dict:
+    if ui_name in long_name_dict:  # noqa SIM401
         label = long_name_dict[ui_name]
     else:
         label = ui_name.capitalize().replace("_", " ")

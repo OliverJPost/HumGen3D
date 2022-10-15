@@ -195,9 +195,8 @@ class CpackEditingSystem:
                     text=gender.capitalize(),
                     icon_value=get_hg_icon(f"{gender}_true"),
                 )
-            try:
+            with contextlib.suppres(Exception):
                 box.template_icon(item.icon_value, scale=5)
-            except Exception:
-                pass
+
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(item, "include", text="Include", icon=incl_icon, toggle=True)

@@ -13,6 +13,7 @@ cpack = Abbreviation of content pack. Represents a collection of items
     .json file
 """
 
+import contextlib
 import json
 import os
 import zipfile
@@ -327,10 +328,8 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
 
         coll = context.scene.installpacks_col
         coll.clear()
-        try:
+        with contextlib.suppress(Exception):
             cpacks_refresh(self, context)
-        except Exception:
-            pass
 
         return {"FINISHED"}
 

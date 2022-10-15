@@ -80,7 +80,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
                 section = box_other
             elif (
                 key.subcategory
-                and not key.subcategory == "main"
+                and key.subcategory != "main"
                 and not getattr(sett.ui, key.subcategory)
             ):
                 continue

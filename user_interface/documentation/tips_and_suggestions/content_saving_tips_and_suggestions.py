@@ -19,9 +19,12 @@ def get_content_saving_tips_from_context(context, sett, hg_rig):
             try:
                 nodes = cloth_obj.data.materials[0].node_tree.nodes
                 base_color_node = nodes.get("Base Color")
-                if base_color_node and base_color_node.image:
-                    if "placeholder" in base_color_node.image.name.lower():
-                        yield placeholder_image_explanation
+                if (
+                    base_color_node
+                    and base_color_node.image
+                    and "placeholder" in base_color_node.image.name.lower()
+                ):
+                    yield placeholder_image_explanation
             except AttributeError:
                 pass
         elif tab_idx == 5:
