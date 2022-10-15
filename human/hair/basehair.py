@@ -24,33 +24,6 @@ from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 class BaseHair:
-    def _add_quality_props(self, mod: bpy.types.Modifier) -> None:
-
-        ps = mod.particle_system.settings
-        ps["steps"] = ps.render_step
-        ps["children"] = ps.rendered_child_count
-        ps["root"] = ps.root_radius
-        ps["tip"] = ps.tip_radius
-
-    def randomize_color(self) -> None:
-        # TODO make system more elaborate
-        hair_color_dict = {
-            "blonde": (4.0, 0.8, 0.0),
-            "black": (0.0, 1.0, 0.0),
-            "dark_brown": (0.5, 1.0, 0.0),
-            "brown": (1.0, 1.0, 0.0),
-            "red": (3.0, 1.0, 0.0),
-        }
-
-        hair_color = hair_color_dict[random.choice([name for name in hair_color_dict])]
-
-        for mat in self._human.body_obj.data.materials[1:]:
-            nodes = mat.node_tree.nodes
-            hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
-            hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
-            hair_node.inputs["Hair Redness"].default_value = hair_color[1]
-            hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
-
     @property
     def particle_systems(self) -> PropCollection:
         particle_systems = self._human.hair.particle_systems
@@ -67,7 +40,29 @@ class BaseHair:
         ]
         return PropCollection(modifiers)
 
-    def _condition(self, string: str) -> bool:
+    def delete_all(self) -> None:
+        raise NotImplementedError  # FIXME
+
+    def randomize_color(self) -> None:
+        # TODO make system more elaborate
+        hair_color_dict = {
+            "blonde": (4.0, 0.8, 0.0),
+            "black": (0.0, 1.0, 0.0),
+            "dark_brown": (0.5, 1.0, 0.0),
+            "brown": (1.0, 1.0, 0.0),
+            "red": (3.0, 1.0, 0.0),
+        }
+
+        hair_color = hair_color_dict[random.choice(list(hair_color_dict))]
+
+        for mat in self._human.body_obj.data.materials[1:]:
+            nodes = mat.node_tree.nodes
+            hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
+            hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
+            hair_node.inputs["Hair Redness"].default_value = hair_color[1]
+            hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
+
+    def _condition(self, string: str) -> bool:  # noqa
         if hasattr(self, "_startswith"):
             return string.startswith(self._startswith)
         elif hasattr(self, "_notstartswith"):
@@ -77,8 +72,13 @@ class BaseHair:
                 "Did not initialize hair class with _startswith or _notstartswith"
             )
 
-    def delete_all(self) -> None:
-        raise NotImplementedError  # FIXME
+    def _add_quality_props(self, mod: bpy.types.Modifier) -> None:
+
+        ps = mod.particle_system.settings
+        ps["steps"] = ps.render_step
+        ps["children"] = ps.rendered_child_count
+        ps["root"] = ps.root_radius
+        ps["tip"] = ps.tip_radius
 
     def __hash__(self) -> int:
         key_data = []
@@ -224,6 +224,17 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             context,
             thumbnail,
         )
+
+    def remove_all(self) -> None:
+        modifiers = self.modifiers
+        for mod in modifiers:
+            self._human.body_obj.modifiers.remove(mod)
+
+    @injected_context
+    def randomize(self, context: C = None) -> None:
+        preset_options = self.get_preset_options()
+        chosen_preset = random.choice(preset_options)
+        self.set(chosen_preset, context)
 
     def _import_hair_obj(
         self, context: bpy.types.Context, hair_type: str, pref: HG_PREF, blendfile: str
@@ -477,14 +488,3 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 bpy.ops.object.modifier_move_to_index(
                     modifier=mod.name, index=lowest_mask_index
                 )
-
-    def remove_all(self) -> None:
-        modifiers = self.modifiers
-        for mod in modifiers:
-            self._human.body_obj.modifiers.remove(mod)
-
-    @injected_context
-    def randomize(self, context: C = None) -> None:
-        preset_options = self.get_preset_options()
-        chosen_preset = random.choice(preset_options)
-        self.set(chosen_preset, context)

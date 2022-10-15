@@ -166,6 +166,147 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self._set_armature(context, cloth_obj, self._human.rig_obj)
         context.view_layer.objects.active = self._human.rig_obj
 
+    def remove(self) -> list[str]:
+        """Removes the cloth objects that were already on the human
+
+        Args:
+            pref (AddonPreferences): preferences of HumGen
+            hg_rig (Object): HumGen armature
+            tag (str): tag for identifying cloth and shoe objects
+
+        Returns:
+            list: list of geometry masks that need to be removed
+        """
+        # removes previous outfit/shoes if the preferences option is True
+        mask_remove_list = []
+
+        for obj in self.objects:
+            mask_remove_list.extend(find_masks(obj))
+            hg_delete(obj)
+
+        return mask_remove_list
+
+    @injected_context
+    def save_to_library(
+        self,
+        name: str,
+        for_male: bool = True,
+        for_female: bool = True,
+        open_when_finished: bool = False,
+        category: str = "Custom",
+        thumbnail: Optional[bpy.types.Image] = None,
+        context: C = None,
+    ) -> None:
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
+
+        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
+        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
+
+        save_clothing(
+            self._human,
+            folder,
+            category,
+            name,
+            context,
+            self.objects,
+            genders,
+            open_when_finished,
+            thumbnail=thumbnail,
+        )
+
+    # TODO item independent
+    def set_texture_resolution(
+        self, clothing_item: bpy.types.Object, resolution_category: str
+    ) -> None:
+        if resolution_category == "performance":
+            resolution_tag = "low"
+        elif resolution_category == "optimised":
+            resolution_tag = "medium"
+
+        mat = clothing_item.data.materials[0]
+        nodes = mat.node_tree.nodes
+
+        for node in [n for n in nodes if n.bl_idname == "ShaderNodeTexImage"]:
+            image = node.image
+
+            if not image:
+                continue
+
+            old_color_setting = image.colorspace_settings.name
+
+            img_dir = os.path.dirname(image.filepath)
+            filename, ext = os.path.splitext(os.path.basename(image.filepath))
+
+            if filename.endswith("_MEDIUM"):
+                filename = filename[:-7]
+            elif filename.endswith("_LOW"):
+                filename = filename[:-4]
+
+            if resolution_category == "high":
+                new_filename = filename + ext
+            else:
+                new_filename = filename + f"_{resolution_tag.upper()}" + ext
+
+            new_path = os.path.join(img_dir, new_filename)
+
+            if not os.path.isfile(new_path):
+                hg_log(
+                    "Could not find other resolution for outfit texture: ",
+                    new_path,
+                    level="WARNING",
+                )
+                return
+
+            new_image = bpy.data.images.load(new_path, check_existing=True)
+            node.image = new_image
+            new_image.colorspace_settings.name = old_color_setting
+
+    @injected_context
+    def randomize_colors(self, cloth_obj: bpy.types.Object, context: C = None) -> None:
+        mat = cloth_obj.data.materials[0]
+        if not mat:
+            return
+        nodes = mat.node_tree.nodes
+
+        control_node = nodes.get("HG_Control")
+        if not control_node:
+            hg_log(
+                f"Could not set random color for {cloth_obj.name}, control node not found",  # noqa E501
+                level="WARNING",
+            )
+            return
+
+        # TODO Rewrite color_random so it doesn't need to be called as operator
+        old_active = context.view_layer.objects.active
+
+        colorgroups_json = "colorgroups.json"
+
+        with open(colorgroups_json) as f:
+            color_dict = json.load(f)
+
+        for input_socket in control_node.inputs:
+            color_groups = tuple(["_{}".format(name) for name in color_dict])
+            color_group = (
+                input_socket.name[-2:]
+                if input_socket.name.endswith(color_groups)
+                else None
+            )
+
+            if not color_group:
+                continue
+
+            context.view_layer.objects.active = cloth_obj
+
+            bpy.ops.hg3d.color_random(
+                input_name=input_socket.name, color_group=color_group
+            )
+
+        context.view_layer.objects.active = old_active
+
     def _set_geometry_masks(
         self, mask_remove_list: list[str], new_mask_list: list[str]
     ) -> None:
@@ -308,26 +449,6 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         return cloth_objs, collections
 
-    def remove(self) -> list[str]:
-        """Removes the cloth objects that were already on the human
-
-        Args:
-            pref (AddonPreferences): preferences of HumGen
-            hg_rig (Object): HumGen armature
-            tag (str): tag for identifying cloth and shoe objects
-
-        Returns:
-            list: list of geometry masks that need to be removed
-        """
-        # removes previous outfit/shoes if the preferences option is True
-        mask_remove_list = []
-
-        for obj in self.objects:
-            mask_remove_list.extend(find_masks(obj))
-            hg_delete(obj)
-
-        return mask_remove_list
-
     def _set_cloth_corrective_drivers(
         self, hg_cloth: bpy.types.Object, sk: bpy.types.ShapeKey
     ) -> None:
@@ -363,95 +484,6 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             new_target.bone_target = old_target.bone_target
             new_target.transform_type = old_target.transform_type
             new_target.transform_space = old_target.transform_space
-
-    # TODO item independent
-    def set_texture_resolution(
-        self, clothing_item: bpy.types.Object, resolution_category: str
-    ) -> None:
-        if resolution_category == "performance":
-            resolution_tag = "low"
-        elif resolution_category == "optimised":
-            resolution_tag = "medium"
-
-        mat = clothing_item.data.materials[0]
-        nodes = mat.node_tree.nodes
-
-        for node in [n for n in nodes if n.bl_idname == "ShaderNodeTexImage"]:
-            image = node.image
-
-            if not image:
-                continue
-
-            old_color_setting = image.colorspace_settings.name
-
-            img_dir = os.path.dirname(image.filepath)
-            filename, ext = os.path.splitext(os.path.basename(image.filepath))
-
-            if filename.endswith("_MEDIUM"):
-                filename = filename[:-7]
-            elif filename.endswith("_LOW"):
-                filename = filename[:-4]
-
-            if resolution_category == "high":
-                new_filename = filename + ext
-            else:
-                new_filename = filename + f"_{resolution_tag.upper()}" + ext
-
-            new_path = os.path.join(img_dir, new_filename)
-
-            if not os.path.isfile(new_path):
-                hg_log(
-                    "Could not find other resolution for outfit texture: ",
-                    new_path,
-                    level="WARNING",
-                )
-                return
-
-            new_image = bpy.data.images.load(new_path, check_existing=True)
-            node.image = new_image
-            new_image.colorspace_settings.name = old_color_setting
-
-    @injected_context
-    def randomize_colors(self, cloth_obj: bpy.types.Object, context: C = None) -> None:
-        mat = cloth_obj.data.materials[0]
-        if not mat:
-            return
-        nodes = mat.node_tree.nodes
-
-        control_node = nodes.get("HG_Control")
-        if not control_node:
-            hg_log(
-                f"Could not set random color for {cloth_obj.name}, control node not found",  # noqa E501
-                level="WARNING",
-            )
-            return
-
-        # TODO Rewrite color_random so it doesn't need to be called as operator
-        old_active = context.view_layer.objects.active
-
-        colorgroups_json = "colorgroups.json"
-
-        with open(colorgroups_json) as f:
-            color_dict = json.load(f)
-
-        for input_socket in control_node.inputs:
-            color_groups = tuple(["_{}".format(name) for name in color_dict])
-            color_group = (
-                input_socket.name[-2:]
-                if input_socket.name.endswith(color_groups)
-                else None
-            )
-
-            if not color_group:
-                continue
-
-            context.view_layer.objects.active = cloth_obj
-
-            bpy.ops.hg3d.color_random(
-                input_name=input_socket.name, color_group=color_group
-            )
-
-        context.view_layer.objects.active = old_active
 
     @injected_context
     def _calc_percentage_clipping_vertices(self, context: C = None) -> float:
@@ -526,35 +558,3 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 hash_coll.append(hash(tuple(node_names)))
 
         return hash(tuple(hash_coll))
-
-    @injected_context
-    def save_to_library(
-        self,
-        name: str,
-        for_male: bool = True,
-        for_female: bool = True,
-        open_when_finished: bool = False,
-        category: str = "Custom",
-        thumbnail: Optional[bpy.types.Image] = None,
-        context: C = None,
-    ) -> None:
-        genders = []
-        if for_male:
-            genders.append("male")
-        if for_female:
-            genders.append("female")
-
-        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
-        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
-
-        save_clothing(
-            self._human,
-            folder,
-            category,
-            name,
-            context,
-            self.objects,
-            genders,
-            open_when_finished,
-            thumbnail=thumbnail,
-        )

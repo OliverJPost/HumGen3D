@@ -122,6 +122,32 @@ class ExpressionSettings(PreviewCollectionContent):
 
         self._human.body_obj["facial_rig"] = 1  # type:ignore[index]
 
+    def remove_facial_rig(self) -> None:
+        if "facial_rig" not in self._human.body_obj:  # type:ignore[operator]
+            raise HumGenException("No facial rig found on this human")
+
+        # TODO give bones custom property if they're part of the face rig
+        for b_name in FACE_RIG_BONE_NAMES:
+            b = self._human.pose_bones[b_name]  # type:ignore[index]
+            b.bone.hide = True
+
+        # TODO this is a bit heavy if we don't need the coordinates
+        json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        for sk_name in data["teeth"]:
+            sk = self._human.lower_teeth_obj.data.shape_keys.key_blocks.get(sk_name)
+            self._human.lower_teeth_obj.shape_key_remove(sk)
+
+        for sk_name in data["body"]:
+            sk = self._human.keys.get(sk_name)
+            self._human.body_obj.shape_key_remove(sk.as_bpy())
+
+        del self._human.body_obj["facial_rig"]
+
+        remove_broken_drivers()
+
     def _load_FACS_sks(self, context: bpy.types.Context) -> None:
         """Imports the needed FACS shapekeys to be used by the rig"""
 
@@ -152,29 +178,3 @@ class ExpressionSettings(PreviewCollectionContent):
                 sk.data.foreach_set("co", adjusted_vert_co)
 
                 self._human.keys._add_driver(sk, sk_data)
-
-    def remove_facial_rig(self) -> None:
-        if "facial_rig" not in self._human.body_obj:  # type:ignore[operator]
-            raise HumGenException("No facial rig found on this human")
-
-        # TODO give bones custom property if they're part of the face rig
-        for b_name in FACE_RIG_BONE_NAMES:
-            b = self._human.pose_bones[b_name]  # type:ignore[index]
-            b.bone.hide = True
-
-        # TODO this is a bit heavy if we don't need the coordinates
-        json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
-        with open(json_path, "r") as f:
-            data = json.load(f)
-
-        for sk_name in data["teeth"]:
-            sk = self._human.lower_teeth_obj.data.shape_keys.key_blocks.get(sk_name)
-            self._human.lower_teeth_obj.shape_key_remove(sk)
-
-        for sk_name in data["body"]:
-            sk = self._human.keys.get(sk_name)
-            self._human.body_obj.shape_key_remove(sk.as_bpy())
-
-        del self._human.body_obj["facial_rig"]
-
-        remove_broken_drivers()

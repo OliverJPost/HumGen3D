@@ -13,9 +13,6 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 
 
 class SavableContent:
-    def save_to_library(self) -> None:
-        raise NotImplementedError
-
     @staticmethod
     def save_objects_optimized(
         context: bpy.types.Context,
@@ -159,3 +156,6 @@ class SavableContent:
             return name
         else:
             return name.replace(re_suffix.group(0), "")
+
+    def save_to_library(self) -> None:
+        raise NotImplementedError

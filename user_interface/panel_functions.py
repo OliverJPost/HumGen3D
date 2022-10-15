@@ -46,19 +46,19 @@ def draw_paragraph(
     words = text.split(" ")
     length = 0
     lines = [
-        list(),
+        [],
     ]
     for word in words:
         if "\n" in word:
             length = 0
             lines[-1].append(word)
             lines.append("WHITESPACE")
-            lines.append(list())
+            lines.append([])
             continue
         length += sum([char_width(char) for char in word]) + 3
         if length >= max_width_percentage:
             length = 0
-            lines.append(list())
+            lines.append([])
 
         lines[-1].append(word)
 

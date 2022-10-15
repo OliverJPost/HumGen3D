@@ -51,11 +51,6 @@ class PatternSettings(PreviewCollectionContent):
         chosen = random.choice(options)
         self.set(chosen, obj)
 
-    def _set(self, context: bpy.types.Context) -> None:
-        obj = context.object
-        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
-        self.set(active_item, obj)
-
     def remove(self, obj: bpy.types.Object) -> None:
         mat = obj.active_material
         for node_name in self._node_names:
@@ -73,6 +68,11 @@ class PatternSettings(PreviewCollectionContent):
                 0,
                 1,
             )
+
+    def _set(self, context: bpy.types.Context) -> None:
+        obj = context.object
+        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
+        self.set(active_item, obj)
 
     def _create_node_if_doesnt_exist(self, name: str) -> ShaderNode:
         """Returns the node, creating it if it doesn't exist

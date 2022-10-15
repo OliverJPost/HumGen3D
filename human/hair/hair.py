@@ -47,32 +47,6 @@ class HairSettings:
 
         return ishidden
 
-    def children_set_hide(self, hide: bool) -> None:
-        for ps in self._human.hair.particle_systems:
-            if hide:
-                ps.settings.child_nbr = 1
-            else:
-                render_children = ps.settings.rendered_child_count
-                ps.settings.child_nbr = render_children
-
-    def _delete_opposite_gender_specific(self) -> None:
-        """Deletes the hair of the opposite gender
-
-        Args:
-            hg_body (Object): hg body object
-            gender (str): gender of this human
-        """
-        ps_delete_dict = {
-            "female": ("Eyebrows_Male", "Eyelashes_Male"),
-            "male": ("Eyebrows_Female", "Eyelashes_Female"),
-        }
-
-        gender = self._human.gender
-
-        # TODO make into common func
-        for ps_name in ps_delete_dict[gender]:
-            self.remove_system_by_name(ps_name)
-
     @property
     def particle_systems(self) -> bpy_prop_collection:
         return self._human.body_obj.particle_systems
@@ -87,17 +61,17 @@ class HairSettings:
             ]
         )
 
+    def children_set_hide(self, hide: bool) -> None:
+        for ps in self._human.hair.particle_systems:
+            if hide:
+                ps.settings.child_nbr = 1
+            else:
+                render_children = ps.settings.rendered_child_count
+                ps.settings.child_nbr = render_children
+
     def remove_system_by_name(self, name: str) -> None:
         mod = next(m for m in self.modifiers if m.particle_system.name == name)
         self._human.body_obj.modifiers.remove(mod)
-
-    def _add_quality_props(self) -> None:
-        for psys in self.particle_systems:
-            ps = psys.settings
-            ps["steps"] = ps.render_step
-            ps["children"] = ps.rendered_child_count
-            ps["root"] = ps.root_radius
-            ps["tip"] = ps.tip_radius
 
     def convert_to_new_hair_shader(self, hg_body: bpy.types.Object) -> None:
         hair_mats = hg_body.data.materials[1:3]
@@ -179,6 +153,24 @@ class HairSettings:
 
         return new_steps
 
+    def _delete_opposite_gender_specific(self) -> None:
+        """Deletes the hair of the opposite gender
+
+        Args:
+            hg_body (Object): hg body object
+            gender (str): gender of this human
+        """
+        ps_delete_dict = {
+            "female": ("Eyebrows_Male", "Eyelashes_Male"),
+            "male": ("Eyebrows_Female", "Eyelashes_Female"),
+        }
+
+        gender = self._human.gender
+
+        # TODO make into common func
+        for ps_name in ps_delete_dict[gender]:
+            self.remove_system_by_name(ps_name)
+
     def _get_child_amount(
         self,
         hair_quality: Literal["high", "medium", "low", "ultralow"],
@@ -206,3 +198,11 @@ class HairSettings:
         new_tip = max_tip * multiplication_dict[hair_quality]
 
         return new_root, new_tip
+
+    def _add_quality_props(self) -> None:
+        for psys in self.particle_systems:
+            ps = psys.settings
+            ps["steps"] = ps.render_step
+            ps["children"] = ps.rendered_child_count
+            ps["root"] = ps.root_radius
+            ps["tip"] = ps.tip_radius

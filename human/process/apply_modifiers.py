@@ -214,7 +214,7 @@ def build_object_list(
         for human in humans:
             if not human:
                 continue
-            objs.extend([child for child in human.children])
+            objs.extend(list(human.children))
     return list(set(objs))
 
 
