@@ -118,12 +118,11 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
 
     @no_type_check
     def apply(self, context, sett, mod, obj):
-        apply = (
-            False
-            if sett.modapply_apply_hidden
-            and not all((mod.show_viewport, mod.show_render))
-            else True
-        )
+        if sett.modapply_apply_hidden and not mod.show_viewport and not mod.show_render:
+            apply = False
+        else:
+            apply = True
+
         if apply:
             context.view_layer.objects.active = obj
             try:

@@ -164,7 +164,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         """
         p_flow, p_box = self.make_box_flow(layout, "Pattern", "NODE_TEXTURE")
 
-        pattern = True if control_node.inputs[9].is_linked else False
+        pattern = control_node.inputs[9].is_linked
 
         if pattern:
             self._draw_pattern_selector_ui(sett, control_node, p_flow)
@@ -176,9 +176,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
             "hg3d.pattern",
             text="Remove" if pattern else "Add Pattern",
             icon="TRASH" if pattern else "TEXTURE",
-        ).add = (
-            False if pattern else True
-        )
+        ).add = not pattern
 
         if pattern:
             row.popover(
