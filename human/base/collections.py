@@ -7,7 +7,7 @@ import bpy
 def add_to_collection(
     context: bpy.types.Context, obj: bpy.types.Object, collection_name: str = "HumGen"
 ) -> bpy.types.Collection:
-    """Adds the giver object toa colleciton. By default added to HumGen collection
+    """Adds the giver object toa colleciton. By default added to HumGen collection.
 
     Args:
         obj (Object): object to add to collection

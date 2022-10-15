@@ -27,11 +27,12 @@ def bpy_only(func: F) -> F:
 
 class PropCollection:
     def __init__(self, collection: Union[bpy_prop_collection, Iterable[ID]]) -> None:
+        """Create a new PropCollection from either bpy_prop_collection or custom."""
         self.is_bpy = isinstance(collection, bpy_prop_collection)
         self._collection = collection
 
     def find(self, item_name: str) -> int:
-        """Find index of item in prop collection
+        """Find index of item in prop collection.
 
         Args:
             item_name (str): Name of item to find

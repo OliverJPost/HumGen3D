@@ -8,8 +8,7 @@ import bpy
 def build_driver_dict(
     obj: bpy.types.Object, remove: bool = True
 ) -> dict[str, dict[str, Any]]:
-    """Builds a dictionary of drivers on this object, saving their settings to
-    be re-used later
+    """Builds a dictionary of drivers on this object, to be re-used later.
 
     Args:
         obj    (Object)        : object to index drivers from

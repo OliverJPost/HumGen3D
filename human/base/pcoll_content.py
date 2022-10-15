@@ -21,8 +21,9 @@ class PreviewCollectionContent:
     def _find_folders(
         pcoll_name: str, gender_toggle: bool, gender: str, include_all: bool = True
     ) -> BpyEnum:
-        """Gets enum of folders found in a specific directory. T
-        hese serve as categories for that specific pcoll
+        """Gets enum of folders found in a specific directory.
+
+        These serve as categories for that specific pcoll
 
         Args:
             context (bpy.context): blender context
@@ -38,7 +39,6 @@ class PreviewCollectionContent:
         Returns:
             list: enum of folders
         """
-
         pref = get_prefs()
 
         folder = PREVIEW_COLLECTION_DATA[pcoll_name][2]
@@ -144,7 +144,7 @@ class PreviewCollectionContent:
     def refresh_pcoll(
         self, context: C = None, ignore_category_and_searchterm: bool = False
     ) -> None:
-        """Refresh the items of this preview collection"""
+        """Refresh the items of this preview collection."""
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         self._check_for_HumGen_filepath_issues()
         pcoll_name = self._pcoll_name
@@ -160,7 +160,7 @@ class PreviewCollectionContent:
         # the 'click here to select' item
 
     def _get_full_options(self) -> BpyEnum:
-        """Internal way of getting content, only used by enum properties"""
+        """Internal way of getting content, only used by enum properties."""
         pcoll = preview_collections.get(self._pcoll_name).pcoll
         if not pcoll:
             return [
@@ -170,7 +170,7 @@ class PreviewCollectionContent:
         return pcoll[self._pcoll_name]
 
     def _set(self, context: bpy.types.Context) -> None:
-        """Internal way of setting content, only used by enum properties"""
+        """Internal way of setting content, only used by enum properties."""
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         if sett.update_exception:
             return
