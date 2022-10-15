@@ -11,6 +11,7 @@ When saving/exporting the cpack, each item that has include = True will
 be saved/exported
 """
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -449,12 +450,11 @@ def _get_other_content_set(context, pref):
     for item in context.scene.contentpacks_col:
         if item.pack_name == pref.cpack_name:
             continue
-        try:
-            with open(item.json_path, "r") as f:
-                json_data = json.load(f)
-                other_cpacks_content.extend(json_data["files"])
-        except (KeyError, FileNotFoundError):
-            pass
+        with contextlib.suppress(KeyError, FileNotFoundError), open(
+            item.json_path, "r"
+        ) as f:
+            json_data = json.load(f)
+            other_cpacks_content.extend(json_data["files"])
 
     other_cpacks_content_set = set(map(os.path.normpath, other_cpacks_content))
     return other_cpacks_content_set

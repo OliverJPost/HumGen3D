@@ -49,7 +49,7 @@ def find_existing_shapekeys(cc_sett, pref):
         walker = os.walk(os.path.join(pref.filepath, "models", "shapekeys"))
         for root, _, filenames in walker:
             for fn in filenames:
-                if not os.path.splitext(fn)[1] == ".json":
+                if os.path.splitext(fn)[1] != ".json":
                     continue
                 with open(os.path.join(root, fn)) as f:
                     data = json.load(f)

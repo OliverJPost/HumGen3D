@@ -246,7 +246,7 @@ class HGPanel:
             these error messages
         """
 
-        if not context.mode == "OBJECT":
+        if context.mode != "OBJECT":
             layout.alert = True
             layout.label(text="HumGen only works in Object Mode")
             return True
@@ -293,11 +293,11 @@ class MainPanelPart(HGPanel):
         if not super().poll(context):
             return False
         sett = context.scene.HG3D  # type:ignore[attr-defined]
-        if not sett.ui.active_tab == "CREATE":
-            return False
-        elif not sett.ui.phase == cls.phase_name:
-            return False
-        elif sett.custom_content.content_saving_ui:
+        if (
+            sett.ui.active_tab != "CREATE"
+            or sett.ui.phase != cls.phase_name
+            or sett.custom_content.content_saving_ui
+        ):
             return False
         human = Human.from_existing(context.object, strict_check=False)
         if not human:
