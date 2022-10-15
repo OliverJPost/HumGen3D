@@ -205,7 +205,7 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
             "hg3d.section_toggle", text=label, icon=icon, emboss=False
         ).section_name = ui_name
 
-    is_open = True if self.sett.ui.phase == ui_name else False
+    is_open = self.sett.ui.phase == ui_name
     return is_open, box
 
 

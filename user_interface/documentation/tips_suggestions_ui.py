@@ -52,7 +52,7 @@ def draw_tips_suggestions_ui(layout, context):
     )
 
     tips_col = context.scene.hg_tips_and_suggestions
-    if not len(tips_col):
+    if not tips_col:
         row = layout.row()
         row.enabled = False
         row.label(text="No active tips.")

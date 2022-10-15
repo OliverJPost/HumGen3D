@@ -4,13 +4,10 @@ import functools
 import os
 from pathlib import Path
 
-
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.ui_properties import (
-    active_phase_enum,
-)
+from HumGen3D.backend.properties.ui_properties import active_phase_enum
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -86,7 +83,7 @@ class HGPanel:
             return True
 
         general_problem = self._warning_header(context, layout)
-        if general_problem:
+        if general_problem:  # noqa
             return True
 
         return False  # no problems found
@@ -179,7 +176,7 @@ class HGPanel:
                 text=label,
                 icon="PACKAGE",
                 depress=True,
-                emboss=True if self.update == "addon" else False,
+                emboss=self.update == "addon",
             )
             return False
 
@@ -426,7 +423,7 @@ class MainPanelPart(HGPanel):
         human = Human.from_existing(context.object, strict_check=False)
         if not human:
             return False
-        if human.is_batch_result[0]:
+        if human.is_batch_result[0]:  # noqa
             return False
         return True
 

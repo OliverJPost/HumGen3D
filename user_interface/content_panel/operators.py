@@ -36,7 +36,7 @@ def refresh_shapekeys_ul(self, context):
         if sk.name in previously_enabled_items:
             item.enabled = True
 
-        item.on = True if not sk.mute else False
+        item.on = not sk.mute
         if not item.on:
             item.enabled = False
 
