@@ -16,6 +16,7 @@ class EyebrowSettings(BaseHair):
     _startswith = "Eyebrows"
 
     def __init__(self, human: "Human") -> None:
+        """Create instance for manipulating human eyebrows."""
         self._human = human
         self._startswith = "Eyebrow"
 
@@ -42,8 +43,7 @@ class EyebrowSettings(BaseHair):
         context.view_layer.objects.active = old_active
 
     def _set_from_preset(self, preset_eyebrow: str) -> None:
-        """Sets the eyebrow named in preset_data as the only visible eyebrow
-        system
+        """Sets the eyebrow named in preset_data as the only visible eyebrow system.
 
         Args:
             hg_body (Object): humgen body obj

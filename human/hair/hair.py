@@ -20,6 +20,7 @@ from ..hair.eyebrows import EyebrowSettings
 
 class HairSettings:
     def __init__(self, human: "Human") -> None:
+        """Create instance that points to different hair categories."""
         self._human = human
 
     @property  # TODO make cached
@@ -154,7 +155,7 @@ class HairSettings:
         return new_steps
 
     def _delete_opposite_gender_specific(self) -> None:
-        """Deletes the hair of the opposite gender
+        """Deletes the hair of the opposite gender.
 
         Args:
             hg_body (Object): hg body object

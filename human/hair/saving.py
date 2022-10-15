@@ -74,7 +74,7 @@ def save_hair(
 
 
 def _find_vgs_used_by_hair(hair_obj: bpy.types.Object) -> list[str]:
-    """Get a list of all vertex groups used by the hair systems
+    """Get a list of all vertex groups used by the hair systems.
 
     Args:
         hair_obj (bpy.types.Object): Human body the hair is on
@@ -108,7 +108,7 @@ def _find_vgs_used_by_hair(hair_obj: bpy.types.Object) -> list[str]:
 
 
 def _remove_other_systems(obj: bpy.types.Object, keep_list: Iterable[str]) -> None:
-    """Remove particle systems that are nog going to be saved
+    """Remove particle systems that are nog going to be saved.
 
     Args:
         obj (bpy.types.Object): Human body object to remove systems from
@@ -127,7 +127,7 @@ def _remove_other_systems(obj: bpy.types.Object, keep_list: Iterable[str]) -> No
 
 
 def _make_hair_json(hair_obj: bpy.types.Object, folder: str, style_name: str) -> None:
-    """Make a json that contains the settings for this hairstyle and save it
+    """Make a json that contains the settings for this hairstyle and save it.
 
     Args:
         context (context): bl context
