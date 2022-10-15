@@ -331,9 +331,9 @@ def find_item_amount(  # TODO might be redundant
         ext = ".blend"
 
     if gender:
-        dir = os.path.join(pref.filepath, categ, gender, folder)
+        directory = os.path.join(pref.filepath, categ, gender, folder)
     else:
-        dir = os.path.join(pref.filepath, categ, folder)
+        directory = os.path.join(pref.filepath, categ, folder)
 
     if categ == "outfit":
         sett = context.scene.HG3D  # type:ignore[attr-defined]
@@ -344,4 +344,4 @@ def find_item_amount(  # TODO might be redundant
         elif outside and not inside:
             ext = "O.blend"
 
-    return len([name for name in os.listdir(dir) if name.endswith(ext)])
+    return len([name for name in os.listdir(directory) if name.endswith(ext)])

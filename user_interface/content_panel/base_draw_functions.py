@@ -186,7 +186,7 @@ def _draw_save_button(layout, content_type, poll=True):
         text="",
         icon="TRIA_LEFT",
         depress=True,
-    ).next = False
+    ).go_next = False
 
     row = split.row(align=True)
     row.enabled = poll
@@ -274,7 +274,7 @@ def _draw_next_button(layout, poll=True):
             text="Previous",
             icon="TRIA_LEFT",
             depress=True,
-        ).next = False
+        ).go_next = False
 
     # Hide next button if poll is False
     if not poll:
@@ -286,4 +286,4 @@ def _draw_next_button(layout, poll=True):
         text="Next",
         icon="TRIA_RIGHT",
         depress=True,
-    ).next = True
+    ).go_next = True

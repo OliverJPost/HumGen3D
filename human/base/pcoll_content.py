@@ -80,7 +80,7 @@ class PreviewCollectionContent:
             return enum_list
 
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
+    def set(self, preset: str, context: C = None) -> None:  # noqa A001
         raise NotImplementedError
 
     @injected_context

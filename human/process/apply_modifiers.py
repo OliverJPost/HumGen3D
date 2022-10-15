@@ -60,7 +60,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         for item in col:
             if (
                 item.mod_type == "ARMATURE"
-                and (item.count or item.object == obj)
+                and (item.count or item.obj == obj)
                 and item.enabled
             ):
                 apply = True
@@ -92,7 +92,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         else:
             for item in [item for item in col if item.enabled]:
                 try:
-                    obj = item.object
+                    obj = item.obj
                     mod = obj.modifiers[item.mod_name]
                     self.apply(context, sett, mod, obj)
                     if sett.modapply_keep_shapekeys:
@@ -101,7 +101,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                 except Exception as e:
                     hg_log(
                         f"Error while applying modifier {item.mod_name} on ",
-                        f"{item.object}, with error as {e}",
+                        f"{item.obj}, with error as {e}",
                         level="WARNING",
                     )
 
@@ -141,17 +141,17 @@ class HG_OT_REFRESH_UL(bpy.types.Operator):
     bl_label = "Refresh list"
     bl_description = "Refresh list"
 
-    type: bpy.props.StringProperty()
+    uilist_type: bpy.props.StringProperty()
 
     @no_type_check
     def execute(self, context):
-        if self.type == "modapply":
+        if self.uilist_type == "modapply":
             refresh_modapply(self, context)
-        elif self.type == "shapekeys":
+        elif self.uilist_type == "shapekeys":
             refresh_shapekeys_ul(self, context)
-        elif self.type == "hair":
+        elif self.uilist_type == "hair":
             refresh_hair_ul(self, context)
-        elif self.type == "outfit":
+        elif self.uilist_type == "outfit":
             refresh_outfit_ul(self, context)
         return {"FINISHED"}
 
@@ -162,7 +162,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
     bl_description = "Select all/none modifiers"
     bl_options = {"UNDO"}
 
-    all: bpy.props.BoolProperty()
+    select_all: bpy.props.BoolProperty()
 
     @no_type_check
     def execute(self, context):
@@ -171,7 +171,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         refresh_modapply(self, context)
 
         for item in col:
-            item.enabled = self.all
+            item.enabled = self.select_all
 
         return {"FINISHED"}
 
@@ -228,7 +228,7 @@ def build_full_list(
     item.viewport_visible = mod.show_viewport
     item.render_visible = mod.show_render
     item.count = 0
-    item.object = obj
+    item.obj = obj
 
     if mod.type in ["ARMATURE", "SUBSURF"]:
         item.enabled = False

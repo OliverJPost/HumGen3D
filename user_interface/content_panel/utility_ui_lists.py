@@ -71,7 +71,7 @@ class MODAPPLY_ITEM(bpy.types.PropertyGroup):
     render_visible: bpy.props.BoolProperty(default=True)
     viewport_visible: bpy.props.BoolProperty(default=True)
     count: bpy.props.IntProperty(default=0)
-    object: bpy.props.PointerProperty(type=bpy.types.Object)
+    obj: bpy.props.PointerProperty(type=bpy.types.Object)
 
 
 class HG_UL_SHAPEKEYS(bpy.types.UIList):
