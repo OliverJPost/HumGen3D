@@ -55,7 +55,7 @@ be visible at full density.
 
 
 def hair_children(layout):
-    for i, line in enumerate(hair_children_txt.splitlines()):
+    for line in hair_children_txt.splitlines():
         layout.label(text=line)
 
 
@@ -68,7 +68,7 @@ render hardware.
 
 
 def subsurface(layout):
-    for i, line in enumerate(subsurface_txt.splitlines()):
+    for line in subsurface_txt.splitlines():
         layout.label(text=line)
 
 
@@ -79,7 +79,7 @@ completed models.
 
 
 def completed(layout):
-    for i, line in enumerate(completed_txt.splitlines()):
+    for line in completed_txt.splitlines():
         layout.label(text=line)
 
 
@@ -102,7 +102,7 @@ down to calculate gravity.
 
 
 def hairsim_type(layout):
-    for i, line in enumerate(hairsim_type_txt.splitlines()):
+    for line in hairsim_type_txt.splitlines():
         layout.label(text=line)
 
 
@@ -122,7 +122,7 @@ on the movements of your charachter.
 
 
 def clothsim_type(layout):
-    for i, line in enumerate(clothsim_type_txt.splitlines()):
+    for line in clothsim_type_txt.splitlines():
         layout.label(text=line)
 
 
@@ -137,7 +137,7 @@ If you want to get the non-rigify rig back, there are two options:
 
 
 def rigify_library(layout):
-    for i, line in enumerate(rigify_library_txt.splitlines()):
+    for line in rigify_library_txt.splitlines():
         layout.label(text=line)
 
 
@@ -152,7 +152,7 @@ You can also turn off this popup in the preferences"""
 
 
 def autohide_hair(layout):
-    for i, line in enumerate(autohide_hair_txt.splitlines()):
+    for line in autohide_hair_txt.splitlines():
         layout.label(text=line)
 
 
@@ -169,7 +169,7 @@ humans.
 
 
 def starting_human(layout):
-    for i, line in enumerate(starting_human_txt.splitlines()):
+    for line in starting_human_txt.splitlines():
         layout.label(text=line)
 
 
@@ -188,7 +188,7 @@ posing and other systems of Human Generator.
 
 
 def experimental(layout):
-    for i, line in enumerate(experimental_txt.splitlines()):
+    for line in experimental_txt.splitlines():
         layout.label(text=line)
 
 
@@ -208,7 +208,7 @@ texture set.
 
 
 def batch_texture_bake_res(layout):
-    for i, line in enumerate(batch_texture_bake_res_txt.splitlines()):
+    for line in batch_texture_bake_res_txt.splitlines():
         layout.label(text=line)
 
 
@@ -219,5 +219,5 @@ this human than usual.
 
 
 def batch_result(layout):
-    for i, line in enumerate(batch_result_txt.splitlines()):
+    for line in batch_result_txt.splitlines():
         layout.label(text=line)

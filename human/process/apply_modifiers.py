@@ -96,8 +96,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                     mod = obj.modifiers[item.mod_name]
                     self.apply(context, sett, mod, obj)
                     if sett.modapply_keep_shapekeys:
-                        for obj in sk_dict[obj.name]:
-                            self.apply(context, sett, mod, obj)
+                        for o in sk_dict[obj.name]:
+                            self.apply(context, sett, mod, o)
                 except Exception as e:
                     hg_log(
                         f"Error while applying modifier {item.mod_name} on ",
