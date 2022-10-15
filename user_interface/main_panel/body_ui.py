@@ -2,20 +2,19 @@
 
 import bpy
 
-
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
-    bl_idname = "HG_PT_Body"
-    phase_name = "body"
-
     """First section shown to the user after adding a human
 
     Shows sliders for body proportion shapekeys, including a randomize
     button for these sliders
     Also shows a collapsable menu for changing individual body part size
     """
+
+    bl_idname = "HG_PT_Body"
+    phase_name = "body"
 
     @subpanel_draw
     def draw(self, context):
@@ -37,7 +36,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         col.separator()
 
         keys = self.human.body.keys
-        subcategories = set(key.subcategory for key in keys)
+        subcategories = {key.subcategory for key in keys}
 
         self.box_main = col.column(align=True)
         self.box_main.scale_y = 1.5

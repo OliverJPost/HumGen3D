@@ -46,6 +46,29 @@ class HeightSettings:
 
         return cast(float, top_coord - bottom_coord)
 
+    @staticmethod
+    def _correct_teeth_obj(
+        obj: bpy.types.Object,
+        bone_name: str,
+        reference_vector: Vector,
+        armature: bpy.types.Armature,
+    ) -> None:
+        vert_count = len(obj.data.vertices)
+        verts = np.empty(vert_count * 3, dtype=np.float64)
+        obj.data.vertices.foreach_get("co", verts)
+        verts = verts.reshape((-1, 3))
+
+        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
+        transformation = np.array(
+            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
+        )
+
+        verts += transformation
+
+        verts = verts.reshape((-1))
+        obj.data.vertices.foreach_set("co", verts)
+        obj.data.update()
+
     @injected_context
     def set(self, value_cm: float, context: C = None, realtime: bool = False) -> None:
         if context.scene.HG3D.update_exception:
@@ -180,29 +203,6 @@ class HeightSettings:
         self._correct_teeth_obj(
             teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003)), armature
         )
-
-    @staticmethod
-    def _correct_teeth_obj(
-        obj: bpy.types.Object,
-        bone_name: str,
-        reference_vector: Vector,
-        armature: bpy.types.Armature,
-    ) -> None:
-        vert_count = len(obj.data.vertices)
-        verts = np.empty(vert_count * 3, dtype=np.float64)
-        obj.data.vertices.foreach_get("co", verts)
-        verts = verts.reshape((-1, 3))
-
-        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
-        transformation = np.array(
-            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
-        )
-
-        verts += transformation
-
-        verts = verts.reshape((-1))
-        obj.data.vertices.foreach_set("co", verts)
-        obj.data.update()
 
     @injected_context
     def randomize(self, context: C = None) -> None:

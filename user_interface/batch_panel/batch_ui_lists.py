@@ -132,7 +132,7 @@ def batch_uilist_refresh(self, context, categ):
         item = collection.add()
         item.name = folder[0]
         item.library_name = folder[0]
-        if folder[0] in [n for n in enabled_dict]:
+        if folder[0] in list(enabled_dict):
             item.enabled = enabled_dict[folder[0]]
         if gender:
             item.male_items = find_item_amount(context, categ, "male", folder[0])

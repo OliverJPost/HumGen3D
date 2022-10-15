@@ -358,9 +358,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 folder = "head" if categ == "hairstyles" else "face_hair"
                 associated_files.append(str(Path(f"/hair/{folder}/{blendfile}")))
 
-        mapped_associated_files = map(
-            lambda x: self._correct_relative_path(x, categ), associated_files
-        )
+        mapped_associated_files = [
+            self._correct_relative_path(x, categ) for x in associated_files
+        ]
 
         returnv = list(mapped_associated_files)
         return returnv

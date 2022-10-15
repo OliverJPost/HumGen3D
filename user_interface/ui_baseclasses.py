@@ -43,8 +43,15 @@ class HGPanel:
     bl_region_type = "UI"
     bl_category = "HumGen"
 
-    def draw(self, context):
-        raise NotImplementedError
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
 
     @classmethod
     def poll(cls, context):
@@ -52,6 +59,9 @@ class HGPanel:
         is_legacy = Human.is_legacy(context.object)
         content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
         return not is_legacy and not filepath_error and not content_saving_ui
+
+    def draw(self, context):
+        raise NotImplementedError
 
     def draw_info_and_warning_labels(self, context) -> bool:
         """Collection of all info and warning labels of HumGen
@@ -87,6 +97,31 @@ class HGPanel:
             return True
 
         return False  # no problems found
+
+    def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
+        """Returns a property split enabled UILayout
+
+        Args:
+            sett (PropertyGroup): HumGen props
+            layout (UILayout): layout to draw flor in
+            animation (bool, optional): show keyframe dot on row. Defaults to False.
+
+        Returns:
+            UILayout: flow layout
+        """
+
+        col_2 = layout.column(align=True)
+        col_2.use_property_split = True
+        col_2.use_property_decorate = animation
+
+        flow = col_2.grid_flow(
+            row_major=False,
+            columns=1,
+            even_columns=True,
+            even_rows=False,
+            align=True,
+        )  # TODO is this even necessary now property split is used?
+        return flow
 
     def _filepath_warning(self, layout) -> bool:
         """Shows warning if no filepath is selected
@@ -223,41 +258,6 @@ class HGPanel:
 
         return False
 
-    def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
-        """Returns a property split enabled UILayout
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            layout (UILayout): layout to draw flor in
-            animation (bool, optional): show keyframe dot on row. Defaults to False.
-
-        Returns:
-            UILayout: flow layout
-        """
-
-        col_2 = layout.column(align=True)
-        col_2.use_property_split = True
-        col_2.use_property_decorate = animation
-
-        flow = col_2.grid_flow(
-            row_major=False,
-            columns=1,
-            even_columns=True,
-            even_rows=False,
-            align=True,
-        )  # TODO is this even necessary now property split is used?
-        return flow
-
-    @staticmethod
-    def draw_centered_subtitle(text, layout, icon=None):
-        """Draw a small title that is centered. Optional icon."""
-        row = layout.row()
-        row.alignment = "CENTER"
-        if icon:
-            row.label(text=text, icon=icon)
-        else:
-            row.label(text=text)
-
 
 def draw_icon_title(text, row, has_icon):
     row = row.row()
@@ -287,6 +287,24 @@ def draw_icon_title(text, row, has_icon):
 
 class MainPanelPart(HGPanel):
     phase_name = None
+
+    @classmethod
+    def poll(cls, context):
+        if not super().poll(context):
+            return False
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        if not sett.ui.active_tab == "CREATE":
+            return False
+        elif not sett.ui.phase == cls.phase_name:
+            return False
+        elif sett.custom_content.content_saving_ui:
+            return False
+        human = Human.from_existing(context.object, strict_check=False)
+        if not human:
+            return False
+        if human.is_batch_result[0]:  # noqa
+            return False
+        return True
 
     def draw_header(self, context):
         layout = self.layout
@@ -408,24 +426,6 @@ class MainPanelPart(HGPanel):
 
         if self.phase_name != "closed":
             pass  # self.draw_back_button(self.layout)
-
-    @classmethod
-    def poll(cls, context):
-        if not super().poll(context):
-            return False
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        if not sett.ui.active_tab == "CREATE":
-            return False
-        elif not sett.ui.phase == cls.phase_name:
-            return False
-        elif sett.custom_content.content_saving_ui:
-            return False
-        human = Human.from_existing(context.object, strict_check=False)
-        if not human:
-            return False
-        if human.is_batch_result[0]:  # noqa
-            return False
-        return True
 
     def draw_back_button(self, layout):
         row = layout.column(align=True).row()

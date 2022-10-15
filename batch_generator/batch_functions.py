@@ -64,7 +64,8 @@ def _get_tag_from_dict(
     )
 
 
-def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:
+# FIXME
+def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:  # noqa
     """Calculates performance statistidcs of batch generator settings.
 
     Returns values to show the user how their choices in the batch settings

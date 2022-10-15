@@ -46,6 +46,30 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         if "Pattern" in control_node.inputs:
             self._draw_pattern_subsection(sett, layout, control_node)
 
+    def make_box_flow(self, layout, name, icon):
+        """creates a box with title
+
+        Args:
+            layout (UILayout): layout to draw box in
+            name (str): name to show as title
+            icon (str): code for icon to display next to title
+
+        Returns:
+            tuple(flow, box):
+                UILayout: flow below box
+                UILayout: box itself
+        """
+        box = layout.box()
+
+        row = box.row()
+        row.alignment = "CENTER"
+        row.label(text=name, icon=icon)
+
+        flow = get_flow(self.sett, box)
+        flow.scale_y = 1.2
+
+        return flow, box
+
     def _draw_clothmat_header(self, context, col):
         """Draws header for the clothing material UI, with clothing name,
         button to go back to normal UI and button to delete clothing item
@@ -233,30 +257,6 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
             text="Opacity",
             slider=True,
         )
-
-    def make_box_flow(self, layout, name, icon):
-        """creates a box with title
-
-        Args:
-            layout (UILayout): layout to draw box in
-            name (str): name to show as title
-            icon (str): code for icon to display next to title
-
-        Returns:
-            tuple(flow, box):
-                UILayout: flow below box
-                UILayout: box itself
-        """
-        box = layout.box()
-
-        row = box.row()
-        row.alignment = "CENTER"
-        row.label(text=name, icon=icon)
-
-        flow = get_flow(self.sett, box)
-        flow.scale_y = 1.2
-
-        return flow, box
 
 
 # TODO incorrect naming per Blender scheme

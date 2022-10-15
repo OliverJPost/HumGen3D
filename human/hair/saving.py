@@ -7,6 +7,7 @@ from HumGen3D.backend.type_aliases import GenderStr
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.backend.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
@@ -83,9 +84,7 @@ def _find_vgs_used_by_hair(hair_obj: bpy.types.Object) -> list[str]:
     """
     all_vgs = [vg.name for vg in hair_obj.vertex_groups]
     keep_vgs = []
-    for ps in [
-        ps for ps in hair_obj.particle_systems
-    ]:  # TODO only iterate over selected systems
+    for ps in hair_obj.particle_systems:  # TODO only iterate selected # type:ignore
         vg_types = [
             ps.vertex_group_clump,
             ps.vertex_group_density,

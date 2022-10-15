@@ -126,43 +126,6 @@ class SkinSettings:
             gender_specific_class = FemaleSkin  # type:ignore[assignment]
         return gender_specific_class(self.nodes)
 
-    def _mac_material_fix(self) -> None:
-        self.links.new(
-            self.nodes["Mix_reroute_1"].outputs[0],  # type:ignore[index]
-            self.nodes["Mix_reroute_2"].inputs[1],  # type:ignore[index]
-        )
-
-    def _set_gender_specific(self) -> None:
-        """Male and female humans of HumGen use the same shader, but one node
-        group is different. This function ensures the right nodegroup is connected
-        """
-        gender = self._human.gender
-        uw_node = self.nodes.get("Underwear_Switch")  # type:ignore[func-returns-value]
-
-        if uw_node:
-            uw_node.inputs[0].default_value = 1 if gender == "female" else 0
-
-        if gender == "male":
-            gender_specific_node = self.nodes["Gender_Group"]  # type:ignore[index]
-            male_node_group = next(
-                ng for ng in bpy.data.node_groups if ".HG_Beard_Shadow" in ng.name
-            )
-            gender_specific_node.node_tree = male_node_group
-
-    def _remove_opposite_gender_specific(self) -> None:
-        self.nodes.remove(
-            self.nodes.get("Delete_node")  # type:ignore[func-returns-value]
-        )
-
-    def _set_from_preset(self, preset_data: dict[str, dict[str, float]]) -> None:
-        for node_name, input_dict in preset_data.items():
-            node = self.nodes.get(node_name)  # type:ignore[func-returns-value]
-
-            for input_name, value in input_dict.items():
-                if input_name.isnumeric():
-                    input_name = int(input_name)  # type:ignore[assignment]
-                node.inputs[input_name].default_value = value
-
     def randomize(self) -> None:
         mat = self.material
         nodes = self.nodes
@@ -194,7 +157,6 @@ class SkinSettings:
             probability_list
         )
 
-        # Age
         age_value = random.choice([0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.5]) * 2
 
         self._human.keys["age_old.Transferred"].value = age_value
@@ -231,6 +193,43 @@ class SkinSettings:
         )  # type:ignore[func-returns-value]
 
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
+
+    def _mac_material_fix(self) -> None:
+        self.links.new(
+            self.nodes["Mix_reroute_1"].outputs[0],  # type:ignore[index]
+            self.nodes["Mix_reroute_2"].inputs[1],  # type:ignore[index]
+        )
+
+    def _set_gender_specific(self) -> None:
+        """Male and female humans of HumGen use the same shader, but one node
+        group is different. This function ensures the right nodegroup is connected
+        """
+        gender = self._human.gender
+        uw_node = self.nodes.get("Underwear_Switch")  # type:ignore[func-returns-value]
+
+        if uw_node:
+            uw_node.inputs[0].default_value = 1 if gender == "female" else 0
+
+        if gender == "male":
+            gender_specific_node = self.nodes["Gender_Group"]  # type:ignore[index]
+            male_node_group = next(
+                ng for ng in bpy.data.node_groups if ".HG_Beard_Shadow" in ng.name
+            )
+            gender_specific_node.node_tree = male_node_group
+
+    def _remove_opposite_gender_specific(self) -> None:
+        self.nodes.remove(
+            self.nodes.get("Delete_node")  # type:ignore[func-returns-value]
+        )
+
+    def _set_from_preset(self, preset_data: dict[str, dict[str, float]]) -> None:
+        for node_name, input_dict in preset_data.items():
+            node = self.nodes.get(node_name)  # type:ignore[func-returns-value]
+
+            for input_name, value in input_dict.items():
+                if input_name.isnumeric():
+                    input_name = int(input_name)  # type:ignore[assignment]
+                node.inputs[input_name].default_value = value
 
 
 class TextureSettings(PreviewCollectionContent):

@@ -30,21 +30,6 @@ class PropCollection:
         self.is_bpy = isinstance(collection, bpy_prop_collection)
         self._collection = collection
 
-    def __contains__(self, item: ID) -> bool:
-        return item in self._collection  # type:ignore[operator]
-
-    def __delitem__(self, item: ID) -> None:
-        del self._collection[item]
-
-    def __getitem__(self, item: str) -> ID:
-        return cast(ID, self._collection[item])  # type:ignore[index]
-
-    def __iter__(self) -> Iterable[ID]:
-        yield from self._collection  # type:ignore[misc]
-
-    def __len__(self) -> int:
-        return len(self._collection)  # type:ignore[arg-type]
-
     def find(self, item_name: str) -> int:
         """Find index of item in prop collection
 
@@ -68,9 +53,6 @@ class PropCollection:
                 (item for item in self._collection if item.name == item_name),
                 None,
             )
-
-    def __getattr__(self, attr: str) -> Any:
-        return getattr(self._collection, attr)
 
     @bpy_only
     def foreach_get(self, attr: str, sequence: ndarray[Any, Any]) -> None:
@@ -99,3 +81,21 @@ class PropCollection:
     @bpy_only
     def remove(self, *items: str) -> None:
         self._collection.remove(*items)
+
+    def __contains__(self, item: ID) -> bool:
+        return item in self._collection  # type:ignore[operator]
+
+    def __delitem__(self, item: ID) -> None:
+        del self._collection[item]
+
+    def __getitem__(self, item: str) -> ID:
+        return cast(ID, self._collection[item])  # type:ignore[index]
+
+    def __iter__(self) -> Iterable[ID]:
+        yield from self._collection  # type:ignore[misc]
+
+    def __len__(self) -> int:
+        return len(self._collection)  # type:ignore[arg-type]
+
+    def __getattr__(self, attr: str) -> Any:
+        return getattr(self._collection, attr)

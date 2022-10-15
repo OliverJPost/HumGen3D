@@ -39,16 +39,16 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
     bl_idname = "HG_PT_PROCESS"
     bl_label = "Process"
 
-    def draw_header(self, context) -> None:
-        draw_panel_switch_header(
-            self.layout, context.scene.HG3D
-        )  # type:ignore[attr-defined]
-
     @classmethod
     def poll(cls, context):
         if not super().poll(context):
             return False
         return context.scene.HG3D.ui.active_tab == "PROCESS"
+
+    def draw_header(self, context) -> None:
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         process_sett = context.scene.HG3D.process
