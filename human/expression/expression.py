@@ -73,6 +73,7 @@ FACE_RIG_BONE_NAMES = [
 
 class ExpressionSettings(PreviewCollectionContent):
     def __init__(self, _human: "Human") -> None:
+        """Create instance for manipulating human expression."""
         self._human = _human
         self._pcoll_name = "expression"
         self._pcoll_gender_split = False
@@ -82,7 +83,7 @@ class ExpressionSettings(PreviewCollectionContent):
         return self._human.keys.filtered("expression")
 
     def set(self, preset: str) -> None:  # noqa: A003
-        """Loads the active expression in the preview collection"""
+        """Loads the active expression in the preview collection."""
         pref = get_prefs()
 
         if preset == "none":
@@ -149,8 +150,7 @@ class ExpressionSettings(PreviewCollectionContent):
         remove_broken_drivers()
 
     def _load_FACS_sks(self, context: bpy.types.Context) -> None:
-        """Imports the needed FACS shapekeys to be used by the rig"""
-
+        """Imports the needed FACS shapekeys to be used by the rig."""
         json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
         with open(json_path, "r") as f:
             data = json.load(f)
