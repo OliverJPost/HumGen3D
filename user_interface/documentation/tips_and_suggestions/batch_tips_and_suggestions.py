@@ -23,7 +23,7 @@ the batch mode here:
         "wm.url_open",
         "Open tutorial in browser",
         "url",
-        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",  # TODO correct url # noqa: E501
+        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",  # TODO correct url # noqa
     ),
 ]
 

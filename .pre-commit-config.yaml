@@ -19,7 +19,7 @@ repos:
         name: flake8
         stages: [commit]
         language: python
-        entry: flake8 .
+        entry: flake8
         types: [python]
         exclude: setup.py
         additional_dependencies: [
