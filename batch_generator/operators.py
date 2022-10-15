@@ -16,8 +16,6 @@ from HumGen3D.human.base.render import set_eevee_ao_and_strip
 
 from .batch_functions import get_batch_marker_list, has_associated_human
 
-not "yes" in "no"
-
 
 class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
     bl_idname = "hg3d.add_batch_marker"

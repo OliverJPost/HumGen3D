@@ -100,7 +100,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                             self.apply(context, sett, mod, obj)
                 except Exception as e:
                     hg_log(
-                        f"Error while applying modifier {item.mod_name} on {item.object}, with error as {e}",
+                        f"Error while applying modifier {item.mod_name} on ",
+                        f"{item.object}, with error as {e}",
                         level="WARNING",
                     )
 
@@ -129,7 +130,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                 bpy.ops.object.modifier_apply(modifier=mod.name)
             except Exception as e:
                 hg_log(
-                    f"Error while applying modifier {mod.name} on {obj.name}, with error as {e}",
+                    f"Error while applying modifier {mod.name} on {obj.name}, ",
+                    f"with error as {e}",
                     level="WARNING",
                 )
 

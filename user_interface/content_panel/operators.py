@@ -95,9 +95,9 @@ def refresh_outfit_ul(self, context):
         o
         for o in hg_rig.children
         if o.type == "MESH"
-        and not "hg_body" in o
-        and not "hg_eyes" in o
-        and not "hg_teeth" in o
+        and "hg_body" not in o
+        and "hg_eyes" not in o
+        and "hg_teeth" not in o
     ]:
 
         item = col.add()
@@ -176,7 +176,10 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
             elif "cloth" in context.object:
                 show_message(
                     self,
-                    "This object is already HG clothing, are you sure you want to redo this process?",
+                    (
+                        "This object is already HG clothing, "
+                        + "are you sure you want to redo this process?"
+                    ),
                 )
 
         update_tips_from_context(context, cc_sett, cc_sett.content_saving_active_human)
@@ -210,7 +213,10 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         Returns:
             str: Message string to display to the user
         """
-        message = "This human uses custom shape keys that are not saved yet! \nPlease save these shapekeys using our 'Save custom shapekeys' button:\n"
+        message = (
+            "This human uses custom shape keys that are not saved yet! \n"
+            + "Please save these shapekeys using our 'Save custom shapekeys button:\n"
+        )
         for sk_name in unsaved_sks:
             message += f"- {sk_name}\n"
         return message

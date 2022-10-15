@@ -5,19 +5,18 @@ import os
 
 import bpy
 from HumGen3D.backend import get_prefs
-from HumGen3D.user_interface.documentation.tips_and_suggestions.batch_tips_and_suggestions import (
-    get_batch_tips_from_context,
-)
-from HumGen3D.user_interface.documentation.tips_and_suggestions.content_saving_tips_and_suggestions import (
+from HumGen3D.user_interface.icons.icons import get_hg_icon
+
+from .tips_and_suggestions.batch_tips_and_suggestions import get_batch_tips_from_context
+from .tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
-from HumGen3D.user_interface.documentation.tips_and_suggestions.extras_menu_tips_and_suggestions import (
+from .tips_and_suggestions.extras_menu_tips_and_suggestions import (
     get_extras_menu_tips_from_context,
 )
-from HumGen3D.user_interface.documentation.tips_and_suggestions.main_ui_tips_and_suggestions import (
+from .tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
-from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 lorum_ipsum = """
 Lorem ipsum dolor sit amet, consectetur

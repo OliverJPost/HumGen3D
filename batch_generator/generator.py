@@ -199,8 +199,6 @@ class BatchHumanGenerator:
                 level="WARNING",
             )
             print(background_blender.stderr.decode("utf-8"))  # noqa T201
-            # ShowMessageBox(message =
-            #    f'''An error occured while generating human, check the console for error details''') #noqa E501
 
     def __import_generated_human(self) -> bpy.types.Object:
         start_time_import = time.time()
