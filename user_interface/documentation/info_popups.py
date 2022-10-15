@@ -4,20 +4,7 @@ import bpy  # type: ignore
 
 
 class HG_OT_INFO(bpy.types.Operator):
-    """
-    Operator for showing a popup message when the questionmark icon is pressed.
-
-    API: False
-
-    Operator type:
-        Tutorial
-
-    Prereq:
-        None
-
-    Args:
-        info (str): Name of message function in this document
-    """
+    """Operator for showing a popup message when the questionmark icon is pressed."""
 
     bl_idname = "hg3d.showinfo"
     bl_label = ""
@@ -32,8 +19,8 @@ class HG_OT_INFO(bpy.types.Operator):
 
         return {"FINISHED"}
 
-    def ShowMessageBox(self, message_txt_key):
-        """Draw a message popup
+    def ShowMessageBox(self, message_txt_key: str) -> None:
+        """Draw a message popup.
 
         Args:
             message_txt_key (str): key to the message function in this file
@@ -47,7 +34,8 @@ class HG_OT_INFO(bpy.types.Operator):
         bpy.context.window_manager.popup_menu(draw, title="Info", icon="QUESTION")
 
 
-hair_children_txt = """Enabling hair children, especially at render density can really slow down
+hair_children_txt = """
+Enabling hair children, especially at render density can really slow down
 viewport performance. Therefore HumGen keeps them hidden by default,
 this includes viewport rendering. In your final renders the hair will
 be visible at full density.
@@ -59,7 +47,8 @@ def hair_children(layout):
         layout.label(text=line)
 
 
-subsurface_txt = """Subsurface scattering simulates light bouncing inside the skin instead of just on
+subsurface_txt = """
+Subsurface scattering simulates light bouncing inside the skin instead of just on
 top of the skin. This produces very realistic results, but it also drastically
 increases the render time and introduces color noise. It's recommended to turn
 this setting off until you do your final render if you don't have powerful
@@ -72,7 +61,8 @@ def subsurface(layout):
         layout.label(text=line)
 
 
-completed_txt = """This model has been completed, meaning it's no longer in the editing
+completed_txt = """
+This model has been completed, meaning it's no longer in the editing
 phase. Below you'll find the settings that are still accessible for
 completed models.
 """
@@ -83,7 +73,8 @@ def completed(layout):
         layout.label(text=line)
 
 
-hairsim_type_txt = """Choose what result you want from the simulation:
+hairsim_type_txt = """
+Choose what result you want from the simulation:
 
 Static:
 If you are making still renders. Use this mode when the default
@@ -106,7 +97,8 @@ def hairsim_type(layout):
         layout.label(text=line)
 
 
-clothsim_type_txt = """Choose what result you want from the simulation:
+clothsim_type_txt = """
+Choose what result you want from the simulation:
 
 Static:
 If you are making still renders. Use this mode when you want the clothing to
@@ -126,7 +118,8 @@ def clothsim_type(layout):
         layout.label(text=line)
 
 
-rigify_library_txt = """The pose library does not work with Rigify rigs.
+rigify_library_txt = """
+The pose library does not work with Rigify rigs.
 
 If you want to get the non-rigify rig back, there are two options:
 
@@ -141,7 +134,8 @@ def rigify_library(layout):
         layout.label(text=line)
 
 
-autohide_hair_txt = """Hair children were hidden to improve performance.
+autohide_hair_txt = """
+Hair children were hidden to improve performance.
 You can turn them back on at the top of the Human Generator interface.
 
 You can also hold CTRL when clicking on the tab you want to go to
@@ -156,7 +150,8 @@ def autohide_hair(layout):
         layout.label(text=line)
 
 
-starting_human_txt = """Saving the starting human saves a list of all
+starting_human_txt = """
+Saving the starting human saves a list of all
 values you've entered for things like body shapes, face
 deformations, skin settings and length. It does not save
 the actual shapekeys, textures or edits. If you've made a
@@ -173,7 +168,8 @@ def starting_human(layout):
         layout.label(text=line)
 
 
-experimental_txt = """This human is now experimental.
+experimental_txt = """
+This human is now experimental.
 
 Experimental humans have sliders that can be pushed beyond
 their normal limits, allowing for further customization.
@@ -192,7 +188,8 @@ def experimental(layout):
         layout.label(text=line)
 
 
-batch_texture_bake_res_txt = """The baking resolution you've selected is higher
+batch_texture_bake_res_txt = """
+The baking resolution you've selected is higher
 than the resolution of the currently active 'source' textures.
 
 This is probably because you have selected a lower resolution
@@ -212,7 +209,8 @@ def batch_texture_bake_res(layout):
         layout.label(text=line)
 
 
-batch_result_txt = """This human was created with the batch system. Depending on
+batch_result_txt = """
+This human was created with the batch system. Depending on
 what quality options you selected, there might be less options for
 this human than usual.
 """
