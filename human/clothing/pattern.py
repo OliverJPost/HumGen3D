@@ -18,6 +18,7 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 
 class PatternSettings(PreviewCollectionContent):
     def __init__(self, _human: "Human") -> None:
+        """Creates new instance to manipulate pattern of clothing items."""
         self._human = _human
         self._pcoll_gender_split = False
         self._pcoll_name = "pattern"
@@ -28,9 +29,7 @@ class PatternSettings(PreviewCollectionContent):
         )
 
     def set(self, preset: str, obj: bpy.types.Object) -> None:  # noqa: A003
-        """
-        Loads the pattern that is the active item in the patterns preview_collection
-        """
+        """Loads pattern that is the active item in the patterns preview_collection."""
         pref = get_prefs()
         mat = obj.active_material
 
@@ -75,7 +74,7 @@ class PatternSettings(PreviewCollectionContent):
         self.set(active_item, obj)
 
     def _create_node_if_doesnt_exist(self, name: str) -> ShaderNode:
-        """Returns the node, creating it if it doesn't exist
+        """Returns the node, creating it if it doesn't exist.
 
         Args:
             name (str): name of node to check

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class BodySettings:
     def __init__(self, human: "Human") -> None:
+        """Initiate instance for modifying body of human."""
         self._human: "Human" = human
 
     @property
@@ -20,12 +21,11 @@ class BodySettings:
         )
 
     def randomize(self) -> None:
-        """Randomizes the body type sliders of the active human
+        """Randomizes the body type sliders of the active human.
 
         Args:
             hg_rig (Object): HumGen armature
         """
-
         for key in self.keys:
             if key.name == "skinny":
                 key.value = random.uniform(0, 0.7)
