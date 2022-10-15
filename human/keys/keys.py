@@ -63,7 +63,6 @@ def update_livekey_collection() -> None:
             item.category = category
             item.subcategory = subcategory
             item.path = os.path.relpath(abspath, get_prefs().filepath)
-            print("adding", item)
 
     from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
 

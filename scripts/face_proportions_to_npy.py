@@ -48,4 +48,3 @@ def main():
             os.makedirs(path)
 
         np.save(os.path.join(path, save_name), relative_coordinates)
-        print("saved to", path)

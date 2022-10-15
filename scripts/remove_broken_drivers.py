@@ -26,7 +26,6 @@ def main():
     remove_broken_drivers()
 
     bpy.ops.wm.save_mainfile()
-    print("test2")
     blend1_file = bpy.data.filepath.replace(".blend", ".blend1")
 
     try:

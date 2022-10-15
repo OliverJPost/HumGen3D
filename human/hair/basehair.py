@@ -90,7 +90,6 @@ class BaseHair:
                 key_data.append(round_vector_to_tuple(particle.location, precision=8))
                 key_data.append(round_vector_to_tuple(particle.rotation, precision=4))
 
-        print(key_data)
         return hash(tuple(key_data))
 
 
