@@ -504,7 +504,8 @@ class Human:
     @classmethod
     def _import_human(cls, context: Context, gender: str) -> Human:
         """
-        It imports the human model from the HG_Human.blend file, sets it up correctly, and returns a Human instance # TODO split up
+        It imports the human model from the HG_Human.blend file, sets it up correctly,
+        and returns a Human instance # TODO split up
 
         Args:
           context: The context of the current scene.

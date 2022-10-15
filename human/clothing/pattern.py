@@ -5,11 +5,12 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.backend.type_aliases import C
 from bpy.types import ShaderNode  # type:ignore
+from HumGen3D.backend.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
@@ -28,7 +29,7 @@ class PatternSettings(PreviewCollectionContent):
 
     def set(self, preset: str, obj: bpy.types.Object) -> None:
         """
-        Loads the pattern that is the current active item in the patterns preview_collection
+        Loads the pattern that is the active item in the patterns preview_collection
         """
         pref = get_prefs()
         mat = obj.active_material

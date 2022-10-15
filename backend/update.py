@@ -10,7 +10,7 @@ import bpy
 import requests  # type:ignore
 
 if TYPE_CHECKING:
-    from HumGen3D.backend.content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
+    from .content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
 
 from . import get_prefs, hg_log  # type: ignore
 

@@ -10,7 +10,7 @@ def main():
         try:
             for sk in [sk for sk in obj.data.shape_keys.key_blocks]:
                 obj.shape_key_remove(sk)
-        except:
+        except Exception:
             pass
 
     bpy.ops.wm.save_mainfile()

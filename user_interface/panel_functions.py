@@ -199,7 +199,7 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
             icon_value=get_hg_icon(ui_name),
             emboss=False,
         ).section_name = ui_name
-    except:
+    except ValueError:
         icon = icon_dict[ui_name]
         row.operator(
             "hg3d.section_toggle", text=label, icon=icon, emboss=False

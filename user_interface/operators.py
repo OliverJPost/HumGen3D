@@ -50,7 +50,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         if (
             pref.auto_hide_hair_switch  # Turned on in preferences
             and not self.children_hide_exception  # User did not hold Ctrl
-            and not self.section_name in ("hair", "eyes")  # It's not the hair tab
+            and self.section_name not in ("hair", "eyes")  # It's not the hair tab
             and not human.hair.children_ishidden  # The children weren't already hidden
         ):
             self.hide_hair_and_show_notification(human, pref)

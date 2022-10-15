@@ -535,7 +535,7 @@ def _add_to_collection(
         current_file_set (set): set of files that are already in this cpack and
             should therefore be set to item.include = True
         categ (str): category of this content item
-        content_item (list (enum)): enum list coming from the preview collection, containing:
+        content_item: enum list coming from the preview collection, containing:
             str: relative path of this item
             str: name of this item
             str: description (almost always empty string, not used by this function)
@@ -603,6 +603,6 @@ class CUSTOM_CONTENT_ITEM(bpy.types.PropertyGroup):
     include: bpy.props.BoolProperty(default=False, update=content_callback)
     gender: bpy.props.StringProperty(default="none")  # set to male or female
     categ: bpy.props.StringProperty()  # category of this content item
-    existing_content: bpy.props.BoolProperty()  # if this item is already in another cpack
+    existing_content: bpy.props.BoolProperty()  # if item is already in another cpack
     newly_added: bpy.props.BoolProperty()  # if it's been added in this editing session
     removed: bpy.props.BoolProperty()  # if it's been removed in this editing session

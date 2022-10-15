@@ -42,7 +42,7 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
         )
         try:
             row.label(text=item.mod_name, icon=modifier_icon)
-        except:
+        except KeyError:
             row.label(text=item.mod_name, icon="QUESTION")
 
         if item.count:
