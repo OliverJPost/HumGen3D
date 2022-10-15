@@ -237,7 +237,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         col.prop(self, "skip_url_request", text="Skip URL request")
 
     def _draw_cpack_ui(self, context):
-        """UI for the user to check which cpacks are installed, who made them,
+        """UI displaying installed content packs.
+
+        For the user to check which cpacks are installed, who made them,
         what version they are, what is inside them and a button to delete them
         """
         layout = self.layout
