@@ -60,7 +60,6 @@ def find_existing_shapekeys(cc_sett, pref):
 
 def refresh_hair_ul(self, context):
     cc_sett = context.scene.HG3D.custom_content
-    pref = get_prefs()
     col = context.scene.savehair_col
 
     previously_enabled_items = [i.ps_name for i in col if i.enabled]
@@ -84,7 +83,6 @@ def refresh_hair_ul(self, context):
 # TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D  # type:ignore[attr-defined]
-    pref = get_prefs()
     col = context.scene.saveoutfit_col
 
     previously_enabled_items = [i.obj_name for i in col if i.enabled]

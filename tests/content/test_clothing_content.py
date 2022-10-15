@@ -1,3 +1,5 @@
+# flake8:noqa: F811
+
 import pytest
 from HumGen3D.tests.fixtures import (  # noqa
     ALL_HUMAN_FIXTURES,
@@ -50,5 +52,6 @@ def _test_all_clothing_options(human, category, context, all_tests=True):  # noq
             mat = obj.active_material
 
             for img_node in [n for n in mat.node_tree.nodes if n.type == "TEX_IMAGE"]:
-                img = img_node.image
+                pass  # TODO
+                # img = img_node.image
                 # assert img.has_data

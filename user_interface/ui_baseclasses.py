@@ -520,7 +520,6 @@ class MainPanelPart(HGPanel):
             label = "No human selected"
         else:
             name = human.name.replace("HG_", "").replace("_RIGIFY", "")
-            gender = human.gender.capitalize()
             label = f"This is {name}"
         return label
 

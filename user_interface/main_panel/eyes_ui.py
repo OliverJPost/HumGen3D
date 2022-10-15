@@ -45,8 +45,6 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
 
         col.separator()
 
-        boxbox = self._draw_eyebrow_switch(col)
-
         eye_systems = self._get_eye_systems(self.human.body_obj)
 
         self._draw_hair_length_ui(eye_systems, col)

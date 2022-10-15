@@ -46,7 +46,7 @@ def get_folders(attr):
         try:
             return retreiver(human).get_categories()
         # Catch for weird behaviour where pose_category refreshes early
-        except (AttributeError, HumGenException) as e:
+        except (AttributeError, HumGenException):
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
     return func
