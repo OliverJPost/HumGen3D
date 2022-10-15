@@ -70,7 +70,9 @@ class HeightSettings:
         obj.data.update()
 
     @injected_context
-    def set(self, value_cm: float, context: C = None, realtime: bool = False) -> None:
+    def set(  # noqa: A003
+        self, value_cm: float, context: C = None, realtime: bool = False
+    ) -> None:  # noqa A001
         if context.scene.HG3D.update_exception:
             return
 

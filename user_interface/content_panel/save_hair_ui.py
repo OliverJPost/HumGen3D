@@ -21,7 +21,7 @@ def _draw_particle_system_selection_ui(context, layout):
     col = layout.column(align=True)
     row = col.row(align=True)
 
-    row.operator("hg3d.ulrefresh", text="Refresh hairsystems").type = "hair"
+    row.operator("hg3d.ulrefresh", text="Refresh hairsystems").uilist_type = "hair"
     row.prop(
         context.scene.HG3D.custom_content,
         "show_eyesystems",

@@ -177,9 +177,9 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col.prop(sett, "modapply_search_modifiers", text="")
 
         row = col.row(align=True)
-        row.operator("hg3d.ulrefresh", text="Refresh").type = "modapply"
-        row.operator("hg3d.selectmodapply", text="All").all = True
-        row.operator("hg3d.selectmodapply", text="None").all = False
+        row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
+        row.operator("hg3d.selectmodapply", text="All").select_all = True
+        row.operator("hg3d.selectmodapply", text="None").select_all = False
 
         col = layout.column(align=True)
         col.label(text="Objects to apply:")

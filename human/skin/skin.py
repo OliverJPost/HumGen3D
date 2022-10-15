@@ -239,7 +239,7 @@ class TextureSettings(PreviewCollectionContent):
         self._pcoll_gender_split = True
 
     @injected_context
-    def set(self, textureset_path: str, context: C = None) -> None:
+    def set(self, textureset_path: str, context: C = None) -> None:  # noqa A001
         diffuse_texture = textureset_path
         library = "Default 4K"  # TODO
 
@@ -302,7 +302,7 @@ class TextureSettings(PreviewCollectionContent):
                     else:
                         current_dir = os.path.dirname(current_path)
 
-                    dir = os.path.join(current_dir, resolution_folder)
+                    directory = os.path.join(current_dir, resolution_folder)
                     fn, ext = os.path.splitext(os.path.basename(current_path))
                     resolution_tag = resolution_folder.replace("_RES", "")
                     corrected_fn = (
@@ -312,7 +312,7 @@ class TextureSettings(PreviewCollectionContent):
                         .replace("_2K", "")
                     )
                     new_fn = corrected_fn + f"_{resolution_tag}" + ext
-                    new_path = os.path.join(dir, new_fn)
+                    new_path = os.path.join(directory, new_fn)
 
                     old_color_mode = current_image.colorspace_settings.name
                     node.image = bpy.data.images.load(new_path, check_existing=True)

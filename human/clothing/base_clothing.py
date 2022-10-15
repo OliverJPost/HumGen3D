@@ -57,7 +57,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         return PatternSettings(self._human)
 
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
+    def set(self, preset: str, context: C = None) -> None:  # noqa A001
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
 
         Args:

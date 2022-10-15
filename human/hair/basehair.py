@@ -96,7 +96,7 @@ class BaseHair:
 
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
+    def set(self, preset: str, context: C = None) -> None:  # noqa: A003
         """Loads hair system the user selected by reading the json that belongs to
         the selected hairstyle
 

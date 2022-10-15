@@ -81,7 +81,7 @@ class ExpressionSettings(PreviewCollectionContent):
     def shape_keys(self) -> list[ShapeKeyItem]:
         return self._human.keys.filtered("expression")
 
-    def set(self, preset: str) -> None:
+    def set(self, preset: str) -> None:  # noqa: A003
         """Loads the active expression in the preview collection"""
         pref = get_prefs()
 

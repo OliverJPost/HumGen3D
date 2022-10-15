@@ -27,7 +27,7 @@ class PatternSettings(PreviewCollectionContent):
             "HG_Pattern_Coordinates",
         )
 
-    def set(self, preset: str, obj: bpy.types.Object) -> None:
+    def set(self, preset: str, obj: bpy.types.Object) -> None:  # noqa: A003
         """
         Loads the pattern that is the active item in the patterns preview_collection
         """
@@ -37,7 +37,7 @@ class PatternSettings(PreviewCollectionContent):
         for node_name in self._node_names:
             self._create_node_if_doesnt_exist(node_name)
 
-        img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore[index]
+        img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore
 
         filepath = os.path.join(pref.filepath, preset)
         images = bpy.data.images

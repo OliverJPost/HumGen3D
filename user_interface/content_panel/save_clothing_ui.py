@@ -45,7 +45,7 @@ def _draw_clothing_uilist_ui(context, layout):
 
     col = layout.column(align=True)
     row = col.row(align=True)
-    row.operator("hg3d.ulrefresh", text="Refresh objects").type = "outfit"
+    row.operator("hg3d.ulrefresh", text="Refresh objects").uilist_type = "outfit"
     col.template_list(
         "HG_UL_SAVEOUTFIT",
         "",
