@@ -1,9 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
-Functions related to the preview_collections of human generator, including
-population of them
-"""
+"""Contains PreviewCollection class for managing content preview collections."""
 
 from __future__ import annotations
 
@@ -208,7 +205,7 @@ def list_files_in_dir(
     file_paths = []
     for root, _, files in os.walk(search_dir):
         if skip_pbr_folder and "PBR" in root:
-            continue  # don't show textures in PBR folder of texture sets
+            continue  # don't show textures in PBR folder of texture sets``
         for fn in files:
             if not fn.lower().endswith(ext):
                 continue
