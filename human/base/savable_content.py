@@ -26,8 +26,9 @@ class SavableContent:
         run_in_background: bool = True,
         clear_drivers: bool = True,
     ) -> None:
-        """Saves the passed objects as a new blend file, opening the file in the
-        background to make it as small as possible
+        """Saves the passed objects as a new blend file.
+
+        opening the file in the background to make it as small as possible
 
         Args:
             objs              (list)          : List of objects to save
@@ -117,7 +118,7 @@ class SavableContent:
     def _remove_particle_systems(
         context: bpy.types.Context, obj: bpy.types.Object
     ) -> None:
-        """Remove particle systems from the passed object
+        """Remove particle systems from the passed object.
 
         Args:
             obj (Object): obj to remove particle systems from
@@ -130,7 +131,7 @@ class SavableContent:
 
     @staticmethod
     def _remove_shapekeys(obj: bpy.types.Object) -> None:
-        """Remove shapekeys from the passed object
+        """Remove shapekeys from the passed object.
 
         Args:
             obj (Object): obj to remove shapekeys from
@@ -142,8 +143,7 @@ class SavableContent:
 
     @staticmethod
     def remove_number_suffix(name: str) -> str:
-        """Remove the number suffix from the passed name
-        (i.e. Box.004 becomes Box)
+        """Remove the number suffix from the passed name (i.e. Box.004 becomes Box).
 
         Args:
             name (str): name to remove suffix from
