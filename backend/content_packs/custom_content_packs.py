@@ -1,6 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""The cpack exporter works by adding all content items to the
+"""Functions and operators for exporting custom content.
+
+The cpack exporter works by adding all content items to the
 scene.custom_content_col when the user clicks the edit content pack icon.
 
 In the editing UI the user can interact with these collection items. The
@@ -32,7 +34,9 @@ from .content_packs import cpacks_refresh
 
 
 class HG_OT_CREATE_CPACK(bpy.types.Operator):
-    """Adds a new json file it the content_packs folder and opens the cpack
+    """Operator for starting content pack creation.
+
+    Adds a new json file it the content_packs folder and opens the cpack
     editing UI for the user to start creating this pack.
 
     Operator type:
@@ -71,7 +75,7 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _create_cpack_json(self, name, cpack_folder):
-        """Creates a new json file as content pack, adding the basic info to it
+        """Creates a new json file as content pack, adding the basic info to it.
 
         Args:
             name (str): name of new content pack
@@ -90,15 +94,7 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
 
 
 class HG_OT_EDIT_CPACK(bpy.types.Operator):
-    """Edit the passed content pack
-
-    Operator type:
-        Content pack creation
-
-    Prereq:
-        item_name passed
-        item_name is a correct cpack item.name in the cpack collection
-    """
+    """Edit the passed content pack."""
 
     bl_idname = "hg3d.edit_cpack"
     bl_label = "Edit content pack"
@@ -129,14 +125,7 @@ class HG_OT_EDIT_CPACK(bpy.types.Operator):
 
 
 class HG_OT_EXIT_CPACK_EDIT(bpy.types.Operator):
-    """Returns to the standard HumGen preferences without saving this cpack
-
-    Operator type:
-        Content pack creation
-
-    Prereq:
-        User was in cpack edit mode
-    """
+    """Returns to the standard HumGen preferences without saving this cpack."""
 
     bl_idname = "hg3d.exit_cpack_edit"
     bl_label = "Exit the editing UI without saving changes"
@@ -200,7 +189,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _build_export_set(self, pref, items_to_export) -> "tuple[set, set]":
-        """Returns two sets with the filepaths of the items to export and the
+        """Find items to be exported and their categories.
+
+        Returns two sets with the filepaths of the items to export and the
         categories of the items that will be exported
 
         Args:
@@ -235,7 +226,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _write_json_file(self, pref, cpack, export_path_set, categ_set):
-        """Write the metadata of this pack to the cpack json file
+        """Write the metadata of this pack to the cpack json file.
 
         Args:
             pref (AddonPreferences): HumGen preferences
@@ -260,8 +251,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _build_categ_dict(self, categ_set, pack_name) -> dict:
-        """Builds a dictionary of what kind of category content items are
-        included in this cpack
+        """Builds a dictionary of what kind of items are included in this cpack.
 
         Args:
             categ_set (set): set of category names that are included in this cpack
@@ -287,8 +277,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _zip_files(self, pref, export_paths, json_path, cpack):
-        """Zip all the files from the export_paths set to a zip file in the
-        user given directory
+        """Zip all the files from the export_paths set to the user given directory.
 
         Args:
             pref (AddonPreferences): HumGen preferencs
@@ -331,8 +320,9 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _find_associated_files(self, filepath, categ) -> set:
-        """Create a set of relative paths of files that are associated with the
-        passed files. For example linked textures and hair collection files
+        """Find relative paths of files associated with the passed files.
+
+        For example linked textures and hair collection files
 
         Args:
             filepath (Path): path of the file to find associated files for
@@ -341,7 +331,6 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         Returns:
             set: relative filepaths of associated files
         """
-
         associated_files = []
         if categ in ["outfits", "footwear"]:
             # find linked textures for clothing and shoe items
@@ -368,8 +357,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
     @no_type_check
     def _correct_relative_path(self, path, categ) -> str:
-        """Deals with Blender //..\..\ relative paths and converts any absolute
-        paths to relative paths
+        """Converts Blender //.. relative paths any absolute paths to relative paths.
 
         Args:
             path (str): path to correct relativity for
@@ -398,6 +386,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 
 @no_type_check
 def build_content_collection(self, context):
+    """Build scene collection of custom content items."""
     pref = get_prefs()
     sett = context.scene.HG3D  # type:ignore[attr-defined]
     sett.update_exception = True
@@ -470,8 +459,9 @@ def _iterate_items_to_collection(
     other_cpacks_content_set,
     pcoll_dict,
 ):
-    """Iterates trough all categories and adds their items to the custom_content
-    collection. Separate procress for shapekeys, since those don't have an
+    """Iterates trough all categories and adds items to the custom_content collection.
+
+    Separate procress for shapekeys, since those don't have an
     associated preview collection
 
     Args:
@@ -577,10 +567,10 @@ def _add_to_collection(
 
 @no_type_check
 def content_callback(self, context):
-    """Gets called every time a content item's include boolean is changed,
-    handles the newly_added and removed lists
-    """
+    """Gets called every time a content item's include boolean is changed.
 
+    Handles the newly_added and removed lists
+    """
     if context.scene.HG3D.update_exception:
         return  # Don't update when building the list for the first time
 
