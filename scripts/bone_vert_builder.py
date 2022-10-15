@@ -19,7 +19,6 @@ def centroid(coordinates) -> Vector:
 def main():
     context = bpy.context
     obj = bpy.data.objects["HG_Body"]
-    rig = [o for o in bpy.data.objects if o.type == "ARMATURE"][0]
 
     selected_bone = context.selected_bones[0]
 

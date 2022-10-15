@@ -20,8 +20,6 @@ def main():
 
     bpy.ops.hg3d.quick_generate(**settings_dict)
 
-    hg_rig = next(obj for obj in bpy.data.objects if obj.HG.ishuman)
-
     hg_addon = next(
         addon
         for addon in bpy.context.preferences.addons

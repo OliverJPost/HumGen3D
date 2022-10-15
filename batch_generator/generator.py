@@ -151,7 +151,7 @@ class BatchHumanGenerator:
         hg_log("^^^ HumGen background process ENDED", level="BACKGROUND")
 
         hg_log(
-            f"Background process took: ",
+            "Background process took: ",
             round(time.time() - start_time_background_process, 2),
             "s",
         )

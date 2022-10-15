@@ -41,7 +41,7 @@ class HG_OT_INFO(bpy.types.Operator):
 
         def draw(self, context):
             nonlocal message_txt_key
-            layout = self.layout
+            layout = self.layout  # noqa: F841
             eval(message_txt_key + "(layout)")  # FIXME wtf dude
 
         bpy.context.window_manager.popup_menu(draw, title="Info", icon="QUESTION")

@@ -68,7 +68,6 @@ class HairSettings:
         }
 
         gender = self._human.gender
-        hg_body = self._human.body_obj
 
         # TODO make into common func
         for ps_name in ps_delete_dict[gender]:
