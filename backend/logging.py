@@ -1,13 +1,18 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import time
+from typing import Literal
 
 from .preferences import get_prefs
 
 
-def hg_log(*message: object, level: str = "INFO") -> None:
-    """Writes a log message to the console. Warning, Error and Critical produce
-    a color coded message.
+def hg_log(
+    *message: object,
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
+) -> None:
+    """Writes a log message to the console.
+
+    Warning, Error and Critical produce a color coded message.
 
     Args:
         message (str or list[str]): Message to display in log
