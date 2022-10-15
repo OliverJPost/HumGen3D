@@ -14,6 +14,7 @@ class FacialHairSettings(ImportableHair):
     _startswith = "fh"
 
     def __init__(self, _human: "Human") -> None:
+        """Create instance to manipulate facial hair settings."""
         if _human.gender == "female":
             raise NotImplementedError(
                 "Facial hair is currently not implemented for female humans"

@@ -15,6 +15,7 @@ class RegularHairSettings(ImportableHair):
     _notstartswith = ("Eye", "fh")
 
     def __init__(self, _human: "Human") -> None:
+        """Create instance for manipulating human (head) hair."""
         self._human = _human
         self._notstartswith = ("Eye", "ff_")
         self._pcoll_name = "hair"

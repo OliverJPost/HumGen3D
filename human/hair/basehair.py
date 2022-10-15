@@ -96,8 +96,7 @@ class BaseHair:
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003
-        """Loads hair system the user selected by reading the json that belongs to
-        the selected hairstyle
+        """Loads hair system the user selected.
 
         Args:
             type (str): type of hair to load ('head' or 'face_hair')
@@ -238,7 +237,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _import_hair_obj(
         self, context: bpy.types.Context, hair_type: str, pref: HG_PREF, blendfile: str
     ) -> bpy.types.Object:
-        """Imports the object that contains the hair systems named in the json file
+        """Imports the object that contains the hair systems named in the json file.
 
         Args:
             context ([type]): [description]
@@ -265,8 +264,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _morph_hair_obj_to_body_obj(
         self, context: bpy.types.Context, hair_obj: bpy.types.Object
     ) -> None:
-        """Gives the imported hair object the exact same shape as hg, to make sure
-        the hair systems get transferred correctly
+        """Gives the imported hair object the exact same shape as hg human.
 
         Args:
             hg_body (Object): body object
@@ -318,7 +316,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         mod: bpy.types.Modifier,
         ps_name: str,
     ) -> None:
-        """Sets the settings of this particle settings according to the json dict
+        """Sets the settings of this particle settings according to the json dict.
 
         Args:
             json_systems (dict):
@@ -341,14 +339,13 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             psys.render_step = json_sett["path_steps"]
 
     def _transfer_vertexgroup(self, from_obj: bpy.types.Object, vg_name: str) -> None:
-        """Copies vertex groups from one object to the other
+        """Copies vertex groups from one object to the other.
 
         Args:
             to_obj   (Object): object to transfer vertex groups to
             from_obj (Object): object to transfer vertex group from
             vg_name  (str)   : name of vertex group to transfer
         """
-
         vert_dict = {}
         for vert_idx, _ in enumerate(from_obj.data.vertices):
             with contextlib.suppress(Exception):
@@ -366,7 +363,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _get_hair_systems_dict(
         self, hair_obj: bpy.types.Object
     ) -> dict[bpy.types.Modifier, str]:
-        """Gets hair particle systems on passed object, including modifiers
+        """Gets hair particle systems on passed object, including modifiers.
 
         Args:
             hair_obj (Object): imported hair obj
@@ -376,7 +373,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 key   (bpy.types.modifier)       : Modifier of a particle system
                 value (bpy.types.particle_system): Particle hair system
         """
-
         system_names = []
 
         for mod in [mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"]:
@@ -390,7 +386,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         return new_mod_dict
 
     def _reconnect_hair(self, mod: bpy.types.Modifier) -> None:
-        """Reconnects the transferred hair systems to the skull
+        """Reconnects the transferred hair systems to the skull.
 
         Args:
             hg_body (Object): hg body object
@@ -406,8 +402,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _set_correct_particle_vertexgroups(
         self, new_systems: dict[bpy.types.Modifier, str], from_obj: bpy.types.Object
     ) -> None:
-        """Transferring particle systems results in the wrong vertex group being set,
-        this corrects that
+        """Corrects particle system errors caused bytransfering systems.
 
         Args:
             new_systems (dict): modifiers and particle_systems to correct vgs for
@@ -441,8 +436,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _set_correct_hair_material(
         self, new_systems: dict[bpy.types.Modifier, str], hair_type: str
     ) -> None:
-        """Sets face hair material for face hair systems and head head material for
-        head hair
+        """Sets face hair material for fh systems and head head material for head hair.
 
         Args:
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
