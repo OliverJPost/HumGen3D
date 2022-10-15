@@ -186,7 +186,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         return {"FINISHED"}
 
     def _check_if_human_uses_unsaved_shapekeys(self, cc_sett) -> list:
-        """Check with the list of already saved shapekeys to see if this human
+        """Check with the list of already saved shapekeys to see if this human # noqa
         uses (value above 0) any shapekeys that are not already saved.
 
         Args:
@@ -204,8 +204,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                 unsaved_sks.append(sk.name)
 
     def _build_sk_warning_message(self, unsaved_sks):
-        """Builds a string with newline characters to display which shapekeys
-        are not saved yet.
+        """Builds a string with newlines to display which shapekeys are not saved yet.
 
         Args:
             unsaved_sks (list): list of unsaved shapekey names

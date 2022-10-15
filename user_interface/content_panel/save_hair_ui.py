@@ -4,14 +4,12 @@ from .base_draw_functions import _draw_header_box, _draw_next_button
 
 
 def _draw_particle_system_selection_ui(context, layout):
-    """Draws a UIList for the user to select which particle systems to save
-    for this hairstyle
+    """Draws a UIList for the user to select which particle systems to save.
 
     Args:
         context (context): bl context
         layout (UILayout): layout to draw tab in
     """
-
     _draw_header_box(
         layout,
         "Select particle systems \nto be included in this style.",
@@ -44,8 +42,7 @@ def _draw_particle_system_selection_ui(context, layout):
 
 
 def _draw_hair_gender_ui(context, layout):
-    """Draws the tab for the user to select for which gender this hairstyle
-    is meant.
+    """Draws the tab for the user to select for which gender this hairstyle is meant.
 
     Args:
         context (context): bl context
@@ -71,8 +68,7 @@ def _draw_hair_gender_ui(context, layout):
 
 
 def _draw_hairtype_ui(context, layout):
-    """Draws layout for the user to select if this is facial hair or regular
-    hair.
+    """Draws layout for the user to select if this is facial hair or regular hair.
 
     Args:
         context (context):  bl context

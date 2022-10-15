@@ -11,8 +11,7 @@ from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 
 class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
-    """Main Human Generator panel, divided into creation phase and finalize
-    phase. These phases are then divided into sections (i.e. hair, body, face)
+    """Main Human Generator panel, divided into sections.
 
     One exception is the clothing material section. If a HumGen clothing object
     is selected, this UI shows options to change the material

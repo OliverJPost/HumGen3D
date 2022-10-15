@@ -6,7 +6,7 @@ from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
 class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
-    """First section shown to the user after adding a human
+    """First section shown to the user after adding a human.
 
     Shows sliders for body proportion shapekeys, including a randomize
     button for these sliders
