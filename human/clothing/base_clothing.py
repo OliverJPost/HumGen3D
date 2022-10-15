@@ -34,7 +34,9 @@ from mathutils import Vector
 
 
 def find_masks(obj: bpy.types.Object) -> list[str]:
-    """Looks at the custom properties of the object, searching for custom tags
+    """Finds masks that belong to cloth items.
+
+    Looks at the custom properties of the object, searching for custom tags
     that indicate mesh masks added for this cloth.
 
     Args:
@@ -58,7 +60,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa A001
-        """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
+        """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit.
 
         Args:
             footwear (boolean): True if called by pcoll_footwear, else loads as outfit
@@ -124,15 +126,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def deform_cloth_to_human(
         self, context: bpy.types.Context, cloth_obj: bpy.types.Object
     ) -> None:
-        """Deforms the cloth object to the shape of the active HumGen human by using
-        HG_SHAPEKEY_CALCULATOR
+        """Deforms the cloth object to the shape of the active HumGen human.
 
         Args:
             hg_rig (Object): HumGen armature
             hg_body (Object): HumGen body
             obj (Object): cloth object to deform
         """
-
         body_obj = self._human.body_obj
         if self._human.gender == "female":
             verts = body_obj.data.vertices
@@ -167,7 +167,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         context.view_layer.objects.active = self._human.rig_obj
 
     def remove(self) -> list[str]:
-        """Removes the cloth objects that were already on the human
+        """Removes the cloth objects that were already on the human.
 
         Args:
             pref (AddonPreferences): preferences of HumGen
@@ -310,8 +310,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def _set_geometry_masks(
         self, mask_remove_list: list[str], new_mask_list: list[str]
     ) -> None:
-        """Adds geometry mask modifiers to hg_body based on custom properties on the
-        imported clothing
+        """Adds mask modifiers to hg_body based on properties on the imported clothing.
 
         Args:
             mask_remove_list (list): list of masks to remove from the human, that
@@ -349,7 +348,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         obj: bpy.types.Object,
         hg_rig: bpy.types.Object,
     ) -> None:
-        """Adds an armature modifier to this cloth object
+        """Adds an armature modifier to this cloth object.
 
         Args:
             obj (Object): cloth object to add armature to
@@ -371,7 +370,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         obj: bpy.types.Object,
         armature_mods: Iterable[bpy.types.Modifier],
     ) -> None:
-        """Moves the armature modifier to the top of the stack
+        """Moves the armature modifier to the top of the stack.
 
         Args:
             context ([type]): [description]
@@ -398,7 +397,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         preset: str,
         context: C = None,
     ) -> Tuple[list[bpy.types.Object], list[bpy.types.Collection]]:
-        """Imports the cloth objects from an external file
+        """Imports the cloth objects from an external file.
 
         Args:
             context ([type]): [description]
@@ -452,7 +451,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def _set_cloth_corrective_drivers(
         self, hg_cloth: bpy.types.Object, sk: bpy.types.ShapeKey
     ) -> None:
-        """Sets up the drivers of the corrective shapekeys on the clothes
+        """Sets up the drivers of the corrective shapekeys on the clothes.
 
         Args:
             hg_body (Object): HumGen body object
