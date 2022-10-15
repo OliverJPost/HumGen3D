@@ -561,7 +561,7 @@ class HG_DELETE_CPACK(bpy.types.Operator):
                     hg_log("Could not remove ", filepath, level="WARNING")
                 except FileNotFoundError as e:
                     hg_log("Could not remove ", filepath, level="WARNING")
-                    print(e)
+                    print(e)  # noqa T201
 
         # remove item from collection
         col.remove(index)

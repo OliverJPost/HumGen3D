@@ -26,8 +26,6 @@ class ProcessPanel(HGPanel):
         if hasattr(self, "enabled_propname"):
             # retreiver = attrgetter(self.propspace)
             # propgroup = retreiver(context.scene.HG3D  # type:ignore[attr-defined]
-            print(context.scene.HG3D.bake, type(context.scene.HG3D.bake))
-            print(context.scene.HG3D.process, type(context.scene.HG3D.process))
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
         try:
             self.layout.label(text="", icon_value=get_hg_icon(self.icon_name))
