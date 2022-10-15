@@ -167,9 +167,7 @@ def update_tips_from_context(context, sett, hg_rig):
 
 
 class TIPS_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist."""
 
     title: bpy.props.StringProperty(default="")
     icon_name: bpy.props.StringProperty(default="")

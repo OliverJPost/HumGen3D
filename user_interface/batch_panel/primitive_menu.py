@@ -10,9 +10,7 @@ class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):
     bl_label = "Human Generator Markers"
 
     def draw(self, context):
-        """Menu in the 'add object' modal for the user to add markers for the
-        HG batch generator
-        """
+        """Menu in 'add object' to add markers for the HG batch generator."""
         layout = self.layout
         layout.operator_context = "INVOKE_REGION_WIN"
 

@@ -23,7 +23,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
 
     # TODO add compatibility with any material, not just standard material
     def draw(self, context):
-        """draws ui for changing the material of the active clothing object"""
+        """Draws ui for changing the material of the active clothing object."""
         layout = self.layout
         self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         self.human = Human.from_existing(context.object, strict_check=False)
@@ -47,7 +47,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
             self._draw_pattern_subsection(sett, layout, control_node)
 
     def make_box_flow(self, layout, name, icon):
-        """creates a box with title
+        """Creates a box with title.
 
         Args:
             layout (UILayout): layout to draw box in
@@ -71,7 +71,9 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         return flow, box
 
     def _draw_clothmat_header(self, context, col):
-        """Draws header for the clothing material UI, with clothing name,
+        """Draws header for the clothing material UI.
+
+        With clothing name,
         button to go back to normal UI and button to delete clothing item
 
         Args:
@@ -107,8 +109,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         )
 
     def _draw_clothmat_color_subsection(self, layout, control_node):
-        """draws subsection for changing colors of the different zones on this
-        clothing material
+        """Draws subsection for changing colors of zones of this clothing material.
 
         Args:
             layout (UILAyout): layout of clothmat section
@@ -121,13 +122,12 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
                 self._draw_color_row(color_flow, node_input)
 
     def _draw_color_row(self, color_flow, node_input):
-        """Draws color picker and color randomize button on row
+        """Draws color picker and color randomize button on row.
 
         Args:
             color_flow (UILayout): indented list where color pickers are placed
             node_input (ShaderNodeInput): input of the color value on group node
         """
-
         color_dict = {
             "C0": [
                 "88C1FF",
@@ -163,7 +163,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         c_random.color_group = color_group
 
     def _draw_clothmat_options_subsection(self, layout, control_node):
-        """draws sliders for roughness, normal and any custom values on group
+        """Draws sliders for roughness, normal and any custom values on group.
 
         Args:
             layout (UILAyout): main layout of clothmat section
@@ -179,7 +179,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
                 flow.prop(node_input, "default_value", text=node_input.name)
 
     def _draw_pattern_subsection(self, sett, layout, control_node):
-        """draws subsection for adding patterns to this clothing item
+        """Draws subsection for adding patterns to this clothing item.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -210,7 +210,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
             )
 
     def _draw_pattern_selector_ui(self, sett, control_node, p_flow):
-        """draws template_icon_view for adding patterns
+        """Draws template_icon_view for adding patterns.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -226,7 +226,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         )
 
     def _draw_pattern_color_ui(self, sett, control_node, p_flow):
-        """shows sliders and options for manipulating the pattern colors
+        """Shows sliders and options for manipulating the pattern colors.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -261,9 +261,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
 
 # TODO incorrect naming per Blender scheme
 class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
-    """
-    Popover for the rot, loc and scale of the pattern
-    """
+    """Popover for the rot, loc and scale of the pattern."""
 
     bl_label = "Pattern RotLocScale"
     bl_space_type = "VIEW_3D"

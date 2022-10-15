@@ -64,7 +64,7 @@ class HGPanel:
         raise NotImplementedError
 
     def draw_info_and_warning_labels(self, context) -> bool:
-        """Collection of all info and warning labels of HumGen
+        """Collection of all info and warning labels of HumGen.
 
         Args:
             context : Blender Context
@@ -99,7 +99,7 @@ class HGPanel:
         return False  # no problems found
 
     def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
-        """Returns a property split enabled UILayout
+        """Returns a property split enabled UILayout.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -109,7 +109,6 @@ class HGPanel:
         Returns:
             UILayout: flow layout
         """
-
         col_2 = layout.column(align=True)
         col_2.use_property_split = True
         col_2.use_property_decorate = animation
@@ -124,7 +123,7 @@ class HGPanel:
         return flow
 
     def _filepath_warning(self, layout) -> bool:
-        """Shows warning if no filepath is selected
+        """Shows warning if no filepath is selected.
 
         Args:
             layout (AnyType): Main HumGen panel layout
@@ -143,8 +142,7 @@ class HGPanel:
         return True
 
     def _base_content_warning(self, layout) -> bool:
-        """Looks if base content is installed, otherwise shows warning and
-        stops the rest of the UI from showing
+        """Looks if base content is installed, otherwise shows warning cancels UI.
 
         Args:
             layout (AnyType): Main Layout of HumGen Panel
@@ -173,8 +171,9 @@ class HGPanel:
         return base_content
 
     def _update_notification(self, layout) -> bool:
-        """Shows notifications for available or required updates of both the
-        add-on and the content packs.
+        """Shows notifications for updates.
+
+        Both for available or required updates of both the add-on and the content packs.
 
         Args:
             layout ([AnyType]): Main layout of HumGen panel
@@ -234,8 +233,7 @@ class HGPanel:
         tutorial_op.tutorial_name = "get_started_tutorial"
 
     def _warning_header(self, context, layout) -> bool:
-        """Checks if context is in object mode and if a body object can be
-        found
+        """Checks if context is in object mode and if a body object can be found.
 
         Args:
             context (AnyType): Blender context
@@ -245,7 +243,6 @@ class HGPanel:
             bool: returns True if problem was found, causing panel to only show
             these error messages
         """
-
         if context.mode != "OBJECT":
             layout.alert = True
             layout.label(text="HumGen only works in Object Mode")
@@ -439,7 +436,7 @@ class MainPanelPart(HGPanel):
     def draw_sub_spoiler(
         self, layout, sett, prop_name, label
     ) -> "tuple[bool, bpy.types.UILayout]":
-        """Draws a ciollapsable box, with title and arrow symbol
+        """Draws a ciollapsable box, with title and arrow symbol.
 
         Args:
             layout (UILayout): Layout to draw spoiler in
@@ -467,7 +464,7 @@ class MainPanelPart(HGPanel):
         return spoiler_open, boxbox
 
     def _get_hair_systems(self, body_obj, eyesystems=False) -> list:
-        """get a list of hair systems on this object
+        """Get a list of hair systems on this object.
 
         Args:
             body_obj (Object): HumGen body object, can be any mesh object
@@ -475,7 +472,6 @@ class MainPanelPart(HGPanel):
         Returns:
             list: list of hair particle systems
         """
-
         hair_systems = []
         for mod in body_obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM" and (
@@ -487,13 +483,12 @@ class MainPanelPart(HGPanel):
         return hair_systems
 
     def _draw_hair_children_switch(self, hair_systems, layout):
-        """Draws a switch for turning children to render amount or back to 1
+        """Draws a switch for turning children to render amount or back to 1.
 
         Args:
             hair_systems (list): List of hair particle systems
             layout (UILayout): layout to draw switch in
         """
-
         row = layout.row(align=True)
         if not hair_systems:
             row.label(text="No hair systems found")
@@ -521,7 +516,7 @@ class MainPanelPart(HGPanel):
         return label
 
     def _draw_hair_length_ui(self, hair_systems, box):
-        """shows a collapsable list of hair systems, with a slider for length
+        """Shows a collapsable list of hair systems, with a slider for length.
 
         Args:
             hair_systems (list): list of particle hair systems

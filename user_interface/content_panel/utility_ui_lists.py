@@ -4,9 +4,7 @@ import bpy  # type: ignore
 
 
 class HG_UL_MODAPPLY(bpy.types.UIList):
-    """
-    UIList showing modifiers
-    """
+    """UIList showing modifiers."""
 
     def draw_item(
         self,
@@ -53,7 +51,7 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
             row.label(text="", icon=render_visible_icon)
 
     def _draw_header_row(self, item, row):
-        """header with label for uilists"""
+        """Header with label for uilists."""
         row.label(text="", icon="BLANK1")
         row.label(text="Type:" if item.count else "Name:", icon="BLANK1")
         row.separator()
@@ -61,9 +59,7 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
 
 
 class MODAPPLY_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist."""
 
     mod_name: bpy.props.StringProperty(name="Modifier Name", default="")
     mod_type: bpy.props.StringProperty(name="Modifier Type", default="")
@@ -75,9 +71,7 @@ class MODAPPLY_ITEM(bpy.types.PropertyGroup):
 
 
 class HG_UL_SHAPEKEYS(bpy.types.UIList):
-    """
-    UIList showing shapekeys
-    """
+    """UIList showing shapekeys."""
 
     def draw_item(
         self,
@@ -102,9 +96,7 @@ class HG_UL_SHAPEKEYS(bpy.types.UIList):
 
 
 class SHAPEKEY_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist."""
 
     sk_name: bpy.props.StringProperty(name="Modifier Name", default="")
     enabled: bpy.props.BoolProperty(default=False)
@@ -112,9 +104,7 @@ class SHAPEKEY_ITEM(bpy.types.PropertyGroup):
 
 
 class HG_UL_SAVEHAIR(bpy.types.UIList):
-    """
-    UIList showing hair particle systems
-    """
+    """UIList showing hair particle systems."""
 
     def draw_item(
         self,
@@ -136,18 +126,14 @@ class HG_UL_SAVEHAIR(bpy.types.UIList):
 
 
 class SAVEHAIR_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist."""
 
     ps_name: bpy.props.StringProperty(name="Hair Name", default="")
     enabled: bpy.props.BoolProperty(default=False)
 
 
 class HG_UL_SAVEOUTFIT(bpy.types.UIList):
-    """
-    UIList showing shapekeys
-    """
+    """UIList showing shapekeys."""
 
     def draw_item(
         self,
@@ -180,9 +166,7 @@ class HG_UL_SAVEOUTFIT(bpy.types.UIList):
 
 
 class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
-    """
-    Properties of the items in the uilist
-    """
+    """Properties of the items in the uilist."""
 
     obj_name: bpy.props.StringProperty(name="Ojbect Name", default="")
     cor_sks_present: bpy.props.BoolProperty(default=False)

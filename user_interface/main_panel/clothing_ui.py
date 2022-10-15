@@ -8,8 +8,7 @@ from ..ui_baseclasses import MainPanelPart, subpanel_draw
 class ClothingPanel(MainPanelPart):
     @subpanel_draw
     def draw(self, context):
-        """draws a template_icon_view for adding outfits"""
-
+        """Draws a template_icon_view for adding outfits."""
         self.draw_content_selector()
 
 

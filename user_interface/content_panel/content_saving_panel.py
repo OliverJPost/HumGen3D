@@ -20,8 +20,9 @@ from .save_keys import _draw_key_type_ui
 
 
 class HG_PT_CONTENT_SAVING(bpy.types.Panel):
-    """Panel that shows step by step options for saving various kinds of custom
-    content. Which custom content it displays options for is determined by
+    """Panel that shows step by step options for saving various kinds of custom content.
+
+    Which custom content it displays options for is determined by
     sett.content_saving_type. Which tab it shows is determined by
     content_saving_tab_index
     """

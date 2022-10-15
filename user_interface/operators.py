@@ -12,8 +12,7 @@ from .documentation.tips_suggestions_ui import update_tips_from_context
 
 class HG_SECTION_TOGGLE(bpy.types.Operator):
     """
-    Section tabs, pressing it will make that section the open/active one,
-    closing any other opened sections
+    Button for switching to one of the sections.
 
     Args:
         section_name (str): name of the section to toggle
@@ -100,19 +99,7 @@ class HG_OPENPREF(bpy.types.Operator):
 
 
 class HG_CLEAR_SEARCH(bpy.types.Operator):
-    """Clears the passed searchfield
-
-    API: False
-
-    Operator type:
-        Preview collection manipulation
-
-    Prereq:
-        None
-
-    Args:
-        pcoll_type (str): Name of preview collection to clear the searchbox for
-    """
+    """Clears the passed searchfield."""
 
     bl_idname = "hg3d.clear_searchbox"
     bl_label = "Clear search"
@@ -152,12 +139,7 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
 
 
 class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
-    """Takes the user our of the content saving UI, pack into the standard
-    interface
-
-    Prereq:
-    Currently in content saving UI
-    """
+    """Takes the user our of the content saving UI, pack into the standard interface."""
 
     bl_idname = "hg3d.cancel_content_saving_ui"
     bl_label = "Close this menu"

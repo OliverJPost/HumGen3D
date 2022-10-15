@@ -11,8 +11,7 @@ from ..panel_functions import draw_panel_switch_header, draw_paragraph
 
 
 class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
-    """Panel with extra functionality for HumGen that is not suitable for the
-    main panel. Things like content pack creation, texture baking etc.
+    """Panel for saving custom content.
 
     Args:
         Tools_PT_Base (class): Adds bl_info and commonly used tools

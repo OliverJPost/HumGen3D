@@ -128,7 +128,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
 
     def _draw_baking_warning_labels(self, context, layout) -> bool:
-        """Draws warning if no human is selected or textures are already baked
+        """Draws warning if no human is selected or textures are already baked.
 
         Args:
             context (bpy.context): Blender context
