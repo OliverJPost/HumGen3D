@@ -235,7 +235,7 @@ class Human:
         include_applied_batch_results: bool = False,
         include_legacy: bool = False,
     ) -> Optional[Object]:
-        """Checks if the passed object is part of a HumGen human. Does NOT return an instance
+        """Checks if passed object is part of a HG human. Does NOT return an instance
 
         Args:
             obj (bpy.types.Object): Object to check for if it's part of a HG human
