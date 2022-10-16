@@ -2,9 +2,9 @@
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.human.hair.basehair import ImportableHair
 
 

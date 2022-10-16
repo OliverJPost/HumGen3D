@@ -120,6 +120,7 @@ class KeyItem:
         human: "Human",
         subcategory: Optional[str] = None,
     ) -> None:
+        """Create new KeyItem."""
         self.name = name
         self.category = category
         self._human = human
@@ -149,6 +150,7 @@ class LiveKeyItem(KeyItem):
         human: "Human",
         subcategory: Optional[str] = None,
     ) -> None:
+        """Create new LiveKeyItem."""
         super().__init__(name, category, human, subcategory)
         self.path = path
 
@@ -236,6 +238,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
     }
 
     def __init__(self, sk_name: str, human: "Human") -> None:
+        """Create new ShapeKeyItem."""
         pattern = re.compile(
             "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
         )
@@ -418,7 +421,7 @@ class KeySettings:
     def load_from_npz(
         self, npz_filepath: str, obj_override: Optional[Object] = None
     ) -> bpy.types.ShapeKey:
-        """Creates a new shapekey on the body or the passed obj_override from a npz file
+        """Creates new shapekey on the body or the passed obj_override from a npz file.
 
         This .npy file contains a one dimensional array with coordinates of the
         shape key, RELATIVE to the base coordinates of the body.

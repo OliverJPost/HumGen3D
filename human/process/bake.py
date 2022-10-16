@@ -22,9 +22,7 @@ if TYPE_CHECKING:
 def follow_links(
     target_node: bpy.types.ShaderNode, target_socket: bpy.types.NodeSocket
 ) -> Optional[bpy.types.NodeSocket]:
-    """
-    finds out what node is connected to a certain socket
-    """
+    """Finds out what node is connected to a certain socket."""
 
     return next(
         (
