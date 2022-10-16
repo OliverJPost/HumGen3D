@@ -2,9 +2,7 @@
 
 # TODO document
 
-"""
-Texture baking operators
-"""
+"""Texture baking operators."""
 
 
 import bpy
@@ -38,7 +36,7 @@ def status_text_callback(header, context):
 
 # TODO progress bar
 class HG_BAKE(bpy.types.Operator):
-    """Bake all textures"""
+    """Bake all textures."""
 
     bl_idname = "hg3d.bake"
     bl_label = "Bake"
@@ -46,6 +44,7 @@ class HG_BAKE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def __init__(self):
+        """Init"""
         self.timer = None
         self.bake_idx = 0
         self.image_dict = {}
