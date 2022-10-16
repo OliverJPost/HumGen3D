@@ -7,6 +7,7 @@ import random
 import time
 
 import bpy
+
 from HumGen3D.API import BatchHumanGenerator
 from HumGen3D.backend import hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root

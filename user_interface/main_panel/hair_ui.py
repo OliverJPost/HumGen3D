@@ -31,13 +31,12 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             self._draw_hair_cards_ui(box)
 
     def _draw_face_hair_section(self, box, sett):
-        """shows template_icon_view for facial hair systems
+        """Shows template_icon_view for facial hair systems.
 
         Args:
             box (UILayout): box of hair section
             sett (PropertyGroup): HumGen props
         """
-
         is_open, boxbox = self.draw_sub_spoiler(box, sett, "face_hair", "Face Hair")
         if not is_open:
             return
@@ -45,7 +44,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         self.draw_content_selector(layout=boxbox, pcoll_name="face_hair")
 
     def _draw_hair_material_ui(self, box):
-        """draws subsection with sliders for the three hair materials
+        """Draws subsection with sliders for the three hair materials.
 
         Args:
             box (UILayout): layout.box of hair section
@@ -153,7 +152,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
                 )
 
     def _draw_hair_cards_ui(self, box):
-        """draws button for adding hair cards
+        """Draws button for adding hair cards.
 
         Args:
             box (UILayout): layout.box of hair section

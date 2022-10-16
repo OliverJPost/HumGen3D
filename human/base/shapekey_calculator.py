@@ -1,20 +1,20 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from typing import Any, Iterable, NamedTuple, TypedDict, Union, cast
+from typing import Any, Iterable, Union, cast
 
 import bpy
 import numpy as np
 from bpy.types import Object, bpy_prop_collection
-from HumGen3D.backend import hg_delete
 from HumGen3D.backend.type_aliases import DistanceDict  # type:ignore
-from HumGen3D.human.keys.keys import ShapeKeyItem, apply_shapekeys
 from mathutils import Matrix, Vector, kdtree
+
+from HumGen3D.human.keys.keys import ShapeKeyItem
 
 
 def world_coords_from_obj(
     obj: Object, data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None
 ) -> np.ndarray[Any, Any]:
-    iter = False
+    iterate_data = False
     if not data:
         data = obj.data.vertices
     elif hasattr(data, "__iter__") and not isinstance(data, bpy_prop_collection):
@@ -22,9 +22,9 @@ def world_coords_from_obj(
             raise ValueError(
                 "Data argument is iterable but does not contain ShapeKeyItem."
             )
-        iter = True
+        iterate_data = True
 
-    if not iter:
+    if not iterate_data:
         world_coords = _get_world_co(obj, data)  # type:ignore[arg-type]
     else:
         base_coords = _get_world_co(obj, obj.data.vertices)

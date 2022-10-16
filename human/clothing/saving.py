@@ -4,11 +4,12 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional
 
 import bpy
 import numpy as np
-from HumGen3D.backend.type_aliases import DistanceDict
 from bpy.types import Context, Image, Object
+from HumGen3D.backend.type_aliases import DistanceDict
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.custom_content.content_saving import (
     remove_number_suffix,
@@ -134,8 +135,7 @@ def export_for_gender(
 def save_material_textures(
     objs: Iterable[bpy.types.Object], texture_folder: str
 ) -> None:
-    """Save the textures used by the materials of these objects to the
-    content folder
+    """Save the textures used by the materials of these objects to the content folder.
 
     Args:
         objs (list): List of objects to check for textures on
@@ -152,7 +152,7 @@ def save_material_textures(
 def _process_image(
     saved_images: dict[str, str], img_node: bpy.types.ShaderNode, texture_folder: str
 ) -> None:
-    """Prepare this image for saving and call _save_img on it
+    """Prepare this image for saving and call _save_img on it.
 
     Args:
         saved_images (dict): Dict to keep record of what images were saved
@@ -174,7 +174,7 @@ def _process_image(
 def _save_img(
     img: bpy.types.Image, saved_images: dict[str, str], folder: str
 ) -> tuple[Optional[str], dict[str, str]]:
-    """Save image to content folder
+    """Save image to content folder.
 
     Returns:
         tuple[str, dict]:

@@ -64,7 +64,8 @@ def _get_tag_from_dict(
     )
 
 
-def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:
+# FIXME
+def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:  # noqa
     """Calculates performance statistidcs of batch generator settings.
 
     Returns values to show the user how their choices in the batch settings
@@ -330,9 +331,9 @@ def find_item_amount(  # TODO might be redundant
         ext = ".blend"
 
     if gender:
-        dir = os.path.join(pref.filepath, categ, gender, folder)
+        directory = os.path.join(pref.filepath, categ, gender, folder)
     else:
-        dir = os.path.join(pref.filepath, categ, folder)
+        directory = os.path.join(pref.filepath, categ, folder)
 
     if categ == "outfit":
         sett = context.scene.HG3D  # type:ignore[attr-defined]
@@ -343,4 +344,4 @@ def find_item_amount(  # TODO might be redundant
         elif outside and not inside:
             ext = "O.blend"
 
-    return len([name for name in os.listdir(dir) if name.endswith(ext)])
+    return len([name for name in os.listdir(directory) if name.endswith(ext)])

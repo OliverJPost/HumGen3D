@@ -1,13 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
-import os
 import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
 from HumGen3D.backend.type_aliases import C
-from bpy.types import Context
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.height.armature_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
@@ -49,8 +46,33 @@ class HeightSettings:
 
         return cast(float, top_coord - bottom_coord)
 
+    @staticmethod
+    def _correct_teeth_obj(
+        obj: bpy.types.Object,
+        bone_name: str,
+        reference_vector: Vector,
+        armature: bpy.types.Armature,
+    ) -> None:
+        vert_count = len(obj.data.vertices)
+        verts = np.empty(vert_count * 3, dtype=np.float64)
+        obj.data.vertices.foreach_get("co", verts)
+        verts = verts.reshape((-1, 3))
+
+        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
+        transformation = np.array(
+            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
+        )
+
+        verts += transformation
+
+        verts = verts.reshape((-1))
+        obj.data.vertices.foreach_set("co", verts)
+        obj.data.update()
+
     @injected_context
-    def set(self, value_cm: float, context: C = None, realtime: bool = False) -> None:
+    def set(  # noqa: A003
+        self, value_cm: float, context: C = None, realtime: bool = False
+    ) -> None:  # noqa A001
         if context.scene.HG3D.update_exception:
             return
 
@@ -183,29 +205,6 @@ class HeightSettings:
         self._correct_teeth_obj(
             teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003)), armature
         )
-
-    @staticmethod
-    def _correct_teeth_obj(
-        obj: bpy.types.Object,
-        bone_name: str,
-        reference_vector: Vector,
-        armature: bpy.types.Armature,
-    ) -> None:
-        vert_count = len(obj.data.vertices)
-        verts = np.empty(vert_count * 3, dtype=np.float64)
-        obj.data.vertices.foreach_get("co", verts)
-        verts = verts.reshape((-1, 3))
-
-        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
-        transformation = np.array(
-            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
-        )
-
-        verts += transformation
-
-        verts = verts.reshape((-1))
-        obj.data.vertices.foreach_set("co", verts)
-        obj.data.update()
 
     @injected_context
     def randomize(self, context: C = None) -> None:

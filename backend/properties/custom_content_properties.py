@@ -157,7 +157,7 @@ class ACustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
 class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     human_attr = "hair"
 
-    type: EnumProperty(
+    save_type: EnumProperty(
         name="Hairtype",
         items=[
             ("head", "Regular Hair", "", 0),

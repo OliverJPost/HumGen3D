@@ -1,8 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """
-Contains operators and functions for the callback HG3D gets whenever
-    the active object changes.
+Callback HG3D gets whenever the active object changes.
+
 This callback has the following usages:
 -Update the choices for all preview collections, for example loading female
     hairstyles when a female human is selected

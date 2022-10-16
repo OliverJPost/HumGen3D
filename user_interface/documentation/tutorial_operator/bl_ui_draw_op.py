@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import bpy  # type: ignore
 from bpy.types import Operator  # type: ignore
 

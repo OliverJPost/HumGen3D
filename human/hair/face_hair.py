@@ -2,9 +2,9 @@
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.human.hair.basehair import ImportableHair
 
 
@@ -14,6 +14,7 @@ class FacialHairSettings(ImportableHair):
     _startswith = "fh"
 
     def __init__(self, _human: "Human") -> None:
+        """Create instance to manipulate facial hair settings."""
         if _human.gender == "female":
             raise NotImplementedError(
                 "Facial hair is currently not implemented for female humans"
