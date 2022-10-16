@@ -1,20 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
 import os
 import random
-import subprocess
-import time
-from typing import Iterable, Literal, Optional, Union
+from typing import Literal, Optional, Union
 
-import bpy
-from HumGen3D.backend import get_addon_root, get_prefs
-from HumGen3D.backend.type_aliases import C, GenderStr  # type:ignore
+from HumGen3D.backend.type_aliases import C  # type:ignore
 from HumGen3D.batch_generator.batch_functions import height_from_bell_curve
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.human import Human
-
-from ..backend.logging import hg_log
 
 SettingsDict = dict[str, Union[str, int, float]]
 

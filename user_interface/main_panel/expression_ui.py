@@ -12,10 +12,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
 
     @subpanel_draw
     def draw(self, context):
-        """section for selecting expressions from template_icon_view or adding
-        facial rig
-        """
-
+        """UI for selecting expressions from template_icon_view or adding facial rig."""
         row = self.layout.row(align=True)
         row.scale_y = 1.5
         row.prop(self.sett.ui, "expression_type", expand=True)
@@ -51,7 +48,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             self._draw_sk_sliders_subsection(filtered_obj_sks)
 
     def _draw_sk_sliders_subsection(self, filtered_obj_sks):
-        """draws sliders for each non-corrective shapekey to adjust the strength
+        """Draws sliders for each non-corrective shapekey to adjust the strength.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -84,7 +81,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             row.operator("hg3d.removesk", text="", icon="TRASH").shapekey = sk.name
 
     def _draw_frig_subsection(self, box):
-        """draws subsection for adding facial rig
+        """Draws subsection for adding facial rig.
 
         Args:
             box (UILayout): layout.box of expression section

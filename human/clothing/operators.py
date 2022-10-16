@@ -10,17 +10,7 @@ from .base_clothing import find_masks
 
 
 class HG_BACK_TO_HUMAN(bpy.types.Operator):
-    """Makes the rig the active object, changing the ui back to the default state
-
-    API: False
-
-    Operator type:
-        Selection
-        HumGen UI manipulation
-
-    Prereq:
-        Cloth object was active
-    """
+    """Makes the rig the active object, changing the ui back to the default state."""
 
     bl_idname = "hg3d.backhuman"
     bl_label = "Back to Human"
@@ -33,15 +23,7 @@ class HG_BACK_TO_HUMAN(bpy.types.Operator):
 
 
 class HG_DELETE_CLOTH(bpy.types.Operator):
-    """Deletes the selected cloth object, also removes any mask modifiers this
-    cloth was using
-
-    Operator type:
-        Object deletion
-
-    Prereq:
-        Active object is a HumGen clothing object
-    """
+    """Deletes selected cloth obj, also removes mask modifiers this cloth was using."""
 
     bl_idname = "hg3d.deletecloth"
     bl_label = "Delete cloth"
@@ -69,7 +51,8 @@ class HG_DELETE_CLOTH(bpy.types.Operator):
 
 
 class HG_OT_PATTERN(bpy.types.Operator):
-    """n Adds a pattern to the selected cloth material, adding the necessary nodes.
+    """Adds a pattern to the selected cloth material, adding the necessary nodes.
+
     Also used for removing the pattern
     """
 
@@ -94,7 +77,7 @@ class HG_OT_PATTERN(bpy.types.Operator):
 
 class HG_COLOR_RANDOM(bpy.types.Operator):
     """
-    Sets the color slot to a random color from the color dicts from HG_COLORS
+    Sets the color slot to a random color from the color dicts from HG_COLORS.
 
     Operator type:
         Material
@@ -145,7 +128,7 @@ class HG_COLOR_RANDOM(bpy.types.Operator):
         return {"FINISHED"}
 
     def _hex_to_rgba(self, color_hex) -> "tuple[float, float, float, 1]":
-        """Build rgb color from this hex code
+        """Build rgb color from this hex code.
 
         Args:
             color_hex (str): Hexadecimal color code, withhout # in front

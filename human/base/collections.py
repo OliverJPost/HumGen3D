@@ -7,7 +7,7 @@ import bpy
 def add_to_collection(
     context: bpy.types.Context, obj: bpy.types.Object, collection_name: str = "HumGen"
 ) -> bpy.types.Collection:
-    """Adds the giver object toa colleciton. By default added to HumGen collection
+    """Adds the giver object toa colleciton. By default added to HumGen collection.
 
     Args:
         obj (Object): object to add to collection
@@ -33,7 +33,7 @@ def add_to_collection(
         else:
             context.scene.collection.children.link(collection)
 
-    if obj in [o for o in context.scene.collection.objects]:
+    if obj in context.scene.collection.objects:
         context.scene.collection.objects.unlink(obj)
     else:
         obj.users_collection[0].objects.unlink(obj)

@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 # type:ignore
-
+# flake8: noqa CM001
 """
 context.scene.HG3D.pcoll
 Stores the preview collections of Human Generator. These collections are used to allow
@@ -46,7 +46,7 @@ def get_folders(attr):
         try:
             return retreiver(human)._get_categories()
         # Catch for weird behaviour where pose_category refreshes early
-        except (AttributeError, HumGenException) as e:
+        except (AttributeError, HumGenException):
             return [("ERROR", "ERROR", "", i) for i in range(99)]
 
     return func
@@ -157,7 +157,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         update=refresh("expression"),
     )
 
-    # footwear
+    # footwear # noqa
     footwear: EnumProperty(
         items=get_items("footwear"),
         update=update("footwear"),

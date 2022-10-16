@@ -1,8 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
-This file is currently inactive
-"""
+"""This file is currently inactive."""
 
 import bpy
 from HumGen3D.backend import preview_collections  # type: ignore
@@ -11,9 +9,7 @@ from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
-    """
-    UIList showing clothing libraries
-    """
+    """UIList showing clothing libraries."""
 
     def draw_item(
         self,
@@ -30,9 +26,7 @@ class HG_UL_BATCH_CLOTHING(bpy.types.UIList):
 
 
 class HG_UL_BATCH_EXPRESSIONS(bpy.types.UIList):
-    """
-    UIList showing clothing libraries
-    """
+    """UIList showing clothing libraries."""
 
     def draw_item(
         self,
@@ -85,7 +79,7 @@ def uilist_layout(layout, context, item):
 
 
 class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
-    """Properties of the items in the uilist"""
+    """Properties of the items in the uilist."""
 
     library_name: bpy.props.StringProperty(
         name="Library Name",
@@ -98,7 +92,7 @@ class BATCH_CLOTHING_ITEM(bpy.types.PropertyGroup):
 
 
 class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
-    """Properties of the items in the uilist"""
+    """Properties of the items in the uilist."""
 
     library_name: bpy.props.StringProperty(
         name="Library Name",
@@ -110,9 +104,7 @@ class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
 
 
 def batch_uilist_refresh(self, context, categ):
-    """
-    Refreshes uilist
-    """
+    """Refreshes uilist."""
     scene = context.scene
     if categ == "outfit":
         collection = scene.batch_clothing_col
@@ -133,7 +125,7 @@ def batch_uilist_refresh(self, context, categ):
         item = collection.add()
         item.name = folder[0]
         item.library_name = folder[0]
-        if folder[0] in [n for n in enabled_dict]:
+        if folder[0] in list(enabled_dict):
             item.enabled = enabled_dict[folder[0]]
         if gender:
             item.male_items = find_item_amount(context, categ, "male", folder[0])
@@ -158,9 +150,7 @@ def batch_uilist_refresh(self, context, categ):
 
 
 class HG_REFRESH_UILISTS(bpy.types.Operator):
-    """
-    clears searchfield
-    """
+    """Clears searchfield."""
 
     bl_idname = "hg3d.refresh_batch_uilists"
     bl_label = "Refresh"

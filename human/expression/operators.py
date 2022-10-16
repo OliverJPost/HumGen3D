@@ -7,18 +7,7 @@ from HumGen3D.user_interface.documentation.feedback_func import show_message
 
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
-    """Removes the corresponding shapekey
-
-    Operator type
-        Shapekeys
-
-    Prereq:
-        shapekey str passed
-        active object is part of HumGen human
-
-    Args:
-        shapekey (str): name of shapekey to remove
-    """
+    """Removes the corresponding shapekey."""
 
     bl_idname = "hg3d.removesk"
     bl_label = "Remove this shapekey"
@@ -41,16 +30,7 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
 
 
 class HG_ADD_FRIG(bpy.types.Operator):
-    """Adds the facial rig to this human, importing the necessary shapekeys
-
-    Operator type:
-        Facial rig
-        Shapekeys
-
-    Prereq:
-        Active object is part of HumGen human
-        Human doesn't already have a facial rig
-    """
+    """Adds the facial rig to this human, importing the necessary shapekeys."""
 
     bl_idname = "hg3d.addfrig"
     bl_label = "Add facial rig"
@@ -64,16 +44,7 @@ class HG_ADD_FRIG(bpy.types.Operator):
 
 
 class HG_REMOVE_FRIG(bpy.types.Operator):
-    """Removes the facial rig, including its shapekeys
-
-    Operator type:
-        Facial rig
-        Shapekeys
-
-    Prereq:
-        Active object is part of HumGen human
-        Human has a facial rig loaded
-    """
+    """Removes the facial rig, including its shapekeys."""
 
     bl_idname = "hg3d.removefrig"
     bl_label = "Remove facial rig"

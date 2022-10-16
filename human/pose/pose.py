@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from os import PathLike
 from typing import TYPE_CHECKING, Literal, Union
 
 import bpy
@@ -25,7 +24,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         self._pcoll_gender_split = False
 
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
+    def set(self, preset: str, context: C = None) -> None:  # noqa: A003
         """Gets called by pcoll_pose to add selected pose to human"""
 
         sett = context.scene.HG3D  # type:ignore[attr-defined]

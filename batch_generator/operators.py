@@ -3,12 +3,10 @@
 """Batch mode for generating multiple humans at once."""
 
 import os
-import random
 import time
 
-import bmesh
 import bpy
-from HumGen3D.backend import hg_delete, hg_log
+from HumGen3D.backend import hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.base.render import set_eevee_ao_and_strip
@@ -107,7 +105,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             self._show_dialog_to_confirm_deleting_humans(context)
             return {"CANCELLED"}
 
-    def _initiate_modal(self, context, batch_sett):
+    def _initiate_modal(self, context, batch_sett):  # noqa
         wm = context.window_manager
         wm.modal_handler_add(self)
 
@@ -245,7 +243,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         return {"CANCELLED"}
 
     def _choose_category_list(self):
-        collection = getattr(bpy.context.scene, f"batch_clothing_col")
+        collection = bpy.context.scene.batch_clothing_col
 
         enabled_categories = [i.library_name for i in collection if i.enabled]
         if not enabled_categories:

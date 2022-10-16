@@ -1,14 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import os
-from typing import TYPE_CHECKING, Optional, Union, cast, no_type_check
+from typing import TYPE_CHECKING, Optional, Union, no_type_check
 
 import bpy  # type:ignore
 import numpy as np
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.backend.type_aliases import BpyEnum, GenderStr
-from HumGen3D.human.human import Human
+from HumGen3D.backend.type_aliases import GenderStr
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.batch_props import BatchProps
@@ -60,7 +59,8 @@ def _get_tag_from_dict(
     )
 
 
-def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:
+# FIXME
+def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:  # noqa
     """Calculates performance statistidcs of batch generator settings.
 
     Returns values to show the user how their choices in the batch settings
@@ -266,9 +266,9 @@ def find_item_amount(  # TODO might be redundant
         pcoll_folder = os.path.join(*pcoll_folder)
 
     if gender:
-        dir = os.path.join(pref.filepath, pcoll_folder, gender, folder)
+        directory = os.path.join(pref.filepath, pcoll_folder, gender, folder)
     else:
-        dir = os.path.join(pref.filepath, pcoll_folder, folder)
+        directory = os.path.join(pref.filepath, pcoll_folder, folder)
 
     if categ == "outfit":
         sett = context.scene.HG3D  # type:ignore[attr-defined]
@@ -279,4 +279,4 @@ def find_item_amount(  # TODO might be redundant
         elif outside and not inside:
             ext = "O.blend"
 
-    return len([name for name in os.listdir(dir) if name.endswith(ext)])
+    return len([name for name in os.listdir(directory) if name.endswith(ext)])

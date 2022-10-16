@@ -35,7 +35,9 @@ from mathutils import Vector
 
 
 def find_masks(obj: bpy.types.Object) -> list[str]:
-    """Looks at the custom properties of the object, searching for custom tags
+    """Finds masks that belong to cloth items.
+
+    Looks at the custom properties of the object, searching for custom tags
     that indicate mesh masks added for this cloth.
 
     Args:
@@ -58,8 +60,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         return PatternSettings(self._human)
 
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
-        """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit
+    def set(self, preset: str, context: C = None) -> None:  # noqa A001
+        """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit.
 
         Args:
             footwear (boolean): True if called by pcoll_footwear, else loads as outfit
@@ -125,15 +127,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def deform_cloth_to_human(
         self, context: bpy.types.Context, cloth_obj: bpy.types.Object
     ) -> None:
-        """Deforms the cloth object to the shape of the active HumGen human by using
-        HG_SHAPEKEY_CALCULATOR
+        """Deforms the cloth object to the shape of the active HumGen human.
 
         Args:
             hg_rig (Object): HumGen armature
             hg_body (Object): HumGen body
             obj (Object): cloth object to deform
         """
-
         body_obj = self._human.body_obj
         if self._human.gender == "female":
             verts = body_obj.data.vertices
@@ -167,150 +167,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self._set_armature(context, cloth_obj, self._human.rig_obj)
         context.view_layer.objects.active = self._human.rig_obj
 
-    def _set_geometry_masks(
-        self, mask_remove_list: list[str], new_mask_list: list[str]
-    ) -> None:
-        """Adds geometry mask modifiers to hg_body based on custom properties on the
-        imported clothing
-
-        Args:
-            mask_remove_list (list): list of masks to remove from the human, that
-                                    were added by previous outfits
-            new_mask_list (list): list of masks to add that were not on theh human
-                                before
-            hg_body (Object): HumGen body to add the modifiers on
-        """
-        # remove duplicates from mask lists
-        mask_remove_list = list(set(mask_remove_list))
-        new_mask_list = list(set(new_mask_list))
-
-        # find the overlap between both lists, these will be ignored
-        ignore_masks = list(set(mask_remove_list) & set(new_mask_list))
-        for mask in ignore_masks:
-            mask_remove_list.remove(mask)
-            new_mask_list.remove(mask)
-
-        # remove modifiers used by old clothes
-        for mask in mask_remove_list:
-            with contextlib.suppress(Exception):
-                self._human.body_obj.modifiers.remove(
-                    self._human.body_obj.modifiers.get(mask)
-                )
-
-        # add new masks used by new clothes
-        for mask in new_mask_list:
-            mod = self._human.body_obj.modifiers.new(mask, "MASK")
-            mod.vertex_group = mask
-            mod.invert_vertex_group = True
-
-    def _set_armature(
-        self,
-        context: bpy.types.Context,
-        obj: bpy.types.Object,
-        hg_rig: bpy.types.Object,
-    ) -> None:
-        """Adds an armature modifier to this cloth object
-
-        Args:
-            obj (Object): cloth object to add armature to
-            hg_rig (Object): HumGen armature
-        """
-        # checks if the cloth object already has an armature modifier,
-        # adds one if it doesnt
-        armature_mods = [mod for mod in obj.modifiers if mod.type == "ARMATURE"]
-
-        if not armature_mods:
-            armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
-
-        armature_mods[0].object = hg_rig
-        self._move_armature_to_top(context, obj, armature_mods)  # type:ignore[arg-type]
-
-    def _move_armature_to_top(
-        self,
-        context: bpy.types.Context,
-        obj: bpy.types.Object,
-        armature_mods: Iterable[bpy.types.Modifier],
-    ) -> None:
-        """Moves the armature modifier to the top of the stack
-
-        Args:
-            context ([type]): [description]
-            obj (Object): object the armature mod is on
-            armature_mods (list): list of armature modifiers on this object
-        """
-        context.view_layer.objects.active = obj
-        for mod in armature_mods:
-            if (
-                2,
-                90,
-                0,
-            ) > bpy.app.version:  # use old method for versions older than 2.90
-                while obj.modifiers.find(mod.name) != 0:
-                    bpy.ops.object.modifier_move_up(
-                        {"object": obj}, modifier=mod.name  # type:ignore
-                    )
-            else:
-                bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
-
-    @injected_context
-    def _import_cloth_items(
-        self,
-        preset: str,
-        context: C = None,
-    ) -> Tuple[list[bpy.types.Object], list[bpy.types.Collection]]:
-        """Imports the cloth objects from an external file
-
-        Args:
-            context ([type]): [description]
-            sett (PropertyGroup): HumGen props
-            pref (AddonPreferences): HumGen preferences
-            hg_rig (Object): HumGen armature object
-            footwear (bool): True if import footwear, False if import clothing
-
-        Returns:
-            tuple[list, list]:
-                cloth_objs: list with imported clothing objects
-                collections: list with imported collections the cloth objs were in
-        """
-        # load the whole collection from the outfit file. It loads collections
-        # instead of objects because this allows loading of linked objects
-
-        blendfile = str(get_prefs().filepath) + str(Path(preset))
-        with bpy.data.libraries.load(blendfile, link=False) as (
-            data_from,
-            data_to,
-        ):
-            data_to.collections = data_from.collections
-            data_to.texts = data_from.texts
-
-        # appends all collections and objects to scene
-        collections = data_to.collections
-
-        cloth_objs = []
-        for col in collections:
-            context.scene.collection.children.link(col)
-            for obj in col.objects:
-                cloth_objs.append(obj)
-
-        for obj in context.selected_objects:
-            obj.select_set(False)
-
-        # loads cloth objects in the humgen collection and sets the rig as their
-        # parent. This also makes sure their rotation and location is correct
-        for obj in cloth_objs:
-            add_to_collection(context, obj)
-            obj.location = (0, 0, 0)
-            obj.parent = self._human.rig_obj
-            obj.select_set(True)
-
-        # makes linked objects/textures/nodes local
-        bpy.ops.object.make_local(type="SELECT_OBDATA_MATERIAL")
-        bpy.ops.object.make_local(type="ALL")
-
-        return cloth_objs, collections
-
     def remove(self) -> list[str]:
-        """Removes the cloth objects that were already on the human
+        """Removes the cloth objects that were already on the human.
 
         Args:
             pref (AddonPreferences): preferences of HumGen
@@ -329,41 +187,37 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         return mask_remove_list
 
-    def _set_cloth_corrective_drivers(
-        self, hg_cloth: bpy.types.Object, sk: bpy.types.ShapeKey
+    @injected_context
+    def save_to_library(
+        self,
+        name: str,
+        for_male: bool = True,
+        for_female: bool = True,
+        open_when_finished: bool = False,
+        category: str = "Custom",
+        thumbnail: Optional[bpy.types.Image] = None,
+        context: C = None,
     ) -> None:
-        """Sets up the drivers of the corrective shapekeys on the clothes
+        genders = []
+        if for_male:
+            genders.append("male")
+        if for_female:
+            genders.append("female")
 
-        Args:
-            hg_body (Object): HumGen body object
-            sk (list): List of cloth object shapekeys #CHECK
-        """
-        with contextlib.suppress(AttributeError):
-            for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
-                hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
+        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
+        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
 
-        body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
-
-        for driver in body_drivers:
-            target_sk = driver.data_path.replace('key_blocks["', "").replace(
-                '"].value', ""
-            )  # TODO this is horrible
-
-            if target_sk not in [shapekey.name for shapekey in sk]:
-                continue
-
-            new_driver = sk[target_sk].driver_add("value")  # type:ignore[index]
-            new_var = new_driver.driver.variables.new()
-            new_var.type = "TRANSFORMS"
-            new_target = new_var.targets[0]
-            old_var = driver.driver.variables[0]
-            old_target = old_var.targets[0]
-            new_target.id = self._human.rig_obj
-
-            new_driver.driver.expression = driver.driver.expression
-            new_target.bone_target = old_target.bone_target
-            new_target.transform_type = old_target.transform_type
-            new_target.transform_space = old_target.transform_space
+        save_clothing(
+            self._human,
+            folder,
+            category,
+            name,
+            context,
+            self.objects,
+            genders,
+            open_when_finished,
+            thumbnail=thumbnail,
+        )
 
     # TODO item independent
     def set_texture_resolution(
@@ -456,6 +310,183 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         context.view_layer.objects.active = old_active
 
+    def _set_geometry_masks(
+        self, mask_remove_list: list[str], new_mask_list: list[str]
+    ) -> None:
+        """Adds mask modifiers to hg_body based on properties on the imported clothing.
+
+        Args:
+            mask_remove_list (list): list of masks to remove from the human, that
+                                    were added by previous outfits
+            new_mask_list (list): list of masks to add that were not on theh human
+                                before
+            hg_body (Object): HumGen body to add the modifiers on
+        """
+        # remove duplicates from mask lists
+        mask_remove_list = list(set(mask_remove_list))
+        new_mask_list = list(set(new_mask_list))
+
+        # find the overlap between both lists, these will be ignored
+        ignore_masks = list(set(mask_remove_list) & set(new_mask_list))
+        for mask in ignore_masks:
+            mask_remove_list.remove(mask)
+            new_mask_list.remove(mask)
+
+        # remove modifiers used by old clothes
+        for mask in mask_remove_list:
+            with contextlib.suppress(Exception):
+                self._human.body_obj.modifiers.remove(
+                    self._human.body_obj.modifiers.get(mask)
+                )
+
+        # add new masks used by new clothes
+        for mask in new_mask_list:
+            mod = self._human.body_obj.modifiers.new(mask, "MASK")
+            mod.vertex_group = mask
+            mod.invert_vertex_group = True
+
+    def _set_armature(
+        self,
+        context: bpy.types.Context,
+        obj: bpy.types.Object,
+        hg_rig: bpy.types.Object,
+    ) -> None:
+        """Adds an armature modifier to this cloth object.
+
+        Args:
+            obj (Object): cloth object to add armature to
+            hg_rig (Object): HumGen armature
+        """
+        # checks if the cloth object already has an armature modifier,
+        # adds one if it doesnt
+        armature_mods = [mod for mod in obj.modifiers if mod.type == "ARMATURE"]
+
+        if not armature_mods:
+            armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
+
+        armature_mods[0].object = hg_rig
+        self._move_armature_to_top(context, obj, armature_mods)  # type:ignore[arg-type]
+
+    def _move_armature_to_top(
+        self,
+        context: bpy.types.Context,
+        obj: bpy.types.Object,
+        armature_mods: Iterable[bpy.types.Modifier],
+    ) -> None:
+        """Moves the armature modifier to the top of the stack.
+
+        Args:
+            context ([type]): [description]
+            obj (Object): object the armature mod is on
+            armature_mods (list): list of armature modifiers on this object
+        """
+        context.view_layer.objects.active = obj
+        for mod in armature_mods:
+            if (
+                2,
+                90,
+                0,
+            ) > bpy.app.version:  # use old method for versions older than 2.90
+                while obj.modifiers.find(mod.name) != 0:
+                    bpy.ops.object.modifier_move_up(
+                        {"object": obj}, modifier=mod.name  # type:ignore
+                    )
+            else:
+                bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
+
+    @injected_context
+    def _import_cloth_items(
+        self,
+        preset: str,
+        context: C = None,
+    ) -> Tuple[list[bpy.types.Object], list[bpy.types.Collection]]:
+        """Imports the cloth objects from an external file.
+
+        Args:
+            context ([type]): [description]
+            sett (PropertyGroup): HumGen props
+            pref (AddonPreferences): HumGen preferences
+            hg_rig (Object): HumGen armature object
+            footwear (bool): True if import footwear, False if import clothing
+
+        Returns:
+            tuple[list, list]:
+                cloth_objs: list with imported clothing objects
+                collections: list with imported collections the cloth objs were in
+        """
+        # load the whole collection from the outfit file. It loads collections
+        # instead of objects because this allows loading of linked objects
+
+        blendfile = str(get_prefs().filepath) + str(Path(preset))
+        with bpy.data.libraries.load(blendfile, link=False) as (
+            data_from,
+            data_to,
+        ):
+            data_to.collections = data_from.collections
+            data_to.texts = data_from.texts
+
+        # appends all collections and objects to scene
+        collections = data_to.collections
+
+        cloth_objs = []
+        for col in collections:
+            context.scene.collection.children.link(col)
+            for obj in col.objects:
+                cloth_objs.append(obj)
+
+        for obj in context.selected_objects:
+            obj.select_set(False)
+
+        # loads cloth objects in the humgen collection and sets the rig as their
+        # parent. This also makes sure their rotation and location is correct
+        for obj in cloth_objs:
+            add_to_collection(context, obj)
+            obj.location = (0, 0, 0)
+            obj.parent = self._human.rig_obj
+            obj.select_set(True)
+
+        # makes linked objects/textures/nodes local
+        bpy.ops.object.make_local(type="SELECT_OBDATA_MATERIAL")
+        bpy.ops.object.make_local(type="ALL")
+
+        return cloth_objs, collections
+
+    def _set_cloth_corrective_drivers(
+        self, hg_cloth: bpy.types.Object, sk: bpy.types.ShapeKey
+    ) -> None:
+        """Sets up the drivers of the corrective shapekeys on the clothes.
+
+        Args:
+            hg_body (Object): HumGen body object
+            sk (list): List of cloth object shapekeys #CHECK
+        """
+        with contextlib.suppress(AttributeError):
+            for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
+                hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
+
+        body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
+
+        for driver in body_drivers:
+            target_sk = driver.data_path.replace('key_blocks["', "").replace(
+                '"].value', ""
+            )  # TODO this is horrible
+
+            if target_sk not in [shapekey.name for shapekey in sk]:
+                continue
+
+            new_driver = sk[target_sk].driver_add("value")  # type:ignore[index]
+            new_var = new_driver.driver.variables.new()
+            new_var.type = "TRANSFORMS"
+            new_target = new_var.targets[0]
+            old_var = driver.driver.variables[0]
+            old_target = old_var.targets[0]
+            new_target.id = self._human.rig_obj
+
+            new_driver.driver.expression = driver.driver.expression
+            new_target.bone_target = old_target.bone_target
+            new_target.transform_type = old_target.transform_type
+            new_target.transform_space = old_target.transform_space
+
     @injected_context
     def _calc_percentage_clipping_vertices(self, context: C = None) -> float:
         body_obj = self._human.body_obj
@@ -529,35 +560,3 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 hash_coll.append(hash(tuple(node_names)))
 
         return hash(tuple(hash_coll))
-
-    @injected_context
-    def save_to_library(
-        self,
-        name: str,
-        for_male: bool = True,
-        for_female: bool = True,
-        open_when_finished: bool = False,
-        category: str = "Custom",
-        thumbnail: Optional[bpy.types.Image] = None,
-        context: C = None,
-    ) -> None:
-        genders = []
-        if for_male:
-            genders.append("male")
-        if for_female:
-            genders.append("female")
-
-        pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
-        folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
-
-        save_clothing(
-            self._human,
-            folder,
-            category,
-            name,
-            context,
-            self.objects,
-            genders,
-            open_when_finished,
-            thumbnail=thumbnail,
-        )

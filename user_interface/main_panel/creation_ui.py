@@ -23,8 +23,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         )  # type:ignore[attr-defined]
 
     def draw(self, context):
-        """UI that shows when no human is selected, with buttons for creating a
-        new human.
+        """UI that shows when no human is selected, UI for creating a new human.
 
         Shows a template icon view of all 'starting humans', a switch for male
         and female genders and a pink button to add the selected human

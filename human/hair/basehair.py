@@ -24,33 +24,6 @@ from HumGen3D.human.keys.keys import apply_shapekeys
 
 
 class BaseHair:
-    def _add_quality_props(self, mod: bpy.types.Modifier) -> None:
-
-        ps = mod.particle_system.settings
-        ps["steps"] = ps.render_step
-        ps["children"] = ps.rendered_child_count
-        ps["root"] = ps.root_radius
-        ps["tip"] = ps.tip_radius
-
-    def randomize_color(self) -> None:
-        # TODO make system more elaborate
-        hair_color_dict = {
-            "blonde": (4.0, 0.8, 0.0),
-            "black": (0.0, 1.0, 0.0),
-            "dark_brown": (0.5, 1.0, 0.0),
-            "brown": (1.0, 1.0, 0.0),
-            "red": (3.0, 1.0, 0.0),
-        }
-
-        hair_color = hair_color_dict[random.choice([name for name in hair_color_dict])]
-
-        for mat in self._human.body_obj.data.materials[1:]:
-            nodes = mat.node_tree.nodes
-            hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
-            hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
-            hair_node.inputs["Hair Redness"].default_value = hair_color[1]
-            hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
-
     @property
     def particle_systems(self) -> PropCollection:
         particle_systems = self._human.hair.particle_systems
@@ -67,7 +40,29 @@ class BaseHair:
         ]
         return PropCollection(modifiers)
 
-    def _condition(self, string: str) -> bool:
+    def delete_all(self) -> None:
+        raise NotImplementedError  # FIXME
+
+    def randomize_color(self) -> None:
+        # TODO make system more elaborate
+        hair_color_dict = {
+            "blonde": (4.0, 0.8, 0.0),
+            "black": (0.0, 1.0, 0.0),
+            "dark_brown": (0.5, 1.0, 0.0),
+            "brown": (1.0, 1.0, 0.0),
+            "red": (3.0, 1.0, 0.0),
+        }
+
+        hair_color = hair_color_dict[random.choice(list(hair_color_dict))]
+
+        for mat in self._human.body_obj.data.materials[1:]:
+            nodes = mat.node_tree.nodes
+            hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
+            hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
+            hair_node.inputs["Hair Redness"].default_value = hair_color[1]
+            hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
+
+    def _condition(self, string: str) -> bool:  # noqa
         if hasattr(self, "_startswith"):
             return string.startswith(self._startswith)
         elif hasattr(self, "_notstartswith"):
@@ -77,8 +72,13 @@ class BaseHair:
                 "Did not initialize hair class with _startswith or _notstartswith"
             )
 
-    def delete_all(self) -> None:
-        raise NotImplementedError  # FIXME
+    def _add_quality_props(self, mod: bpy.types.Modifier) -> None:
+
+        ps = mod.particle_system.settings
+        ps["steps"] = ps.render_step
+        ps["children"] = ps.rendered_child_count
+        ps["root"] = ps.root_radius
+        ps["tip"] = ps.tip_radius
 
     def __hash__(self) -> int:
         key_data = []
@@ -90,15 +90,13 @@ class BaseHair:
                 key_data.append(round_vector_to_tuple(particle.location, precision=8))
                 key_data.append(round_vector_to_tuple(particle.rotation, precision=4))
 
-        print(key_data)
         return hash(tuple(key_data))
 
 
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
-        """Loads hair system the user selected by reading the json that belongs to
-        the selected hairstyle
+    def set(self, preset: str, context: C = None) -> None:  # noqa: A003
+        """Loads hair system the user selected.
 
         Args:
             type (str): type of hair to load ('head' or 'face_hair')
@@ -225,10 +223,21 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             thumbnail,
         )
 
+    def remove_all(self) -> None:
+        modifiers = self.modifiers
+        for mod in modifiers:
+            self._human.body_obj.modifiers.remove(mod)
+
+    @injected_context
+    def randomize(self, context: C = None) -> None:
+        preset_options = self.get_preset_options()
+        chosen_preset = random.choice(preset_options)
+        self.set(chosen_preset, context)
+
     def _import_hair_obj(
         self, context: bpy.types.Context, hair_type: str, pref: HG_PREF, blendfile: str
     ) -> bpy.types.Object:
-        """Imports the object that contains the hair systems named in the json file
+        """Imports the object that contains the hair systems named in the json file.
 
         Args:
             context ([type]): [description]
@@ -255,8 +264,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _morph_hair_obj_to_body_obj(
         self, context: bpy.types.Context, hair_obj: bpy.types.Object
     ) -> None:
-        """Gives the imported hair object the exact same shape as hg, to make sure
-        the hair systems get transferred correctly
+        """Gives the imported hair object the exact same shape as hg human.
 
         Args:
             hg_body (Object): body object
@@ -308,7 +316,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         mod: bpy.types.Modifier,
         ps_name: str,
     ) -> None:
-        """Sets the settings of this particle settings according to the json dict
+        """Sets the settings of this particle settings according to the json dict.
 
         Args:
             json_systems (dict):
@@ -331,14 +339,13 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             psys.render_step = json_sett["path_steps"]
 
     def _transfer_vertexgroup(self, from_obj: bpy.types.Object, vg_name: str) -> None:
-        """Copies vertex groups from one object to the other
+        """Copies vertex groups from one object to the other.
 
         Args:
             to_obj   (Object): object to transfer vertex groups to
             from_obj (Object): object to transfer vertex group from
             vg_name  (str)   : name of vertex group to transfer
         """
-
         vert_dict = {}
         for vert_idx, _ in enumerate(from_obj.data.vertices):
             with contextlib.suppress(Exception):
@@ -356,7 +363,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _get_hair_systems_dict(
         self, hair_obj: bpy.types.Object
     ) -> dict[bpy.types.Modifier, str]:
-        """Gets hair particle systems on passed object, including modifiers
+        """Gets hair particle systems on passed object, including modifiers.
 
         Args:
             hair_obj (Object): imported hair obj
@@ -366,7 +373,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 key   (bpy.types.modifier)       : Modifier of a particle system
                 value (bpy.types.particle_system): Particle hair system
         """
-
         system_names = []
 
         for mod in [mod for mod in hair_obj.modifiers if mod.type == "PARTICLE_SYSTEM"]:
@@ -380,7 +386,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         return new_mod_dict
 
     def _reconnect_hair(self, mod: bpy.types.Modifier) -> None:
-        """Reconnects the transferred hair systems to the skull
+        """Reconnects the transferred hair systems to the skull.
 
         Args:
             hg_body (Object): hg body object
@@ -396,8 +402,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _set_correct_particle_vertexgroups(
         self, new_systems: dict[bpy.types.Modifier, str], from_obj: bpy.types.Object
     ) -> None:
-        """Transferring particle systems results in the wrong vertex group being set,
-        this corrects that
+        """Corrects particle system errors caused bytransfering systems.
 
         Args:
             new_systems (dict): modifiers and particle_systems to correct vgs for
@@ -431,8 +436,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     def _set_correct_hair_material(
         self, new_systems: dict[bpy.types.Modifier, str], hair_type: str
     ) -> None:
-        """Sets face hair material for face hair systems and head head material for
-        head hair
+        """Sets face hair material for fh systems and head head material for head hair.
 
         Args:
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
@@ -477,13 +481,3 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 bpy.ops.object.modifier_move_to_index(
                     modifier=mod.name, index=lowest_mask_index
                 )
-
-    def remove_all(self) -> None:
-        modifiers = self.modifiers
-        for mod in modifiers:
-            self._human.body_obj.modifiers.remove(mod)
-
-    @injected_context
-    def randomize(self, context: C = None) -> None:
-        chosen_preset = random.choice(self.get_options(context=context))
-        self.set(chosen_preset, context)

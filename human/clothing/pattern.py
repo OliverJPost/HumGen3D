@@ -5,11 +5,12 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.backend.type_aliases import C
 from bpy.types import ShaderNode  # type:ignore
+from HumGen3D.backend.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.backend import get_prefs
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
@@ -17,6 +18,7 @@ from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 
 class PatternSettings(PreviewCollectionContent):
     def __init__(self, _human: "Human") -> None:
+        """Creates new instance to manipulate pattern of clothing items."""
         self._human = _human
         self._pcoll_gender_split = False
         self._pcoll_name = "pattern"
@@ -26,17 +28,15 @@ class PatternSettings(PreviewCollectionContent):
             "HG_Pattern_Coordinates",
         )
 
-    def set(self, preset: str, obj: bpy.types.Object) -> None:
-        """
-        Loads the pattern that is the current active item in the patterns preview_collection
-        """
+    def set(self, preset: str, obj: bpy.types.Object) -> None:  # noqa: A003
+        """Loads pattern that is the active item in the patterns preview_collection."""
         pref = get_prefs()
         mat = obj.active_material
 
         for node_name in self._node_names:
             self._create_node_if_doesnt_exist(node_name)
 
-        img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore[index]
+        img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore
 
         filepath = os.path.join(pref.filepath, preset)
         images = bpy.data.images
@@ -49,11 +49,6 @@ class PatternSettings(PreviewCollectionContent):
         options = self.get_options(context)
         chosen = random.choice(options)
         self.set(chosen, obj)
-
-    def _set(self, context: bpy.types.Context) -> None:
-        obj = context.object
-        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
-        self.set(active_item, obj)
 
     def remove(self, obj: bpy.types.Object) -> None:
         mat = obj.active_material
@@ -73,8 +68,13 @@ class PatternSettings(PreviewCollectionContent):
                 1,
             )
 
+    def _set(self, context: bpy.types.Context) -> None:
+        obj = context.object
+        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
+        self.set(active_item, obj)
+
     def _create_node_if_doesnt_exist(self, name: str) -> ShaderNode:
-        """Returns the node, creating it if it doesn't exist
+        """Returns the node, creating it if it doesn't exist.
 
         Args:
             name (str): name of node to check
