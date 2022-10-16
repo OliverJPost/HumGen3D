@@ -73,8 +73,118 @@ def status_text_callback(header, context):
     layout.separator_spacer()
 
 
+def set_generator_settings(generator, batch_sett):
+    generator.female_chance = batch_sett.female_chance
+    generator.male_chance = batch_sett.male_chance
+    # TODO generator.human_preset_category_chances
+    generator.add_clothing = batch_sett.clothing
+    generator.clothing_categories = _choose_category_list()
+    generator.add_expression = batch_sett.expression
+    generator.add_hair = batch_sett.hair
+    generator.hair_quality = batch_sett.hair_quality_particle
+
+    if batch_sett.height_system == "metric":
+        avg_height_cm_male = batch_sett.average_height_cm_male
+        avg_height_cm_female = batch_sett.average_height_cm_female
+    else:
+        avg_height_cm_male = (
+            batch_sett.average_height_ft_male * 30.48
+            + batch_sett.average_height_in_male * 2.54
+        )
+        avg_height_cm_female = (
+            batch_sett.average_height_ft_female * 30.48
+            + batch_sett.average_height_in_female * 2.54
+        )
+
+    generator.average_height_female = avg_height_cm_male
+    generator.average_height_male = avg_height_cm_female
+
+    generator.height_one_standard_deviation = batch_sett.standard_deviation
+
+    generator.texture_resolution = batch_sett.texture_resolution
+
+
+def _choose_category_list():
+    collection = bpy.context.scene.batch_clothing_col
+
+    enabled_categories = [i.library_name for i in collection if i.enabled]
+    if not enabled_categories:
+        bpy.ops.hg3d.refresh_batch_uilists()
+
+        enabled_categories = [i.library_name for i in collection]
+
+    return enabled_categories
+
+
 class HG_BATCH_GENERATE(bpy.types.Operator):
     bl_idname = "hg3d.generate"
+    bl_label = "Generate"
+    bl_description = "Generates specified amount of humans"
+    bl_options = {"REGISTER", "UNDO"}
+
+    run_immediately: bpy.props.BoolProperty(default=False)
+
+    def invoke(self, context, event):
+        batch_sett = context.scene.HG3D.batch
+        self.generate_queue = get_batch_marker_list(context)
+        markers_with_associated_human = list(
+            filter(has_associated_human, self.generate_queue)
+        )
+
+        if self.run_immediately or not markers_with_associated_human:
+            set_eevee_ao_and_strip(context)
+            self.generator = BatchHumanGenerator()
+            set_generator_settings(self.generator, batch_sett)
+            return self.execute(context)
+        else:
+            self._show_dialog_to_confirm_deleting_humans(context)
+            return {"CANCELLED"}
+
+    def execute(self, context):
+        for marker in self.generate_queue:
+            pose_type = marker["hg_batch_marker"]
+
+            human = self.generator.generate_human(context, pose_type)
+
+            associated_rig = marker["associated_human"]
+            if associated_rig:
+                old_human = Human.from_existing(associated_rig)
+                old_human.delete()
+
+            human.location = marker.location
+            human.rotation_euler = marker.rotation_euler
+            marker["associated_human"] = human.rig_obj
+
+        return {"FINISHED"}
+
+    def _show_dialog_to_confirm_deleting_humans(self, context):  # noqa CCE001
+        generate_queue = self.generate_queue
+
+        def draw(self, context):
+            layout = self.layout
+
+            nonlocal generate_queue
+
+            for i, marker in enumerate(filter(has_associated_human, generate_queue)):
+                layout.label(text=marker["associated_human"].name)
+
+                if i > 9:
+                    layout.label(text=f"+ {len(generate_queue) - 10} more")
+                    break
+
+            layout.separator()
+
+            layout.operator_context = "INVOKE_DEFAULT"
+            layout.operator(
+                "hg3d.generate", text="Generate anyway"
+            ).run_immediately = True
+            return
+
+        context.window_manager.popup_menu(draw, title="This will delete these humans:")
+
+
+class HG_BATCH_GENERATE_MODAL(bpy.types.Operator):
+    bl_idname = "hg3d.generate_modal"
     bl_label = "Generate"
     bl_description = "Generates specified amount of humans"
     bl_options = {"REGISTER", "UNDO"}
@@ -99,7 +209,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             self._initiate_modal(context, batch_sett)
             set_eevee_ao_and_strip(context)
             self.generator = BatchHumanGenerator()
-            self.set_generator_settings(batch_sett)
+            set_generator_settings(self.generator, batch_sett)
             return {"RUNNING_MODAL"}
         else:
             self._show_dialog_to_confirm_deleting_humans(context)
@@ -117,37 +227,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         batch_sett.idx = 1
         context.workspace.status_text_set(status_text_callback)
         context.area.tag_redraw()
-
-    def set_generator_settings(self, batch_sett):
-        generator = self.generator
-        generator.female_chance = batch_sett.female_chance
-        generator.male_chance = batch_sett.male_chance
-        # TODO generator.human_preset_category_chances
-        generator.add_clothing = batch_sett.clothing
-        generator.clothing_categories = self._choose_category_list()
-        generator.add_expression = batch_sett.expression
-        generator.add_hair = batch_sett.hair
-        generator.hair_quality = batch_sett.hair_quality_particle
-
-        if batch_sett.height_system == "metric":
-            avg_height_cm_male = batch_sett.average_height_cm_male
-            avg_height_cm_female = batch_sett.average_height_cm_female
-        else:
-            avg_height_cm_male = (
-                batch_sett.average_height_ft_male * 30.48
-                + batch_sett.average_height_in_male * 2.54
-            )
-            avg_height_cm_female = (
-                batch_sett.average_height_ft_female * 30.48
-                + batch_sett.average_height_in_female * 2.54
-            )
-
-        generator.average_height_female = avg_height_cm_male
-        generator.average_height_male = avg_height_cm_female
-
-        generator.height_one_standard_deviation = batch_sett.standard_deviation
-
-        generator.texture_resolution = batch_sett.texture_resolution
 
     def _show_dialog_to_confirm_deleting_humans(self, context):  # noqa CCE001
         generate_queue = self.generate_queue
@@ -241,17 +320,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
         self.finish_modal = True
         context.workspace.status_text_set(status_text_callback)
         return {"CANCELLED"}
-
-    def _choose_category_list(self):
-        collection = bpy.context.scene.batch_clothing_col
-
-        enabled_categories = [i.library_name for i in collection if i.enabled]
-        if not enabled_categories:
-            bpy.ops.hg3d.refresh_batch_uilists()
-
-            enabled_categories = [i.library_name for i in collection]
-
-        return enabled_categories
 
 
 class HG_RESET_BATCH_OPERATOR(bpy.types.Operator):

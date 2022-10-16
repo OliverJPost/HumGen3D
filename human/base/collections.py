@@ -33,7 +33,7 @@ def add_to_collection(
         else:
             context.scene.collection.children.link(collection)
 
-    if obj in context.scene.collection.objects:
+    if context.scene.collection.objects.get(obj.name):
         context.scene.collection.objects.unlink(obj)
     else:
         obj.users_collection[0].objects.unlink(obj)
