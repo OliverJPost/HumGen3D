@@ -57,8 +57,9 @@ def save_objects_optimized(
     run_in_background: bool = True,
     clear_drivers: bool = True,
 ) -> None:
-    """Saves the passed objects as a new blend file, opening the file in the
-    background to make it as small as possible
+    """Saves the passed objects as a new blend file.
+
+    Opens the file in the background to make it as small as possible
 
     Args:
         objs              (list)          : List of objects to save
@@ -171,7 +172,7 @@ def _remove_shapekeys(obj: bpy.types.Object) -> None:
 
 
 def remove_number_suffix(name: str) -> str:
-    """Remove the number suffix from the passed name.EE
+    """Remove the number suffix from the passed name.
 
     (i.e. Box.004 becomes Box)
 

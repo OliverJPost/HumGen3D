@@ -1,48 +1,24 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 from typing import TYPE_CHECKING
+
 import bpy
 from HumGen3D.backend.type_aliases import C  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.human.hair.basehair import BaseHair
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-
-from ..base.prop_collection import PropCollection
 
 
 class EyebrowSettings(BaseHair):
     _startswith = "Eyebrows"
 
     def __init__(self, human: "Human") -> None:
+        """Create instance for manipulating human eyebrows."""
         self._human = human
         self._startswith = "Eyebrow"
-
-    def _set_from_preset(self, preset_eyebrow: str) -> None:
-        """Sets the eyebrow named in preset_data as the only visible eyebrow
-        system
-
-        Args:
-            hg_body (Object): humgen body obj
-            preset_data (dict): preset data dict
-        """
-        for mod in self.modifiers:
-            mod.show_viewport = mod.show_render = False
-
-        preset_eyebrows = next(
-            (
-                mod
-                for mod in self.modifiers
-                if mod.particle_system.name == preset_eyebrow
-            ),
-            None,
-        )
-
-        if not preset_eyebrows:
-            ShowMessageBox(message=("Could not find eyebrows named " + preset_eyebrow))
-        else:
-            preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
 
     def remove_unused(self, context: C = None, _internal: bool = False) -> None:
         remove_list = [
@@ -65,6 +41,30 @@ class EyebrowSettings(BaseHair):
             self.particle_systems.active_index = ps_idx
             bpy.ops.object.particle_system_remove()
         context.view_layer.objects.active = old_active
+
+    def _set_from_preset(self, preset_eyebrow: str) -> None:
+        """Sets the eyebrow named in preset_data as the only visible eyebrow system.
+
+        Args:
+            hg_body (Object): humgen body obj
+            preset_data (dict): preset data dict
+        """
+        for mod in self.modifiers:
+            mod.show_viewport = mod.show_render = False
+
+        preset_eyebrows = next(
+            (
+                mod
+                for mod in self.modifiers
+                if mod.particle_system.name == preset_eyebrow
+            ),
+            None,
+        )
+
+        if not preset_eyebrows:
+            ShowMessageBox(message=("Could not find eyebrows named " + preset_eyebrow))
+        else:
+            preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
 
     def _switch_eyebrows(self, forward: bool = True, report: bool = False) -> None:
         eyebrows = self.modifiers

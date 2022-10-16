@@ -11,5 +11,6 @@ class EyelashSettings:
     _startswith = "Eyelashes"
 
     def __init__(self, _human: "Human") -> None:
+        """Creates instance to mapipulate eyelash settings."""
         self._human = _human
         self._startswith = "Eyelash"

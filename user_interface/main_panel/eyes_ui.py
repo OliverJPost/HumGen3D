@@ -11,8 +11,7 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
 
     @subpanel_draw
     def draw(self, context):
-        """Options for changing eyebrows and eye shader"""
-
+        """Options for changing eyebrows and eye shader."""
         col = self.layout.column()
 
         if "hg_baked" in self.human.rig_obj:
@@ -45,14 +44,12 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
 
         col.separator()
 
-        boxbox = self._draw_eyebrow_switch(col)
-
         eye_systems = self._get_eye_systems(self.human.body_obj)
 
         self._draw_hair_length_ui(eye_systems, col)
 
     def _draw_eyebrow_switch(self, col) -> bpy.types.UILayout:
-        """UI for switching between different types of eyebrows
+        """UI for switching between different types of eyebrows.
 
         Args:
             box (UILayout): eye section layout.box
@@ -60,7 +57,6 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
         Returns:
             UILayout: box in box for other hair controls to be placed in
         """
-
         row = col.row()
         row.alignment = "CENTER"
         row.label(text="Eyebrows:", icon="OUTLINER_OB_CURVES")
@@ -73,7 +69,7 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
         ).forward = True
 
     def _get_eye_systems(self, body_obj) -> list:
-        """Get a list of all particle systems belojnging to eyeborws and eyelashes
+        """Get a list of all particle systems belojnging to eyeborws and eyelashes.
 
         Args:
             body_obj (Object): HumGen body object

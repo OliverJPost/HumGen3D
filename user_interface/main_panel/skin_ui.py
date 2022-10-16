@@ -14,7 +14,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
     @subpanel_draw
     def draw(self, context):
-        """Collapsable section with options for changing the shader of the human"""
+        """Collapsable section with options for changing the shader of the human."""
         sett = self.sett
 
         col = self.layout.column()
@@ -37,7 +37,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             self._draw_beard_shadow_subsection(sett, col)
 
     def _draw_main_skin_subsection(self, sett, box):
-        """Collapsable section with main sliders of skin effects
+        """Collapsable section with main sliders of skin effects.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -91,13 +91,12 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         row.prop(sett, "underwear_switch", expand=True)
 
     def _draw_texture_subsection(self, sett, box):
-        """Shows a template_icon_view for different texture options
+        """Shows a template_icon_view for different texture options.
 
         Args:
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
         """
-
         is_open, boxbox = draw_sub_spoiler(box, sett, "texture", "Texture sets")
         if not is_open:
             return
@@ -105,14 +104,13 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         self.draw_content_selector(layout=boxbox, pcoll_name="texture")
 
     def _draw_light_dark_subsection(self, sett, box):
-        """Collapsable section with sliders for dark and light areas on the skin
+        """Collapsable section with sliders for dark and light areas on the skin.
 
         Args:
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-
         is_open, boxbox = draw_sub_spoiler(
             box, sett, "light_dark", "Light & dark areas"
         )
@@ -140,7 +138,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         )
 
     def _draw_age_subsection(self, sett, box):
-        """Collapsable section with sliders age effects
+        """Collapsable section with sliders age effects.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -165,7 +163,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         col.prop(age_node.inputs[1], "default_value", text="Wrinkles", slider=True)
 
     def _draw_freckles_subsection(self, sett, box):
-        """Collapsable section with sliders for freckles
+        """Collapsable section with sliders for freckles.
 
         Args:
             sett (PropertyGroup): HumGen props
@@ -197,14 +195,13 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         )
 
     def _draw_makeup_subsection(self, sett, box):
-        """Collapsable section with sliders for makeup
+        """Collapsable section with sliders for makeup.
 
         Args:
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-
         is_open, boxbox = draw_sub_spoiler(box, sett, "makeup", "Makeup")
         if not is_open:
             return
@@ -279,7 +276,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         flow.prop(makeup_node.inputs["Eyebrows Color"], "default_value", text="Color")
 
     def _get_skin_flow(self, layout, label):
-        """Generates a property split layout
+        """Generates a property split layout.
 
         Args:
             layout (UILayout): boxbox from makeup/beard section
@@ -298,14 +295,13 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         return flow
 
     def _draw_beautyspots_subsection(self, sett, box):
-        """Collapsable section with sliders for beautyspots
+        """Collapsable section with sliders for beautyspots.
 
         Args:
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-
         if platform == "darwin":  # not compatible with MacOS 8-texture material
             return
 
@@ -330,10 +326,10 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         col.prop(bs_node.inputs[1], "default_value", text="Seed [Randomize]")
 
     def _draw_beard_shadow_subsection(self, sett, box):
-        """Collapsable section with sliders for beard shadow
+        """Collapsable section with sliders for beard shadow.
 
         Args:
-            sett (PropertyGroup): HumGen props
+            sett (PropertyGroup): HumGen propss
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """

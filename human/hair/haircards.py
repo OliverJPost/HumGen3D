@@ -1,6 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""UNDER CONSTRUCTION"""
+"""UNDER CONSTRUCTION."""
 
 from pathlib import Path
 from typing import no_type_check
@@ -12,9 +12,7 @@ from HumGen3D.backend import get_prefs
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
-    """
-    Removes the corresponding hair system
-    """
+    """Removes the corresponding hair system."""
 
     bl_idname = "hg3d.haircards"
     bl_label = "Convert to hair cards"

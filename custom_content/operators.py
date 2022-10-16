@@ -102,7 +102,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         elif category == "starting_human":
             human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
         elif category == "hair":
-            attr = "regular_hair" if cc_sett.hair.type == "head" else "face_hair"
+            attr = "regular_hair" if cc_sett.hair.save_type == "head" else "face_hair"
             getattr(human.hair, attr).save_to_library(
                 [ps.ps_name for ps in context.scene.savehair_col if ps.enabled],
                 cc_sett.hair.name,

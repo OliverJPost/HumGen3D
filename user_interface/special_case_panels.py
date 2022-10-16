@@ -1,9 +1,6 @@
-from tokenize import Triple
-
 import bpy
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.panel_functions import draw_paragraph
-from HumGen3D.user_interface.ui_baseclasses import HGPanel
 
 
 class HG_PT_LEGACYINSTALL(bpy.types.Panel):

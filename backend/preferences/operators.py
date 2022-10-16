@@ -9,17 +9,7 @@ from HumGen3D.backend import get_prefs
 
 
 class HG_PATHCHANGE(Operator, ImportHelper):
-    """
-    Changes the path via file browser popup
-
-    Operator Type:
-        -Preferences
-        -Prop setter
-        -Path selection
-
-    Prereq:
-        None
-    """
+    """Changes the path via file browser popup."""
 
     bl_idname = "hg3d.pathchange"
     bl_label = "Change Path"

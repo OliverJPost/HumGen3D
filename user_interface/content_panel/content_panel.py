@@ -7,12 +7,11 @@ from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import HGPanel, draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
+from ..panel_functions import draw_panel_switch_header, draw_paragraph
 
 
 class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
-    """Panel with extra functionality for HumGen that is not suitable for the
-    main panel. Things like content pack creation, texture baking etc.
+    """Panel for saving custom content.
 
     Args:
         Tools_PT_Base (class): Adds bl_info and commonly used tools

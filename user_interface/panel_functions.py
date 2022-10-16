@@ -2,7 +2,6 @@
 
 import bpy
 
-from ..backend import preview_collections
 from .icons.icons import get_hg_icon  # type: ignore
 
 CHAR_WIDTH_DICT = {
@@ -47,19 +46,19 @@ def draw_paragraph(
     words = text.split(" ")
     length = 0
     lines = [
-        list(),
+        [],
     ]
     for word in words:
         if "\n" in word:
             length = 0
             lines[-1].append(word)
             lines.append("WHITESPACE")
-            lines.append(list())
+            lines.append([])
             continue
         length += sum([char_width(char) for char in word]) + 3
         if length >= max_width_percentage:
             length = 0
-            lines.append(list())
+            lines.append([])
 
         lines[-1].append(word)
 
@@ -83,7 +82,7 @@ def prettify(string: str) -> str:
 def draw_sub_spoiler(
     layout, sett, prop_name, label
 ) -> "tuple[bool, bpy.types.UILayout]":
-    """Draws a ciollapsable box, with title and arrow symbol
+    """Draws a collapsable box, with title and arrow symbol.
 
     Args:
         layout (UILayout): Layout to draw spoiler in
@@ -112,7 +111,7 @@ def draw_sub_spoiler(
 
 
 def draw_panel_switch_header(layout, sett):
-    """Draws a enum prop that switches between main humgen panel and extras panel
+    """Draws a enum prop that switches between main humgen panel and extras panel.
 
     Args:
         layout (UILayout): header layout to draw the switch in
@@ -125,7 +124,7 @@ def draw_panel_switch_header(layout, sett):
 
 
 def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
-    """Returns a property split enabled UILayout
+    """Returns a property split enabled UILayout.
 
     Args:
         sett (PropertyGroup): HumGen props
@@ -135,7 +134,6 @@ def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
     Returns:
         UILayout: flow layout
     """
-
     col_2 = layout.column(align=True)
     col_2.use_property_split = True
     col_2.use_property_decorate = animation
@@ -151,7 +149,7 @@ def get_flow(sett, layout, animation=False) -> bpy.types.UILayout:
 
 
 def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]":
-    """Draws the spoiler box of the main sections (i.e. body, hair, face)
+    """Draws the spoiler box of the main sections (i.e. body, hair, face).
 
     Args:
         ui_name (str): name of the category to draw spoiler for
@@ -161,7 +159,6 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
             bool: True if spoiler is open
             box: layout.box to draw the category UI in
     """
-
     # fallback icons for when custom ones don't load
     icon_dict = {
         "body": "COMMUNITY",
@@ -188,7 +185,7 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
     row.scale_y = 1.0
     row.alignment = "LEFT"
 
-    if ui_name in long_name_dict:
+    if ui_name in long_name_dict:  # noqa SIM401
         label = long_name_dict[ui_name]
     else:
         label = ui_name.capitalize().replace("_", " ")
@@ -200,18 +197,18 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
             icon_value=get_hg_icon(ui_name),
             emboss=False,
         ).section_name = ui_name
-    except:
+    except ValueError:
         icon = icon_dict[ui_name]
         row.operator(
             "hg3d.section_toggle", text=label, icon=icon, emboss=False
         ).section_name = ui_name
 
-    is_open = True if self.sett.ui.phase == ui_name else False
+    is_open = self.sett.ui.phase == ui_name
     return is_open, box
 
 
 def searchbox(sett, name, layout):
-    """draws a searchbox of the given preview collection
+    """Draws a searchbox of the given preview collection.
 
     Args:
         sett (PropertyGroup): HumGen props

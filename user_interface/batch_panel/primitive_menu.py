@@ -1,7 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy  # type:ignore
-
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -11,15 +10,13 @@ class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):
     bl_label = "Human Generator Markers"
 
     def draw(self, context):
-        """Menu in the 'add object' modal for the user to add markers for the
-        HG batch generator
-        """
+        """Menu in 'add object' to add markers for the HG batch generator."""
         layout = self.layout
         layout.operator_context = "INVOKE_REGION_WIN"
 
         layout.operator(
             "wm.url_open", text="Tutorial", icon="HELP"
-        ).url = "https://publish.obsidian.md/human-generator/Using+the+batch+mode/Using+the+batch+generator"
+        ).url = "https://publish.obsidian.md/human-generator/Using+the+batch+mode/Using+the+batch+generator"  # noqa: E501
 
         layout.separator()
 

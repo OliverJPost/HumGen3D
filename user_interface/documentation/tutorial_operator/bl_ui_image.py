@@ -1,4 +1,6 @@
-import blf  # type: ignore
+# flake8: noqa
+
+import blf  # type: ignore # noqa
 import bpy  # type: ignore
 
 from .bl_ui_widget import *

@@ -77,7 +77,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         return sk_name.title()
 
     def _get_ff_col(self, layout, categ_name, is_open_propname) -> bpy.types.UILayout:
-        """Creates a collapsable box for passed shapekey category
+        """Creates a collapsable box for passed shapekey category.
 
         Args:
             layout (bpy.types.layout): layout.box of the facial features section

@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import bpy
-from HumGen3D.backend import PREVIEW_COLLECTION_DATA, get_prefs, preview_collections
-from HumGen3D.backend.logging import hg_log
+from HumGen3D.backend import get_prefs, preview_collections
 from HumGen3D.backend.type_aliases import BpyEnum, C
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.base.exceptions import HumGenException
@@ -18,10 +17,10 @@ class PreviewCollectionContent:
     _pcoll_gender_split: bool
 
     @injected_context
-    def set(self, preset: str, context: C = None) -> None:
+    def set(self, preset: str, context: C = None) -> None:  # noqa: A003
         raise NotImplementedError
 
-    def _set(self, context: bpy.types.Context) -> None:
+    def _set(self, context: bpy.types.Context) -> None:  # noqa: CCE001
         """Internal way of setting content, only used by enum properties"""
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         if sett.update_exception:
@@ -55,7 +54,7 @@ class PreviewCollectionContent:
 
     @injected_context
     def get_options(self, context: C = None, category: str = "All") -> List[str]:
-        if category not in self.get_categories() and not category == "All":
+        if category not in self.get_categories() and category != "All":
             raise ValueError(
                 (
                     f"Invalid category passed, '{category}'. "
@@ -74,7 +73,7 @@ class PreviewCollectionContent:
 
         return options
 
-    def _get_full_options(self) -> BpyEnum:
+    def _get_full_options(self) -> BpyEnum:  # noqa: CCE001
         """Internal way of getting content, only used by enum properties"""
         pcoll = preview_collections.get(self._pcoll_name).pcoll
         if not pcoll:
@@ -87,7 +86,7 @@ class PreviewCollectionContent:
     def get_categories(self) -> list[str]:
         return [option[0] for option in self._get_categories(include_all=False)]
 
-    def _get_categories(
+    def _get_categories(  # noqa: CCE001
         self, include_all: bool = True, ignore_genders: bool = False
     ) -> BpyEnum:
 

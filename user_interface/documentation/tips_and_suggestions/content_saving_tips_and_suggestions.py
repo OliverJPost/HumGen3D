@@ -1,7 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import bpy
-
 
 def get_content_saving_tips_from_context(context, sett, hg_rig):
     tab_idx = sett.custom_content.content_saving_tab_index
@@ -21,9 +19,12 @@ def get_content_saving_tips_from_context(context, sett, hg_rig):
             try:
                 nodes = cloth_obj.data.materials[0].node_tree.nodes
                 base_color_node = nodes.get("Base Color")
-                if base_color_node and base_color_node.image:
-                    if "placeholder" in base_color_node.image.name.lower():
-                        yield placeholder_image_explanation
+                if (
+                    base_color_node
+                    and base_color_node.image
+                    and "placeholder" in base_color_node.image.name.lower()
+                ):
+                    yield placeholder_image_explanation
             except AttributeError:
                 pass
         elif tab_idx == 5:

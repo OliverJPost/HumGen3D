@@ -1,30 +1,17 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
-from pathlib import Path
-from sys import platform
 
-import addon_utils  # type:ignore
 import bpy
-from HumGen3D import bl_info
 from HumGen3D.backend import get_prefs
 
-from ...backend.preview_collections import preview_collections
 from ...human.human import Human  # type: ignore
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..panel_functions import (
-    draw_panel_switch_header,
-    draw_spoiler_box,
-    draw_sub_spoiler,
-    get_flow,
-    searchbox,
-)
+from ..panel_functions import draw_panel_switch_header, draw_spoiler_box
 from ..ui_baseclasses import MainPanelPart  # type: ignore
 
 
 class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
-    """Main Human Generator panel, divided into creation phase and finalize
-    phase. These phases are then divided into sections (i.e. hair, body, face)
+    """Main Human Generator panel, divided into sections.
 
     One exception is the clothing material section. If a HumGen clothing object
     is selected, this UI shows options to change the material

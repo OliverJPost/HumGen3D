@@ -26,7 +26,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             self._draw_rigify_subsection(self.layout)
 
     def _draw_rigify_subsection(self, box):
-        """draws ui for adding rigify, context info if added
+        """Draws ui for adding rigify, context info if added.
 
         Args:
             box (UILayout): layout.box of pose section
@@ -44,13 +44,12 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             box.label(text="Rigify is not enabled")
 
     def _draw_pose_library(self, sett, layout):
-        """draws template_icon_view for selecting poses from the library
+        """Draws template_icon_view for selecting poses from the library.
 
         Args:
             sett (PropertyGroup): HumGen properties
             box (UILayout): layout.box of pose section
         """
-
         col = layout.column(align=True)
 
         if "hg_rigify" in self.human.rig_obj.data:

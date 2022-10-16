@@ -15,9 +15,10 @@ def round_vector_to_tuple(
     )
 
 
-def centroid(
-    coordinates: Union[list[tuple[float, float, float]], np.ndarray[Any, Any]]
-) -> Vector:
+TuplePoint = tuple[float, float, float]
+
+
+def centroid(coordinates: Union[list[TuplePoint], np.ndarray[Any, Any]]) -> Vector:
     x = [c[0] for c in coordinates]
     y = [c[1] for c in coordinates]
     z = [c[2] for c in coordinates]

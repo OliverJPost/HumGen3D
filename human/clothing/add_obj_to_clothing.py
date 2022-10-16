@@ -14,7 +14,6 @@ from HumGen3D.human.base.shapekey_calculator import (
     deform_obj_from_difference,
     world_coords_from_obj,
 )
-from mathutils import Matrix, Vector, kdtree
 
 
 def correct_shape_to_a_pose(

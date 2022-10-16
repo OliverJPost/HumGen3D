@@ -137,9 +137,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
-    """Subpanel showing options for height variation in the generation of batch
-    humans.
-    """
+    """Subpanel with options for height variation in the generation of batch humans."""
 
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Height variation"
@@ -185,8 +183,9 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
                 self._draw_examples_list(col_l, batch_sett, gender)
 
     def _draw_average_height_props(self, layout, batch_sett):
-        """Draws props for the user to select the average height in either
-        metric or imperial system
+        """Draws props for the user to select the average height.
+
+        In either metric or imperial system.
 
         Args:
             layout (UILayout): layout to draw in

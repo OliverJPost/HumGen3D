@@ -1,3 +1,5 @@
+# flake8: noqa
+
 import blf  # type: ignore
 import bpy  # type: ignore
 

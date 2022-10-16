@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """
-Operators and functions used for installing and managing HumGen's content packs
+Operators and functions used for installing and managing HumGen's content packs.
 
 Nomenclature:
 Installpack = a collection item that represents a zip file the user has selected.
@@ -13,6 +13,7 @@ cpack = Abbreviation of content pack. Represents a collection of items
     .json file
 """
 
+import contextlib
 import json
 import os
 import zipfile
@@ -74,8 +75,10 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
 
 
 class HG_UL_CONTENTPACKS(bpy.types.UIList):
-    """UIList showing content packs, including icons on who made the pack,
-    what version it is, what items are included, a weblink and a delete button
+    """UIList showing content packs.
+
+    Including icons on who made the pack, what version it is, what items are included,
+    a weblink and a delete button
     """
 
     @no_type_check
@@ -113,8 +116,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
     @no_type_check
     def _draw_operator_buttons(self, item, header, subrow):
-        """Draws buttons to go to edit cpack, to cpack weblink and button to
-        delete cpack"""
+        """Draws buttons to go to edit cpack, to cpack weblink and to delete cpack."""
         if header:
             for _ in range(3):
                 subrow.label(text="", icon="BLANK1")
@@ -135,7 +137,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
     @no_type_check
     def _draw_category_dots(self, item, header, subrow):
-        """Draws grid of dots to show what kind of content is in this cpack"""
+        """Draws grid of dots to show what kind of content is in this cpack."""
         for categ, icon in ICON_DICT.items():
             if header:
                 subrow.label(text="", icon_value=get_hg_icon(icon))
@@ -161,7 +163,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
 
     @no_type_check
     def _draw_update_label(self, item, subrow, header):
-        """Draws a column with info if the cpack is up to date"""  # noqa
+        """Draws a column with info if the cpack is up to date."""
         if header:
             subrow.label(text="Update info:    ")
             return
@@ -243,7 +245,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
 
     @no_type_check
     def _add_to_collection(self, coll, directory, fn):
-        """adds this cpack to the installpack collection.
+        """Adds this cpack to the installpack collection.
 
         Args:
             coll (CollectionProperty): installpack collection
@@ -259,7 +261,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
 
     @no_type_check
     def _check_for_alerts(self, item, filepath) -> str:
-        """checks for common errors with content packs.
+        """Checks for common errors with content packs.
 
         Args:
             item (collection item): installpack item
@@ -327,10 +329,8 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
 
         coll = context.scene.installpacks_col
         coll.clear()
-        try:
+        with contextlib.suppress(Exception):
             cpacks_refresh(self, context)
-        except Exception:
-            pass
 
         return {"FINISHED"}
 
@@ -349,7 +349,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
         zf = zipfile.ZipFile(zip_path.name)
 
         file_list = [fn for fn in zf.namelist() if not fn.endswith("/")]
-        zf.extractall(path=filepath)  # FIXME apperantly insecure
+        zf.extractall(path=filepath)  # FIXME apperantly insecure # noqa DUO112
 
         return {"files": file_list}
 
@@ -561,7 +561,7 @@ class HG_DELETE_CPACK(bpy.types.Operator):
                     hg_log("Could not remove ", filepath, level="WARNING")
                 except FileNotFoundError as e:
                     hg_log("Could not remove ", filepath, level="WARNING")
-                    print(e)
+                    print(e)  # noqa T201
 
         # remove item from collection
         col.remove(index)
@@ -596,18 +596,7 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
 
 class HG_DELETE_INSTALLPACK(bpy.types.Operator):
-    """
-    Removes installpack from ui_list collection
-
-    API: False
-
-    Operator type:
-        UI list removal
-
-    Prereq:
-        Installpacks in installpack_col
-        Active installpack
-    """
+    """Removes installpack from ui_list collection."""
 
     bl_idname = "hg3d.removeipack"
     bl_label = ""

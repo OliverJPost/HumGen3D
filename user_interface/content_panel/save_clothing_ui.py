@@ -5,8 +5,7 @@ from HumGen3D.user_interface.content_panel.base_draw_functions import (
 
 
 def _draw_clothing_gender_ui(context, layout, content_type):
-    """Draws a tab for the user to select for which gender(s) this clothing
-    item is meant.
+    """Draws a tab for the user to select for which gender(s) this clothing is meant.
 
     Args:
         context (context): bl context
@@ -30,8 +29,7 @@ def _draw_clothing_gender_ui(context, layout, content_type):
 
 
 def _draw_clothing_uilist_ui(context, layout):
-    """Draws a UIList tab for selecting which clothing items should be saved
-    for this outfit/footwear
+    """Draws a UIList tab for selecting clothing items to be saved for this clothing.
 
     Args:
         context (context): bl context
@@ -45,7 +43,7 @@ def _draw_clothing_uilist_ui(context, layout):
 
     col = layout.column(align=True)
     row = col.row(align=True)
-    row.operator("hg3d.ulrefresh", text="Refresh objects").type = "outfit"
+    row.operator("hg3d.ulrefresh", text="Refresh objects").uilist_type = "outfit"
     col.template_list(
         "HG_UL_SAVEOUTFIT",
         "",
@@ -60,7 +58,7 @@ def _draw_clothing_uilist_ui(context, layout):
 
 
 def _draw_outfit_type_selector(context, layout):
-    """Draws a tab for the user to select if this is an outfit or footwear
+    """Draws a tab for the user to select if this is an outfit or footwear.
 
     Args:
         context (context): bl context

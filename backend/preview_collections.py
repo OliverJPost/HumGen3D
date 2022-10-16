@@ -1,9 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""
-Functions related to the preview_collections of human generator, including
-population of them
-"""
+"""Contains PreviewCollection class for managing content preview collections."""
 
 from __future__ import annotations
 
@@ -21,7 +18,7 @@ preview_collections: Dict[str, PreviewCollection] = {}  # global dict of all pco
 
 # fmt: off
 # (extension, gender_dependent, folder, category_propname, search_term_propname) # noqa
-PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], str], Optional[str], Optional[str]]] #FIXME
+PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], str], Optional[str], Optional[str]]] #FIXME # noqa
 PREVIEW_COLLECTION_DATA: PcollDict = {
     "humans": (".json", True, "models", "humans_category", None),
     "pose": (".blend", False, "poses", "pose_category", "search_term_pose"),
@@ -161,30 +158,6 @@ class PreviewCollection:
 
         sett.load_exception = False
 
-    def _get_thumbnail_for_item(self, full_path: str) -> bpy.types.ImagePreview:
-        filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"
-        if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
-            return self.pcoll.load(filepath_thumb, filepath_thumb, "IMAGE")
-        else:
-            return self.pcoll[filepath_thumb]  # type:ignore[index, no-any-return]
-
-    def _add_info_thumbnail(self, thumb_name: str) -> bpy.types.ImagePreview:
-        """Loads a thumbnail for this pcoll item.
-
-        Args:
-            thumb_name (str): name of the thumbnail image, excluding extension
-
-        Returns:
-            list: icon in enumarator
-        """
-        filepath_thumb = os.path.join(
-            get_addon_root(), "user_interface", "icons", f"{thumb_name}.jpg"
-        )
-        if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
-            return self.pcoll.load(filepath_thumb, filepath_thumb, "IMAGE")
-        else:
-            return self.pcoll[filepath_thumb]  # type:ignore[index, no-any-return]
-
     def find_folders(self, gender: str, include_all: bool = True) -> BpyEnum:
         """Gets enum of folders found in a specific directory. T
         hese serve as categories for that specific pcoll
@@ -245,6 +218,30 @@ class PreviewCollection:
         else:
             return enum_list
 
+    def _get_thumbnail_for_item(self, full_path: str) -> bpy.types.ImagePreview:
+        filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"
+        if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
+            return self.pcoll.load(filepath_thumb, filepath_thumb, "IMAGE")
+        else:
+            return self.pcoll[filepath_thumb]  # type:ignore[index, no-any-return]
+
+    def _add_info_thumbnail(self, thumb_name: str) -> bpy.types.ImagePreview:
+        """Loads a thumbnail for this pcoll item.
+
+        Args:
+            thumb_name (str): name of the thumbnail image, excluding extension
+
+        Returns:
+            list: icon in enumarator
+        """
+        filepath_thumb = os.path.join(
+            get_addon_root(), "user_interface", "icons", f"{thumb_name}.jpg"
+        )
+        if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
+            return self.pcoll.load(filepath_thumb, filepath_thumb, "IMAGE")
+        else:
+            return self.pcoll[filepath_thumb]  # type:ignore[index, no-any-return]
+
 
 def list_files_in_dir(
     search_dir: str,
@@ -269,7 +266,7 @@ def list_files_in_dir(
     file_paths = []
     for root, _, files in os.walk(search_dir):
         if skip_pbr_folder and "PBR" in root:
-            continue  # don't show textures in PBR folder of texture sets
+            continue  # don't show textures in PBR folder of texture sets``
         for fn in files:
             if not fn.lower().endswith(ext):
                 continue
