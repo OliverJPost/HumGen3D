@@ -1,8 +1,9 @@
+# flake8: noqa
+
 import os
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.types import Operator  # type: ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.callback import msgbus
 from HumGen3D.backend.update import check_update

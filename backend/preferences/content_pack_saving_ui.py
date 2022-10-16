@@ -35,8 +35,10 @@ class CpackEditingSystem:
     hide_other_packs: BoolProperty(default=True)
 
     def _draw_cpack_editing_ui(self, layout, context):
-        """Draws the UI for editing content packs, this is an exclusive UI, no
-        other items of the preferences are shown while this is active
+        """Draws the UI for editing content packs.
+
+        This is an exclusive UI, no other items of the preferences are shown while this
+        is active
 
         Args:
             layout (UILayout): layout to draw in
@@ -93,9 +95,10 @@ class CpackEditingSystem:
         ).export = True
 
     def _draw_total_added_removed_counters(self, context, sidebar):
-        """Draws the three counters in the sidebar: Total items, added items and
-        removed items. Both added and removed have a dropdown showing all of
-        those items in a list
+        """Draws the three counters in the sidebar.
+
+        Total items, added items and removed items.
+        Both added and removed have a dropdown showing all of those items in a list
 
         Args:
             sidebar (UILayout): layout to draw in
@@ -195,9 +198,8 @@ class CpackEditingSystem:
                     text=gender.capitalize(),
                     icon_value=get_hg_icon(f"{gender}_true"),
                 )
-            try:
+            with contextlib.suppres(Exception):
                 box.template_icon(item.icon_value, scale=5)
-            except Exception:
-                pass
+
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(item, "include", text="Include", icon=incl_icon, toggle=True)

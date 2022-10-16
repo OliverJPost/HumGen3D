@@ -13,7 +13,7 @@ from bpy.props import EnumProperty, IntProperty, StringProperty  # type: ignore
 
 
 def make_path_absolute(self: bpy.types.PropertyGroup, prop_name: str) -> None:
-    """Makes sure the passed path is absolute
+    """Makes sure the passed path is absolute.
 
     Args:
         self: PropertyGroup the prop is in

@@ -3,16 +3,11 @@
 import functools
 import os
 from pathlib import Path
-from re import L
-from tokenize import Triple
 
 import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.ui_properties import (
-    UserInterfaceProps,
-    active_phase_enum,
-)
+from HumGen3D.backend.properties.ui_properties import active_phase_enum
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -48,8 +43,15 @@ class HGPanel:
     bl_region_type = "UI"
     bl_category = "HumGen"
 
-    def draw(self, context):
-        raise NotImplementedError
+    @staticmethod
+    def draw_centered_subtitle(text, layout, icon=None):
+        """Draw a small title that is centered. Optional icon."""
+        row = layout.row()
+        row.alignment = "CENTER"
+        if icon:
+            row.label(text=text, icon=icon)
+        else:
+            row.label(text=text)
 
     @classmethod
     def poll(cls, context):
@@ -58,8 +60,11 @@ class HGPanel:
         content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
         return not is_legacy and not filepath_error and not content_saving_ui
 
+    def draw(self, context):
+        raise NotImplementedError
+
     def draw_info_and_warning_labels(self, context) -> bool:
-        """Collection of all info and warning labels of HumGen
+        """Collection of all info and warning labels of HumGen.
 
         Args:
             context : Blender Context
@@ -88,13 +93,37 @@ class HGPanel:
             return True
 
         general_problem = self._warning_header(context, layout)
-        if general_problem:
+        if general_problem:  # noqa
             return True
 
         return False  # no problems found
 
+    def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
+        """Returns a property split enabled UILayout.
+
+        Args:
+            sett (PropertyGroup): HumGen props
+            layout (UILayout): layout to draw flor in
+            animation (bool, optional): show keyframe dot on row. Defaults to False.
+
+        Returns:
+            UILayout: flow layout
+        """
+        col_2 = layout.column(align=True)
+        col_2.use_property_split = True
+        col_2.use_property_decorate = animation
+
+        flow = col_2.grid_flow(
+            row_major=False,
+            columns=1,
+            even_columns=True,
+            even_rows=False,
+            align=True,
+        )  # TODO is this even necessary now property split is used?
+        return flow
+
     def _filepath_warning(self, layout) -> bool:
-        """Shows warning if no filepath is selected
+        """Shows warning if no filepath is selected.
 
         Args:
             layout (AnyType): Main HumGen panel layout
@@ -113,8 +142,7 @@ class HGPanel:
         return True
 
     def _base_content_warning(self, layout) -> bool:
-        """Looks if base content is installed, otherwise shows warning and
-        stops the rest of the UI from showing
+        """Looks if base content is installed, otherwise shows warning cancels UI.
 
         Args:
             layout (AnyType): Main Layout of HumGen Panel
@@ -143,8 +171,9 @@ class HGPanel:
         return base_content
 
     def _update_notification(self, layout) -> bool:
-        """Shows notifications for available or required updates of both the
-        add-on and the content packs.
+        """Shows notifications for updates.
+
+        Both for available or required updates of both the add-on and the content packs.
 
         Args:
             layout ([AnyType]): Main layout of HumGen panel
@@ -181,7 +210,7 @@ class HGPanel:
                 text=label,
                 icon="PACKAGE",
                 depress=True,
-                emboss=True if self.update == "addon" else False,
+                emboss=self.update == "addon",
             )
             return False
 
@@ -204,8 +233,7 @@ class HGPanel:
         tutorial_op.tutorial_name = "get_started_tutorial"
 
     def _warning_header(self, context, layout) -> bool:
-        """Checks if context is in object mode and if a body object can be
-        found
+        """Checks if context is in object mode and if a body object can be found.
 
         Args:
             context (AnyType): Blender context
@@ -215,8 +243,7 @@ class HGPanel:
             bool: returns True if problem was found, causing panel to only show
             these error messages
         """
-
-        if not context.mode == "OBJECT":
+        if context.mode != "OBJECT":
             layout.alert = True
             layout.label(text="HumGen only works in Object Mode")
             return True
@@ -227,41 +254,6 @@ class HGPanel:
             return True
 
         return False
-
-    def get_flow(self, layout, animation=False) -> bpy.types.UILayout:
-        """Returns a property split enabled UILayout
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            layout (UILayout): layout to draw flor in
-            animation (bool, optional): show keyframe dot on row. Defaults to False.
-
-        Returns:
-            UILayout: flow layout
-        """
-
-        col_2 = layout.column(align=True)
-        col_2.use_property_split = True
-        col_2.use_property_decorate = animation
-
-        flow = col_2.grid_flow(
-            row_major=False,
-            columns=1,
-            even_columns=True,
-            even_rows=False,
-            align=True,
-        )  # TODO is this even necessary now property split is used?
-        return flow
-
-    @staticmethod
-    def draw_centered_subtitle(text, layout, icon=None):
-        """Draw a small title that is centered. Optional icon."""
-        row = layout.row()
-        row.alignment = "CENTER"
-        if icon:
-            row.label(text=text, icon=icon)
-        else:
-            row.label(text=text)
 
 
 def draw_icon_title(text, row, has_icon):
@@ -292,6 +284,24 @@ def draw_icon_title(text, row, has_icon):
 
 class MainPanelPart(HGPanel):
     phase_name = None
+
+    @classmethod
+    def poll(cls, context):
+        if not super().poll(context):
+            return False
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        if (
+            sett.ui.active_tab != "CREATE"
+            or sett.ui.phase != cls.phase_name
+            or sett.custom_content.content_saving_ui
+        ):
+            return False
+        human = Human.from_existing(context.object, strict_check=False)
+        if not human:
+            return False
+        if human.is_batch_result[0]:  # noqa
+            return False
+        return True
 
     def draw_header(self, context):
         layout = self.layout
@@ -414,24 +424,6 @@ class MainPanelPart(HGPanel):
         if self.phase_name != "closed":
             pass  # self.draw_back_button(self.layout)
 
-    @classmethod
-    def poll(cls, context):
-        if not super().poll(context):
-            return False
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        if not sett.ui.active_tab == "CREATE":
-            return False
-        elif not sett.ui.phase == cls.phase_name:
-            return False
-        elif sett.custom_content.content_saving_ui:
-            return False
-        human = Human.from_existing(context.object, strict_check=False)
-        if not human:
-            return False
-        if human.is_batch_result[0]:
-            return False
-        return True
-
     def draw_back_button(self, layout):
         row = layout.column(align=True).row()
         row.scale_y = 1.5
@@ -444,7 +436,7 @@ class MainPanelPart(HGPanel):
     def draw_sub_spoiler(
         self, layout, sett, prop_name, label
     ) -> "tuple[bool, bpy.types.UILayout]":
-        """Draws a ciollapsable box, with title and arrow symbol
+        """Draws a ciollapsable box, with title and arrow symbol.
 
         Args:
             layout (UILayout): Layout to draw spoiler in
@@ -472,7 +464,7 @@ class MainPanelPart(HGPanel):
         return spoiler_open, boxbox
 
     def _get_hair_systems(self, body_obj, eyesystems=False) -> list:
-        """get a list of hair systems on this object
+        """Get a list of hair systems on this object.
 
         Args:
             body_obj (Object): HumGen body object, can be any mesh object
@@ -480,7 +472,6 @@ class MainPanelPart(HGPanel):
         Returns:
             list: list of hair particle systems
         """
-
         hair_systems = []
         for mod in body_obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM" and (
@@ -492,13 +483,12 @@ class MainPanelPart(HGPanel):
         return hair_systems
 
     def _draw_hair_children_switch(self, hair_systems, layout):
-        """Draws a switch for turning children to render amount or back to 1
+        """Draws a switch for turning children to render amount or back to 1.
 
         Args:
             hair_systems (list): List of hair particle systems
             layout (UILayout): layout to draw switch in
         """
-
         row = layout.row(align=True)
         if not hair_systems:
             row.label(text="No hair systems found")
@@ -522,12 +512,11 @@ class MainPanelPart(HGPanel):
             label = "No human selected"
         else:
             name = human.name.replace("HG_", "").replace("_RIGIFY", "")
-            gender = human.gender.capitalize()
             label = f"This is {name}"
         return label
 
     def _draw_hair_length_ui(self, hair_systems, box):
-        """shows a collapsable list of hair systems, with a slider for length
+        """Shows a collapsable list of hair systems, with a slider for length.
 
         Args:
             hair_systems (list): list of particle hair systems

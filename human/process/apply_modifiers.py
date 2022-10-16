@@ -60,7 +60,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         for item in col:
             if (
                 item.mod_type == "ARMATURE"
-                and (item.count or item.object == obj)
+                and (item.count or item.obj == obj)
                 and item.enabled
             ):
                 apply = True
@@ -92,15 +92,16 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         else:
             for item in [item for item in col if item.enabled]:
                 try:
-                    obj = item.object
+                    obj = item.obj
                     mod = obj.modifiers[item.mod_name]
                     self.apply(context, sett, mod, obj)
                     if sett.modapply_keep_shapekeys:
-                        for obj in sk_dict[obj.name]:
-                            self.apply(context, sett, mod, obj)
+                        for o in sk_dict[obj.name]:
+                            self.apply(context, sett, mod, o)
                 except Exception as e:
                     hg_log(
-                        f"Error while applying modifier {item.mod_name} on {item.object}, with error as {e}",
+                        f"Error while applying modifier {item.mod_name} on ",
+                        f"{item.obj}, with error as {e}",
                         level="WARNING",
                     )
 
@@ -118,19 +119,19 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
 
     @no_type_check
     def apply(self, context, sett, mod, obj):
-        apply = (
-            False
-            if sett.modapply_apply_hidden
-            and not all((mod.show_viewport, mod.show_render))
-            else True
-        )
+        if sett.modapply_apply_hidden and not mod.show_viewport and not mod.show_render:
+            apply = False
+        else:
+            apply = True
+
         if apply:
             context.view_layer.objects.active = obj
             try:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
             except Exception as e:
                 hg_log(
-                    f"Error while applying modifier {mod.name} on {obj.name}, with error as {e}",
+                    f"Error while applying modifier {mod.name} on {obj.name}, ",
+                    f"with error as {e}",
                     level="WARNING",
                 )
 
@@ -140,17 +141,17 @@ class HG_OT_REFRESH_UL(bpy.types.Operator):
     bl_label = "Refresh list"
     bl_description = "Refresh list"
 
-    type: bpy.props.StringProperty()
+    uilist_type: bpy.props.StringProperty()
 
     @no_type_check
     def execute(self, context):
-        if self.type == "modapply":
+        if self.uilist_type == "modapply":
             refresh_modapply(self, context)
-        elif self.type == "shapekeys":
+        elif self.uilist_type == "shapekeys":
             refresh_shapekeys_ul(self, context)
-        elif self.type == "hair":
+        elif self.uilist_type == "hair":
             refresh_hair_ul(self, context)
-        elif self.type == "outfit":
+        elif self.uilist_type == "outfit":
             refresh_outfit_ul(self, context)
         return {"FINISHED"}
 
@@ -161,7 +162,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
     bl_description = "Select all/none modifiers"
     bl_options = {"UNDO"}
 
-    all: bpy.props.BoolProperty()
+    select_all: bpy.props.BoolProperty()
 
     @no_type_check
     def execute(self, context):
@@ -170,7 +171,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         refresh_modapply(self, context)
 
         for item in col:
-            item.enabled = self.all
+            item.enabled = self.select_all
 
         return {"FINISHED"}
 
@@ -213,7 +214,7 @@ def build_object_list(
         for human in humans:
             if not human:
                 continue
-            objs.extend([child for child in human.children])
+            objs.extend(list(human.children))
     return list(set(objs))
 
 
@@ -227,7 +228,7 @@ def build_full_list(
     item.viewport_visible = mod.show_viewport
     item.render_visible = mod.show_render
     item.count = 0
-    item.object = obj
+    item.obj = obj
 
     if mod.type in ["ARMATURE", "SUBSURF"]:
         item.enabled = False

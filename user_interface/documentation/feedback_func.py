@@ -12,7 +12,7 @@ def show_message(self, msg):
 
 
 def ShowConfirmationBox(message=""):
-    """Shows a confirmation box to the user with the given text"""
+    """Shows a confirmation box to the user with the given text."""
 
     def draw(self, context):
         self.layout.label(text=message)
@@ -21,7 +21,7 @@ def ShowConfirmationBox(message=""):
 
 
 def ShowMessageBox(message="", title="Human Generator - Alert", icon="INFO"):
-    """Shows a message popup with the passed text
+    """Shows a message popup with the passed text.
 
     Args:
         message (str, optional): Message to display. Defaults to "".

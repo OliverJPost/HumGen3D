@@ -13,6 +13,7 @@ from .base_clothing import BaseClothing
 
 class FootwearSettings(BaseClothing):
     def __init__(self, human: "Human") -> None:
+        """Create new instance to manipulate footwear of human."""
         self._human = human
         self._pcoll_name = "footwear"
         self._pcoll_gender_split = True

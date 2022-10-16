@@ -5,7 +5,7 @@ import os
 import random
 import subprocess
 import time
-from typing import Iterable, Optional, Union
+from typing import Optional, Union
 
 import bpy
 from HumGen3D.backend import get_addon_root, get_prefs
@@ -151,7 +151,7 @@ class BatchHumanGenerator:
         hg_log("^^^ HumGen background process ENDED", level="BACKGROUND")
 
         hg_log(
-            f"Background process took: ",
+            "Background process took: ",
             round(time.time() - start_time_background_process, 2),
             "s",
         )
@@ -199,8 +199,6 @@ class BatchHumanGenerator:
                 level="WARNING",
             )
             print(background_blender.stderr.decode("utf-8"))  # noqa T201
-            # ShowMessageBox(message =
-            #    f'''An error occured while generating human, check the console for error details''') #noqa E501
 
     def __import_generated_human(self) -> bpy.types.Object:
         start_time_import = time.time()

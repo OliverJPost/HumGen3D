@@ -1,7 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""Contains the check_update function for online checking for cpack and
-code updates"""
+"""Contains the check_update function for online checking for cpack and code updates."""
 
 import json
 from typing import TYPE_CHECKING
@@ -10,7 +9,7 @@ import bpy
 import requests  # type:ignore
 
 if TYPE_CHECKING:
-    from HumGen3D.backend.content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
+    from .content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
 
 from . import get_prefs, hg_log  # type: ignore
 

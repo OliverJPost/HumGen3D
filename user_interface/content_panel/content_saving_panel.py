@@ -3,21 +3,14 @@
 import bpy
 from HumGen3D.backend import get_prefs
 
-from ..documentation.tips_suggestions_ui import (
-    draw_tips_suggestions_ui,
-    update_tips_from_context,
-)
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 from .base_draw_functions import (
     _draw_name_ui,
     _draw_thumbnail_selection_ui,
     _draw_warning_if_different_active_human,
     draw_category_ui,
 )
-from .save_clothing_ui import (
-    _draw_clothing_gender_ui,
-    _draw_clothing_uilist_ui,
-    _draw_outfit_type_selector,
-)
+from .save_clothing_ui import _draw_clothing_gender_ui
 from .save_hair_ui import (
     _draw_hair_gender_ui,
     _draw_hairtype_ui,
@@ -27,8 +20,9 @@ from .save_keys import _draw_key_type_ui
 
 
 class HG_PT_CONTENT_SAVING(bpy.types.Panel):
-    """Panel that shows step by step options for saving various kinds of custom
-    content. Which custom content it displays options for is determined by
+    """Panel that shows step by step options for saving various kinds of custom content.
+
+    Which custom content it displays options for is determined by
     sett.content_saving_type. Which tab it shows is determined by
     content_saving_tab_index
     """
@@ -62,13 +56,13 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
             _draw_clothing_gender_ui,
             draw_category_ui,
             _draw_name_ui,
-            ],
+        ],
         "footwear": [
             _draw_thumbnail_selection_ui,
             _draw_clothing_gender_ui,
             draw_category_ui,
             _draw_name_ui,
-            ],
+        ],
         "pose": [
             _draw_thumbnail_selection_ui,
             draw_category_ui,

@@ -27,26 +27,12 @@ def bpy_only(func: F) -> F:
 
 class PropCollection:
     def __init__(self, collection: Union[bpy_prop_collection, Iterable[ID]]) -> None:
+        """Create a new PropCollection from either bpy_prop_collection or custom."""
         self.is_bpy = isinstance(collection, bpy_prop_collection)
         self._collection = collection
 
-    def __contains__(self, item: ID) -> bool:
-        return item in self._collection  # type:ignore[operator]
-
-    def __delitem__(self, item: ID) -> None:
-        del self._collection[item]
-
-    def __getitem__(self, item: str) -> ID:
-        return cast(ID, self._collection[item])  # type:ignore[index]
-
-    def __iter__(self) -> Iterable[ID]:
-        yield from self._collection  # type:ignore[misc]
-
-    def __len__(self) -> int:
-        return len(self._collection)  # type:ignore[arg-type]
-
     def find(self, item_name: str) -> int:
-        """Find index of item in prop collection
+        """Find index of item in prop collection.
 
         Args:
             item_name (str): Name of item to find
@@ -68,9 +54,6 @@ class PropCollection:
                 (item for item in self._collection if item.name == item_name),
                 None,
             )
-
-    def __getattr__(self, attr: str) -> Any:
-        return getattr(self._collection, attr)
 
     @bpy_only
     def foreach_get(self, attr: str, sequence: ndarray[Any, Any]) -> None:
@@ -99,3 +82,21 @@ class PropCollection:
     @bpy_only
     def remove(self, *items: str) -> None:
         self._collection.remove(*items)
+
+    def __contains__(self, item: ID) -> bool:
+        return item in self._collection  # type:ignore[operator]
+
+    def __delitem__(self, item: ID) -> None:
+        del self._collection[item]
+
+    def __getitem__(self, item: str) -> ID:
+        return cast(ID, self._collection[item])  # type:ignore[index]
+
+    def __iter__(self) -> Iterable[ID]:
+        yield from self._collection  # type:ignore[misc]
+
+    def __len__(self) -> int:
+        return len(self._collection)  # type:ignore[arg-type]
+
+    def __getattr__(self, attr: str) -> Any:
+        return getattr(self._collection, attr)

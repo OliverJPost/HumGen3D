@@ -45,7 +45,7 @@ def draw_category_ui(context, layout, content_type):
 
 
 def _draw_name_ui(context, layout, content_type):
-    """Draws the tab to give the content a name
+    """Draws the tab to give the content a name.
 
     Args:
         context (context): Blender context
@@ -75,7 +75,7 @@ def _draw_name_ui(context, layout, content_type):
 
 
 def _draw_thumbnail_selection_ui(context, layout, content_type):
-    """Tab to select/generate a thumbnail for this content
+    """Tab to select/generate a thumbnail for this content.
 
     Args:
         context (context): Blender context
@@ -121,7 +121,7 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
 
 
 def __draw_render_result_thumbnail_ui(layout):
-    """Draw UI inside thumbnail tab for picking the last render result
+    """Draw UI inside thumbnail tab for picking the last render result.
 
     Args:
         layout (UILayout): layout to draw in
@@ -133,7 +133,7 @@ def __draw_render_result_thumbnail_ui(layout):
 
 
 def __draw_auto_thumbnail_ui(layout, content_type):
-    """Draw UI inside thumbnail tab for automatically rendering a thumbnail
+    """Draw UI inside thumbnail tab for automatically rendering a thumbnail.
 
     Args:
         layout (UILayout): layout to draw in
@@ -167,8 +167,9 @@ def __draw_auto_thumbnail_ui(layout, content_type):
 
 
 def _draw_save_button(layout, content_type, poll=True):
-    """Draws a saving button on the last tab of the content saving ui. Also
-    shows small previous button next to it. Button is disabled if poll ==
+    """Draws a saving button on the last tab of the content saving ui.
+
+    Also shows small previous button next to it. Button is disabled if poll ==
     False
 
     Args:
@@ -186,7 +187,7 @@ def _draw_save_button(layout, content_type, poll=True):
         text="",
         icon="TRIA_LEFT",
         depress=True,
-    ).next = False
+    ).go_next = False
 
     row = split.row(align=True)
     row.enabled = poll
@@ -200,7 +201,9 @@ def _draw_save_button(layout, content_type, poll=True):
 
 
 def _draw_warning_if_different_active_human(context, layout):
-    """Draw a warning at the top of the content saving tab if the user has
+    """Draw warning to warn user for different active human.
+
+    Draw a warning at the top of the content saving tab if the user has
     selected a different human than the one the content saving was
     initialised for.
 
@@ -218,16 +221,16 @@ def _draw_warning_if_different_active_human(context, layout):
             row.label(
                 text=f"Selected human is not {cc_sett.content_saving_active_human.name}"
             )
-    except Exception as e:
+    except Exception:
         row = layout.row()
         row.alert = True
         row.label(text="Human seems to be deleted")
 
 
 def _draw_header_box(layout, text, icon):
-    """Draws a box with an icon to show the name/description of this tab. If
-    the text consists of multiple lines the icon will center in the height
-    axis
+    """Draws a box with an icon to show the name/description of this tab.
+
+    If the text consists of multiple lines the icon will center in the height axis
 
     Args:
         layout (UILayout): layout to draw header box in
@@ -253,8 +256,10 @@ def _draw_header_box(layout, text, icon):
 
 
 def _draw_next_button(layout, poll=True):
-    """Draws a button to go to the next tab. Also draws previous button if
-    the index is higher than 0. Next button is disabled if poll == False
+    """Draws a button to go to the next tab.
+
+    Also draws previous button if the index is higher than 0.
+    Next button is disabled if poll == False
 
     Args:
         layout (UILayout): layout to draw buttons in
@@ -274,7 +279,7 @@ def _draw_next_button(layout, poll=True):
             text="Previous",
             icon="TRIA_LEFT",
             depress=True,
-        ).next = False
+        ).go_next = False
 
     # Hide next button if poll is False
     if not poll:
@@ -286,4 +291,4 @@ def _draw_next_button(layout, poll=True):
         text="Next",
         icon="TRIA_RIGHT",
         depress=True,
-    ).next = True
+    ).go_next = True

@@ -63,7 +63,6 @@ def update_livekey_collection() -> None:
             item.category = category
             item.subcategory = subcategory
             item.path = os.path.relpath(abspath, get_prefs().filepath)
-            print("adding", item)
 
     from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
 
@@ -121,6 +120,7 @@ class KeyItem:
         human: "Human",
         subcategory: Optional[str] = None,
     ) -> None:
+        """Create new KeyItem."""
         self.name = name
         self.category = category
         self._human = human
@@ -150,37 +150,9 @@ class LiveKeyItem(KeyItem):
         human: "Human",
         subcategory: Optional[str] = None,
     ) -> None:
+        """Create new LiveKeyItem."""
         super().__init__(name, category, human, subcategory)
         self.path = path
-
-    def to_shapekey(self) -> ShapeKeyItem:
-        filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
-        body = self._human.body_obj
-        vert_count = len(body.data.vertices)
-        new_key_relative_coords = import_npz_key(vert_count, filepath)
-
-        if self.category:
-            if self.subcategory:
-                # Tripe curly braces for result of f{chin}_chin_size
-                name = f"{self.category[0]}]_{{{self.subcategory}}}_{self.name}"
-            else:
-                name = f"{self.category[0]}_{self.name}"
-        else:
-            name = self.name
-        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
-        body.data.vertices.foreach_get("co", obj_coords)
-
-        new_key_coords = obj_coords + new_key_relative_coords
-        key = self._human.body_obj.shape_key_add(name=name)
-        key.slider_max = 2
-        key.slider_min = -2
-
-        key.data.foreach_set("co", new_key_coords)
-
-        idx = bpy.context.window_manager.livekeys.find(self.name)
-        bpy.context.window_manager.livekeys.remove(idx)  # FIXME
-
-        return ShapeKeyItem(name, self._human)
 
     @property
     def value(self) -> float:
@@ -218,6 +190,35 @@ class LiveKeyItem(KeyItem):
 
         self._human.props.sk_values[self.name] = value
 
+    def to_shapekey(self) -> ShapeKeyItem:
+        filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
+        body = self._human.body_obj
+        vert_count = len(body.data.vertices)
+        new_key_relative_coords = import_npz_key(vert_count, filepath)
+
+        if self.category:
+            if self.subcategory:
+                # Tripe curly braces for result of f{chin}_chin_size
+                name = f"{self.category[0]}]_{{{self.subcategory}}}_{self.name}"
+            else:
+                name = f"{self.category[0]}_{self.name}"
+        else:
+            name = self.name
+        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", obj_coords)
+
+        new_key_coords = obj_coords + new_key_relative_coords
+        key = self._human.body_obj.shape_key_add(name=name)
+        key.slider_max = 2
+        key.slider_min = -2
+
+        key.data.foreach_set("co", new_key_coords)
+
+        idx = bpy.context.window_manager.livekeys.find(self.name)
+        bpy.context.window_manager.livekeys.remove(idx)  # FIXME
+
+        return ShapeKeyItem(name, self._human)
+
     def as_bpy(self) -> "BpyLiveKey":
         # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
         livekey = bpy.context.window_manager.livekeys.get(self.name)
@@ -237,6 +238,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
     }
 
     def __init__(self, sk_name: str, human: "Human") -> None:
+        """Create new ShapeKeyItem."""
         pattern = re.compile(
             "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
         )
@@ -268,15 +270,6 @@ class ShapeKeyItem(KeyItem, SavableContent):
         else:
             name = self.name
         return cast(ShapeKey, self._human.body_obj.data.shape_keys.key_blocks[name])
-
-    def __repr__(self) -> str:
-        return "ShapeKey " + super().__repr__()
-
-    def __hash__(self) -> int:
-        data = self.as_bpy().data
-        coords = np.empty(len(data) * 3, dtype=np.float64)  # type:ignore[arg-type]
-        data.foreach_get("co", coords)
-        return int(hashlib.sha1(data).hexdigest(), 16)  # type:ignore[arg-type] # noqa
 
     def save_to_library(
         self,
@@ -322,26 +315,19 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
         update_livekey_collection()
 
+    def __repr__(self) -> str:
+        return "ShapeKey " + super().__repr__()
+
+    def __hash__(self) -> int:
+        data = self.as_bpy().data
+        coords = np.empty(len(data) * 3, dtype=np.float64)  # type:ignore[arg-type]
+        data.foreach_get("co", coords)
+        return int(hashlib.sha1(data).hexdigest(), 16)  # type:ignore[arg-type] # noqa
+
 
 class KeySettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
-
-    def __getitem__(self, name: str) -> Union[LiveKeyItem, ShapeKeyItem]:
-        try:
-            return next(key for key in self.all_keys if key.name == name)
-        except StopIteration:
-            hg_log(f"{self.all_keys = }", level="DEBUG")
-            raise ValueError(f"Key '{name}' not found")
-
-    def __iter__(self) -> Iterable[Union[ShapeKeyItem, LiveKeyItem]]:
-        yield from self.all_keys
-
-    def get(self, name: str) -> Optional[Union[ShapeKeyItem, LiveKeyItem]]:
-        try:
-            return self[name]
-        except ValueError:
-            return None
 
     @property
     def all_keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
@@ -414,6 +400,12 @@ class KeySettings:
     def permanent_key(self) -> bpy.types.ShapeKey:
         return cast(bpy.types.ShapeKey, self["LIVE_KEY_PERMANENT"].as_bpy())
 
+    def get(self, name: str) -> Optional[Union[ShapeKeyItem, LiveKeyItem]]:
+        try:
+            return self[name]
+        except ValueError:
+            return None
+
     def filtered(
         self, category: str, subcategory: Optional[str] = None  # FIXME
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
@@ -429,7 +421,7 @@ class KeySettings:
     def load_from_npz(
         self, npz_filepath: str, obj_override: Optional[Object] = None
     ) -> bpy.types.ShapeKey:
-        """Creates a new shapekey on the body or the passed obj_override from a npz file
+        """Creates new shapekey on the body or the passed obj_override from a npz file.
 
         This .npy file contains a one dimensional array with coordinates of the
         shape key, RELATIVE to the base coordinates of the body.
@@ -462,6 +454,13 @@ class KeySettings:
 
         return sk
 
+    def as_dict(self) -> dict[str, dict[str, float]]:
+        key_dict = {}  # noqa SIM904
+        key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
+        key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
+
+        return key_dict
+
     def _set_gender_specific(self, human: "Human") -> None:
         """Renames shapekeys, removing Male_ and Female_ prefixes according to
         the passed gender
@@ -472,7 +471,7 @@ class KeySettings:
         """
         gender = human.gender
         hg_body = human.body_obj
-        for sk in [sk for sk in hg_body.data.shape_keys.key_blocks]:
+        for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.lower().startswith(gender) and sk.name != "Male":
                 GD = gender.capitalize()
                 sk.name = sk.name.replace(f"{GD}_", "")
@@ -505,9 +504,12 @@ class KeySettings:
 
         return driver
 
-    def as_dict(self) -> dict[str, dict[str, float]]:
-        key_dict = {}  # noqa SIM904
-        key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
-        key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
+    def __getitem__(self, name: str) -> Union[LiveKeyItem, ShapeKeyItem]:
+        try:
+            return next(key for key in self.all_keys if key.name == name)
+        except StopIteration:
+            hg_log(f"{self.all_keys = }", level="DEBUG")
+            raise ValueError(f"Key '{name}' not found")
 
-        return key_dict
+    def __iter__(self) -> Iterable[Union[ShapeKeyItem, LiveKeyItem]]:
+        yield from self.all_keys

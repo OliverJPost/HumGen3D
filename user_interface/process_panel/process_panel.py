@@ -1,6 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from operator import attrgetter
 
 import bpy
 from HumGen3D.human.human import Human
@@ -27,8 +26,6 @@ class ProcessPanel(HGPanel):
         if hasattr(self, "enabled_propname"):
             # retreiver = attrgetter(self.propspace)
             # propgroup = retreiver(context.scene.HG3D  # type:ignore[attr-defined]
-            print(context.scene.HG3D.bake, type(context.scene.HG3D.bake))
-            print(context.scene.HG3D.process, type(context.scene.HG3D.process))
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
         try:
             self.layout.label(text="", icon_value=get_hg_icon(self.icon_name))
@@ -40,16 +37,16 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
     bl_idname = "HG_PT_PROCESS"
     bl_label = "Process"
 
-    def draw_header(self, context) -> None:
-        draw_panel_switch_header(
-            self.layout, context.scene.HG3D
-        )  # type:ignore[attr-defined]
-
     @classmethod
     def poll(cls, context):
         if not super().poll(context):
             return False
         return context.scene.HG3D.ui.active_tab == "PROCESS"
+
+    def draw_header(self, context) -> None:
+        draw_panel_switch_header(
+            self.layout, context.scene.HG3D
+        )  # type:ignore[attr-defined]
 
     def draw(self, context):
         process_sett = context.scene.HG3D.process
@@ -131,7 +128,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
 
     def _draw_baking_warning_labels(self, context, layout) -> bool:
-        """Draws warning if no human is selected or textures are already baked
+        """Draws warning if no human is selected or textures are already baked.
 
         Args:
             context (bpy.context): Blender context
@@ -178,9 +175,9 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col.prop(sett, "modapply_search_modifiers", text="")
 
         row = col.row(align=True)
-        row.operator("hg3d.ulrefresh", text="Refresh").type = "modapply"
-        row.operator("hg3d.selectmodapply", text="All").all = True
-        row.operator("hg3d.selectmodapply", text="None").all = False
+        row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
+        row.operator("hg3d.selectmodapply", text="All").select_all = True
+        row.operator("hg3d.selectmodapply", text="None").select_all = False
 
         col = layout.column(align=True)
         col.label(text="Objects to apply:")

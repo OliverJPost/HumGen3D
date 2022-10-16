@@ -8,8 +8,9 @@ from ..human import Human
 
 
 class HG_RANDOM_CHOICE(bpy.types.Operator):
-    """Picks a random item to be active in this preview collection. For all pcolls
-    except "humans" it will also load the item onto the humna.
+    """Picks a random item to be active in this preview collection.
+
+    For all pcolls except "humans" it will also load the item onto the human.
     """
 
     bl_idname = "hg3d.random_choice"
@@ -44,7 +45,7 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
 
 
 class HG_RANDOM_VALUE(bpy.types.Operator):
-    """randomizes this specific property"""
+    """randomizes this specific property."""
 
     bl_idname = "hg3d.random_value"
     bl_label = "Randomize"

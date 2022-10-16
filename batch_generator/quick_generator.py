@@ -153,6 +153,24 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
 
         return {"FINISHED"}
 
+    def pick_library(self, context, categ, gender=None):
+        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        collection = getattr(context.scene, f"batch_{categ}_col")
+
+        if gender:
+            library_list = [
+                i for i in collection if i.enabled and getattr(i, f"{gender}_items")
+            ]
+        else:
+            library_list = [
+                item.library_name
+                for item in collection
+                if item.count != 0 and item.enabled
+            ]
+
+        categ_tag = "outfit" if categ == "clothing" else categ
+        setattr(sett.pcoll, f"{categ_tag}_category", random.choice(library_list))
+
     def _make_body_obj_main_object(self, hg_rig, hg_body):
         hg_body.HG.batch_result = True
         hg_body.HG.ishuman = True
@@ -274,21 +292,3 @@ class HG_QUICK_GENERATE(bpy.types.Operator):
         else:
             sett.pose_category = pose_type.capitalize().replace("_", " ")
             set_random_active_in_pcoll(context, sett, "pose")
-
-    def pick_library(self, context, categ, gender=None):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        collection = getattr(context.scene, f"batch_{categ}_col")
-
-        if gender:
-            library_list = [
-                i for i in collection if i.enabled and getattr(i, f"{gender}_items")
-            ]
-        else:
-            library_list = [
-                item.library_name
-                for item in collection
-                if item.count != 0 and item.enabled
-            ]
-
-        categ_tag = "outfit" if categ == "clothing" else categ
-        setattr(sett.pcoll, f"{categ_tag}_category", random.choice(library_list))

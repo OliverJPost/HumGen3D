@@ -36,7 +36,7 @@ def refresh_shapekeys_ul(self, context):
         if sk.name in previously_enabled_items:
             item.enabled = True
 
-        item.on = True if not sk.mute else False
+        item.on = not sk.mute
         if not item.on:
             item.enabled = False
 
@@ -49,7 +49,7 @@ def find_existing_shapekeys(cc_sett, pref):
         walker = os.walk(os.path.join(pref.filepath, "models", "shapekeys"))
         for root, _, filenames in walker:
             for fn in filenames:
-                if not os.path.splitext(fn)[1] == ".json":
+                if os.path.splitext(fn)[1] != ".json":
                     continue
                 with open(os.path.join(root, fn)) as f:
                     data = json.load(f)
@@ -60,7 +60,6 @@ def find_existing_shapekeys(cc_sett, pref):
 
 def refresh_hair_ul(self, context):
     cc_sett = context.scene.HG3D.custom_content
-    pref = get_prefs()
     col = context.scene.savehair_col
 
     previously_enabled_items = [i.ps_name for i in col if i.enabled]
@@ -84,7 +83,6 @@ def refresh_hair_ul(self, context):
 # TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
     sett = context.scene.HG3D  # type:ignore[attr-defined]
-    pref = get_prefs()
     col = context.scene.saveoutfit_col
 
     previously_enabled_items = [i.obj_name for i in col if i.enabled]
@@ -97,9 +95,9 @@ def refresh_outfit_ul(self, context):
         o
         for o in hg_rig.children
         if o.type == "MESH"
-        and not "hg_body" in o
-        and not "hg_eyes" in o
-        and not "hg_teeth" in o
+        and "hg_body" not in o
+        and "hg_eyes" not in o
+        and "hg_teeth" not in o
     ]:
 
         item = col.add()
@@ -178,14 +176,17 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
             elif "cloth" in context.object:
                 show_message(
                     self,
-                    "This object is already HG clothing, are you sure you want to redo this process?",
+                    (
+                        "This object is already HG clothing, "
+                        + "are you sure you want to redo this process?"
+                    ),
                 )
 
         update_tips_from_context(context, cc_sett, cc_sett.content_saving_active_human)
         return {"FINISHED"}
 
     def _check_if_human_uses_unsaved_shapekeys(self, cc_sett) -> list:
-        """Check with the list of already saved shapekeys to see if this human
+        """Check with the list of already saved shapekeys to see if this human # noqa
         uses (value above 0) any shapekeys that are not already saved.
 
         Args:
@@ -203,8 +204,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                 unsaved_sks.append(sk.name)
 
     def _build_sk_warning_message(self, unsaved_sks):
-        """Builds a string with newline characters to display which shapekeys
-        are not saved yet.
+        """Builds a string with newlines to display which shapekeys are not saved yet.
 
         Args:
             unsaved_sks (list): list of unsaved shapekey names
@@ -212,7 +212,10 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         Returns:
             str: Message string to display to the user
         """
-        message = "This human uses custom shape keys that are not saved yet! \nPlease save these shapekeys using our 'Save custom shapekeys' button:\n"
+        message = (
+            "This human uses custom shape keys that are not saved yet! \n"
+            + "Please save these shapekeys using our 'Save custom shapekeys button:\n"
+        )
         for sk_name in unsaved_sks:
             message += f"- {sk_name}\n"
         return message
