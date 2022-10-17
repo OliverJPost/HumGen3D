@@ -74,42 +74,6 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
                 icon="TIME",
             ).run_immediately = False
 
-        box = layout.box().column(align=True)
-        box.prop(
-            batch_sett,
-            "performance_statistics",
-            text="Performance statistics:",
-            emboss=False,
-            icon="TRIA_DOWN" if batch_sett.performance_statistics else "TRIA_RIGHT",
-        )
-        if batch_sett.performance_statistics:
-            return  # TODO
-            box.separator()
-            row = box.row()
-            row.alignment = "CENTER"
-            row.label(text="Lower is better", icon="INFO")
-            box.separator()
-            split = box.split(factor=0.25)
-            split.scale_y = 0.8
-            col_l = split.column(align=True)
-            col_r = split.column(align=True)
-
-            weight_dict = calculate_batch_statistics(batch_sett)
-
-            col_l.label(text="Cycles:")
-            col_r.label(text=weight_dict["cycles_time"], icon="RENDER_STILL")
-            col_l.label(text="")
-            col_r.label(text=weight_dict["cycles_memory"], icon="BLANK1")
-            col_l.label(text="Eevee:")
-            col_r.label(text=weight_dict["eevee_time"], icon="RENDER_STILL")
-            col_l.label(text="")
-            col_r.label(text=weight_dict["eevee_memory"], icon="BLANK1")
-            col_l.label(text="RAM:")
-            col_r.label(text=weight_dict["scene_memory"], icon="MEMORY")
-            col_l.label(text="Storage:")
-            col_r.label(text=weight_dict["storage"], icon="DISK_DRIVE")
-            col_r.label(text="* Excluding textures")
-
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
     bl_parent_id = "HG_PT_Batch_Panel"

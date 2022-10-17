@@ -123,6 +123,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     run_immediately: bpy.props.BoolProperty(default=False)
+    show_time_dialog: bpy.props.BoolProperty(default=False)
 
     def invoke(self, context, event):
         batch_sett = context.scene.HG3D.batch
@@ -131,25 +132,54 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             filter(has_associated_human, self.generate_queue)
         )
 
+        if self.show_time_dialog:
+            self.show_time_dialog = False
+            return self.execute(context)
+
+        if len(self.generate_queue) >= 3:
+            self.show_time_dialog = True
+
         if self.run_immediately or not markers_with_associated_human:
             set_eevee_ao_and_strip(context)
             self.generator = BatchHumanGenerator()
             set_generator_settings(self.generator, batch_sett)
-            return self.execute(context)
+
+            if self.show_time_dialog:
+                self.execute_first(context)
+                bpy.app.timers.register(
+                    lambda: bpy.ops.hg3d.generate(show_time_dialog=True),
+                    first_interval=0,
+                )
+                return {"CANCELLED"}
+            else:
+                return self.execute(context)
         else:
             self._show_dialog_to_confirm_deleting_humans(context)
             return {"CANCELLED"}
+
+    def execute_first(self, context):
+        marker = self.generate_queue[0]
+        pose_type = marker["hg_batch_marker"]
+
+        if has_associated_human(marker):
+            old_human = Human.from_existing(marker["associated_human"])
+            old_human.delete()
+
+        human = self.generator.generate_human(context, pose_type)
+
+        human.location = marker.location
+        human.rotation_euler = marker.rotation_euler
+        marker["associated_human"] = human.rig_obj
 
     def execute(self, context):
         for marker in self.generate_queue:
             pose_type = marker["hg_batch_marker"]
 
-            human = self.generator.generate_human(context, pose_type)
-
-            associated_rig = marker["associated_human"]
-            if associated_rig:
-                old_human = Human.from_existing(associated_rig)
+            if has_associated_human(marker):
+                old_human = Human.from_existing(marker["associated_human"])
                 old_human.delete()
+
+            human = self.generator.generate_human(context, pose_type)
 
             human.location = marker.location
             human.rotation_euler = marker.rotation_euler
