@@ -134,3 +134,21 @@ class BpyLiveKey(bpy.types.PropertyGroup):
         get=get_livekey,
         set=set_livekey,
     )
+    value_limited: FloatProperty(
+        default=0,
+        min=-10,
+        max=10,
+        soft_min=-1,
+        soft_max=1,
+        get=get_livekey,
+        set=set_livekey,
+    )
+    value_positive_limited: FloatProperty(
+        default=0,
+        min=-10,
+        max=10,
+        soft_min=0,
+        soft_max=1,
+        get=get_livekey,
+        set=set_livekey,
+    )
