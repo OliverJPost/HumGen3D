@@ -325,26 +325,7 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         batch_sett = context.scene.HG3D.batch
         layout.enabled = batch_sett.expression
 
-        col = layout.column(align=True)
-        box = col.box().row()
-        box.label(text="Select libraries:")
-        box.operator("hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH")
-        col = col.column()
-        col.template_list(
-            "HG_UL_BATCH_EXPRESSIONS",
-            "",
-            context.scene,
-            "batch_expression_col",
-            context.scene,
-            "batch_expression_col_index",
-        )
-
-        count = sum(
-            [item.count for item in context.scene.batch_expression_col if item.enabled]
-        )
-        if count == 0:
-            col.alert = True
-        col.label(text="Total: {} Expressions".format(count))
+        layout.prop(batch_sett, "expression_type", expand=True)
 
 
 # class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
