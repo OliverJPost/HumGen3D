@@ -13,7 +13,7 @@ import bpy
 from bpy.types import Object  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.backend.properties.object_props import XHG_OBJECT_PROPS
+from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
 
@@ -384,12 +384,12 @@ class Human:
         return cast("bpy_prop_collection", self.rig_obj.data.edit_bones)
 
     @property
-    def props(self) -> XHG_OBJECT_PROPS:
+    def props(self) -> HG_OBJECT_PROPS:
         """Custom object properties of the human.
 
         Used by the add-on for storing metadata like gender, backup_human pointer,
         current phase, body_obj pointer. Points to rig_obj.HG"""
-        return cast(XHG_OBJECT_PROPS, self.rig_obj.HG)
+        return cast(HG_OBJECT_PROPS, self.rig_obj.HG)
 
     @property  # TODO make cached
     def skin(self) -> SkinSettings:

@@ -122,7 +122,9 @@ class ContentSavingSubgroup:
 
 
 # FIXME load order with class property instead of alphabetical
-class ACustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+class CustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
+
     key_to_save: StringProperty()
 
     save_as: EnumProperty(
@@ -150,11 +152,13 @@ class ACustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
 
 
 # FIXME load order with class property instead of alphabetical
-class ACustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+class CustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
     human_attr = "pose"
 
 
-class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+class CustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
     human_attr = "hair"
 
     save_type: EnumProperty(
@@ -172,14 +176,16 @@ class ACustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     )
 
 
-class ACustomOutfitProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+class CustomOutfitProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
     human_attr = "outfit"
     save_for_male: BoolProperty(default=True)
     save_for_female: BoolProperty(default=True)
     save_when_finished: BoolProperty(default=True)
 
 
-class ACustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+class CustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
     human_attr = "footwear"
     save_for_male: BoolProperty(default=True)
     save_for_female: BoolProperty(default=True)
@@ -189,11 +195,13 @@ class ACustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
 class CustomContentProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties related to custom_content in HG."""
 
-    key: PointerProperty(type=ACustomKeyProps)
-    pose: PointerProperty(type=ACustomPoseProps)
-    hair: PointerProperty(type=ACustomHairProps)
-    outfit: PointerProperty(type=ACustomOutfitProps)
-    footwear: PointerProperty(type=ACustomFootwearProps)
+    _register_priority = 4
+
+    key: PointerProperty(type=CustomKeyProps)
+    pose: PointerProperty(type=CustomPoseProps)
+    hair: PointerProperty(type=CustomHairProps)
+    outfit: PointerProperty(type=CustomOutfitProps)
+    footwear: PointerProperty(type=CustomFootwearProps)
     starting_human_name: StringProperty()
     hair_name: StringProperty()
     show_unchanged: BoolProperty(

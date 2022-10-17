@@ -5,6 +5,8 @@ from bpy.props import BoolProperty, EnumProperty  # type:ignore
 
 
 class ProcessProps(bpy.types.PropertyGroup):
+    _register_priority = 4
+
     bake: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=True)

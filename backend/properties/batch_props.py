@@ -19,6 +19,8 @@ from bpy.props import (  # type: ignore
 class BatchProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, contains properties related to the batch generator."""
 
+    _register_priority = 4
+
     # Modal props
     progress: IntProperty(
         name="Progress", subtype="PERCENTAGE", min=0, max=100, default=0

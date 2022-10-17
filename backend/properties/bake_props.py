@@ -39,6 +39,8 @@ RESOLUTIONS_ENUM = [
 class BakeProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, contains properties related to texture baking."""
 
+    _register_priority = 4
+
     # Resolution props
     res_body: EnumProperty(
         items=RESOLUTIONS_ENUM,
