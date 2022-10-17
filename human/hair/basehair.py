@@ -230,7 +230,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
     @injected_context
     def randomize(self, context: C = None) -> None:
-        preset_options = self.get_preset_options()
+        preset_options = self.get_options(context)
         chosen_preset = random.choice(preset_options)
         self.set(chosen_preset, context)
 

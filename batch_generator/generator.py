@@ -1,19 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import json
 import os
 import random
-import subprocess
-import time
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
-import bpy
-from HumGen3D.backend import get_addon_root, get_prefs
 from HumGen3D.backend.type_aliases import C  # type:ignore
+from HumGen3D.batch_generator.batch_functions import height_from_bell_curve
 from HumGen3D.human.base.decorators import injected_context
 from HumGen3D.human.human import Human
-
-from ..backend.logging import hg_log
 
 SettingsDict = dict[str, Union[str, int, float]]
 
@@ -24,205 +18,105 @@ class BatchHumanGenerator:
     Also used by the batch panel in the Human Generator GUI
     """
 
+    female_chance: float = 1.0
+    male_chance: float = 1.0
+    human_preset_category_chances: Optional[dict[str, float]] = None
+    add_clothing: bool = True
+    clothing_categories: Optional[list[str]] = None
+    add_expression: bool = True
+    add_hair: bool = True
+    hair_quality: Literal["high", "medium", "low", "ultralow"] = "medium"
+    average_height_male: int = 177
+    average_height_female: int = 172
+    height_one_standard_deviation: float = 0.05
+    texture_resolution: Literal["high", "optimised", "performance"] = "optimised"
+
     def __init__(
         self,
-        apply_shapekeys: bool = True,
-        apply_armature_modifier: bool = False,
-        remove_clothing_subdiv: bool = True,
-        remove_clothing_solidify: bool = True,
-        apply_clothing_geometry_masks: bool = True,
-        texture_resolution: str = "optimised",
+        add_clothing: bool = True,
+        add_hair: bool = True,
+        add_expression: bool = True,
     ) -> None:
-        """Creates a dictionary with settings to pass to generate_human_in_background
-        if you want to change the quality settings from the default values.
-
-        Args:
-            delete_backup (bool, optional): Delete the backup human, which is an
-                extra object used to revert to creation phase and to load 1-click
-                expressions.
-                Big storage impact. Medium RAM impact.
-                Defaults to True.
-            apply_shapekeys (bool, optional): Applies all the shape keys on the
-                human. Simplifies object.
-                Small performance impact, medium storage impact.
-                Defaults to True.
-            apply_armature_modifier (bool, optional): Applies the armature modifier,
-                removes bone vertex groups and deletes the rig.
-                Use this if you don't need a rig.
-                Small impact.
-                Defaults to False.
-            remove_clothing_subdiv (bool, optional): Removes any subdiv modifier
-                from clothing.
-                Small to medium impact.
-                Defaults to True.
-            remove_clothing_solidify (bool, optional): Removes any solidify modifier
-                from clothing.
-                Small to medium impact.
-                Defaults to True.
-            apply_clothing_geometry_masks (bool, optional): Applies the modifiers
-                that hide the body geometry behind clothing.
-                Small impact.
-                Defaults to True.
-            texture_resolution (str, optional): Texture resolution in
-                ('high', 'optimised', 'performance') from high to low.
-                Also applies to clothing, eyes and teeth.
-                HUGE memory and Eevee impact.
-                Defaults to 'optimised'.
-        """
-        self.apply_shapekeys = apply_shapekeys
-        self.apply_armature_modifier = apply_armature_modifier
-        self.remove_clothing_subdiv = remove_clothing_subdiv
-        self.remove_clothing_solidify = remove_clothing_solidify
-        self.apply_clothing_geometry_masks = apply_clothing_geometry_masks
-        self.texture_resolution = texture_resolution
+        self.add_clothing = add_clothing
+        self.add_hair = add_hair
+        self.add_expression = add_expression
 
     @injected_context
-    def generate_in_background(
+    def generate_human(
         self,
         context: C = None,
-        gender: Optional[str] = None,
-        add_hair: bool = False,
-        hair_type: str = "particle",
-        hair_quality: str = "medium",
-        add_expression: bool = False,
-        expression_category: str = "All",
-        add_clothing: bool = False,
-        clothing_category: str = "All",
         pose_type: str = "a_pose",
     ) -> "Human":
-        """Generate a new HG_Human in a background proces based on the settings
-        of this HG_Batch_Generator instance and import the created human to
-        Blender
 
-        Args:
-            context (C): Blender context, if None is passed
-                bpy.context will be used.
-            gender (str, optional): The gender of the human to create, either 'male'
-                or 'female'.
-                If None is passed, random.choice(('male', 'female')) will be used
-            ethnicity (str, optional): Ethnicity of the human to create. Will search
-                for starting humans with this string in their name.
-                If None is passed, random.choice(('caucasian', 'black', 'asian'))
-                will be used.
-            add_hair (bool, optional): If True, hair will be added to the created
-                human.
-                Defaults to False.
-            hair_type (str, optional): Choose between 'particle' and 'haircards' for
-                the add-on to create.
-                Ignored if add_hair == False.
-                Defaults to 'particle'.
-            hair_quality (str, optional): The quality of the particle system to
-                create, in ('high', 'medium', 'low', 'ultralow').
-                Defaults to 'medium'.
-            add_expression (bool, optional): If True, a 1-click expression will be
-                added to the human.
-                Defaults to False.
-            expression_category (str, optional): Category to choose expression
-                from.
-                Use get_pcoll_categs('expressions') to see options.
-                Ignored if add_expression == False.
-                Defaults to 'All'.
-            add_clothing (bool, optional): If True, an outfit and footwear will be
-                added to this human.
-                Defaults to False.
-            clothing_category (str, optional): Category to choose outfit from.
-                Use get_pcoll_categs('outfits') to see options.
-                Ignored if add_clothing == False.
-                Defaults to 'All'.
-            pose_type (str, optional): Category to choose pose from.
-                Use get_pcoll_categs('pose') to see options.
-                Defaults to 'A_Pose'.
-        Returns:
-            HG_Human: Python representation of a Human Generator Human. See
-                [[HG_Human]]
-        """
+        gender = random.choices(
+            ("male", "female"), (self.male_chance, self.female_chance)
+        )[0]
+        if not self.human_preset_category_chances:
+            presets = Human.get_preset_options(gender)
+        else:
+            chosen_category: str = random.choices(
+                zip(*self.human_preset_category_chances.items())  # type:ignore
+            )[0]
+            presets = Human.get_preset_options(gender, chosen_category)
 
-        settings_dict = self.__construct_settings_dict_from_kwargs(locals())
+        chosen_preset = random.choice(presets)
+        human = Human.from_preset(chosen_preset)
 
-        for obj in context.selected_objects:
-            obj.select_set(False)
+        human.body.randomize()
+        human.face.randomize(use_bell_curve=gender == "female")
 
-        python_file = os.path.join(get_addon_root(), "scripts", "batch_generate.py")
+        human.skin.randomize()
+        human.eyes.randomize()
 
-        start_time_background_process = time.time()
+        if self.add_hair:
+            human.hair.regular_hair.randomize(context)
+            human.hair.regular_hair.randomize_color()
+            if human.gender == "male":
+                human.hair.face_hair.randomize(context)
+                human.hair.face_hair.randomize_color()
 
-        hg_log("STARTING HumGen background process", level="BACKGROUND")
-        self.__run_hg_subprocess(python_file, settings_dict)
-        hg_log("^^^ HumGen background process ENDED", level="BACKGROUND")
+        human.hair.set_hair_quality(self.hair_quality)
+        human.hair.eyebrows.randomize_color()
+        human.hair.children_set_hide(True)
 
-        hg_log(
-            "Background process took: ",
-            round(time.time() - start_time_background_process, 2),
-            "s",
+        human.height.set(
+            height_from_bell_curve(
+                self.average_height_male
+                if gender == "male"
+                else self.average_height_female,
+                self.height_one_standard_deviation,
+            )[0]
         )
 
-        hg_rig = self.__import_generated_human()
+        if self.add_clothing:
+            if self.clothing_categories:
+                clothing_category = random.choice(self.clothing_categories)
+            else:
+                clothing_category = "All"
+            clothing_options = human.outfit.get_options(context, clothing_category)
 
-        return Human.from_existing(hg_rig)
+            human.outfit.set(random.choice(clothing_options))
+            human.footwear.set_random(context)
 
-    def __construct_settings_dict_from_kwargs(
-        self, settings_dict: SettingsDict
-    ) -> SettingsDict:
-        del settings_dict["self"]
-        del settings_dict["context"]
-        if not settings_dict["gender"]:
-            settings_dict["gender"] = random.choice(("male", "female"))
-        if not settings_dict["ethnicity"]:
-            settings_dict["ethnicity"] = random.choice(
-                ("caucasian", "black", "asian")
-            )  # TODO option for custom ethnicities for custom starting humans
+            for cloth in human.outfit.objects:
+                human.outfit.randomize_colors(cloth)
+                human.outfit.set_texture_resolution(cloth, self.texture_resolution)
 
-        return settings_dict
+            for cloth in human.footwear.objects:
+                human.footwear.randomize_colors(cloth)
+                human.footwear.set_texture_resolution(cloth, self.texture_resolution)
 
-    def __run_hg_subprocess(
-        self, python_file: str, settings_dict: SettingsDict
-    ) -> None:
-        background_blender = subprocess.run(
-            [
-                bpy.app.binary_path,
-                "--background",
-                "--python",
-                python_file,
-                json.dumps({**settings_dict, **vars(self)}),
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        if pose_type != "a_pose":
+            if pose_type == "t_pose":
+                human.pose.set(os.path.join("poses", "Base Poses", "HG_T_Pose.blend"))
+            else:
+                options = human.pose.get_options(context, category=pose_type)
+                human.pose.set(random.choice(options))
 
-        for line in background_blender.stdout.decode("utf-8").splitlines():
-            if line.startswith(("HG_", "\033")):
-                print(line)  # noqa T201
+        if self.add_expression:
+            human.expression.set_random(context)
+            # FIXME human.expression.shape_keys[0].value = random.choice(
+            #    [0.5, 0.7, 0.8, 1, 1, 1]
+            # )
 
-        if background_blender.stderr:
-            hg_log(
-                "Exception occured while in background process",
-                level="WARNING",
-            )
-            print(background_blender.stderr.decode("utf-8"))  # noqa T201
-
-    def __import_generated_human(self) -> bpy.types.Object:
-        start_time_import = time.time()
-        batch_result_path = os.path.join(get_prefs().filepath, "batch_result.blend")
-        with bpy.data.libraries.load(batch_result_path, link=False) as (  # type:ignore
-            data_from,
-            data_to,
-        ):
-            data_to.objects = data_from.objects
-
-        for obj in data_to.objects:
-            bpy.context.scene.collection.objects.link(obj)  # type:ignore
-            # toggle_hair_visibility(obj, show=True)
-
-        human_parent: bpy.types.Object = next(
-            (obj for obj in data_to.objects if obj.HG.ishuman and obj.HG.backup),
-            [obj for obj in data_to.objects if obj.HG.ishuman][0],
-        )
-
-        name = human_parent.name  # type:ignore[attr-defined]
-        hg_log(
-            f"Import succesful for human {name}, import took: ",
-            round(time.time() - start_time_import, 2),
-            "s",
-        )
-
-        return human_parent
+        return human

@@ -9,7 +9,7 @@ from typing import Dict, Optional, Union
 
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.backend.type_aliases import GenderStr
+from HumGen3D.backend.type_aliases import BpyEnum, GenderStr
 
 from ..human.base.exceptions import HumGenException  # type: ignore
 from . import get_prefs, hg_log
@@ -26,7 +26,7 @@ PREVIEW_COLLECTION_DATA: PcollDict = {
     "footwear": (".blend", True, "footwear", "footwear_category", "search_term_footwear"), # noqa
     "hair": (".json", True, ["hair", "head"], "hair_category", None),
     "face_hair": (".json", False, ["hair", "face_hair"], "face_hair_category", None),
-    "expression": (".npy", False, ["shapekeys", "expressions"], "expression_category", "search_term_expression"), # noqa
+    "expression": (".npz", False, ["shapekeys", "expressions"], "expression_category", "search_term_expression"), # noqa
     "pattern": (".png", False, "patterns", "pattern_category", "search_term_pattern"),
     "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_category", None),
 }
@@ -119,7 +119,8 @@ class PreviewCollection:
         # find category and subcategory in order to determine the dir to search
 
         gender = gender if gender and self.gender_split else ""
-        subcategory = subcategory if subcategory else ""
+        if not subcategory or subcategory == "All":
+            subcategory = ""
 
         pcoll_full_dir = os.path.join(
             pref.filepath, self.subfolder, gender, subcategory  # type:ignore[arg-type]
@@ -156,6 +157,66 @@ class PreviewCollection:
         sett[f"previews_list_{self.name}"] = path_list
 
         sett.load_exception = False
+
+    def find_folders(self, gender: str, include_all: bool = True) -> BpyEnum:
+        """Gets enum of folders found in a specific directory. T
+        hese serve as categories for that specific pcoll
+
+        Args:
+            context (bpy.context): blender context
+            pcoll_name (str): preview collection name
+            gender_toggle (bool): Search for folders that are in respective male/female
+                folders.
+            include_all (bool, optional): include "All" as first item.
+                Defaults to True.
+            gender_override (str): Used by operations that are not linked to a single
+                human. Instead of getting the gender from hg_rig this allows for the
+                manual passing of the gender ('male' or 'female')
+
+        Returns:
+            list: enum of folders
+        """
+
+        pref = get_prefs()
+
+        folder = PREVIEW_COLLECTION_DATA[self.name][2]
+        if isinstance(folder, list):
+            folder = os.path.join(*folder)
+
+        separate_folders_for_genders = PREVIEW_COLLECTION_DATA[self.name][1]
+        if separate_folders_for_genders:
+            categ_folder = os.path.join(pref.filepath, folder, gender)
+        else:
+            categ_folder = os.path.join(pref.filepath, folder)
+
+        if not os.path.isdir(categ_folder):
+            hg_log(
+                f"Can't find folder {categ_folder} for preview collection {self.name}",
+                level="DEBUG",
+            )
+            return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
+
+        dirlist = os.listdir(categ_folder)
+        dirlist.sort()
+        categ_list = []
+        ext = (".jpg", "png", ".jpeg", ".blend")
+        # FIXME
+        for item in dirlist:
+            if not item.endswith(ext) and ".DS_Store" not in item:
+                categ_list.append(item)
+
+        if not categ_list:
+            categ_list.append("No Category Found")
+
+        enum_list = [("All", "All Categories", "", 0)] if include_all else []
+        for i, name in enumerate(categ_list):
+            idx = i if self.name == "texture" else i + 1
+            enum_list.append((name, name, "", idx))
+
+        if not enum_list:
+            return [("ERROR", "ERROR", "", i) for i in range(99)]
+        else:
+            return enum_list
 
     def _get_thumbnail_for_item(self, full_path: str) -> bpy.types.ImagePreview:
         filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"

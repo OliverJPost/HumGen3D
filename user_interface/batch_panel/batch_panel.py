@@ -64,9 +64,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
         col = col.column(align=True)
         if batch_sett.idx:
-            col.prop(
-                batch_sett, "progress", text=f"Building Human {batch_sett.batch_idx}"
-            )
+            col.prop(batch_sett, "progress", text=f"Building Human {batch_sett.idx}")
         else:
             col.alert = True
             col.operator(
@@ -75,41 +73,6 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
                 depress=True,
                 icon="TIME",
             ).run_immediately = False
-
-        box = layout.box().column(align=True)
-        box.prop(
-            batch_sett,
-            "performance_statistics",
-            text="Performance statistics:",
-            emboss=False,
-            icon="TRIA_DOWN" if batch_sett.performance_statistics else "TRIA_RIGHT",
-        )
-        if batch_sett.performance_statistics:
-            box.separator()
-            row = box.row()
-            row.alignment = "CENTER"
-            row.label(text="Lower is better", icon="INFO")
-            box.separator()
-            split = box.split(factor=0.25)
-            split.scale_y = 0.8
-            col_l = split.column(align=True)
-            col_r = split.column(align=True)
-
-            weight_dict = calculate_batch_statistics(batch_sett)
-
-            col_l.label(text="Cycles:")
-            col_r.label(text=weight_dict["cycles_time"], icon="RENDER_STILL")
-            col_l.label(text="")
-            col_r.label(text=weight_dict["cycles_memory"], icon="BLANK1")
-            col_l.label(text="Eevee:")
-            col_r.label(text=weight_dict["eevee_time"], icon="RENDER_STILL")
-            col_l.label(text="")
-            col_r.label(text=weight_dict["eevee_memory"], icon="BLANK1")
-            col_l.label(text="RAM:")
-            col_r.label(text=weight_dict["scene_memory"], icon="MEMORY")
-            col_l.label(text="Storage:")
-            col_r.label(text=weight_dict["storage"], icon="DISK_DRIVE")
-            col_r.label(text="* Excluding textures")
 
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
@@ -205,7 +168,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
                 row.prop(batch_sett, f"average_height_ft_{gender}")
                 row.prop(batch_sett, f"average_height_in_{gender}")
 
-    def _draw_examples_list(self, layout, sett, gender):
+    def _draw_examples_list(self, layout, batch_sett, gender):
         """Draws a list of example heights based on the settings the user selected.
 
         Args:
@@ -214,8 +177,15 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
             gender (str): 'male' or 'female', determines which average height to
                 sample from.
         """
+        if batch_sett.height_system == "metric":
+            avg_height_cm = getattr(batch_sett, f"average_height_cm_{gender}")
+        else:
+            ft = getattr(batch_sett, f"average_height_ft_{gender}")
+            inch = getattr(batch_sett, f"average_height_in_{gender}")
+            avg_height_cm = ft * 30.48 + inch * 2.54
+
         length_list = height_from_bell_curve(
-            sett, gender, random_seed=False, samples=10
+            avg_height_cm, batch_sett.standard_deviation, random_seed=False, samples=10
         )
 
         col = layout.column(align=True)
@@ -224,7 +194,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
         for i in length_list:
             length_m = round(i / 100, 2)
 
-            length_label = self._unit_conversion(sett, length_m)
+            length_label = self._unit_conversion(batch_sett, length_m)
 
             row = col.row(align=True)
             row.alert = i > 200 or i < 150
@@ -266,30 +236,6 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
         # col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
         # col.prop(sett, 'batch_poly_reduction', text = '')
-
-        col.separator()
-
-        col.label(text="Objects:", icon="MESH_CUBE")
-        col_header = col.column(heading="Delete")
-        col_header.prop(batch_sett, "delete_backup", text="Backup human")
-
-        col.separator()
-
-        col.label(text="Modifiers/effects:", icon="MODIFIER")
-        col_header = col.column(heading="Apply")
-        col_header.prop(batch_sett, "apply_shapekeys", text="Shape keys")
-        col_e = col_header.column()
-        col_e.enabled = batch_sett.batch_apply_shapekeys
-        col_e.prop(batch_sett, "apply_armature_modifier", text="Armature")
-        col_e.prop(batch_sett, "apply_clothing_geometry_masks", text="Geometry masks")
-        # col_e.prop(sett, 'batch_apply_poly_reduction', text = 'Polygon reduction')
-
-        col.separator()
-
-        col.label(text="Clothing:", icon="MOD_CLOTH")
-        col_header = col.column(heading="Remove")
-        col_header.prop(batch_sett, "remove_clothing_subdiv", text="Subdivisions")
-        col_header.prop(batch_sett, "remove_clothing_solidify", text="Solidify")
 
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
@@ -389,13 +335,13 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
             "HG_UL_BATCH_EXPRESSIONS",
             "",
             context.scene,
-            "batch_expressions_col",
+            "batch_expression_col",
             context.scene,
-            "batch_expressions_col_index",
+            "batch_expression_col_index",
         )
 
         count = sum(
-            [item.count for item in context.scene.batch_expressions_col if item.enabled]
+            [item.count for item in context.scene.batch_expression_col if item.enabled]
         )
         if count == 0:
             col.alert = True

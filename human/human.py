@@ -15,7 +15,6 @@ from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import XHG_OBJECT_PROPS
 from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
-from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
@@ -73,10 +72,6 @@ class Human:
         )
 
     @staticmethod
-    def get_categories(gender: GenderStr) -> BpyEnum:
-        return PreviewCollectionContent._find_folders("humans", True, gender)
-
-    @staticmethod
     def is_legacy(obj: bpy.types.Object) -> bool:
         rig_obj = Human.find_hg_rig(obj, include_legacy=True)
         if not rig_obj:
@@ -89,7 +84,9 @@ class Human:
 
     @staticmethod
     @injected_context
-    def get_preset_options(gender: str, context: C = None) -> List[str]:
+    def get_preset_options(
+        gender: str, category: str = "All", context: C = None
+    ) -> List[str]:
         """
         Return a list of human possible presets for the given gender.
 
@@ -102,13 +99,13 @@ class Human:
         Returns:
           A list of starting human presets you can choose from
         """
-        preview_collections["humans"].populate(context, gender)
-        # TODO more low level way
-        return cast(list[str], context.scene.HG3D["previews_list_humans"])
+        preview_collections["humans"].populate(context, gender, subcategory=category)
+        return [
+            option[0] for option in preview_collections["humans"].pcoll["humans"][1:]
+        ]
 
     # Do not remove unused arguments
     @staticmethod
-    @injected_context
     def _get_full_options(_self: Any, context: C = None) -> BpyEnum:
         """Internal method for getting preview collection items."""
         pcoll = preview_collections.get("humans").pcoll
@@ -267,6 +264,14 @@ class Human:
             return None
 
         return rig_obj
+
+    @staticmethod
+    def get_categories(gender: GenderStr) -> list[str]:
+        return [option[0] for option in Human._get_categories(gender)]
+
+    @staticmethod
+    def _get_categories(gender: GenderStr) -> BpyEnum:  # noqa
+        return preview_collections["humans"].find_folders(gender)
 
     # endregion
     # region Properties

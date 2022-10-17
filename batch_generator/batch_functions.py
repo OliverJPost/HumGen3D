@@ -1,20 +1,23 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import os
-from typing import TYPE_CHECKING, Optional, Union, cast, no_type_check
+from typing import TYPE_CHECKING, Optional, Union, no_type_check
 
 import bpy  # type:ignore
 import numpy as np
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.type_aliases import BpyEnum, GenderStr
-from HumGen3D.human.human import Human
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
+from HumGen3D.backend.type_aliases import GenderStr
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.batch_props import BatchProps
 
 
 def height_from_bell_curve(
-    batch_sett: "BatchProps", gender: str, random_seed: bool = True, samples: int = 1
+    average_height_cm: int,
+    one_sd: float,
+    random_seed: bool = True,
+    samples: int = 1,
 ) -> list[float]:
     """Returns one or multiple samples from a bell curve generated from the
     batch_average_height and batch_standard_deviation properties.
@@ -31,23 +34,15 @@ def height_from_bell_curve(
         list: with the default 0 samples it returns a single length value
             in centimeters, else it returns a list of length values in cm
     """
-
-    if batch_sett.height_system == "metric":
-        avg_height_cm = getattr(batch_sett, f"average_height_cm_{gender}")
-    else:
-        ft = getattr(batch_sett, f"average_height_ft_{gender}")
-        inch = getattr(batch_sett, f"average_height_in_{gender}")
-        avg_height_cm = ft * 30.48 + inch * 2.54
-
-    sd = batch_sett.standard_deviation / 100
-
     if random_seed:
         np.random.seed()
     else:
         np.random.seed(0)
 
     return list(
-        np.random.normal(loc=avg_height_cm, scale=avg_height_cm * sd, size=samples)
+        np.random.normal(
+            loc=average_height_cm, scale=average_height_cm * one_sd, size=samples
+        )
     )
 
 
@@ -242,77 +237,13 @@ def has_associated_human(marker: bpy.types.Object) -> bool:
         return False
 
     # Check if object still exists
-    if not bpy.data.objects.get(marker["associated_human"]):
+    if not bpy.data.objects.get(marker["associated_human"].name):
         return False
 
     same_location = marker.location == marker["associated_human"].location
     object_in_scene = bpy.context.scene.objects.get(marker["associated_human"].name)
 
     return same_location and object_in_scene
-
-
-def find_folders(  # TODO might be duplicate
-    context: bpy.types.Context,
-    categ: str,
-    gender_toggle: bool,
-    include_all: bool = True,
-    gender_override: Optional[GenderStr] = None,
-) -> BpyEnum:
-    """Gets enum of folders found in a specific directory. T
-    hese serve as categories for that specific pcoll
-
-    Args:
-        context (bpy.context): blender context
-        categ (str): preview collection name
-        gender_toggle (bool): Search for folders that are in respective male/female
-            folders.
-        include_all (bool, optional): include "All" as first item.
-            Defaults to True.
-        gender_override (str): Used by operations that are not linked to a single
-            human. Instead of getting the gender from hg_rig this allows for the
-            manual passing of the gender ('male' or 'female')
-
-    Returns:
-        list: enum of folders
-    """
-    human = Human.from_existing(context.active_object, strict_check=False)
-    pref = get_prefs()
-
-    if gender_override:
-        gender = gender_override
-    elif human:
-        gender = human.gender
-    else:
-        return [("ERROR", "ERROR", "", i) for i in range(99)]
-
-    if gender_toggle:
-        categ_folder = os.path.join(pref.filepath, categ, gender)
-    else:
-        categ_folder = os.path.join(pref.filepath, categ)
-
-    if not os.path.isdir(categ_folder):
-        return [("NOT INSTALLED", "NOT INSTALLED", "", i) for i in range(99)]
-
-    dirlist = os.listdir(categ_folder)
-    dirlist.sort()
-    categ_list = []
-    ext = (".jpg", "png", ".jpeg", ".blend")
-    for item in dirlist:
-        if not item.endswith(ext) and ".DS_Store" not in item:
-            categ_list.append(item)
-
-    if not categ_list:
-        categ_list.append("No Category Found")
-
-    enum_list = [("All", "All Categories", "", 0)] if include_all else []
-    for i, name in enumerate(categ_list):
-        idx = i if categ == "texture" else i + 1
-        enum_list.append((name, name, "", idx))
-
-    if not enum_list:
-        return [("ERROR", "ERROR", "", i) for i in range(99)]
-    else:
-        return cast(BpyEnum, enum_list)
 
 
 def find_item_amount(  # TODO might be redundant
@@ -326,14 +257,18 @@ def find_item_amount(  # TODO might be redundant
     pref = get_prefs()
 
     if categ == "expression":  # FIXME
-        ext = ".npy"
+        ext = ".npz"
     else:
         ext = ".blend"
 
+    pcoll_folder = PREVIEW_COLLECTION_DATA[categ][2]
+    if isinstance(pcoll_folder, list):
+        pcoll_folder = os.path.join(*pcoll_folder)
+
     if gender:
-        directory = os.path.join(pref.filepath, categ, gender, folder)
+        directory = os.path.join(pref.filepath, pcoll_folder, gender, folder)
     else:
-        directory = os.path.join(pref.filepath, categ, folder)
+        directory = os.path.join(pref.filepath, pcoll_folder, folder)
 
     if categ == "outfit":
         sett = context.scene.HG3D  # type:ignore[attr-defined]
