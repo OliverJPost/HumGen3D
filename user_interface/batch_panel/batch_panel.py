@@ -3,7 +3,6 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.batch_generator.batch_functions import (
-    calculate_batch_statistics,
     get_batch_marker_list,
     height_from_bell_curve,
 )
