@@ -20,11 +20,7 @@ def add_to_collection(
 
     if not collection:
         collection = bpy.data.collections.new(name=collection_name)
-        if collection_name == "HumGen_Backup [Don't Delete]":
-            bpy.data.collections["HumGen"].children.link(collection)  # type:ignore
-            coll = context.view_layer.layer_collection.children["HumGen"]  # type:ignore
-            coll.children[collection_name].exclude = True  # type:ignore
-        elif collection_name == "HG Batch Markers":
+        if collection_name == "HG Batch Markers":
             hg_collection = bpy.data.collections.get("HumGen")
             if not hg_collection:
                 hg_collection = bpy.data.collections.new(name="HumGen")
