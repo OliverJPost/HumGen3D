@@ -117,6 +117,7 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
 
 
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
+    _register_priority = 999
     bl_parent_id = "HG_PT_CONTENT"
     bl_label = "Tips and suggestions!"
     bl_options = {"HIDE_HEADER"}

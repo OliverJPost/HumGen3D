@@ -3,20 +3,10 @@
 import inspect
 import os
 from types import ModuleType
-from typing import Any, Iterator, Type
+from typing import Any, Callable
 
 import bpy
 import HumGen3D
-
-YIELD_LAST = (
-    "HG_PT_BATCH_TIPS",
-    "HG_PT_EXTRAS_TIPS",
-)
-
-YIELD_LATER = (
-    "HG_SETTINGS",
-    "HG_OBJECT_PROPS",
-)
 
 # There are more, but I'm not using them
 BPY_CLASSES = (
@@ -29,43 +19,27 @@ BPY_CLASSES = (
     bpy.types.UIList,
 )
 
+Class = Callable[..., Any]
 
-def _get_bpy_classes() -> Iterator[Type[Any]]:
+
+def _get_bpy_classes() -> list[Class]:
     dir_path = os.path.dirname(os.path.abspath(HumGen3D.__file__))
 
     py_files = get_python_files_from_dir(dir_path)
 
-    already_yielded = []
+    class_priority_tuples: list[tuple[Class, int]] = []
     for root, filename in py_files:
         module = _import_pyfile_as_module(dir_path, root, filename)
 
-        yield_later = []
-        yield_last = []
-        for name, obj in inspect.getmembers(module):
+        for _, obj in inspect.getmembers(module):
             if not inspect.isclass(obj) or not issubclass(obj, BPY_CLASSES):
                 continue
-            # Skip classes that have been yielded previously
-            if name in already_yielded:
-                continue
 
-            # Check if the class is actually from the HumGen3D module
-            if obj.__module__.split(".")[0] != "HumGen3D":
-                continue
+            priority = getattr(obj, "_register_priority", 99)
+            class_priority_tuples.append((obj, priority))
 
-            if obj.__name__ in YIELD_LAST:
-                yield_last.append(obj)
-                continue
-
-            # Wait with yielding UI classes that depend on parent
-            if obj.__name__ in YIELD_LATER or hasattr(obj, "bl_parent_id"):
-                yield_later.append(obj)
-                continue
-
-            already_yielded.append(name)
-            yield obj
-
-        yield from yield_later
-        yield from yield_last
+    class_priority_tuples.sort(key=lambda x: x[1])
+    return [cls for cls, _ in class_priority_tuples]
 
 
 def _import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleType:

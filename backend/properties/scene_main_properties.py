@@ -34,6 +34,8 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     Contains top level properties and pointers to lower level property groups.
     """
 
+    _register_priority = 5
+
     pcoll: PointerProperty(type=PreviewCollectionProps)
     ui: PointerProperty(type=UserInterfaceProps)
     custom_content: PointerProperty(type=CustomContentProps)

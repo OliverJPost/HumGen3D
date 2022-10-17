@@ -77,6 +77,8 @@ def active_phase_enum(self, context):
 class UserInterfaceProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, contains user interface properties."""
 
+    _register_priority = 4
+
     # UI box toggles
     __annotations__.update(  # noqa: CCE002,  CCE001
         create_ui_toggles(

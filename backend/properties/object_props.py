@@ -27,7 +27,7 @@ class HG_HASHES(bpy.types.PropertyGroup):
 
 
 # FIXME register order
-class XHG_OBJECT_PROPS(bpy.types.PropertyGroup):
+class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """Properties added to every Blender object as object.HG.
 
     Used for storing information about the human itself.

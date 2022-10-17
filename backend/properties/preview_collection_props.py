@@ -74,6 +74,8 @@ def refresh(attr):
 class PreviewCollectionProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties of and about the preview collections of HG"""
 
+    _register_priority = 4
+
     humans: EnumProperty(
         items=lambda self, context: Human._get_full_options(self, context)
     )

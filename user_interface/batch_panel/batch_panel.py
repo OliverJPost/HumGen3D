@@ -371,6 +371,7 @@ def header(self, context, categ):
 
 
 class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 999
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Tips and suggestions!"
     bl_options = {"HIDE_HEADER"}

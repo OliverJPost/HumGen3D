@@ -48,7 +48,7 @@ from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refre
 from .backend.preferences.preference_func import get_prefs
 from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
 from .backend.preview_collections import preview_collections as _preview_collections
-from .backend.properties.object_props import XHG_OBJECT_PROPS
+from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload  # noqa
 from .batch_generator.generator import BatchHumanGenerator
@@ -149,9 +149,7 @@ def register() -> None:
 
     bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS)  # type:ignore
     # Object specific props
-    bpy.types.Object.HG = bpy.props.PointerProperty(
-        type=XHG_OBJECT_PROPS
-    )  # type:ignore
+    bpy.types.Object.HG = bpy.props.PointerProperty(type=HG_OBJECT_PROPS)  # type:ignore
 
     _initiate_preview_collections()
     _initiate_ui_lists()
