@@ -13,14 +13,15 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
 
 
-def save_hair(
+def save_hair(  # noqa CCR001
     human: "Human",
     name: str,
     category: str,
-    genders: Optional[Iterable[GenderStr]],
     particle_systems: Iterable[str],
     hair_type: Literal["face_hair", "hair"],
     context: bpy.types.Context,
+    for_male: bool = True,
+    for_female: bool = True,
     thumb: Optional[bpy.types.Image] = None,
 ) -> None:
     pref = get_prefs()
@@ -38,9 +39,9 @@ def save_hair(
     for vg in [vg for vg in hair_obj.vertex_groups if vg.name not in keep_vgs]:
         hair_obj.vertex_groups.remove(vg)
 
-    for gender in genders:
+    def create_for_gender(gender: GenderStr) -> Optional[str]:
         if hair_type == "face_hair" and gender == "female":
-            continue
+            return None
 
         if hair_type == "hair":
             blend_folder = os.path.join(pref.filepath, "hair", "head")
@@ -55,6 +56,13 @@ def save_hair(
             save_thumb(json_folder, thumb.name, name)
 
         _make_hair_json(hair_obj, json_folder, name)
+
+        return blend_folder
+
+    if for_male:
+        blend_folder = create_for_gender("male")
+    if for_female:
+        blend_folder = create_for_gender("female")
 
     save_objects_optimized(
         context,
