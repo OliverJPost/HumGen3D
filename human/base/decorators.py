@@ -2,12 +2,10 @@
 
 import functools
 import traceback
-from typing import Callable, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 import bpy
-from black import Any
 from HumGen3D.backend import hg_log
-
 
 F = TypeVar("F", bound=Callable[..., Any])
 
