@@ -79,7 +79,13 @@ def status_text_callback(header, context):
 def set_generator_settings(generator, batch_sett):
     generator.female_chance = batch_sett.female_chance
     generator.male_chance = batch_sett.male_chance
-    # TODO generator.human_preset_category_chances
+
+    category_chance_dict = {}
+    categories = set(Human.get_categories("male") + Human.get_categories("female"))
+    categories.remove("All")
+    for category in categories:
+        category_chance_dict[category] = batch_sett[f"{category}_chance"] / 100
+    generator.human_preset_category_chances = category_chance_dict
     generator.add_clothing = batch_sett.clothing
     generator.clothing_categories = _choose_category_list()
     generator.add_expression = batch_sett.expression

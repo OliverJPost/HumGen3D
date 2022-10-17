@@ -6,6 +6,7 @@ from HumGen3D.batch_generator.batch_functions import (
     get_batch_marker_list,
     height_from_bell_curve,
 )
+from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
 
@@ -94,9 +95,10 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         flow.prop(batch_sett, "female_chance")
         flow.separator()
 
-        flow.prop(batch_sett, "caucasian_chance")
-        flow.prop(batch_sett, "black_chance")
-        flow.prop(batch_sett, "asian_chance")
+        categories = set(Human.get_categories("male") + Human.get_categories("female"))
+
+        for category in categories:
+            flow.prop(batch_sett, f"{category}_chance")
 
 
 class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
