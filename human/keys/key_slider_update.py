@@ -33,20 +33,8 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
     @no_type_check
     def correct_when_done(self, context):
-        self.human.hide_set(False)
         self.armature_modifier.show_viewport = True
-        self.human.height.correct_armature(context)
-        self.human.height.correct_eyes()
-        self.human.height.correct_teeth()
-        for mod in self.human.body_obj.modifiers:
-            if mod.type == "MASK":
-                mod.show_viewport = True
-
-        for cloth_obj in self.human.outfit.objects:
-            self.human.outfit.deform_cloth_to_human(context, cloth_obj)
-        for shoe_obj in self.human.footwear.objects:
-            self.human.footwear.deform_cloth_to_human(context, shoe_obj)
-
+        self.human.keys.update_human_from_key_change(context)
         if not self.children_hidden_before:
             self.human.hair.children_set_hide(False)
 

@@ -10,8 +10,8 @@ import numpy as np
 from bpy.props import FloatProperty, StringProperty
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from HumGen3D.human.human import Human
+from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from HumGen3D.human.keys.keys import import_npz_key
 
 
