@@ -253,13 +253,13 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
     @property
     def value(self) -> float:
-        return cast(
-            float, self._human.body_obj.data.shape_keys.key_blocks[self.name].value
-        )
+        key_blocks = self._human.body_obj.data.shape_keys.key_blocks
+        return cast(float, key_blocks[self.name].value)
 
     @value.setter
     def value(self, value: float) -> None:
-        self._human.body_obj.data.shape_keys.key_blocks[self.name].value = value
+        key_blocks = self._human.body_obj.data.shape_keys.key_blocks
+        key_blocks[self.name].value = value
 
     def as_bpy(self) -> ShapeKey:
         if self.category:
