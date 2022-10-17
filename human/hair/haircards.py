@@ -20,7 +20,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     @no_type_check
-    def execute(self, context):
+    def execute(self, context):  # noqa CCR001 FIXME
         pref = get_prefs()
 
         hg_rig = None  # find_human(context.object)
