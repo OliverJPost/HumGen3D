@@ -24,6 +24,7 @@ class Batch_PT_Base:
 
 
 class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 2
     bl_idname = "HG_PT_Batch_Panel"
     bl_label = "Batch"  # Tab name
 
@@ -76,6 +77,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 3
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Generation Probability"
     bl_options = {"DEFAULT_CLOSED"}
@@ -104,6 +106,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
 class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
     """Subpanel with options for height variation in the generation of batch humans."""
 
+    _register_priority = 5
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Height variation"
     bl_options = {"DEFAULT_CLOSED"}
@@ -215,6 +218,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
 
 
 class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 6
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = "Quality"
     bl_options = {"DEFAULT_CLOSED"}
@@ -240,6 +244,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 4
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = " Hair"
     bl_options = {"DEFAULT_CLOSED"}
@@ -269,6 +274,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 4
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = " Clothing"
     bl_options = {"DEFAULT_CLOSED"}
@@ -314,6 +320,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
 
 class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
+    _register_priority = 4
     bl_parent_id = "HG_PT_Batch_Panel"
     bl_label = " Expression"
     bl_options = {"DEFAULT_CLOSED"}

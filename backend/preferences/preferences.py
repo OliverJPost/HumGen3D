@@ -32,6 +32,7 @@ ALERT_DICT = {
 class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreferences):
     """HumGen user preferences."""
 
+    _register_priority = 1
     bl_idname = __package__.split(".")[0]
 
     def draw(self, context):
