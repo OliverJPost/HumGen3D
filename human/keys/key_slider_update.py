@@ -8,7 +8,7 @@ import bpy
 class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     bl_idname = "hg3d.slider_subscribe"
     bl_label = ""
-    # bl_options = {"UNDO"}
+    bl_options = {"UNDO"}
 
     stop: bpy.props.BoolProperty()
     hide_armature: bpy.props.BoolProperty(default=False)
