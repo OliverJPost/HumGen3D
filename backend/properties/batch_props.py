@@ -14,7 +14,6 @@ from bpy.props import (  # type: ignore
     FloatProperty,
     IntProperty,
 )
-from HumGen3D.user_interface.batch_panel.batch_ui_lists import batch_uilist_refresh
 
 
 class BatchProps(bpy.types.PropertyGroup):
@@ -43,6 +42,14 @@ class BatchProps(bpy.types.PropertyGroup):
     hair: BoolProperty(default=False)
     bake: BoolProperty(default=False)
 
+    expression_type: EnumProperty(
+        name="Expression type",
+        items=[
+            ("natural", "Natural", "", 0),
+            ("most_varied", "Most varied", "", 1),
+        ],
+        default="natural",
+    )
     hairtype: EnumProperty(
         name="Hair Type",
         items=[
@@ -50,17 +57,6 @@ class BatchProps(bpy.types.PropertyGroup):
             ("haircards", "Haircards", "", 1),
         ],
         default="particle",
-    )
-
-    clothing_inside: BoolProperty(
-        name="Inside",
-        default=True,
-        update=lambda a, b: batch_uilist_refresh(a, b, "outfits"),
-    )
-    clothing_outside: BoolProperty(
-        name="Outside",
-        default=True,
-        update=lambda a, b: batch_uilist_refresh(a, b, "outfits"),
     )
 
     marker_selection: EnumProperty(
@@ -97,17 +93,6 @@ class BatchProps(bpy.types.PropertyGroup):
     )
     show_height_examples: BoolProperty(default=False)
 
-    delete_backup: BoolProperty(name="Delete backup human", default=True)
-    apply_shapekeys: BoolProperty(name="Apply shape keys", default=True)
-    apply_armature_modifier: BoolProperty(name="Apply armature modifier", default=True)
-    remove_clothing_solidify: BoolProperty(
-        name="Remove clothing solidify", default=True
-    )
-    remove_clothing_subdiv: BoolProperty(name="Remove clothing subdiv", default=True)
-    apply_clothing_geometry_masks: BoolProperty(
-        name="Apply geometry masks", default=True
-    )
-
     texture_resolution: EnumProperty(
         name="Texture Resolution",
         items=[
@@ -117,18 +102,6 @@ class BatchProps(bpy.types.PropertyGroup):
         ],
         default="optimised",
     )
-
-    poly_reduction: EnumProperty(
-        name="Polygon reduction",
-        items=[
-            ("none", "Disabled (original topology)", "", 0),
-            ("medium", "Medium (33% polycount)", "", 1),  # 2x unsubdivide
-            ("high", "High (15% polycount)", "", 2),  # 0.08 collapse
-            ("ultra", "Ultra (5% polycount)", "", 3),  # 0.025 collapse
-        ],
-        default="none",
-    )
-    apply_poly_reduction: BoolProperty(name="Apply poly reduction", default=True)
 
     hair_quality_particle: EnumProperty(
         name="Particle hair quality",
