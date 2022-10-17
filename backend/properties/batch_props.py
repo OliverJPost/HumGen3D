@@ -87,7 +87,6 @@ class BatchProps(bpy.types.PropertyGroup):
     standard_deviation: FloatProperty(
         name="Standard deviation",
         default=0.05,
-        subtype="PERCENTAGE",
         min=0,
         max=0.1,
     )
