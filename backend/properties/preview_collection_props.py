@@ -80,7 +80,9 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     humans_category: EnumProperty(
         name="Human Library",
         items=get_folders("humans"),
-        update=lambda _, context: preview_collections["humans"].refresh(context),
+        update=lambda _, context: preview_collections["humans"].refresh(
+            context, context.scene.HG3D.gender
+        ),
     )
 
     # posing
