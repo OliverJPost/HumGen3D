@@ -17,6 +17,7 @@ from typing import no_type_check
 import bpy
 from bpy.types import Context  # type:ignore[import]
 from HumGen3D.backend import hg_log, preview_collections
+from HumGen3D.backend.properties.batch_props import BatchProps
 from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
@@ -152,6 +153,7 @@ def tab_change_update(self, context):
     refresh_modapply(self, context)
 
     human = Human.from_existing(context.object, strict_check=False)
+    set_human_categ_props()
     if not human:
         return
 
@@ -162,8 +164,21 @@ def tab_change_update(self, context):
     )
 
     find_possible_content(context)
-    # batch_uilist_refresh(self, context, "outfit")
-    # FIXME batch_uilist_refresh(self, context, "expression")
+    refresh_outfit_ul(None, context)
+
+
+def set_human_categ_props() -> None:
+    """Create properties for the batch generator to choose human categories."""
+    all_folders = set(Human.get_categories("male") + Human.get_categories("female"))
+    all_folders.remove("All")
+    for category in all_folders:
+        setattr(
+            BatchProps,
+            f"{category}_chance",
+            bpy.props.IntProperty(
+                name=category, default=100, min=0, max=100, subtype="PERCENTAGE"
+            ),  # type:ignore[func-returns-value]
+        )
 
 
 @no_type_check
