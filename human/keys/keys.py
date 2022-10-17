@@ -300,7 +300,8 @@ class ShapeKeyItem(KeyItem, SavableContent):
 
         # Only save nonzero values. NOTE: This operatates on a 1-dimensional array, it
         # does not store vertex indices but individual vector member indices.
-        changed_idxs = np.where(relative_coordinates > 0.00001)
+        relative_coordinates = relative_coordinates.round(4)
+        changed_idxs = np.nonzero(relative_coordinates)
 
         np.savez(
             os.path.join(path, name),
