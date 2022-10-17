@@ -200,7 +200,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
             row.label(text=length_label)
 
     def _unit_conversion(self, sett, length_m):
-        if sett.batch_height_system == "imperial":
+        if sett.height_system == "imperial":
             length_feet = length_m / 0.3048
             length_inches = int(length_feet * 12.0 - int(length_feet) * 12.0)
             length_label = str(int(length_feet)) + "' " + str(length_inches) + '"'
