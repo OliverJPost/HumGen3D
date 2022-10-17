@@ -138,7 +138,8 @@ class ExpressionSettings(PreviewCollectionContent):
             data = json.load(f)
 
         for sk_name in data["teeth"]:
-            sk = self._human.lower_teeth_obj.data.shape_keys.key_blocks.get(sk_name)
+            key_blocks = self._human.lower_teeth_obj.data.shape_keys.key_blocks
+            sk = key_blocks.get(sk_name)
             self._human.lower_teeth_obj.shape_key_remove(sk)
 
         for sk_name in data["body"]:
