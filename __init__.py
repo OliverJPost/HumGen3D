@@ -114,7 +114,6 @@ def _initiate_ui_lists() -> None:
 
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
-        "batch_expression_col": batch_ui_lists.BATCH_EXPRESSION_ITEM,
         "contentpacks_col": content_packs.HG_CONTENT_PACK,
         "installpacks_col": content_packs.HG_INSTALLPACK,
         "modapply_col": utility_ui_lists.MODAPPLY_ITEM,

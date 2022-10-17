@@ -2,9 +2,13 @@
 
 """This file is currently inactive."""
 
+import os
+
 import bpy
 from HumGen3D.backend import preview_collections  # type: ignore
-from HumGen3D.batch_generator.batch_functions import find_item_amount
+from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
+from HumGen3D.backend.type_aliases import GenderStr
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -103,50 +107,38 @@ class BATCH_EXPRESSION_ITEM(bpy.types.PropertyGroup):
     count: bpy.props.IntProperty(default=0)
 
 
-def batch_uilist_refresh(self, context, categ):
+def find_item_amount(gender: GenderStr, folder: str) -> int:
+    ext = ".blend"
+    pcoll_folder = PREVIEW_COLLECTION_DATA["outfit"][2]
+    directory = os.path.join(get_prefs().filepath, pcoll_folder, gender, folder)
+    if not os.path.isdir(directory):
+        return 0
+    return len([name for name in os.listdir(directory) if name.endswith(ext)])
+
+
+def batch_clothing_uilist_refresh(self, context):
     """Refreshes uilist."""
     scene = context.scene
-    if categ == "outfit":
-        collection = scene.batch_clothing_col
-    elif categ == "pose":
-        collection = scene.batch_pose_col
-    else:
-        collection = scene.batch_expression_col
+    collection = scene.batch_clothing_col
 
     enabled_dict = {i.name: i.enabled for i in collection}
     collection.clear()
 
-    gender = categ == "outfit"
-    found_folders_male = preview_collections[categ].find_folders(
+    found_folders_male = preview_collections["outfit"].find_folders(
         "male", include_all=False
     )
-
-    for folder in found_folders_male:
-        item = collection.add()
-        item.name = folder[0]
-        item.library_name = folder[0]
-        if folder[0] in list(enabled_dict):
-            item.enabled = enabled_dict[folder[0]]
-        if gender:
-            item.male_items = find_item_amount(context, categ, "male", folder[0])
-        else:
-            item.count = find_item_amount(context, categ, False, folder[0])
-
-    if not gender:
-        return
-
-    found_folders_female = preview_collections[categ].find_folders(
+    found_folders_female = preview_collections["outfit"].find_folders(
         "female", include_all=False
     )
 
-    for folder in found_folders_female:
-        if folder[0] in [item.library_name for item in collection]:
-            item = collection[folder[0]]
-        else:
-            item = collection.add()
-            item.name = folder[0]
-            item.library_name = folder[0]
-        item.female_items = find_item_amount(context, categ, "female", folder[0])
+    for folder_name, *_ in set(found_folders_male + found_folders_female):
+        item = collection.add()
+        item.name = folder_name
+        item.library_name = folder_name
+        if folder_name in list(enabled_dict):
+            item.enabled = enabled_dict[folder_name]
+        item.male_items = find_item_amount("male", folder_name)
+        item.female_items = find_item_amount("female", folder_name)
 
 
 class HG_REFRESH_UILISTS(bpy.types.Operator):
@@ -158,7 +150,5 @@ class HG_REFRESH_UILISTS(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        batch_uilist_refresh(self, context, "outfit")
-        batch_uilist_refresh(self, context, "expression")
-
+        batch_clothing_uilist_refresh(self, context)
         return {"FINISHED"}

@@ -1,13 +1,9 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
-from typing import TYPE_CHECKING, Optional, Union, no_type_check
+from typing import TYPE_CHECKING, Union, no_type_check
 
 import bpy  # type:ignore
 import numpy as np
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.backend.type_aliases import GenderStr
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.batch_props import BatchProps
@@ -244,39 +240,3 @@ def has_associated_human(marker: bpy.types.Object) -> bool:
     object_in_scene = bpy.context.scene.objects.get(marker["associated_human"].name)
 
     return same_location and object_in_scene
-
-
-def find_item_amount(  # TODO might be redundant
-    context: bpy.types.Context, categ: str, gender: Optional[GenderStr], folder: str
-) -> int:
-    """used by batch menu, showing the total amount of items of the selected
-    categories
-
-    Batch menu currently disabled
-    """
-    pref = get_prefs()
-
-    if categ == "expression":  # FIXME
-        ext = ".npz"
-    else:
-        ext = ".blend"
-
-    pcoll_folder = PREVIEW_COLLECTION_DATA[categ][2]
-    if isinstance(pcoll_folder, list):
-        pcoll_folder = os.path.join(*pcoll_folder)
-
-    if gender:
-        directory = os.path.join(pref.filepath, pcoll_folder, gender, folder)
-    else:
-        directory = os.path.join(pref.filepath, pcoll_folder, folder)
-
-    if categ == "outfit":
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        inside = sett.batch.clothing_inside
-        outside = sett.batch.clothing_outside
-        if inside and not outside:
-            ext = "I.blend"
-        elif outside and not inside:
-            ext = "O.blend"
-
-    return len([name for name in os.listdir(directory) if name.endswith(ext)])

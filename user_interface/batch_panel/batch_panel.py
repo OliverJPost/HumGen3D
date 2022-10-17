@@ -249,7 +249,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
-        layout.enabled = batch_sett.batch_hair
+        layout.enabled = batch_sett.hair
 
         row = layout.row(align=True)
         row.scale_y = 1.5
@@ -257,7 +257,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
         if batch_sett.hairtype == "particle":
             layout.prop(
                 batch_sett,
-                "hair_quality_{}".format(batch_sett.batch_hairtype),
+                "hair_quality_{}".format(batch_sett.hairtype),
                 text="Quality",
             )
         else:
