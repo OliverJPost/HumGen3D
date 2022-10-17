@@ -23,7 +23,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     @no_type_check
-    def execute(self, context):
+    def execute(self, context):  # noqa CCR001
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = context.scene.modapply_col
         objs = build_object_list(context, sett)
@@ -78,7 +78,9 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         return sk_dict, driver_dict
 
     @no_type_check
-    def apply_modifiers(self, context, sett, col, sk_dict, objs_to_apply):
+    def apply_modifiers(  # noqa CCR001 # FIXME
+        self, context, sett, col, sk_dict, objs_to_apply
+    ):
         if sett.modapply_search_modifiers == "summary":
             mod_types = [
                 item.mod_type
@@ -176,7 +178,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def refresh_modapply(self: Any, context: bpy.types.Context) -> None:
+def refresh_modapply(self: Any, context: bpy.types.Context) -> None:  # noqa CCR001
     sett = context.scene.HG3D  # type:ignore[attr-defined]
     col = context.scene.modapply_col
     col.clear()
@@ -202,19 +204,19 @@ def build_object_list(
     from HumGen3D.human.human import Human
 
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
-    if sett.modapply_search_objects != "selected":
-        if sett.modapply_search_objects == "full":
-            human = Human.from_existing(context.object, strict_check=False)
-            humans = [
-                human,
-            ]
-        else:
-            humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
+    if sett.modapply_search_objects == "selected":
+        return objs
+    elif sett.modapply_search_objects == "full":
+        human = Human.from_existing(context.object, strict_check=False)
+        humans = list(human)
+    else:
+        humans = [obj for obj in bpy.data.objects if obj.HG.ishuman]
 
-        for human in humans:
-            if not human:
-                continue
-            objs.extend(list(human.children))
+    for human in humans:
+        if not human:
+            continue
+        objs.extend(list(human.children))
+
     return list(set(objs))
 
 
