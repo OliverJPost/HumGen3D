@@ -4,6 +4,7 @@ import os
 import random
 from typing import Literal, Optional, Union
 
+import bpy
 from HumGen3D.backend.type_aliases import C  # type:ignore
 from HumGen3D.batch_generator.batch_functions import height_from_bell_curve
 from HumGen3D.human.base.decorators import injected_context
@@ -24,6 +25,7 @@ class BatchHumanGenerator:
     add_clothing: bool = True
     clothing_categories: Optional[list[str]] = None
     add_expression: bool = True
+    expression_type: Literal["natural", "most_varied"] = "natural"
     add_hair: bool = True
     hair_quality: Literal["high", "medium", "low", "ultralow"] = "medium"
     average_height_male: int = 177
@@ -89,22 +91,7 @@ class BatchHumanGenerator:
         )
 
         if self.add_clothing:
-            if self.clothing_categories:
-                clothing_category = random.choice(self.clothing_categories)
-            else:
-                clothing_category = "All"
-            clothing_options = human.outfit.get_options(context, clothing_category)
-
-            human.outfit.set(random.choice(clothing_options))
-            human.footwear.set_random(context)
-
-            for cloth in human.outfit.objects:
-                human.outfit.randomize_colors(cloth)
-                human.outfit.set_texture_resolution(cloth, self.texture_resolution)
-
-            for cloth in human.footwear.objects:
-                human.footwear.randomize_colors(cloth)
-                human.footwear.set_texture_resolution(cloth, self.texture_resolution)
+            self._set_clothing(context, human)
 
         if pose_type != "a_pose":
             if pose_type == "t_pose":
@@ -114,9 +101,44 @@ class BatchHumanGenerator:
                 human.pose.set(random.choice(options))
 
         if self.add_expression:
-            human.expression.set_random(context)
+            self._set_expression(context, human)
             # FIXME human.expression.shape_keys[0].value = random.choice(
             #    [0.5, 0.7, 0.8, 1, 1, 1]
             # )
 
         return human
+
+    def _set_clothing(self, context: bpy.types.Context, human: Human) -> None:
+        if self.clothing_categories:
+            clothing_category = random.choice(self.clothing_categories)
+        else:
+            clothing_category = "All"
+        clothing_options = human.outfit.get_options(context, clothing_category)
+
+        human.outfit.set(random.choice(clothing_options))
+        human.footwear.set_random(context)
+
+        for cloth in human.outfit.objects:
+            human.outfit.randomize_colors(cloth)
+            human.outfit.set_texture_resolution(cloth, self.texture_resolution)
+
+        for cloth in human.footwear.objects:
+            human.footwear.randomize_colors(cloth)
+            human.footwear.set_texture_resolution(cloth, self.texture_resolution)
+
+    def _set_expression(self, context: bpy.types.Context, human: Human) -> None:
+        categories = human.expression.get_categories()
+        if self.expression_type == "most_varied":
+            chosen_category = random.choice(categories)
+        else:
+            weight_dict = {"happy": 1.0, "neutral": 1.0}
+            weights = tuple(
+                weight_dict.get(category.lower(), 0.08) for category in categories
+            )
+            chosen_category = random.choices(categories, weights=weights)[0]
+
+        options = human.expression.get_options(context, category=chosen_category)
+        if options:
+            human.expression.set(random.choice(options))
+        else:
+            human.expression.set_random(context)

@@ -80,6 +80,7 @@ def set_generator_settings(generator, batch_sett):
     generator.add_clothing = batch_sett.clothing
     generator.clothing_categories = _choose_category_list()
     generator.add_expression = batch_sett.expression
+    generator.expression_type = batch_sett.expression_type
     generator.add_hair = batch_sett.hair
     generator.hair_quality = batch_sett.hair_quality_particle
 
