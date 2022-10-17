@@ -32,7 +32,14 @@ def _get_bpy_classes() -> list[Class]:
         module = _import_pyfile_as_module(dir_path, root, filename)
 
         for _, obj in inspect.getmembers(module):
-            if not inspect.isclass(obj) or not issubclass(obj, BPY_CLASSES):
+            if (
+                not inspect.isclass(obj)
+                or not issubclass(obj, BPY_CLASSES)
+                or obj in BPY_CLASSES
+            ):
+                continue
+
+            if obj in [cls for cls, _ in class_priority_tuples]:
                 continue
 
             priority = getattr(obj, "_register_priority", 99)

@@ -19,11 +19,11 @@ from bpy.props import (  # type: ignore
 
 
 class HG_SK_VALUES(bpy.types.PropertyGroup):
-    testprop: BoolProperty()
+    _register_priority = 3
 
 
 class HG_HASHES(bpy.types.PropertyGroup):
-    pass
+    _register_priority = 3
 
 
 # FIXME register order

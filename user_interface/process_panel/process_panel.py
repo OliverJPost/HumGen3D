@@ -34,6 +34,7 @@ class ProcessPanel(HGPanel):
 
 
 class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
+    _register_priority = 4
     bl_idname = "HG_PT_PROCESS"
     bl_label = "Process"
 

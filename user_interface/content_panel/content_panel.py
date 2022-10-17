@@ -17,6 +17,8 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
         Tools_PT_Base (class): Adds bl_info and commonly used tools
     """
 
+    _register_priority = 4
+
     bl_idname = "HG_PT_CONTENT"
     bl_label = "Content"
 
