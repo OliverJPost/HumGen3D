@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Union, cast
 import bpy
 import numpy as np
 from bpy.types import Object, ShapeKey
+from HumGen3D.backend.type_aliases import C
+from HumGen3D.human.base.decorators import injected_context
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -168,6 +170,11 @@ class LiveKeyItem(KeyItem):
 
     @value.setter
     def value(self, value: float) -> None:
+        self.set_without_update(value)
+        self._human.keys.update_human_from_key_change(bpy.context)
+        self._human.body_obj.data.update()
+
+    def set_without_update(self, value: float) -> None:
         # TODO repetition from set_livekey
         body = self._human.body_obj
         vert_count = len(body.data.vertices)
@@ -461,6 +468,23 @@ class KeySettings:
         key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
 
         return key_dict
+
+    @injected_context
+    def update_human_from_key_change(self, context: C = None) -> None:
+        human = self._human
+        human.hide_set(False)
+        human.height.correct_armature(context)
+        human.height.correct_eyes()
+        human.height.correct_teeth()
+        for mod in human.body_obj.modifiers:
+            if mod.type == "MASK":
+                mod.show_viewport = True
+        for cloth_obj in human.outfit.objects:
+            human.outfit.deform_cloth_to_human(context, cloth_obj)
+        for shoe_obj in human.footwear.objects:
+            human.footwear.deform_cloth_to_human(context, shoe_obj)
+
+        human.body_obj.data.update()
 
     def _set_gender_specific(self, human: "Human") -> None:
         """Renames shapekeys, removing Male_ and Female_ prefixes according to

@@ -1,12 +1,14 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import random
 from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
+from HumGen3D.backend.type_aliases import C
+from HumGen3D.human.base.decorators import injected_context
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
+
 from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
 from ..base.prop_collection import PropCollection
@@ -46,13 +48,21 @@ class FaceKeys(PropCollection):
         for sk in self.shape_keys:
             sk.value = 0
 
-    def randomize(self, subcategory: str = "all", use_bell_curve: bool = False) -> None:
-        face_sk = [key.as_bpy() for key in self.keys if key.subcategory == subcategory]
+    @injected_context
+    def randomize(
+        self, subcategory: str = "all", use_bell_curve: bool = False, context: C = None
+    ) -> None:
+        if subcategory.lower() == "all":
+            keys = self.keys
+        else:
+            keys = [key for key in self.keys if key.subcategory == subcategory]
         all_v = 0.0
-        for sk in face_sk:
+        for key in keys:
             if use_bell_curve:
                 new_value = np.random.normal(loc=0, scale=0.5)
             else:
-                new_value = random.uniform(sk.slider_min, sk.slider_max)
+                new_value = np.random.normal(loc=0, scale=0.5)
             all_v += new_value
-            sk.value = new_value
+            key.set_without_update(new_value)
+
+        self._human.keys.update_human_from_key_change(context)

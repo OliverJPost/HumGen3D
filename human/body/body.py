@@ -3,6 +3,9 @@
 import random
 from typing import TYPE_CHECKING, Union, cast
 
+from HumGen3D.backend.type_aliases import C
+from HumGen3D.human.base.decorators import injected_context
+
 if TYPE_CHECKING:
     from HumGen3D import Human
     from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
@@ -20,7 +23,8 @@ class BodySettings:
             self._human.keys.filtered("body_proportions"),
         )
 
-    def randomize(self) -> None:
+    @injected_context
+    def randomize(self, context: C = None) -> None:
         """Randomizes the body type sliders of the active human.
 
         Args:
@@ -28,9 +32,11 @@ class BodySettings:
         """
         for key in self.keys:
             if key.name == "skinny":
-                key.value = random.uniform(0, 0.7)
+                key.set_without_update(random.uniform(0, 0.7))
             else:
-                key.value = random.uniform(0, 1.0)
+                key.set_without_update(random.uniform(0, 1.0))
+
+        self._human.keys.update_human_from_key_change(context)
 
     def __hash__(self) -> int:
         sk_values = [sk.value for sk in self._human.body.keys]
