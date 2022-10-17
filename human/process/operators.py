@@ -78,7 +78,7 @@ class HG_BAKE(bpy.types.Operator):
 
         return {"RUNNING_MODAL"}
 
-    def modal(self, context, event):
+    def modal(self, context, event):  # noqa CCR001
         bake_sett = context.scene.HG3D.bake
 
         if self.finish_modal:
