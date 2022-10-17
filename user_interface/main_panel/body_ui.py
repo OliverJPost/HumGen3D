@@ -89,7 +89,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
             key_bpy = key.as_bpy()
             section.prop(
                 key_bpy,
-                "value",
+                "value_limited",
                 text=key.name.capitalize(),
                 expand=True,
             )
