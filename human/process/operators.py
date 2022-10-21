@@ -5,6 +5,8 @@
 """Texture baking operators."""
 
 
+import uuid
+
 import bpy
 from HumGen3D.backend import hg_log
 from HumGen3D.human.human import Human
@@ -32,6 +34,39 @@ def status_text_callback(header, context):
     layout.label(text="Press ESC to cancel", icon="EVENT_ESC")
 
     layout.separator_spacer()
+
+
+class HG_OT_ADD_LOD_OUTPUT(bpy.types.Operator):
+    bl_idname = "hg3d.add_lod_output"
+    bl_label = "Add LOD output."
+    bl_description = "Adds a new output item for LODs."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        coll = context.scene.lod_output_col
+
+        last_item = coll[-1] if coll else None
+        item = coll.add()
+        item.name = str(uuid.uuid4())
+        if last_item and last_item.suffix[-1].isdigit():
+            new_index = int(last_item.suffix[-1]) + 1
+            item.suffix = f"_LOD{new_index}"
+
+        return {"FINISHED"}
+
+
+class HG_OT_REMOVE_LOD_OUTPUT(bpy.types.Operator):
+    bl_idname = "hg3d.remove_lod_output"
+    bl_label = "Remove LOD output."
+    bl_description = "Remove this output from the list."
+    bl_options = {"UNDO"}
+
+    name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        item = context.scene.lod_output_col.find(self.name)
+        context.scene.lod_output_col.remove(item)
+        return {"FINISHED"}
 
 
 # TODO progress bar

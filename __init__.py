@@ -40,6 +40,7 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent  # type: ignore
 
+from HumGen3D.human.process.lod import LOD_OUTPUT_ITEM
 from HumGen3D.human.base.exceptions import HumGenException
 from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
 
@@ -124,6 +125,7 @@ def _initiate_ui_lists() -> None:
         "hg_update_col": update.UPDATE_INFO_ITEM,
         "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
         "possible_content_col": POSSIBLE_CONTENT_ITEM,
+        "lod_output_col": LOD_OUTPUT_ITEM,
     }
 
     scene = bpy.types.Scene

@@ -199,7 +199,45 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
     enabled_propname = "lod_enabled"
 
     def draw(self, context):
-        self.layout.label(text="test")
+        col = self.layout.column()
+        col.label(text="Output(s):")
+        lod_output_col = context.scene.lod_output_col
+        for output in lod_output_col:
+            self._draw_output_box(col, output)
+        col.operator("hg3d.add_lod_output", text="", icon="ADD")
+
+    def _draw_output_box(self, col, output_item):
+        col = col.box().column()
+        row = col.row(align=True)
+        row.prop(
+            output_item,
+            "menu_open",
+            text="",
+            icon="TRIA_DOWN" if output_item.menu_open else "TRIA_RIGHT",
+            emboss=False,
+        )
+        row.prop(output_item, "suffix", text="")
+        row.operator(
+            "hg3d.remove_lod_output", text="", icon="TRASH"
+        ).name = output_item.name
+
+        if not output_item.menu_open:
+            return
+
+        col.separator()
+
+        self.draw_centered_subtitle("Body LOD", col, icon=get_hg_icon("body"))
+        col.prop(output_item, "body_lod", text="")
+
+        col.separator()
+        self.draw_centered_subtitle("Clothing", col, icon=get_hg_icon("outfit"))
+        col.prop(output_item, "decimate_ratio", text="Decimate ratio")
+        col.prop(output_item, "remove_clothing_subdiv", text="Remove clothing subdiv")
+        col.prop(
+            output_item, "remove_clothing_solidify", text="Remove clothing solidify"
+        )
+
+        col.label(text="Texture resolution:")
 
 
 class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):

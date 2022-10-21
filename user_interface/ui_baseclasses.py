@@ -49,7 +49,10 @@ class HGPanel:
         row = layout.row()
         row.alignment = "CENTER"
         if icon:
-            row.label(text=text, icon=icon)
+            if isinstance(icon, int):
+                row.label(text=text, icon_value=icon)
+            else:
+                row.label(text=text, icon=icon)
         else:
             row.label(text=text)
 
