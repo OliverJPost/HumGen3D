@@ -289,4 +289,4 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = 1.5
         row.alert = True
-        row.operator("hg3d.bake", text="Process", depress=True, icon="COMMUNITY")
+        row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
