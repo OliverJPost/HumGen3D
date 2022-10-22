@@ -4,16 +4,14 @@ import json
 import math
 import os
 import random
-from collections import defaultdict
 from itertools import islice
 from typing import Dict, List, Tuple
 
 import bpy  # type: ignore
 import mathutils
 import numpy as np
+from HumGen3D import Human, get_prefs
 from mathutils import Matrix, Vector
-
-from ...features.common.HG_COMMON_FUNC import find_human, get_prefs
 
 
 class Hair:
@@ -192,7 +190,7 @@ class Hair:
         mat = bpy.data.materials.get("HG_Haircards")
         if not mat:
             blendpath = os.path.join(
-                get_prefs().filepath, "hair", "haircards", "haircards.blend"
+                get_prefs().filepath, "hair", "haircards", "haircards_material.blend"
             )
             with bpy.data.libraries.load(blendpath, link=False) as (
                 _,
@@ -220,11 +218,10 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
         pref = get_prefs()
         scene = context.scene
-        hg_rig = find_human(context.object)
+        human = Human.from_existing(context.object)
         dg = context.evaluated_depsgraph_get()
 
-        hg_body = hg_rig.HG.body_obj.evaluated_get(dg)
-
+        hg_body = human.body_obj.evaluated_get(dg)
         vertices = hg_body.data.vertices
         size = len(vertices)
         kd = mathutils.kdtree.KDTree(size)
@@ -235,8 +232,9 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
         mw = hg_body.matrix_world
 
-        hairs: Hair = []
-        for ps in hg_body.particle_systems:
+        hairs = []
+        for ps in human.hair.regular_hair.get_evaluated_particle_systems(context):
+            # for ps in hg_body.particle_systems:
             for gh in ps.particles:
                 hairs.append(Hair(mw, kd, gh, ps, vertices))
 
@@ -263,7 +261,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
         return {"FINISHED"}
 
-    def downsample_to_size(self, list_to_downsample, wanted_size):
+    def downsample_to_size(self, list_to_downsample, wanted_size) -> list[Hair]:
         ln = len(list_to_downsample)
         if ln <= wanted_size:
             return list_to_downsample

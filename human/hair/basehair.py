@@ -40,6 +40,14 @@ class BaseHair:
         ]
         return PropCollection(modifiers)
 
+    @injected_context
+    def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
+        dg = context.evaluated_depsgraph_get()
+        eval_body = self._human.body_obj.evaluated_get(dg)
+        particle_systems = eval_body.particle_systems
+        psys = [ps for ps in particle_systems if self._condition(ps.name)]
+        return PropCollection(psys)
+
     def delete_all(self) -> None:
         raise NotImplementedError  # FIXME
 
