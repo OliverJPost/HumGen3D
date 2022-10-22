@@ -55,6 +55,11 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 for obj in human.objects:
                     add_to_collection(context, obj, "Processing Results")
 
+            if pr_sett.bake:
+                human.process.baking.bake_all(
+                    int(context.scene.HG3D.bake.samples), context
+                )
+
             if pr_sett.lod_enabled:
                 human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
                 human.process.lod.set_clothing_lod(
