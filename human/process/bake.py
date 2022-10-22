@@ -64,6 +64,30 @@ class BakeSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
+    @property
+    def resolution_body(self) -> int:
+        return bpy.context.scene.HG3D.res_body
+
+    @resolution_body.setter
+    def resolution_body(self, value: int) -> None:  # noqa
+        bpy.context.scene.HG3D.res_body = str(value)
+
+    @property
+    def resolution_clothes(self) -> int:
+        return bpy.context.scene.HG3D.res_body
+
+    @resolution_clothes.setter
+    def resolution_clothes(self, value: int) -> None:  # noqa
+        bpy.context.scene.HG3D.res_clothes = str(value)
+
+    @property
+    def resolution_eyes(self) -> int:
+        return bpy.context.scene.HG3D.res_body
+
+    @resolution_eyes.setter
+    def resolution_eyes(self, value: int) -> None:  # noqa
+        bpy.context.scene.HG3D.res_eyes = str(value)
+
     @staticmethod
     def _add_image_node(
         image: bpy.types.Image,
@@ -192,7 +216,7 @@ class BakeSettings:
             was_optix,
             old_samples,
             was_eevee,
-        ) = self.check_bake_render_settings(context, samples, force_cycles=True)
+        ) = self._check_bake_render_settings(context, samples, force_cycles=True)
         baketextures = self.get_baking_list()
         for baketexture in baketextures:
             self.bake_single_texture(baketexture)
