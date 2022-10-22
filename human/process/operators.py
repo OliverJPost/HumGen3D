@@ -9,7 +9,10 @@ import uuid
 
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.custom_content.content_saving import remove_number_suffix
+from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.human import Human
+from mathutils import Vector
 
 
 def status_text_callback(header, context):
@@ -34,6 +37,65 @@ def status_text_callback(header, context):
     layout.label(text="Press ESC to cancel", icon="EVENT_ESC")
 
     layout.separator_spacer()
+
+
+class HG_OT_PROCESS(bpy.types.Operator):
+    bl_idname = "hg3d.process"
+    bl_label = "Process"
+    bl_description = "Process according to these settings."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):  # noqa
+        pr_sett = context.scene.HG3D.process
+        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        export_humans = []
+        for rig_obj in human_rigs:
+            human = Human.from_existing(rig_obj)
+            if pr_sett.output != "replace":
+                human = human.duplicate()
+                human.location += Vector((0, 2, 0))
+                for obj in human.objects:
+                    add_to_collection(context, obj, "Processing Results")
+            export_humans.append(human)
+
+            if pr_sett.lod_enabled:
+                self._process_lods(context, export_humans, human)
+
+        return {"FINISHED"}
+
+    @staticmethod
+    def _process_lods(context, export_humans, human):
+        lod_coll = context.scene.lod_output_col
+        lod_human = human
+        prev_human = None
+        for item in lod_coll:
+            if not lod_human:
+                lod_human = HG_OT_PROCESS._create_lod_duplicate(
+                    context, export_humans, human, prev_human
+                )
+            lod_human.name = (
+                remove_number_suffix(human.name).replace("_LOD0", "") + item.suffix
+            )
+
+            lod_human.process.lod.set_body_lod(int(item.body_lod))
+            lod_human.process.lod.set_clothing_lod(
+                item.decimate_ratio,
+                item.remove_clothing_subdiv,
+                item.remove_clothing_solidify,
+            )
+
+            prev_human = lod_human
+            lod_human = None
+
+    @staticmethod
+    def _create_lod_duplicate(context, export_humans, human, prev_human):
+        lod_human = human.duplicate()
+        for obj in lod_human.objects:
+            add_to_collection(context, obj, "Processing Results")
+        if prev_human:
+            lod_human.location = prev_human.location + Vector((0, 2, 0))
+        export_humans.append(human)
+        return lod_human
 
 
 class HG_OT_ADD_LOD_OUTPUT(bpy.types.Operator):
