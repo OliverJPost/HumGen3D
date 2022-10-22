@@ -1,19 +1,26 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import os
+from typing import TYPE_CHECKING, Literal
 
 import bpy
+from bpy.types import bpy_prop_collection  # type:ignore
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
+
 from HumGen3D.backend import get_addon_root
-from HumGen3D.human.base.decorators import cached_property
 from HumGen3D.human.base.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
-from HumGen3D.human.hair.facial_hair import FacialHairSettings
+from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
-from ..base.decorators import injected_context
 from ..hair.eyebrows import EyebrowSettings
 
 
 class HairSettings:
-    def __init__(self, human):
+    def __init__(self, human: "Human") -> None:
+        """Create instance that points to different hair categories."""
         self._human = human
 
     @property  # TODO make cached
@@ -25,7 +32,7 @@ class HairSettings:
         return EyelashSettings(self._human)
 
     @property  # TODO make cached
-    def facial_hair(self) -> FacialHairSettings:
+    def face_hair(self) -> FacialHairSettings:
         return FacialHairSettings(self._human)
 
     @property  # TODO make cached
@@ -41,39 +48,12 @@ class HairSettings:
 
         return ishidden
 
-    def children_set_hide(self, hide: bool):
-        for ps in self._human.hair.particle_systems:
-            if hide:
-                ps.settings.child_nbr = 1
-            else:
-                render_children = ps.settings.rendered_child_count
-                ps.settings.child_nbr = render_children
-
-    def _delete_opposite_gender_specific(self):
-        """Deletes the hair of the opposite gender
-
-        Args:
-            hg_body (Object): hg body object
-            gender (str): gender of this human
-        """
-        ps_delete_dict = {
-            "female": ("Eyebrows_Male", "Eyelashes_Male"),
-            "male": ("Eyebrows_Female", "Eyelashes_Female"),
-        }
-
-        gender = self._human.gender
-        hg_body = self._human.body_obj
-
-        # TODO make into common func
-        for ps_name in ps_delete_dict[gender]:
-            self.remove_system_by_name(ps_name)
-
     @property
-    def particle_systems(self):
+    def particle_systems(self) -> bpy_prop_collection:
         return self._human.body_obj.particle_systems
 
     @property
-    def modifiers(self):
+    def modifiers(self) -> PropCollection:
         return PropCollection(
             [
                 mod
@@ -82,19 +62,19 @@ class HairSettings:
             ]
         )
 
-    def remove_system_by_name(self, name):
+    def children_set_hide(self, hide: bool) -> None:
+        for ps in self._human.hair.particle_systems:
+            if hide:
+                ps.settings.child_nbr = 1
+            else:
+                render_children = ps.settings.rendered_child_count
+                ps.settings.child_nbr = render_children
+
+    def remove_system_by_name(self, name: str) -> None:
         mod = next(m for m in self.modifiers if m.particle_system.name == name)
         self._human.body_obj.modifiers.remove(mod)
 
-    def _add_quality_props(self):
-        for psys in self.particle_systems:
-            ps = psys.settings
-            ps["steps"] = ps.render_step
-            ps["children"] = ps.rendered_child_count
-            ps["root"] = ps.root_radius
-            ps["tip"] = ps.tip_radius
-
-    def convert_to_new_hair_shader(self, hg_body):
+    def convert_to_new_hair_shader(self, hg_body: bpy.types.Object) -> None:
         hair_mats = hg_body.data.materials[1:3]
 
         group_nodes = []
@@ -114,7 +94,9 @@ class HairSettings:
         blendfile = os.path.join(addon_folder, "human", "hair", "hair_shader_v3.blend")
 
         if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
-            new_hair_group = bpy.data.node_groups["HG_Hair_V3"]
+            new_hair_group = bpy.data.node_groups[
+                "HG_Hair_V3"
+            ]  # type:ignore[index, call-overload]
         else:
             with bpy.data.libraries.load(blendfile, link=False) as (
                 data_from,
@@ -128,7 +110,7 @@ class HairSettings:
             node.node_tree = new_hair_group
             node.name = "HG_Hair_V3"
 
-    def update_hair_shader_type(self, shader_type):
+    def update_hair_shader_type(self, shader_type: str) -> None:
         value = 0 if shader_type == "fast" else 1
 
         hg_rig = self._human.rig_obj
@@ -141,7 +123,9 @@ class HairSettings:
 
             hair_group.inputs["Fast/Accurate"].default_value = value
 
-    def set_hair_quality(self, hair_quality):
+    def set_hair_quality(
+        self, hair_quality: Literal["high", "medium", "low", "ultralow"]
+    ) -> None:
         for psys in self._human.hair.particle_systems:
             ps = psys.settings
             max_steps = ps["steps"]
@@ -159,7 +143,9 @@ class HairSettings:
                 hair_quality, max_root, max_tip
             )
 
-    def _get_steps_amount(self, hair_quality, max_steps):
+    def _get_steps_amount(
+        self, hair_quality: Literal["high", "medium", "low", "ultralow"], max_steps: int
+    ) -> int:
         min_steps = 1 if max_steps <= 2 else 2 if max_steps <= 4 else 3
         deduction_dict = {"high": 0, "medium": 1, "low": 2, "ultralow": 3}
         new_steps = max_steps - deduction_dict[hair_quality]
@@ -168,13 +154,40 @@ class HairSettings:
 
         return new_steps
 
-    def _get_child_amount(self, hair_quality, max_children):
+    def _delete_opposite_gender_specific(self) -> None:
+        """Deletes the hair of the opposite gender.
+
+        Args:
+            hg_body (Object): hg body object
+            gender (str): gender of this human
+        """
+        ps_delete_dict = {
+            "female": ("Eyebrows_Male", "Eyelashes_Male"),
+            "male": ("Eyebrows_Female", "Eyelashes_Female"),
+        }
+
+        gender = self._human.gender
+
+        # TODO make into common func
+        for ps_name in ps_delete_dict[gender]:
+            self.remove_system_by_name(ps_name)
+
+    def _get_child_amount(
+        self,
+        hair_quality: Literal["high", "medium", "low", "ultralow"],
+        max_children: int,
+    ) -> int:
         division_dict = {"high": 1, "medium": 2, "low": 4, "ultralow": 10}
         new_children = max_children / division_dict[hair_quality]
 
         return int(new_children)
 
-    def _get_root_and_tip(self, hair_quality, max_root, max_tip):
+    def _get_root_and_tip(
+        self,
+        hair_quality: Literal["high", "medium", "low", "ultralow"],
+        max_root: int,
+        max_tip: int,
+    ) -> tuple[int, int]:
         multiplication_dict = {
             "high": 1,
             "medium": 2,
@@ -186,3 +199,11 @@ class HairSettings:
         new_tip = max_tip * multiplication_dict[hair_quality]
 
         return new_root, new_tip
+
+    def _add_quality_props(self) -> None:
+        for psys in self.particle_systems:
+            ps = psys.settings
+            ps["steps"] = ps.render_step
+            ps["children"] = ps.rendered_child_count
+            ps["root"] = ps.root_radius
+            ps["tip"] = ps.tip_radius

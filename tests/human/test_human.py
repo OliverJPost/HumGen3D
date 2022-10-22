@@ -1,14 +1,16 @@
-import pytest # type:ignore
-from bpy.props import FloatVectorProperty # type:ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+# flake8: noqa F811
+
+import bpy
+import pytest  # type:ignore
 from HumGen3D import Human
 from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.tests.fixtures import (
+from HumGen3D.tests.fixtures import (  # noqa
+    ALL_HUMAN_FIXTURES,
     context,
-    creation_phase_human,
-    finalize_phase_human,
-    reverted_human,
+    female_human,
+    male_human,
 )
-from pytest_lazyfixture import lazy_fixture # type:ignore
 
 
 def assert_vector_tuple_equality(vec, tup):
@@ -21,11 +23,7 @@ def test_get_preset_options(gender, context):
     assert Human.get_preset_options(gender, context), "No preset options returned"
 
 
-fixture_names = ["creation_phase_human", "finalize_phase_human", "reverted_human"]
-
-
-@pytest.mark.usefixtures(*fixture_names)
-@pytest.mark.parametrize("human", [lazy_fixture(name) for name in fixture_names])
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 class TestHumanCommonMethods:
     @staticmethod
     def test_repr(human):
@@ -132,32 +130,11 @@ class TestHumanCommonMethods:
         is_visible()
         is_visible()
 
+
 # TODO implement batch_human
 # def test_is_batch(batch_human):
 #     rig_obj = batch_human.rig_obj
 #     assert Human._is_applied_batch_result(rig_obj)
-
-
-def test_creation_phase(creation_phase_human):
-    assert creation_phase_human.phase == "creation"
-
-    assert creation_phase_human.creation_phase
-    try:
-        creation_phase_human.finalize_phase
-        assert False, "Should have thrown exception"
-    except HumGenException:
-        assert True
-
-
-def test_finalize_phase(finalize_phase_human):
-    assert finalize_phase_human.phase == "finalize"
-
-    assert finalize_phase_human.finalize_phase
-    try:
-        finalize_phase_human.creation_phase
-        assert False, "Should have thrown exception"
-    except HumGenException:
-        assert True
 
 
 def test_from_existing_fail():
@@ -165,11 +142,15 @@ def test_from_existing_fail():
         try:
             Human.from_existing(obj)
             assert False, "Should throw exception"
-        except TypeError:
+        except HumGenException:
             assert True
 
-    cube = ...
+    mesh = bpy.data.meshes.new("Basic_Cube")
+    cube = bpy.data.objects.new("Basic_Cube", mesh)
+    bpy.context.scene.collection.objects.link(cube)
     assert_failure(cube)
 
-    non_mesh = ...
+    cam = bpy.data.cameras.new("Camera")
+    non_mesh = bpy.data.objects.new("Camera", cam)
+    bpy.context.scene.collection.objects.link(non_mesh)
     assert_failure(non_mesh)
