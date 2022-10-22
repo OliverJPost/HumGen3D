@@ -5,9 +5,13 @@
 """Texture baking operators."""
 
 
+import uuid
+
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.human.base.collections import add_to_collection
 from HumGen3D.human.human import Human
+from mathutils import Vector
 
 
 def status_text_callback(header, context):
@@ -32,6 +36,75 @@ def status_text_callback(header, context):
     layout.label(text="Press ESC to cancel", icon="EVENT_ESC")
 
     layout.separator_spacer()
+
+
+class HG_OT_PROCESS(bpy.types.Operator):
+    bl_idname = "hg3d.process"
+    bl_label = "Process"
+    bl_description = "Process according to these settings."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):  # noqa
+        pr_sett = context.scene.HG3D.process
+        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        for rig_obj in human_rigs:
+            human = Human.from_existing(rig_obj)
+            if pr_sett.output != "replace":
+                human = human.duplicate(context)
+                human.location += Vector((0, 2, 0))
+                for obj in human.objects:
+                    add_to_collection(context, obj, "Processing Results")
+
+            if pr_sett.bake:
+                human.process.baking.bake_all(
+                    int(context.scene.HG3D.bake.samples), context
+                )
+
+            if pr_sett.lod_enabled:
+                human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
+                human.process.lod.set_clothing_lod(
+                    pr_sett.lod.decimate_ratio,
+                    pr_sett.lod.remove_clothing_subdiv,
+                    pr_sett.lod.remove_clothing_solidify,
+                )
+
+            if pr_sett.output == "export":
+                pass  # TODO export
+
+        return {"FINISHED"}
+
+
+class HG_OT_ADD_LOD_OUTPUT(bpy.types.Operator):
+    bl_idname = "hg3d.add_lod_output"
+    bl_label = "Add LOD output."
+    bl_description = "Adds a new output item for LODs."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        coll = context.scene.lod_output_col
+
+        last_item = coll[-1] if coll else None
+        item = coll.add()
+        item.name = str(uuid.uuid4())
+        if last_item and last_item.suffix[-1].isdigit():
+            new_index = int(last_item.suffix[-1]) + 1
+            item.suffix = f"_LOD{new_index}"
+
+        return {"FINISHED"}
+
+
+class HG_OT_REMOVE_LOD_OUTPUT(bpy.types.Operator):
+    bl_idname = "hg3d.remove_lod_output"
+    bl_label = "Remove LOD output."
+    bl_description = "Remove this output from the list."
+    bl_options = {"UNDO"}
+
+    name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        item = context.scene.lod_output_col.find(self.name)
+        context.scene.lod_output_col.remove(item)
+        return {"FINISHED"}
 
 
 # TODO progress bar

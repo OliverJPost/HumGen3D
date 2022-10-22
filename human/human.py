@@ -605,6 +605,29 @@ class Human:
         preview_collections["humans"].refresh(context)
 
     @injected_context
+    def duplicate(self, context: C = None) -> Human:
+        rig_copy = self.rig_obj.copy()
+        rig_copy.data = self.rig_obj.data.copy()
+        context.collection.objects.link(rig_copy)
+        add_to_collection(context, rig_copy)
+
+        for obj in self.children:
+            obj_copy = obj.copy()
+            obj_copy.data = obj.data.copy()
+            obj_copy.parent = rig_copy
+            for mod in obj_copy.modifiers:
+                if mod.type == "ARMATURE":
+                    mod.object = rig_copy
+
+            # Reassign body_obj pointerproperty
+            if obj == self.body_obj:
+                rig_copy.HG.body_obj = obj_copy
+            context.collection.objects.link(obj_copy)
+            add_to_collection(context, obj_copy)
+
+        return Human.from_existing(obj_copy)  # type:ignore[return-value]
+
+    @injected_context
     def render_thumbnail(
         self,
         folder: Optional[str] = None,
