@@ -9,13 +9,6 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
-from bpy.props import (  # type:ignore
-    BoolProperty,
-    EnumProperty,
-    FloatProperty,
-    StringProperty,
-)
-
 
 class LodSettings:
     def __init__(self, _human: "Human") -> None:
@@ -78,19 +71,3 @@ class LodSettings:
                     mod.type == "SOLIDIFY" and remove_solidify
                 ):
                     obj.modifiers.remove(mod)
-
-
-class LOD_OUTPUT_ITEM(bpy.types.PropertyGroup):
-    menu_open: BoolProperty()
-    suffix: StringProperty(default="_LOD0")
-    body_lod: EnumProperty(
-        items=[
-            ("0", "Original resolution", "", 0),
-            ("1", "Lower face resolution", "", 1),
-            ("2", "1/4th original resolution", "", 2),
-        ],
-        default="0",
-    )
-    decimate_ratio: FloatProperty(min=0, max=1, default=0.15)
-    remove_clothing_subdiv: BoolProperty(default=True)
-    remove_clothing_solidify: BoolProperty(default=True)
