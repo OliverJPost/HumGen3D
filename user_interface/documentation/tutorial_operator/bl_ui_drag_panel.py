@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from .bl_ui_widget import *
 
 

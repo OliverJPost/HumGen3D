@@ -1,10 +1,10 @@
-import bpy
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 
 def get_content_saving_tips_from_context(context, sett, hg_rig):
-    tab_idx = sett.content_saving_tab_index
+    tab_idx = sett.custom_content.content_saving_tab_index
 
-    if sett.content_saving_type == "mesh_to_cloth":
+    if sett.custom_content.content_saving_type == "mesh_to_cloth":
         yield mtc_tutorial
 
         if tab_idx == 0 and len(context.selected_objects) > 1:
@@ -15,13 +15,16 @@ def get_content_saving_tips_from_context(context, sett, hg_rig):
             yield mtc_mask_advice
         elif tab_idx == 4:
             yield mtc_material_advice
-            cloth_obj = sett.content_saving_object
+            cloth_obj = sett.custom_content.content_saving_object
             try:
                 nodes = cloth_obj.data.materials[0].node_tree.nodes
                 base_color_node = nodes.get("Base Color")
-                if base_color_node and base_color_node.image:
-                    if "placeholder" in base_color_node.image.name.lower():
-                        yield placeholder_image_explanation
+                if (
+                    base_color_node
+                    and base_color_node.image
+                    and "placeholder" in base_color_node.image.name.lower()
+                ):
+                    yield placeholder_image_explanation
             except AttributeError:
                 pass
         elif tab_idx == 5:

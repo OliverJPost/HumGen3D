@@ -1,20 +1,38 @@
-""" HumGen add-on preferences and associated functions"""
+# type:ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+"""HumGen add-on preferences and associated functions."""
 
 import os
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D import bl_info  # type: ignore
+from HumGen3D import bl_info
+from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
-from ..preview_collections import preview_collections
 from .content_pack_saving_ui import CpackEditingSystem
 from .preference_props import HGPreferenceBackend
 
+ALERT_DICT = {
+    "cpack_required": [
+        "One or more Content Packs are incompatible and need to be updated!",
+        "ERROR",
+    ],
+    "addon": [
+        "A new update of the Human Generator add-on is available!",
+        "INFO",
+    ],
+    "cpack_available": [
+        "One or more Content Packs can be updated!",
+        "INFO",
+    ],
+}
 
-class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
-    """HumGen user preferences"""
 
+class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreferences):
+    """HumGen user preferences."""
+
+    _register_priority = 1
     bl_idname = __package__.split(".")[0]
 
     def draw(self, context):
@@ -46,8 +64,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
             self._draw_cpack_ui(context)
 
     def _check_if_basecontent_is_installed(self) -> bool:
-        """Determines if this is the first time loading Human Generator by
-        checking if the base content is installed
+        """Determines if this is the first time loading Human Generator.
+
+        Checks if the base content is installed
 
         Returns:
             bool: True if base content is installed
@@ -58,15 +77,15 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
             else False
         )
 
-        return base_content_found
+        return base_content_found  # noqa
 
     def _get_update_statuscode(self) -> str:
-        """Gets update code from check that was done when Blender was opened
+        """Gets update code from check that was done when Blender was opened.
 
         Returns:
             str: Code determining what kind of update is available, if any
         """
-        update_statuscode = (
+        update_statuscode = (  # FIXME
             "cpack_required"
             if self.cpack_update_required
             else "addon"
@@ -76,10 +95,10 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
             else None
         )
 
-        return update_statuscode
+        return update_statuscode  # noqa
 
     def _draw_update_notification(self, context, col, update_statuscode):
-        """Draws notification if there is an update available
+        """Draws notification if there is an update available.
 
         Args:
             col (UILayout): draw in this
@@ -95,11 +114,10 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         col_h.scale_y = 3
         col_h.alert = update_statuscode == "cpack_required"
 
-        alert_dict = self._get_alert_dict()
         col_h.operator(
             "wm.url_open",
-            text=alert_dict[update_statuscode][0],
-            icon=alert_dict[update_statuscode][1],
+            text=ALERT_DICT[update_statuscode][0],
+            icon=ALERT_DICT[update_statuscode][1],
             depress=update_statuscode != "cpack_required",
         ).url = "https://humgen3d.com/support/update"
 
@@ -123,10 +141,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
             return
 
         update_info_dict = self._build_update_info_dict(context)
-        hg_icons = preview_collections["hg_icons"]
         for version, update_types in update_info_dict.items():
             version_label = "Human Generator V" + str(version)[1:-1].replace(", ", ".")
-            boxbox.label(text=version_label, icon_value=hg_icons["HG_icon"].icon_id)
+            boxbox.label(text=version_label, icon_value=get_hg_icon("HG_icon"))
             col = boxbox.column(align=True)
             for update_type, lines in update_types.items():
                 col.label(text=update_type)
@@ -145,35 +162,8 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
 
         return update_info_dict
 
-    def _get_alert_dict(self) -> dict:
-        """Dictionary for alert messages and icons for different update status
-
-        Returns:
-            dict:
-                key (str): update code
-                value (tuple[str, str]):
-                    str: message to display
-                    str: icon to display
-        """
-        alert_dict = {
-            "cpack_required": [
-                "One or more Content Packs are incompatible and need to be updated!",
-                "ERROR",
-            ],
-            "addon": [
-                "A new update of the Human Generator add-on is available!",
-                "INFO",
-            ],
-            "cpack_available": [
-                "One or more Content Packs can be updated!",
-                "INFO",
-            ],
-        }
-
-        return alert_dict
-
     def _draw_settings_ui(self):
-        """UI with checkboxes and enums for changing HumGen's preferences"""
+        """UI with checkboxes and enums for changing HumGen's preferences."""
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False  # No animation.
@@ -248,7 +238,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         col.prop(self, "skip_url_request", text="Skip URL request")
 
     def _draw_cpack_ui(self, context):
-        """UI for the user to check which cpacks are installed, who made them,
+        """UI displaying installed content packs.
+
+        For the user to check which cpacks are installed, who made them,
         what version they are, what is inside them and a button to delete them
         """
         layout = self.layout
@@ -282,7 +274,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         box = col.box()
         box.label(text="Select packs to install:")
 
-        selected_packs = True if len(context.scene.installpacks_col) != 0 else False
+        selected_packs = bool(context.scene.installpacks_col)
 
         if selected_packs:
             row = box.row()
@@ -301,7 +293,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         row.operator(
             "hg3d.cpackselect",
             text="Select Content Packs",
-            depress=False if selected_packs else True,
+            depress=not selected_packs,
             icon="PACKAGE",
         )
 
@@ -326,14 +318,13 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         row.operator("hg3d.create_cpack", text="Create pack", depress=True)
 
     def _draw_warning(self, layout, message):
-        """Draw a warrning label that's right aligned"""
+        """Draw a warrning label that's right aligned."""
         row = layout.row()
         row.alignment = "RIGHT"
         row.label(text=message, icon="ERROR")
 
     def _draw_first_time_ui(self, context):
-        """UI for when no base humans can be found, promting the user to install
-        the content packs"""
+        """UI for when no base humans found, promting to install the content packs."""
         layout = self.layout
 
         # tutorial link section
@@ -354,7 +345,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         box = layout.box()
         box.scale_y = 1.5
         box.label(
-            text="STEP 2: Select a folder for HumGen to install content packs in. 2 GB free space recommended."
+            text="STEP 2: Select a folder for HumGen to install content packs in. 2 GB free space recommended."  # noqa
         )
 
         if self.filepath:
@@ -365,7 +356,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
         box.operator(
             "hg3d.pathchange",
             text="Change folder" if self.filepath else "Select folder",
-            depress=False if self.filepath else True,
+            depress=not self.filepath,
             icon="FILEBROWSER",
         )
         box.label(
@@ -392,22 +383,22 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
 
         row.operator("hg3d.removeipack", icon="TRASH")
 
-        selected_packs = True if len(context.scene.installpacks_col) != 0 else False
+        selected_packs = bool(context.scene.installpacks_col)
         row = box.row()
         row.scale_y = 1.5
         row.operator(
             "hg3d.cpackselect",
             text="Select Content Packs",
-            depress=False if selected_packs else True,
+            depress=not selected_packs,
             icon="PACKAGE",
         )
 
         box.label(
-            text="Select multiple content packs by pressing Ctrl (Windows) or Cmd (Mac)",
+            text="Select multiple content packs by pressing Ctrl (Windows) or Cmd (Mac)",  # noqa
             icon="INFO",
         )
         box.label(
-            text="Selected files with a red warning cannot be installed and will be skipped",
+            text="Selected files with a red warning cannot be installed and will be skipped",  # noqa
             icon="INFO",
         )
 
@@ -423,15 +414,13 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend):
                 icon="PACKAGE",
             )
             box.label(
-                text="Installation time depends on your hardware and the selected packs",
+                text="Installation time depends on your hardware and the selected packs",  # noqa
                 icon="INFO",
             )
 
 
 class HG_PT_ICON_LEGEND(bpy.types.Panel):
-    """
-    Legend popover for the icons used in the ui_list
-    """
+    """Legend popover for the icons used in the ui_list."""
 
     bl_label = "Icon legend"
     bl_space_type = "VIEW_3D"
@@ -440,7 +429,6 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        hg_icons = preview_collections["hg_icons"]
 
         icon_dict = {
             "Human Meshes": "humans",
@@ -448,10 +436,10 @@ class HG_PT_ICON_LEGEND(bpy.types.Panel):
             "Shapekeys": "body",
             "Hairstyles": "hair",
             "Poses": "pose",
-            "Outfits": "clothing",
+            "Outfits": "outfit",
             "Footwear": "footwear",
             "Expressions": "expression",
         }
 
         for icon_desc, icon in icon_dict.items():
-            layout.label(text=icon_desc, icon_value=hg_icons[icon].icon_id)
+            layout.label(text=icon_desc, icon_value=get_hg_icon(icon))

@@ -1,5 +1,7 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 """
-Operators and functions used for installing and managing HumGen's content packs
+Operators and functions used for installing and managing HumGen's content packs.
 
 Nomenclature:
 Installpack = a collection item that represents a zip file the user has selected.
@@ -11,24 +13,37 @@ cpack = Abbreviation of content pack. Represents a collection of items
     .json file
 """
 
+import contextlib
 import json
 import os
 import zipfile
 from pathlib import Path
+from typing import Any, no_type_check
 
-import bpy  # type: ignore
+import bpy
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D.backend import hg_log, get_prefs 
-from ..preview_collections import preview_collections
+from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from HumGen3D.user_interface.icons.icons import get_hg_icon
+
 from ..update import check_update
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+
+ICON_DICT = {
+    "humans": "humans",
+    "human_textures": "textures",
+    "shapekeys": "body",
+    "hair": "hair",
+    "poses": "pose",
+    "clothes": "clothing",
+    "footwear": "footwear",
+    "expression": "expression",
+}
 
 
 class HG_UL_INSTALLPACKS(bpy.types.UIList):
-    """
-    UIList showing cpacks to be installed
-    """
+    """UIList showing cpacks to be installed."""
 
+    @no_type_check
     def draw_item(
         self,
         context,
@@ -45,7 +60,9 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
             "no_json": "No .json file in pack",
             "incorrect_structure": "Incorrect file structure",
             "not_zip": "Not a zip file",
-            "already_installed": "Already installed, delete old pack before installing a new one",
+            "already_installed": (
+                "Already installed, delete old pack before installing a new one"
+            ),
         }
 
         row = layout.row(align=True)
@@ -58,10 +75,13 @@ class HG_UL_INSTALLPACKS(bpy.types.UIList):
 
 
 class HG_UL_CONTENTPACKS(bpy.types.UIList):
-    """UIList showing content packs, including icons on who made the pack,
-    what version it is, what items are included, a weblink and a delete button
+    """UIList showing content packs.
+
+    Including icons on who made the pack, what version it is, what items are included,
+    a weblink and a delete button
     """
 
+    @no_type_check
     def draw_item(
         self,
         context,
@@ -74,8 +94,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         index,
     ):
 
-        hg_icons = preview_collections["hg_icons"]
-        header = True if item.name == "header" else False
+        header = item.name == "header"
         # header is true only for the first item in the list.
         # This fakes a header for the items in the ui_list
 
@@ -83,23 +102,23 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         row.label(text="Name:" if header else item.pack_name)
 
         subrow = row
-        self._draw_creator_column(item, hg_icons, header, subrow)
+        self._draw_creator_column(item, header, subrow)
 
         subrow.label(text="Version:" if header else "%s.%s" % tuple(item.pack_version))
         subrow.alignment = "LEFT"
 
         self._draw_update_label(item, subrow, header)
-        self._draw_category_dots(item, hg_icons, header, subrow)
+        self._draw_category_dots(item, header, subrow)
 
         subrow.separator()
 
         self._draw_operator_buttons(item, header, subrow)
 
+    @no_type_check
     def _draw_operator_buttons(self, item, header, subrow):
-        """Draws buttons to go to edit cpack, to cpack weblink and button to
-        delete cpack"""
+        """Draws buttons to go to edit cpack, to cpack weblink and to delete cpack."""
         if header:
-            for i in range(3):
+            for _ in range(3):
                 subrow.label(text="", icon="BLANK1")
             return
 
@@ -116,33 +135,12 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         else:
             subrow.label(text="", icon="BLANK1")
 
-    def _get_icon_dict(self) -> dict:
-        """Dictionary with custom icon names for each category
-
-        Returns:
-            dict: key: name of category, value: name of icon
-        """
-
-        icon_dict = {
-            "humans": "humans",
-            "human_textures": "textures",
-            "shapekeys": "body",
-            "hair": "hair",
-            "poses": "pose",
-            "clothes": "clothing",
-            "footwear": "footwear",
-            "expressions": "expression",
-        }
-
-        return icon_dict
-
-    def _draw_category_dots(self, item, hg_icons, header, subrow):
-        """Draws grid of dots to show what kind of content is in this cpack"""
-        icon_dict = self._get_icon_dict()
-
-        for categ, icon in icon_dict.items():
+    @no_type_check
+    def _draw_category_dots(self, item, header, subrow):
+        """Draws grid of dots to show what kind of content is in this cpack."""
+        for categ, icon in ICON_DICT.items():
             if header:
-                subrow.label(text="", icon_value=hg_icons[icon].icon_id)
+                subrow.label(text="", icon_value=get_hg_icon(icon))
             else:
                 if categ not in item:
                     subrow.label(text="", icon="LAYER_USED")
@@ -153,17 +151,19 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
                     icon="LAYER_ACTIVE" if item[categ] else "LAYER_USED",
                 )
 
-    def _draw_creator_column(self, item, hg_icons, header, subrow):
-        """Draws a column with info about the creator of this cpack"""
+    @no_type_check
+    def _draw_creator_column(self, item, header, subrow):
+        """Draws a column with info about the creator of this cpack."""
         if header:
             subrow.label(text="Creator:")
         elif item.creator == "HumGen":
-            subrow.label(text=item.creator, icon_value=hg_icons["HG_icon"].icon_id)
+            subrow.label(text=item.creator, icon_value=get_hg_icon("HG_icon"))
         else:
             subrow.label(text=item.creator, icon=item.icon_name)
 
+    @no_type_check
     def _draw_update_label(self, item, subrow, header):
-        """Draws a column with info if the cpack is up to date"""
+        """Draws a column with info if the cpack is up to date."""
         if header:
             subrow.label(text="Update info:    ")
             return
@@ -180,7 +180,7 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
             else "available"
         )
 
-        subrow.alert = True if upd == "required" else False
+        subrow.alert = upd == "required"
         # format version number to string
         vnum = "%s.%s" % tuple(
             item.latest_version if upd == "available" else item.required_version
@@ -205,22 +205,11 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         subrow.alert = False
 
 
-class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
-    """Opens a filebrowser popup, allowing the user to select files. This
-    operator adds them to a collection property, meanwhile checking if any
+class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
+    """Opens a filebrowser popup, allowing the user to select files.
+
+    This operator adds them to a collection property, meanwhile checking if any
     problems arise that mean the pack should not be installed
-
-    API: False
-
-    Operator Type:
-        HumGen installation
-        File/dir selection
-
-    Prereq:
-        None
-
-    Args:
-        ImportHelper: prompts a filebrowser popup
     """
 
     bl_idname = "hg3d.cpackselect"
@@ -229,16 +218,16 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
         the content packs you wish to install"""
 
     files: bpy.props.CollectionProperty(
-        name="File Path",
+        name="File Path",  # noqa F722
         type=bpy.types.OperatorFileListElement,
     )
     directory: bpy.props.StringProperty(
-        subtype="DIR_PATH",
+        subtype="DIR_PATH",  # noqa F821
     )
 
+    @no_type_check
     def execute(self, context):
         directory = self.directory
-        pref = get_prefs()
 
         coll = context.scene.installpacks_col
 
@@ -254,8 +243,9 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
             self._add_to_collection(coll, directory, fn)
         return {"FINISHED"}
 
+    @no_type_check
     def _add_to_collection(self, coll, directory, fn):
-        """adds this cpack to the installpack collection
+        """Adds this cpack to the installpack collection.
 
         Args:
             coll (CollectionProperty): installpack collection
@@ -269,8 +259,9 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
         item.pack_name = filepath
         item.alert = self._check_for_alerts(item, filepath)
 
+    @no_type_check
     def _check_for_alerts(self, item, filepath) -> str:
-        """checks for common errors with content packs
+        """Checks for common errors with content packs.
 
         Args:
             item (collection item): installpack item
@@ -317,21 +308,13 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):
 
 
 class HG_INSTALL_CPACK(bpy.types.Operator):
-    """Installs (unzips into file structure) all packs in the installpack
-    collection if they don't have any error codes.
-
-    Operator type:
-        HumGen installation
-        File management
-
-    Prereq:
-        Items in installpack collection
-    """
+    """Installs all valid packs in the installpack collection."""
 
     bl_idname = "hg3d.cpackinstall"
     bl_label = "Install"
     bl_description = "Refresh the content pack list"
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
         self.files = [
@@ -346,15 +329,14 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
 
         coll = context.scene.installpacks_col
         coll.clear()
-        try:
+        with contextlib.suppress(Exception):
             cpacks_refresh(self, context)
-        except Exception:
-            pass
 
         return {"FINISHED"}
 
+    @no_type_check
     def _unzip_file(self, zip_path, filepath) -> dict:
-        """unzips the file to the HumGen cpack directory
+        """Unzips the file to the HumGen cpack directory.
 
         Args:
             filepath (str): filepath of the HumGen cpack directory
@@ -367,13 +349,15 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
         zf = zipfile.ZipFile(zip_path.name)
 
         file_list = [fn for fn in zf.namelist() if not fn.endswith("/")]
-        zf.extractall(path=filepath)
+        zf.extractall(path=filepath)  # FIXME apperantly insecure # noqa DUO112
 
         return {"files": file_list}
 
+    @no_type_check
     def _add_filelist_to_json(self, filepath, zip_path, file_dict):
-        """adds a dictionary to the json file with all filenames of files in the
-        content pack. This will be used by the HG_DELETE_CPACK operator
+        """Adds a dictionary to the json file with all filenames of files in the cpack.
+
+        This will be used by the HG_DELETE_CPACK operator
 
         Args:
             filepath (str): filepath of the HumGen cpack directory
@@ -396,9 +380,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
 
 
 class HG_CONTENT_PACK(bpy.types.PropertyGroup):
-    """
-    Properties of the content pack
-    """
+    """Properties of the content pack."""
 
     pack_name: bpy.props.StringProperty(
         name="Content Pack Name",
@@ -409,7 +391,7 @@ class HG_CONTENT_PACK(bpy.types.PropertyGroup):
     creator: bpy.props.StringProperty()
     pack_version: bpy.props.IntVectorProperty(default=(0, 0), size=2)
     weblink: bpy.props.StringProperty()
-    icon_name: bpy.props.StringProperty(default="COMMUNITY")
+    icon_name: bpy.props.StringProperty(default="COMMUNITY")  # noqa F821
 
     # booleans for showing in the UI what capassalse)
     human_textures: bpy.props.BoolProperty(default=False)
@@ -426,7 +408,7 @@ class HG_CONTENT_PACK(bpy.types.PropertyGroup):
 
 
 class HG_INSTALLPACK(bpy.types.PropertyGroup):
-    """Properties of the installpack representation of the selected zip files"""
+    """Properties of the installpack representation of the selected zip files."""
 
     pack_name: bpy.props.StringProperty(
         name="Content Pack Name",
@@ -455,30 +437,29 @@ class HG_INSTALLPACK(bpy.types.PropertyGroup):
 
 
 class HG_REFRESH_CPACKS(bpy.types.Operator):
-    """Operator for the refresh cpacks button. Refresh function is outside class
-    because it is called as an update for certain props
+    """Operator for the refresh cpacks button.
 
-    Operator type:
-        UI_list refresh
-
-    Prereq:
-        None
+    Refresh function is outside class because it is called as an update for certain
+    props
     """
 
     bl_idname = "hg3d.cpacksrefresh"
     bl_label = "Refresh"
     bl_description = "Refresh the content pack list"
 
+    @no_type_check
     def execute(self, context):
         cpacks_refresh(self, context)
         return {"FINISHED"}
 
 
 # TODO slow switch between preferences tabs
-def cpacks_refresh(self, context):
-    """Refreshes the content pack ui list by scanning the content_packs folder
-    in the file structure"""
-    coll = context.scene.contentpacks_col
+def cpacks_refresh(self: Any, context: bpy.types.Context) -> None:
+    """Refreshes the content pack ui list.
+
+    Does this by scanning the content_packs folder in the file structure
+    """
+    coll = context.scene.contentpacks_col  # type:ignore[attr-defined]
     pref = get_prefs()
 
     coll.clear()
@@ -497,19 +478,21 @@ def cpacks_refresh(self, context):
     check_update()
 
 
-def _add_cpack_to_coll(coll, json_folder, fn):
-    """Adds this cpack to the content pack collection
+def _add_cpack_to_coll(
+    coll: bpy.types.CollectionProperty, json_folder: str, fn: str
+) -> None:
+    """Adds this cpack to the content pack collection.
 
     Args:
         coll (CollectionProperty): cpack collection
-        json_folder (Path): folder where the cpack jsons are
+        json_folder (str): folder where the cpack jsons are
         fn (str): filename of json file for this cpack
     """
     filepath = json_folder + str(Path("/{}".format(fn)))
     with open(filepath) as f:
         data = json.load(f)
 
-    item = coll.add()
+    item = coll.add()  # type:ignore[attr-defined]
     config = data["config"]
 
     item.name = config["pack_name"]
@@ -525,10 +508,6 @@ def _add_cpack_to_coll(coll, json_folder, fn):
         item[prop_name] = config[prop_name] if prop_name in config else None
 
     pack_version = config["pack_version"]
-    if (
-        type(pack_version) is str
-    ):  # compatibility with old str method of writing version
-        pack_version = [int(pack_version[0]), int(pack_version[2])]
     item["pack_version"] = pack_version
 
     item.json_path = filepath
@@ -543,17 +522,9 @@ def _add_cpack_to_coll(coll, json_folder, fn):
 
 class HG_DELETE_CPACK(bpy.types.Operator):
     """Deletes the cpack from the content pack collection.
+
     Uses the dictionary of files in the .json of the cpack to delete all files
     belonging to this cpack
-
-    Operator type:
-        File management
-
-    Prereq:
-        Cpack passed. Needs to be installed, not copied in
-
-    Args:
-        item_name (str): name of cpack item to remove
     """
 
     bl_idname = "hg3d.cpackdel"
@@ -562,10 +533,12 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
     item_name: bpy.props.StringProperty()
 
+    @no_type_check
     def invoke(self, context, event):
         # confirmation checkbox
         return context.window_manager.invoke_confirm(self, event)
 
+    @no_type_check
     def execute(self, context):
         pref = get_prefs()
         col = context.scene.contentpacks_col
@@ -588,7 +561,7 @@ class HG_DELETE_CPACK(bpy.types.Operator):
                     hg_log("Could not remove ", filepath, level="WARNING")
                 except FileNotFoundError as e:
                     hg_log("Could not remove ", filepath, level="WARNING")
-                    print(e)
+                    print(e)  # noqa T201
 
         # remove item from collection
         col.remove(index)
@@ -600,18 +573,18 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
         return {"FINISHED"}
 
+    @no_type_check
     def _removeEmptyFolders(self, path):
-        """Recursive function to remove empty folders
+        """Recursive function to remove empty folders.
 
         Args:
-            path (Path): filepath of HumGen cpack directory
+            path (str): filepath of HumGen cpack directory
         """
-
         if not os.path.isdir(path):
             return
 
         files = os.listdir(path)
-        if len(files):
+        if files:
             for f in files:
                 fullpath = os.path.join(path, f)
                 if os.path.isdir(fullpath):
@@ -623,27 +596,18 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
 
 class HG_DELETE_INSTALLPACK(bpy.types.Operator):
-    """
-    Removes installpack from ui_list collection
-
-    API: False
-
-    Operator type:
-        UI list removal
-
-    Prereq:
-        Installpacks in installpack_col
-        Active installpack
-    """
+    """Removes installpack from ui_list collection."""
 
     bl_idname = "hg3d.removeipack"
     bl_label = ""
     bl_description = "Remove the active item from the list"
 
+    @no_type_check
     @classmethod
     def poll(cls, context):
         return context.scene.installpacks_col
 
+    @no_type_check
     def execute(self, context):
         col = context.scene.installpacks_col
         index = context.scene.installpacks_col_index

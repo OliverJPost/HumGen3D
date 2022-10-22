@@ -1,9 +1,13 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 
 
 # MODULE
-def add_to_collection(context, obj, collection_name="HumGen") -> bpy.types.Collection:
-    """Adds the giver object toa colleciton. By default added to HumGen collection
+def add_to_collection(
+    context: bpy.types.Context, obj: bpy.types.Object, collection_name: str = "HumGen"
+) -> bpy.types.Collection:
+    """Adds the giver object toa colleciton. By default added to HumGen collection.
 
     Args:
         obj (Object): object to add to collection
@@ -16,12 +20,7 @@ def add_to_collection(context, obj, collection_name="HumGen") -> bpy.types.Colle
 
     if not collection:
         collection = bpy.data.collections.new(name=collection_name)
-        if collection_name == "HumGen_Backup [Don't Delete]":
-            bpy.data.collections["HumGen"].children.link(collection)
-            context.view_layer.layer_collection.children["HumGen"].children[
-                collection_name
-            ].exclude = True
-        elif collection_name == "HG Batch Markers":
+        if collection_name == "HG Batch Markers":
             hg_collection = bpy.data.collections.get("HumGen")
             if not hg_collection:
                 hg_collection = bpy.data.collections.new(name="HumGen")
@@ -30,7 +29,7 @@ def add_to_collection(context, obj, collection_name="HumGen") -> bpy.types.Colle
         else:
             context.scene.collection.children.link(collection)
 
-    if obj in [o for o in context.scene.collection.objects]:
+    if context.scene.collection.objects.get(obj.name):
         context.scene.collection.objects.unlink(obj)
     else:
         obj.users_collection[0].objects.unlink(obj)

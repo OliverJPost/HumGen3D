@@ -1,0 +1,32 @@
+{
+    "pants": [
+        "cor_LegFrontRaise_Rt",
+        "cor_LegFrontRaise_Lt",
+        "cor_FootDown_Lt",
+        "cor_FootDown_Rt"
+    ],
+    "top": [
+        "cor_ElbowBend_Lt",
+        "cor_ElbowBend_Rt",
+        "cor_ShoulderSideRaise_Lt",
+        "cor_ShoulderSideRaise_Rt",
+        "cor_ShoulderFrontRaise_Lt",
+        "cor_ShoulderFrontRaise_Rt"
+    ],
+    "shoe": [
+        "cor_FootDown_Lt",
+        "cor_FootDown_Rt"
+    ],
+    "full": [
+        "cor_ElbowBend_Lt",
+        "cor_ElbowBend_Rt",
+        "cor_ShoulderSideRaise_Lt",
+        "cor_ShoulderSideRaise_Rt",
+        "cor_ShoulderFrontRaise_Lt",
+        "cor_ShoulderFrontRaise_Rt",
+        "cor_LegFrontRaise_Rt",
+        "cor_LegFrontRaise_Lt",
+        "cor_FootDown_Lt",
+        "cor_FootDown_Rt"
+    ]
+}

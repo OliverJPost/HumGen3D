@@ -1,3 +1,5 @@
+# flake8: noqa
+# type:ignore
 import json
 import math
 import os
@@ -31,9 +33,7 @@ class Hair:
         self.nearest_vert_normals = np.empty(self.key_coordinates.shape)
         for i, k_co in enumerate(self.key_coordinates):
             nearest_vert_idx = kd.find(k_co)[1]
-            self.nearest_vert_normals[i] = verts[
-                nearest_vert_idx
-            ].normal.normalized()
+            self.nearest_vert_normals[i] = verts[nearest_vert_idx].normal.normalized()
 
         self.particle_system = particle_sys
         self.perpendicular_card = None
@@ -59,15 +59,11 @@ class Hair:
         hk_len = len(self.key_coordinates)
         head_normals = self.nearest_vert_normals
         hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=1)
-        hair_key_vectors = self.normalized(
-            hair_keys_next_coords - self.key_coordinates
-        )
+        hair_key_vectors = self.normalized(hair_keys_next_coords - self.key_coordinates)
 
         perpendicular = np.cross(head_normals, hair_key_vectors)
 
-        length_correction = np.arange(
-            0.01, 0.03, 0.02 / hk_len, dtype=np.float32
-        )
+        length_correction = np.arange(0.01, 0.03, 0.02 / hk_len, dtype=np.float32)
 
         length_correction = length_correction[::-1]
         length_correction = np.expand_dims(length_correction, axis=-1)
@@ -89,12 +85,8 @@ class Hair:
         vertices_left = np.flip(self.key_coordinates - offset, axis=0)
 
         vertices = np.concatenate((vertices_left, vertices_right))
-        vertices_subdivided = self.__subdivide_coordinates(
-            vertices, factor=1.3
-        )
-        vertices_subdivided = self.matrix_multiplication(
-            mw, vertices_subdivided
-        )
+        vertices_subdivided = self.__subdivide_coordinates(vertices, factor=1.3)
+        vertices_subdivided = self.matrix_multiplication(mw, vertices_subdivided)
 
         edges = []
 
@@ -154,9 +146,7 @@ class Hair:
             vert_loop_dict: Dict[int, List[bpy.types.uvloop]] = {}
 
             for poly in obj.data.polygons:
-                for vert_idx, loop_idx in zip(
-                    poly.vertices, poly.loop_indices
-                ):
+                for vert_idx, loop_idx in zip(poly.vertices, poly.loop_indices):
                     loop = uv_layer.data[loop_idx]
                     if vert_idx not in vert_loop_dict:
                         vert_loop_dict[vert_idx] = [

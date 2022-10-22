@@ -1,0 +1,64 @@
+repos:
+  - repo: local
+    hooks:
+      # - id: isort
+      #   name: isort
+      #   stages: [commit]
+      #   language: system
+      #   entry: isort
+      #   types: [python]
+
+      # - id: black
+      #   name: black
+      #   stages: [commit]
+      #   language: system
+      #   entry: black
+      #   types: [python]
+
+      - id: flake8
+        name: flake8
+        stages: [commit]
+        language: python
+        entry: flake8
+        types: [python]
+        exclude: setup.py
+        additional_dependencies: [
+          flake8-docstrings,
+          flake8-bugbear,
+          flake8-builtins,
+          flake8-comprehensions,
+          flake8-eradicate,
+          flake8-pytest-style,
+          flake8-broken-line,
+          flake8-print,
+          flake8-pie,
+          flake8-simplify,
+          flake8-useless-assert,
+          flake8-class-attributes-order,
+          flake8-literal,
+          flake8-return,
+          flake8-annotations-complexity,
+          flake8-cognitive-complexity,
+          flake8-expression-complexity,
+          flake8-functions,
+          flake8-length,
+          flake8-copyright,
+          flake8-comments,
+          flake8-fixme
+          ]
+
+      - id: mypy
+        name: mypy
+        stages: [commit]
+        language: system
+        entry: mypy .
+        types: [python]
+        pass_filenames: false
+
+#      - id: pytest
+#        name: pytest
+#        stages: [commit]
+#        language: system
+#        entry: pipenv run pytest
+#        types: [python]
+
