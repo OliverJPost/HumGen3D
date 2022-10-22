@@ -116,14 +116,14 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             return
 
         col = get_flow(sett, layout)
-        self.draw_centered_subtitle("Quality", col, "SETTINGS")
+        self.draw_subtitle("Quality", col, "SETTINGS")
         col.prop(bake_sett, "samples", text="Samples")
 
         layout.separator()
 
         col = get_flow(sett, layout)
 
-        self.draw_centered_subtitle("Resolution", col, "IMAGE_PLANE")
+        self.draw_subtitle("Resolution", col, "IMAGE_PLANE")
 
         for res_type in ["body", "eyes", "teeth", "clothes"]:
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
@@ -187,7 +187,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
 
         layout.separator()
         col = layout.column(align=True)
-        self.draw_centered_subtitle("Options", col, "SETTINGS")
+        self.draw_subtitle("Options", col, "SETTINGS")
         col.prop(sett, "modapply_keep_shapekeys", text="Keep shapekeys")
         col.prop(sett, "modapply_apply_hidden", text="Apply hidden modifiers")
 
@@ -203,7 +203,7 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
 
         lod_sett = context.scene.HG3D.process.lod
 
-        self.draw_centered_subtitle("Body LOD", col, icon=get_hg_icon("body"))
+        self.draw_subtitle("Body LOD", col, icon=get_hg_icon("body"), alignment="LEFT")
         col.prop(lod_sett, "body_lod", text="")
 
         col.separator()

@@ -3,6 +3,7 @@
 import functools
 import os
 from pathlib import Path
+from typing import Literal
 
 import bpy
 from HumGen3D import bl_info
@@ -44,10 +45,15 @@ class HGPanel:
     bl_category = "HumGen"
 
     @staticmethod
-    def draw_centered_subtitle(text, layout, icon=None):
+    def draw_subtitle(
+        text,
+        layout,
+        icon=None,
+        alignment: Literal["CENTER", "LEFT", "RIGHT", "EXPAND"] = "CENTER",
+    ):
         """Draw a small title that is centered. Optional icon."""
         row = layout.row()
-        row.alignment = "CENTER"
+        row.alignment = alignment
         if icon:
             if isinstance(icon, int):
                 row.label(text=text, icon_value=icon)
