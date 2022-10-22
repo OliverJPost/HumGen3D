@@ -1,4 +1,3 @@
-# flake8: noqa
 # type:ignore
 import json
 import math
@@ -7,6 +6,7 @@ import random
 from itertools import islice
 from typing import Dict, List, Tuple
 
+import bmesh
 import bpy  # type: ignore
 import mathutils
 import numpy as np
@@ -17,21 +17,20 @@ from mathutils import Matrix, Vector
 class Hair:
     key_coordinates: np.ndarray
     location: Tuple[float]
-    rotation: Tuple[float]
     nearest_vert_normals: np.ndarray
     particle_sys: bpy.types.ParticleSystem
     perpendicular_card: bpy.types.Object
     parallel_card: bpy.types.Object
 
-    def __init__(self, mw, kd, guide_hair, particle_sys, verts):
-        self.location = guide_hair.location
-        self.rotation = guide_hair.rotation
-        self.key_coordinates = np.array([hk.co for hk in guide_hair.hair_keys])
+    def __init__(self, mw, kd, vert_island, particle_sys, normals):
+        self.location = "blabla"
+        self.key_coordinates = self.matrix_multiplication(mw, np.array(vert_island))
 
         self.nearest_vert_normals = np.empty(self.key_coordinates.shape)
         for i, k_co in enumerate(self.key_coordinates):
             nearest_vert_idx = kd.find(k_co)[1]
-            self.nearest_vert_normals[i] = verts[nearest_vert_idx].normal.normalized()
+            split = normals[nearest_vert_idx]
+            self.nearest_vert_normals[i] = split
 
         self.particle_system = particle_sys
         self.perpendicular_card = None
@@ -56,7 +55,7 @@ class Hair:
     def to_mesh(self, mw, scene):
         hk_len = len(self.key_coordinates)
         head_normals = self.nearest_vert_normals
-        hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=1)
+        hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=0)
         hair_key_vectors = self.normalized(hair_keys_next_coords - self.key_coordinates)
 
         perpendicular = np.cross(head_normals, hair_key_vectors)
@@ -66,24 +65,27 @@ class Hair:
         length_correction = length_correction[::-1]
         length_correction = np.expand_dims(length_correction, axis=-1)
 
-        perpendicular_offset = length_correction * np.abs(perpendicular)
+        perpendicular_offset = length_correction * perpendicular
         head_normal_offset = length_correction * np.abs(head_normals) * 0.3
 
-        self.perpendicular_card = self.__create_mesh_from_offset(
+        self.perpendicular_card = self.create_mesh_from_offset(
             mw, scene, perpendicular_offset
         )
-        self.parallel_card = self.__create_mesh_from_offset(
+        self.parallel_card = self.create_mesh_from_offset(
             mw, scene, head_normal_offset, check=True
         )
 
-    def __create_mesh_from_offset(self, mw, scene, offset, check=False):
+    def create_mesh_from_offset(self, mw, scene, offset, check=False):
         mesh = bpy.data.meshes.new(name=f"hair_{self.location}")
 
         vertices_right = self.key_coordinates + offset
-        vertices_left = np.flip(self.key_coordinates - offset, axis=0)
+        vertices_left = self.key_coordinates - offset
+
+        # Create verts for the left side of the card in reverse order for poly creation
+        vertices_left = np.flip(vertices_left, axis=0)
 
         vertices = np.concatenate((vertices_left, vertices_right))
-        vertices_subdivided = self.__subdivide_coordinates(vertices, factor=1.3)
+        vertices_subdivided = self.subdivide_coordinates(vertices, factor=1.3)
         vertices_subdivided = self.matrix_multiplication(mw, vertices_subdivided)
 
         edges = []
@@ -107,7 +109,7 @@ class Hair:
 
         return obj
 
-    def __subdivide_coordinates(self, coords: np.ndarray, factor: float = 2.0):
+    def subdivide_coordinates(self, coords: np.ndarray, factor: float = 2.0):
         c_len = coords.shape[0]
 
         # Round samples to nearest EVEN integer
@@ -128,7 +130,6 @@ class Hair:
 
     def add_uv(self):
         for obj in [self.perpendicular_card, self.parallel_card]:
-            poly_count = len(obj.data.polygons)
 
             haircard_json = os.path.join(
                 get_prefs().filepath,
@@ -204,6 +205,39 @@ class Hair:
         self.parallel_card.data.materials.append(mat)
 
 
+def walk_island(vert):
+    """walk all un-tagged linked verts"""
+    vert.tag = True
+    yield (vert)
+    linked_verts = [
+        e.other_vert(vert) for e in vert.link_edges if not e.other_vert(vert).tag
+    ]
+
+    for v in linked_verts:
+        if v.tag:
+            continue
+        yield from walk_island(v)
+
+
+def get_islands(bm, verts):
+    def tag(verts, switch):
+        for v in verts:
+            v.tag = switch
+
+    tag(bm.verts, True)
+    tag(verts, False)
+    islands = []
+    verts = set(verts)
+    while verts:
+        v = verts.pop()
+        verts.add(v)
+        island = set(walk_island(v))
+        islands.append(list(island))
+        tag(island, False)  # remove tag = True
+        verts -= island
+    return [[Vector(bv.co) for bv in island] for island in islands]
+
+
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     """
     Removes the corresponding hair system
@@ -216,29 +250,62 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
     def execute(self, context):
 
-        pref = get_prefs()
         scene = context.scene
         human = Human.from_existing(context.object)
         dg = context.evaluated_depsgraph_get()
 
         hg_body = human.body_obj.evaluated_get(dg)
         vertices = hg_body.data.vertices
+        normals = [v.normal.normalized() for v in vertices]
         size = len(vertices)
         kd = mathutils.kdtree.KDTree(size)
-
+        mw = hg_body.matrix_world
         for i, v in enumerate(vertices):
-            kd.insert(v.co, i)
+            kd.insert(mw @ v.co, i)
         kd.balance()
 
-        mw = hg_body.matrix_world
-
         hairs = []
-        for ps in human.hair.regular_hair.get_evaluated_particle_systems(context):
-            # for ps in hg_body.particle_systems:
-            for gh in ps.particles:
-                hairs.append(Hair(mw, kd, gh, ps, vertices))
+        bm = bmesh.new()
+        for mod in human.hair.regular_hair.modifiers:
+            ps = mod.particle_system
+            ps.settings.child_nbr = ps.settings.child_nbr // 10
 
-        hairs = self.downsample_to_size(hairs, 100)
+            with context.temp_override(active_object=human.body_obj):
+                bpy.ops.object.modifier_convert(modifier=mod.name)
+
+            hair_mesh = context.object
+            old_name = hair_mesh.name
+            assert not len(hair_mesh.data.polygons)
+
+            bm.from_mesh(hair_mesh.data)
+            # individual_hairs = get_islands(bm, bm.verts)
+            for obj in context.selected_objects:
+                if obj != hair_mesh:
+                    obj.select_set(False)
+
+            with context.temp_override(active_object=hair_mesh):
+                bpy.ops.mesh.separate(type="LOOSE")
+
+            sep_objs = [
+                obj for obj in bpy.data.objects if obj.name.startswith(old_name)
+            ]
+            individual_hairs = [[v.co for v in obj.data.vertices] for obj in sep_objs]
+
+            pick_amount = min(100, len(individual_hairs))
+
+            weights = [max(v.z for v in verts) for verts in individual_hairs]
+            for obj in random.choices(sep_objs, weights, k=pick_amount):
+                mw = obj.matrix_world
+                hairs.append(
+                    Hair(mw, kd, [v.co for v in obj.data.vertices], ps, normals)
+                )
+
+            for obj in sep_objs:
+                bpy.data.objects.remove(obj)
+
+        bm.free()
+
+        # hairs = self.downsample_to_size(hairs, 100)
 
         for hair in reversed(hairs):
             hair.to_mesh(mw, scene)
@@ -256,7 +323,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
         bpy.ops.object.join(c)
 
-        for mod in hg_body.modifiers:
+        for mod in human.body_obj.modifiers:
             mod.show_viewport = False
 
         return {"FINISHED"}
