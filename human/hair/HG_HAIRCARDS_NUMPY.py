@@ -3,6 +3,7 @@ import json
 import math
 import os
 import random
+import time
 from itertools import islice
 from typing import Dict, List, Tuple
 
@@ -11,7 +12,9 @@ import bpy  # type: ignore
 import mathutils
 import numpy as np
 from HumGen3D import Human, get_prefs
-from mathutils import Matrix, Vector
+from HumGen3D.backend.logging import time_update
+from HumGen3D.extern.rdp import rdp
+from mathutils import Matrix
 
 
 class Hair:
@@ -57,6 +60,7 @@ class Hair:
         head_normals = self.nearest_vert_normals
         hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=0)
         hair_key_vectors = self.normalized(hair_keys_next_coords - self.key_coordinates)
+        hair_key_vectors[-1] = hair_key_vectors[-2]
 
         perpendicular = np.cross(head_normals, hair_key_vectors)
 
@@ -208,7 +212,7 @@ class Hair:
 def walk_island(vert):
     """walk all un-tagged linked verts"""
     vert.tag = True
-    yield (vert)
+    yield (tuple(vert.co))
     linked_verts = [
         e.other_vert(vert) for e in vert.link_edges if not e.other_vert(vert).tag
     ]
@@ -219,37 +223,35 @@ def walk_island(vert):
         yield from walk_island(v)
 
 
-def get_islands(bm, verts):
-    def tag(verts, switch):
-        for v in verts:
-            v.tag = switch
-
-    tag(bm.verts, True)
-    tag(verts, False)
+def get_individual_hairs(bm):
+    t = time.perf_counter()
+    start_verts = []
+    for v in bm.verts:
+        if len(v.link_edges) == 1:
+            start_verts.append(v)
+    t = time_update("start vert finding", t)
     islands = []
-    verts = set(verts)
-    while verts:
-        v = verts.pop()
-        verts.add(v)
-        island = set(walk_island(v))
-        islands.append(list(island))
-        tag(island, False)  # remove tag = True
-        verts -= island
-    return [[Vector(bv.co) for bv in island] for island in islands]
+
+    found_verts = set()
+    for start_vert in start_verts:
+        if tuple(start_vert.co) in found_verts:
+            continue
+        island_list = list(walk_island(start_vert))
+        island = np.array(island_list, dtype=np.float64)
+        islands.append(island)
+        found_verts.update(tuple(island[-1]))
+
+    t = time_update("island finding", t)
+    return islands
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
-    """
-    Removes the corresponding hair system
-    """
-
     bl_idname = "hg3d.haircards"
     bl_label = "Convert to hair cards"
     bl_description = "Converts this system to hair cards"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-
         scene = context.scene
         human = Human.from_existing(context.object)
         dg = context.evaluated_depsgraph_get()
@@ -268,50 +270,34 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
         bm = bmesh.new()
         for mod in human.hair.regular_hair.modifiers:
             ps = mod.particle_system
-            ps.settings.child_nbr = ps.settings.child_nbr // 10
+            ps.settings.child_nbr = 50 // len(ps.particles)
 
             with context.temp_override(active_object=human.body_obj):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
             hair_mesh = context.object
-            old_name = hair_mesh.name
             assert not len(hair_mesh.data.polygons)
 
             bm.from_mesh(hair_mesh.data)
-            # individual_hairs = get_islands(bm, bm.verts)
             for obj in context.selected_objects:
                 if obj != hair_mesh:
                     obj.select_set(False)
 
-            with context.temp_override(active_object=hair_mesh):
-                bpy.ops.mesh.separate(type="LOOSE")
+            individual_hairs = get_individual_hairs(bm)
 
-            sep_objs = [
-                obj for obj in bpy.data.objects if obj.name.startswith(old_name)
-            ]
-            individual_hairs = [[v.co for v in obj.data.vertices] for obj in sep_objs]
-
-            pick_amount = min(100, len(individual_hairs))
-
-            weights = [max(v.z for v in verts) for verts in individual_hairs]
-            for obj in random.choices(sep_objs, weights, k=pick_amount):
-                mw = obj.matrix_world
-                hairs.append(
-                    Hair(mw, kd, [v.co for v in obj.data.vertices], ps, normals)
-                )
-
-            for obj in sep_objs:
-                bpy.data.objects.remove(obj)
+            mw = obj.matrix_world
+            for hair in individual_hairs:
+                if len(hair) <= 1:
+                    continue
+                hair_decimated = rdp(hair, epsilon=0.01)
+                hairs.append(Hair(mw, kd, hair_decimated, ps, normals))
 
         bm.free()
-
-        # hairs = self.downsample_to_size(hairs, 100)
 
         for hair in reversed(hairs):
             hair.to_mesh(mw, scene)
             hair.add_uv()
             hair.add_material()
-
         hair_objs = [h.parallel_card for h in hairs] + [
             h.perpendicular_card for h in hairs
         ]
@@ -325,7 +311,6 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
 
         for mod in human.body_obj.modifiers:
             mod.show_viewport = False
-
         return {"FINISHED"}
 
     def downsample_to_size(self, list_to_downsample, wanted_size) -> list[Hair]:
