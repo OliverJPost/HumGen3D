@@ -20,7 +20,7 @@ from HumGen3D.human.base.shapekey_calculator import (
 class HairCollection:
     hairs: dict[int, list[tuple[np.ndarray, np.ndarray]]]  # noqa
 
-    def __init__(self, hair_obj, body_obj, depsgraph, bm) -> None:
+    def __init__(self, hair_obj, body_obj, depsgraph) -> None:
         self.mx_world_hair_obj = hair_obj.matrix_world
         body_obj_eval = body_obj.evaluated_get(depsgraph)
 
@@ -43,9 +43,11 @@ class HairCollection:
         hair_obj.data.vertices.foreach_get("co", hair_coords)
         self.hair_coords = matrix_multiplication(mx_hair, hair_coords.reshape((-1, 3)))
 
+        bm = bmesh.new()
         bm.from_mesh(hair_obj.data)
         self.hairs = self._get_individual_hairs(bm)
         self.objects = {}
+        bm.free()
 
     def create_mesh(self):
         for hair_co_len, hair_vert_idxs in self.hairs.items():
@@ -133,6 +135,10 @@ class HairCollection:
         for hz in zone_dict["long"]["dense"]["wide"]:
             flattened_hairzones.append(hz)
         for hz in zone_dict["long"]["dense"]["narrow"]:
+            flattened_hairzones.append(hz)
+        for hz in zone_dict["long"]["sparse"]["wide"]:
+            flattened_hairzones.append(hz)
+        for hz in zone_dict["long"]["sparse"]["narrow"]:
             flattened_hairzones.append(hz)
 
         for vert_len, obj in self.objects.items():
@@ -235,17 +241,25 @@ class HairCollection:
         for v in bm.verts:
             if len(v.link_edges) == 1:
                 start_verts.append(v)
-        islands = defaultdict()
+        islands_dict = defaultdict()
 
         found_verts = set()
         for start_vert in start_verts:
             if tuple(start_vert.co) in found_verts:
                 continue
-            island = np.fromiter(self._walk_island(start_vert), dtype=np.int64)
-            islands.setdefault(len(island), []).append(island)
+            island_idxs = np.fromiter(self._walk_island(start_vert), dtype=np.int64)
+            island_co = self.hair_coords[island_idxs]
+            island_rdp_masked = island_idxs[
+                rdp(island_co, epsilon=0.005, return_mask=True)
+            ]
+
+            island = np.fromiter(island_rdp_masked, dtype=np.int64)
+            islands_dict.setdefault(len(island), []).append(island)
             found_verts.add(island[-1])
 
-        return islands
+        return {
+            hair_len: np.array(islands) for hair_len, islands in islands_dict.items()
+        }
 
 
 class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
@@ -258,10 +272,10 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
         human = Human.from_existing(context.object)
         dg = context.evaluated_depsgraph_get()
         hair_objs = []
-        bm = bmesh.new()
+
         for mod in human.hair.regular_hair.modifiers:
             ps = mod.particle_system
-            ps.settings.child_nbr = 200 // len(ps.particles)
+            ps.settings.child_nbr = 400 // len(ps.particles)
 
             with context.temp_override(
                 active_object=human.body_obj,
@@ -273,7 +287,7 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
             hair_obj = context.object
-            hc = HairCollection(hair_obj, human.body_obj, dg, bm)
+            hc = HairCollection(hair_obj, human.body_obj, dg)
             objs = hc.create_mesh()
             hair_objs.extend(objs)
             for obj in objs:
