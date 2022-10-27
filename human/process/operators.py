@@ -9,7 +9,7 @@ import uuid
 
 import bpy
 from HumGen3D.backend import hg_log
-from HumGen3D.human.base.collections import add_to_collection
+from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
 from mathutils import Vector
 

@@ -14,14 +14,14 @@ from bpy.types import Object  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
-from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
+from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
-from .base.collections import add_to_collection
-from .base.decorators import injected_context
-from .base.exceptions import HumGenException
-from .base.render import set_eevee_ao_and_strip
+from ..common.collections import add_to_collection
+from ..common.decorators import injected_context
+from ..common.exceptions import HumGenException
+from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
 from .clothing.footwear import FootwearSettings
 from .clothing.outfit import OutfitSettings

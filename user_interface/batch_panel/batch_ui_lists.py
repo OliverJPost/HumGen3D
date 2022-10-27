@@ -8,7 +8,7 @@ import bpy
 from HumGen3D.backend import preview_collections  # type: ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.backend.type_aliases import GenderStr
+from HumGen3D.common.type_aliases import GenderStr
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
