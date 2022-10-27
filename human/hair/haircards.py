@@ -2,18 +2,18 @@ import json
 import os
 import random
 from collections import defaultdict
-from typing import Any, Iterable, no_type_check
+from typing import Any, Iterable
 
 import bmesh
 import bpy
 import numpy as np
-from HumGen3D import Human, get_prefs
-from HumGen3D.extern.rdp import rdp  # noqa
-from HumGen3D.human.base.math import create_kdtree, normalize
-from HumGen3D.human.base.shapekey_calculator import (
+from HumGen3D import get_prefs
+from HumGen3D.common.math import create_kdtree, normalize
+from HumGen3D.common.shapekey_calculator import (
     matrix_multiplication,
     world_coords_from_obj,
 )
+from HumGen3D.extern.rdp import rdp  # noqa
 
 
 class HairCollection:
@@ -310,50 +310,3 @@ class HairCollection:
 
         for obj in self.objects.values():
             obj.data.materials.append(mat)
-
-
-class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
-    bl_idname = "hg3d.haircards"
-    bl_label = "Convert to hair cards"
-    bl_description = "Converts this system to hair cards"
-    bl_options = {"REGISTER", "UNDO"}
-
-    @no_type_check
-    def execute(self, context):
-        human = Human.from_existing(context.object)
-        dg = context.evaluated_depsgraph_get()
-        hair_objs = []
-
-        for mod in human.hair.regular_hair.modifiers:
-            ps = mod.particle_system
-            ps.settings.child_nbr = 400 // len(ps.particles)
-
-            with context.temp_override(
-                active_object=human.body_obj,
-                object=human.body_obj,
-                selected_objects=[
-                    human.body_obj,
-                ],
-            ):
-                bpy.ops.object.modifier_convert(modifier=mod.name)
-
-            hair_obj = context.object
-            hc = HairCollection(hair_obj, human.body_obj, dg)
-            objs = hc.create_mesh()
-            hair_objs.extend(objs)
-            for obj in objs:
-                obj.name += ps.name
-
-            hc.add_uvs()
-            hc.add_material()
-
-        return {"FINISHED"}
-        c = {}
-
-        c["object"] = c["active_object"] = hair_objs[0]
-        c["selected_objects"] = c["selected_editable_objects"] = hair_objs
-
-        bpy.ops.object.join(c)
-
-        for mod in human.body_obj.modifiers:  # noqa
-            mod.show_viewport = False
