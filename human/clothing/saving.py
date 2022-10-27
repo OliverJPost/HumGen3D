@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional
 import bpy
 import numpy as np
 from bpy.types import Context, Image, Object
-from HumGen3D.backend.type_aliases import DistanceDict
+from HumGen3D.common.type_aliases import DistanceDict
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -16,7 +16,7 @@ from HumGen3D.custom_content.content_saving import (
     save_objects_optimized,
     save_thumb,
 )
-from HumGen3D.human.base.shapekey_calculator import (
+from HumGen3D.common.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,

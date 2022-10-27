@@ -7,9 +7,9 @@ from typing import List, Optional
 
 import bpy
 from HumGen3D.backend import get_prefs, preview_collections
-from HumGen3D.backend.type_aliases import BpyEnum, C
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.common.type_aliases import BpyEnum, C
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.exceptions import HumGenException
 
 
 class PreviewCollectionContent:
@@ -58,7 +58,7 @@ class PreviewCollectionContent:
             raise ValueError(
                 (
                     f"Invalid category passed, '{category}'. "
-                    + "choose 'All' or an option from Human.get_categories()",
+                    + "choose 'All' or an option from HumGen3D.human.get_categories()",
                 )
             )
 

@@ -10,14 +10,14 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Union, cast
 import bpy
 import numpy as np
 from bpy.types import Object, ShapeKey
-from HumGen3D.backend.type_aliases import C
-from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.common.type_aliases import C
+from HumGen3D.common.decorators import injected_context
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.base.savable_content import SavableContent
+from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 
 if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey

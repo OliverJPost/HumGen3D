@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 import bpy
-from HumGen3D.backend.type_aliases import C  # type:ignore
+from HumGen3D.common.type_aliases import C  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
