@@ -6,16 +6,16 @@ from typing import TYPE_CHECKING
 
 import bpy
 import numpy as np
-from HumGen3D.backend.type_aliases import C
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.keys import ShapeKeyItem
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.backend import get_prefs, remove_broken_drivers
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 
 FACE_RIG_BONE_NAMES = [
     "brow_inner_up",

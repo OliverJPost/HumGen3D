@@ -3,15 +3,15 @@
 from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
-from HumGen3D.backend.type_aliases import C
-from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.common.type_aliases import C
+from HumGen3D.common.decorators import injected_context
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
-from ..base.prop_collection import PropCollection
+from ..common_baseclasses.prop_collection import PropCollection
 
 
 class FaceKeys(PropCollection):

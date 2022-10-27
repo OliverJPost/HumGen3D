@@ -14,14 +14,14 @@ from bpy.types import Object  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
-from HumGen3D.backend.type_aliases import BpyEnum, C, GenderStr
+from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
-from .base.collections import add_to_collection
-from .base.decorators import injected_context
-from .base.exceptions import HumGenException
-from .base.render import set_eevee_ao_and_strip
+from ..common.collections import add_to_collection
+from ..common.decorators import injected_context
+from ..common.exceptions import HumGenException
+from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
 from .clothing.footwear import FootwearSettings
 from .clothing.outfit import OutfitSettings
@@ -603,6 +603,29 @@ class Human:
         self.sett.content_saving_ui = False
 
         preview_collections["humans"].refresh(context)
+
+    @injected_context
+    def duplicate(self, context: C = None) -> Human:
+        rig_copy = self.rig_obj.copy()
+        rig_copy.data = self.rig_obj.data.copy()
+        context.collection.objects.link(rig_copy)
+        add_to_collection(context, rig_copy)
+
+        for obj in self.children:
+            obj_copy = obj.copy()
+            obj_copy.data = obj.data.copy()
+            obj_copy.parent = rig_copy
+            for mod in obj_copy.modifiers:
+                if mod.type == "ARMATURE":
+                    mod.object = rig_copy
+
+            # Reassign body_obj pointerproperty
+            if obj == self.body_obj:
+                rig_copy.HG.body_obj = obj_copy
+            context.collection.objects.link(obj_copy)
+            add_to_collection(context, obj_copy)
+
+        return Human.from_existing(obj_copy)  # type:ignore[return-value]
 
     @injected_context
     def render_thumbnail(

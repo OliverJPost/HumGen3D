@@ -3,6 +3,8 @@
 
 from typing import TYPE_CHECKING
 
+from .lod import LodSettings
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
@@ -16,3 +18,7 @@ class ProcessSettings:
     @property
     def baking(self) -> BakeSettings:
         return BakeSettings(self._human)
+
+    @property
+    def lod(self) -> LodSettings:
+        return LodSettings(self._human)

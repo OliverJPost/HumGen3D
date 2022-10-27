@@ -8,7 +8,7 @@ from typing import Iterable
 
 import bpy
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.memory_management import hg_delete
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 
 
