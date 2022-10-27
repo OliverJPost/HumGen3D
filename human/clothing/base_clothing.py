@@ -13,13 +13,13 @@ import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.backend.type_aliases import C
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human import clothing
-from HumGen3D.human.base.collections import add_to_collection
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.base.savable_content import SavableContent
-from HumGen3D.human.base.shapekey_calculator import (
+from HumGen3D.common.collections import add_to_collection
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from HumGen3D.common.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,

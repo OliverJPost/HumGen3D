@@ -10,14 +10,14 @@ import bpy
 from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
-from HumGen3D.backend.type_aliases import C
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human import hair
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.exceptions import HumGenException
-from HumGen3D.human.base.math import round_vector_to_tuple
-from HumGen3D.human.base.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.base.prop_collection import PropCollection
-from HumGen3D.human.base.savable_content import SavableContent
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.common.math import round_vector_to_tuple
+from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
+from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys

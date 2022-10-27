@@ -10,9 +10,9 @@ import bpy
 from bpy.types import Material, Object  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.backend.properties.bake_props import BakeProps
-from HumGen3D.backend.type_aliases import C
-from HumGen3D.human.base.decorators import injected_context
-from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.common.type_aliases import C
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 if TYPE_CHECKING:

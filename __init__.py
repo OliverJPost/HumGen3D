@@ -40,7 +40,7 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent  # type: ignore
 
-from HumGen3D.human.base.exceptions import HumGenException
+from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
 
 from .backend.auto_classes import _get_bpy_classes

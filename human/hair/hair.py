@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.backend import get_addon_root
-from HumGen3D.human.base.prop_collection import PropCollection
+from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings

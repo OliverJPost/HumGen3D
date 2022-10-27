@@ -2,11 +2,11 @@
 
 from typing import TYPE_CHECKING
 import bpy
-from HumGen3D.backend.type_aliases import C
+from HumGen3D.common.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
-from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.common.decorators import injected_context
 
 from .base_clothing import BaseClothing
 

@@ -4,12 +4,12 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.backend.type_aliases import C
-from HumGen3D.human.base.decorators import injected_context
+from HumGen3D.common.type_aliases import C
+from HumGen3D.common.decorators import injected_context
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
-from ..base.math import centroid
+from ...common.math import centroid
 
 if TYPE_CHECKING:
     from HumGen3D import Human

@@ -4,7 +4,7 @@ import random
 
 import bpy
 
-from ..human import Human
+from ..human.human import Human
 
 
 class HG_RANDOM_CHOICE(bpy.types.Operator):
