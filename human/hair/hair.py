@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.backend import get_addon_root
-from HumGen3D.human.base.prop_collection import PropCollection
+from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
@@ -61,6 +61,13 @@ class HairSettings:
                 if mod.type == "PARTICLE_SYSTEM"
             ]
         )
+
+    def set_connected(self, connected: bool) -> None:
+        with bpy.context.temp_override(active_object=self._human.body_obj):
+            if connected:
+                bpy.ops.particle.connect_hair(all=True)
+            else:
+                bpy.ops.particle.disconnect_hair(all=True)
 
     def children_set_hide(self, hide: bool) -> None:
         for ps in self._human.hair.particle_systems:

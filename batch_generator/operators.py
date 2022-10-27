@@ -7,8 +7,8 @@ import time
 
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.human.base.collections import add_to_collection
-from HumGen3D.human.base.render import set_eevee_ao_and_strip
+from HumGen3D.common.collections import add_to_collection
+from HumGen3D.common.render import set_eevee_ao_and_strip
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.batch_panel.batch_ui_lists import (
     batch_clothing_uilist_refresh,

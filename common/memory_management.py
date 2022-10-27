@@ -4,7 +4,7 @@ from typing import no_type_check
 
 import bpy
 
-from .logging import hg_log
+from ..backend.logging import hg_log
 
 
 @no_type_check
