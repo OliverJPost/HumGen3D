@@ -2,8 +2,9 @@
 
 from typing import Any, Union, cast
 
+import bpy
 import numpy as np
-from mathutils import Vector
+from mathutils import Vector, kdtree  # type:ignore
 
 
 def round_vector_to_tuple(
@@ -28,3 +29,21 @@ def centroid(coordinates: Union[list[TuplePoint], np.ndarray[Any, Any]]) -> Vect
     mz = sum(z) / len(z)
 
     return Vector((mx, my, mz))
+
+
+def create_kdtree(obj: bpy.types.Object) -> kdtree:
+    vertices = obj.data.vertices
+    size = len(vertices)
+    kd = kdtree.KDTree(size)  # type:ignore
+    for i, v in enumerate(vertices):
+        kd.insert(obj.matrix_world @ v.co, i)
+    kd.balance()
+    return kd
+
+
+def normalize(
+    vector_array: np.ndarray[Any, Any], axis: int = -1, order: int = 2
+) -> np.ndarray[Any, Any]:
+    l2 = np.atleast_1d(np.linalg.norm(vector_array, order, axis))
+    l2[l2 == 0] = 1
+    return vector_array / np.expand_dims(l2, axis)
