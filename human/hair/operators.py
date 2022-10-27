@@ -63,3 +63,14 @@ class HG_TOGGLE_HAIR_CHILDREN(bpy.types.Operator):
         human.hair.children_set_hide(not current_state)
 
         return {"FINISHED"}
+
+
+class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
+    bl_idname = "hg3d.haircards"
+    bl_label = "Convert to hair cards"
+    bl_description = "Converts this system to hair cards"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        human = Human.from_existing(context.object)
+        human.hair.regular_hair.convert_to_haircards(quality="high", context=context)

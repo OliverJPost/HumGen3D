@@ -4,17 +4,18 @@ import contextlib
 import json
 import os
 import random
-from typing import Optional, cast
+from typing import Literal, Optional, cast
 
 import bpy
 from bpy.types import Image  # type:ignore
+from human.hair.haircards import HairCollection
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human import hair
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
+from HumGen3D.common.type_aliases import C
+from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
@@ -39,6 +40,47 @@ class BaseHair:
             mod for mod in particle_mods if self._condition(mod.particle_system.name)
         ]
         return PropCollection(modifiers)
+
+    @injected_context
+    def convert_to_haircards(
+        self, quality: Literal["high"] = "high", context: C = None
+    ) -> bpy.types.Object:
+        dg = context.evaluated_depsgraph_get()
+
+        hair_objs: list[bpy.types.Object] = []
+        for mod in self.modifiers:
+            if not mod.show_viewport:
+                continue
+
+            ps = mod.particle_system
+            amount = 400 if quality == "high" else None  # TODO
+            ps.settings.child_nbr = amount // len(ps.particles)
+
+            body_obj = self._human.body_obj
+            with context.temp_override(
+                active_object=body_obj, object=body_obj, selected_objects=list(body_obj)
+            ):
+                bpy.ops.object.modifier_convert(modifier=mod.name)
+
+            hair_obj = context.object  # TODO this is bound to fail
+            hc = HairCollection(hair_obj, body_obj, dg)
+            objs = hc.create_mesh()
+            hair_objs.extend(objs)
+            for obj in objs:
+                obj.name += ps.name
+
+            hc.add_uvs()
+            hc.add_material()
+
+        with context.temp_override(
+            active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs
+        ):
+            bpy.ops.object.join()
+
+        for mod in self.modifiers:  # noqa
+            mod.show_viewport = False
+
+        return context.object  # TODO bound to fail
 
     @injected_context
     def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
