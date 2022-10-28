@@ -1,17 +1,11 @@
-from bpy.props import ( # type:ignore
-    BoolProperty,
-    EnumProperty,
-    IntProperty,
-    IntVectorProperty,
-    StringProperty,
-)
+# type:ignore
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-
-from ..preview_collections import preview_collections
+from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class CpackEditingSystem:
-
     # cpack editing props
     editing_cpack: StringProperty()
     cpack_content_search: StringProperty()
@@ -22,7 +16,7 @@ class CpackEditingSystem:
         description="",
         items=[
             ("starting_humans", "Starting Humans", "", 0),
-            # ("texture_sets",    "Texture sets",     "", 1),
+            # ("texture_sets",    "Texture sets",     "", 1), # noqa
             ("shapekeys", "Shapekeys", "", 2),
             ("hairstyles", "Hairstyles", "", 3),
             ("face_hair", "Facial hair", "", 4),
@@ -41,8 +35,10 @@ class CpackEditingSystem:
     hide_other_packs: BoolProperty(default=True)
 
     def _draw_cpack_editing_ui(self, layout, context):
-        """Draws the UI for editing content packs, this is an exclusive UI, no
-        other items of the preferences are shown while this is active
+        """Draws the UI for editing content packs.
+
+        This is an exclusive UI, no other items of the preferences are shown while this
+        is active
 
         Args:
             layout (UILayout): layout to draw in
@@ -99,24 +95,18 @@ class CpackEditingSystem:
         ).export = True
 
     def _draw_total_added_removed_counters(self, context, sidebar):
-        """Draws the three counters in the sidebar: Total items, added items and
-        removed items. Both added and removed have a dropdown showing all of
-        those items in a list
+        """Draws the three counters in the sidebar.
+
+        Total items, added items and removed items.
+        Both added and removed have a dropdown showing all of those items in a list
 
         Args:
             sidebar (UILayout): layout to draw in
         """
         coll = context.scene.custom_content_col
-        hg_icons = preview_collections["hg_icons"]
 
-        # Total
         sidebar.label(text=f"Total items: {len([c for c in coll if c.include])}")
 
-        kwargs = (
-            lambda c: {"icon": "BLANK1"}
-            if c.gender == "none"
-            else {"icon_value": hg_icons[f"{c.gender}_true"].icon_id}
-        )
         # TODO these two can be joined into one function
         # Added
         box = sidebar.box()
@@ -134,7 +124,11 @@ class CpackEditingSystem:
             col.scale_y = 0.5
             for c in newly_added_list:
                 row = col.row()
-                row.label(text=c.name, **kwargs(c))
+                if c.gender == "none":
+                    kwarg = {"icon_value": get_hg_icon(f"{c.gender}_true")}
+                else:
+                    kwarg = {"icon": "BLANK1"}
+                row.label(text=c.name, **kwarg)
                 row.prop(c, "include", text="")
 
         # Removed
@@ -157,8 +151,9 @@ class CpackEditingSystem:
                 row.prop(c, "include", text="")
 
     def _draw_main_topbar(self, main):
-        """Draws the top bar of the main section of the editing UI. This
-        contains the enum to swith categories and the filter items (search and
+        """Draws the top bar of the main section of the editing UI.
+
+        This contains the enum to swith categories and the filter items (search and
         hide others)
 
         Args:
@@ -187,24 +182,24 @@ class CpackEditingSystem:
         flow = col.grid_flow(row_major=True, even_columns=True, even_rows=True)
 
         categ = self.custom_content_categ
-        condition = lambda i: i.categ == categ and self.cpack_content_search in i.name
+        condition = (
+            lambda i: i.categ == categ and self.cpack_content_search in i.name
+        )  # FIXME
         for item in filter(condition, context.scene.custom_content_col):
             if self.hide_other_packs and item.existing_content:
                 continue
             box = flow.box()
             box.label(text=item.name)
-            hg_icons = preview_collections["hg_icons"]
             gender = item.gender
             if gender == "none":
                 box.label(icon="BLANK1")
             else:
                 box.label(
                     text=gender.capitalize(),
-                    icon_value=hg_icons[f"{gender}_true"].icon_id,
+                    icon_value=get_hg_icon(f"{gender}_true"),
                 )
-            try:
+            with contextlib.suppres(Exception):
                 box.template_icon(item.icon_value, scale=5)
-            except Exception:
-                pass
+
             incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
             box.prop(item, "include", text="Include", icon=incl_icon, toggle=True)

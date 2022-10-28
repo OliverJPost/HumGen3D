@@ -1,19 +1,49 @@
-import bpy
-from bpy.types import Context # type:ignore
-from HumGen3D.human.hair.basehair import BaseHair
-from HumGen3D.user_interface.feedback_func import ShowMessageBox
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from ..base.prop_collection import PropCollection
+from typing import TYPE_CHECKING
+
+import bpy
+from HumGen3D.common.type_aliases import C  # type:ignore
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
+
+from HumGen3D.human.hair.basehair import BaseHair
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
 class EyebrowSettings(BaseHair):
-    def __init__(self, human):
+    _startswith = "Eyebrows"
+
+    def __init__(self, human: "Human") -> None:
+        """Create instance for manipulating human eyebrows."""
         self._human = human
         self._startswith = "Eyebrow"
 
-    def _set_from_preset(self, preset_eyebrow):
-        """Sets the eyebrow named in preset_data as the only visible eyebrow
-        system
+    def remove_unused(self, context: C = None, _internal: bool = False) -> None:
+        remove_list = [
+            mod.particle_system.name for mod in self.modifiers if not mod.show_render
+        ]
+
+        if _internal and len(self.modifiers) == len(remove_list):
+            ShowMessageBox(
+                message="""All eyebrow systems are hidden (render),
+                        please manually remove particle systems you aren't using
+                        """
+            )
+            return
+
+        # TODO without bpy.ops
+        old_active = context.view_layer.objects.active
+        context.view_layer.objects.active = self._human.body_obj
+        for remove_name in remove_list:
+            ps_idx = self._human.hair.particle_systems.find(remove_name)
+            self.particle_systems.active_index = ps_idx
+            bpy.ops.object.particle_system_remove()
+        context.view_layer.objects.active = old_active
+
+    def _set_from_preset(self, preset_eyebrow: str) -> None:
+        """Sets the eyebrow named in preset_data as the only visible eyebrow system.
 
         Args:
             hg_body (Object): humgen body obj
@@ -36,32 +66,7 @@ class EyebrowSettings(BaseHair):
         else:
             preset_eyebrows.show_viewport = preset_eyebrows.show_render = True
 
-    def remove_unused(self, context: Context = None, _internal: bool = False):
-        if not context:
-            context = bpy.context
-
-        remove_list = [
-            mod.particle_system.name for mod in self.modifiers if not mod.show_render
-        ]
-
-        if _internal and len(self.modifiers) == len(remove_list):
-            ShowMessageBox(
-                message="""All eyebrow systems are hidden (render),
-                        please manually remove particle systems you aren't using
-                        """
-            )
-            return
-
-        # TODO without bpy.ops
-        old_active = context.view_layer.objects.active
-        context.view_layer.objects.active = self._human.body_obj
-        for remove_name in remove_list:
-            ps_idx = self._human.hair.particle_systems.find(remove_name)
-            self.particle_systems.active_index = ps_idx
-            bpy.ops.object.particle_system_remove()
-        context.view_layer.objects.active = old_active
-
-    def _switch_eyebrows(self, forward=True, report=False):
+    def _switch_eyebrows(self, forward: bool = True, report: bool = False) -> None:
         eyebrows = self.modifiers
         if not eyebrows:
             if report:
@@ -72,7 +77,7 @@ class EyebrowSettings(BaseHair):
                 self.report({"WARNING"}, "Only one eyebrow system found")
             return
 
-        idx, current_ps = next(
+        idx, current_ps = next(  # FIXME
             (
                 (i, mod)
                 for i, mod in enumerate(eyebrows)

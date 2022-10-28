@@ -1,169 +1,279 @@
 import json
-import math
 import os
 import random
 from collections import defaultdict
-from itertools import islice
-from typing import Dict, List, Tuple
+from typing import Any, Iterable
 
-import bpy  # type: ignore
-import mathutils
+import bmesh
+import bpy
 import numpy as np
-from HumGen3D.backend import get_prefs
-from HumGen3D.human.human import Human
-from mathutils import Matrix, Vector
+from HumGen3D import get_prefs
+from HumGen3D.common.math import create_kdtree, normalize
+from HumGen3D.common.shapekey_calculator import (
+    matrix_multiplication,
+    world_coords_from_obj,
+)
+from HumGen3D.extern.rdp import rdp  # noqa
 
 
-class Hair:
-    key_coordinates: np.ndarray
-    location: Tuple[float]
-    rotation: Tuple[float]
-    nearest_vert_normals: np.ndarray
-    particle_sys: bpy.types.ParticleSystem
-    perpendicular_card: bpy.types.Object
-    parallel_card: bpy.types.Object
+class HairCollection:
+    def __init__(
+        self,
+        hair_obj: bpy.types.Object,
+        body_obj: bpy.types.Object,
+        depsgraph: bpy.types.Depsgraph,
+        density_vertex_groups: list[bpy.types.VertexGroup],
+    ) -> None:
+        self.mx_world_hair_obj = hair_obj.matrix_world
+        self.density_vertex_groups = density_vertex_groups
+        body_obj_eval = body_obj.evaluated_get(depsgraph)
 
-    def __init__(self, mw, kd, guide_hair, particle_sys, verts):
-        self.location = guide_hair.location
-        self.rotation = guide_hair.rotation
-        self.key_coordinates = np.array([hk.co for hk in guide_hair.hair_keys])
+        kd = create_kdtree(body_obj, body_obj_eval)
 
-        self.nearest_vert_normals = np.empty(self.key_coordinates.shape)
-        for i, k_co in enumerate(self.key_coordinates):
-            nearest_vert_idx = kd.find(k_co)[1]
-            self.nearest_vert_normals[i] = verts[nearest_vert_idx].normal.normalized()
-
-        self.particle_system = particle_sys
-        self.perpendicular_card = None
-        self.parallel_card = None
-
-    def normalized(self, a, axis=-1, order=2):
-        l2 = np.atleast_1d(np.linalg.norm(a, order, axis))
-        l2[l2 == 0] = 1
-        return a / np.expand_dims(l2, axis)
-
-    def matrix_multiplication(
-        self, matrix: Matrix, coordinates: np.ndarray
-    ) -> np.ndarray:
-        vert_count = coordinates.shape[0]
-        coords_4d = np.ones((vert_count, 4), "f")
-        coords_4d[:, :-1] = coordinates
-
-        coords: np.ndarray = np.einsum("ij,aj->ai", matrix, coords_4d)[:, :-1]
-
-        return coords
-
-    def to_mesh(self, mw, scene):
-        hk_len = len(self.key_coordinates)
-        head_normals = self.nearest_vert_normals
-        hair_keys_next_coords = np.roll(self.key_coordinates, -1, axis=1)
-        hair_key_vectors = self.normalized(hair_keys_next_coords - self.key_coordinates)
-
-        perpendicular = np.cross(head_normals, hair_key_vectors)
-
-        length_correction = np.arange(0.01, 0.03, 0.02 / hk_len, dtype=np.float32)
-
-        length_correction = length_correction[::-1]
-        length_correction = np.expand_dims(length_correction, axis=-1)
-
-        perpendicular_offset = length_correction * np.abs(perpendicular)
-        head_normal_offset = length_correction * np.abs(head_normals) * 0.3
-
-        self.perpendicular_card = self.__create_mesh_from_offset(
-            mw, scene, perpendicular_offset
-        )
-        self.parallel_card = self.__create_mesh_from_offset(
-            mw, scene, head_normal_offset, check=True
+        hair_obj_world_co = world_coords_from_obj(hair_obj)
+        nearest_vert_idx = np.array([kd.find(co)[1] for co in hair_obj_world_co])
+        verts = body_obj.data.vertices
+        self.nearest_normals = np.array(
+            [tuple(verts[idx].normal.normalized()) for idx in nearest_vert_idx]
         )
 
-    def __create_mesh_from_offset(self, mw, scene, offset, check=False):
-        mesh = bpy.data.meshes.new(name=f"hair_{self.location}")
+        hair_coords = np.empty(len(hair_obj.data.vertices) * 3, dtype=np.float64)
+        mx_hair = hair_obj.matrix_world
+        hair_obj.data.vertices.foreach_get("co", hair_coords)
+        self.hair_coords = matrix_multiplication(mx_hair, hair_coords.reshape((-1, 3)))
 
-        vertices_right = self.key_coordinates + offset
-        vertices_left = np.flip(self.key_coordinates - offset, axis=0)
+        bm = bmesh.new()  # type:ignore[call-arg]
+        bm.from_mesh(hair_obj.data)
+        self.hairs = self._get_individual_hairs(bm)
+        bm.free()
+        self.objects: dict[int, bpy.types.Object] = {}
 
-        vertices = np.concatenate((vertices_left, vertices_right))
-        vertices_subdivided = self.__subdivide_coordinates(vertices, factor=1.3)
-        vertices_subdivided = self.matrix_multiplication(mw, vertices_subdivided)
+    @staticmethod
+    def _walk_island(vert: bmesh.types.BMVert) -> Iterable[int]:
+        """walk all un-tagged linked verts"""
+        vert.tag = True
+        yield vert.index
+        linked_verts = [
+            e.other_vert(vert) for e in vert.link_edges if not e.other_vert(vert).tag
+        ]
 
-        edges = []
+        for v in linked_verts:
+            if v.tag:
+                continue
+            yield from HairCollection._walk_island(v)
 
-        vert_count = vertices_subdivided.shape[0]
-        assert vert_count % 2 == 0
+    def _get_individual_hairs(
+        self, bm: bmesh.types.BMesh
+    ) -> dict[int, np.ndarray[Any, Any]]:
+        start_verts = []
+        for v in bm.verts:
+            if len(v.link_edges) == 1:
+                start_verts.append(v)
+        islands_dict: dict[int, list[np.ndarray[Any, Any]]] = defaultdict()  # noqa
 
-        faces = []
-        for i in range(int(vert_count / 2)):
-            faces.append((i, i + 1, vert_count - i - 2, vert_count - i - 1))
+        found_verts = set()
+        for start_vert in start_verts:
+            if tuple(start_vert.co) in found_verts:
+                continue
+            island_idxs = np.fromiter(self._walk_island(start_vert), dtype=np.int64)
+            island_co = self.hair_coords[island_idxs]
+            island_rdp_masked = island_idxs[
+                rdp(island_co, epsilon=0.005, return_mask=True)
+            ]
 
-        mesh.from_pydata(vertices_subdivided, edges, faces)
+            island = np.fromiter(island_rdp_masked, dtype=np.int64)
+            islands_dict.setdefault(len(island), []).append(island)
+            found_verts.add(island[-1])
+
+        return {
+            hair_len: np.array(islands) for hair_len, islands in islands_dict.items()
+        }
+
+    def create_mesh(self) -> Iterable[bpy.types.Object]:
+        for hair_co_len, hair_vert_idxs in self.hairs.items():
+            hair_coords = self.hair_coords[hair_vert_idxs]
+            nearest_normals = self.nearest_normals[hair_vert_idxs]
+
+            perpendicular = self._calculate_perpendicular_vec(
+                hair_co_len, hair_coords, nearest_normals
+            )
+
+            new_verts, new_verts_parallel = self._compute_new_ver_coordinaes(
+                hair_co_len, hair_coords, nearest_normals, perpendicular
+            )
+
+            faces, faces_parallel = self._compute_new_face_vert_idxs(
+                hair_co_len, hair_coords
+            )
+
+            all_verts = np.concatenate((new_verts, new_verts_parallel))
+            all_faces = np.concatenate((faces, faces_parallel + len(new_verts)))
+            all_faces = all_faces.reshape((-1, 4))
+
+            obj = self._create_obj_from_verts_and_faces(
+                f"hair_{hair_co_len}", all_verts, all_faces
+            )
+
+            bpy.context.scene.collection.objects.link(obj)  # TODO bpy
+
+            self.objects[hair_co_len] = obj
+            yield obj
+
+    @staticmethod
+    def _create_obj_from_verts_and_faces(
+        obj_name: str, all_verts: np.ndarray[Any, Any], all_faces: np.ndarray[Any, Any]
+    ) -> bpy.types.Object:
+        mesh = bpy.data.meshes.new(name="hair")
+        all_verts_as_tuples = [tuple(co) for co in all_verts]
+        all_faces_as_tuples = [tuple(idxs) for idxs in all_faces]
+
+        mesh.from_pydata(all_verts_as_tuples, [], all_faces_as_tuples)
         mesh.update()
 
         for f in mesh.polygons:
             f.use_smooth = True
 
-        obj = bpy.data.objects.new(f"hair_{self.location}", mesh)
-
-        scene.collection.objects.link(obj)
-
+        obj = bpy.data.objects.new(obj_name, mesh)  # type:ignore[arg-type]
         return obj
 
-    def __subdivide_coordinates(self, coords: np.ndarray, factor: float = 2.0):
-        c_len = coords.shape[0]
+    @staticmethod
+    def _compute_new_face_vert_idxs(
+        hair_co_len: int, hair_coords: np.ndarray[Any, Any]
+    ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+        faces = np.empty((len(hair_coords), hair_co_len - 1, 4), dtype=np.int64)
 
-        # Round samples to nearest EVEN integer
-        samples = math.ceil(c_len * factor / 2.0) * 2
+        for i in range(hair_coords.shape[0]):
+            for j in range(hair_co_len - 1):
+                corr = i * hair_co_len * 2
+                faces[i, j, :] = (
+                    corr + j,
+                    corr + j + 1,
+                    corr + hair_co_len * 2 - j - 2,
+                    corr + hair_co_len * 2 - j - 1,
+                )
+        faces_parallel = faces.copy()
+        return faces, faces_parallel
 
-        steps_new = np.linspace(0, 1, samples)
-        steps_old = np.linspace(0, 1, c_len)
+    @staticmethod
+    def _compute_new_ver_coordinaes(
+        hair_co_len: int,
+        hair_coords: np.ndarray[Any, Any],
+        nearest_normals: np.ndarray[Any, Any],
+        perpendicular: np.ndarray[Any, Any],
+    ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+        length_correction = HairCollection._calculate_length_correction(hair_co_len)
+        perpendicular_offset = length_correction * perpendicular
+        head_normal_offset = length_correction * np.abs(nearest_normals) * 0.3
 
-        co_interp = np.empty((samples, 3), dtype=np.float32)
+        hair_coords_right = hair_coords + perpendicular_offset
+        hair_coords_left = np.flip(hair_coords, axis=1) - perpendicular_offset
+        hair_coords_top = hair_coords + head_normal_offset  # noqa
+        hair_coords_bottom = hair_coords - head_normal_offset  # noqa
 
-        for i in range(3):
-            axis_co = coords[:, i]
-            axis_interp = np.interp(steps_new, steps_old, axis_co)
+        new_verts = np.concatenate((hair_coords_left, hair_coords_right), axis=1)
+        new_verts_parallel = np.concatenate(
+            (hair_coords_top, hair_coords_bottom), axis=1
+        )
 
-            co_interp[:, i] = axis_interp
+        new_verts = new_verts.reshape((-1, 3))
+        new_verts_parallel = new_verts_parallel.reshape((-1, 3))
+        return new_verts, new_verts_parallel
 
-        return co_interp
+    @staticmethod
+    def _calculate_perpendicular_vec(
+        hair_co_len: int,
+        hair_coords: np.ndarray[Any, Any],
+        nearest_normals: np.ndarray[Any, Any],
+    ) -> np.ndarray[Any, Any]:
+        hair_keys_next_coords = np.roll(hair_coords, -1, axis=1)
+        hair_key_vectors = normalize(hair_keys_next_coords - hair_coords)
+        if hair_co_len > 1:
+            hair_key_vectors[:, -1] = hair_key_vectors[:, -2]
 
-    def add_uv(self):
-        for obj in [self.perpendicular_card, self.parallel_card]:
-            poly_count = len(obj.data.polygons)
+        # Fix for bug in Numpy returning NoReturn causing unreachable code
+        def crossf(a: np.ndarray, b: np.ndarray, axis) -> np.ndarray:  # type: ignore
+            return np.cross(a, b, axis=axis)
 
-            haircard_json = os.path.join(
-                get_prefs().filepath,
-                "hair",
-                "haircards",
-                "HairMediumLength_zones.json",
-            )
-            with open(haircard_json, "r") as f:
-                zone_dict = json.load(f)
+        perpendicular = crossf(nearest_normals, hair_key_vectors, 2)
+        return perpendicular
 
+    @staticmethod
+    def _calculate_length_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
+        length_correction = np.arange(0.01, 0.03, 0.02 / hair_co_len, dtype=np.float32)
+
+        length_correction = length_correction[::-1]
+        length_correction = np.expand_dims(length_correction, axis=-1)
+        return length_correction
+
+    def add_uvs(self) -> None:
+        haircard_json = os.path.join(
+            get_prefs().filepath,
+            "hair",
+            "haircards",
+            "HairMediumLength_zones.json",
+        )
+        with open(haircard_json, "r") as f:
+            zone_dict = json.load(f)
+
+        flattened_hairzones = []
+        for hz in zone_dict["long"]["dense"]["wide"]:
+            flattened_hairzones.append(hz)
+        for hz in zone_dict["long"]["dense"]["narrow"]:
+            flattened_hairzones.append(hz)
+        for hz in zone_dict["long"]["sparse"]["wide"]:
+            flattened_hairzones.append(hz)
+        for hz in zone_dict["long"]["sparse"]["narrow"]:
+            flattened_hairzones.append(hz)
+
+        for vert_len, obj in self.objects.items():
             uv_layer = obj.data.uv_layers.new()
 
-            vert_loop_dict: Dict[int, List[bpy.types.uvloop]] = {}
+            if not obj.data.polygons:
+                continue
 
-            for poly in obj.data.polygons:
-                for vert_idx, loop_idx in zip(poly.vertices, poly.loop_indices):
-                    loop = uv_layer.data[loop_idx]
-                    if vert_idx not in vert_loop_dict:
-                        vert_loop_dict[vert_idx] = [
-                            loop,
-                        ]
-                    else:
-                        vert_loop_dict[vert_idx].append(loop)
+            vert_loop_dict = self._create_vert_loop_dict(obj, uv_layer)
 
-            flattened_hairzones = []
-            for hz in zone_dict["long"]["dense"]["wide"]:
-                flattened_hairzones.append(hz)
-            for hz in zone_dict["long"]["dense"]["narrow"]:
-                flattened_hairzones.append(hz)
+            self._set_vert_group_uvs(flattened_hairzones, vert_len, obj, vert_loop_dict)
+
+    @staticmethod
+    def _create_vert_loop_dict(
+        obj: bpy.types.Object, uv_layer: bpy.types.MeshUVLoopLayer
+    ) -> dict[int, list[bpy.types.MeshUVLoop]]:
+        vert_loop_dict: dict[int, list[bpy.types.MeshUVLoop]] = {}
+
+        for poly in obj.data.polygons:
+            for vert_idx, loop_idx in zip(poly.vertices, poly.loop_indices):
+                loop = uv_layer.data[loop_idx]  # type:ignore
+                if vert_idx not in vert_loop_dict:
+                    vert_loop_dict[vert_idx] = [
+                        loop,
+                    ]
+                else:
+                    vert_loop_dict[vert_idx].append(loop)
+        return vert_loop_dict
+
+    @staticmethod
+    def _set_vert_group_uvs(
+        flattened_hairzones: list[  # noqa
+            tuple[tuple[float, float], tuple[float, float]]
+        ],
+        vert_len: int,
+        obj: bpy.types.Object,
+        vert_loop_dict: dict[int, list[bpy.types.MeshUVLoop]],
+    ) -> None:
+        verts = obj.data.vertices
+        for i in range(0, len(verts), vert_len * 2):
+            vert_count = vert_len * 2
+            hair_verts = verts[i : i + vert_count]  # noqa
 
             vert_pairs = []
-            vert_count = len(obj.data.vertices)
-            half = len(obj.data.vertices) // 2
-            for vert in obj.data.vertices[:half]:
+            for vert in hair_verts[:vert_len]:
                 vert_pairs.append((vert.index, vert_count - vert.index - 1))
+
+            vert_pairs = zip(  # type:ignore
+                [v.index for v in hair_verts[:vert_len]],
+                list(reversed([v.index for v in hair_verts[vert_len:]])),
+            )
 
             chosen_zone = random.choice(flattened_hairzones)
             bottom_left, top_right = chosen_zone
@@ -179,18 +289,18 @@ class Hair:
                 y_max = top_right[1]
                 y_diff = y_max - y_min
 
-                y_relative = i / (half - 1)
+                y_relative = i / (vert_len - 1)
                 for loop in left_loops:
                     loop.uv = (x_max, y_min + y_diff * y_relative)
 
                 for loop in right_loops:
                     loop.uv = (x_min, y_min + y_diff * y_relative)
 
-    def add_material(self):
+    def add_material(self) -> None:
         mat = bpy.data.materials.get("HG_Haircards")
         if not mat:
             blendpath = os.path.join(
-                get_prefs().filepath, "hair", "haircards", "haircards.blend"
+                get_prefs().filepath, "hair", "haircards", "haircards_material.blend"
             )
             with bpy.data.libraries.load(blendpath, link=False) as (
                 _,
@@ -200,68 +310,11 @@ class Hair:
 
             mat = data_to.materials[0]
 
-        self.perpendicular_card.data.materials.append(mat)
-        self.parallel_card.data.materials.append(mat)
+        for obj in self.objects.values():
+            obj.data.materials.append(mat)
 
+    def add_haircap(self) -> bpy.types.Object:
+        vg_aggregate = np.zeros(len(self.hair_coords), dtype=np.float32)
 
-class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
-    """
-    Removes the corresponding hair system
-    """
-
-    bl_idname = "hg3d.haircards"
-    bl_label = "Convert to hair cards"
-    bl_description = "Converts this system to hair cards"
-    bl_options = {"REGISTER", "UNDO"}
-
-    def execute(self, context):
-        scene = context.scene
-        hg_rig = Human.from_existing(context.object)
-        dg = context.evaluated_depsgraph_get()
-
-        hg_body = hg_rig.HG.body_obj.evaluated_get(dg)
-
-        vertices = hg_body.data.vertices
-        size = len(vertices)
-        kd = mathutils.kdtree.KDTree(size)
-
-        for i, v in enumerate(vertices):
-            kd.insert(v.co, i)
-        kd.balance()
-
-        mw = hg_body.matrix_world
-
-        hairs: Hair = []
-        for ps in hg_body.particle_systems:
-            for gh in ps.particles:
-                hairs.append(Hair(mw, kd, gh, ps, vertices))
-
-        hairs = self.downsample_to_size(hairs, 100)
-
-        for hair in reversed(hairs):
-            hair.to_mesh(mw, scene)
-            hair.add_uv()
-            hair.add_material()
-
-        hair_objs = [h.parallel_card for h in hairs] + [
-            h.perpendicular_card for h in hairs
-        ]
-
-        c = {}
-
-        c["object"] = c["active_object"] = hair_objs[0]
-        c["selected_objects"] = c["selected_editable_objects"] = hair_objs
-
-        bpy.ops.object.join(c)
-
-        for mod in hg_body.modifiers:
-            mod.show_viewport = False
-
-        return {"FINISHED"}
-
-    def downsample_to_size(self, list_to_downsample, wanted_size):
-        ln = len(list_to_downsample)
-        if ln <= wanted_size:
-            return list_to_downsample
-        proportion = wanted_size / ln
-        return list(islice(list_to_downsample, 0, ln, int(1 / proportion)))
+        for vg in self.density_vertex_groups:
+            vg_aggregate += np.fromiter((v.value for v in vg.data), dtype=np.float32)
