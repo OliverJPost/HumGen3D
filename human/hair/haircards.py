@@ -22,8 +22,10 @@ class HairCollection:
         hair_obj: bpy.types.Object,
         body_obj: bpy.types.Object,
         depsgraph: bpy.types.Depsgraph,
+        density_vertex_groups: list[bpy.types.VertexGroup]
     ) -> None:
         self.mx_world_hair_obj = hair_obj.matrix_world
+        self.density_vertex_groups = density_vertex_groups
         body_obj_eval = body_obj.evaluated_get(depsgraph)
 
         kd = create_kdtree(body_obj, body_obj_eval)
@@ -310,3 +312,9 @@ class HairCollection:
 
         for obj in self.objects.values():
             obj.data.materials.append(mat)
+
+    def add_haircap(self) -> bpy.types.Object:
+        vg_aggregate = np.zeros(len(self.hair_coords), dtype=np.float32)
+
+        for vg in self.density_vertex_groups:
+            vg_aggregate += np.fromiter((v.value for v in vg.data), dtype=np.float32)

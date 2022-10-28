@@ -8,7 +8,6 @@ from typing import Literal, Optional, cast
 
 import bpy
 from bpy.types import Image  # type:ignore
-from human.hair.haircards import HairCollection
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
 from HumGen3D.common.decorators import injected_context
@@ -19,6 +18,7 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from HumGen3D.human.hair.haircards import HairCollection
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
@@ -71,6 +71,8 @@ class BaseHair:
 
             hc.add_uvs()
             hc.add_material()
+            cap_obj = hc.add_haircap()
+            hair_objs.extend(cap_obj)
 
         with context.temp_override(
             active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs
