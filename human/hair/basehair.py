@@ -58,7 +58,11 @@ class BaseHair:
 
             body_obj = self._human.body_obj
             with context.temp_override(
-                active_object=body_obj, object=body_obj, selected_objects=list(body_obj)
+                active_object=body_obj,
+                object=body_obj,
+                selected_objects=[
+                    body_obj,
+                ],
             ):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
@@ -71,8 +75,13 @@ class BaseHair:
 
             hc.add_uvs()
             hc.add_material()
-            cap_obj = hc.add_haircap()
-            hair_objs.extend(cap_obj)
+            density_vertex_groups = [
+                body_obj.vertex_groups[ps.vertex_group_density]
+                for ps in self.particle_systems
+                if ps.vertex_group_density
+            ]
+            cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
+            hair_objs.append(cap_obj)
 
         with context.temp_override(
             active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs

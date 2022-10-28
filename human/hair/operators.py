@@ -74,3 +74,4 @@ class HG_CONVERT_HAIRCARDS(bpy.types.Operator):
     def execute(self, context):
         human = Human.from_existing(context.object)
         human.hair.regular_hair.convert_to_haircards(quality="high", context=context)
+        return {"FINISHED"}
