@@ -1,19 +1,26 @@
+import contextlib
 import json
 import os
 import random
 from collections import defaultdict
-from typing import Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, Set
 
 import bmesh
 import bpy
 import numpy as np
 from HumGen3D import get_prefs
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.geometry import obj_from_pydata  # noqa
 from HumGen3D.common.math import create_kdtree, normalize
 from HumGen3D.common.shapekey_calculator import (
     matrix_multiplication,
     world_coords_from_obj,
 )
-from HumGen3D.extern.rdp import rdp  # noqa
+from HumGen3D.common.type_aliases import C
+from HumGen3D.extern.rdp import rdp
+
+if TYPE_CHECKING:
+    from ..human import Human
 
 
 class HairCollection:
@@ -22,13 +29,11 @@ class HairCollection:
         hair_obj: bpy.types.Object,
         body_obj: bpy.types.Object,
         depsgraph: bpy.types.Depsgraph,
-        density_vertex_groups: list[bpy.types.VertexGroup],
     ) -> None:
         self.mx_world_hair_obj = hair_obj.matrix_world
-        self.density_vertex_groups = density_vertex_groups
         body_obj_eval = body_obj.evaluated_get(depsgraph)
 
-        kd = create_kdtree(body_obj, body_obj_eval)
+        kd = create_kdtree(body_obj_eval)
 
         hair_obj_world_co = world_coords_from_obj(hair_obj)
         nearest_vert_idx = np.array([kd.find(co)[1] for co in hair_obj_world_co])
@@ -110,11 +115,13 @@ class HairCollection:
             all_faces = np.concatenate((faces, faces_parallel + len(new_verts)))
             all_faces = all_faces.reshape((-1, 4))
 
-            obj = self._create_obj_from_verts_and_faces(
-                f"hair_{hair_co_len}", all_verts, all_faces
+            obj = obj_from_pydata(
+                f"hair_{hair_co_len}",
+                all_verts,
+                faces=all_faces,
+                use_smooth=True,
+                context=bpy.context,
             )
-
-            bpy.context.scene.collection.objects.link(obj)  # TODO bpy
 
             self.objects[hair_co_len] = obj
             yield obj
@@ -313,8 +320,82 @@ class HairCollection:
         for obj in self.objects.values():
             obj.data.materials.append(mat)
 
-    def add_haircap(self) -> bpy.types.Object:
-        vg_aggregate = np.zeros(len(self.hair_coords), dtype=np.float32)
+    @injected_context
+    def add_haircap(
+        self,
+        human: "Human",
+        density_vertex_groups: list[bpy.types.VertexGroup],
+        context: C = None,
+    ) -> bpy.types.Object:
+        body_obj = human.body_obj
+        vert_count = len(body_obj.data.vertices)
 
-        for vg in self.density_vertex_groups:
-            vg_aggregate += np.fromiter((v.value for v in vg.data), dtype=np.float32)
+        vg_aggregate = np.zeros(vert_count, dtype=np.float32)
+
+        for vg in density_vertex_groups:
+            vg_values = np.zeros(vert_count, dtype=np.float32)
+            for i in range(vert_count):
+                with contextlib.suppress(RuntimeError):
+                    vg_values[i] = vg.weight(i)
+            vg_aggregate += vg_values
+
+        vert_idxs_to_duplicate = np.nonzero(vg_aggregate)[0]
+        vert_idxs_to_duplicate = expand_region(body_obj, vert_idxs_to_duplicate)
+        normals = np.empty(vert_count * 3, dtype=np.float64)
+        body_obj.data.vertices.foreach_get("normal", normals)
+        normals = normals.reshape((-1, 3))
+
+        vert_idx_set = set(vert_idxs_to_duplicate)
+        body_world_co = world_coords_from_obj(
+            body_obj, data=human.keys.all_deformation_shapekeys
+        )
+        vert_coordinates_to_duplicate = body_world_co[vert_idxs_to_duplicate]
+        vert_idx_translation = {
+            orig_idx: i for i, orig_idx in enumerate(vert_idxs_to_duplicate)
+        }
+
+        new_faces = []
+        for poly in body_obj.data.polygons:
+            # Check if all vertices of this face are in the vertices to keep set
+            if set(poly.vertices).issubset(vert_idx_set):
+                # Set original idx to new idx
+                new_faces.append([vert_idx_translation[v] for v in poly.vertices])
+
+        # 3mm offset
+        vert_coords_offset = (
+            vert_coordinates_to_duplicate + normals[vert_idxs_to_duplicate] * 0.003
+        )
+        obj = obj_from_pydata(
+            "hair_cap", vert_coords_offset, faces=new_faces, context=context
+        )
+
+        color_data = np.clip(vg_aggregate[vert_idxs_to_duplicate], 0, 1)
+        vc = (
+            obj.data.vertex_colors[0]
+            if obj.data.vertex_colors
+            else obj.data.vertex_colors.new(name="col")
+        )
+        for i, color_value in enumerate(color_data):
+            vc.data[i].color = (
+                color_value,
+                color_value,
+                color_value,
+                1,
+            )
+
+        return obj
+
+
+def expand_region(
+    obj: bpy.types.Object, vert_idxs: Iterable[int]
+) -> np.ndarray[Any, Any]:
+    bm = bmesh.new()  # type:ignore
+    bm.from_mesh(obj.data)
+    other_verts: Set[int] = set()
+    for vert_idx in vert_idxs:
+        other_verts.update(
+            (e.other_vert.index for e in bm.verts[vert_idx].link_edges)  # type:ignore
+        )
+
+    with_added_verts = vert_idxs.append(other_verts)
+    return np.unique(with_added_verts)
