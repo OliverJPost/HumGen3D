@@ -1,3 +1,5 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import bpy
 
 
@@ -21,7 +23,7 @@ the batch mode here:
         "wm.url_open",
         "Open tutorial in browser",
         "url",
-        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",  # TODO correct url
+        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",  # TODO correct url # noqa
     ),
 ]
 

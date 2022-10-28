@@ -1,16 +1,25 @@
-"""
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+""" # noqa D400
 context.scene.HG3D.batch
+
 Properties related to the Human Generator batch generator
 """
 
 
 import bpy
-from bpy.props import BoolProperty, EnumProperty, IntProperty  # type: ignore
-from HumGen3D.user_interface.batch_ui_lists import batch_uilist_refresh
+from bpy.props import (  # type: ignore
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+)
 
 
 class BatchProps(bpy.types.PropertyGroup):
-    """Subclass of HG_SETTINGS, contains properties related to the batch generator"""
+    """Subclass of HG_SETTINGS, contains properties related to the batch generator."""
+
+    _register_priority = 4
 
     # Modal props
     progress: IntProperty(
@@ -25,15 +34,6 @@ class BatchProps(bpy.types.PropertyGroup):
     female_chance: IntProperty(
         name="Female", subtype="PERCENTAGE", min=0, max=100, default=100
     )
-    caucasian_chance: IntProperty(
-        name="Caucasian", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
-    black_chance: IntProperty(
-        name="Black", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
-    asian_chance: IntProperty(
-        name="Asian", subtype="PERCENTAGE", min=0, max=100, default=100
-    )
 
     performance_statistics: BoolProperty(default=False)
 
@@ -44,6 +44,14 @@ class BatchProps(bpy.types.PropertyGroup):
     hair: BoolProperty(default=False)
     bake: BoolProperty(default=False)
 
+    expression_type: EnumProperty(
+        name="Expression type",
+        items=[
+            ("natural", "Natural", "", 0),
+            ("most_varied", "Most varied", "", 1),
+        ],
+        default="natural",
+    )
     hairtype: EnumProperty(
         name="Hair Type",
         items=[
@@ -51,17 +59,6 @@ class BatchProps(bpy.types.PropertyGroup):
             ("haircards", "Haircards", "", 1),
         ],
         default="particle",
-    )
-
-    clothing_inside: BoolProperty(
-        name="Inside",
-        default=True,
-        update=lambda a, b: batch_uilist_refresh(a, b, "outfits"),
-    )
-    clothing_outside: BoolProperty(
-        name="Outside",
-        default=True,
-        update=lambda a, b: batch_uilist_refresh(a, b, "outfits"),
     )
 
     marker_selection: EnumProperty(
@@ -89,25 +86,13 @@ class BatchProps(bpy.types.PropertyGroup):
     average_height_in_male: IntProperty(name="in", default=10, min=0, max=12)
     average_height_in_female: IntProperty(name="in", default=10, min=0, max=12)
 
-    standard_deviation: IntProperty(
+    standard_deviation: FloatProperty(
         name="Standard deviation",
-        default=5,
-        subtype="PERCENTAGE",
+        default=0.05,
         min=0,
-        max=10,
+        max=0.1,
     )
     show_height_examples: BoolProperty(default=False)
-
-    delete_backup: BoolProperty(name="Delete backup human", default=True)
-    apply_shapekeys: BoolProperty(name="Apply shape keys", default=True)
-    apply_armature_modifier: BoolProperty(name="Apply armature modifier", default=True)
-    remove_clothing_solidify: BoolProperty(
-        name="Remove clothing solidify", default=True
-    )
-    remove_clothing_subdiv: BoolProperty(name="Remove clothing subdiv", default=True)
-    apply_clothing_geometry_masks: BoolProperty(
-        name="Apply geometry masks", default=True
-    )
 
     texture_resolution: EnumProperty(
         name="Texture Resolution",
@@ -118,18 +103,6 @@ class BatchProps(bpy.types.PropertyGroup):
         ],
         default="optimised",
     )
-
-    poly_reduction: EnumProperty(
-        name="Polygon reduction",
-        items=[
-            ("none", "Disabled (original topology)", "", 0),
-            ("medium", "Medium (33% polycount)", "", 1),  # 2x unsubdivide
-            ("high", "High (15% polycount)", "", 2),  # 0.08 collapse
-            ("ultra", "Ultra (5% polycount)", "", 3),  # 0.025 collapse
-        ],
-        default="none",
-    )
-    apply_poly_reduction: BoolProperty(name="Apply poly reduction", default=True)
 
     hair_quality_particle: EnumProperty(
         name="Particle hair quality",

@@ -1,10 +1,11 @@
+# flake8: noqa
+
 import os
 from pathlib import Path
 
 import bpy  # type: ignore
-from bpy.types import Operator  # type: ignore
+from HumGen3D.backend import preview_collections
 from HumGen3D.backend.callback import msgbus
-from HumGen3D.backend import refresh_pcoll
 from HumGen3D.backend.update import check_update
 
 from .bl_ui_button import *
@@ -84,10 +85,10 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
 
     def on_invoke(self, context, event):
         if self.first_time:
-            sett = bpy.context.scene.HG3D
+            sett = bpy.context.scene.HG3D  # type:ignore[attr-defined]
             sett.subscribed = False
             msgbus(self, context)
-            refresh_pcoll(self, context, "humans")
+            preview_collections["humans"].refresh(context, None)
             check_update()
 
         widgets_panel = [self.button1, self.button2, self.button3, self.image1]

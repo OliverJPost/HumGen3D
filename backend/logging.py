@@ -1,11 +1,18 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
 import time
+from typing import Literal
 
 from .preferences import get_prefs
 
 
-def hg_log(*message, level="INFO"):
-    """Writes a log message to the console. Warning, Error and Critical produce
-    a color coded message.
+def hg_log(
+    *message: object,
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
+) -> None:
+    """Writes a log message to the console.
+
+    Warning, Error and Critical produce a color coded message.
 
     Args:
         message (str or list[str]): Message to display in log
@@ -15,7 +22,6 @@ def hg_log(*message, level="INFO"):
     Raises:
         ValueError: Raised if level string is not in possible levels
     """
-
     log_levels = (
         "DEBUG",
         "INFO",
@@ -46,24 +52,18 @@ def hg_log(*message, level="INFO"):
     }
 
     if level in bcolors:
-        print(bcolors[level] + level_tag + bcolors["ENDC"], *message)
+        print(bcolors[level] + level_tag + bcolors["ENDC"], *message)  # noqa T201
 
 
-def print_context(context):
-    context_dict = {
-        "active": context.object,
-        "active object": context.active_object,
-        "selected objects": context.selected_objects,
-        "area": context.area,
-        "scene": context.scene,
-        "mode": context.mode,
-        "view layer": context.view_layer,
-        "visible objects": context.visible_objects,
-    }
+def time_update(label: str, prev_time: float) -> float:
+    """Logging function to time code.
 
-    hg_log(context_dict)
+    Args:
+        label: What to print for this time update
+        prev_time: Output of a previous time_update or time.perf_counter()
 
-
-def time_update(label, prev_time) -> int:
+    Returns:
+        time.perf_counter() output
+    """
     hg_log(label, round(time.perf_counter() - prev_time, 2))
     return time.perf_counter()

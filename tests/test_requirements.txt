@@ -1,5 +1,0 @@
-# Install these packages in BOTH your regular Python and Blender's internal Python
-pytest>=7.1.2
-pytest-blender>=3.0.3
-pytest-cov>=3.0.0
-pytest-lazy-fixture>=0.6.3
