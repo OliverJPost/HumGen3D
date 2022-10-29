@@ -75,13 +75,15 @@ class BaseHair:
 
             hc.add_uvs()
             hc.add_material()
-            density_vertex_groups = [
-                body_obj.vertex_groups[ps.vertex_group_density]
-                for ps in self.particle_systems
-                if ps.vertex_group_density
-            ]
-            cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
-            hair_objs.append(cap_obj)
+
+        density_vertex_groups = [
+            body_obj.vertex_groups[ps.vertex_group_density]
+            for ps in self.particle_systems
+            if ps.vertex_group_density
+        ]
+
+        cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
+        hair_objs.append(cap_obj)
 
         with context.temp_override(
             active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs
