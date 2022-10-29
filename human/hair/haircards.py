@@ -22,6 +22,8 @@ from HumGen3D.extern.rdp import rdp
 if TYPE_CHECKING:
     from ..human import Human
 
+UVCoords = list[list[list[float]]]
+
 
 class HairCollection:
     def __init__(
@@ -220,17 +222,7 @@ class HairCollection:
             "HairMediumLength_zones.json",
         )
         with open(haircard_json, "r") as f:
-            zone_dict = json.load(f)
-
-        flattened_hairzones = []
-        for hz in zone_dict["long"]["dense"]["wide"]:
-            flattened_hairzones.append(hz)
-        for hz in zone_dict["long"]["dense"]["narrow"]:
-            flattened_hairzones.append(hz)
-        for hz in zone_dict["long"]["sparse"]["wide"]:
-            flattened_hairzones.append(hz)
-        for hz in zone_dict["long"]["sparse"]["narrow"]:
-            flattened_hairzones.append(hz)
+            hairzone_uv_dict = json.load(f)
 
         for vert_len, obj in self.objects.items():
             uv_layer = obj.data.uv_layers.new()
@@ -240,7 +232,7 @@ class HairCollection:
 
             vert_loop_dict = self._create_vert_loop_dict(obj, uv_layer)
 
-            self._set_vert_group_uvs(flattened_hairzones, vert_len, obj, vert_loop_dict)
+            self._set_vert_group_uvs(hairzone_uv_dict, vert_len, obj, vert_loop_dict)
 
     @staticmethod
     def _create_vert_loop_dict(
@@ -261,9 +253,7 @@ class HairCollection:
 
     @staticmethod
     def _set_vert_group_uvs(
-        flattened_hairzones: list[  # noqa
-            tuple[tuple[float, float], tuple[float, float]]
-        ],
+        hairzone_uv_dict: dict[str, dict[str, dict[str, UVCoords]]],  # noqa
         vert_len: int,
         obj: bpy.types.Object,
         vert_loop_dict: dict[int, list[bpy.types.MeshUVLoop]],
@@ -282,7 +272,21 @@ class HairCollection:
                 list(reversed([v.index for v in hair_verts[vert_len:]])),
             )
 
-            chosen_zone = random.choice(flattened_hairzones)
+            length = (hair_verts[0].co - hair_verts[vert_len].co).length
+            width = (hair_verts[0].co - hair_verts[-1].co).length
+            if length > 0.05:
+                subdict = random.choice(list(hairzone_uv_dict["long"].values()))
+                if width > 0.02:
+                    chosen_zone = random.choice(subdict["wide"])
+                else:
+                    chosen_zone = random.choice(subdict["narrow"])
+            else:
+                subdict = random.choice(list(hairzone_uv_dict["short"].values()))
+                if width > 0.01:
+                    chosen_zone = random.choice(subdict["wide"])
+                else:
+                    chosen_zone = random.choice(subdict["narrow"])
+
             bottom_left, top_right = chosen_zone
 
             for i, (vert_left, vert_right) in enumerate(vert_pairs):
@@ -339,6 +343,7 @@ class HairCollection:
                     vg_values[i] = vg.weight(i)
             vg_aggregate += vg_values
 
+        vg_aggregate = np.round(vg_aggregate, 4)
         vert_idxs_to_duplicate = np.nonzero(vg_aggregate)[0]
         vert_idxs_to_duplicate = expand_region(body_obj, vert_idxs_to_duplicate)
         normals = np.empty(vert_count * 3, dtype=np.float64)
