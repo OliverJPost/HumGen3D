@@ -45,7 +45,6 @@ class BaseHair:
     def convert_to_haircards(
         self, quality: Literal["high"] = "high", context: C = None
     ) -> bpy.types.Object:
-        dg = context.evaluated_depsgraph_get()
 
         hair_objs: list[bpy.types.Object] = []
         for mod in self.modifiers:
@@ -53,9 +52,7 @@ class BaseHair:
                 continue
 
             ps = mod.particle_system
-            amount = 400 if quality == "high" else None  # TODO
-            ps.settings.child_nbr = amount // len(ps.particles)
-
+            ps.settings.child_nbr = ps.settings.child_nbr // 10
             body_obj = self._human.body_obj
             with context.temp_override(
                 active_object=body_obj,
@@ -67,7 +64,7 @@ class BaseHair:
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
             hair_obj = context.object  # TODO this is bound to fail
-            hc = HairCollection(hair_obj, body_obj, dg)
+            hc = HairCollection(hair_obj, self._human)
             objs = hc.create_mesh()
             hair_objs.extend(objs)
             for obj in objs:
@@ -84,6 +81,7 @@ class BaseHair:
 
         cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
         hair_objs.append(cap_obj)
+        hc.set_node_values(self._human)
 
         with context.temp_override(
             active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs
