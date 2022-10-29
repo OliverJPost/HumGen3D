@@ -93,8 +93,9 @@ def deform_obj_from_difference(
     as_shapekey: bool = False,
 ) -> None:
 
-    sk = deform_obj.data.shape_keys.key_blocks.get(name)
+    sk = None
     if as_shapekey and not sk:
+        sk = deform_obj.data.shape_keys.key_blocks.get(name)
         sk = deform_obj.shape_key_add(name=name)
         sk.interpolation = "KEY_LINEAR"
         sk.value = 1
