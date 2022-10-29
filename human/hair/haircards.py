@@ -380,13 +380,13 @@ class HairCollection:
             if obj.data.vertex_colors
             else obj.data.vertex_colors.new(name="col")
         )
-        for i, color_value in enumerate(color_data):
-            vc.data[i].color = (
-                color_value,
-                color_value,
-                color_value,
-                1,
-            )
+        i = 0
+        for poly in obj.data.polygons:
+            for j, _ in enumerate(poly.loop_indices):
+                vert_idx = poly.vertices[j]
+                color_value = color_data[vert_idx]
+                vc.data[i].color = (color_value, color_value, color_value, 1.0)
+                i += 1
 
         return obj
 
