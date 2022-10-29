@@ -3,7 +3,7 @@ import json
 import os
 import random
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterable, Set
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Set
 
 import bmesh
 import bpy
@@ -13,7 +13,8 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.geometry import obj_from_pydata  # noqa
 from HumGen3D.common.math import create_kdtree, normalize
 from HumGen3D.common.shapekey_calculator import (
-    matrix_multiplication,
+    build_distance_dict,
+    deform_obj_from_difference,
     world_coords_from_obj,
 )
 from HumGen3D.common.type_aliases import C
@@ -29,29 +30,25 @@ class HairCollection:
     def __init__(
         self,
         hair_obj: bpy.types.Object,
-        body_obj: bpy.types.Object,
-        depsgraph: bpy.types.Depsgraph,
+        human: "Human",
     ) -> None:
         self.mx_world_hair_obj = hair_obj.matrix_world
-        body_obj_eval = body_obj.evaluated_get(depsgraph)
 
-        kd = create_kdtree(body_obj_eval)
+        body_world_coords_eval = world_coords_from_obj(
+            human.body_obj, data=human.keys.all_deformation_shapekeys
+        )
+        self.kd = create_kdtree(body_world_coords_eval)
 
-        hair_obj_world_co = world_coords_from_obj(hair_obj)
-        nearest_vert_idx = np.array([kd.find(co)[1] for co in hair_obj_world_co])
-        verts = body_obj.data.vertices
+        self.hair_coords = world_coords_from_obj(hair_obj)
+        nearest_vert_idx = np.array([self.kd.find(co)[1] for co in self.hair_coords])
+        verts = human.body_obj.data.vertices
         self.nearest_normals = np.array(
             [tuple(verts[idx].normal.normalized()) for idx in nearest_vert_idx]
         )
 
-        hair_coords = np.empty(len(hair_obj.data.vertices) * 3, dtype=np.float64)
-        mx_hair = hair_obj.matrix_world
-        hair_obj.data.vertices.foreach_get("co", hair_coords)
-        self.hair_coords = matrix_multiplication(mx_hair, hair_coords.reshape((-1, 3)))
-
         bm = bmesh.new()  # type:ignore[call-arg]
         bm.from_mesh(hair_obj.data)
-        self.hairs = self._get_individual_hairs(bm)
+        self.hairs = list(self._get_individual_hairs(bm))
         bm.free()
         self.objects: dict[int, bpy.types.Object] = {}
 
@@ -71,7 +68,8 @@ class HairCollection:
 
     def _get_individual_hairs(
         self, bm: bmesh.types.BMesh
-    ) -> dict[int, np.ndarray[Any, Any]]:
+    ) -> Iterable[tuple[np.ndarray[Any, Any], float]]:  # noqa[TAE002]
+
         start_verts = []
         for v in bm.verts:
             if len(v.link_edges) == 1:
@@ -80,24 +78,58 @@ class HairCollection:
 
         found_verts = set()
         for start_vert in start_verts:
-            if tuple(start_vert.co) in found_verts:
+            if start_vert.index in found_verts:
                 continue
             island_idxs = np.fromiter(self._walk_island(start_vert), dtype=np.int64)
-            island_co = self.hair_coords[island_idxs]
-            island_rdp_masked = island_idxs[
-                rdp(island_co, epsilon=0.005, return_mask=True)
+
+            yield island_idxs, np.linalg.norm(
+                self.hair_coords[island_idxs[0]] - self.hair_coords[island_idxs[-2]]
+            )
+
+            found_verts.add(island_idxs[-1])
+
+    def create_mesh(
+        self, quality: Literal["low", "medium", "high", "ultra"] = "high"
+    ) -> Iterable[bpy.types.Object]:
+
+        long_hairs = [hair for hair, length in self.hairs if length > 0.1]
+        medium_hairs = [hair for hair, length in self.hairs if 0.1 >= length > 0.05]
+        short_hairs = [hair for hair, length in self.hairs if 0.05 >= length]
+
+        quality_dict = {
+            "ultra": (1, 5, 6, 0.002, 0.5),
+            "high": (3, 6, 6, 0.003, 1),
+            "medium": (6, 12, 14, 0.005, 1),
+            "low": (15, 20, 20, 0.005, 2),
+        }
+        chosen_quality = quality_dict[quality]
+
+        all_hairs = []
+        for i, hair_list in enumerate((short_hairs, medium_hairs, long_hairs)):
+            if len(hair_list) > 30:
+                all_hairs.extend(hair_list[:: chosen_quality[i]])
+            else:
+                all_hairs.extend(hair_list)
+
+        rdp_downsized_hair_co_idxs = [
+            hair_vert_idxs[
+                rdp(
+                    self.hair_coords[hair_vert_idxs],
+                    epsilon=chosen_quality[3],
+                    return_mask=True,
+                )
             ]
+            for hair_vert_idxs in all_hairs
+        ]
+        hair_len_dict: dict[int, list[list[int]]] = defaultdict()  # noqa[TAE002]
+        for hair_vert_idxs in rdp_downsized_hair_co_idxs:
+            hair_len_dict.setdefault(len(hair_vert_idxs), []).append(hair_vert_idxs)
 
-            island = np.fromiter(island_rdp_masked, dtype=np.int64)
-            islands_dict.setdefault(len(island), []).append(island)
-            found_verts.add(island[-1])
-
-        return {
-            hair_len: np.array(islands) for hair_len, islands in islands_dict.items()
+        hair_len_dict_np: dict[int, np.ndarray[Any, Any]] = {
+            i: np.array(hairs) for i, hairs in hair_len_dict.items()
         }
 
-    def create_mesh(self) -> Iterable[bpy.types.Object]:
-        for hair_co_len, hair_vert_idxs in self.hairs.items():
+        for hair_co_len, hair_vert_idxs in hair_len_dict_np.items():
             hair_coords = self.hair_coords[hair_vert_idxs]
             nearest_normals = self.nearest_normals[hair_vert_idxs]
 
@@ -320,6 +352,10 @@ class HairCollection:
                 data_to.materials = ["HG_Haircards"]
 
             mat = data_to.materials[0]
+        else:
+            mat = mat.copy()
+
+        self.material = mat
 
         for obj in self.objects.values():
             obj.data.materials.append(mat)
@@ -344,51 +380,52 @@ class HairCollection:
             vg_aggregate += vg_values
 
         vg_aggregate = np.round(vg_aggregate, 4)
-        vert_idxs_to_duplicate = np.nonzero(vg_aggregate)[0]
-        vert_idxs_to_duplicate = expand_region(body_obj, vert_idxs_to_duplicate)
-        normals = np.empty(vert_count * 3, dtype=np.float64)
-        body_obj.data.vertices.foreach_get("normal", normals)
-        normals = normals.reshape((-1, 3))
+        vg_aggregate = np.clip(vg_aggregate, 0, 1)
 
-        vert_idx_set = set(vert_idxs_to_duplicate)
-        body_world_co = world_coords_from_obj(
-            body_obj, data=human.keys.all_deformation_shapekeys
+        blendfile = os.path.join(
+            get_prefs().filepath, "hair", "haircards", "haircap.blend"
         )
-        vert_coordinates_to_duplicate = body_world_co[vert_idxs_to_duplicate]
-        vert_idx_translation = {
-            orig_idx: i for i, orig_idx in enumerate(vert_idxs_to_duplicate)
-        }
+        with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
+            data_to.objects = [
+                "HG_Haircap",
+            ]
 
-        new_faces = []
-        for poly in body_obj.data.polygons:
-            # Check if all vertices of this face are in the vertices to keep set
-            if set(poly.vertices).issubset(vert_idx_set):
-                # Set original idx to new idx
-                new_faces.append([vert_idx_translation[v] for v in poly.vertices])
-
-        # 3mm offset
-        vert_coords_offset = (
-            vert_coordinates_to_duplicate + normals[vert_idxs_to_duplicate] * 0.003
+        haircap_obj = data_to.objects[0]
+        context.scene.collection.objects.link(haircap_obj)
+        haircap_obj.location = human.location
+        body_obj_eval_coords = world_coords_from_obj(
+            human.body_obj, data=human.keys.all_deformation_shapekeys
         )
-        obj = obj_from_pydata(
-            "hair_cap", vert_coords_offset, faces=new_faces, context=context
+        body_world_coords = world_coords_from_obj(human.body_obj)
+        haircap_world_coords = world_coords_from_obj(haircap_obj)
+        distance_dict = build_distance_dict(body_world_coords, haircap_world_coords)
+        deform_obj_from_difference(
+            "test", distance_dict, body_obj_eval_coords, haircap_obj, as_shapekey=False
         )
+        vc = haircap_obj.data.color_attributes[0]
 
-        color_data = np.clip(vg_aggregate[vert_idxs_to_duplicate], 0, 1)
-        vc = (
-            obj.data.vertex_colors[0]
-            if obj.data.vertex_colors
-            else obj.data.vertex_colors.new(name="col")
-        )
-        i = 0
-        for poly in obj.data.polygons:
-            for j, _ in enumerate(poly.loop_indices):
-                vert_idx = poly.vertices[j]
-                color_value = color_data[vert_idx]
-                vc.data[i].color = (color_value, color_value, color_value, 1.0)
-                i += 1
+        for i, vert_world_co in enumerate(haircap_world_coords):
+            nearest_vert_index = self.kd.find(vert_world_co)[1]
+            value = vg_aggregate[nearest_vert_index]
+            vc.data[i].color = (value, value, value, 1)
 
-        return obj
+        self.haircap_obj = haircap_obj
+
+        return haircap_obj
+
+    def set_node_values(self, human: "Human") -> None:
+        card_material = self.material
+        cap_material = self.haircap_obj.data.materials[0]
+
+        old_hair_mat = human.body_obj.data.materials[2]
+        old_node = old_hair_mat.node_tree.nodes.get("HG_Hair_V4")
+
+        for mat in (card_material, cap_material):
+            node = mat.node_tree.nodes.get("Group")
+            for inp_name in ("Lightness", "Redness"):
+                node.inputs[inp_name].default_value = old_node.inputs[
+                    inp_name
+                ].default_value
 
 
 def expand_region(
