@@ -1,8 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-from typing import Any, Union, cast
+from typing import Any, Iterable, Union, cast
 
-import bpy
 import numpy as np
 from mathutils import Vector, kdtree  # type:ignore
 
@@ -31,12 +30,14 @@ def centroid(coordinates: Union[list[TuplePoint], np.ndarray[Any, Any]]) -> Vect
     return Vector((mx, my, mz))
 
 
-def create_kdtree(obj: bpy.types.Object) -> kdtree:
-    vertices = obj.data.vertices
-    size = len(vertices)
+Coordinates = Union[Iterable[tuple[float, float, float]], np.ndarray[Any, Any]]
+
+
+def create_kdtree(coordinates: Coordinates) -> kdtree:
+    size = len(coordinates)  # type:ignore[arg-type]
     kd = kdtree.KDTree(size)  # type:ignore
-    for i, v in enumerate(vertices):
-        kd.insert(obj.matrix_world @ v.co, i)
+    for i, v in enumerate(coordinates):
+        kd.insert(v, i)
     kd.balance()
     return kd
 
