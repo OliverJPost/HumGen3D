@@ -392,15 +392,15 @@ class HairCollection:
 
 
 def expand_region(
-    obj: bpy.types.Object, vert_idxs: Iterable[int]
+    obj: bpy.types.Object, vert_idxs: np.ndarray[Any, Any]
 ) -> np.ndarray[Any, Any]:
     bm = bmesh.new()  # type:ignore
     bm.from_mesh(obj.data)
+    bm.verts.ensure_lookup_table()
     other_verts: Set[int] = set()
     for vert_idx in vert_idxs:
-        other_verts.update(
-            (e.other_vert.index for e in bm.verts[vert_idx].link_edges)  # type:ignore
-        )
+        v = bm.verts[vert_idx]  # type:ignore[index]
+        other_verts.update((e.other_vert(v).index for e in v.link_edges))
 
-    with_added_verts = vert_idxs.append(other_verts)
+    with_added_verts = np.append(vert_idxs, list(other_verts))
     return np.unique(with_added_verts)
