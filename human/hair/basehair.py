@@ -96,8 +96,7 @@ class BaseHair:
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
-        return context.object  # TODO bound to fail
-        return joined_object  # TODO bound to fail
+        return joined_object
 
     @injected_context
     def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
