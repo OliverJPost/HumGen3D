@@ -12,6 +12,7 @@ from HumGen3D import get_prefs
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.geometry import obj_from_pydata  # noqa
 from HumGen3D.common.math import create_kdtree, normalize
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
@@ -50,6 +51,7 @@ class HairCollection:
         bm.from_mesh(hair_obj.data)
         self.hairs = list(self._get_individual_hairs(bm))
         bm.free()
+        hg_delete(hair_obj)
         self.objects: dict[int, bpy.types.Object] = {}
 
     @staticmethod
