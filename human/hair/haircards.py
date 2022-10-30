@@ -426,10 +426,18 @@ class HairCollection:
         cap_material = self.haircap_obj.data.materials[0]
 
         old_hair_mat = human.body_obj.data.materials[2]
-        old_node = old_hair_mat.node_tree.nodes.get("HG_Hair_V4")
+        old_node = next(
+            node
+            for node in old_hair_mat.node_tree.nodes
+            if node.bl_idname == "ShaderNodeGroup"
+        )
 
         for mat in (card_material, cap_material):
-            node = mat.node_tree.nodes.get("Group")
+            node = next(
+                node
+                for node in mat.node_tree.nodes
+                if node.bl_idname == "ShaderNodeGroup"
+            )
             for inp_name in ("Lightness", "Redness"):
                 node.inputs[inp_name].default_value = old_node.inputs[
                     inp_name
