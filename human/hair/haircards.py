@@ -202,9 +202,17 @@ class HairCollection:
         nearest_normals: np.ndarray[Any, Any],
         perpendicular: np.ndarray[Any, Any],
     ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
-        length_correction = HairCollection._calculate_length_correction(hair_co_len)
-        perpendicular_offset = length_correction * perpendicular
-        head_normal_offset = length_correction * np.abs(nearest_normals) * 0.3
+        segment_correction = HairCollection._calculate_segment_correction(hair_co_len)
+        hair_length = np.linalg.norm(hair_coords[:, 0] - hair_coords[:, -1], axis=1)
+        length_correction = np.ones(hair_coords.shape[0])
+        np.place(length_correction, hair_length < 0.01, 0.8)
+        np.place(length_correction, hair_length < 0.005, 0.6)
+        length_correction = length_correction[:, None, None]
+        perpendicular_offset = segment_correction * perpendicular * length_correction
+
+        head_normal_offset = (
+            segment_correction * np.abs(nearest_normals) * length_correction * 0.3
+        )
 
         hair_coords_right = hair_coords + perpendicular_offset
         hair_coords_left = np.flip(hair_coords, axis=1) - perpendicular_offset
@@ -239,7 +247,8 @@ class HairCollection:
         return perpendicular
 
     @staticmethod
-    def _calculate_length_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
+    def _calculate_segment_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
+        """Makes an array of scalars to make the hair get narrower with each segment."""
         length_correction = np.arange(0.01, 0.03, 0.02 / hair_co_len, dtype=np.float32)
 
         length_correction = length_correction[::-1]
