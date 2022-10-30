@@ -83,15 +83,21 @@ class BaseHair:
             hair_objs.append(cap_obj)
         hc.set_node_values(self._human)
 
+        join_obj_name = hair_objs[0].name
         with context.temp_override(
-            active_object=hair_objs[0], object=hair_objs[0], selected_objects=hair_objs
+            active_object=hair_objs[0],
+            selected_editable_objects=hair_objs,
         ):
             bpy.ops.object.join()
+
+        joined_object = bpy.data.objects.get(join_obj_name)
+        joined_object.name = "Haircards"
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
         return context.object  # TODO bound to fail
+        return joined_object  # TODO bound to fail
 
     @injected_context
     def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
