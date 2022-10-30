@@ -419,7 +419,7 @@ class KeySettings:
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
         keys = []
         for key in self:
-            if key.name in ("hg_taller", "hg_shorter"):
+            if key.name in ("height_200", "height_150"):
                 continue
             if key.category == category:
                 keys.append(key)

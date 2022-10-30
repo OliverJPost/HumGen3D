@@ -4,8 +4,8 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
@@ -78,10 +78,10 @@ class HeightSettings:
 
         if value_cm > 184:
             value = (value_cm - 184) / (200 - 184)
-            livekey_name = "hg_taller"
+            livekey_name = "height_200"
         else:
             value = -((value_cm - 150) / (184 - 150) - 1)
-            livekey_name = "hg_shorter"
+            livekey_name = "height_150"
 
         if not value:
             return
