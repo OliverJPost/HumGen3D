@@ -9,6 +9,7 @@ import bmesh
 import bpy
 import numpy as np
 from HumGen3D import get_prefs
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.geometry import obj_from_pydata  # noqa
 from HumGen3D.common.math import create_kdtree, normalize
@@ -377,6 +378,7 @@ class HairCollection:
         human: "Human",
         density_vertex_groups: list[bpy.types.VertexGroup],
         context: C = None,
+        downsample_mesh: bool = False,
     ) -> bpy.types.Object:
         body_obj = human.body_obj
         vert_count = len(body_obj.data.vertices)
@@ -427,6 +429,23 @@ class HairCollection:
                 v1, v2 = edge.verts
                 vc.data[v1.index].color = (0, 0, 0, 1)
                 vc.data[v2.index].color = (0, 0, 0, 1)
+
+        if downsample_mesh:
+            edge_json = os.path.join(get_addon_root(), "human", "hair", "haircap.json")
+            with open(edge_json, "r") as f:
+                edge_idxs = set(json.load(f))
+
+            edges_to_dissolve = [edge for edge in bm.edges if edge.index in edge_idxs]
+
+            bmesh.ops.dissolve_edges(
+                bm, edges=edges_to_dissolve, use_verts=True, use_face_split=True
+            )
+
+            # Offset mesh to account for lowered resolution
+            for v in bm.verts:
+                v.co += v.normal * 0.1
+
+            bm.to_mesh(haircap_obj.data)
 
         self.haircap_obj = haircap_obj
         bm.free()
