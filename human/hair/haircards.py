@@ -409,6 +409,14 @@ class HairCollection:
             value = vg_aggregate[nearest_vert_index]
             vc.data[i].color = (value, value, value, 1)
 
+        bm = bmesh.new()  # type:ignore[call-arg]
+        bm.from_mesh(haircap_obj.data)
+        for edge in bm.edges:
+            if edge.is_boundary:
+                v1, v2 = edge.verts
+                vc.data[v1.index].color = (0, 0, 0, 1)
+                vc.data[v2.index].color = (0, 0, 0, 1)
+
         self.haircap_obj = haircap_obj
 
         return haircap_obj
