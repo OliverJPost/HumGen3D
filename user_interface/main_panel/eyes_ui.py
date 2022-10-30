@@ -2,6 +2,7 @@
 
 import bpy
 
+from ..panel_functions import prettify
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -38,9 +39,14 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
         ).random_type = "eyes"
         col.prop(
             nodes["HG_Scelera_Color"].inputs[2],
-            "default_value",
+            "value",
             text="Sclera Color",
         )
+
+        for key in self.human.eyes.keys:
+            bpy_key = key.as_bpy()
+            row = col.row()
+            row.prop(bpy_key, "value_limited", text=prettify(key.name), slider=True)
 
         col.separator()
 

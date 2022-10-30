@@ -1,9 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import random
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Union, cast
 
-from bpy.types import Material, Object  # type:ignore
+from bpy.types import Material, Object
+from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human  # type:ignore
@@ -62,6 +63,10 @@ class EyeSettings:
     @property
     def inner_material(self) -> Material:
         return cast(Material, self.eye_obj.data.materials[1])
+
+    @property
+    def keys(self) -> list[Union["ShapeKeyItem", "LiveKeyItem"]]:
+        return self._human.keys.filtered("special", "eyes")
 
     def randomize(self) -> None:
         nodes = self.inner_material.node_tree.nodes
