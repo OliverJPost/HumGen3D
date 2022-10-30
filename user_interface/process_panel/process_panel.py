@@ -224,7 +224,16 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     enabled_propname = "haircards_enabled"
 
     def draw(self, context):
-        self.layout.label(text="test")
+        col = self.layout.column()
+        col.scale_y = 1.5
+        hairc_sett = context.scene.HG3D.process.haircards
+
+        col.prop(hairc_sett, "quality")
+
+        message = """If you are baking textures, see Bake Textures menu for haircard \
+baking resolution."""
+
+        draw_paragraph(self.layout, text=message, enabled=False)
 
 
 class HG_PT_RIG(ProcessPanel, bpy.types.Panel):

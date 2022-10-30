@@ -55,6 +55,13 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 for obj in human.objects:
                     add_to_collection(context, obj, "Processing Results")
 
+            if pr_sett.haircards_enabled:
+                quality = pr_sett.haircards.quality
+                human.hair.regular_hair.convert_to_haircards(quality, context)
+                human.hair.eyebrows.convert_to_haircards(quality, context)
+                human.hair.eyelashes.convert_to_haircards(quality, context)
+                human.hair.face_hair.convert_to_haircards(quality, context)
+
             if pr_sett.bake:
                 human.process.baking.bake_all(
                     int(context.scene.HG3D.bake.samples), context
