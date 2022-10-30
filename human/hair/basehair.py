@@ -90,7 +90,7 @@ class BaseHair:
         ):
             bpy.ops.object.join()
 
-        joined_object = bpy.data.objects.get(join_obj_name)
+        joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
         joined_object.name = "Haircards"
 
         for mod in self.modifiers:  # noqa
