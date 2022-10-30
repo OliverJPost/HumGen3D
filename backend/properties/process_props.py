@@ -27,10 +27,27 @@ class LodProps(bpy.types.PropertyGroup):
     remove_clothing_solidify: BoolProperty(default=True)
 
 
+class HaircardProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    quality: EnumProperty(
+        name="Quality",
+        items=[
+            ("ultra", "Ultra", "", 0),
+            ("high", "High", "", 1),
+            ("medium", "Medium", "", 2),
+            ("low", "Low", "", 3),
+            ("haircap_only", "Haircap only", "", 4),
+        ],
+        default="high",
+    )
+
+
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
 
     lod: PointerProperty(type=LodProps)
+    haircards: PointerProperty(type=HaircardProps)
 
     bake: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)

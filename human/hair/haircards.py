@@ -429,11 +429,12 @@ class HairCollection:
                 vc.data[v2.index].color = (0, 0, 0, 1)
 
         self.haircap_obj = haircap_obj
+        bm.free()
 
         return haircap_obj
 
     def set_node_values(self, human: "Human") -> None:
-        card_material = self.material
+        card_material = self.material if hasattr(self, "material") else None
 
         cap_material = (
             self.haircap_obj.data.materials[0] if hasattr(self, "haircap_obj") else None
