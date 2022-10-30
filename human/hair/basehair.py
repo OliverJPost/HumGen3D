@@ -78,9 +78,9 @@ class BaseHair:
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
-
-        cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
-        hair_objs.append(cap_obj)
+        if density_vertex_groups:
+            cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
+            hair_objs.append(cap_obj)
         hc.set_node_values(self._human)
 
         with context.temp_override(

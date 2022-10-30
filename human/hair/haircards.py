@@ -423,7 +423,10 @@ class HairCollection:
 
     def set_node_values(self, human: "Human") -> None:
         card_material = self.material
-        cap_material = self.haircap_obj.data.materials[0]
+
+        cap_material = (
+            self.haircap_obj.data.materials[0] if hasattr(self, "haircap_obj") else None
+        )
 
         old_hair_mat = human.body_obj.data.materials[2]
         old_node = next(
@@ -433,6 +436,8 @@ class HairCollection:
         )
 
         for mat in (card_material, cap_material):
+            if not mat:
+                continue
             node = next(
                 node
                 for node in mat.node_tree.nodes
