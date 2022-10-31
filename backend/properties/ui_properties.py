@@ -22,7 +22,8 @@ def create_ui_toggles(ui_toggle_names):
 
     for name in ui_toggle_names:
         display_name = name.replace("_", " ").title()
-        prop_dict[name] = BoolProperty(name=display_name, default=False)
+        default = name in ("hair_mat",)
+        prop_dict[name] = BoolProperty(name=display_name, default=default)
 
     return prop_dict
 
