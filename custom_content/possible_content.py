@@ -87,12 +87,12 @@ def find_possible_content(context: bpy.types.Context) -> None:
         item.name = "Hairstyle"
         item.category = "hair"
 
-    if str(hash(human.outfit)) != hashes.get("$outfit") or show_unchanged:
+    if str(hash(human.clothing.outfit)) != hashes.get("$outfit") or show_unchanged:
         item = coll.add()
         item.name = "Outfit"
         item.category = "outfit"
 
-    if str(hash(human.footwear)) != hashes.get("$footwear") or show_unchanged:
+    if str(hash(human.clothing.footwear)) != hashes.get("$footwear") or show_unchanged:
         item = coll.add()
         item.name = "Footwear"
         item.category = "footwear"

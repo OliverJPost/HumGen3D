@@ -98,10 +98,10 @@ class HeightSettings:
             self.correct_armature(context)
             self.correct_eyes()
             self.correct_teeth()
-            for cloth_obj in self._human.outfit.objects:
-                self._human.outfit.deform_cloth_to_human(context, cloth_obj)
-            for shoe_obj in self._human.footwear.objects:
-                self._human.footwear.deform_cloth_to_human(context, shoe_obj)
+            for cloth_obj in self._human.clothing.outfit.objects:
+                self._human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
+            for shoe_obj in self._human.clothing.footwear.objects:
+                self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
     @injected_context
     def correct_armature(self, context: C = None) -> None:

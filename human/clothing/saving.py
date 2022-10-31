@@ -69,8 +69,8 @@ def save_clothing(
             body_coords_world,
         )
 
-    human.outfit.refresh_pcoll(context)
-    human.footwear.refresh_pcoll(context)
+    human.clothing.outfit.refresh_pcoll(context)
+    human.clothing.footwear.refresh_pcoll(context)
 
 
 def export_for_gender(

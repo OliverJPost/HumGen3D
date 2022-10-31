@@ -113,18 +113,20 @@ class BatchHumanGenerator:
             clothing_category = random.choice(self.clothing_categories)
         else:
             clothing_category = "All"
-        clothing_options = human.outfit.get_options(context, clothing_category)
+        clothing_options = human.clothing.outfit.get_options(context, clothing_category)
 
-        human.outfit.set(random.choice(clothing_options))
-        human.footwear.set_random(context)
+        human.clothing.outfit.set(random.choice(clothing_options))
+        human.clothing.footwear.set_random(context)
 
-        for cloth in human.outfit.objects:
-            human.outfit.randomize_colors(cloth)
-            human.outfit.set_texture_resolution(cloth, self.texture_resolution)
+        for cloth in human.clothing.outfit.objects:
+            human.clothing.outfit.randomize_colors(cloth)
+            human.clothing.outfit.set_texture_resolution(cloth, self.texture_resolution)
 
-        for cloth in human.footwear.objects:
-            human.footwear.randomize_colors(cloth)
-            human.footwear.set_texture_resolution(cloth, self.texture_resolution)
+        for cloth in human.clothing.footwear.objects:
+            human.clothing.footwear.randomize_colors(cloth)
+            human.clothing.footwear.set_texture_resolution(
+                cloth, self.texture_resolution
+            )
 
     def _set_expression(self, context: bpy.types.Context, human: Human) -> None:
         categories = human.expression.get_categories()
