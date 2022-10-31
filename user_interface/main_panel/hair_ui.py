@@ -37,27 +37,23 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             box (UILayout): box of hair section
             sett (PropertyGroup): HumGen props
         """
-        is_open, boxbox = self.draw_sub_spoiler(box, sett, "face_hair", "Face Hair")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "face_hair", "Face Hair")
         if not is_open:
             return
 
         self.draw_content_selector(layout=boxbox, pcoll_name="face_hair")
 
-    def _draw_hair_material_ui(self, box):
+    def _draw_hair_material_ui(self, layout):
         """Draws subsection with sliders for the three hair materials.
 
         Args:
             box (UILayout): layout.box of hair section
         """
-        boxbox = box.box()
-        boxbox.prop(
-            self.sett.ui,
-            "hair_mat",
-            icon="TRIA_DOWN" if self.sett.ui.hair_mat else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True,
+        is_open, box = self.draw_sub_spoiler(
+            layout, self.sett.ui, "hair_mat", "Material"
         )
-        if not self.sett.ui.hair_mat:
+
+        if not is_open:
             return
 
         gender = self.human.gender
@@ -87,13 +83,13 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             new_hair_node = False
 
         if new_hair_node:
-            boxbox.prop(self.sett, "hair_shader_type", text="Shader")
+            box.prop(self.sett, "hair_shader_type", text="Shader")
 
-        row = boxbox.row(align=True)
+        row = box.row(align=True)
         row.scale_y = 1.5
         row.prop(self.sett, "hair_mat_{}".format(gender), expand=True)
 
-        col = boxbox.column()
+        col = box.column()
 
         col.prop(
             hair_node.inputs["Hair Lightness"],

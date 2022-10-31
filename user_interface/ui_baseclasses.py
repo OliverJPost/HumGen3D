@@ -443,7 +443,7 @@ class MainPanelPart(HGPanel):
         ).section_name = "closed"
 
     def draw_sub_spoiler(
-        self, layout, sett, prop_name, label
+        self, layout, sett_namespace, prop_name, label
     ) -> "tuple[bool, bpy.types.UILayout]":
         """Draws a ciollapsable box, with title and arrow symbol.
 
@@ -460,15 +460,15 @@ class MainPanelPart(HGPanel):
         """
         boxbox = layout.box()
         boxbox.prop(
-            sett.ui,
+            sett_namespace,
             prop_name,
-            icon="TRIA_DOWN" if getattr(sett.ui, prop_name) else "TRIA_RIGHT",
+            icon="TRIA_DOWN" if getattr(sett_namespace, prop_name) else "TRIA_RIGHT",
             text=label,
             emboss=False,
             toggle=True,
         )
 
-        spoiler_open = getattr(sett.ui, prop_name)
+        spoiler_open = getattr(sett_namespace, prop_name)
 
         return spoiler_open, boxbox
 
