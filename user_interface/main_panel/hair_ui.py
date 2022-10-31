@@ -12,23 +12,29 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         sett = self.sett
-        hg_rig = self.human.rig_obj
         body_obj = self.human.body_obj
 
         hair_systems = self._get_hair_systems(body_obj)
 
-        self.draw_content_selector(pcoll_name="hair")
+        row = self.layout.row()
+        row.scale_y = 1.5
+        row.prop(sett.ui, "hair_ui_tab", expand=True)
+
+        if sett.ui.hair_ui_tab == "head":
+            self.draw_content_selector(pcoll_name="hair")
+            hair_systems = self.human.hair.regular_hair.particle_systems
+        elif sett.ui.hair_ui_tab == "face":
+            self.draw_content_selector(pcoll_name="face_hair")
+            hair_systems = self.human.hair.face_hair.particle_systems
+        else:
+            self._draw_eyebrow_switch(self.layout)
+            hair_systems = list(self.human.hair.eyebrows.particle_systems) + list(
+                self.human.hair.eyelashes.particle_systems
+            )
         col = self.layout.column()
-        if hg_rig.HG.gender == "male":
-            self._draw_face_hair_section(col, sett)
 
-        self._draw_hair_material_ui(col)
+        self._draw_hair_material_ui(col, sett.ui.hair_ui_tab)
         self._draw_hair_length_ui(hair_systems, col)
-
-        return  # disable hair cards UI until operator works
-
-        if hair_systems:
-            self._draw_hair_cards_ui(box)
 
     def _draw_face_hair_section(self, box, sett):
         """Shows template_icon_view for facial hair systems.
@@ -43,7 +49,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         self.draw_content_selector(layout=boxbox, pcoll_name="face_hair")
 
-    def _draw_hair_material_ui(self, layout):
+    def _draw_hair_material_ui(self, layout, category):
         """Draws subsection with sliders for the three hair materials.
 
         Args:
@@ -56,11 +62,9 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        gender = self.human.gender
-
-        categ = (
-            self.sett.hair_mat_male if gender == "male" else self.sett.hair_mat_female
-        )
+        row = box.row()
+        row.scale_y = 1.5
+        row.prop(self.sett, "hair_shader_type", text="Shader")
 
         mat_names = {
             "eye": ".HG_Hair_Eye",
@@ -70,21 +74,14 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         hair_mat = next(
             mat
             for mat in self.human.body_obj.data.materials
-            if mat.name.startswith(mat_names[categ])
+            if mat.name.startswith(mat_names[category])
         )
 
         hair_node = hair_mat.node_tree.nodes["HG_Hair_V4"]
 
-        box.prop(self.sett, "hair_shader_type", text="Shader")
-
-        row = box.row(align=True)
-        row.scale_y = 1.5
-        row.prop(self.sett, "hair_mat_{}".format(gender), expand=True)
-
         col = box.column(align=True)
-
+        col.scale_y = 1.2
         col_h = col.column(align=True)
-
         col_h.prop(
             hair_node.inputs["Lightness"],
             "default_value",
@@ -98,7 +95,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             slider=True,
         )
 
-        if categ == "eye":
+        if category == "eye":
             return
 
         col.separator()
@@ -158,3 +155,23 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         if self.sett.hair_cards_ui:
             box.operator("hg3d.haircards")
+
+    def _draw_eyebrow_switch(self, layout) -> bpy.types.UILayout:
+        """UI for switching between different types of eyebrows.
+
+        Args:
+            box (UILayout): eye section layout.box
+
+        Returns:
+            UILayout: box in box for other hair controls to be placed in
+        """
+        row = layout.row()
+        row.alignment = "CENTER"
+        row.label(text="Eyebrows:", icon="OUTLINER_OB_CURVES")
+        row = layout.row(align=True)
+        row.operator(
+            "hg3d.eyebrowswitch", text="Previous", icon="TRIA_LEFT"
+        ).forward = False
+        row.operator(
+            "hg3d.eyebrowswitch", text="Next", icon="TRIA_RIGHT"
+        ).forward = True

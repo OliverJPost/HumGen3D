@@ -2,12 +2,13 @@
 
 from typing import TYPE_CHECKING
 
+from HumGen3D.human.hair.basehair import BaseHair
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 
-class EyelashSettings:
+class EyelashSettings(BaseHair):
     _startswith = "Eyelashes"
 
     def __init__(self, _human: "Human") -> None:

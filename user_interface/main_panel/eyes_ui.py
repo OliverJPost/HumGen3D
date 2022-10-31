@@ -54,26 +54,6 @@ class HG_PT_EYES(MainPanelPart, bpy.types.Panel):
 
         self._draw_hair_length_ui(eye_systems, col)
 
-    def _draw_eyebrow_switch(self, col) -> bpy.types.UILayout:
-        """UI for switching between different types of eyebrows.
-
-        Args:
-            box (UILayout): eye section layout.box
-
-        Returns:
-            UILayout: box in box for other hair controls to be placed in
-        """
-        row = col.row()
-        row.alignment = "CENTER"
-        row.label(text="Eyebrows:", icon="OUTLINER_OB_CURVES")
-        row = col.row(align=True)
-        row.operator(
-            "hg3d.eyebrowswitch", text="Previous", icon="TRIA_LEFT"
-        ).forward = False
-        row.operator(
-            "hg3d.eyebrowswitch", text="Next", icon="TRIA_RIGHT"
-        ).forward = True
-
     def _get_eye_systems(self, body_obj) -> list:
         """Get a list of all particle systems belojnging to eyeborws and eyelashes.
 

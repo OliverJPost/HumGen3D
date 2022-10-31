@@ -11,9 +11,22 @@ Properties related to the user interface of Human Generator.
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty  # type:ignore
+from HumGen3D import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
+
+
+def get_hair_tab_items(_, context):
+    hair_enum = [
+        ("head", "Head", "", get_hg_icon("hair"), 0),
+        ("eye", "Eye", "", get_hg_icon("eyes"), 2),
+    ]
+    human = Human.from_existing(context.object)
+    if human.gender == "male":
+        hair_enum.append(("face", "Face", "", 1))
+
+    return hair_enum
 
 
 def create_ui_toggles(ui_toggle_names):
@@ -157,4 +170,9 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("frig", "Face Rig", "", 1),
         ],
         default="1click",
+    )
+
+    hair_ui_tab: EnumProperty(
+        name="Hair Tab",
+        items=get_hair_tab_items,
     )
