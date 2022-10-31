@@ -308,7 +308,7 @@ class MainPanelPart(HGPanel):
         human = Human.from_existing(context.object, strict_check=False)
         if not human:
             return False
-        if human.is_batch_result[0]:  # noqa
+        if "cloth" in context.object or "shoe" in context.object:  # noqa
             return False
         return True
 
