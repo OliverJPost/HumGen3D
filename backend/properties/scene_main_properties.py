@@ -137,7 +137,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("face", "Facial Hair", "", 1),
             ("head", "Hair", "", 2),
         ],
-        default="eye",
+        default="head",
     )
 
     hair_mat_female: EnumProperty(
@@ -146,7 +146,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("eye", "Eyebrows & Eyelashes", "", 0),
             ("head", "Hair", "", 1),
         ],
-        default="eye",
+        default="head",
     )
 
     hair_shader_type: EnumProperty(
