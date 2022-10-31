@@ -5,18 +5,18 @@ import bpy
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
-class ClothingPanel(MainPanelPart):
+class HG_PT_CLOTHING(MainPanelPart, bpy.types.Panel):
+    bl_idname = "HG_PT_CLOTHING"
+    phase_name = "clothing"
+
     @subpanel_draw
     def draw(self, context):
         """Draws a template_icon_view for adding outfits."""
-        self.draw_content_selector()
 
+        col = self.layout.column()
+        sett = context.scene.HG3D
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(sett.ui, "clothing_tab", expand=True)
 
-class HG_PT_OUTFIT(ClothingPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_OUTFIT"
-    phase_name = "outfit"
-
-
-class HG_PT_FOOTWEAR(ClothingPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_FOOTWEAR"
-    phase_name = "footwear"
+        self.draw_content_selector(self.layout, sett.ui.clothing_tab)

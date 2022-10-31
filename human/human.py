@@ -16,14 +16,14 @@ from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
 
+from .clothing.clothing import ClothingSettings
+
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from ..common.collections import add_to_collection
 from ..common.decorators import injected_context
 from ..common.exceptions import HumGenException
 from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
-from .clothing.footwear import FootwearSettings
-from .clothing.outfit import OutfitSettings
 from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
@@ -211,8 +211,8 @@ class Human:
 
         human.props.version = bl_info["version"]
         human.props.hashes["$pose"] = str(hash(human.pose))
-        human.props.hashes["$outfit"] = str(hash(human.outfit))
-        human.props.hashes["$footwear"] = str(hash(human.footwear))
+        human.props.hashes["$outfit"] = str(hash(human.clothing.outfit))
+        human.props.hashes["$footwear"] = str(hash(human.clothing.footwear))
         human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
 
         return human
@@ -291,13 +291,9 @@ class Human:
     def pose(self) -> PoseSettings:
         return PoseSettings(self)
 
-    @property  # TODO make cached
-    def outfit(self) -> OutfitSettings:
-        return OutfitSettings(self)
-
-    @property  # TODO make cached
-    def footwear(self) -> FootwearSettings:
-        return FootwearSettings(self)
+    @property
+    def clothing(self) -> ClothingSettings:
+        return ClothingSettings(self)
 
     @property  # TODO make cached
     def expression(self) -> ExpressionSettings:

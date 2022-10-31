@@ -57,7 +57,9 @@ class LodSettings:
         remove_subdiv: float = True,
         remove_solidify: float = True,
     ) -> None:
-        clothing_objs = self._human.outfit.objects + self._human.footwear.objects
+        clothing_objs = (
+            self._human.clothing.outfit.objects + self._human.clothing.footwear.objects
+        )
 
         for obj in clothing_objs:
             if decimate_ratio < 1.0:

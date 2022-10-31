@@ -73,8 +73,7 @@ def active_phase_enum(self, context):
             ("height", "Height", "", get_hg_icon("height"), 2),
             ("skin", "Skin", "", get_hg_icon("skin"), 4),
             ("hair", "Hair", "", get_hg_icon("hair"), 6),
-            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
-            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
+            ("clothing", "Clothing", "", get_hg_icon("outfit"), 7),
             ("pose", "Pose", "", get_hg_icon("pose"), 9),
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
             ("", "Tabs", ""),
@@ -175,4 +174,12 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     hair_ui_tab: EnumProperty(
         name="Hair Tab",
         items=get_hair_tab_items,
+    )
+
+    clothing_tab: EnumProperty(
+        name="Clothing Tab",
+        items=lambda _, _c: [
+            ("outfit", "Outfit", "", get_hg_icon("outfit"), 0),
+            ("footwear", "Footwear", "", get_hg_icon("footwear"), 1),
+        ],
     )

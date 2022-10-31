@@ -25,8 +25,7 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         "face",
         "skin",
         "hair",
-        "outfit",
-        "footwear",
+        "clothing",
         "pose",
         "expression",
     ]
