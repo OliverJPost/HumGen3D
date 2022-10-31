@@ -26,7 +26,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             self.draw_content_selector(col, pcoll_name="hair")
             hair_systems = self.human.hair.regular_hair.particle_systems
         elif sett.ui.hair_ui_tab == "face":
-            self.draw_content_selector(pcoll_name="face_hair")
+            self.draw_content_selector(col, pcoll_name="face_hair")
             hair_systems = self.human.hair.face_hair.particle_systems
         else:
             self._draw_eyebrow_switch(self.layout)

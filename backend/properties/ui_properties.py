@@ -20,11 +20,11 @@ from ..callback import hg_callback, tab_change_update
 def get_hair_tab_items(_, context):
     hair_enum = [
         ("head", "Head", "", get_hg_icon("hair"), 0),
-        ("eye", "Eye", "", get_hg_icon("eyes"), 2),
+        ("eye", "Eye", "", get_hg_icon("eyebrows"), 2),
     ]
     human = Human.from_existing(context.object)
     if human.gender == "male":
-        hair_enum.append(("face", "Face", "", 1))
+        hair_enum.append(("face", "Face", "", get_hg_icon("face_hair"), 1))
 
     return hair_enum
 
