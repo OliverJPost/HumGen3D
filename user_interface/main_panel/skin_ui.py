@@ -25,10 +25,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         self._draw_texture_subsection(sett, col)
         self._draw_main_skin_subsection(sett, col)
-        self._draw_light_dark_subsection(sett, col)
         self._draw_freckles_subsection(sett, col)
-        self._draw_beautyspots_subsection(sett, col)
-        self._draw_age_subsection(sett, col)
 
         gender = self.human.gender
         if gender == "female":
@@ -102,40 +99,6 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             return
 
         self.draw_content_selector(layout=boxbox, pcoll_name="texture")
-
-    def _draw_light_dark_subsection(self, sett, box):
-        """Collapsable section with sliders for dark and light areas on the skin.
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            box (UILayout): layout.box of the skin section
-            nodes (Shadernode list): All nodes in the .human material
-        """
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "light_dark", "Light & dark areas"
-        )
-        if not is_open:
-            return
-
-        nodes = self.human.skin.nodes
-
-        light_hsv = nodes["Lighten_hsv"]
-        dark_hsv = nodes["Darken_hsv"]
-
-        col = boxbox.column(align=False)
-        col.scale_y = 1.2
-        col.prop(
-            dark_hsv.inputs["Value"],
-            "default_value",
-            text="Dark areas",
-            slider=True,
-        )
-        col.prop(
-            light_hsv.inputs["Value"],
-            "default_value",
-            text="Light areas",
-            slider=True,
-        )
 
     def _draw_age_subsection(self, sett, box):
         """Collapsable section with sliders age effects.
