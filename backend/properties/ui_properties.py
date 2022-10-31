@@ -156,8 +156,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     pose_tab_switch: EnumProperty(
         name="posing",
         items=[
-            ("library", "Library", "", 0),
-            ("rigify", "Rigify", "", 1),
+            ("library", "Library", "", "ASSET_MANAGER", 0),
+            ("rigify", "Rigify", "", "CON_ARMATURE", 1),
         ],
         default="library",
     )
