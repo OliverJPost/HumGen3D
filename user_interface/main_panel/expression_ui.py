@@ -2,7 +2,6 @@
 
 import bpy
 
-from ..panel_functions import draw_sub_spoiler
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -65,7 +64,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         if not expr_sks:
             return
 
-        is_open, boxbox = draw_sub_spoiler(
+        is_open, boxbox = self.draw_sub_spoiler(
             self.layout, self.sett, "expression_slider", "Strength"
         )
         if not is_open:
