@@ -524,32 +524,29 @@ class MainPanelPart(HGPanel):
             label = f"This is {name}"
         return label
 
-    def _draw_hair_length_ui(self, hair_systems, box):
+    def _draw_hair_length_ui(self, hair_systems, layout):
         """Shows a collapsable list of hair systems, with a slider for length.
 
         Args:
             hair_systems (list): list of particle hair systems
             box (UILayout): layout.box of hair section
         """
-        boxbox = box.box()
-        boxbox.prop(
-            self.sett.ui,
-            "hair_length",
-            icon="TRIA_DOWN" if self.sett.ui.hair_length else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True,
+        is_open, box = self.draw_sub_spoiler(
+            layout, self.sett.ui, "hair_length", "Hair Length"
         )
-        if not self.sett.ui.hair_length:
+
+        if not is_open:
             return
 
         if not hair_systems:
             box.label(text="No hairstyles loaded")
             return
 
-        flow = self.get_flow(box)
+        col = box.column(align=True)
+        col.scale_y = 1.2
         for ps in hair_systems:
             ps_name = ps.name.replace("fh_", "").replace("_", " ").title()
 
-            row = flow.row()
+            row = col.row(align=True)
             row.prop(ps.settings, "child_length", text=ps_name)
             row.operator("hg3d.removehair", text="", icon="TRASH").hair_system = ps.name
