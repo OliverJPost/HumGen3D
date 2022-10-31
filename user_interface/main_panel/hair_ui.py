@@ -22,8 +22,8 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         if hg_rig.HG.gender == "male":
             self._draw_face_hair_section(col, sett)
 
-        self._draw_hair_length_ui(hair_systems, col)
         self._draw_hair_material_ui(col)
+        self._draw_hair_length_ui(hair_systems, col)
 
         return  # disable hair cards UI until operator works
 
@@ -72,50 +72,44 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             for mat in self.human.body_obj.data.materials
             if mat.name.startswith(mat_names[categ])
         )
-        if "HG_Hair_V3" in [n.name for n in hair_mat.node_tree.nodes]:
-            hair_node = hair_mat.node_tree.nodes["HG_Hair_V3"]
-            new_hair_node = True
-        elif "HG_Hair_V2" in [n.name for n in hair_mat.node_tree.nodes]:
-            hair_node = hair_mat.node_tree.nodes["HG_Hair_V2"]
-            new_hair_node = True
-        else:
-            hair_node = hair_mat.node_tree.nodes["HG_Hair"]
-            new_hair_node = False
 
-        if new_hair_node:
-            box.prop(self.sett, "hair_shader_type", text="Shader")
+        hair_node = hair_mat.node_tree.nodes["HG_Hair_V4"]
+
+        box.prop(self.sett, "hair_shader_type", text="Shader")
 
         row = box.row(align=True)
         row.scale_y = 1.5
         row.prop(self.sett, "hair_mat_{}".format(gender), expand=True)
 
-        col = box.column()
+        col = box.column(align=True)
 
-        col.prop(
-            hair_node.inputs["Hair Lightness"],
+        col_h = col.column(align=False)
+        col_h.scale_y = 1.3
+        col_h.prop(
+            hair_node.inputs["Lightness"],
             "default_value",
             text="Lightness",
             slider=True,
         )
-        col.prop(
-            hair_node.inputs["Hair Redness"],
+        col_h.prop(
+            hair_node.inputs["Redness"],
             "default_value",
             text="Redness",
             slider=True,
         )
-        col.prop(hair_node.inputs["Roughness"], "default_value", text="Roughness")
-
-        if "Hue" in hair_node.inputs:
-            col.prop(
-                hair_node.inputs["Hue"],
-                "default_value",
-                text="Hue (For dyed hair)",
-            )
 
         if categ == "eye":
             return
 
-        col.label(text="Effects:")
+        col.separator()
+
+        self.draw_subtitle("Effects", col, "GP_MULTIFRAME_EDITING")
+        col.prop(
+            hair_node.inputs["Hue"],
+            "default_value",
+            text="Hue (For dyed hair)",
+        )
+        col.prop(hair_node.inputs["Roughness"], "default_value", text="Roughness")
         col.prop(
             hair_node.inputs["Pepper & Salt"],
             "default_value",
