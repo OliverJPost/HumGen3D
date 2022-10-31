@@ -83,8 +83,8 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         col = box.column(align=True)
 
-        col_h = col.column(align=False)
-        col_h.scale_y = 1.3
+        col_h = col.column(align=True)
+
         col_h.prop(
             hair_node.inputs["Lightness"],
             "default_value",
