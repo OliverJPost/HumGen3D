@@ -165,8 +165,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     expression_type: EnumProperty(
         name="Expression",
         items=[
-            ("1click", "1-Click", "", 0),
-            ("frig", "Face Rig", "", 1),
+            ("1click", "1-Click", "", "ASSET_MANAGER", 0),
+            ("frig", "Face Rig", "", "MESH_MONKEY", 1),
         ],
         default="1click",
     )
