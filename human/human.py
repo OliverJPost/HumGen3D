@@ -6,7 +6,6 @@ import contextlib
 import json
 import os
 import random
-from sys import platform
 from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import bpy
@@ -518,9 +517,6 @@ class Human:
         human = cls(hg_rig)
         human.keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
-
-        if platform == "darwin":
-            human.skin._mac_material_fix()
 
         human.skin._set_gender_specific()
         human.skin._remove_opposite_gender_specific()

@@ -194,12 +194,6 @@ class SkinSettings:
 
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
 
-    def _mac_material_fix(self) -> None:
-        self.links.new(
-            self.nodes["Mix_reroute_1"].outputs[0],  # type:ignore[index]
-            self.nodes["Mix_reroute_2"].inputs[1],  # type:ignore[index]
-        )
-
     def _set_gender_specific(self) -> None:
         """Male and female humans of HumGen use the same shader, but one node
         group is different. This function ensures the right nodegroup is connected
