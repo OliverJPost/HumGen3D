@@ -16,12 +16,14 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
 
         hair_systems = self._get_hair_systems(body_obj)
 
-        row = self.layout.row()
+        col = self.layout.column()
+
+        row = col.row()
         row.scale_y = 1.5
         row.prop(sett.ui, "hair_ui_tab", expand=True)
 
         if sett.ui.hair_ui_tab == "head":
-            self.draw_content_selector(pcoll_name="hair")
+            self.draw_content_selector(col, pcoll_name="hair")
             hair_systems = self.human.hair.regular_hair.particle_systems
         elif sett.ui.hair_ui_tab == "face":
             self.draw_content_selector(pcoll_name="face_hair")

@@ -19,4 +19,4 @@ class HG_PT_CLOTHING(MainPanelPart, bpy.types.Panel):
         row.scale_y = 1.5
         row.prop(sett.ui, "clothing_tab", expand=True)
 
-        self.draw_content_selector(self.layout, sett.ui.clothing_tab)
+        self.draw_content_selector(col, sett.ui.clothing_tab)

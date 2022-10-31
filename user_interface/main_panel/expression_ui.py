@@ -12,16 +12,17 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         """UI for selecting expressions from template_icon_view or adding facial rig."""
-        row = self.layout.row(align=True)
+
+        col = self.layout.column()
+
+        row = col.row(align=True)
         row.scale_y = 1.5
         row.prop(self.sett.ui, "expression_type", expand=True)
 
-        self.layout.separator()
-
         if self.sett.ui.expression_type == "1click":
-            self._draw_oneclick_subsection(self.layout)
+            self._draw_oneclick_subsection(col)
         else:
-            self._draw_frig_subsection(self.layout)
+            self._draw_frig_subsection(col)
 
     def _draw_oneclick_subsection(self, layout):
         if "facial_rig" in self.human.body_obj:
@@ -38,7 +39,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             )
             return
 
-        self.draw_content_selector()
+        self.draw_content_selector(layout)
 
         layout.separator(factor=0.5)
 
