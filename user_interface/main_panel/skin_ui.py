@@ -341,7 +341,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         beard_node = nodes["Gender_Group"]
 
-        flow = self.get_flow(sett, boxbox)
+        flow = self.get_flow(boxbox)
         flow.scale_y = 1.2
         flow.prop(beard_node.inputs[2], "default_value", text="Mustache", slider=True)
         flow.prop(beard_node.inputs[3], "default_value", text="Beard", slider=True)
