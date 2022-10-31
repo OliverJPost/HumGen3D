@@ -72,7 +72,6 @@ def active_phase_enum(self, context):
             ("face", "Face", "", get_hg_icon("face"), 3),
             ("height", "Height", "", get_hg_icon("height"), 2),
             ("skin", "Skin", "", get_hg_icon("skin"), 4),
-            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
             ("hair", "Hair", "", get_hg_icon("hair"), 6),
             ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
@@ -118,6 +117,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "content_saving",
                 "other",
                 "main",
+                "eyes",
             ]
         )
     )
