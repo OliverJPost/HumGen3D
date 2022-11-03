@@ -16,6 +16,7 @@ from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
+from HumGen3D.human.materials import MaterialSettings
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
@@ -301,6 +302,10 @@ class Human:
         return ProcessSettings(self)
 
     @property
+    def materials(self) -> MaterialSettings:
+        return MaterialSettings(self)
+
+    @property
     def objects(self) -> Iterable[Object]:
         """Yields all the Blender objects that the human consists of"""
         for child in self.rig_obj.children:
@@ -342,6 +347,10 @@ class Human:
         )
 
         return upper_teeth
+
+    @property
+    def haircards_obj(self) -> Optional[Object]:
+        return next((c for c in self.children if "hg_haircard" in c), None)
 
     @property
     def children(self) -> Iterable[Object]:

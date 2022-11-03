@@ -278,6 +278,19 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
                 col.prop(naming_sett, prop.identifier, **mirrored_icon)
 
 
+def create_token_row(layout, token_name):
+    row = layout.row()
+    row.scale_y = 0.8
+    row.label(text=token_name)
+
+
+def create_disabled_row(layout, text):
+    row = layout.row()
+    row.scale_y = 0.8
+    row.enabled = False
+    row.label(text=text)
+
+
 class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RENAMING"
     bl_label = "Other Renaming"
@@ -285,7 +298,57 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     enabled_propname = "renaming_enabled"
 
     def draw(self, context):
-        pass
+        rename_sett = context.scene.HG3D.process.renaming
+
+        box = self.layout.box()
+        self.draw_subtitle("Tokens", box, "HELP")
+
+        col = box.column(align=True)
+        create_token_row(col, ". (period at start of name)")
+        create_disabled_row(col, "Hides material in Blender")
+        create_token_row(col, "Suffix")
+        create_disabled_row(col, "Custom suffix: e.g. _LOD1")
+        create_token_row(col, "{name}")
+        create_disabled_row(col, "Human name: e.g. Jake")
+        create_token_row(col, "{original_name}")
+        create_disabled_row(col, "Original name: e.g. HG_Eyes")
+        create_token_row(col, "{custom}")
+        create_disabled_row(col, "Custom token defined below.")
+
+        col = self.layout.column()
+        col.use_property_decorate = False
+        col.use_property_split = True
+        col.prop(rename_sett, "custom_token", text="{custom}")
+        col.prop(rename_sett, "suffix", text="Suffix")
+        self.layout.separator()
+
+        self.draw_subtitle("Objects", self.layout, "MESH_CUBE")
+        row = self.layout.row()
+        row.alignment = "CENTER"
+        row.scale_y = 0.8
+        row.prop(rename_sett, "use_suffix")
+        for prop_name in (
+            "rig_obj",
+            "body_obj",
+            "eye_obj",
+            "haircards_obj",
+            "upper_teeth_obj",
+            "lower_teeth_obj",
+            "clothing",
+        ):
+            self.layout.prop(rename_sett, prop_name)
+
+        self.layout.separator()
+        self.draw_subtitle("Materials", self.layout, "MATERIAL")
+
+        row = self.layout.row()
+        row.alignment = "CENTER"
+        row.scale_y = 0.8
+        row.prop(rename_sett.materials, "use_suffix")
+        for prop in rename_sett.materials.bl_rna.properties:
+            if prop.identifier in ("bl_rna", "rna_type", "name", "use_suffix"):
+                continue
+            self.layout.prop(rename_sett.materials, prop.identifier)
 
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
