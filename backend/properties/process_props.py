@@ -79,6 +79,44 @@ class RigRenamingProps(bpy.types.PropertyGroup):
     suffix_R: StringProperty(name=".R", default=".R")
 
 
+class MaterialRenaming(bpy.types.PropertyGroup):
+    _register_priority = 2
+
+    use_suffix: BoolProperty(name="Use suffix", default=True)
+
+    body: StringProperty(name="Body", default=".Human")
+
+    haircards: StringProperty(name="Haircards", default="HG_Haircards")
+    haircap: StringProperty(name="Haircap", default="HG_Haircap")
+    eye_hair: StringProperty(name="Eye hair", default=".HG_Hair_Eye")
+    face_hair: StringProperty(name="Face hair", default=".HG_Hair_Face")
+    head_hair: StringProperty(name="Main hair", default=".HG_Hair_Head")
+
+    eye_outer: StringProperty(name="Eye outer", default=".HG_Eyes_Outer_FAST")
+    eye_inner: StringProperty(name="Eye inner", default=".HG_Eyes_Inner")
+
+    teeth: StringProperty(name="Teeth", default=".HG_Teeth")
+
+    clothing: StringProperty(name="Clothing", default=".{original_name}")
+
+
+class RenamingProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    custom_token: StringProperty(name="Custom token", default="")
+    suffix: StringProperty(name="Suffix", default="")
+    use_suffix: BoolProperty(name="Use suffix", default=True)
+
+    materials: PointerProperty(type=MaterialRenaming)
+    rig_obj: StringProperty(name="Rig", default="HG_{name}")
+    body_obj: StringProperty(name="Body", default="HG_Body")
+    eye_obj: StringProperty(name="Eye", default="HG_Eyes")
+    upper_teeth_obj: StringProperty(name="Teeth Upper", default="HG_TeethUpper")
+    lower_teeth_obj: StringProperty(name="Teeth Lower", default="HG_TeethLower")
+    haircards_obj: StringProperty(name="Haircards", default="HG_Haircards")
+    clothing: StringProperty(name="Clothing", default="{original_name}")
+
+
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
 
@@ -86,6 +124,7 @@ class ProcessProps(bpy.types.PropertyGroup):
 
     haircards: PointerProperty(type=HaircardProps)
     rig_naming: PointerProperty(type=RigRenamingProps)
+    renaming: PointerProperty(type=RenamingProps)
 
     bake: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)

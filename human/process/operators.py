@@ -86,6 +86,34 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 }
                 human.process.rename_bones_from_json(json.dumps(prop_dict))
 
+            if pr_sett.renaming_enabled:
+                obj_naming_sett = context.scene.HG3D.process.renaming
+                props = obj_naming_sett.bl_rna.properties
+                prop_dict = {
+                    str(prop.identifier): str(getattr(obj_naming_sett, prop.identifier))
+                    for prop in props
+                }
+                human.process.rename_objects_from_json(
+                    json.dumps(prop_dict),
+                    custom_token=obj_naming_sett.custom_token,
+                    suffix=obj_naming_sett.suffix if obj_naming_sett.use_suffix else "",
+                )
+                material_naming_sett = context.scene.HG3D.process.renaming.materials
+                props = material_naming_sett.bl_rna.properties
+                prop_dict = {
+                    str(prop.identifier): str(
+                        getattr(material_naming_sett, prop.identifier)
+                    )
+                    for prop in props
+                }
+                human.process.rename_materials_from_json(
+                    json.dumps(prop_dict),
+                    custom_token=obj_naming_sett.custom_token,
+                    suffix=obj_naming_sett.suffix
+                    if material_naming_sett.use_suffix
+                    else "",
+                )
+
             if pr_sett.output == "export":
                 pass  # TODO export
 
