@@ -4,8 +4,8 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
@@ -78,10 +78,10 @@ class HeightSettings:
 
         if value_cm > 184:
             value = (value_cm - 184) / (200 - 184)
-            livekey_name = "hg_taller"
+            livekey_name = "height_200"
         else:
             value = -((value_cm - 150) / (184 - 150) - 1)
-            livekey_name = "hg_shorter"
+            livekey_name = "height_150"
 
         if not value:
             return
@@ -98,10 +98,10 @@ class HeightSettings:
             self.correct_armature(context)
             self.correct_eyes()
             self.correct_teeth()
-            for cloth_obj in self._human.outfit.objects:
-                self._human.outfit.deform_cloth_to_human(context, cloth_obj)
-            for shoe_obj in self._human.footwear.objects:
-                self._human.footwear.deform_cloth_to_human(context, shoe_obj)
+            for cloth_obj in self._human.clothing.outfit.objects:
+                self._human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
+            for shoe_obj in self._human.clothing.footwear.objects:
+                self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
     @injected_context
     def correct_armature(self, context: C = None) -> None:

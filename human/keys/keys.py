@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Union, cast
 import bpy
 import numpy as np
 from bpy.types import Object, ShapeKey
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -419,7 +419,7 @@ class KeySettings:
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
         keys = []
         for key in self:
-            if key.name in ("hg_taller", "hg_shorter"):
+            if key.name in ("height_200", "height_150"):
                 continue
             if key.category == category:
                 keys.append(key)
@@ -479,10 +479,10 @@ class KeySettings:
         for mod in human.body_obj.modifiers:
             if mod.type == "MASK":
                 mod.show_viewport = True
-        for cloth_obj in human.outfit.objects:
-            human.outfit.deform_cloth_to_human(context, cloth_obj)
-        for shoe_obj in human.footwear.objects:
-            human.footwear.deform_cloth_to_human(context, shoe_obj)
+        for cloth_obj in human.clothing.outfit.objects:
+            human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
+        for shoe_obj in human.clothing.footwear.objects:
+            human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
         human.body_obj.data.update()
 

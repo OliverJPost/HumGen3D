@@ -1,6 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 
+from collections import defaultdict
+
 import bpy
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
@@ -244,12 +246,36 @@ baking resolution."""
 
 class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RIG"
-    bl_label = "Rig options"
+    bl_label = "Bone Renaming"
     icon_name = "MOD_ARMATURE"
-    enabled_propname = "rig_enabled"
+    enabled_propname = "rig_renaming_enabled"
 
     def draw(self, context):
-        self.layout.label(text="test")
+        naming_sett = context.scene.HG3D.process.rig_naming
+        col = self.layout.column(align=True)
+        col.use_property_split = True
+        col.use_property_decorate = False
+
+        self.draw_subtitle("Suffix naming", col, "MOD_MIRROR")
+        col.prop(naming_sett, "suffix_L", text="Left")
+        col.prop(naming_sett, "suffix_R", text="Right")
+
+        prop_dict = defaultdict()
+        for prop in naming_sett.bl_rna.properties:
+            description = prop.description
+            if not description.startswith("Category"):
+                continue
+            category = description.split(" ")[1].replace(",", "").capitalize()
+            prop_dict.setdefault(category, []).append(prop)
+
+        for category, props in prop_dict.items():
+            col.separator()
+            self.draw_subtitle(category, col, icon="OPTIONS", alignment="CENTER")
+            for prop in props:
+                mirrored_icon = (
+                    {"icon": "MOD_MIRROR"} if "True" in prop.description else {}
+                )
+                col.prop(naming_sett, prop.identifier, **mirrored_icon)
 
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):

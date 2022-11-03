@@ -14,19 +14,19 @@ from HumGen3D.tests.fixtures import (  # noqa
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_set_outfit(human, context):
     old_child_count = len(list(human.children))
-    options = human.outfit.get_options(context)
-    human.outfit.set(options[1], context)
+    options = human.clothing.outfit.get_options(context)
+    human.clothing.outfit.set(options[1], context)
 
     assert old_child_count != len(list(human.children))
-    assert human.outfit.objects
-    assert human.outfit._calc_percentage_clipping_vertices(context) < 0.05
+    assert human.clothing.outfit.objects
+    assert human.clothing.outfit._calc_percentage_clipping_vertices(context) < 0.05
 
 
 @pytest.fixture(scope="class")
 def human_with_outfit(male_human):
-    options = male_human.outfit.get_options(bpy.context)
+    options = male_human.clothing.outfit.get_options(bpy.context)
     chosen = options[0]
-    male_human.outfit.set(chosen, bpy.context)
+    male_human.clothing.outfit.set(chosen, bpy.context)
     yield male_human
 
 

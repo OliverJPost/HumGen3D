@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, cast
 
 import bpy
-from bpy.types import bpy_prop_collection  # type:ignore
+from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
+from bpy.props import FloatVectorProperty  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
@@ -17,7 +18,6 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from ...common.decorators import injected_context
 
 if TYPE_CHECKING:
-    from bpy.types import FloatVectorProperty, Material, ShaderNode  # type:ignore
 
     from ..human import Human
 
@@ -90,14 +90,8 @@ class SkinSettings:
     saturation = create_node_property("Skin_tone", 3)
     normal_strength = create_node_property("Normal Map", 0)
     roughness_multiplier = create_node_property("R_Multiply", 1)
-    light_areas = create_node_property("Lighten_hsv", "Value")
-    dark_areas = create_node_property("Darken_hsv", "Value")
-    skin_sagging = create_node_property("HG_Age", 1)
     freckles = create_node_property("Freckles_control", "Pos2")
     splotches = create_node_property("Splotches_control", "Pos2")
-    beautyspots_amount = create_node_property("BS_Control", 2)
-    beautyspots_opacity = create_node_property("BS_Opacity", 1)
-    beautyspots_seed = create_node_property("BS_Control", 1)
 
     def __init__(self, human: "Human"):
         self._human = human
@@ -193,12 +187,6 @@ class SkinSettings:
         )  # type:ignore[func-returns-value]
 
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
-
-    def _mac_material_fix(self) -> None:
-        self.links.new(
-            self.nodes["Mix_reroute_1"].outputs[0],  # type:ignore[index]
-            self.nodes["Mix_reroute_2"].inputs[1],  # type:ignore[index]
-        )
 
     def _set_gender_specific(self) -> None:
         """Male and female humans of HumGen use the same shader, but one node

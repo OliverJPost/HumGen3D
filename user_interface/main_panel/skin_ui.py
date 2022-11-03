@@ -4,7 +4,6 @@ from sys import platform
 
 import bpy
 
-from ..panel_functions import draw_sub_spoiler
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -25,10 +24,8 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         self._draw_texture_subsection(sett, col)
         self._draw_main_skin_subsection(sett, col)
-        self._draw_light_dark_subsection(sett, col)
         self._draw_freckles_subsection(sett, col)
-        self._draw_beautyspots_subsection(sett, col)
-        self._draw_age_subsection(sett, col)
+        self._draw_eye_subsection(sett, col)
 
         gender = self.human.gender
         if gender == "female":
@@ -44,7 +41,9 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "main_skin", "Main settings")
+        is_open, boxbox = self.draw_sub_spoiler(
+            box, sett.ui, "main_skin", "Main settings"
+        )
         if not is_open:
             return
 
@@ -97,45 +96,11 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "texture", "Texture sets")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "texture", "Texture sets")
         if not is_open:
             return
 
         self.draw_content_selector(layout=boxbox, pcoll_name="texture")
-
-    def _draw_light_dark_subsection(self, sett, box):
-        """Collapsable section with sliders for dark and light areas on the skin.
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            box (UILayout): layout.box of the skin section
-            nodes (Shadernode list): All nodes in the .human material
-        """
-        is_open, boxbox = draw_sub_spoiler(
-            box, sett, "light_dark", "Light & dark areas"
-        )
-        if not is_open:
-            return
-
-        nodes = self.human.skin.nodes
-
-        light_hsv = nodes["Lighten_hsv"]
-        dark_hsv = nodes["Darken_hsv"]
-
-        col = boxbox.column(align=False)
-        col.scale_y = 1.2
-        col.prop(
-            dark_hsv.inputs["Value"],
-            "default_value",
-            text="Dark areas",
-            slider=True,
-        )
-        col.prop(
-            light_hsv.inputs["Value"],
-            "default_value",
-            text="Light areas",
-            slider=True,
-        )
 
     def _draw_age_subsection(self, sett, box):
         """Collapsable section with sliders age effects.
@@ -145,7 +110,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "age", "Age")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "age", "Age")
         if not is_open:
             return
 
@@ -162,6 +127,28 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         col.prop(age_sk, "value", text="Skin sagging [Mesh]", slider=True)
         col.prop(age_node.inputs[1], "default_value", text="Wrinkles", slider=True)
 
+    def _draw_eye_subsection(self, sett, col):
+        is_open, boxbox = self.draw_sub_spoiler(col, sett.ui, "eyes", "Eyes")
+        if not is_open:
+            return
+
+        mat = self.human.eye_obj.data.materials[1]
+        nodes = mat.node_tree.nodes
+
+        col = boxbox.column(align=True)
+        col.use_property_split = True
+        col.use_property_decorate = False
+        row = col.row(align=True)
+        row.prop(nodes["HG_Eye_Color"].inputs[2], "default_value", text="Iris Color")
+        row.operator(
+            "hg3d.random_value", text="", icon="FILE_REFRESH"
+        ).random_type = "eyes"
+        col.prop(
+            nodes["HG_Scelera_Color"].inputs[2],
+            "default_value",
+            text="Sclera Color",
+        )
+
     def _draw_freckles_subsection(self, sett, box):
         """Collapsable section with sliders for freckles.
 
@@ -170,7 +157,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "freckles", "Freckles")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "freckles", "Freckles")
         if not is_open:
             return
 
@@ -202,7 +189,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "makeup", "Makeup")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "makeup", "Makeup")
         if not is_open:
             return
 
@@ -305,7 +292,9 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if platform == "darwin":  # not compatible with MacOS 8-texture material
             return
 
-        is_open, boxbox = draw_sub_spoiler(box, sett, "beautyspots", "Beauty Spots")
+        is_open, boxbox = self.draw_sub_spoiler(
+            box, sett.ui, "beautyspots", "Beauty Spots"
+        )
         if not is_open:
             return
 
@@ -333,7 +322,9 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = draw_sub_spoiler(box, sett, "beard_shadow", "Beard Shadow")
+        is_open, boxbox = self.draw_sub_spoiler(
+            box, sett.ui, "beard_shadow", "Beard Shadow"
+        )
         if not is_open:
             return
 
@@ -341,7 +332,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         beard_node = nodes["Gender_Group"]
 
-        flow = self.get_flow(sett, boxbox)
+        flow = self.get_flow(boxbox)
         flow.scale_y = 1.2
         flow.prop(beard_node.inputs[2], "default_value", text="Mustache", slider=True)
         flow.prop(beard_node.inputs[3], "default_value", text="Beard", slider=True)

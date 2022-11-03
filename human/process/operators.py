@@ -5,6 +5,7 @@
 """Texture baking operators."""
 
 
+import json
 import uuid
 
 import bpy
@@ -75,6 +76,15 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
                 )
+
+            if pr_sett.rig_renaming_enabled:
+                naming_sett = context.scene.HG3D.process.rig_naming
+                props = naming_sett.bl_rna.properties
+                prop_dict = {
+                    str(prop.identifier): str(getattr(naming_sett, prop.identifier))
+                    for prop in props
+                }
+                human.process.rename_bones_from_json(json.dumps(prop_dict))
 
             if pr_sett.output == "export":
                 pass  # TODO export

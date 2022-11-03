@@ -161,9 +161,9 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         human = get_human_from_distance(cloth_obj)
 
         if self.cloth_type == "footwear":
-            human.footwear.add_obj(cloth_obj, context)
+            human.clothing.footwear.add_obj(cloth_obj, context)
         else:
-            human.outfit.add_obj(cloth_obj, self.cloth_type, context)
+            human.clothing.outfit.add_obj(cloth_obj, self.cloth_type, context)
 
 
 class HG_OT_SAVE_SK(bpy.types.Operator):

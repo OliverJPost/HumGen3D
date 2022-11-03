@@ -21,6 +21,12 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
 
         return "cloth" in context.object or "shoe" in context.object
 
+    def draw_header(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.alert = True
+        row.operator("hg3d.backhuman", text="Back", icon="BACK", depress=True)
+
     # TODO add compatibility with any material, not just standard material
     def draw(self, context):
         """Draws ui for changing the material of the active clothing object."""
@@ -93,14 +99,9 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
             ),
         )
 
-        col.operator(
-            "hg3d.backhuman",
-            text="Go back to human",
-            icon="RESTRICT_SELECT_OFF",
-            depress=True,
-        )
         alert_col = col.column(align=True)
         alert_col.alert = True
+        alert_col.scale_y = 1.5
         alert_col.operator(
             "hg3d.deletecloth",
             text="Delete clothing item",
