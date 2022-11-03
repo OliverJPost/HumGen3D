@@ -426,9 +426,12 @@ class MainPanelPart(HGPanel):
             subrow.scale_x = 1.2
             subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
 
-            box = col.box()
+            row = col.row(align=True)
+            row.scale_x = 2
+            row.operator("hg3d.deselect", text="", icon="RESTRICT_SELECT_ON")
+
             hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
-            self._draw_hair_children_switch(hair_systems, box)
+            self._draw_hair_children_switch(hair_systems, row)
 
         if self.phase_name != "closed":
             pass  # self.draw_back_button(self.layout)
@@ -498,23 +501,24 @@ class MainPanelPart(HGPanel):
             hair_systems (list): List of hair particle systems
             layout (UILayout): layout to draw switch in
         """
-        row = layout.row(align=True)
-        if not hair_systems:
-            row.label(text="No hair systems found")
-            return
 
-        row.label(
-            text=(
-                "Hair children are hidden"
-                if self.human.hair.children_ishidden
-                else "Hair children are visible"
-            )
-        )
-        row.operator(
+        if not hair_systems:
+            layout.label(text="No hair systems found")
+            return
+        hair_ishidden = self.human.hair.children_ishidden
+        layout.operator(
             "hg3d.togglechildren",
-            text="",
-            icon=("HIDE_ON" if hair_systems[0].settings.child_nbr <= 1 else "HIDE_OFF"),
+            text="Hair hidden" if hair_ishidden else "Hair visible",
+            icon_value=get_hg_icon("hair_hidden" if hair_ishidden else "hair"),
         )
+
+        return
+        row = layout.box().row(align=True)
+        row.alignment = "CENTER"
+        row.label(text=())
+        row = layout.row(align=True)
+        row.scale_x = 0.8
+        row.scale_y = 1.5
 
     def _get_header_label(self, human):
         if not human:
