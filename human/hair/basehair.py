@@ -4,7 +4,7 @@ import contextlib
 import json
 import os
 import random
-from typing import Optional, cast
+from typing import Literal, Optional, cast
 
 import bpy
 from bpy.types import Image  # type:ignore
@@ -18,6 +18,7 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from HumGen3D.human.hair.haircards import HairCollection
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
@@ -39,6 +40,71 @@ class BaseHair:
             mod for mod in particle_mods if self._condition(mod.particle_system.name)
         ]
         return PropCollection(modifiers)
+
+    @injected_context
+    def convert_to_haircards(
+        self, quality: Literal["high"] = "high", context: C = None
+    ) -> bpy.types.Object:
+
+        hair_objs: list[bpy.types.Object] = []
+        for mod in self.modifiers:
+            if not mod.show_viewport:
+                continue
+
+            ps = mod.particle_system
+            ps.settings.child_nbr = ps.settings.child_nbr // 10
+            body_obj = self._human.body_obj
+            with context.temp_override(
+                active_object=body_obj,
+                object=body_obj,
+                selected_objects=[
+                    body_obj,
+                ],
+            ):
+                bpy.ops.object.modifier_convert(modifier=mod.name)
+
+            hair_obj = context.object  # TODO this is bound to fail
+            hc = HairCollection(hair_obj, self._human)
+            objs = hc.create_mesh()
+            hair_objs.extend(objs)
+            for obj in objs:
+                obj.name += ps.name
+
+            hc.add_uvs()
+            hc.add_material()
+
+        density_vertex_groups = [
+            body_obj.vertex_groups[ps.vertex_group_density]
+            for ps in self.particle_systems
+            if ps.vertex_group_density
+        ]
+        if density_vertex_groups:
+            cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
+            hair_objs.append(cap_obj)
+        hc.set_node_values(self._human)
+
+        join_obj_name = hair_objs[0].name
+        with context.temp_override(
+            active_object=hair_objs[0],
+            selected_editable_objects=hair_objs,
+        ):
+            bpy.ops.object.join()
+
+        joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
+        joined_object.name = "Haircards"
+
+        for mod in self.modifiers:  # noqa
+            mod.show_viewport = False
+
+        return joined_object
+
+    @injected_context
+    def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
+        dg = context.evaluated_depsgraph_get()
+        eval_body = self._human.body_obj.evaluated_get(dg)
+        particle_systems = eval_body.particle_systems
+        psys = [ps for ps in particle_systems if self._condition(ps.name)]
+        return PropCollection(psys)
 
     def delete_all(self) -> None:
         raise NotImplementedError  # FIXME
