@@ -11,9 +11,22 @@ Properties related to the user interface of Human Generator.
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty  # type:ignore
+from HumGen3D import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
+
+
+def get_hair_tab_items(_, context):
+    hair_enum = [
+        ("head", "Head", "", get_hg_icon("hair"), 0),
+        ("eye", "Eye", "", get_hg_icon("eyebrows"), 2),
+    ]
+    human = Human.from_existing(context.object)
+    if human.gender == "male":
+        hair_enum.append(("face", "Face", "", get_hg_icon("face_hair"), 1))
+
+    return hair_enum
 
 
 def create_ui_toggles(ui_toggle_names):
@@ -22,7 +35,8 @@ def create_ui_toggles(ui_toggle_names):
 
     for name in ui_toggle_names:
         display_name = name.replace("_", " ").title()
-        prop_dict[name] = BoolProperty(name=display_name, default=False)
+        default = name in ("hair_mat", "texture")
+        prop_dict[name] = BoolProperty(name=display_name, default=default)
 
     return prop_dict
 
@@ -58,10 +72,8 @@ def active_phase_enum(self, context):
             ("face", "Face", "", get_hg_icon("face"), 3),
             ("height", "Height", "", get_hg_icon("height"), 2),
             ("skin", "Skin", "", get_hg_icon("skin"), 4),
-            ("eyes", "Eyes", "", get_hg_icon("eyes"), 5),
             ("hair", "Hair", "", get_hg_icon("hair"), 6),
-            ("outfit", "Outfit", "", get_hg_icon("outfit"), 7),
-            ("footwear", "Footwear", "", get_hg_icon("footwear"), 8),
+            ("clothing", "Clothing", "", get_hg_icon("outfit"), 7),
             ("pose", "Pose", "", get_hg_icon("pose"), 9),
             ("expression", "Expression", "", get_hg_icon("expression"), 10),
             ("", "Tabs", ""),
@@ -104,6 +116,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "content_saving",
                 "other",
                 "main",
+                "eyes",
             ]
         )
     )
@@ -143,8 +156,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     pose_tab_switch: EnumProperty(
         name="posing",
         items=[
-            ("library", "Library", "", 0),
-            ("rigify", "Rigify", "", 1),
+            ("library", "Library", "", "ASSET_MANAGER", 0),
+            ("rigify", "Rigify", "", "CON_ARMATURE", 1),
         ],
         default="library",
     )
@@ -152,8 +165,21 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
     expression_type: EnumProperty(
         name="Expression",
         items=[
-            ("1click", "1-Click", "", 0),
-            ("frig", "Face Rig", "", 1),
+            ("1click", "1-Click", "", "ASSET_MANAGER", 0),
+            ("frig", "Face Rig", "", "MESH_MONKEY", 1),
         ],
         default="1click",
+    )
+
+    hair_ui_tab: EnumProperty(
+        name="Hair Tab",
+        items=get_hair_tab_items,
+    )
+
+    clothing_tab: EnumProperty(
+        name="Clothing Tab",
+        items=lambda _, _c: [
+            ("outfit", "Outfit", "", get_hg_icon("outfit"), 0),
+            ("footwear", "Footwear", "", get_hg_icon("footwear"), 1),
+        ],
     )

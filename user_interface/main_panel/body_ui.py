@@ -52,7 +52,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
 
             is_open, box = self.draw_sub_spoiler(
                 col.column(align=True),
-                sett,
+                sett.ui,
                 subcategory,
                 subcategory.capitalize(),
             )
@@ -65,7 +65,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
         if any_without_category:
             is_open, box = self.draw_sub_spoiler(
                 col.column(align=True),
-                sett,
+                sett.ui,
                 "other",
                 "Other",
             )

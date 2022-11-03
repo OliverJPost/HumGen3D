@@ -308,7 +308,7 @@ class MainPanelPart(HGPanel):
         human = Human.from_existing(context.object, strict_check=False)
         if not human:
             return False
-        if human.is_batch_result[0]:  # noqa
+        if "cloth" in context.object or "shoe" in context.object:  # noqa
             return False
         return True
 
@@ -426,9 +426,12 @@ class MainPanelPart(HGPanel):
             subrow.scale_x = 1.2
             subrow.operator("hg3d.delete", text="", icon="TRASH")  # , depress=True)
 
-            box = col.box()
+            row = col.row(align=True)
+            row.scale_x = 2
+            row.operator("hg3d.deselect", text="", icon="RESTRICT_SELECT_ON")
+
             hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
-            self._draw_hair_children_switch(hair_systems, box)
+            self._draw_hair_children_switch(hair_systems, row)
 
         if self.phase_name != "closed":
             pass  # self.draw_back_button(self.layout)
@@ -443,7 +446,7 @@ class MainPanelPart(HGPanel):
         ).section_name = "closed"
 
     def draw_sub_spoiler(
-        self, layout, sett, prop_name, label
+        self, layout, sett_namespace, prop_name, label
     ) -> "tuple[bool, bpy.types.UILayout]":
         """Draws a ciollapsable box, with title and arrow symbol.
 
@@ -460,15 +463,15 @@ class MainPanelPart(HGPanel):
         """
         boxbox = layout.box()
         boxbox.prop(
-            sett.ui,
+            sett_namespace,
             prop_name,
-            icon="TRIA_DOWN" if getattr(sett.ui, prop_name) else "TRIA_RIGHT",
+            icon="TRIA_DOWN" if getattr(sett_namespace, prop_name) else "TRIA_RIGHT",
             text=label,
             emboss=False,
             toggle=True,
         )
 
-        spoiler_open = getattr(sett.ui, prop_name)
+        spoiler_open = getattr(sett_namespace, prop_name)
 
         return spoiler_open, boxbox
 
@@ -498,23 +501,24 @@ class MainPanelPart(HGPanel):
             hair_systems (list): List of hair particle systems
             layout (UILayout): layout to draw switch in
         """
-        row = layout.row(align=True)
-        if not hair_systems:
-            row.label(text="No hair systems found")
-            return
 
-        row.label(
-            text=(
-                "Hair children are hidden"
-                if self.human.hair.children_ishidden
-                else "Hair children are visible"
-            )
-        )
-        row.operator(
+        if not hair_systems:
+            layout.label(text="No hair systems found")
+            return
+        hair_ishidden = self.human.hair.children_ishidden
+        layout.operator(
             "hg3d.togglechildren",
-            text="",
-            icon=("HIDE_ON" if hair_systems[0].settings.child_nbr <= 1 else "HIDE_OFF"),
+            text="Hair hidden" if hair_ishidden else "Hair visible",
+            icon_value=get_hg_icon("hair_hidden" if hair_ishidden else "hair"),
         )
+
+        return
+        row = layout.box().row(align=True)
+        row.alignment = "CENTER"
+        row.label(text=())
+        row = layout.row(align=True)
+        row.scale_x = 0.8
+        row.scale_y = 1.5
 
     def _get_header_label(self, human):
         if not human:
@@ -524,32 +528,29 @@ class MainPanelPart(HGPanel):
             label = f"This is {name}"
         return label
 
-    def _draw_hair_length_ui(self, hair_systems, box):
+    def _draw_hair_length_ui(self, hair_systems, layout):
         """Shows a collapsable list of hair systems, with a slider for length.
 
         Args:
             hair_systems (list): list of particle hair systems
             box (UILayout): layout.box of hair section
         """
-        boxbox = box.box()
-        boxbox.prop(
-            self.sett.ui,
-            "hair_length",
-            icon="TRIA_DOWN" if self.sett.ui.hair_length else "TRIA_RIGHT",
-            emboss=False,
-            toggle=True,
+        is_open, box = self.draw_sub_spoiler(
+            layout, self.sett.ui, "hair_length", "Hair Length"
         )
-        if not self.sett.ui.hair_length:
+
+        if not is_open:
             return
 
         if not hair_systems:
             box.label(text="No hairstyles loaded")
             return
 
-        flow = self.get_flow(box)
+        col = box.column(align=True)
+        col.scale_y = 1.2
         for ps in hair_systems:
             ps_name = ps.name.replace("fh_", "").replace("_", " ").title()
 
-            row = flow.row()
+            row = col.row(align=True)
             row.prop(ps.settings, "child_length", text=ps_name)
             row.operator("hg3d.removehair", text="", icon="TRASH").hair_system = ps.name

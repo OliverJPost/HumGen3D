@@ -79,37 +79,6 @@ def prettify(string: str) -> str:
     return string.replace("_", " ").title()
 
 
-def draw_sub_spoiler(
-    layout, sett, prop_name, label
-) -> "tuple[bool, bpy.types.UILayout]":
-    """Draws a collapsable box, with title and arrow symbol.
-
-    Args:
-        layout (UILayout): Layout to draw spoiler in
-        sett (PropertyGroup): HumGen Props
-        prop_name (str): Name of the BoolProperty that opens/closes spoiler
-        label (str): Label to display in the ui
-
-    Returns:
-        tuple[bool, bpy.types.UILayout]:
-            bool: True means the box will open in the UI
-            UILayout: layout.box to draw items inside the openable box
-    """
-    boxbox = layout.box()
-    boxbox.prop(
-        sett.ui,
-        prop_name,
-        icon="TRIA_DOWN" if getattr(sett.ui, prop_name) else "TRIA_RIGHT",
-        text=label,
-        emboss=False,
-        toggle=True,
-    )
-
-    spoiler_open = getattr(sett.ui, prop_name)
-
-    return spoiler_open, boxbox
-
-
 def draw_panel_switch_header(layout, sett):
     """Draws a enum prop that switches between main humgen panel and extras panel.
 

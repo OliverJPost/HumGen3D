@@ -68,9 +68,9 @@ class HG_OT_PATTERN(bpy.types.Operator):
         human = Human.from_existing(obj)
 
         if self.add:
-            human.outfit.pattern.set_random(obj, context)
+            human.clothing.outfit.pattern.set_random(obj, context)
         else:
-            human.outfit.pattern.remove(obj)
+            human.clothing.outfit.pattern.remove(obj)
 
         return {"FINISHED"}
 

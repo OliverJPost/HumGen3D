@@ -6,11 +6,12 @@ import contextlib
 import json
 import os
 import random
-from sys import platform
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import bpy
+from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Object  # type:ignore
+from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
@@ -23,8 +24,7 @@ from ..common.decorators import injected_context
 from ..common.exceptions import HumGenException
 from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
-from .clothing.footwear import FootwearSettings
-from .clothing.outfit import OutfitSettings
+from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
@@ -34,10 +34,6 @@ from .keys.keys import KeySettings
 from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
-
-if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty  # type:ignore
-    from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 
 
 class Human:
@@ -212,8 +208,8 @@ class Human:
 
         human.props.version = bl_info["version"]
         human.props.hashes["$pose"] = str(hash(human.pose))
-        human.props.hashes["$outfit"] = str(hash(human.outfit))
-        human.props.hashes["$footwear"] = str(hash(human.footwear))
+        human.props.hashes["$outfit"] = str(hash(human.clothing.outfit))
+        human.props.hashes["$footwear"] = str(hash(human.clothing.footwear))
         human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
 
         return human
@@ -292,13 +288,9 @@ class Human:
     def pose(self) -> PoseSettings:
         return PoseSettings(self)
 
-    @property  # TODO make cached
-    def outfit(self) -> OutfitSettings:
-        return OutfitSettings(self)
-
-    @property  # TODO make cached
-    def footwear(self) -> FootwearSettings:
-        return FootwearSettings(self)
+    @property
+    def clothing(self) -> ClothingSettings:
+        return ClothingSettings(self)
 
     @property  # TODO make cached
     def expression(self) -> ExpressionSettings:
@@ -518,9 +510,6 @@ class Human:
         human = cls(hg_rig)
         human.keys._set_gender_specific(human)
         human.hair._delete_opposite_gender_specific()
-
-        if platform == "darwin":
-            human.skin._mac_material_fix()
 
         human.skin._set_gender_specific()
         human.skin._remove_opposite_gender_specific()

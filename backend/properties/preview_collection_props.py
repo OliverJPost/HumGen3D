@@ -104,16 +104,18 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     )
 
     # outfits
-    outfit: EnumProperty(items=get_items("outfit"), update=update("outfit"))
+    outfit: EnumProperty(
+        items=get_items("clothing.outfit"), update=update("clothing.outfit")
+    )
     outfit_category: EnumProperty(
         name="Outfit Library",
-        items=get_folders("outfit"),
-        update=refresh("outfit"),
+        items=get_folders("clothing.outfit"),
+        update=refresh("clothing.outfit"),
     )
     search_term_outfit: StringProperty(
         name="Search:",
         default="",
-        update=refresh("outfit"),
+        update=refresh("clothing.outfit"),
     )
 
     # hair
@@ -163,34 +165,34 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
 
     # footwear # noqa
     footwear: EnumProperty(
-        items=get_items("footwear"),
-        update=update("footwear"),
+        items=get_items("clothing.footwear"),
+        update=update("clothing.footwear"),
     )
     footwear_category: EnumProperty(
         name="Footwear Library",
-        items=get_folders("footwear"),
-        update=refresh("footwear"),
+        items=get_folders("clothing.footwear"),
+        update=refresh("clothing.footwear"),
     )
     search_term_footwear: StringProperty(
         name="Search:",
         default="",
-        update=refresh("footwear"),
+        update=refresh("clothing.footwear"),
     )
 
     # patterns
     pattern: EnumProperty(
-        items=get_items("outfit.pattern"),
-        update=update("outfit.pattern"),
+        items=get_items("clothing.outfit.pattern"),
+        update=update("clothing.outfit.pattern"),
     )
     pattern_category: EnumProperty(
         name="Pattern Library",
-        items=get_folders("outfit.pattern"),
-        update=refresh("outfit.pattern"),
+        items=get_folders("clothing.outfit.pattern"),
+        update=refresh("clothing.outfit.pattern"),
     )
     search_term_pattern: StringProperty(
         name="Search:",
         default="",
-        update=refresh("outfit.pattern"),
+        update=refresh("clothing.outfit.pattern"),
     )
 
     texture: EnumProperty(
