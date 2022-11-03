@@ -12,9 +12,9 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
+from HumGen3D.backend.properties.bake_props import BakeProps
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.human.process.process import ProcessSettings
-from HumGen3D.backend.properties.bake_props import BakeProps
 
 
 class LodProps(bpy.types.PropertyGroup):
@@ -170,6 +170,26 @@ class ModApplyProps(bpy.types.PropertyGroup):
     keep_shapekeys: BoolProperty(default=True)
 
 
+def get_script_list(self, context):
+    folder = os.path.join(get_prefs().filepath, "scripts")
+    files = [file for file in os.listdir(folder) if file.endswith(".py")]
+    return [(file, file, "") for file in files]
+
+
+def add_script_to_collection(self, context):
+    """Adds a script to the collection."""
+    scripts_col = context.scene.hg_scripts_col
+    scripts_col.add().name = self.available_scripts
+
+
+class ScriptingProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+    available_scripts: EnumProperty(
+        items=get_script_list,
+        update=add_script_to_collection,
+    )
+
+
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
 
@@ -179,6 +199,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     renaming: PointerProperty(type=RenamingProps)
     modapply: PointerProperty(type=ModApplyProps)
     baking: PointerProperty(type=BakeProps)
+    scripting: PointerProperty(type=ScriptingProps)
 
     baking_enabled: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
@@ -186,6 +207,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)
+    scripting_enabled: BoolProperty(default=False)
 
     human_list_isopen: BoolProperty(default=False)
     output: EnumProperty(
@@ -193,6 +215,15 @@ class ProcessProps(bpy.types.PropertyGroup):
             ("replace", "Replace humans", "", 0),
             ("duplicate", "Duplicate humans", "", 1),
             ("export", "Export humans", "", 2),
+        ]
+    )
+    file_type: EnumProperty(
+        items=[
+            ("obj", "OBJ", "", 0),
+            ("fbx", "FBX", "", 1),
+            ("abc", "Alembic", "", 2),
+            ("glb", "glTF Binary (.glb)", "", 3),
+            ("gltf", "glTF Embedded (.glTF", "", 4),
         ]
     )
 

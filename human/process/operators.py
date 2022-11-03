@@ -5,8 +5,10 @@
 """Texture baking operators."""
 
 
+import importlib
 import json
 import os
+import sys
 import uuid
 
 import bpy
@@ -16,6 +18,7 @@ from HumGen3D.backend.properties.process_props import get_preset_list
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.process import ProcessSettings
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
 
@@ -68,7 +71,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 if pr_sett.haircards.face_hair:
                     human.hair.face_hair.convert_to_haircards(quality, context)
 
-            if pr_sett.baking:
+            if pr_sett.baking_enabled:
                 human.process.baking.bake_all(
                     int(context.scene.HG3D.process.baking.samples), context
                 )
@@ -117,10 +120,125 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     if material_naming_sett.use_suffix
                     else "",
                 )
+            if pr_sett.scripting_enabled:
+                folder = os.path.join(get_prefs().filepath, "scripts")
+                sys.path.append(folder)
+                for item in context.scene.hg_scripts_col:
+                    module = importlib.import_module(item.name.replace(".py", ""))
+                    module.main(context, human)
 
             if pr_sett.output == "export":
-                pass  # TODO export
+                pass
 
+        return {"FINISHED"}
+
+
+class HG_OT_REMOVE_SCRIPT(bpy.types.Operator):
+    bl_idname = "hg3d.remove_script"
+    bl_label = "Remove script"
+    bl_description = "Remove script from the list."
+
+    name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        coll = context.scene.hg_scripts_col
+
+        item_idx = next(i for i, item in enumerate(coll) if item.name == self.name)
+        coll.remove(item_idx)
+        return {"FINISHED"}
+
+
+class HG_OT_MOVE_SCRIPT(bpy.types.Operator):
+    bl_idname = "hg3d.move_script"
+    bl_label = "Move script"
+    bl_description = "Move script up or down in the stack."
+
+    name: bpy.props.StringProperty()
+    move_up: bpy.props.BoolProperty()
+
+    def execute(self, context):
+        coll = context.scene.hg_scripts_col
+
+        item_idx = next(i for i, item in enumerate(coll) if item.name == self.name)
+        if item_idx > 0 and not self.move_up:
+            coll.move(item_idx, item_idx - 1)
+        elif item_idx < len(coll) and self.move_up:
+            coll.move(item_idx, item_idx + 1)
+
+        return {"FINISHED"}
+
+
+class HG_OT_ADD_SCRIPT(bpy.types.Operator):
+    bl_idname = "hg3d.add_script"
+    bl_label = "Add script"
+    bl_description = "Add new script."
+
+    name: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        col = self.layout.column()
+        col.label(text="Give a name to your script:")
+
+        subcol = col.column()
+        subcol.scale_y = 1.5
+        py_in_name = ".py" in self.name
+        non_valid = any(char in self.name for char in r"\/:*?<>| .")
+        subcol.alert = py_in_name or non_valid
+        subcol.prop(self, "name", text="")
+        if py_in_name:
+            subcol.label(text="Don't include file extension.", icon="ERROR")
+        elif non_valid:
+            subcol.label(text="Only letters, numbers and underscores.", icon="ERROR")
+
+    def execute(self, context):
+        textblock = bpy.data.texts.new(self.name + ".py")
+        textblock.write(
+            '''# This is a script template. DON'T FORGET TO SAVE!
+# Saved scripts will appear in available scripts list.
+# For API documentation, see https://help.humgen3d.com
+
+import bpy
+from HumGen3D import Human
+
+def main(context: bpy.types.Context, human: Human):
+    """This function is called when the script is executed.
+
+    Args:
+        context (bpy.types.Context): Blender context.
+        human (Human): Instance of a single human. Script will be run for each human.
+    """
+    pass # Your code goes here
+'''
+        )
+        textblock.filepath = os.path.join(
+            get_prefs().filepath, "scripts", self.name + ".py"
+        )
+        coll = context.scene.hg_scripts_col
+        coll.add().name = self.name + ".py"
+
+        with open(textblock.filepath, "w") as f:
+            f.write(textblock.as_string())
+
+        scripting_workspace = bpy.data.workspaces.get("Scripting")
+        if scripting_workspace:
+            context.window.workspace = scripting_workspace
+
+            # Set active text in text editor window
+            for screen in scripting_workspace.screens:
+                for area in screen.areas:
+                    if area.type == "TEXT_EDITOR":
+                        for space in area.spaces:
+                            if space.type == "TEXT_EDITOR":
+                                space.text = textblock
+                                break
+                        break
+        else:
+            ShowMessageBox(
+                "Couldn't find Scripting workspace. Please open it manually."
+            )
         return {"FINISHED"}
 
 

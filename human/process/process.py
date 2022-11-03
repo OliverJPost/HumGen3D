@@ -34,6 +34,12 @@ def fill_tokens(
     return name
 
 
+class SCRIPT_ITEM(bpy.types.PropertyGroup):
+    _register_priority = 2
+    name: bpy.props.StringProperty()
+    menu_open: bpy.props.BoolProperty(default=False)
+
+
 class ProcessSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
