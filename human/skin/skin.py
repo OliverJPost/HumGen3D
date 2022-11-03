@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, List, Tuple, cast
 
 import bpy
-from bpy.types import bpy_prop_collection  # type:ignore
-from bpy.types import FloatVectorProperty, Material, ShaderNode  # type:ignore
+from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
+from bpy.props import FloatVectorProperty  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
