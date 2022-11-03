@@ -360,23 +360,62 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
             self.layout.prop(rename_sett.materials, prop.identifier)
 
 
+class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_SCRIPTS"
+    bl_label = "Custom scripts"
+    icon_name = "FILE_SCRIPT"
+    enabled_propname = "scripting_enabled"
+
+    def draw(self, context):
+        col = self.layout.column()
+        self.draw_subtitle("Available Scripts", col)
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(context.scene.HG3D.process.scripting, "available_scripts", text="")
+        row.operator("hg3d.add_script", text="", icon="ADD")
+
+        coll = context.scene.hg_scripts_col
+        if coll:
+            self.draw_subtitle("Selected Scripts", col)
+            draw_paragraph(
+                col, text="Executed top to bottom.", alignment="CENTER", enabled=False
+            )
+        for item in coll:
+            row = col.box().row(align=True)
+            subrow = row.row(align=True)
+            subrow.scale_x = 0.8
+            op = subrow.operator("hg3d.move_script", text="", icon="TRIA_UP")
+            op.name = item.name
+            op.move_up = False
+            op = subrow.operator("hg3d.move_script", text="", icon="TRIA_DOWN")
+            op.name = item.name
+            op.move_up = True
+
+            row.separator()
+
+            row.label(text=item.name)
+            row.operator("hg3d.remove_script", text="", icon="X").name = item.name
+
+
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
 
     def draw(self, context):
         box = self.layout.box()
         sett = context.scene.HG3D  # type:ignore[attr-defined]
-        process_sett = sett.process
+        pr_sett = sett.process
 
         self.draw_subtitle("Output", box, icon="SETTINGS")
 
-        if process_sett.baking:
+        if pr_sett.baking:
             col = box.column(align=True)
             col.use_property_split = True
             col.use_property_decorate = False
             bake_sett = sett.process.baking
-            col.prop(bake_sett, "file_type", text="Format:")
-            col.prop(bake_sett, "export_folder", text="Tex. Folder")
+            col.prop(bake_sett, "file_type", text="Format:", icon="TEXTURE")
+            col.prop(pr_sett, "file_type", text=" ", icon="MESH_CUBE")
+            label = "Tex. Folder" if pr_sett.output != "export" else "Folder"
+            col.prop(bake_sett, "export_folder", text=label)
 
             row = col.row()
             row.alignment = "RIGHT"
@@ -385,7 +424,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         col = box.column(align=True)
         row = col.row(align=True)
         row.scale_y = 1.5
-        row.prop(process_sett, "output", text="")
+        row.prop(pr_sett, "output", text="")
         row = col.row(align=True)
         row.scale_y = 1.5
         row.alert = True

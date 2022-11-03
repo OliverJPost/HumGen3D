@@ -40,9 +40,6 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent  # type: ignore
 
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
-
 from .backend.auto_classes import _get_bpy_classes
 from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
 from .backend.preferences.preference_func import get_prefs
@@ -52,8 +49,11 @@ from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload  # noqa
 from .batch_generator.generator import BatchHumanGenerator
+from .common.exceptions import HumGenException
 from .human.human import Human
 from .human.keys.bpy_livekey import BpyLiveKey
+from .human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
+from .human.process.process import SCRIPT_ITEM
 from .user_interface.batch_panel import batch_ui_lists
 from .user_interface.content_panel import utility_ui_lists
 from .user_interface.icons.icons import hg_icons
@@ -124,6 +124,7 @@ def _initiate_ui_lists() -> None:
         "hg_update_col": update.UPDATE_INFO_ITEM,
         "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
         "possible_content_col": POSSIBLE_CONTENT_ITEM,
+        "hg_scripts_col": SCRIPT_ITEM,
     }
 
     scene = bpy.types.Scene
