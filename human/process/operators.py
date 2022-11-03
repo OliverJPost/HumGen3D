@@ -60,7 +60,8 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.hair.regular_hair.convert_to_haircards(quality, context)
                 human.hair.eyebrows.convert_to_haircards(quality, context)
                 human.hair.eyelashes.convert_to_haircards(quality, context)
-                human.hair.face_hair.convert_to_haircards(quality, context)
+                if pr_sett.haircards.face_hair:
+                    human.hair.face_hair.convert_to_haircards(quality, context)
 
             if pr_sett.bake:
                 human.process.baking.bake_all(
