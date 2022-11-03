@@ -18,9 +18,7 @@ from bpy.props import (  # type: ignore
 )
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
-from HumGen3D.human.process.apply_modifiers import refresh_modapply
 
-from .bake_props import BakeProps
 from .batch_props import BatchProps
 from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
@@ -40,7 +38,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     ui: PointerProperty(type=UserInterfaceProps)
     custom_content: PointerProperty(type=CustomContentProps)
     batch: PointerProperty(type=BatchProps)
-    bake: PointerProperty(type=BakeProps)
+
     process: PointerProperty(type=ProcessProps)
 
     # back end
@@ -160,28 +158,5 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             s.hair_shader_type
         ),
     )
-
-    modapply_search_objects: EnumProperty(
-        name="Objects to apply",
-        items=[
-            ("selected", "Selected objects only", "", 0),
-            ("all", "All selected humans", "", 2),
-        ],
-        default="all",
-        update=refresh_modapply,
-    )
-
-    modapply_search_modifiers: EnumProperty(
-        name="Modifier display method",
-        items=[
-            ("summary", "Modifier summary", "", 0),
-            ("individual", "Individual modifiers", "", 1),
-        ],
-        default="summary",
-        update=refresh_modapply,
-    )
-
-    modapply_apply_hidden: BoolProperty(default=False)
-    modapply_keep_shapekeys: BoolProperty(default=True)
 
     show_hidden_tips: BoolProperty(default=False)
