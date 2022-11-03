@@ -58,8 +58,8 @@ class BaseHair:
         for mat in self._human.body_obj.data.materials[1:]:
             nodes = mat.node_tree.nodes
             hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
-            hair_node.inputs["Hair Lightness"].default_value = hair_color[0]
-            hair_node.inputs["Hair Redness"].default_value = hair_color[1]
+            hair_node.inputs["Lightness"].default_value = hair_color[0]
+            hair_node.inputs["Redness"].default_value = hair_color[1]
             hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
 
     def _condition(self, string: str) -> bool:  # noqa
