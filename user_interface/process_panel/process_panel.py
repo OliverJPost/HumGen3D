@@ -278,6 +278,16 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
                 col.prop(naming_sett, prop.identifier, **mirrored_icon)
 
 
+class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_RENAMING"
+    bl_label = "Other Renaming"
+    icon_name = "OUTLINER_OB_FONT"
+    enabled_propname = "renaming_enabled"
+
+    def draw(self, context):
+        pass
+
+
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
 
