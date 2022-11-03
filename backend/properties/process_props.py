@@ -42,6 +42,8 @@ class HaircardProps(bpy.types.PropertyGroup):
         default="high",
     )
 
+    face_hair: BoolProperty(default=False, name="Face hair")
+
 
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
