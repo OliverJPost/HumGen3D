@@ -6,17 +6,17 @@ import contextlib
 import json
 import os
 import random
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import bpy
+from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Object  # type:ignore
+from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from mathutils import Vector
-
-from .clothing.clothing import ClothingSettings
 
 from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
 from ..common.collections import add_to_collection
@@ -24,6 +24,7 @@ from ..common.decorators import injected_context
 from ..common.exceptions import HumGenException
 from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
+from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
 from .face.face import FaceKeys
@@ -33,10 +34,6 @@ from .keys.keys import KeySettings
 from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
-
-if TYPE_CHECKING:
-    from bpy.props import FloatVectorProperty  # type:ignore
-    from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 
 
 class Human:
