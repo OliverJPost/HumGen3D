@@ -1,5 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+import json
+import os
+
 import bpy
 from bpy.props import (  # type:ignore
     BoolProperty,
@@ -8,6 +11,7 @@ from bpy.props import (  # type:ignore
     PointerProperty,
     StringProperty,
 )
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 
 
 class LodProps(bpy.types.PropertyGroup):
@@ -27,17 +31,48 @@ class LodProps(bpy.types.PropertyGroup):
     remove_clothing_solidify: BoolProperty(default=True)
 
 
+def create_name_props():
+    """Function for creating StringProperties in a loop to prevent repetition."""
+    prop_dict = {}
+
+    path = os.path.join(
+        get_addon_root(), "backend", "properties", "bone_basenames.json"
+    )
+    with open(path, "r") as f:
+        prop_names = json.load(f)
+
+    for category, name_dict in prop_names.items():
+        for name, has_left_right in name_dict.items():
+            prop_dict[name.replace(".", "")] = StringProperty(
+                name=name,
+                default=name,
+                description=f"Category: {category}, Mirrored: {has_left_right}",
+            )
+
+    return prop_dict
+
+
+class RigRenamingProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    __annotations__.update(create_name_props())  # noqa
+
+    suffix_L: StringProperty(name=".L", default=".L")
+    suffix_R: StringProperty(name=".R", default=".R")
+
+
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
 
     lod: PointerProperty(type=LodProps)
+    rig_naming: PointerProperty(type=RigRenamingProps)
 
     bake: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=True)
     human_list_isopen: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
-    rig_enabled: BoolProperty(default=False)
+    rig_renaming_enabled: BoolProperty(default=False)
 
     output: EnumProperty(
         items=[
