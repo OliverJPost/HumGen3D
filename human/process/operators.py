@@ -6,17 +6,21 @@
 
 
 import json
+import os
 import uuid
 
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.properties.process_props import get_preset_list
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.process import ProcessSettings
 from mathutils import Vector
 
 
 def status_text_callback(header, context):
-    bake_sett = context.scene.HG3D.bake
+    bake_sett = context.scene.HG3D.process.baking
     layout = header.layout
 
     layout.separator_spacer()
@@ -64,9 +68,9 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 if pr_sett.haircards.face_hair:
                     human.hair.face_hair.convert_to_haircards(quality, context)
 
-            if pr_sett.bake:
+            if pr_sett.baking:
                 human.process.baking.bake_all(
-                    int(context.scene.HG3D.bake.samples), context
+                    int(context.scene.HG3D.process.baking.samples), context
                 )
 
             if pr_sett.lod_enabled:
@@ -78,7 +82,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 )
 
             if pr_sett.rig_renaming_enabled:
-                naming_sett = context.scene.HG3D.process.rig_naming
+                naming_sett = context.scene.HG3D.process.rig_renaming
                 props = naming_sett.bl_rna.properties
                 prop_dict = {
                     str(prop.identifier): str(getattr(naming_sett, prop.identifier))
@@ -153,6 +157,69 @@ class HG_OT_REMOVE_LOD_OUTPUT(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def get_existing_groups(self, context):
+    path = os.path.join(get_prefs().filepath, "process_templates")
+    # Return all directories in the process_templates folder
+    return [
+        (f.name, f.name, f.name)
+        for f in os.scandir(path)
+        if f.is_dir() and not f.name.startswith(".")
+    ]
+
+
+class HG_OT_SAVE_PROCESS_TEMPLATE(bpy.types.Operator):
+    bl_idname = "hg3d.save_process_template"
+    bl_label = "Save template."
+    bl_description = "Save current settings as a template."
+
+    name: bpy.props.StringProperty(name="Template name")
+    new_or_existing: bpy.props.EnumProperty(
+        items=[
+            ("existing", "Existing", "Add to an existing group.", 0),
+            ("new", "New", "Create a new group.", 1),
+        ]
+    )
+    existing_groups: bpy.props.EnumProperty(items=get_existing_groups)
+    new_group_name: bpy.props.StringProperty(name="New group name")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        col = self.layout.column()
+        col.label(text="Give a name to your template:")
+
+        subcol = col.column()
+        subcol.scale_y = 1.5
+        subcol.alert = self.name in [
+            name for _, name, *_ in get_preset_list(None, None)
+        ]
+        subcol.prop(self, "name", text="")
+        if subcol.alert:
+            subcol.label(text="Will override existing.", icon="ERROR")
+
+        col = self.layout.column()
+        col.label(text="Category:")
+        col.scale_y = 1.5
+        row = col.row()
+        row.prop(self, "new_or_existing", expand=True)
+        if self.new_or_existing == "existing":
+            col.prop(self, "existing_groups", text="")
+        else:
+            col.prop(self, "new_group_name", text="Name")
+
+    def execute(self, context):
+        if self.new_or_existing == "existing":
+            group = self.existing_groups
+        else:
+            group = self.new_group_name
+
+        path = os.path.join(get_prefs().filepath, "process_templates", group)
+        ProcessSettings.save_settings_to_template(path, self.name, context)
+
+        return {"FINISHED"}
+
+
 # TODO progress bar
 class HG_BAKE(bpy.types.Operator):
     """Bake all textures."""
@@ -173,7 +240,7 @@ class HG_BAKE(bpy.types.Operator):
         self.human = Human.from_existing(context.object)
         self.baketextures = self.human.process.baking.get_baking_list()
 
-        bake_sett = context.scene.HG3D.bake
+        bake_sett = context.scene.HG3D.process.baking
         bake_sett.total = len(self.baketextures)
         bake_sett.idx = 1
 
@@ -198,7 +265,7 @@ class HG_BAKE(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):  # noqa CCR001
-        bake_sett = context.scene.HG3D.bake
+        bake_sett = context.scene.HG3D.process.baking
 
         if self.finish_modal:
             self.human.process.baking.set_up_new_materials(self.baketextures)

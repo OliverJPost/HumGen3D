@@ -235,7 +235,7 @@ class BakeSettings:
     def bake_single_texture(
         self, baketexture: BakeTexture, context: C = None
     ) -> bpy.types.Image:
-        bake_sett = context.scene.HG3D.bake
+        bake_sett = context.scene.HG3D.process.baking
         bake_obj = baketexture.bake_object
         was_solidified = self._disable_solidify_if_enabled(bake_obj)
 

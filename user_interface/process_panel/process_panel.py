@@ -78,7 +78,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = 1.5
         row.prop(process_sett, "presets", text="")
-        row.operator("hg3d.bake", text="", icon="ADD")
+        row.operator("hg3d.save_process_template", text="", icon="ADD")
 
         box = col.box()
         human_rigs = Human.find_multiple_in_list(context.selected_objects)
@@ -108,7 +108,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BAKE"
     bl_label = "Bake Textures"
     icon_name = "RENDERLAYERS"
-    enabled_propname = "bake"
+    enabled_propname = "baking_enabled"
 
     def draw(self, context):
         self.check_enabled(context)
@@ -116,7 +116,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
         layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
         sett = context.scene.HG3D  # type:ignore[attr-defined]
-        bake_sett = sett.bake
+        bake_sett = sett.process.baking
 
         if self._draw_baking_warning_labels(context, layout):
             return
@@ -180,7 +180,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
             context.scene,
             "modapply_col_index",
         )
-        col.prop(sett, "modapply_search_modifiers", text="")
+        col.prop(sett.process.modapply, "search_modifiers", text="")
 
         row = col.row(align=True)
         row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
@@ -190,13 +190,13 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col = layout.column(align=True)
         col.label(text="Objects to apply:")
         row = col.row(align=True)
-        row.prop(sett, "modapply_search_objects", text="")
+        row.prop(sett.process.modapply, "search_objects", text="")
 
         layout.separator()
         col = layout.column(align=True)
         self.draw_subtitle("Options", col, "SETTINGS")
-        col.prop(sett, "modapply_keep_shapekeys", text="Keep shapekeys")
-        col.prop(sett, "modapply_apply_hidden", text="Apply hidden modifiers")
+        col.prop(sett.process.modapply, "keep_shapekeys", text="Keep shapekeys")
+        col.prop(sett.process.modapply, "apply_hidden", text="Apply hidden modifiers")
 
 
 class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
@@ -259,7 +259,7 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         self.check_enabled(context)
-        naming_sett = context.scene.HG3D.process.rig_naming
+        naming_sett = context.scene.HG3D.process.rig_renaming
         col = self.layout.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False
@@ -370,11 +370,11 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
         self.draw_subtitle("Output", box, icon="SETTINGS")
 
-        if process_sett.bake:
+        if process_sett.baking:
             col = box.column(align=True)
             col.use_property_split = True
             col.use_property_decorate = False
-            bake_sett = sett.bake
+            bake_sett = sett.process.baking
             col.prop(bake_sett, "file_type", text="Format:")
             col.prop(bake_sett, "export_folder", text="Tex. Folder")
 

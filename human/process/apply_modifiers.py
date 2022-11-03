@@ -32,7 +32,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         driver_dict = {}
 
         for obj in objs:
-            if sett.modapply_keep_shapekeys:
+            if sett.process.modapply.keep_shapekeys:
                 sk_dict, driver_dict = self.copy_shapekeys(
                     context, col, sk_dict, driver_dict, obj
                 )
@@ -48,7 +48,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
         for obj in context.selected_objects:
             obj.select_set(False)
 
-        if sett.modapply_keep_shapekeys:
+        if sett.process.modapply.keep_shapekeys:
             self.add_shapekeys_again(context, objs, sk_dict, driver_dict)
 
         refresh_modapply(self, context)
@@ -81,7 +81,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
     def apply_modifiers(  # noqa CCR001 # FIXME
         self, context, sett, col, sk_dict, objs_to_apply
     ):
-        if sett.modapply_search_modifiers == "summary":
+        if sett.process.modapply.search_modifiers == "summary":
             mod_types = [
                 item.mod_type
                 for item in col
@@ -97,7 +97,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                     obj = item.obj
                     mod = obj.modifiers[item.mod_name]
                     self.apply(context, sett, mod, obj)
-                    if sett.modapply_keep_shapekeys:
+                    if sett.process.modapply.keep_shapekeys:
                         for o in sk_dict[obj.name]:
                             self.apply(context, sett, mod, o)
                 except Exception as e:
@@ -121,7 +121,11 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
 
     @no_type_check
     def apply(self, context, sett, mod, obj):
-        if sett.modapply_apply_hidden and not mod.show_viewport and not mod.show_render:
+        if (
+            sett.process.modapply.apply_hidden
+            and not mod.show_viewport
+            and not mod.show_render
+        ):
             apply = False
         else:
             apply = True
@@ -185,14 +189,14 @@ def refresh_modapply(self: Any, context: bpy.types.Context) -> None:  # noqa CCR
 
     header = col.add()
     header.mod_name = "HEADER"
-    header.count = 1 if sett.modapply_search_modifiers == "summary" else 0
+    header.count = 1 if sett.process.modapply.search_modifiers == "summary" else 0
     objs = build_object_list(context, sett)
 
     for obj in objs:
         for mod in obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM":
                 continue
-            if sett.modapply_search_modifiers == "individual":
+            if sett.process.modapply.search_modifiers == "individual":
                 build_full_list(col, mod, obj)  # type:ignore[arg-type]
             else:
                 build_summary_list(col, mod)  # type:ignore[arg-type]
@@ -204,9 +208,9 @@ def build_object_list(
     from HumGen3D.human.human import Human
 
     objs = [obj for obj in context.selected_objects if not obj.HG.ishuman]
-    if sett.modapply_search_objects == "selected":
+    if sett.process.modapply.search_objects == "selected":
         return objs
-    elif sett.modapply_search_objects == "full":
+    elif sett.process.modapply.search_objects == "full":
         human = Human.from_existing(context.object, strict_check=False)
         humans = list(human)
     else:
