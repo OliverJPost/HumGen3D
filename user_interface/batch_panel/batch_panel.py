@@ -269,8 +269,8 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
             )
         else:
             col = layout.column()
-            col.alert = True
-            col.label(text="Coming soon!")
+            col.scale_y = 1.5
+            col.prop(batch_sett, "hair_quality_haircards")
 
 
 class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):

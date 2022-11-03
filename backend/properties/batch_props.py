@@ -117,8 +117,11 @@ class BatchProps(bpy.types.PropertyGroup):
     hair_quality_haircards: EnumProperty(
         name="Haircard quality",
         items=[
-            ("low", "Low", "", 1),
-            ("ultralow", "Ultra Low", "", 2),
+            ("ultra", "Ultra", "", 0),
+            ("high", "High", "", 1),
+            ("medium", "Medium", "", 2),
+            ("low", "Low", "", 3),
+            ("haircap_only", "Haircap only", "", 4),
         ],
-        default="low",
+        default="medium",
     )

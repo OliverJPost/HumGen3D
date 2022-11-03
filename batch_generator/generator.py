@@ -5,9 +5,9 @@ import random
 from typing import Literal, Optional, Union
 
 import bpy
-from HumGen3D.common.type_aliases import C  # type:ignore
 from HumGen3D.batch_generator.batch_functions import height_from_bell_curve
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C  # type:ignore
 from HumGen3D.human.human import Human
 
 SettingsDict = dict[str, Union[str, int, float]]
@@ -27,7 +27,10 @@ class BatchHumanGenerator:
     add_expression: bool = True
     expression_type: Literal["natural", "most_varied"] = "natural"
     add_hair: bool = True
-    hair_quality: Literal["high", "medium", "low", "ultralow"] = "medium"
+    hair_type: Literal["particle", "haircards"] = "particle"
+    hair_quality: Literal[
+        "high", "medium", "low", "ultralow", "haircap_only"
+    ] = "medium"
     average_height_male: int = 177
     average_height_female: int = 172
     height_one_standard_deviation: float = 0.05
@@ -77,9 +80,14 @@ class BatchHumanGenerator:
                 human.hair.face_hair.randomize(context)
                 human.hair.face_hair.randomize_color()
 
-        human.hair.set_hair_quality(self.hair_quality)
         human.hair.eyebrows.randomize_color()
-        human.hair.children_set_hide(True)
+        if self.hair_type == "particle":
+            human.hair.set_hair_quality(self.hair_quality)
+            human.hair.children_set_hide(True)
+        else:
+            for hairtype in ("regular_hair", "face_hair", "eyebrows", "eyelashes"):
+                hair_attr = getattr(human.hair, hairtype)
+                hair_attr.convert_to_haircards(self.hair_quality, context)
 
         human.height.set(
             height_from_bell_curve(
