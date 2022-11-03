@@ -90,14 +90,8 @@ class SkinSettings:
     saturation = create_node_property("Skin_tone", 3)
     normal_strength = create_node_property("Normal Map", 0)
     roughness_multiplier = create_node_property("R_Multiply", 1)
-    light_areas = create_node_property("Lighten_hsv", "Value")
-    dark_areas = create_node_property("Darken_hsv", "Value")
-    skin_sagging = create_node_property("HG_Age", 1)
     freckles = create_node_property("Freckles_control", "Pos2")
     splotches = create_node_property("Splotches_control", "Pos2")
-    beautyspots_amount = create_node_property("BS_Control", 2)
-    beautyspots_opacity = create_node_property("BS_Opacity", 1)
-    beautyspots_seed = create_node_property("BS_Control", 1)
 
     def __init__(self, human: "Human"):
         self._human = human
