@@ -34,6 +34,9 @@ class ProcessPanel(HGPanel):
         except KeyError:
             self.layout.label(text="", icon=self.icon_name)
 
+    def check_enabled(self, context):
+        self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+
 
 class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
     _register_priority = 4
@@ -108,6 +111,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     enabled_propname = "bake"
 
     def draw(self, context):
+        self.check_enabled(context)
         layout = self.layout
         layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
@@ -163,6 +167,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     enabled_propname = "modapply_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         layout = self.layout
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = layout.column(align=True)
@@ -201,6 +206,7 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
     enabled_propname = "lod_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         col = self.layout.column()
 
         lod_sett = context.scene.HG3D.process.lod
@@ -226,6 +232,7 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     enabled_propname = "haircards_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         col = self.layout.column()
         col.scale_y = 1.5
         hairc_sett = context.scene.HG3D.process.haircards
@@ -251,6 +258,7 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
     enabled_propname = "rig_renaming_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         naming_sett = context.scene.HG3D.process.rig_naming
         col = self.layout.column(align=True)
         col.use_property_split = True
@@ -298,6 +306,7 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     enabled_propname = "renaming_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         rename_sett = context.scene.HG3D.process.renaming
 
         box = self.layout.box()
