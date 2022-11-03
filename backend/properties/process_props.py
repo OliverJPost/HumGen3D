@@ -31,7 +31,6 @@ class LodProps(bpy.types.PropertyGroup):
     remove_clothing_solidify: BoolProperty(default=True)
 
 
-
 class HaircardProps(bpy.types.PropertyGroup):
     _register_priority = 3
 
@@ -48,6 +47,7 @@ class HaircardProps(bpy.types.PropertyGroup):
     )
 
     face_hair: BoolProperty(default=False, name="Face hair")
+
 
 def create_name_props():
     """Function for creating StringProperties in a loop to prevent repetition."""
@@ -79,21 +79,21 @@ class RigRenamingProps(bpy.types.PropertyGroup):
     suffix_R: StringProperty(name=".R", default=".R")
 
 
-
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
 
     lod: PointerProperty(type=LodProps)
 
     haircards: PointerProperty(type=HaircardProps)
-    rig_naming: PointerProperty(type=RigRenamingProps
+    rig_naming: PointerProperty(type=RigRenamingProps)
 
     bake: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
-    modapply_enabled: BoolProperty(default=True)
+    modapply_enabled: BoolProperty(default=False)
     human_list_isopen: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
+    renaming_enabled: BoolProperty(default=False)
 
     output: EnumProperty(
         items=[
