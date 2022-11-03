@@ -512,14 +512,6 @@ class MainPanelPart(HGPanel):
             icon_value=get_hg_icon("hair_hidden" if hair_ishidden else "hair"),
         )
 
-        return
-        row = layout.box().row(align=True)
-        row.alignment = "CENTER"
-        row.label(text=())
-        row = layout.row(align=True)
-        row.scale_x = 0.8
-        row.scale_y = 1.5
-
     def _get_header_label(self, human):
         if not human:
             label = "No human selected"
