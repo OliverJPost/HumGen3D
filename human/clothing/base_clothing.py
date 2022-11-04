@@ -557,6 +557,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         Args:
             context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            float: From 0 to 1.0, percentage of verts that clip with human.
         """
         body_obj = self._human.body_obj
         for modifier in body_obj.modifiers:
