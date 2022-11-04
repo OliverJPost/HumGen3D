@@ -13,6 +13,7 @@ from bpy.props import (  # type: ignore
     BoolProperty,
     EnumProperty,
     FloatProperty,
+    IntProperty,
     PointerProperty,
     StringProperty,
 )
@@ -71,6 +72,17 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             value, realtime=True, context=bpy.context
         ),
         get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
+    )
+
+    age: IntProperty(
+        default=30,
+        min=20,
+        max=70,
+        step=10,
+        set=lambda s, value: Human.from_existing(bpy.context.object).age.set(
+            value, realtime=True
+        ),
+        get=lambda s: Human.from_existing(bpy.context.object).age._current,
     )
 
     # skin props

@@ -69,8 +69,9 @@ def active_phase_enum(self, context):
             ("", "Editing", ""),
             ("closed", "All Categories", "", "COLLAPSEMENU", 0),
             ("body", "Body", "", get_hg_icon("body"), 1),
+            ("age", "Age", "", get_hg_icon("height"), 2),
             ("face", "Face", "", get_hg_icon("face"), 3),
-            ("height", "Height", "", get_hg_icon("height"), 2),
+            ("height", "Height", "", get_hg_icon("height"), 5),
             ("skin", "Skin", "", get_hg_icon("skin"), 4),
             ("hair", "Hair", "", get_hg_icon("hair"), 6),
             ("clothing", "Clothing", "", get_hg_icon("outfit"), 7),
@@ -117,6 +118,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "other",
                 "main",
                 "eyes",
+                "age_hairmat_ui",
+                "age_slider_ui",
             ]
         )
     )
