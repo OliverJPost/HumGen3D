@@ -14,6 +14,7 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 class EyebrowSettings(BaseHair):
     _startswith = "Eyebrows"
+    _mat_idx = 1
 
     def __init__(self, human: "Human") -> None:
         """Create instance for manipulating human eyebrows."""

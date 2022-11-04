@@ -41,6 +41,10 @@ class BaseHair:
         ]
         return PropCollection(modifiers)
 
+    @property
+    def material(self) -> bpy.types.Material:
+        return self._human.body_obj.data.materials[self._mat_idx]
+
     @injected_context
     def convert_to_haircards(
         self, quality: Literal["high"] = "high", context: C = None

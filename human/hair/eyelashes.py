@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class EyelashSettings(BaseHair):
     _startswith = "Eyelashes"
+    _mat_idx = 1
 
     def __init__(self, _human: "Human") -> None:
         """Creates instance to mapipulate eyelash settings."""

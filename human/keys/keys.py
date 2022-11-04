@@ -46,8 +46,10 @@ def update_livekey_collection() -> None:
             if not file.endswith(".npz"):
                 continue
             item = bpy.context.window_manager.livekeys.add()
-            if file.startswith(("male_", "female_")):
-                item.gender = file.split("_")[0]
+            if file.startswith(("male_", "female_")) or os.path.splitext(file)[
+                0
+            ].endswith(("_male", "_female")):
+                item.gender = "female" if "female" in file else "male"
                 item.name = file[:-4].replace(f"{item.gender}_", "")
             else:
                 item.name = file[:-4]
@@ -421,7 +423,8 @@ class KeySettings:
             if key.name in ("height_200", "height_150"):
                 continue
             if key.category == category:
-                keys.append(key)
+                if subcategory is None or key.subcategory == subcategory:
+                    keys.append(key)
 
         return keys
 
