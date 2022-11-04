@@ -7,8 +7,8 @@ from shutil import copyfile
 from typing import Iterable
 
 import bpy
-from backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
