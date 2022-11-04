@@ -158,25 +158,18 @@ class PreviewCollection:
 
         sett.load_exception = False
 
-    def find_folders(self, gender: str, include_all: bool = True) -> BpyEnum:
-        """Gets enum of folders found in a specific directory. T
-        hese serve as categories for that specific pcoll
+    def find_folders(self, gender: GenderStr, include_all: bool = True) -> BpyEnum:
+        """Gets enum of folders found in a specific directory.
+
+        These serve as categories for that specific pcoll
 
         Args:
-            context (bpy.context): blender context
-            pcoll_name (str): preview collection name
-            gender_toggle (bool): Search for folders that are in respective male/female
-                folders.
-            include_all (bool, optional): include "All" as first item.
-                Defaults to True.
-            gender_override (str): Used by operations that are not linked to a single
-                human. Instead of getting the gender from hg_rig this allows for the
-                manual passing of the gender ('male' or 'female')
+            gender (GenderStr): Gender to find folders for ("male", "female")
+            include_all (bool): include "All" as first item. Defaults to True.
 
         Returns:
-            list: enum of folders
+            BpyEnum: Enum of folders in format (folder_name, folder_name, "", idx)
         """
-
         pref = get_prefs()
 
         folder = PREVIEW_COLLECTION_DATA[self.name][2]
