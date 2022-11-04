@@ -61,7 +61,11 @@ repos:
         language: system
         entry: pylint
         types: [python]
-
+        args:
+          [
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+          ]
 
 #      - id: pytest
 #        name: pytest

@@ -24,6 +24,7 @@ flake8-length
 flake8-copyright
 flake8-comments
 flake8-fixme
+darglint
 pylint
 # Formatting
 black
