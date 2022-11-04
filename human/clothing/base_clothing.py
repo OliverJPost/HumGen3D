@@ -1,12 +1,22 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Module containing the baseclass to change both footwear and clothing settings.
+
+The outfit and footwear system are almost exactly the same, the distinction between
+the two is made to give the user the option to choose footwear separately from
+clothing. This class contains the functionality that is shared between the two.
+
+The clothing system heavily relies on `build_distance_dict` and
+`deform_obj_from_difference`.
+"""
+
 import contextlib
 import hashlib
 import json
 import os
 from math import acos, pi
 from pathlib import Path
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Literal, Optional, Tuple, Union
 
 import bpy
 import numpy as np
@@ -43,7 +53,7 @@ def find_masks(obj: bpy.types.Object) -> list[str]:
     Args:
         obj (Object): object to look for masks on
 
-    Retruns:
+    Returns:
         mask_list (list): list of str names of masks on this object
     """
     mask_list = []
@@ -55,8 +65,15 @@ def find_masks(obj: bpy.types.Object) -> list[str]:
 
 
 class BaseClothing(PreviewCollectionContent, SavableContent):
+    """Baseclass for changing both footwear and clothing settings."""
+
     @property
     def pattern(self) -> PatternSettings:
+        """Gives access to PatternSettings to add/change patterns on this clothing.
+
+        Returns:
+            PatternSettings: Instance of PatternSettings for this human's clothing.
+        """
         return PatternSettings(self._human)
 
     @injected_context
@@ -64,7 +81,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         """Gets called by pcoll_outfit or pcoll_footwear to load the selected outfit.
 
         Args:
-            footwear (boolean): True if called by pcoll_footwear, else loads as outfit
+            preset (str): Relative path of the preset to load. Get options from the
+                `get_options` method.
+            context (C): Blender context. bpy.context if not provided.
         """
         pref = get_prefs()
 
@@ -109,8 +128,22 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self._human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
 
     def add_obj(
-        self, cloth_obj: bpy.types.Object, cloth_type: str, context: bpy.types.Context
+        self,
+        cloth_obj: bpy.types.Object,
+        cloth_type: Literal["pants", "top", "footwear", "full"],
+        context: bpy.types.Context,
     ) -> None:
+        """Base method for adding new object to the clothing of this human.
+
+        Will correct the shape of the object to A pose, add corrective shapekeys, do
+        automatic weight painting and add the object to the armature.
+
+        Args:
+            cloth_obj (bpy.types.Object): Object you want to add to the clothing.
+            cloth_type (Literal["pants", "top", "footwear", "full"]): Type of clothing
+                as string, defines what kind of corrective shapekeys will be added.
+            context (C): Blender context. bpy.context if not provided.
+        """
         body_obj = self._human.body_obj
         correct_shape_to_a_pose(cloth_obj, body_obj, context)
         add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
@@ -129,10 +162,14 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     ) -> None:
         """Deforms the cloth object to the shape of the active HumGen human.
 
+        Mainly meant for internal use, but might be useful. Expects the passed
+        cloth_obj to fit for a standard HG human with no adjustments. Will modify
+        the hsape of the object to fit the evaluated shape of the human, with body
+        proportions and height taken into account.
+
         Args:
-            hg_rig (Object): HumGen armature
-            hg_body (Object): HumGen body
-            obj (Object): cloth object to deform
+            context (bpy.types.Context): Blender context.
+            cloth_obj (Object): cloth object to deform
         """
         body_obj = self._human.body_obj
         if self._human.gender == "female":
@@ -168,12 +205,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         context.view_layer.objects.active = self._human.rig_obj
 
     def remove(self) -> list[str]:
-        """Removes the cloth objects that were already on the human.
-
-        Args:
-            pref (AddonPreferences): preferences of HumGen
-            hg_rig (Object): HumGen armature
-            tag (str): tag for identifying cloth and shoe objects
+        """Removes the cloth objects of this category that are currently on the human.
 
         Returns:
             list: list of geometry masks that need to be removed
@@ -198,6 +230,24 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         thumbnail: Optional[bpy.types.Image] = None,
         context: C = None,
     ) -> None:
+        """Save the currently active footwear/clothing to the HumGen library.
+
+        This will make this item accessible in future projects.
+
+        Args:
+            name (str): Name of the item to save.
+            for_male (bool): Whether to make the item available for male humans.
+                Defaults to True.
+            for_female (bool): Whether to make the item available for female humans.
+                Defaults to True.
+            open_when_finished (bool): Whether to open the created .blend files in
+                new windows after saving. Defaults to False.
+            category (str): Category to save the item to. Defaults to "Custom". This
+                is the folder the item will be saved in.
+            thumbnail (bpy.types.Image): Image to use as thumbnail for the item. Has to
+                be loaded in Blender. If None, NO thumbnail will be saved.
+            context (C): Blender context. bpy.context if not provided.
+        """
         genders = []
         if for_male:
             genders.append("male")
@@ -221,8 +271,18 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
     # TODO item independent
     def set_texture_resolution(
-        self, clothing_item: bpy.types.Object, resolution_category: str
+        self,
+        clothing_item: bpy.types.Object,
+        resolution_category: Literal["high", "optimised", "performance"],
     ) -> None:
+        """Sets the texture resolution of the passed clothing to the passed resolution.
+
+        Args:
+            clothing_item (bpy.types.Object): Blender object that is currently loaded
+                on this human as clothing.
+            resolution_category (Literal["high", "optimised", "performance"]):
+                Resolution category to set the textures to.
+        """
         if resolution_category == "performance":
             resolution_tag = "low"
         elif resolution_category == "optimised":
@@ -268,6 +328,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
     @injected_context
     def randomize_colors(self, cloth_obj: bpy.types.Object, context: C = None) -> None:
+        """Randomizes the colors of the passed clothing object.
+
+        Args:
+            cloth_obj (bpy.types.Object): Blender object that is currently loaded on
+                this human as clothing.
+            context (C): Blender context. bpy.context if not provided.
+        """
         mat = cloth_obj.data.materials[0]
         if not mat:
             return
@@ -320,7 +387,6 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                                     were added by previous outfits
             new_mask_list (list): list of masks to add that were not on theh human
                                 before
-            hg_body (Object): HumGen body to add the modifiers on
         """
         # remove duplicates from mask lists
         mask_remove_list = list(set(mask_remove_list))
@@ -354,6 +420,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         """Adds an armature modifier to this cloth object.
 
         Args:
+            context (bpy.types.Context): Blender context.
             obj (Object): cloth object to add armature to
             hg_rig (Object): HumGen armature
         """
@@ -403,11 +470,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         """Imports the cloth objects from an external file.
 
         Args:
-            context ([type]): [description]
-            sett (PropertyGroup): HumGen props
-            pref (AddonPreferences): HumGen preferences
-            hg_rig (Object): HumGen armature object
-            footwear (bool): True if import footwear, False if import clothing
+            preset (str): Path of the preset to import.
+            context (C): Blender context. bpy.context if not provided.
 
         Returns:
             tuple[list, list]:
@@ -457,7 +521,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         """Sets up the drivers of the corrective shapekeys on the clothes.
 
         Args:
-            hg_body (Object): HumGen body object
+            hg_cloth (Object): cloth object to set up the drivers on
             sk (list): List of cloth object shapekeys #CHECK
         """
         with contextlib.suppress(AttributeError):
@@ -489,6 +553,11 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
     @injected_context
     def _calc_percentage_clipping_vertices(self, context: C = None) -> float:
+        """Calculate percentage of verts on this clothing item that clip with human.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
         body_obj = self._human.body_obj
         for modifier in body_obj.modifiers:
             if modifier.type != "ARMATURE":
