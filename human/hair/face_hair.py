@@ -13,6 +13,7 @@ class FacialHairSettings(ImportableHair):
     _pcoll_gender_split = False
     _startswith = "fh"
     _mat_idx = 3
+    _haircap_type = "Beard"
 
     def __init__(self, _human: "Human") -> None:
         """Create instance to manipulate facial hair settings."""

@@ -56,6 +56,13 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
             slider=True,
             text="Skin aging",
         )
+        cavity_map_input = nodes.get("Cavity_Multiply").inputs["Fac"]
+        col.prop(
+            cavity_map_input,
+            "default_value",
+            slider=True,
+            text="Skin cavities",
+        )
         normal_input = nodes.get("Normal Map").inputs["Strength"]
         col.prop(normal_input, "default_value", slider=True, text="Normal Strength")
 
