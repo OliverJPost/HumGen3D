@@ -40,6 +40,6 @@ def _create_human(gender="male"):
     return Human.from_preset(chosen_preset, bpy.context)
 
 
-@pytest.fixture
+@pytest.fixture()
 def context():
     return bpy.context

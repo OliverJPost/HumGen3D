@@ -245,8 +245,10 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         r_row.alert = True
         r_row.label(text="ALPHA")
 
-        message = """If you are baking textures, see Bake Textures menu for haircard \
-baking resolution."""
+        message = (
+            "If you are baking textures, see Bake Textures menu for haircard"
+            + "baking resolution."
+        )
 
         draw_paragraph(self.layout, text=message, enabled=False)
 
