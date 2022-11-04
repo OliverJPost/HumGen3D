@@ -88,7 +88,6 @@ def draw_panel_switch_header(layout, sett):
     """
     row = layout.row()
     row.scale_x = 1.2
-    # row.alignment = "EXPAND"
     row.prop(sett.ui, "active_tab", expand=True, icon_only=True)
 
 

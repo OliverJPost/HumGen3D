@@ -110,9 +110,6 @@ class BatchHumanGenerator:
 
         if self.add_expression:
             self._set_expression(context, human)
-            # FIXME human.expression.shape_keys[0].value = random.choice(
-            #    [0.5, 0.7, 0.8, 1, 1, 1]
-            # )
 
         return human
 

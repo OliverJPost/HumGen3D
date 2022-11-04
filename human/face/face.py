@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -17,21 +17,6 @@ from ..common_baseclasses.prop_collection import PropCollection
 class FaceKeys(PropCollection):
     def __init__(self, human: "Human") -> None:
         self._human = human
-
-    #     facekeys_dict = self._get_ff_prefix_dict()
-
-    #     for type_name, prefix in facekeys_dict.items():
-    #         setattr(
-    #             FaceKeys,
-    #             type_name,
-    #             property(self._set_prop(type_name, prefix)),
-    #         )
-
-    # def _set_prop(self, type_name, prefix):
-    #     if not hasattr(self, f"_{type_name}"):
-    #         filtered_sks = [sk for sk in self if sk.name.startswith(prefix)]
-    #         setattr(self, f"_{type_name}", PropCollection(filtered_sks))
-    #     return getattr(self, f"_{type_name}")
 
     @property
     def keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:

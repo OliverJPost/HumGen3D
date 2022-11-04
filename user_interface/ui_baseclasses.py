@@ -322,7 +322,6 @@ class MainPanelPart(HGPanel):
         ).section_name = "closed"
 
         row.prop(context.scene.HG3D.ui, "phase", text="", icon_only=True)
-        # row.prop(context.scene.HG3D.ui, "active_tab", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
         col = layout.column()
@@ -352,7 +351,6 @@ class MainPanelPart(HGPanel):
         row_center = row.row()
         row_center.alignment = "CENTER"
         row_center.scale_x = 0.7
-        # row_center.scale_x = 0.07 * len(text)
         if icon:
             row_center.prop(
                 self.sett.ui, "phase", text="", emboss=False, icon_only=True

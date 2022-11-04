@@ -114,9 +114,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                 continue
             context.view_layer.objects.active = obj
             obj.select_set(True)
-            # FIXME reapply_shapekeys(
-            #     context, sk_dict[obj.name], obj, driver_dict[obj.name]
-            # )
+            # FIXME
+            # reapply_shapekeys(context, sk_dict[obj.name], obj, driver_dict[obj.name]) # noqa E800
             obj.select_set(False)
 
     @no_type_check

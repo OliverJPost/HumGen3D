@@ -49,8 +49,6 @@ class HG_UL_BATCH_EXPRESSIONS(bpy.types.UIList):
 def uilist_layout(layout, context, item):
     enabledicon = "CHECKBOX_HLT" if item.enabled else "CHECKBOX_DEHLT"
 
-    # islockedicon = "LOCKED" if item.islocked else "BLANK1"
-
     row = layout.row(align=True)
     row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
 
