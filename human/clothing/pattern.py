@@ -1,8 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Contains PatternSettings, for changing patterns on individual clothing items."""
+
 import os
 import random
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Literal, cast
 
 import bpy
 from bpy.types import ShaderNode  # type:ignore
@@ -17,8 +19,14 @@ from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionCon
 
 
 class PatternSettings(PreviewCollectionContent):
+    """Class for changing patterns on individual clothing items."""
+
     def __init__(self, _human: "Human") -> None:
-        """Creates new instance to manipulate pattern of clothing items."""
+        """Creates new instance to manipulate pattern of clothing items.
+
+        Args:
+            _human (Human): Human instance.
+        """
         self._human = _human
         self._pcoll_gender_split = False
         self._pcoll_name = "pattern"
@@ -29,12 +37,19 @@ class PatternSettings(PreviewCollectionContent):
         )
 
     def set(self, preset: str, obj: bpy.types.Object) -> None:  # noqa: A003
-        """Loads pattern that is the active item in the patterns preview_collection."""
+        """Loads passed pattern on passed object.
+
+        NOTE: Expects passed object to use HG clothing material.
+
+        Args:
+            preset (str): Relative path of pattern to load.
+            obj (bpy.types.Object): Object to apply pattern to.
+        """
         pref = get_prefs()
         mat = obj.active_material
 
         for node_name in self._node_names:
-            self._create_node_if_doesnt_exist(node_name)
+            self._create_node_if_doesnt_exist(node_name)  # type:ignore[arg-type]
 
         img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore
 
@@ -46,11 +61,22 @@ class PatternSettings(PreviewCollectionContent):
 
     @injected_context
     def set_random(self, obj: bpy.types.Object, context: C = None) -> None:
+        """Set a random pattern as active on the passed object.
+
+        Args:
+            obj (bpy.types.Object): Object to add pattern to.
+            context (C): Blender context. bpy.context if not provided.
+        """
         options = self.get_options(context)
         chosen = random.choice(options)
         self.set(chosen, obj)
 
     def remove(self, obj: bpy.types.Object) -> None:
+        """Remove pattern from passed object.
+
+        Args:
+            obj (bpy.types.Object): Object to remove pattern from.
+        """
         mat = obj.active_material
         for node_name in self._node_names:
             mat.node_tree.nodes.remove(
@@ -69,17 +95,25 @@ class PatternSettings(PreviewCollectionContent):
             )
 
     def _set(self, context: bpy.types.Context) -> None:
+        """Internal method for calling from update function.
+
+        Args:
+            context (bpy.types.Context): Blender context.
+        """
         obj = context.object
         active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
         self.set(active_item, obj)
 
-    def _create_node_if_doesnt_exist(self, name: str) -> ShaderNode:
+    def _create_node_if_doesnt_exist(
+        self,
+        name: Literal["HG_Pattern", "HG_Pattern_Mapping", "HG_Pattern_Coordinates"],
+    ) -> ShaderNode:
         """Returns the node, creating it if it doesn't exist.
 
         Args:
             name (str): name of node to check
 
-        Return
+        Returns:
             node (ShaderNode): node that was being searched for
         """
         # try to find the node, returns it if it already exists
