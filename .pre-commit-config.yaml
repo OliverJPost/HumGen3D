@@ -55,6 +55,14 @@ repos:
         types: [python]
         pass_filenames: false
 
+      - id: pylint
+        name: pylint
+        stages: [commit]
+        language: system
+        entry: pylint
+        types: [python]
+
+
 #      - id: pytest
 #        name: pytest
 #        stages: [commit]
