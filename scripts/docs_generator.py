@@ -239,7 +239,7 @@ class Property:
         self.docstring = Docstring(docstring_txt) if docstring_txt else ""
         try:
             annotations = get_type_hints(self.attr.fget)
-        except (NameError, AttributeError) as e:
+        except (NameError, AttributeError, TypeError) as e:
             self.type = ReturnValue.from_type(str(e), docstring_txt)
             return
 
@@ -359,7 +359,7 @@ def document_from_instance(instance, parent_namespace):
 
 
 def main():
-    chosen = Human.get_preset_options("male", context=bpy.context)[5]
+    chosen = Human.get_preset_options("male", context=bpy.context)[1]
     human = Human.from_preset(chosen)
 
     try:
