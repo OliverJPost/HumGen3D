@@ -44,7 +44,8 @@ repos:
           flake8-length,
           flake8-copyright,
           flake8-comments,
-          flake8-fixme
+          flake8-fixme,
+          darglint
           ]
 
       - id: mypy
