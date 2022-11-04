@@ -65,7 +65,7 @@ class BodySettings:
             if key.name == "skinny":
                 key.set_without_update(random.uniform(0, 0.7))
             else:
-                key.set_without_update(random.uniform(0, 1.0))
+                key.set_without_update(random.normalvariate(0, 0.5))
 
         self._human.keys.update_human_from_key_change(context)
 
