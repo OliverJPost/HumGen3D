@@ -43,6 +43,3 @@ def main():
     selected_bone["tail_verts"] = [v.index for v in tail_v_sorted[:half]]
     centroid_co = centroid([v.co for v in tail_v_sorted[:half]])
     selected_bone["tail_relative_co"] = selected_bone.tail - centroid_co
-
-
-# main()

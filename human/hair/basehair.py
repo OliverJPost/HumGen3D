@@ -274,9 +274,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         if for_female:
             genders.append("female")
 
-        # else:
-        #     self._human.render_thumbnail()  # FIXME
-
         hair_type = self._pcoll_name
         save_hair(
             self._human,

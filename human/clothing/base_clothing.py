@@ -13,17 +13,15 @@ import numpy as np
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human import clothing
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 from HumGen3D.common.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
 )
+from HumGen3D.common.type_aliases import C
+from HumGen3D.human import clothing
 from HumGen3D.human.clothing.add_obj_to_clothing import (
     add_corrective_shapekeys,
     auto_weight_paint,
@@ -31,6 +29,8 @@ from HumGen3D.human.clothing.add_obj_to_clothing import (
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.clothing.saving import save_clothing
+from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 from mathutils import Vector
 
 
@@ -161,7 +161,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             as_shapekey=True,
         )
 
-        # cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
+        cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
 
         context.view_layer.objects.active = cloth_obj
         self._set_armature(context, cloth_obj, self._human.rig_obj)

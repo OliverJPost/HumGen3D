@@ -227,7 +227,6 @@ class LiveKeyItem(KeyItem):
         return ShapeKeyItem(name, self._human)
 
     def as_bpy(self) -> "BpyLiveKey":
-        # livekey = getattr(context.scene.livekeys, self.category).get(self.name)
         livekey = bpy.context.window_manager.livekeys.get(self.name)
         assert livekey
         return cast("BpyLiveKey", livekey)

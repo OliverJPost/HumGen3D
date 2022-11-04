@@ -2,11 +2,14 @@
 
 import os
 import re
+import subprocess
 from shutil import copyfile
 from typing import Iterable
 
 import bpy
+from backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend import get_prefs, hg_log
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
 def save_thumb(folder: str, img_name: str, save_name: str) -> None:
@@ -41,7 +44,7 @@ def save_thumb(folder: str, img_name: str, save_name: str) -> None:
             img.file_format = "JPEG"
             img.save()
         except RuntimeError as e:
-            # show_message(self, "Thumbnail image doesn't have any image data")
+            ShowMessageBox("Thumbnail image doesn't have any image data")
             hg_log(e, level="ERROR")
 
 
@@ -106,23 +109,21 @@ def save_objects_optimized(
     bpy.data.libraries.write(blend_filepath, {new_scene})
 
     # FIXME
-    # python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
-    # if run_in_background:
-    #     hg_log("STARTING HumGen background process", level="BACKGROUND")
-    #     background_blender = subprocess.Popen(
-    #         [
-    #             bpy.app.binary_path,
-    #             blend_filepath,
-    #             "--background",
-    #             "--python",
-    #             python_file,
-    #         ],
-    #         stdout=subprocess.DEVNULL,
-    #     )
-    # else:
-    #     subprocess.Popen(
-    #         [bpy.app.binary_path, blend_filepath, "--python", python_file]
-    #     )
+    python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
+    if run_in_background:
+        hg_log("STARTING HumGen background process", level="BACKGROUND")
+        subprocess.Popen(
+            [
+                bpy.app.binary_path,
+                blend_filepath,
+                "--background",
+                "--python",
+                python_file,
+            ],
+            stdout=subprocess.DEVNULL,
+        )
+    else:
+        subprocess.Popen([bpy.app.binary_path, blend_filepath, "--python", python_file])
 
     bpy.data.scenes.remove(new_scene)
 

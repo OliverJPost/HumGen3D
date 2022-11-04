@@ -237,11 +237,6 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         col.label(text="Texture resolution:", icon="IMAGE_PLANE")
         col.prop(batch_sett, "texture_resolution", text="")
 
-        # col.separator()
-
-        # col.label(text = 'Polygon reduction [BETA]:', icon = 'MOD_DECIM')
-        # col.prop(sett, 'batch_poly_reduction', text = '')
-
 
 class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
     _register_priority = 4
@@ -293,7 +288,6 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         box.label(text="Select libraries:")
         box.operator("hg3d.refresh_batch_uilists", text="", icon="FILE_REFRESH")
 
-        # col.scale_y = 1.5
         row = col.row(align=False)
         row.template_list(
             "HG_UL_BATCH_CLOTHING",
@@ -335,40 +329,6 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         layout.enabled = batch_sett.expression
 
         layout.prop(batch_sett, "expression_type", expand=True)
-
-
-# class HG_PT_B_BAKING(Batch_PT_Base, bpy.types.Panel):
-#     bl_parent_id = "HG_PT_Batch_Panel"
-#     bl_label = " Bake textures"
-#     bl_options = {"DEFAULT_CLOSED"}
-
-#     @classmethod
-#     def poll(cls, context):
-#         return False
-
-#     def draw_header(self, context):
-#         header(self, context, "bake")
-#         self.layout.label(text="", icon="RENDERLAYERS")
-
-#     def draw(self, context):
-#         layout = self.layout
-#         sett = context.scene.HG3D  # type:ignore[attr-defined]
-#         layout.enabled = sett.batch_bake
-
-#         col = get_flow(sett, layout.box())
-#         col.prop(sett, "bake_samples", text="Quality")
-
-#         col = get_flow(sett, layout.box())
-
-#         draw_resolution_box(sett, col, show_batch_comparison=True)
-
-#         col = get_flow(sett, layout.box())
-#         col.prop(sett, "bake_export_folder", text="Output Folder:")
-
-#         row = col.row()
-#         row.alignment = "RIGHT"
-#         row.label(text="HumGen folder when left empty", icon="INFO")
-#         col.prop(sett, "bake_file_type", text="Format:")
 
 
 def header(self, context, categ):

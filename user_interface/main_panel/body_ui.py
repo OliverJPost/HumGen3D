@@ -19,14 +19,6 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
 
-        # row.alignment = "CENTER"
-        # row.label(text="Body Proportions", icon="COMMUNITY")
-        # row = self.layout.row()
-        # row.scale_y = 0.2
-        # row.alignment = "CENTER"
-        # for i in range(8):
-        #     row.label(text="", icon="KEYTYPE_KEYFRAME_VEC")
-
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
         row = col.row()
