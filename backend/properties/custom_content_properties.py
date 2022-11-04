@@ -45,7 +45,7 @@ def thumbnail_saving_prop_update(self, context):
             try:
                 img = bpy.data.images.load(full_image_path)
                 self.preset_thumbnail = img
-            except Exception as e:
+            except Exception as e:  # noqa PIE786
                 hg_log("Auto thumbnail failed to load with error:", e)
 
     if switched_to == "last_render":

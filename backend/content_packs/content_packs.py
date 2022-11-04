@@ -303,7 +303,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
                 # structure with the same name
             else:
                 return "None"
-        except Exception:
+        except Exception:  # noqa PIE786
             return "None"
 
 

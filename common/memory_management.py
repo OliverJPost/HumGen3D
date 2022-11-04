@@ -26,14 +26,14 @@ def hg_delete(obj: bpy.types.Object) -> None:
     for material in [m for m in materials if m and not m.users]:
         try:
             bpy.data.materials.remove(material)
-        except Exception as e:
+        except Exception as e:  # noqa PIE786
             hg_log("Error while deleting material: ", e)
             pass
 
     for image in [i for i in images if i and not i.users]:
         try:
             bpy.data.images.remove(image)
-        except Exception as e:
+        except Exception as e:  # noqa PIE786
             hg_log("Error while deleting image: ", e)
             pass
 
