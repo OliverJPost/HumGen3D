@@ -49,6 +49,8 @@ class BaseHair:
     def convert_to_haircards(
         self, quality: Literal["high"] = "high", context: C = None
     ) -> bpy.types.Object:
+        if not self.modifiers:
+            raise HumGenException("No hair to convert")
 
         hair_objs: list[bpy.types.Object] = []
         for mod in self.modifiers:
@@ -69,33 +71,39 @@ class BaseHair:
 
             hair_obj = context.object  # TODO this is bound to fail
             hc = HairCollection(hair_obj, self._human)
-            objs = hc.create_mesh()
-            hair_objs.extend(objs)
-            for obj in objs:
-                obj.name += ps.name
+            if self._haircap_type == "Scalp":
+                objs = hc.create_mesh(quality)
+                hair_objs.extend(objs)
+                for obj in objs:
+                    obj.name += ps.name
 
-            hc.add_uvs()
-            hc.add_material()
+                hc.add_uvs()
+                hc.add_material()
 
         density_vertex_groups = [
             body_obj.vertex_groups[ps.vertex_group_density]
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
-        if density_vertex_groups:
-            cap_obj = hc.add_haircap(self._human, density_vertex_groups, context)
+        if density_vertex_groups or self._haircap_type != "Scalp":
+            cap_obj = hc.add_haircap(
+                self._human, self._haircap_type, density_vertex_groups, context
+            )
             hair_objs.append(cap_obj)
         hc.set_node_values(self._human)
 
-        join_obj_name = hair_objs[0].name
-        with context.temp_override(
-            active_object=hair_objs[0],
-            selected_editable_objects=hair_objs,
-        ):
-            bpy.ops.object.join()
+        if len(hair_objs) > 1:
+            join_obj_name = hair_objs[0].name
+            with context.temp_override(
+                active_object=hair_objs[0],
+                selected_editable_objects=hair_objs,
+            ):
+                bpy.ops.object.join()
 
-        joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
-        joined_object.name = "Haircards"
+            joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
+            joined_object.name = "Haircards"
+        else:
+            joined_object = cap_obj
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
