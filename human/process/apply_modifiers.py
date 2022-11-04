@@ -100,7 +100,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
                     if sett.process.modapply.keep_shapekeys:
                         for o in sk_dict[obj.name]:
                             self.apply(context, sett, mod, o)
-                except Exception as e:
+                except Exception as e:  # noqa PIE786
                     hg_log(
                         f"Error while applying modifier {item.mod_name} on ",
                         f"{item.obj}, with error as {e}",
@@ -134,7 +134,7 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
             context.view_layer.objects.active = obj
             try:
                 bpy.ops.object.modifier_apply(modifier=mod.name)
-            except Exception as e:
+            except Exception as e:  # noqa PIE786
                 hg_log(
                     f"Error while applying modifier {mod.name} on {obj.name}, ",
                     f"with error as {e}",

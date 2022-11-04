@@ -40,7 +40,7 @@ class HG_RIGIFY(bpy.types.Operator):
 
         try:
             bpy.ops.pose.rigify_generate()
-        except Exception as e:
+        except Exception as e:  # noqa PIE786
             hg_log("Rigify Error:", e, level="WARNING")
             self.report(
                 {"WARNING"},

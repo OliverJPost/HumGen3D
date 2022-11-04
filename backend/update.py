@@ -31,46 +31,34 @@ def check_update() -> None:
     pref.cpack_update_required = False
     pref.cpack_update_available = False
 
-    try:
-        update_data = json.loads(resp.text)
-    except Exception as e:
-        hg_log("Failed to load HumGen update data, with error:", level="WARNING")
-        print(e)  # noqa T201
-        return
+    update_data = json.loads(resp.text)
 
-    try:
-        # only get 2 first version numbers for required cpacks, last number can
-        # be updated without needing a new required cpack item
-        current_main_version = str([bl_info["version"][0], bl_info["version"][1]])
+    # only get 2 first version numbers for required cpacks, last number can
+    # be updated without needing a new required cpack item
+    current_main_version = str([bl_info["version"][0], bl_info["version"][1]])
 
-        pref.latest_version = tuple(update_data["latest_addon"])
+    pref.latest_version = tuple(update_data["latest_addon"])
 
-        update_col = bpy.context.scene.hg_update_col  # type:ignore[attr-defined]
-        update_col.clear()
-        for version, update_types in update_data["addon_updates"].items():
-            if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
-                continue
-            for update_type, lines in update_types.items():
-                for line in lines:
-                    item = update_col.add()
-                    item.version = tuple([int(i) for i in version.split(",")])
-                    item.categ = update_type
-                    item.line = line
+    update_col = bpy.context.scene.hg_update_col  # type:ignore[attr-defined]
+    update_col.clear()
+    for version, update_types in update_data["addon_updates"].items():
+        if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
+            continue
+        for update_type, lines in update_types.items():
+            for line in lines:
+                item = update_col.add()
+                item.version = tuple([int(i) for i in version.split(",")])
+                item.categ = update_type
+                item.line = line
 
-        cpack_col = bpy.context.scene.contentpacks_col  # type:ignore[attr-defined]
-        req_cpacks = update_data["required_cpacks"][
-            current_main_version
-        ]  # TODO this is bound to break
-        latest_cpacks = update_data["latest_cpacks"]
+    cpack_col = bpy.context.scene.contentpacks_col  # type:ignore[attr-defined]
+    req_cpacks = update_data["required_cpacks"][
+        current_main_version
+    ]  # TODO this is bound to break
+    latest_cpacks = update_data["latest_cpacks"]
 
-        for cp in cpack_col:
-            _check_cpack_update(cp, req_cpacks, latest_cpacks)
-    except Exception as e:  # FIXME
-        hg_log(
-            "Failed to compute HumGen update numbering, with error:",
-            level="WARNING",
-        )
-        print(e)  # noqa T201
+    for cp in cpack_col:
+        _check_cpack_update(cp, req_cpacks, latest_cpacks)
 
 
 class UPDATE_INFO_ITEM(bpy.types.PropertyGroup):

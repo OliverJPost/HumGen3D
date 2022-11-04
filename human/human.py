@@ -19,7 +19,7 @@ from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from HumGen3D.human.materials import MaterialSettings
 from mathutils import Vector
 
-from ..backend import get_prefs, hg_delete, hg_log, remove_broken_drivers
+from ..backend import get_prefs, hg_delete, remove_broken_drivers
 from ..common.collections import add_to_collection
 from ..common.decorators import injected_context
 from ..common.exceptions import HumGenException
@@ -463,10 +463,7 @@ class Human:
                 delete_list.append(sub_child)
 
         for obj in delete_list:
-            try:
-                hg_delete(obj)
-            except Exception:
-                hg_log("Could not remove", obj)
+            hg_delete(obj)
 
     # TODO this method is too broad
     @classmethod

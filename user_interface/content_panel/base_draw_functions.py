@@ -221,7 +221,7 @@ def _draw_warning_if_different_active_human(context, layout):
             row.label(
                 text=f"Selected human is not {cc_sett.content_saving_active_human.name}"
             )
-    except Exception:
+    except AttributeError:
         row = layout.row()
         row.alert = True
         row.label(text="Human seems to be deleted")

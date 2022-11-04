@@ -297,7 +297,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         if get_prefs().compress_zip:
             try:
                 cpack_zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
-            except Exception as e:
+            except Exception as e:  # noqa PIE786
                 hg_log(
                     "Error while attempting zip compression",
                     e,
