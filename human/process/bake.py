@@ -10,9 +10,9 @@ import bpy
 from bpy.types import Material, Object  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.backend.properties.bake_props import BakeProps
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.common.type_aliases import C
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 if TYPE_CHECKING:
@@ -66,27 +66,27 @@ class BakeSettings:
 
     @property
     def resolution_body(self) -> int:
-        return bpy.context.scene.HG3D.res_body
+        return bpy.context.scene.HG3D.process.baking.res_body
 
     @resolution_body.setter
     def resolution_body(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.res_body = str(value)
+        bpy.context.scene.HG3D.process.baking.res_body = str(value)
 
     @property
     def resolution_clothes(self) -> int:
-        return bpy.context.scene.HG3D.res_body
+        return bpy.context.scene.HG3D.process.baking.res_clothes
 
     @resolution_clothes.setter
     def resolution_clothes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.res_clothes = str(value)
+        bpy.context.scene.HG3D.process.baking.res_clothes = str(value)
 
     @property
     def resolution_eyes(self) -> int:
-        return bpy.context.scene.HG3D.res_body
+        return bpy.context.scene.HG3D.process.baking.res_eyes
 
     @resolution_eyes.setter
     def resolution_eyes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.res_eyes = str(value)
+        bpy.context.scene.HG3D.process.baking.res_eyes = str(value)
 
     @staticmethod
     def _add_image_node(
