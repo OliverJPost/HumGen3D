@@ -118,6 +118,29 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
         )
 
 
+class HG_PT_MANAGE_CONTENT(HGPanel, bpy.types.Panel):
+    _register_priority = 998  # Put after other panels but before tips panel
+    bl_parent_id = "HG_PT_CONTENT"
+    bl_idname = "HG_PT_MANAGE_CONTENT"
+    bl_label = "Manage/export content"
+
+    def draw_header(self, context) -> None:
+        self.layout.label(icon_value=get_hg_icon("custom_content"))
+
+    def draw(self, context):
+        col = self.layout.column(align=True)
+        col.scale_y = 1.5
+        col.operator(
+            "hg3d.toggle_content_overview", text="Open Content Overview"
+        ).toggle_state = True
+        col.operator(
+            "hg3d.toggle_content_overview", text="Edit existing pack"
+        ).toggle_state = True
+        col.operator(
+            "hg3d.create_cpack", text="Create new pack"
+        ).show_name_dialog = True
+
+
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
     _register_priority = 999
     bl_parent_id = "HG_PT_CONTENT"

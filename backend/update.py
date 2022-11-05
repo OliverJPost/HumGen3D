@@ -9,7 +9,7 @@ import bpy
 import requests  # type:ignore
 
 if TYPE_CHECKING:
-    from .content_packs.content_packs import HG_CONTENT_PACK  # type: ignore
+    from .content.content_packs import HG_CONTENT_PACK  # type: ignore
 
 from . import get_prefs, hg_log  # type: ignore
 

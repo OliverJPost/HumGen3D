@@ -48,6 +48,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         if self.editing_cpack:
             self._draw_cpack_editing_ui(layout, context)
             return
+        elif self.show_content_overview:
+            self._draw_content_overview_ui(layout, context)
+            return
 
         update_statuscode = self._get_update_statuscode()
 

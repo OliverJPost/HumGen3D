@@ -10,12 +10,12 @@ from HumGen3D.common.type_aliases import DistanceDict
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.custom_content.content_saving import (
+from HumGen3D.backend.content.content_saving import (
     remove_number_suffix,
     save_objects_optimized,
     save_thumb,
 )
+from HumGen3D.backend.logging import hg_log
 from HumGen3D.common.shapekey_calculator import (
     build_distance_dict,
     deform_obj_from_difference,

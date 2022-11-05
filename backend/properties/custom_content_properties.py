@@ -20,13 +20,13 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.user_interface.panel_functions import prettify
 
-from ..content_packs.custom_content_packs import build_content_collection
+from ..content.custom_content_packs import build_content_collection
+from ..content.possible_content import find_possible_content
 
 
 def poll_mtc_armature(self, obj):

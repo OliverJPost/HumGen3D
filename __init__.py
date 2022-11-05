@@ -38,10 +38,11 @@ import bpy  # type: ignore
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
-from bpy.app.handlers import persistent as _persistent  # type: ignore
+from bpy.app.handlers import persistent as _persistent
 
 from .backend.auto_classes import _get_bpy_classes
-from .backend.content_packs.content_packs import cpacks_refresh as _cpacks_refresh
+from .backend.content import content_packs  # type: ignore
+from .backend.content.content_packs import cpacks_refresh as _cpacks_refresh
 from .backend.preferences.preference_func import get_prefs
 from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
 from .backend.preview_collections import preview_collections as _preview_collections
@@ -106,11 +107,10 @@ def _initiate_custom_icons() -> None:
 
 def _initiate_ui_lists() -> None:
     # Import in local namespace to prevent cluttering package namespace
-    from HumGen3D.backend import update
-    from HumGen3D.backend.content_packs import content_packs, custom_content_packs
-    from HumGen3D.user_interface.documentation import tips_suggestions_ui
-
-    from .custom_content.possible_content import POSSIBLE_CONTENT_ITEM
+    from .backend import update
+    from .backend.content import custom_content_packs
+    from .backend.content.possible_content import POSSIBLE_CONTENT_ITEM
+    from .user_interface.documentation import tips_suggestions_ui
 
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
