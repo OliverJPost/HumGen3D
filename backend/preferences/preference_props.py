@@ -12,7 +12,7 @@ from bpy.props import (  # type:ignore
 )
 from bpy.types import AddonPreferences  # type:ignore
 
-from ..content_packs.content_packs import cpacks_refresh
+from ..content.content_packs import cpacks_refresh
 
 
 class HGPreferenceBackend:

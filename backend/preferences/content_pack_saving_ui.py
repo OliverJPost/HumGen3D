@@ -1,13 +1,17 @@
 # type:ignore
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class CpackEditingSystem:
     # cpack editing props
     editing_cpack: StringProperty()
+    show_content_overview: BoolProperty()
+    grid_columns: IntProperty(name="Grid columns", default=0, min=0, max=20)
     cpack_content_search: StringProperty()
     newly_added_ui: BoolProperty(default=False)
     removed_ui: BoolProperty(default=False)
@@ -15,16 +19,20 @@ class CpackEditingSystem:
         name="Content type",
         description="",
         items=[
-            ("starting_humans", "Starting Humans", "", 0),
-            # ("texture_sets",    "Texture sets",     "", 1), # noqa
-            ("shapekeys", "Shapekeys", "", 2),
-            ("hairstyles", "Hairstyles", "", 3),
-            ("face_hair", "Facial hair", "", 4),
-            ("poses", "Poses", "", 5),
-            ("outfits", "Outfits", "", 6),
-            ("footwear", "Footwear", "", 7),
+            ("all", "Everything", ""),
+            ("humans", "Starting Humans", ""),
+            ("texture", "Textures", ""),
+            ("key", "Keys", ""),
+            ("hair", "Hairstyles", ""),
+            ("face_hair", "Facial hair", ""),
+            ("pose", "Poses", ""),
+            ("outfit", "Outfits", ""),
+            ("footwear", "Footwear", ""),
+            ("pattern", "Patterns", ""),
+            ("scripts", "Scripts", ""),
+            ("process_templates", "Process templates", ""),
         ],
-        default="starting_humans",
+        default="humans",
     )
     cpack_name: StringProperty()
     cpack_creator: StringProperty()
@@ -52,6 +60,17 @@ class CpackEditingSystem:
 
         self._draw_main_topbar(main)
         self._draw_content_grid(main, context)
+
+    def _draw_content_overview_ui(self, layout, context):
+        row = layout.row()
+        row.scale_y = 2
+        row.operator(
+            "hg3d.toggle_content_overview",
+            text="Back to preferences",
+            icon="BACK",
+        ).toggle_state = False
+        self._draw_main_topbar(layout)
+        self._draw_content_grid(layout, context, show_include_button=False)
 
     def _draw_sidebar(self, context, sidebar):
         sidebar.scale_y = 1.5
@@ -163,7 +182,7 @@ class CpackEditingSystem:
 
         row = box.row(align=True)
         row.scale_y = 2
-        row.prop(self, "custom_content_categ", expand=True)
+        row.prop(self, "custom_content_categ", text="")
 
         subrow = box.row(align=True)
         subrow.prop(self, "cpack_content_search", text="Filter", icon="VIEWZOOM")
@@ -177,15 +196,24 @@ class CpackEditingSystem:
 
         subrow.separator()
         subrow.prop(self, "hide_other_packs", text="Hide content from other packs")
+        subrow.prop(self, "grid_columns")
 
-    def _draw_content_grid(self, col, context):
-        flow = col.grid_flow(row_major=True, even_columns=True, even_rows=True)
+    def _draw_content_grid(self, col, context, show_include_button=True):
+        flow = col.grid_flow(
+            row_major=True,
+            even_columns=True,
+            even_rows=True,
+            columns=get_prefs().grid_columns,
+        )
 
         categ = self.custom_content_categ
-        condition = (
-            lambda i: i.categ == categ and self.cpack_content_search in i.name
-        )  # FIXME
-        for item in filter(condition, context.scene.custom_content_col):
+        coll = context.scene.custom_content_col
+        if categ != "all":
+            coll = [c for c in coll if c.categ == categ]
+        if self.cpack_content_search:
+            coll = [c for c in coll if self.cpack_content_search in c.name]
+
+        for item in coll:
             if self.hide_other_packs and item.existing_content:
                 continue
             box = flow.box()
@@ -198,8 +226,22 @@ class CpackEditingSystem:
                     text=gender.capitalize(),
                     icon_value=get_hg_icon(f"{gender}_true"),
                 )
-            with contextlib.suppres(Exception):
-                box.template_icon(item.icon_value, scale=5)
 
-            incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
-            box.prop(item, "include", text="Include", icon=incl_icon, toggle=True)
+            scale = 10 if get_prefs().grid_columns < 5 else 5
+            box.template_icon(item.icon_value, scale=scale)
+
+            col = box.column(align=True)
+            if show_include_button:
+                incl_icon = "CHECKBOX_HLT" if item.include else "CHECKBOX_DEHLT"
+                col.prop(item, "include", text="Include", icon=incl_icon, toggle=True)
+            col.operator(
+                "hg3d.show_content_item", text="Open folder", icon="FILE_FOLDER"
+            ).item_name = item.name
+            col.operator(
+                "hg3d.edit_content_item", text="Edit", icon="GREASEPENCIL"
+            ).item_name = item.name
+            row = col.row()
+            row.alert = True
+            row.operator(
+                "hg3d.delete_content_item", text="Delete!", icon="TRASH"
+            ).item_name = item.name

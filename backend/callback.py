@@ -17,8 +17,8 @@ from typing import no_type_check
 import bpy
 from bpy.types import Context  # type:ignore[import]
 from HumGen3D.backend import hg_log, preview_collections
+from HumGen3D.backend.content.possible_content import find_possible_content
 from HumGen3D.backend.properties.batch_props import BatchProps
-from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.user_interface.content_panel.operators import (

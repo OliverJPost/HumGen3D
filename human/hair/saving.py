@@ -8,9 +8,9 @@ from HumGen3D.common.type_aliases import GenderStr
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
-from HumGen3D.common.memory_management import hg_delete
+from HumGen3D.backend.content.content_saving import save_objects_optimized, save_thumb
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.custom_content.content_saving import save_objects_optimized, save_thumb
+from HumGen3D.common.memory_management import hg_delete
 
 
 def save_hair(  # noqa CCR001
