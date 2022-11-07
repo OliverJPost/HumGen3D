@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class for manipulating facial proportions of human."""
+
 from typing import TYPE_CHECKING, List, Union
 
 import numpy as np
@@ -15,28 +17,47 @@ from ..common_baseclasses.prop_collection import PropCollection
 
 
 class FaceSettings(PropCollection):
+    """Class for manipulating the facial proportions of the human."""
+
     def __init__(self, human: "Human") -> None:
         self._human = human
 
     @property
     def keys(self) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
+        """Filtered subset of human.keys for keys related to facial proportions.
+
+        Returns:
+            List[Union[LiveKeyItem, ShapeKeyItem]]: Keys related to facial proportions.
+        """
         return self._human.keys.filtered("face_proportions")
 
-    @property
-    def shape_keys(self) -> PropCollection:
-        sks = self._human.keys
-        ff_keys = [sk for sk in sks if sk.name.startswith("ff_")]
-        pr_keys = [sk for sk in sks if sk.name.startswith("pr_")]
-        return PropCollection(ff_keys + pr_keys)
+    @injected_context
+    def reset(self, context: C = None) -> None:
+        """Reset all facial proportions to 0.
 
-    def reset(self) -> None:
-        for sk in self.shape_keys:
-            sk.value = 0
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
+        for key in self.keys:
+            if hasattr(key, "set_without_update"):
+                key.set_without_update(0)
+            else:
+                key.value = 0
+
+        self._human.keys.update_human_from_key_change(context)
 
     @injected_context
     def randomize(
         self, subcategory: str = "all", use_bell_curve: bool = False, context: C = None
     ) -> None:
+        """Randomize facial proportions.
+
+        Args:
+            subcategory (str): Subcategory of facial proportions to randomize. Defaults
+                to "all".
+            use_bell_curve (bool): Whether to use a bell curve for randomization.
+            context (C): Blender context. bpy.context if not provided.
+        """
         if subcategory.lower() == "all":
             keys = self.keys
         else:
