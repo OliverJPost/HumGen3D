@@ -63,13 +63,8 @@ def _draw_name_ui(context, layout, content_type):
     col = layout.column()
     col.scale_y = 1.5
 
-    # FIXME crash when spaces in name
-    if content_type in ("pose", "key", "hair", "footwear", "outfit"):
-        col.prop(getattr(cc_sett, content_type), "name", text="Name")
-        poll = bool(getattr(cc_sett, content_type).name)
-    else:
-        col.prop(cc_sett, f"{content_type}_name", text="Name")
-        poll = bool(getattr(cc_sett, f"{content_type}_name"))
+    col.prop(getattr(cc_sett, content_type), "name", text="Name")
+    poll = bool(getattr(cc_sett, content_type).name)
 
     _draw_save_button(layout, content_type, poll=poll)
 

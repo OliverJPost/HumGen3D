@@ -80,11 +80,10 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         human = Human.from_existing(cc_sett.content_saving_active_human)
 
         thumbnail = cc_sett.preset_thumbnail
-        if category != "starting_human":
-            if getattr(cc_sett, category).existing_or_new_category == "existing":
-                subcategory = getattr(cc_sett, category).chosen_existing_subcategory
-            else:
-                subcategory = getattr(cc_sett, category).new_category_name
+        if getattr(cc_sett, category).existing_or_new_category == "existing":
+            subcategory = getattr(cc_sett, category).chosen_existing_subcategory
+        else:
+            subcategory = getattr(cc_sett, category).new_category_name
 
         if category == "key":
             key_to_save = cc_sett.key.key_to_save
@@ -103,7 +102,9 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             name = cc_sett.pose.name
             human.pose.save_to_library(name, subcategory, thumbnail, context)
         elif category == "starting_human":
-            human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
+            human.save_to_library(
+                cc_sett.starting_human.name, subcategory, thumbnail, context
+            )
         elif category == "hair":
             attr = "regular_hair" if cc_sett.hair.save_type == "head" else "face_hair"
             getattr(human.hair, attr).save_to_library(

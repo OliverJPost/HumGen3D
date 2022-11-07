@@ -102,6 +102,9 @@ def get_categories(self, context):
     human = Human.from_existing(custom_content_saving_human)
 
     attr = self.human_attr
+    if not attr:
+        return human._get_categories(human.gender, include_all=False)
+
     if attr == "hair":
         hair_type = "regular_hair" if self.type == "head" else "face_hair"
         human_subclass = getattr(human.hair, hair_type)
@@ -157,6 +160,11 @@ class CustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     human_attr = "pose"
 
 
+class StartingHumanProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
+    human_attr = None
+
+
 class CustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     _register_priority = 3
     human_attr = "hair"
@@ -202,7 +210,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
     hair: PointerProperty(type=CustomHairProps)
     outfit: PointerProperty(type=CustomOutfitProps)
     footwear: PointerProperty(type=CustomFootwearProps)
-    starting_human_name: StringProperty()
+    starting_human: PointerProperty(type=StartingHumanProps)
     hair_name: StringProperty()
     show_unchanged: BoolProperty(
         update=lambda self, context: find_possible_content(context)
