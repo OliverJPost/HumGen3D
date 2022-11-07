@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
+"""Implements class for accessing hair types of human."""
+
 from operator import attrgetter
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -10,7 +11,6 @@ from bpy.types import bpy_prop_collection  # type:ignore
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
-from HumGen3D.backend import get_addon_root
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.face_hair import FacialHairSettings
@@ -20,28 +20,54 @@ from ..hair.eyebrows import EyebrowSettings
 
 
 class HairSettings:
+    """Class for accessing hair types of human and common functionality."""
+
     def __init__(self, human: "Human") -> None:
-        """Create instance that points to different hair categories."""
         self._human = human
 
     @property  # TODO make cached
     def eyebrows(self) -> EyebrowSettings:
+        """Property for accessing eyebrow settings.
+
+        Returns:
+            EyebrowSettings: Eyebrow settings.
+        """
         return EyebrowSettings(self._human)
 
     @property  # TODO make cached
     def eyelashes(self) -> EyelashSettings:
+        """Property for accessing eyelash settings.
+
+        Returns:
+            EyelashSettings: Eyelash settings.
+        """
         return EyelashSettings(self._human)
 
     @property  # TODO make cached
     def face_hair(self) -> FacialHairSettings:
+        """Property for accessing facial hair settings.
+
+        Returns:
+            FacialHairSettings: Instance of FacialHairSettings.
+        """
         return FacialHairSettings(self._human)
 
     @property  # TODO make cached
     def regular_hair(self) -> RegularHairSettings:
+        """Property for accessing regular hair settings.
+
+        Returns:
+            RegularHairSettings: Instance of RegularHairSettings.
+        """
         return RegularHairSettings(self._human)
 
     @property
     def children_ishidden(self) -> bool:
+        """Check if hair children of systems are hidden.
+
+        Returns:
+            bool: True if children are hidden, False otherwise.
+        """
         ishidden = True
         for ps in self._human.hair.particle_systems:
             if ps.settings.child_nbr > 1:
@@ -51,10 +77,20 @@ class HairSettings:
 
     @property
     def particle_systems(self) -> bpy_prop_collection:
+        """All particle systems of human body.
+
+        Returns:
+            bpy_prop_collection: Collection of particle systems on human body.
+        """
         return self._human.body_obj.particle_systems
 
     @property
     def modifiers(self) -> PropCollection:
+        """All modifiers on human body.
+
+        Returns:
+            PropCollection: Collection of ParticleSystem modifiers on human body.
+        """
         return PropCollection(
             [
                 mod
@@ -64,6 +100,14 @@ class HairSettings:
         )
 
     def set_connected(self, connected: bool) -> None:
+        """Shortcut for using `connect_hair` and `disconnect_hair` operators.
+
+        This should be used when modifying the body mesh (the actual mesh, not the shape
+        keys).
+
+        Args:
+            connected (bool): True if hair should be connected, False otherwise.
+        """
         with bpy.context.temp_override(active_object=self._human.body_obj):
             if connected:
                 bpy.ops.particle.connect_hair(all=True)
@@ -71,6 +115,14 @@ class HairSettings:
                 bpy.ops.particle.disconnect_hair(all=True)
 
     def children_set_hide(self, hide: bool) -> None:
+        """Set the visibility state of the children of all hair systems.
+
+        If you will do a heavy computation on the human body, you should hide the
+            children. This is already implemented for builtin heavy operations.
+
+        Args:
+            hide (bool): True if children should be hidden, False otherwise.
+        """
         for ps in self._human.hair.particle_systems:
             if hide:
                 ps.settings.child_nbr = 1
@@ -79,46 +131,20 @@ class HairSettings:
                 ps.settings.child_nbr = render_children
 
     def remove_system_by_name(self, name: str) -> None:
+        """Remove a certain particle system from the human by its name.
+
+        Args:
+            name (str): Name of the particle system to remove.
+        """
         mod = next(m for m in self.modifiers if m.particle_system.name == name)
         self._human.body_obj.modifiers.remove(mod)
 
-    def convert_to_new_hair_shader(self, hg_body: bpy.types.Object) -> None:
-        hair_mats = hg_body.data.materials[1:3]
+    def update_hair_shader_type(self, shader_type: Literal["fast", "accurate"]) -> None:
+        """Set the shader type between accurate (Eevee comp.) and fast (Cycles only).
 
-        group_nodes = []
-        for mat in hair_mats:
-            group_nodes.append(
-                next(
-                    (n for n in mat.node_tree.nodes if n.name == "HG_Hair"),
-                    None,
-                )
-            )
-
-        # check if there is at least one
-        if not any(group_nodes):
-            return
-
-        addon_folder = get_addon_root()
-        blendfile = os.path.join(addon_folder, "human", "hair", "hair_shader_v3.blend")
-
-        if "HG_Hair_V3" in [ng.name for ng in bpy.data.node_groups]:
-            new_hair_group = bpy.data.node_groups[
-                "HG_Hair_V3"
-            ]  # type:ignore[index, call-overload]
-        else:
-            with bpy.data.libraries.load(blendfile, link=False) as (
-                data_from,
-                data_to,
-            ):
-                data_to.node_groups = data_from.node_groups
-
-            new_hair_group = data_to.node_groups[0]
-
-        for node in group_nodes:
-            node.node_tree = new_hair_group
-            node.name = "HG_Hair_V3"
-
-    def update_hair_shader_type(self, shader_type: str) -> None:
+        Args:
+            shader_type (Literal["fast", "accurate"]): Type to set the shader to.
+        """
         value = 0 if shader_type == "fast" else 1
 
         hg_rig = self._human.rig_obj
@@ -134,6 +160,12 @@ class HairSettings:
     def set_hair_quality(
         self, hair_quality: Literal["high", "medium", "low", "ultralow"]
     ) -> None:
+        """Makes hairs thicker and lowers chileren amount for lower qualities.
+
+        Args:
+            hair_quality (Literal["high", "medium", "low", "ultralow"]): Quality to set
+                all hair types on this human to.
+        """
         for psys in self._human.hair.particle_systems:
             ps = psys.settings
             max_steps = ps["steps"]
@@ -152,6 +184,11 @@ class HairSettings:
             )
 
     def as_dict(self) -> dict[str, dict[str, Any]]:
+        """Return a dictionary representation of the hair settings.
+
+        Returns:
+            dict[str, dict[str, Any]]: Dictionary representation of the hair settings.
+        """
         return {
             "eyebrows": self.eyebrows.as_dict(),
             "regular_hair": self.regular_hair.as_dict(),
@@ -159,6 +196,13 @@ class HairSettings:
         }
 
     def set_from_dict(self, data: dict[str, dict[str, Any]]) -> None:
+        """Set the hair settings from a dictionary representation.
+
+        See `as_dict` for structure.
+
+        Args:
+            data (dict[str, dict[str, Any]]): Dictionary representation of the hair
+        """
         for hair_categ, categ_data in data.items():
             for attr_name, attr_value in categ_data.items():
                 if attr_name == "set":
@@ -180,12 +224,7 @@ class HairSettings:
         return new_steps
 
     def _delete_opposite_gender_specific(self) -> None:
-        """Deletes the hair of the opposite gender.
-
-        Args:
-            hg_body (Object): hg body object
-            gender (str): gender of this human
-        """
+        """Deletes the hair of the opposite gender."""
         ps_delete_dict = {
             "female": ("Eyebrows_Male", "Eyelashes_Male"),
             "male": ("Eyebrows_Female", "Eyelashes_Female"),
