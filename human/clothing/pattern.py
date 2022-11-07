@@ -48,6 +48,8 @@ class PatternSettings(PreviewCollectionContent):
         pref = get_prefs()
         mat = obj.active_material
 
+        self._active = preset
+
         for node_name in self._node_names:
             self._create_node_if_doesnt_exist(node_name)  # type:ignore[arg-type]
 

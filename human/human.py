@@ -176,33 +176,19 @@ class Human:
             get_prefs().filepath, preset.replace("jpg", "json")  # TODO
         )
 
+        if prettify_eevee:
+            set_eevee_ao_and_strip(context)
+
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
         gender = preset.split(os.sep)[1]
 
-        human: "Human" = cls._import_human(context, gender)
-        # remove broken drivers
-        if prettify_eevee:
-            set_eevee_ao_and_strip(context)
+        human = cls._import_human(context, gender)
 
-        # Set height from preset
-        preset_height = preset_data["body_proportions"]["length"] * 100
-        if 181 < preset_height < 182:
-            # Fix for old presets that use wrong default height
-            preset_height = 183.15
-        human.height.set(preset_height, context)
-
-        human.keys["Male"].value = 1.0 if gender == "male" else 0.0
-
-        # Set shape key values from preset
-        for name, value in preset_data["livekeys"].items():
-            human.keys[name].value = value
-
-        human.skin.texture._set_from_preset(preset_data["material"], context)
-        human.skin._set_from_preset(preset_data["material"]["node_inputs"])
-
-        human.hair.eyebrows._set_from_preset(preset_data["eyebrows"])
+        # Set human settings from preset dictionary
+        for attr, data in preset_data.items():
+            getattr(human, attr).set_from_dict(data)
 
         human._set_random_name()
 
@@ -213,6 +199,8 @@ class Human:
         human.props.hashes["$outfit"] = str(hash(human.clothing.outfit))
         human.props.hashes["$footwear"] = str(hash(human.clothing.footwear))
         human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
+
+        human._active = preset
 
         return human
 
@@ -365,15 +353,6 @@ class Human:
         """
         yield from self.rig_obj.children
 
-    # TODO as method?
-    @property
-    def is_batch_result(self) -> Tuple[bool, bool]:
-        """Checks if human was created in batch and if 'apply armature' was used.
-
-        If apply armature was used, the human no longer has a rig object.
-        """
-        return self.props.batch_result, self.body_obj == self.rig_obj
-
     @property
     def gender(self) -> GenderStr:
         """Gender of this human in ("male", "female")"""
@@ -452,6 +431,14 @@ class Human:
     @name.setter
     def name(self, name: str) -> None:  # noqa
         self.rig_obj.name = name
+
+    @property
+    def _active(self) -> str:
+        return self.rig_obj["ACTIVE_HUMAN_PRESET"]
+
+    @_active.setter
+    def _active(self, value: str) -> None:
+        self.rig_obj["ACTIVE_HUMAN_PRESET"] = value
 
     def delete(self) -> None:
         """Delete the human from Blender.
@@ -573,36 +560,40 @@ class Human:
 
     @injected_context
     def save_to_library(
-        self, name: str, thumbnail: Optional[Image] = None, context: C = None
+        self,
+        name: str,
+        category: str = "Custom",
+        thumbnail: Optional[Image] = None,
+        context: C = None,
     ) -> None:
-        folder = os.path.join(get_prefs().filepath, "models", self.gender)
+        folder = os.path.join(get_prefs().filepath, "models", self.gender, category)
+
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
 
         if thumbnail:
             self.save_thumb(self.folder, thumbnail, name)
 
-        preset_data = {}  # noqa SIM904
-        preset_data["gender"] = self.gender
+        preset_data = self.as_dict()
 
-        eyebrows = self.hair.eyebrows.particle_systems
-        preset_data["eyebrows"] = next(
-            (
-                mod.particle_system.name
-                for mod in eyebrows
-                if (mod.show_viewport or mod.show_render)
-            ),
-            f"Eyebrows_{self.gender.capitalize()}",
-        )
-
-        preset_data.update(self.keys.as_dict())  # type:ignore[arg-type]
-        # FIXME preset_data.update(self.skin.as_dict())
-        # FIXME preset_data.update(self.eyes.as_dict())
-
-        with open(os.path.join(folder, f"{self.name}.json"), "w") as f:
+        with open(os.path.join(folder, f"{name}.json"), "w") as f:
             json.dump(preset_data, f, indent=4)
 
-        self.sett.content_saving_ui = False
+        context.scene.HG3D.content_saving_ui = False
 
         preview_collections["humans"].refresh(context)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Returns a dictionary representation of this human.
+
+        This is used for saving the human to a JSON file.
+        """
+        return_dict = {}
+
+        for attr in ("keys", "skin", "eyes", "height", "hair", "clothing"):
+            return_dict[attr] = getattr(self, attr).as_dict()
+
+        return return_dict
 
     @injected_context
     def duplicate(self, context: C = None) -> Human:

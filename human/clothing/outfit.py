@@ -2,7 +2,7 @@
 
 """Module containing ClothingSettings class for adding/modifying human's clothing."""
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import bpy
 from HumGen3D.common.type_aliases import C

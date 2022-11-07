@@ -88,6 +88,9 @@ class ExpressionSettings(PreviewCollectionContent):
 
         if preset == "none":
             return
+
+        self._active = preset
+
         sk_name, _ = os.path.splitext(os.path.basename(preset))
 
         filepath = str(pref.filepath) + str(preset)

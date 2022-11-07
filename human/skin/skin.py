@@ -11,6 +11,7 @@ import bpy
 from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs
+from HumGen3D.common.shadernode import ShaderNodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -41,60 +42,41 @@ def create_node_property(node_name: str, input_name: str | int) -> Callable[...,
 
 
 class MaleSkin:
-    mustache_shadows: float = create_node_property("Gender_Group", 2)  # type:ignore
-    beard_shadow: float = create_node_property("Gender_Group", 3)  # type:ignore
-
     def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
+        self.mustache_shadows = ShaderNodeInput(self, "Gender_Group", 2)
+        self.beard_shadow = ShaderNodeInput(self, "Gender_Group", 3)
 
 
 class FemaleSkin:
-    foundation_amount: float = create_node_property(
-        "Gender_Group", "Foundation Amount"
-    )  # type:ignore
-    foundation_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Foundation Color"
-    )
-    blush_opacity: float = create_node_property(
-        "Gender_Group", "Blush Opacity"
-    )  # type:ignore
-    blush_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Blush Color"
-    )
-    eyebrows_opacity: float = create_node_property(
-        "Gender_Group", "Eyebrows Opacity"
-    )  # type:ignore
-    eyebrows_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Eyebrows Color"
-    )
-    lipstick_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Lipstick Color"
-    )
-    lipstick_opacity: float = create_node_property(
-        "Gender_Group", "Lipstick Opacity"
-    )  # type:ignore
-    eyeliner_opacity: float = create_node_property(
-        "Gender_Group", "Eyeliner Opacity"
-    )  # type:ignore
-    eyeliner_color: FloatVectorProperty = create_node_property(
-        "Gender_Group", "Eyeliner Color"
-    )
-
     def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
 
+        # fmt: off
+        self.foundation_amount = ShaderNodeInput(self, "Gender_Group", "Foundation Amount")
+        self.foundation_color = ShaderNodeInput(self, "Gender_Group", "Foundation Color")
+        self.blush_opacity = ShaderNodeInput(self, "Gender_Group", "Blush Opacity")
+        self.blush_color = ShaderNodeInput(self, "Gender_Group", "Blush Color")
+        self.eyebrows_opacity = ShaderNodeInput(self, "Gender_Group", "Eyebrows Opacity")
+        self.eyebrows_color = ShaderNodeInput(self, "Gender_Group", "Eyebrows Color")
+        self.lipstick_color = ShaderNodeInput(self, "Gender_Group", "Lipstick Color")
+        self.lipstick_opacity = ShaderNodeInput(self, "Gender_Group", "Lipstick Opacity")
+        self.eyeliner_opacity = ShaderNodeInput(self, "Gender_Group", "Eyeliner Opacity")
+        self.eyeliner_color = ShaderNodeInput(self, "Gender_Group", "Eyeliner Color")
+        # fmt: on
+
 
 class SkinSettings:
-    tone = create_node_property("Skin_tone", 1)
-    redness = create_node_property("Skin_tone", 2)
-    saturation = create_node_property("Skin_tone", 3)
-    normal_strength = create_node_property("Normal Map", 0)
-    roughness_multiplier = create_node_property("R_Multiply", 1)
-    freckles = create_node_property("Freckles_control", "Pos2")
-    splotches = create_node_property("Splotches_control", "Pos2")
-
     def __init__(self, human: "Human"):
         self._human = human
+
+        self.tone = ShaderNodeInput(self, "Skin_tone", 1)
+        self.redness = ShaderNodeInput(self, "Skin_tone", 2)
+        self.saturation = ShaderNodeInput(self, "Skin_tone", 3)
+        self.normal_strength = ShaderNodeInput(self, "Normal Map", 0)
+        self.roughness_multiplier = ShaderNodeInput(self, "R_Multiply", 1)
+        self.freckles = ShaderNodeInput(self, "Freckles_control", "Pos2")
+        self.splotches = ShaderNodeInput(self, "Splotches_control", "Pos2")
 
     @property  # TODO make cached
     def texture(self) -> TextureSettings:
@@ -183,6 +165,35 @@ class SkinSettings:
 
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
 
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "tone": self.tone.value,
+            "redness": self.redness.value,
+            "saturation": self.saturation.value,
+            "normal_strength": self.normal_strength.value,
+            "roughness_multiplier": self.roughness_multiplier.value,
+            "freckles": self.freckles.value,
+            "splotches": self.splotches.value,
+            "texture.set": self.texture._active,
+            "gender_specific": {
+                attr_name + "": attr_value.value
+                for attr_name, attr_value in vars(self.gender_specific).items()
+                if attr_name != "nodes"
+            },
+        }
+
+    @injected_context
+    def set_from_dict(self, data: dict[str, Any], context: C = None) -> None:
+        for attr_name, attr_value in data.items():
+            if attr_name == "gender_specific":
+                for gs_attr_name, gs_attr_value in attr_value.items():
+                    setattr(self.gender_specific, gs_attr_name, gs_attr_value)
+            elif "texture.set" in attr_name:
+                if attr_value is not None:
+                    self.texture.set(attr_value, context)
+            else:
+                getattr(self, attr_name).value = attr_value
+
     def _set_gender_specific(self) -> None:
         """Male and female humans of HumGen use the same shader, but one node
         group is different. This function ensures the right nodegroup is connected
@@ -228,6 +239,9 @@ class TextureSettings(PreviewCollectionContent):
 
         if diffuse_texture == "none":
             return
+
+        self._active = textureset_path
+
         if diffuse_texture.startswith(os.sep):
             diffuse_texture = diffuse_texture[1:]
 

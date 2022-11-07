@@ -4,7 +4,7 @@ import contextlib
 import json
 import os
 import random
-from typing import Literal, Optional, cast
+from typing import Any, Literal, Optional, cast
 
 import bpy
 from bpy.types import Image  # type:ignore
@@ -13,6 +13,7 @@ from HumGen3D.backend.preferences.preferences import HG_PREF
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
+from HumGen3D.common.shadernode import ShaderNodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
@@ -23,8 +24,22 @@ from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
 
+HAIR_NODE_NAME = "HG_Hair"
+
 
 class BaseHair:
+    def __init__(self) -> None:
+        self.lightness = ShaderNodeInput(self, HAIR_NODE_NAME, "Lightness")
+        self.redness = ShaderNodeInput(self, HAIR_NODE_NAME, "Redness")
+        self.roughness = ShaderNodeInput(self, HAIR_NODE_NAME, "Roughness")
+        self.salt_and_pepper = ShaderNodeInput(self, HAIR_NODE_NAME, "Pepper & Salt")
+        self.roots = ShaderNodeInput(self, HAIR_NODE_NAME, "Roots")
+        self.root_lightness = ShaderNodeInput(self, HAIR_NODE_NAME, "Root Lightness")
+        self.root_redness = ShaderNodeInput(self, HAIR_NODE_NAME, "Root Redness")
+        self.roots_hue = ShaderNodeInput(self, HAIR_NODE_NAME, "Roots Hue")
+        self.fast_or_accurate = ShaderNodeInput(self, HAIR_NODE_NAME, "Fast/Accurate")
+        self.hue = ShaderNodeInput(self, HAIR_NODE_NAME, "Hue")
+
     @property
     def particle_systems(self) -> PropCollection:
         particle_systems = self._human.hair.particle_systems
@@ -42,8 +57,24 @@ class BaseHair:
         return PropCollection(modifiers)
 
     @property
-    def material(self) -> bpy.types.Material:
-        return self._human.body_obj.data.materials[self._mat_idx]
+    def haircard_obj(self) -> bpy.types.Object:
+        return next(  # type:ignore[call-overload]
+            (obj for obj in self._human.children if self._haircap_tag in obj), None
+        )
+
+    @property
+    def materials(self) -> list[bpy.types.Material]:
+        if self.haircard_obj:
+            return self.haircard_obj.data.materials
+        else:
+            return [self._human.body_obj.data.materials[self._mat_idx]]
+
+    @property
+    def nodes(self) -> PropCollection:
+        nodes = []
+        for mat in self.materials:
+            nodes.extend(mat.node_tree.nodes)
+        return PropCollection(nodes)
 
     @injected_context
     def convert_to_haircards(
@@ -96,6 +127,7 @@ class BaseHair:
 
         joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
         joined_object.name = "Haircards"
+        joined_object[self._haircap_tag] = True  # type:ignore[index]
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
@@ -131,6 +163,20 @@ class BaseHair:
             hair_node.inputs["Lightness"].default_value = hair_color[0]
             hair_node.inputs["Redness"].default_value = hair_color[1]
             hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "lightness": self.lightness.value,
+            "redness": self.redness.value,
+            "roughness": self.roughness.value,
+            "salt_and_pepper": self.salt_and_pepper.value,
+            "roots": self.roots.value,
+            "root_lightness": self.root_lightness.value,
+            "root_redness": self.root_redness.value,
+            "roots_hue": self.roots_hue.value,
+            "fast_or_accurate": self.fast_or_accurate.value,
+            "hue": self.hue.value,
+        }
 
     def _condition(self, string: str) -> bool:  # noqa
         if hasattr(self, "_startswith"):
@@ -172,6 +218,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             type (str): type of hair to load ('head' or 'face_hair')
         """
         pref = get_prefs()
+
+        self._active = preset
 
         full_path = str(pref.filepath) + preset
         with open(full_path) as f:
@@ -309,7 +357,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         Args:
             context ([type]): [description]
             type (str): type of hair system ('facial hair' or 'head')
-            pref (AddonPreferences): HumGen preferences
+            pref (HG_PREF): HumGen preferences
             blendfile (str): name of blendfile to open
 
         Returns:

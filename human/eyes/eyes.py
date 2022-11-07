@@ -1,10 +1,12 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import random
-from typing import TYPE_CHECKING, Union, cast
+from typing import TYPE_CHECKING, Any, Union, cast
 
 from bpy.types import Material, Object
-from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem  # type:ignore
+from HumGen3D.common.shadernode import ShaderNodeInput  # type:ignore
+from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
+from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human  # type:ignore
@@ -52,6 +54,9 @@ class EyeSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
+        self.pupil_color = ShaderNodeInput(self, "HG_Eye_Color", "Color2")
+        self.sclera_color = ShaderNodeInput(self, "HG_Scelera_Color", "Color2")
+
     @property
     def eye_obj(self) -> Object:
         return next(
@@ -61,8 +66,16 @@ class EyeSettings:
         )
 
     @property
+    def outer_material(self) -> Material:
+        return cast(Material, self.eye_obj.data.materials[0])
+
+    @property
     def inner_material(self) -> Material:
         return cast(Material, self.eye_obj.data.materials[1])
+
+    @property
+    def nodes(self) -> PropCollection:
+        return self.inner_material.node_tree.nodes
 
     @property
     def keys(self) -> list[Union["ShapeKeyItem", "LiveKeyItem"]]:
@@ -95,6 +108,16 @@ class EyeSettings:
 
         nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb  # type:ignore
 
+    def as_dict(self) -> dict[str, dict[str, Any]]:
+        return {
+            "pupil_color": self.pupil_color.value,
+            "sclera_color": self.sclera_color.value,
+        }
+
+    def set_from_dict(self, data: dict[str, Any]) -> None:
+        self.pupil_color.value = data["pupil_color"]
+        self.sclera_color.value = data["sclera_color"]
+
     def _srgb_to_linearrgb(self, c: float) -> float:
         # Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896 # noqa
         if c < 0:
@@ -111,6 +134,7 @@ class EyeSettings:
         r = (h & 0xFF0000) >> 16
         g = (h & 0x00FF00) >> 8
         b = h & 0x0000FF
+
         return cast(
             tuple[float, float, float, float],
             tuple([self._srgb_to_linearrgb(c / 0xFF) for c in (r, g, b)] + [alpha]),

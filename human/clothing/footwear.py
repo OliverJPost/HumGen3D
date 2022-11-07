@@ -2,7 +2,7 @@
 
 """Contains FootWearSettings class. Used for changing footwear of human."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import bpy
 from HumGen3D.common.type_aliases import C

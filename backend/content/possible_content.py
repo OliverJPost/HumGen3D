@@ -1,3 +1,4 @@
+# type:ignore
 from typing import no_type_check
 
 import bpy
