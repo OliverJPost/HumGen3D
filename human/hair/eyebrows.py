@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class for manipulating eyebrows of human."""
+
 from typing import TYPE_CHECKING, Any
 
 import bpy
@@ -13,26 +15,42 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 
 class EyebrowSettings(BaseHair):
+    """Class for manipulating human eyebrows."""
+
     _haircap_tag = "hg_eyebrows"
     _startswith = "Eyebrows"
     _mat_idx = 1
 
     def __init__(self, human: "Human") -> None:
-        """Create instance for manipulating human eyebrows."""
         super().__init__()
         self._human = human
         self._startswith = "Eyebrow"
 
     @property
     def _active(self) -> str:
+        """Property for accessing prop to store active eyebrow name.
+
+        Returns:
+            str: Name of active eyebrow system
+        """
         return self._human.rig_obj["ACTIVE_EYEBROWS"]
 
     @_active.setter
     def _active(self, value: str) -> None:
+        """Set prop to store active eyebrow name.
+
+        Args:
+            value (str): Name of active eyebrow system
+        """
         self._human.rig_obj["ACTIVE_EYEBROWS"] = value
 
     def as_dict(self) -> dict[str, Any]:
-        """Returns dict of eyebrow settings."""
+        """Returns dict of eyebrow settings.
+
+        Returns:
+            dict[str, Any]: Dict of eyebrow settings, storing active eyebrow and
+                material settings.
+        """
         return_dict = {
             "set": self._active,
         }
@@ -41,6 +59,11 @@ class EyebrowSettings(BaseHair):
         return return_dict
 
     def remove_unused(self, context: C = None, _internal: bool = False) -> None:
+        """Remove unused eyebrow systems.
+
+        Args:
+            context (C): Blender context. Defaults to None.
+        """
         remove_list = [
             mod.particle_system.name for mod in self.modifiers if not mod.show_render
         ]
@@ -62,7 +85,7 @@ class EyebrowSettings(BaseHair):
             bpy.ops.object.particle_system_remove()
         context.view_layer.objects.active = old_active
 
-    def set(self, preset_eyebrow: str) -> None:
+    def set(self, preset_eyebrow: str) -> None:  # noqa: A003
         """Sets the eyebrow named in preset_data as the only visible eyebrow system.
 
         Args:

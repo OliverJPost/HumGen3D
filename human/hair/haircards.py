@@ -1,9 +1,11 @@
+"""Implements class for generating haircards from a particle system."""
+
 import contextlib
 import json
 import os
 import random
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Set
+from typing import TYPE_CHECKING, Any, Iterable, Literal
 
 import bmesh
 import bpy
@@ -29,11 +31,19 @@ UVCoords = list[list[list[float]]]
 
 
 class HairCollection:
+    """Class for generating haircards from a particle system."""
+
     def __init__(
         self,
         hair_obj: bpy.types.Object,
         human: "Human",
     ) -> None:
+        """Get a new instance based on a particle system converted to a mesh.
+
+        Args:
+            hair_obj (bpy.types.Object): Particle system converted to mesh.
+            human (Human): Human instance
+        """
         self.mx_world_hair_obj = hair_obj.matrix_world
 
         body_world_coords_eval = world_coords_from_obj(
@@ -57,7 +67,14 @@ class HairCollection:
 
     @staticmethod
     def _walk_island(vert: bmesh.types.BMVert) -> Iterable[int]:
-        """walk all un-tagged linked verts"""
+        """Walk all un-tagged linked verts.
+
+        Args:
+            vert (bmesh.types.BMVert): Start vert to walk from.
+
+        Yields:
+            int: Index of the next vert.
+        """
         vert.tag = True
         yield vert.index
         linked_verts = [
@@ -94,7 +111,15 @@ class HairCollection:
     def create_mesh(
         self, quality: Literal["low", "medium", "high", "ultra"] = "high"
     ) -> Iterable[bpy.types.Object]:
+        """Create a haircard mesh for downsampled hairs.
 
+        Args:
+            quality (Literal["low", "medium", "high", "ultra"], optional): Quality of
+                the haircards. Defaults to "high".
+
+        Yields:
+            bpy.types.Object: Haircard objects for each resolution.
+        """
         long_hairs = [hair for hair, length in self.hairs if length > 0.1]
         medium_hairs = [hair for hair, length in self.hairs if 0.1 >= length > 0.05]
         short_hairs = [hair for hair, length in self.hairs if 0.05 >= length]
@@ -251,7 +276,15 @@ class HairCollection:
 
     @staticmethod
     def _calculate_segment_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
-        """Makes an array of scalars to make the hair get narrower with each segment."""
+        """Makes an array of scalars to make the hair get narrower with each segment.
+
+        Args:
+            hair_co_len (int): Number of coordinates per hair.
+
+        Returns:
+            np.ndarray[Any, Any]: Array of scalars to multiply with the perpendicular
+                vector.
+        """
         length_correction = np.arange(0.01, 0.03, 0.02 / hair_co_len, dtype=np.float32)
 
         length_correction = length_correction[::-1]
@@ -259,6 +292,7 @@ class HairCollection:
         return length_correction
 
     def add_uvs(self) -> None:
+        """Add uvs to all hair objects."""
         haircard_json = os.path.join(
             get_prefs().filepath,
             "hair",
@@ -352,6 +386,7 @@ class HairCollection:
                     loop.uv = (x_min, y_min + y_diff * y_relative)
 
     def add_material(self) -> None:
+        """Add a material to all hair objects."""
         mat = bpy.data.materials.get("HG_Haircards")
         if not mat:
             blendpath = os.path.join(
@@ -374,12 +409,24 @@ class HairCollection:
 
     @injected_context
     def add_haircap(
-        self,
+        self,  # noqa
         human: "Human",
         density_vertex_groups: list[bpy.types.VertexGroup],
         context: C = None,
         downsample_mesh: bool = False,
     ) -> bpy.types.Object:
+        """Add a haircap object based on the vertex groups of the human hair systems.
+
+        Args:
+            human (Human): The human to add the haircap to.
+            density_vertex_groups (list[bpy.types.VertexGroup]): The vertex groups that
+                belong to the hair systems the haircards are generated for.
+            context (C): The blender context. Defaults to None.
+            downsample_mesh (bool): Whether to downsample the haircap mesh.
+
+        Returns:
+            bpy.types.Object: The haircap object.
+        """
         body_obj = human.body_obj
         vert_count = len(body_obj.data.vertices)
 
@@ -453,6 +500,11 @@ class HairCollection:
         return haircap_obj
 
     def set_node_values(self, human: "Human") -> None:
+        """Set values of the hair material node on all materials of the haircards.
+
+        Args:
+            human: The human object to get the values from.
+        """
         card_material = self.material if hasattr(self, "material") else None
 
         cap_material = (
@@ -478,18 +530,3 @@ class HairCollection:
                 node.inputs[inp_name].default_value = old_node.inputs[
                     inp_name
                 ].default_value
-
-
-def expand_region(
-    obj: bpy.types.Object, vert_idxs: np.ndarray[Any, Any]
-) -> np.ndarray[Any, Any]:
-    bm = bmesh.new()  # type:ignore
-    bm.from_mesh(obj.data)
-    bm.verts.ensure_lookup_table()
-    other_verts: Set[int] = set()
-    for vert_idx in vert_idxs:
-        v = bm.verts[vert_idx]  # type:ignore[index]
-        other_verts.update((e.other_vert(v).index for e in v.link_edges))
-
-    with_added_verts = np.append(vert_idxs, list(other_verts))
-    return np.unique(with_added_verts)

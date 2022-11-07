@@ -1,3 +1,5 @@
+"""Implements functions for saving hair to content library."""
+
 import json
 import os
 from typing import TYPE_CHECKING, Iterable, Literal, Optional
@@ -24,6 +26,22 @@ def save_hair(  # noqa CCR001
     for_female: bool = True,
     thumb: Optional[bpy.types.Image] = None,
 ) -> None:
+    """Save hair to content library.
+
+    Args:
+        human (Human): Human instance the hair is on.
+        name (str): Name to save hairstyle as
+        category (str): Category to save hairstyle in. If it doesn't exist already a
+            folder will be created.
+        particle_systems (Iterable[str]): Names of particle systems to save
+        hair_type (Literal[&quot;face_hair&quot;, &quot;hair&quot;]): Type to make hair
+            available under for the user
+        context (bpy.types.Context): Blender context
+        for_male (bool): Make hair available for male humans. Defaults to True.
+        for_female (bool): Make hair available for female humans. Defaults to True.
+        thumb (Optional[bpy.types.Image]): Blender image to save as thumbnail for this
+            hair. Defaults to None.
+    """
     pref = get_prefs()
 
     hair_obj = human.body_obj.copy()
@@ -138,7 +156,6 @@ def _make_hair_json(hair_obj: bpy.types.Object, folder: str, style_name: str) ->
     """Make a json that contains the settings for this hairstyle and save it.
 
     Args:
-        context (context): bl context
         hair_obj (bpy.types.Object): Body object the hairstyles are on
         folder (str): Folder to save json to
         style_name (str): Name of this style
