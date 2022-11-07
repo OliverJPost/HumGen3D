@@ -256,8 +256,10 @@ class Human:
         return [option[0] for option in Human._get_categories(gender)]
 
     @staticmethod
-    def _get_categories(gender: GenderStr) -> BpyEnum:  # noqa
-        return preview_collections["humans"].find_folders(gender)
+    def _get_categories(gender: GenderStr, include_all: bool = True) -> BpyEnum:  # noqa
+        return preview_collections["humans"].find_folders(
+            gender, include_all=include_all
+        )
 
     # endregion
     # region Properties

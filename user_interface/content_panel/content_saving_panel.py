@@ -44,6 +44,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
         ],
         "starting_human": [
             _draw_thumbnail_selection_ui,
+            draw_category_ui,
             _draw_name_ui
         ],
         "key": [
