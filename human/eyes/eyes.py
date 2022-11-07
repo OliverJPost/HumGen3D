@@ -1,12 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import random
-from typing import TYPE_CHECKING, Any, Union, cast
+"""Implements class for manipulating the eyes of the human."""
 
-from bpy.types import Material, Object
+import random
+from typing import TYPE_CHECKING, Any, cast
+
+from bpy.types import Material, Object  # type:ignore
 from HumGen3D.common.shadernode import ShaderNodeInput  # type:ignore
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
-from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human  # type:ignore
@@ -51,6 +52,11 @@ A_CLASS = [
 
 
 class EyeSettings:
+    """Class for manipulating the eyes of the human.
+
+    Also contains properties for changing the material values.
+    """
+
     def __init__(self, human: "Human") -> None:
         self._human = human
 
@@ -59,6 +65,11 @@ class EyeSettings:
 
     @property
     def eye_obj(self) -> Object:
+        """Blender object of the eyes of the human.
+
+        Returns:
+            Object: Blender object of the eyes of the human.
+        """
         return next(
             child
             for child in self._human.objects
@@ -67,21 +78,33 @@ class EyeSettings:
 
     @property
     def outer_material(self) -> Material:
+        """The material used for the outer layer of the eyes (The transparent part).
+
+        Returns:
+            Material: Material used for the outer layer of the eyes.
+        """
         return cast(Material, self.eye_obj.data.materials[0])
 
     @property
     def inner_material(self) -> Material:
+        """The material used for the inner part of the eyes (The colored part).
+
+        Returns:
+            Material: Material used for the inner part of the eyes.
+        """
         return cast(Material, self.eye_obj.data.materials[1])
 
     @property
     def nodes(self) -> PropCollection:
+        """Nodes of the inner eye material.
+
+        Returns:
+            PropCollection: ShaderNodes of the inner eye material.
+        """
         return self.inner_material.node_tree.nodes
 
-    @property
-    def keys(self) -> list[Union["ShapeKeyItem", "LiveKeyItem"]]:
-        return self._human.keys.filtered("special", "eyes")
-
     def randomize(self) -> None:
+        """Randomizes the color of the pupils based on worlwide statistics."""
         nodes = self.inner_material.node_tree.nodes
 
         # If you think the numers used here are incorrect, please contact us at
@@ -108,13 +131,25 @@ class EyeSettings:
 
         nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb  # type:ignore
 
-    def as_dict(self) -> dict[str, dict[str, Any]]:
+    def as_dict(self) -> dict[str, tuple[float, float, float, float]]:
+        """Returns the current eye settings as a dictionary.
+
+        Returns:
+            dict: Dictionary containing the current eye settings. Currently color only.
+        """
         return {
             "pupil_color": self.pupil_color.value,
             "sclera_color": self.sclera_color.value,
         }
 
     def set_from_dict(self, data: dict[str, Any]) -> None:
+        """Sets the eye settings from a dictionary.
+
+        This dict can be derived from the as_dict method.
+
+        Args:
+            data (dict[str, Any]): Dictionary to set the eye settings from.
+        """
         self.pupil_color.value = data["pupil_color"]
         self.sclera_color.value = data["sclera_color"]
 
