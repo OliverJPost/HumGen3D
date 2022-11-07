@@ -1,5 +1,9 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+# flake8: noqa D101
+
+"""Implements operator for updating human after user lets go of slider."""
+
 from typing import Optional, no_type_check
 
 import bpy

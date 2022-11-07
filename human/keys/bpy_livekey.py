@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements internal implementation of livekeys."""
+
 from __future__ import annotations
 
 import os
@@ -7,7 +9,7 @@ from typing import Any, cast
 
 import bpy
 import numpy as np
-from bpy.props import FloatProperty, StringProperty
+from bpy.props import FloatProperty, StringProperty  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
@@ -16,8 +18,14 @@ from HumGen3D.human.keys.keys import import_npz_key
 
 
 def get_livekey(self: BpyLiveKey) -> float:
-    """Get the value of the livekey from either the temp_key or the stored values on the
-    model."""
+    """Get value of livekey from either the temp_key or the stored values on the model.
+
+    Args:
+        self: The livekey to get the value of.
+
+    Returns:
+        The value of the livekey.
+    """
     human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
     name = self.name
     temp_key = human.keys.temp_key
@@ -36,8 +44,14 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
     This method will load the live key into a temporary shape key that stays on
     the model until another live key's value is changed. This costs more performance
     for the first change, but much less for subsequent changes of the value.
-    """
 
+    Args:
+        self: The livekey to set the value of.
+        value: The value to set the livekey to.
+
+    Raises:
+        HumGenException: If the active object is not part of a human.
+    """
     name = self.name
     human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
     if not human:
@@ -47,7 +61,7 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
     # Change value of existing temp_key if it matches the changing key
     if temp_key and temp_key.name.endswith(name):
         temp_key.value = value
-        run_modal()
+        _run_modal()
         return
 
     # Get coordinates of base human mesh
@@ -90,10 +104,11 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
     temp_key.value = value
 
-    run_modal()
+    _run_modal()
 
 
-def run_modal() -> None:
+def _run_modal() -> None:
+
     if not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
         bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")  # , hide_armature=True)
 
@@ -117,8 +132,10 @@ def _add_temp_key_to_permanent_key_coords(
 
 
 class BpyLiveKey(bpy.types.PropertyGroup):
-    """Representation of a livekey, a shape key that is not on the model but loaded from
-    an external file."""
+    """Internal representation of a livekey stored in CollectionProperty.
+
+    This is a shape key that is not on the model but loaded from an external file.
+    """
 
     path: StringProperty()
     category: StringProperty()
