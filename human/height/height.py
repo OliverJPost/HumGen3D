@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class for changing the height of the human."""
+
 import random
 from typing import TYPE_CHECKING, cast
 
@@ -18,7 +20,7 @@ import numpy as np
 
 
 def apply_armature(obj: bpy.types.Object) -> None:
-    """Applies all armature modifiers on this object
+    """Applies all armature modifiers on this object.
 
     Args:
         obj (Object): object to apply armature modifiers on
@@ -30,15 +32,27 @@ def apply_armature(obj: bpy.types.Object) -> None:
 
 
 class HeightSettings:
+    """Class for changing height of human."""
+
     def __init__(self, human: "Human") -> None:
         self._human: "Human" = human
 
     @property
     def centimeters(self) -> int:
+        """Height of human in centimeters.
+
+        Returns:
+            int: Height of human in centimeters.
+        """
         return int(self.meters * 100)
 
     @property
     def meters(self) -> float:
+        """Height of human in meters.
+
+        Returns:
+            float: Height of human in meters.
+        """
         rig_obj = self._human.rig_obj
 
         top_coord = rig_obj.data.bones["head"].tail_local.z
@@ -46,33 +60,18 @@ class HeightSettings:
 
         return cast(float, top_coord - bottom_coord)
 
-    @staticmethod
-    def _correct_teeth_obj(
-        obj: bpy.types.Object,
-        bone_name: str,
-        reference_vector: Vector,
-        armature: bpy.types.Armature,
-    ) -> None:
-        vert_count = len(obj.data.vertices)
-        verts = np.empty(vert_count * 3, dtype=np.float64)
-        obj.data.vertices.foreach_get("co", verts)
-        verts = verts.reshape((-1, 3))
-
-        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
-        transformation = np.array(
-            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
-        )
-
-        verts += transformation
-
-        verts = verts.reshape((-1))
-        obj.data.vertices.foreach_set("co", verts)
-        obj.data.update()
-
     @injected_context
     def set(  # noqa: A003
         self, value_cm: float, context: C = None, realtime: bool = False
     ) -> None:  # noqa A001
+        """Sets height of human.
+
+        Args:
+            value_cm (float): Height of human in centimeters.
+            context (C): Blender context. Defaults to None.
+            realtime (bool): Whether to update the human in realtime. Only
+                needed for sliders in the UI. Defaults to False.
+        """
         if context.scene.HG3D.update_exception:
             return
 
@@ -95,23 +94,39 @@ class HeightSettings:
             self._human.keys[livekey_name].as_bpy().value = value
         else:
             self._human.keys[livekey_name].value = value
-            self.correct_armature(context)
-            self.correct_eyes()
-            self.correct_teeth()
+            self._correct_armature(context)
+            self._correct_eyes()
+            self._correct_teeth()
             for cloth_obj in self._human.clothing.outfit.objects:
                 self._human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
             for shoe_obj in self._human.clothing.footwear.objects:
                 self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
     def as_dict(self) -> dict[str, float]:
+        """Returns height of human as dictionary.
+
+        Returns:
+            dict[str, float]: Height of human as dictionary.
+        """
         return {"set": self.centimeters}
 
     @injected_context
     def set_from_dict(self, data: dict[str, float], context: C = None) -> None:
+        """Sets height of human from dictionary.
+
+        Args:
+            data (dict[str, float]): Dictionary with height of human.
+            context (C): Blender context. Defaults to None.
+        """
         self.set(data["set"], context)
 
     @injected_context
-    def correct_armature(self, context: C = None) -> None:
+    def _correct_armature(self, context: C = None) -> None:
+        """Corrects armature to fit the new height.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
         # FIXME symmetry
         body = self._human.body_obj
         rig = self._human.rig_obj
@@ -166,7 +181,18 @@ class HeightSettings:
         for obj in selected_objects:
             obj.select_set(True)
 
-    def correct_eyes(self) -> None:
+    @injected_context
+    def randomize(self, context: C = None) -> None:
+        """Randomize human height.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
+        chosen_height_cm = random.uniform(150, 200)
+        self.set(chosen_height_cm, context)
+
+    def _correct_eyes(self) -> None:
+        """Corrects eyes to fit the new height."""
         eye_obj = self._human.eye_obj
 
         eye_vert_count = len(eye_obj.data.vertices)
@@ -201,7 +227,8 @@ class HeightSettings:
         else:
             eye_obj.data.vertices.foreach_set("co", eye_verts_corrected)
 
-    def correct_teeth(self) -> None:
+    def _correct_teeth(self) -> None:
+        """Corrects teeth to fit the new height."""
         armature = self._human.rig_obj.data
         teeth_obj_lower = self._human.lower_teeth_obj
         teeth_obj_upper = self._human.upper_teeth_obj
@@ -213,7 +240,25 @@ class HeightSettings:
             teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003)), armature
         )
 
-    @injected_context
-    def randomize(self, context: C = None) -> None:
-        chosen_height_cm = random.uniform(150, 200)
-        self.set(chosen_height_cm, context)
+    @staticmethod
+    def _correct_teeth_obj(
+        obj: bpy.types.Object,
+        bone_name: str,
+        reference_vector: Vector,
+        armature: bpy.types.Armature,
+    ) -> None:
+        vert_count = len(obj.data.vertices)
+        verts = np.empty(vert_count * 3, dtype=np.float64)
+        obj.data.vertices.foreach_get("co", verts)
+        verts = verts.reshape((-1, 3))
+
+        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
+        transformation = np.array(
+            reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
+        )
+
+        verts += transformation
+
+        verts = verts.reshape((-1))
+        obj.data.vertices.foreach_set("co", verts)
+        obj.data.update()
