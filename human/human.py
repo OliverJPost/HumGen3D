@@ -29,7 +29,7 @@ from .body.body import BodySettings
 from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
-from .face.face import FaceKeys
+from .face.face import FaceSettings
 from .hair.hair import HairSettings
 from .height.height import HeightSettings
 from .keys.keys import KeySettings
@@ -273,8 +273,8 @@ class Human:
         return HeightSettings(self)
 
     @property  # TODO make cached
-    def face(self) -> FaceKeys:
-        return FaceKeys(self)
+    def face(self) -> FaceSettings:
+        return FaceSettings(self)
 
     @property  # TODO make cached
     def age(self) -> AgeSettings:

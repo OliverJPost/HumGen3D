@@ -14,7 +14,7 @@ from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 from ..common_baseclasses.prop_collection import PropCollection
 
 
-class FaceKeys(PropCollection):
+class FaceSettings(PropCollection):
     def __init__(self, human: "Human") -> None:
         self._human = human
 
