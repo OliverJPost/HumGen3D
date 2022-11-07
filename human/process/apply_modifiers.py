@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+# flake8: noqa D101
+
 from typing import TYPE_CHECKING, Any, no_type_check
 
 import bpy  # type: ignore

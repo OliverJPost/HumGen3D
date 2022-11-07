@@ -2,10 +2,8 @@
 
 from typing import TYPE_CHECKING, Union
 
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
-from HumGen3D.human.skin.skin import SkinNodes, create_node_property
+from HumGen3D.human.skin.skin import SkinNodes
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human

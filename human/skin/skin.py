@@ -1,17 +1,18 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class for changing the skin material of the human."""
+
 from __future__ import annotations
 
 import os
 import random
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, List, Tuple, cast
+from typing import TYPE_CHECKING, Any, List, Union, cast
 
 import bpy
-from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs
-from HumGen3D.common.shadernode import ShaderNodeInput
+from HumGen3D.common.shadernode import NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -23,79 +24,93 @@ if TYPE_CHECKING:
     from ..human import Human
 
 
-def create_node_property(node_name: str, input_name: str | int) -> Callable[..., Any]:
-    @property  # type:ignore[misc]
-    def _property_function(  # type:ignore[no-untyped-def]
-        self,
-    ) -> float | FloatVectorProperty | Tuple[float]:
-        tone_node = self.nodes[node_name]
-        return tone_node.inputs[input_name].default_value
-
-    @_property_function.setter
-    def _property_function(  # type:ignore[no-untyped-def]
-        self, value: float | FloatVectorProperty | Tuple[float]
-    ) -> None:
-        tone_node = self.nodes[node_name]
-        tone_node.inputs[input_name].default_value = value
-
-    return _property_function
-
-
 class MaleSkin:
+    """Subclass of human.skin for exposing controls for male specific skin settings."""
+
     def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
-        self.mustache_shadows = ShaderNodeInput(self, "Gender_Group", 2)
-        self.beard_shadow = ShaderNodeInput(self, "Gender_Group", 3)
+        self.mustache_shadows = NodeInput(self, "Gender_Group", 2)
+        self.beard_shadow = NodeInput(self, "Gender_Group", 3)
 
 
 class FemaleSkin:
+    """Subclass of human.skin exposing controls for female specific skin settings."""
+
     def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
 
-        # fmt: off
-        self.foundation_amount = ShaderNodeInput(self, "Gender_Group", "Foundation Amount")
-        self.foundation_color = ShaderNodeInput(self, "Gender_Group", "Foundation Color")
-        self.blush_opacity = ShaderNodeInput(self, "Gender_Group", "Blush Opacity")
-        self.blush_color = ShaderNodeInput(self, "Gender_Group", "Blush Color")
-        self.eyebrows_opacity = ShaderNodeInput(self, "Gender_Group", "Eyebrows Opacity")
-        self.eyebrows_color = ShaderNodeInput(self, "Gender_Group", "Eyebrows Color")
-        self.lipstick_color = ShaderNodeInput(self, "Gender_Group", "Lipstick Color")
-        self.lipstick_opacity = ShaderNodeInput(self, "Gender_Group", "Lipstick Opacity")
-        self.eyeliner_opacity = ShaderNodeInput(self, "Gender_Group", "Eyeliner Opacity")
-        self.eyeliner_color = ShaderNodeInput(self, "Gender_Group", "Eyeliner Color")
-        # fmt: on
+        self.foundation_amount = NodeInput(self, "Gender_Group", "Foundation Amount")
+        self.foundation_color = NodeInput(self, "Gender_Group", "Foundation Color")
+        self.blush_opacity = NodeInput(self, "Gender_Group", "Blush Opacity")
+        self.blush_color = NodeInput(self, "Gender_Group", "Blush Color")
+        self.eyebrows_opacity = NodeInput(self, "Gender_Group", "Eyebrows Opacity")
+        self.eyebrows_color = NodeInput(self, "Gender_Group", "Eyebrows Color")
+        self.lipstick_color = NodeInput(self, "Gender_Group", "Lipstick Color")
+        self.lipstick_opacity = NodeInput(self, "Gender_Group", "Lipstick Opacity")
+        self.eyeliner_opacity = NodeInput(self, "Gender_Group", "Eyeliner Opacity")
+        self.eyeliner_color = NodeInput(self, "Gender_Group", "Eyeliner Color")
 
 
 class SkinSettings:
+    """Class for manipulating skin material of human."""
+
     def __init__(self, human: "Human"):
         self._human = human
 
-        self.tone = ShaderNodeInput(self, "Skin_tone", 1)
-        self.redness = ShaderNodeInput(self, "Skin_tone", 2)
-        self.saturation = ShaderNodeInput(self, "Skin_tone", 3)
-        self.normal_strength = ShaderNodeInput(self, "Normal Map", 0)
-        self.roughness_multiplier = ShaderNodeInput(self, "R_Multiply", 1)
-        self.freckles = ShaderNodeInput(self, "Freckles_control", "Pos2")
-        self.splotches = ShaderNodeInput(self, "Splotches_control", "Pos2")
+        self.tone = NodeInput(self, "Skin_tone", 1)
+        self.redness = NodeInput(self, "Skin_tone", 2)
+        self.saturation = NodeInput(self, "Skin_tone", 3)
+        self.normal_strength = NodeInput(self, "Normal Map", 0)
+        self.roughness_multiplier = NodeInput(self, "R_Multiply", 1)
+        self.freckles = NodeInput(self, "Freckles_control", "Pos2")
+        self.splotches = NodeInput(self, "Splotches_control", "Pos2")
 
     @property  # TODO make cached
     def texture(self) -> TextureSettings:
+        """Gives acces to texture settings, for setting and changing textures.
+
+        Returns:
+            TextureSettings: Texture settings object.
+        """
         return TextureSettings(self._human)
 
     @property
     def nodes(self) -> SkinNodes:
+        """All nodes of the human skin material.
+
+        Returns:
+            SkinNodes: All nodes of the human skin material. Basically a
+                bpy_prop_collection with one extra method.
+        """
         return SkinNodes(self._human)
 
     @property
     def links(self) -> SkinLinks:
+        """All links on the human skin material.
+
+        Returns:
+            SkinLinks: All links on the human skin material. Basically a
+                bpy_prop_collection.
+        """
         return SkinLinks(self._human)
 
     @property
     def material(self) -> "Material":
+        """Human skin material.
+
+        Returns:
+            Material: Human skin Blender material.
+        """
         return cast("Material", self._human.body_obj.data.materials[0])
 
     @property  # TODO make cached
-    def gender_specific(self) -> MaleSkin | FemaleSkin:
+    def gender_specific(self) -> Union[MaleSkin, FemaleSkin]:
+        """Returns an instance to change node settings specifically related to gender.
+
+        Returns:
+            Union[MaleSkin, FemaleSkin]: Instance to change node settings regarding
+                the specific gender of this human.
+        """
         if self._human.gender == "male":
             gender_specific_class = MaleSkin
         else:
@@ -103,6 +118,7 @@ class SkinSettings:
         return gender_specific_class(self.nodes)
 
     def randomize(self) -> None:
+        """Randomize the skin material of the human."""
         mat = self.material
         nodes = self.nodes
 
@@ -144,6 +160,12 @@ class SkinSettings:
 
     @injected_context
     def set_subsurface_scattering(self, turn_on: bool, context: C = None) -> None:
+        """Set the subsurface scattering on or off.
+
+        Args:
+            turn_on (bool): True for turning on, False for turning off.
+            context (C): Blender context. Defaults to None.
+        """
         if context.scene.HG3D.update_exception:
             return
 
@@ -155,7 +177,12 @@ class SkinSettings:
 
     @injected_context
     def set_underwear(self, turn_on: bool, context: C = None) -> None:
+        """Turn on/off the underwear/censoring on the human skin material.
 
+        Args:
+            turn_on (bool): True for showing underwear, False for hiding it
+            context (C): Blender context. bpy.context if not provided.
+        """
         if context.scene.HG3D.update_exception:
             return
 
@@ -166,6 +193,11 @@ class SkinSettings:
         underwear_node.inputs[1].default_value = 1 if turn_on else 0
 
     def as_dict(self) -> dict[str, Any]:
+        """Returns a dictionary representation of the skin material.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of the skin material.
+        """
         return {
             "tone": self.tone.value,
             "redness": self.redness.value,
@@ -184,18 +216,24 @@ class SkinSettings:
 
     @injected_context
     def set_from_dict(self, data: dict[str, Any], context: C = None) -> None:
+        """Set the skin material from a dictionary representation.
+
+        Args:
+            data (dict[str, Any]): Dictionary representation of the skin material.
+            context (C): Blender context. bpy.context if not provided.
+        """
         for attr_name, attr_value in data.items():
             if attr_name == "gender_specific":
                 for gs_attr_name, gs_attr_value in attr_value.items():
                     setattr(self.gender_specific, gs_attr_name, gs_attr_value)
             elif "texture.set" in attr_name:
                 if attr_value is not None:
-                    self.texture.set(attr_value, context)
+                    self.texture.set(attr_value)
             else:
                 getattr(self, attr_name).value = attr_value
 
     def _set_gender_specific(self) -> None:
-        """Male and female humans of HumGen use the same shader, but one node
+        """Male and female humans of HumGen use the same shader, but one node # noqa
         group is different. This function ensures the right nodegroup is connected
         """
         gender = self._human.gender
@@ -227,13 +265,21 @@ class SkinSettings:
 
 
 class TextureSettings(PreviewCollectionContent):
+    """Class for changing the skin texture of the human."""
+
     def __init__(self, human: "Human") -> None:
         self._human = human
         self._pcoll_name = "texture"
         self._pcoll_gender_split = True
 
     @injected_context
-    def set(self, textureset_path: str, context: C = None) -> None:  # noqa A001
+    def set(self, textureset_path: str) -> None:  # noqa A001
+        """Set the skin texture from a textureset from the HumGen library.
+
+        Args:
+            textureset_path (str): Relative path to the textureset. Can be found from
+                the `get_options` method.
+        """
         diffuse_texture = textureset_path
         library = "Default 4K"  # TODO
 
@@ -316,15 +362,15 @@ class TextureSettings(PreviewCollectionContent):
                     node.image.colorspace_settings.name = old_color_mode
 
     def _add_texture_to_node(
-        self, node: ShaderNode, sub_path: Path | str, tx_type: str
+        self, node: ShaderNode, sub_path: Union[Path, str], tx_type: str
     ) -> None:
-        """Adds correct image to the teximage node
+        """Adds correct image to the teximage node.
 
         Args:
-            node      (ShaderNode): TexImage node to add image to
-            sub_path  (Path)      : Path relative to HumGen folder where the texture
-                                is located
-            tx_type   (str)       : what kind of texture it is (Diffuse, Roughness etc.)
+            node (ShaderNode): TexImage node to add image to
+            sub_path (Path): Path relative to HumGen folder where the texture
+                is located
+            tx_type (str): what kind of texture it is (Diffuse, Roughness etc.)
         """
         pref = get_prefs()
 
@@ -367,17 +413,26 @@ class TextureSettings(PreviewCollectionContent):
 
 
 class SkinNodes(bpy_prop_collection):
-    def __new__(cls, human: "Human") -> "SkinNodes":
+    """Inherits from bpy_prop_collection to add custom methods to the collection."""
+
+    def __new__(cls, human: "Human") -> "SkinNodes":  # noqa D102
         skin_mat = human.body_obj.data.materials[0]
         nodes = skin_mat.node_tree.nodes
         return super().__new__(cls, nodes)  # type:ignore[call-arg]
 
     def get_image_nodes(self) -> List[ShaderNode]:
+        """Get all nodes that are ShaderNodeTexImage.
+
+        Returns:
+            List[ShaderNode]: List of ShaderNodeTexImage nodes
+        """
         return [node for node in self if node.bl_idname == "ShaderNodeTexImage"]
 
 
 class SkinLinks(bpy_prop_collection):
-    def __new__(cls, human: "Human") -> "SkinLinks":
+    """Inherits from bpy_prop_collection to add custom methods to the collection."""
+
+    def __new__(cls, human: "Human") -> "SkinLinks":  # noqa D102
         skin_mat = human.body_obj.data.materials[0]
         links = skin_mat.node_tree.links
         return super().__new__(cls, links)  # type:ignore[call-arg]

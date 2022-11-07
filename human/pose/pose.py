@@ -1,7 +1,9 @@
+"""Contains class for manipulating pose of human."""
+
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Optional
 
 import bpy
 from bpy.types import Image  # type:ignore
@@ -18,6 +20,8 @@ from HumGen3D.backend.content.content_saving import save_objects_optimized, save
 
 
 class PoseSettings(PreviewCollectionContent, SavableContent):
+    """Class for manipulating pose of human."""
+
     def __init__(self, _human: "Human") -> None:
         self._human: "Human" = _human
         self._pcoll_name = "pose"
@@ -25,8 +29,13 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003
-        """Gets called by pcoll_pose to add selected pose to human"""
+        """Set a pose from the Human Generator pose library.
 
+        Args:
+            preset (str): Name of the pose to set, you can get options from the
+                `get_options` method.
+            context (C): Context to use. Defaults to None.
+        """
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         pref = get_prefs()
 
@@ -66,9 +75,19 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         self,
         name: str,
         category: str = "Custom",
-        thumbnail: Union[None, Literal["auto"], Image] = "auto",
+        thumbnail: Optional[Image] = None,
         context: C = None,
     ) -> None:
+        """Save current pose to the Human Generator pose library.
+
+        Args:
+            name (str): Name to save the pose as.
+            category (str): Category to save the pose in. If the category
+                does not exist, a new folder is created. Defaults to "Custom".
+            thumbnail (Optional[Image]): Thumbnail to use for the pose. If None, no
+                thumbnail is saved. Defaults to None.
+            context (C): Context to use. Defaults to None.
+        """
         folder = os.path.join(get_prefs().filepath, "poses", category)
 
         pose_object = self._human.rig_obj.copy()
@@ -86,19 +105,26 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         )
 
         if thumbnail:
-            if thumbnail == "auto":
-                thumb_name = self._human.render_thumbnail()
-            else:
-                thumb_name = thumbnail.name
+            thumb_name = thumbnail.name
             save_thumb(folder, thumb_name, name)
 
         hg_delete(pose_object)
 
     def as_dict(self) -> dict[str, Any]:
+        """Pose settings as dict.
+
+        Returns:
+            dict[str, Any]: Pose settings as dict.
+        """
         return {"set": self._active}
 
     def _import_pose(self, preset: str, context: bpy.types.Context) -> bpy.types.Object:
-        """Import selected pose object
+        """Import selected pose object.
+
+        Args:
+            preset (str): Name of the pose to set, you can get options from the
+                `get_options` method.
+            context (C): Context to use. Defaults to None.
 
         Returns:
             bpy.types.Object: Armature containing this pose
@@ -131,14 +157,18 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         hg_pose: bpy.types.Object,
         context: bpy.types.Context,
     ) -> None:
-        """Some weird issue caused changed to the rig to change the roll values on
+        """Matches roll on bones in rig.
+
+        Some weird issue caused changed to the rig to change the roll values on
         bones. This caused imported poses that still use the original armature to
         not copy properly to the human
 
         Args:
             hg_rig (Object): HumGen human armature
             hg_pose (Object): imported armature set to a certain pose
+            context (Context): Context from Blender
         """
+        # TODO check if still needed
         context.view_layer.objects.active = hg_pose
         hg_rig.select_set(True)
         bpy.ops.object.mode_set(mode="EDIT")
@@ -166,9 +196,10 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         bpy.ops.object.mode_set(mode="OBJECT")
 
     def _copy_pose(self, context: bpy.types.Context, pose: bpy.types.Object) -> None:
-        """Copies pose from one human to the other
+        """Copies pose from one human to the other.
 
         Args:
+            context (C): Blender context. bpy.context if not provided.
             pose (Object): armature to copy from
         """
         for obj in context.selected_objects:
