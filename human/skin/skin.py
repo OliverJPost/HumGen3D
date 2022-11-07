@@ -29,7 +29,7 @@ class MaleSkin:
 
     def __init__(self, nodes: bpy_prop_collection) -> None:
         self.nodes = nodes
-        self.mustache_shadows = NodeInput(self, "Gender_Group", 2)
+        self.mustache_shadow = NodeInput(self, "Gender_Group", 2)
         self.beard_shadow = NodeInput(self, "Gender_Group", 3)
 
 
@@ -57,6 +57,7 @@ class SkinSettings:
     def __init__(self, human: "Human"):
         self._human = human
 
+        self.cavity_strength = NodeInput(self, "Cavity_Multiply", "Fac")
         self.tone = NodeInput(self, "Skin_tone", 1)
         self.redness = NodeInput(self, "Skin_tone", 2)
         self.saturation = NodeInput(self, "Skin_tone", 3)
@@ -207,6 +208,7 @@ class SkinSettings:
             "freckles": self.freckles.value,
             "splotches": self.splotches.value,
             "texture.set": self.texture._active,
+            "cavity_strength": self.cavity_strength.value,
             "gender_specific": {
                 attr_name + "": attr_value.value
                 for attr_name, attr_value in vars(self.gender_specific).items()
@@ -272,7 +274,6 @@ class TextureSettings(PreviewCollectionContent):
         self._pcoll_name = "texture"
         self._pcoll_gender_split = True
 
-    @injected_context
     def set(self, textureset_path: str) -> None:  # noqa A001
         """Set the skin texture from a textureset from the HumGen library.
 

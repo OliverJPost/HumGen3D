@@ -1,7 +1,8 @@
 """Module for changing the age of the human."""
 
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Union
 
+from HumGen3D.common.shadernode import NodeInput
 from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
 from HumGen3D.human.skin.skin import SkinNodes
 
@@ -19,6 +20,9 @@ class AgeSettings:
             human (Human): Human instance.
         """
         self._human: "Human" = human
+
+        self.age_color = NodeInput(human.skin, "Age_Multiply", "Fac")
+        self.age_wrinkles = NodeInput(human.skin, "HG_Age", "Strength")
 
     @property
     def _current(self) -> int:
@@ -74,3 +78,25 @@ class AgeSettings:
         node_normal.inputs["Strength"].default_value = normal_value
 
         self._human.body_obj["Age"] = age
+
+    def as_dict(self) -> dict[str, Any]:
+        """Get the age settings of the human as a dictionary.
+
+        Returns:
+            dict: Dictionary with the age settings of the human.
+        """
+        return {
+            "set": self._current,
+            "age_color": self.age_color.value,
+            "age_wrinkles": self.age_wrinkles.value,
+        }
+
+    def set_from_dict(self, data: dict[str, Any]) -> None:
+        """Set the age of the human from a dictionary.
+
+        Args:
+            data (dict): Dictionary with the age of the human.
+        """
+        self.set(data["set"])
+        self.age_color.value = data["age_color"]
+        self.age_wrinkles.value = data["age_wrinkles"]
