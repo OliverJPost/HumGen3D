@@ -26,14 +26,20 @@ class ProcessPanel(HGPanel):
 
     def draw_header(self, context):
         if hasattr(self, "enabled_propname"):
-            self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
+            self.layout.prop(
+                bpy.context.window_manager.humgen3d.process,
+                self.enabled_propname,
+                text="",
+            )
         try:
             self.layout.label(text="", icon_value=get_hg_icon(self.icon_name))
         except KeyError:
             self.layout.label(text="", icon=self.icon_name)
 
     def check_enabled(self, context):
-        self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+        self.layout.enabled = getattr(
+            bpy.context.window_manager.humgen3d.process, self.enabled_propname
+        )
 
 
 class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
@@ -45,15 +51,15 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
     def poll(cls, context):
         if not super().poll(context):
             return False
-        return context.scene.HG3D.ui.active_tab == "PROCESS"
+        return bpy.context.window_manager.humgen3d.ui.active_tab == "PROCESS"
 
     def draw_header(self, context) -> None:
         draw_panel_switch_header(
-            self.layout, context.scene.HG3D
+            self.layout, bpy.context.window_manager.humgen3d
         )  # type:ignore[attr-defined]
 
     def draw(self, context):
-        process_sett = context.scene.HG3D.process
+        process_sett = bpy.context.window_manager.humgen3d.process
         col = self.layout.column()
 
         row = col.row(align=True)
@@ -111,9 +117,11 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     def draw(self, context):
         self.check_enabled(context)
         layout = self.layout
-        layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+        layout.enabled = getattr(
+            bpy.context.window_manager.humgen3d.process, self.enabled_propname
+        )
 
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         bake_sett = sett.process.baking
 
         if self._draw_baking_warning_labels(context, layout):
@@ -148,7 +156,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             return True
 
         if "hg_baked" in human.rig_obj:
-            if context.scene.HG3D.batch_idx:
+            if bpy.context.window_manager.humgen3d.batch_idx:
                 layout.label(text="Baking in progress")
             else:
                 layout.label(text="Already baked")
@@ -167,15 +175,15 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     def draw(self, context):
         self.check_enabled(context)
         layout = self.layout
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         col = layout.column(align=True)
         col.label(text="Select modifiers to be applied:")
         col.template_list(
             "HG_UL_MODAPPLY",
             "",
-            context.scene,
+            context.window_manager,
             "modapply_col",
-            context.scene,
+            context.window_manager,
             "modapply_col_index",
         )
         col.prop(sett.process.modapply, "search_modifiers", text="")
@@ -207,7 +215,7 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
         self.check_enabled(context)
         col = self.layout.column()
 
-        lod_sett = context.scene.HG3D.process.lod
+        lod_sett = bpy.context.window_manager.humgen3d.process.lod
 
         self.draw_subtitle("Body LOD", col, icon=get_hg_icon("body"), alignment="LEFT")
         col.prop(lod_sett, "body_lod", text="")
@@ -233,7 +241,7 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         self.check_enabled(context)
         col = self.layout.column()
         col.scale_y = 1.5
-        hairc_sett = context.scene.HG3D.process.haircards
+        hairc_sett = bpy.context.window_manager.humgen3d.process.haircards
 
         col.prop(hairc_sett, "quality")
 
@@ -259,7 +267,7 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         self.check_enabled(context)
-        naming_sett = context.scene.HG3D.process.rig_renaming
+        naming_sett = bpy.context.window_manager.humgen3d.process.rig_renaming
         col = self.layout.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False
@@ -307,7 +315,7 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         self.check_enabled(context)
-        rename_sett = context.scene.HG3D.process.renaming
+        rename_sett = bpy.context.window_manager.humgen3d.process.renaming
 
         box = self.layout.box()
         self.draw_subtitle("Tokens", box, "HELP")
@@ -371,10 +379,14 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
         self.draw_subtitle("Available Scripts", col)
         row = col.row(align=True)
         row.scale_y = 1.5
-        row.prop(context.scene.HG3D.process.scripting, "available_scripts", text="")
+        row.prop(
+            bpy.context.window_manager.humgen3d.process.scripting,
+            "available_scripts",
+            text="",
+        )
         row.operator("hg3d.add_script", text="", icon="ADD")
 
-        coll = context.scene.hg_scripts_col
+        coll = context.window_manager.hg_scripts_col
         if coll:
             self.draw_subtitle("Selected Scripts", col)
             draw_paragraph(
@@ -402,7 +414,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         box = self.layout.box()
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         pr_sett = sett.process
 
         self.draw_subtitle("Output", box, icon="SETTINGS")

@@ -30,7 +30,7 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
 
 class HG_EYEBROW_SWITCH(bpy.types.Operator):

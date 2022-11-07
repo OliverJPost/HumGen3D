@@ -30,5 +30,5 @@ def obj_from_pydata(
 
     obj = bpy.data.objects.new(obj_name, mesh)  # type:ignore[arg-type]
 
-    context.scene.collection.objects.link(obj)
+    context.window_manager.collection.objects.link(obj)
     return obj

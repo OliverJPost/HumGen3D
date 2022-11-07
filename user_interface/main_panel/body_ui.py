@@ -19,7 +19,7 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
 
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         col = self.layout.column()
         row = col.row()
         row.scale_y = 1.5

@@ -229,7 +229,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
     def execute(self, context):
         directory = self.directory
 
-        coll = context.scene.installpacks_col
+        coll = context.window_manager.installpacks_col
 
         if not self.files:
             ShowMessageBox(
@@ -318,7 +318,9 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
     def execute(self, context):
         pref = get_prefs()
         self.files = [
-            file for file in context.scene.installpacks_col if file.alert == "None"
+            file
+            for file in context.window_manager.installpacks_col
+            if file.alert == "None"
         ]
 
         filepath = pref.filepath
@@ -327,7 +329,7 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
             file_dict = self._unzip_file(zip_path, filepath)
             self._add_filelist_to_json(filepath, zip_path, file_dict)
 
-        coll = context.scene.installpacks_col
+        coll = context.window_manager.installpacks_col
         coll.clear()
         with contextlib.suppress(Exception):
             cpacks_refresh(self, context)
@@ -459,7 +461,7 @@ def cpacks_refresh(self: Any, context: bpy.types.Context) -> None:
 
     Does this by scanning the content_packs folder in the file structure
     """
-    coll = context.scene.contentpacks_col  # type:ignore[attr-defined]
+    coll = context.window_manager.contentpacks_col  # type:ignore[attr-defined]
     pref = get_prefs()
 
     coll.clear()
@@ -536,13 +538,13 @@ class HG_DELETE_CPACK(bpy.types.Operator):
     @no_type_check
     def invoke(self, context, event):
         # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     @no_type_check
     def execute(self, context):
         pref = get_prefs()
-        col = context.scene.contentpacks_col
-        index = context.scene.contentpacks_col_index
+        col = context.window_manager.contentpacks_col
+        index = context.window_manager.contentpacks_col_index
         item = col[self.item_name]
 
         # delete files from dict in json
@@ -565,7 +567,9 @@ class HG_DELETE_CPACK(bpy.types.Operator):
 
         # remove item from collection
         col.remove(index)
-        context.scene.contentpacks_col_index = min(max(0, index - 1), len(col) - 1)
+        context.window_manager.contentpacks_col_index = min(
+            max(0, index - 1), len(col) - 1
+        )
 
         self._removeEmptyFolders(pref.filepath)
 
@@ -605,13 +609,15 @@ class HG_DELETE_INSTALLPACK(bpy.types.Operator):
     @no_type_check
     @classmethod
     def poll(cls, context):
-        return context.scene.installpacks_col
+        return context.window_manager.installpacks_col
 
     @no_type_check
     def execute(self, context):
-        col = context.scene.installpacks_col
-        index = context.scene.installpacks_col_index
+        col = context.window_manager.installpacks_col
+        index = context.window_manager.installpacks_col_index
 
         col.remove(index)
-        context.scene.installpacks_col_index = min(max(0, index - 1), len(col) - 1)
+        context.window_manager.installpacks_col_index = min(
+            max(0, index - 1), len(col) - 1
+        )
         return {"FINISHED"}

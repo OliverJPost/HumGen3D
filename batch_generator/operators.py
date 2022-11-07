@@ -48,7 +48,7 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
         context.scene.collection.objects.link(marker)
         add_to_collection(context, marker, collection_name="HG Batch Markers")
 
-        marker.location = context.scene.cursor.location
+        marker.location = context.window_manager.cursor.location
 
         marker["hg_batch_marker"] = self.marker_type
 
@@ -56,7 +56,7 @@ class HG_OT_ADD_BATCH_MARKER(bpy.types.Operator):
 
 
 def status_text_callback(header, context):
-    batch_sett = context.scene.HG3D.batch
+    batch_sett = bpy.context.window_manager.humgen3d.batch
     layout = header.layout
 
     layout.separator_spacer()
@@ -116,7 +116,7 @@ def set_generator_settings(generator, batch_sett):
 
 
 def _choose_category_list():
-    collection = bpy.context.scene.batch_clothing_col
+    collection = bpy.context.window_manager.batch_clothing_col
 
     enabled_categories = [i.library_name for i in collection if i.enabled]
     if not enabled_categories:
@@ -138,7 +138,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
     timing_run_marker: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
         self.generate_queue = get_batch_marker_list(context)
         markers_with_associated_human = list(
             filter(has_associated_human, self.generate_queue)
@@ -243,4 +243,6 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
             ).run_immediately = True
             return
 
-        context.window_manager.popup_menu(draw, title="This will delete these humans:")
+        bpy.context.window_manager.popup_menu(
+            draw, title="This will delete these humans:"
+        )

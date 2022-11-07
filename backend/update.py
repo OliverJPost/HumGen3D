@@ -39,7 +39,7 @@ def check_update() -> None:
 
     pref.latest_version = tuple(update_data["latest_addon"])
 
-    update_col = bpy.context.scene.hg_update_col  # type:ignore[attr-defined]
+    update_col = bpy.context.window_manager.hg_update_col  # type:ignore[attr-defined]
     update_col.clear()
     for version, update_types in update_data["addon_updates"].items():
         if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
@@ -51,7 +51,7 @@ def check_update() -> None:
                 item.categ = update_type
                 item.line = line
 
-    cpack_col = bpy.context.scene.contentpacks_col  # type:ignore[attr-defined]
+    cpack_col = bpy.context.window_manager.contentpacks_col  # type:ignore[attr-defined]
     req_cpacks = update_data["required_cpacks"][
         current_main_version
     ]  # TODO this is bound to break

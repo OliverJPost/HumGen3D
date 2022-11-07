@@ -14,12 +14,12 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
     def poll(self, context):
         if not HGPanel.poll(context):
             return False
-        ui_sett = context.scene.HG3D.ui
+        ui_sett = bpy.context.window_manager.humgen3d.ui
         return not Human.find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
         draw_panel_switch_header(
-            self.layout, context.scene.HG3D
+            self.layout, bpy.context.window_manager.humgen3d
         )  # type:ignore[attr-defined]
 
     def draw(self, context):
@@ -29,7 +29,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         and female genders and a pink button to add the selected human
         """
         self.human = None
-        self.sett = context.scene.HG3D  # type:ignore[attr-defined]
+        self.sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         if self.draw_info_and_warning_labels(context):
             return
 
@@ -41,7 +41,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         box = col.box().column(align=True)
         self.draw_subtitle("Select a starting human", box)
         box.template_icon_view(
-            context.scene.HG3D.pcoll,
+            bpy.context.window_manager.humgen3d.pcoll,
             "humans",
             show_labels=True,
             scale=8,
@@ -51,14 +51,14 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         row = box.row(align=True)
         row.scale_y = 2
         row.scale_x = 1.3
-        row.prop(context.scene.HG3D, "gender", expand=True)
+        row.prop(context.window_manager.humgen3d, "gender", expand=True)
         row.operator(
             "hg3d.random_choice", text="", icon="FILE_REFRESH"
         ).pcoll_name = "humans"
 
         row = box.row(align=True)
         row.scale_y = 1.5
-        row.prop(context.scene.HG3D.pcoll, "humans_category", text="")
+        row.prop(context.window_manager.humgen3d.pcoll, "humans_category", text="")
 
         col = col.column()
         col.scale_y = 2

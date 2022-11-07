@@ -74,7 +74,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.HG3D.custom_content.content_saving_ui
+        return bpy.context.window_manager.humgen3d.custom_content.content_saving_ui
 
     def draw_header(self, context):
         row = self.layout.row()
@@ -83,7 +83,7 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
         self.cc_sett = cc_sett
 
         content_type = cc_sett.content_saving_type

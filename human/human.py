@@ -81,10 +81,7 @@ class Human:
         )
 
     @staticmethod
-    @injected_context
-    def get_preset_options(
-        gender: str, category: str = "All", context: C = None
-    ) -> List[str]:
+    def get_preset_options(gender: str, category: str = "All") -> List[str]:
         """
         Return a list of human possible presets for the given gender.
 
@@ -92,12 +89,11 @@ class Human:
 
         Args:
           gender (str): string in ('male', 'female')
-          context (Context): Blender context, uses bpy.context if not passed
 
         Returns:
           A list of starting human presets you can choose from
         """
-        preview_collections["humans"].populate(context, gender, subcategory=category)
+        preview_collections["humans"].populate(gender, subcategory=category)
         return [
             option[0] for option in preview_collections["humans"].pcoll["humans"][1:]
         ]
@@ -487,12 +483,12 @@ class Human:
 
         # link to scene
         hg_rig, hg_body, hg_eyes, *hg_teeth = data_to.objects
-        scene = context.scene
+        scene = context.window_manager
         for obj in data_to.objects:
             scene.collection.objects.link(obj)
             add_to_collection(context, obj)
 
-        hg_rig.location = context.scene.cursor.location
+        hg_rig.location = context.window_manager.cursor.location
 
         # set custom properties for identifying
         hg_body["hg_body"] = hg_eyes["hg_eyes"] = 1
@@ -581,9 +577,9 @@ class Human:
         with open(os.path.join(folder, f"{name}.json"), "w") as f:
             json.dump(preset_data, f, indent=4)
 
-        context.scene.HG3D.content_saving_ui = False
+        bpy.context.window_manager.humgen3d.content_saving_ui = False
 
-        preview_collections["humans"].refresh(context)
+        preview_collections["humans"].refresh()
 
     def as_dict(self) -> dict[str, Any]:
         """Returns a dictionary representation of this human.
@@ -717,7 +713,7 @@ class Human:
         bpy.data.scenes.remove(hg_thumbnail_scene)
 
         img = bpy.data.images.load(full_image_path)
-        context.scene.HG3D.custom_content.preset_thumbnail = img
+        bpy.context.window_manager.humgen3d.custom_content.preset_thumbnail = img
         return cast(str, img.name)
 
     def _set_random_name(self) -> None:

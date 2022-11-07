@@ -14,7 +14,7 @@ class HG_PT_CLOTHING(MainPanelPart, bpy.types.Panel):
         """Draws a template_icon_view for adding outfits."""
 
         col = self.layout.column()
-        sett = context.scene.HG3D
+        sett = bpy.context.window_manager.humgen3d
         row = col.row(align=True)
         row.scale_y = 1.5
         row.prop(sett.ui, "clothing_tab", expand=True)

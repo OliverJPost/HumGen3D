@@ -20,7 +20,7 @@ def assert_vector_tuple_equality(vec, tup):
 
 @pytest.mark.parametrize("gender", ["male", "female"])
 def test_get_preset_options(gender, context):
-    assert Human.get_preset_options(gender, context), "No preset options returned"
+    assert Human.get_preset_options(gender), "No preset options returned"
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)

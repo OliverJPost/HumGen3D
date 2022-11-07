@@ -27,12 +27,12 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
         if not super().poll(context):
             return False
 
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         return sett.ui.active_tab == "CONTENT" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(
-            self.layout, context.scene.HG3D
+            self.layout, bpy.context.window_manager.humgen3d
         )  # type:ignore[attr-defined]
 
     def draw(self, context):
@@ -98,20 +98,20 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
             "hg3d.refresh_possible_content", text="Refresh list", icon="FILE_REFRESH"
         )
         row.prop(
-            context.scene.HG3D.custom_content,
+            bpy.context.window_manager.humgen3d.custom_content,
             "show_unchanged",
             toggle=True,
             icon_only=True,
             icon="HIDE_OFF",
         )
 
-        amount_of_items = len(context.scene.possible_content_col)
+        amount_of_items = len(context.window_manager.possible_content_col)
         col.template_list(
             "HG_UL_POSSIBLE_CONTENT",
             "",
-            context.scene,
+            context.window_manager,
             "possible_content_col",
-            context.scene,
+            context.window_manager,
             "possible_content_col_index",
             rows=amount_of_items if amount_of_items <= 15 else 15,
             sort_lock=True,

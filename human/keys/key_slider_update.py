@@ -77,5 +77,5 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
             cls._handler = None
             return {"FINISHED"}
 
-        context.window_manager.modal_handler_add(self)
+        bpy.context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}

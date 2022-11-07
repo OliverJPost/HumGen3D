@@ -47,7 +47,7 @@ def import_npz_key(
 
 
 def update_livekey_collection() -> None:
-    """Updates the livekeys collection inside context.window_manager.
+    """Updates the livekeys collection inside bpy.context.window_manager.
 
     Updates it to contain all livekeys present in the Human Generator folder structure.
     """

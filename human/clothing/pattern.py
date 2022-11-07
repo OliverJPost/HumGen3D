@@ -103,7 +103,9 @@ class PatternSettings(PreviewCollectionContent):
             context (bpy.types.Context): Blender context.
         """
         obj = context.object
-        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
+        active_item = getattr(
+            bpy.context.window_manager.humgen3d, f"pcoll_{self._pcoll_name}"
+        )
         self.set(active_item, obj)
 
     def _create_node_if_doesnt_exist(

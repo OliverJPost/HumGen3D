@@ -148,7 +148,6 @@ def register() -> None:
     # Main props
     from .backend.properties.scene_main_properties import HG_SETTINGS
 
-    bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS)  # type:ignore
     # Object specific props
     bpy.types.Object.HG = bpy.props.PointerProperty(type=HG_OBJECT_PROPS)  # type:ignore
 
@@ -161,6 +160,9 @@ def register() -> None:
 
     livekeys_coll = bpy.props.CollectionProperty(type=BpyLiveKey)  # type:ignore
     bpy.types.WindowManager.livekeys = livekeys_coll
+    bpy.types.WindowManager.humgen3d = bpy.props.PointerProperty(
+        type=HG_SETTINGS
+    )  # type:ignore
 
     # load handler
     if HG_start not in bpy.app.handlers.load_post:

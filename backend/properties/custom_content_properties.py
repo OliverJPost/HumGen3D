@@ -3,7 +3,7 @@
 # type:ignore
 
 """ # noqa D400
-context.scene.HG3D.custom_content
+context.window_manager.humgen3d.custom_content
 
 Properties for creating and managing custom content in Human Generator
 """
@@ -97,7 +97,7 @@ def get_key_subcategories(category_type):
 
 def get_categories(self, context):
     custom_content_saving_human = (
-        context.scene.HG3D.custom_content.content_saving_active_human
+        bpy.context.window_manager.humgen3d.custom_content.content_saving_active_human
     )
     human = Human.from_existing(custom_content_saving_human)
 

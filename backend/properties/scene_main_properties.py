@@ -2,7 +2,7 @@
 
 
 """ # noqa D400
-context.scene.HG3D
+context.window_manager.humgen3d
 
 Main propertygroup of Human Generator, others are subclasses of this one.
 Contains top level properties.

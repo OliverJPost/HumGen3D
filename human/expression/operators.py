@@ -17,7 +17,7 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
     shapekey: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
         hg_rig = Human.from_existing(context.active_object).rig_obj
@@ -52,7 +52,7 @@ class HG_REMOVE_FRIG(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
         human = Human.from_existing(context.object)
@@ -75,7 +75,7 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
     )
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         layout = self.layout

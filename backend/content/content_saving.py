@@ -22,7 +22,7 @@ def save_thumb(folder: str, img_name: str, save_name: str) -> None:
     """
     img = bpy.data.images[img_name]  # type:ignore[index, call-overload]
     thumbnail_type = (
-        bpy.context.scene.HG3D.custom_content.thumbnail_saving_enum  # type:ignore[attr-defined] # noqa E501
+        bpy.context.window_manager.humgen3d.custom_content.thumbnail_saving_enum  # type:ignore[attr-defined] # noqa E501
     )
 
     destination_path = os.path.join(folder, f"{save_name}.jpg")

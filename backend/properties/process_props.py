@@ -178,7 +178,7 @@ def get_script_list(self, context):
 
 def add_script_to_collection(self, context):
     """Adds a script to the collection."""
-    scripts_col = context.scene.hg_scripts_col
+    scripts_col = context.window_manager.hg_scripts_col
     scripts_col.add().name = self.available_scripts
 
 

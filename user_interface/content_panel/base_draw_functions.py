@@ -9,7 +9,7 @@ def draw_category_ui(context, layout, content_type):
         "BLANK1",
     )
 
-    cc_sett = context.scene.HG3D.custom_content
+    cc_sett = bpy.context.window_manager.humgen3d.custom_content
     col = layout.column()
     col.scale_y = 1.5
 
@@ -52,7 +52,7 @@ def _draw_name_ui(context, layout, content_type):
         layout (UILayout): layout to draw in
         content_type (str): String about what content type this is
     """
-    cc_sett = context.scene.HG3D.custom_content
+    cc_sett = bpy.context.window_manager.humgen3d.custom_content
 
     _draw_header_box(
         layout,
@@ -77,7 +77,7 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         layout (UILayout): layout to draw in
         content_type (str): What type of content to get thumbnail for
     """
-    cc_sett = context.scene.HG3D.custom_content
+    cc_sett = bpy.context.window_manager.humgen3d.custom_content
 
     _draw_header_box(layout, "Select a thumbnail", icon="IMAGE")
 
@@ -206,7 +206,7 @@ def _draw_warning_if_different_active_human(context, layout):
         context (context): BL context
         layout (UILayout): layout to draw warning button in
     """
-    cc_sett = context.scene.HG3D.custom_content
+    cc_sett = bpy.context.window_manager.humgen3d.custom_content
 
     active_human = Human.from_existing(context.object).rig_obj
     try:
@@ -265,7 +265,7 @@ def _draw_next_button(layout, poll=True):
     row.scale_y = 1.5
     row.alert = True
 
-    sett = bpy.context.scene.HG3D.custom_content
+    sett = bpy.context.window_manager.humgen3d.custom_content
 
     # Show previous button if the current index is higher than 0
     if sett.content_saving_tab_index > 0:

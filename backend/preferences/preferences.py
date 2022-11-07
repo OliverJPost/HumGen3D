@@ -154,7 +154,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
                     col.label(text=line, icon="DOT")
 
     def _build_update_info_dict(self, context) -> dict:
-        update_col = context.scene.hg_update_col
+        update_col = context.window_manager.hg_update_col
         update_info_dict = {}
 
         update_info_dict = {
@@ -263,9 +263,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.template_list(
             "HG_UL_CONTENTPACKS",
             "",
-            context.scene,
+            context.window_manager,
             "contentpacks_col",
-            context.scene,
+            context.window_manager,
             "contentpacks_col_index",
             rows=10,
         )
@@ -277,16 +277,16 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         box = col.box()
         box.label(text="Select packs to install:")
 
-        selected_packs = bool(context.scene.installpacks_col)
+        selected_packs = bool(context.window_manager.installpacks_col)
 
         if selected_packs:
             row = box.row()
             row.template_list(
                 "HG_UL_INSTALLPACKS",
                 "",
-                context.scene,
+                context.window_manager,
                 "installpacks_col",
-                context.scene,
+                context.window_manager,
                 "installpacks_col_index",
             )
             row.operator("hg3d.removeipack", icon="TRASH")
@@ -378,15 +378,15 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.template_list(
             "HG_UL_INSTALLPACKS",
             "",
-            context.scene,
+            context.window_manager,
             "installpacks_col",
-            context.scene,
+            context.window_manager,
             "installpacks_col_index",
         )
 
         row.operator("hg3d.removeipack", icon="TRASH")
 
-        selected_packs = bool(context.scene.installpacks_col)
+        selected_packs = bool(context.window_manager.installpacks_col)
         row = box.row()
         row.scale_y = 1.5
         row.operator(

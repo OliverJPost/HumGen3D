@@ -23,7 +23,7 @@ from mathutils import Vector
 
 
 def status_text_callback(header, context):
-    bake_sett = context.scene.HG3D.process.baking
+    bake_sett = bpy.context.window_manager.humgen3d.process.baking
     layout = header.layout
 
     layout.separator_spacer()
@@ -53,7 +53,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):  # noqa
-        pr_sett = context.scene.HG3D.process
+        pr_sett = bpy.context.window_manager.humgen3d.process
         human_rigs = Human.find_multiple_in_list(context.selected_objects)
         for rig_obj in human_rigs:
             human = Human.from_existing(rig_obj)
@@ -73,7 +73,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
             if pr_sett.baking_enabled:
                 human.process.baking.bake_all(
-                    int(context.scene.HG3D.process.baking.samples), context
+                    int(context.window_manager.humgen3d.process.baking.samples), context
                 )
 
             if pr_sett.lod_enabled:
@@ -85,7 +85,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 )
 
             if pr_sett.rig_renaming_enabled:
-                naming_sett = context.scene.HG3D.process.rig_renaming
+                naming_sett = bpy.context.window_manager.humgen3d.process.rig_renaming
                 props = naming_sett.bl_rna.properties
                 prop_dict = {
                     str(prop.identifier): str(getattr(naming_sett, prop.identifier))
@@ -94,7 +94,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.process.rename_bones_from_json(json.dumps(prop_dict))
 
             if pr_sett.renaming_enabled:
-                obj_naming_sett = context.scene.HG3D.process.renaming
+                obj_naming_sett = bpy.context.window_manager.humgen3d.process.renaming
                 props = obj_naming_sett.bl_rna.properties
                 prop_dict = {
                     str(prop.identifier): str(getattr(obj_naming_sett, prop.identifier))
@@ -105,7 +105,9 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     custom_token=obj_naming_sett.custom_token,
                     suffix=obj_naming_sett.suffix if obj_naming_sett.use_suffix else "",
                 )
-                material_naming_sett = context.scene.HG3D.process.renaming.materials
+                material_naming_sett = (
+                    bpy.context.window_manager.humgen3d.process.renaming.materials
+                )
                 props = material_naming_sett.bl_rna.properties
                 prop_dict = {
                     str(prop.identifier): str(
@@ -123,7 +125,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
             if pr_sett.scripting_enabled:
                 folder = os.path.join(get_prefs().filepath, "scripts")
                 sys.path.append(folder)
-                for item in context.scene.hg_scripts_col:
+                for item in context.window_manager.hg_scripts_col:
                     module = importlib.import_module(item.name.replace(".py", ""))
                     module.main(context, human)
 
@@ -141,7 +143,7 @@ class HG_OT_REMOVE_SCRIPT(bpy.types.Operator):
     name: bpy.props.StringProperty()
 
     def execute(self, context):
-        coll = context.scene.hg_scripts_col
+        coll = context.window_manager.hg_scripts_col
 
         item_idx = next(i for i, item in enumerate(coll) if item.name == self.name)
         coll.remove(item_idx)
@@ -157,7 +159,7 @@ class HG_OT_MOVE_SCRIPT(bpy.types.Operator):
     move_up: bpy.props.BoolProperty()
 
     def execute(self, context):
-        coll = context.scene.hg_scripts_col
+        coll = context.window_manager.hg_scripts_col
 
         item_idx = next(i for i, item in enumerate(coll) if item.name == self.name)
         if item_idx > 0 and not self.move_up:
@@ -176,7 +178,7 @@ class HG_OT_ADD_SCRIPT(bpy.types.Operator):
     name: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         col = self.layout.column()
@@ -216,7 +218,7 @@ def main(context: bpy.types.Context, human: Human):
         textblock.filepath = os.path.join(
             get_prefs().filepath, "scripts", self.name + ".py"
         )
-        coll = context.scene.hg_scripts_col
+        coll = context.window_manager.hg_scripts_col
         coll.add().name = self.name + ".py"
 
         with open(textblock.filepath, "w") as f:
@@ -249,7 +251,7 @@ class HG_OT_ADD_LOD_OUTPUT(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        coll = context.scene.lod_output_col
+        coll = context.window_manager.lod_output_col
 
         last_item = coll[-1] if coll else None
         item = coll.add()
@@ -270,8 +272,8 @@ class HG_OT_REMOVE_LOD_OUTPUT(bpy.types.Operator):
     name: bpy.props.StringProperty()
 
     def execute(self, context):
-        item = context.scene.lod_output_col.find(self.name)
-        context.scene.lod_output_col.remove(item)
+        item = context.window_manager.lod_output_col.find(self.name)
+        context.window_manager.lod_output_col.remove(item)
         return {"FINISHED"}
 
 
@@ -301,7 +303,7 @@ class HG_OT_SAVE_PROCESS_TEMPLATE(bpy.types.Operator):
     new_group_name: bpy.props.StringProperty(name="New group name")
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         col = self.layout.column()
@@ -358,7 +360,7 @@ class HG_BAKE(bpy.types.Operator):
         self.human = Human.from_existing(context.object)
         self.baketextures = self.human.process.baking.get_baking_list()
 
-        bake_sett = context.scene.HG3D.process.baking
+        bake_sett = bpy.context.window_manager.humgen3d.process.baking
         bake_sett.total = len(self.baketextures)
         bake_sett.idx = 1
 
@@ -374,7 +376,7 @@ class HG_BAKE(bpy.types.Operator):
         if cancelled:
             return {"FINISHED"}
 
-        wm = context.window_manager
+        wm = bpy.context.window_manager
         wm.modal_handler_add(self)
 
         self.timer = wm.event_timer_add(0.01, window=context.window)
@@ -383,7 +385,7 @@ class HG_BAKE(bpy.types.Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):  # noqa CCR001
-        bake_sett = context.scene.HG3D.process.baking
+        bake_sett = bpy.context.window_manager.humgen3d.process.baking
 
         if self.finish_modal:
             self.human.process.baking.set_up_new_materials(self.baketextures)
@@ -396,7 +398,7 @@ class HG_BAKE(bpy.types.Operator):
                     "cycles"
                 ].preferences.compute_device_type = "OPTIX"
 
-            context.scene.cycles.samples = self.old_samples
+            context.window_manager.cycles.samples = self.old_samples
 
             return {"FINISHED"}
 

@@ -2,6 +2,7 @@ from HumGen3D.user_interface.content_panel.base_draw_functions import (
     _draw_header_box,
     _draw_next_button,
 )
+import bpy
 
 
 def _draw_clothing_gender_ui(context, layout, content_type):
@@ -19,7 +20,9 @@ def _draw_clothing_gender_ui(context, layout, content_type):
 
     col = layout.column(align=True)
     col.scale_y = 1.5
-    clothing_type_sett = getattr(context.scene.HG3D.custom_content, content_type)
+    clothing_type_sett = getattr(
+        bpy.context.window_manager.humgen3d.custom_content, content_type
+    )
 
     col.prop(clothing_type_sett, "save_for_male", text="Male", toggle=True)
     col.prop(clothing_type_sett, "save_for_female", text="Female", toggle=True)
@@ -47,13 +50,13 @@ def _draw_clothing_uilist_ui(context, layout):
     col.template_list(
         "HG_UL_SAVEOUTFIT",
         "",
-        context.scene,
+        context.window_manager,
         "saveoutfit_col",
-        context.scene,
+        context.window_manager,
         "saveoutfit_col_index",
     )
 
-    poll = [i for i in context.scene.saveoutfit_col if i.enabled]
+    poll = [i for i in context.window_manager.saveoutfit_col if i.enabled]
     _draw_next_button(layout, poll=poll)
 
 
@@ -68,6 +71,10 @@ def _draw_outfit_type_selector(context, layout):
 
     col = layout.column()
     col.scale_y = 1.5
-    col.prop(context.scene.HG3D.custom_content, "saveoutfit_categ", expand=True)
+    col.prop(
+        bpy.context.window_manager.humgen3d.custom_content,
+        "saveoutfit_categ",
+        expand=True,
+    )
 
     _draw_next_button(layout)

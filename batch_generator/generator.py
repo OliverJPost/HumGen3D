@@ -62,7 +62,7 @@ class BatchHumanGenerator:
             chosen_category: str = random.choices(
                 *zip(*self.human_preset_category_chances.items())  # type:ignore
             )[0]
-            presets = Human.get_preset_options(gender, chosen_category, context)
+            presets = Human.get_preset_options(gender, chosen_category)
 
         chosen_preset = random.choice(presets)
         human = Human.from_preset(chosen_preset)

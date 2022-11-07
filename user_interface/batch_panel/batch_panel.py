@@ -30,17 +30,17 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         return sett.ui.active_tab == "BATCH" and not sett.ui.content_saving
 
     def draw_header(self, context):
         draw_panel_switch_header(
-            self.layout, context.scene.HG3D
+            self.layout, bpy.context.window_manager.humgen3d
         )  # type:ignore[attr-defined]
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
 
         col = layout.column(align=True)
 
@@ -87,7 +87,7 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
 
         col = layout.column(align=True)
 
@@ -116,7 +116,7 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
 
         row = layout.box().row(align=True)
         row.scale_y = 1.5
@@ -228,7 +228,7 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
 
         col = layout.column()
         col.use_property_split = True
@@ -250,7 +250,7 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
         layout.enabled = batch_sett.hair
 
         row = layout.row(align=True)
@@ -280,7 +280,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
         layout.enabled = batch_sett.clothing
 
         col = layout.column(align=True)
@@ -292,9 +292,9 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         row.template_list(
             "HG_UL_BATCH_CLOTHING",
             "",
-            context.scene,
+            context.window_manager,
             "batch_clothing_col",
-            context.scene,
+            context.window_manager,
             "batch_clothing_col_index",
         )
 
@@ -302,7 +302,7 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         count = sum(
             [
                 (item.male_items + item.female_items)
-                for item in context.scene.batch_clothing_col
+                for item in context.window_manager.batch_clothing_col
                 if item.enabled
             ]
         )
@@ -325,14 +325,14 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        batch_sett = context.scene.HG3D.batch
+        batch_sett = bpy.context.window_manager.humgen3d.batch
         layout.enabled = batch_sett.expression
 
         layout.prop(batch_sett, "expression_type", expand=True)
 
 
 def header(self, context, categ):
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
     layout = self.layout
     layout.prop(sett.batch, categ, text="")
 

@@ -66,27 +66,27 @@ class BakeSettings:
 
     @property
     def resolution_body(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_body
+        return bpy.context.window_manager.humgen3d.process.baking.res_body
 
     @resolution_body.setter
     def resolution_body(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_body = str(value)
+        bpy.context.window_manager.humgen3d.process.baking.res_body = str(value)
 
     @property
     def resolution_clothes(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_clothes
+        return bpy.context.window_manager.humgen3d.process.baking.res_clothes
 
     @resolution_clothes.setter
     def resolution_clothes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_clothes = str(value)
+        bpy.context.window_manager.humgen3d.process.baking.res_clothes = str(value)
 
     @property
     def resolution_eyes(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_eyes
+        return bpy.context.window_manager.humgen3d.process.baking.res_eyes
 
     @resolution_eyes.setter
     def resolution_eyes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_eyes = str(value)
+        bpy.context.window_manager.humgen3d.process.baking.res_eyes = str(value)
 
     @staticmethod
     def _add_image_node(
@@ -196,16 +196,16 @@ class BakeSettings:
         if cycles_addon.preferences.compute_device_type == "OPTIX":
             switched_to_cuda = True
             cycles_addon.preferences.compute_device_type = "CUDA"
-        if context.scene.render.engine != "CYCLES":
+        if context.window_manager.render.engine != "CYCLES":
             if force_cycles:
                 switched_from_eevee = True
-                context.scene.render.engine = "CYCLES"
+                context.window_manager.render.engine = "CYCLES"
             else:
                 ShowMessageBox(message="You can only bake while in Cycles")
                 return True, False, False, False
 
-        old_samples = context.scene.cycles.samples
-        context.scene.cycles.samples = samples
+        old_samples = context.window_manager.cycles.samples
+        context.window_manager.cycles.samples = samples
 
         return False, switched_to_cuda, old_samples, switched_from_eevee
 
@@ -227,15 +227,15 @@ class BakeSettings:
             context.preferences.addons[  # type:ignore[index, call-overload]
                 "cycles"
             ].preferences.compute_device_type = "OPTIX"
-        context.scene.cycles.samples = old_samples
+        context.window_manager.cycles.samples = old_samples
         if was_eevee:
-            context.scene.render.engine = "EEVEE"
+            context.window_manager.render.engine = "EEVEE"
 
     @injected_context
     def bake_single_texture(
         self, baketexture: BakeTexture, context: C = None
     ) -> bpy.types.Image:
-        bake_sett = context.scene.HG3D.process.baking
+        bake_sett = bpy.context.window_manager.humgen3d.process.baking
         bake_obj = baketexture.bake_object
         was_solidified = self._disable_solidify_if_enabled(bake_obj)
 

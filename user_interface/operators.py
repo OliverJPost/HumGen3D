@@ -37,7 +37,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
 
     def execute(self, context):
         human = Human.from_existing(context.object)
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         sett.ui.phase = self.section_name
 
         if self.section_name == "hair":
@@ -102,7 +102,7 @@ class HG_CLEAR_SEARCH(bpy.types.Operator):
     searchbox_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         human = Human.from_existing(context.object)
         if self.searchbox_name == "cpack_creator":
             get_prefs().cpack_content_search = ""
@@ -122,7 +122,7 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
     go_next: bpy.props.BoolProperty()
 
     def execute(self, context):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         sett.custom_content.content_saving_tab_index += 1 if self.go_next else -1
 
         update_tips_from_context(
@@ -142,10 +142,10 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
 
     def invoke(self, context, event):
         # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         sett.custom_content.content_saving_ui = False
 
         update_tips_from_context(

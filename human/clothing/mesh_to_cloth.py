@@ -11,7 +11,7 @@ from HumGen3D.human.human import Human  # type: ignore
 
 class MESH_TO_CLOTH_TOOLS:
     def invoke(self, context, event):
-        self.cc_sett = context.scene.HG3D.custom_content
+        self.cc_sett = bpy.context.window_manager.humgen3d.custom_content
         self.hg_rig = self.sett.content_saving_active_human
         return self.execute(context)
 
@@ -24,7 +24,9 @@ class HG_OT_AUTOWEIGHT(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        cloth_obj = context.scene.HG3D.custom_content.content_saving_object
+        cloth_obj = (
+            bpy.context.window_manager.humgen3d.custom_content.content_saving_object
+        )
         context.view_layer.objects.active = cloth_obj
 
         for obj in context.selected_objects:
@@ -150,7 +152,7 @@ class HG_OT_ADDMASKS(bpy.types.Operator, MESH_TO_CLOTH_TOOLS):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
 
         hg_rig = cc_sett.content_saving_active_human
         human = Human.from_existing(cc_sett.content_saving_active_human)

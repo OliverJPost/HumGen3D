@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """ # noqa D400
-context.scene.HG3D.batch
+context.window_manager.humgen3d.batch
 
 Properties related to the Human Generator batch generator
 """

@@ -12,9 +12,9 @@ from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
 
 
 def refresh_shapekeys_ul(self, context):
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
     pref = get_prefs()
-    col = context.scene.shapekeys_col
+    col = context.window_manager.shapekeys_col
 
     previously_enabled_items = [i.sk_name for i in col if i.enabled]
 
@@ -59,8 +59,8 @@ def find_existing_shapekeys(cc_sett, pref):
 
 
 def refresh_hair_ul(self, context):
-    cc_sett = context.scene.HG3D.custom_content
-    col = context.scene.savehair_col
+    cc_sett = bpy.context.window_manager.humgen3d.custom_content
+    col = context.window_manager.savehair_col
 
     previously_enabled_items = [i.ps_name for i in col if i.enabled]
 
@@ -82,8 +82,8 @@ def refresh_hair_ul(self, context):
 
 # TODO if old list, make cloth_types the same again
 def refresh_outfit_ul(self, context):
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
-    col = context.scene.saveoutfit_col
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
+    col = context.window_manager.saveoutfit_col
 
     previously_enabled_items = [i.obj_name for i in col if i.enabled]
 
@@ -142,7 +142,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
 
         hg_rig = Human.from_existing(context.object).rig_obj
 

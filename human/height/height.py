@@ -72,7 +72,7 @@ class HeightSettings:
             realtime (bool): Whether to update the human in realtime. Only
                 needed for sliders in the UI. Defaults to False.
         """
-        if context.scene.HG3D.update_exception:
+        if bpy.context.window_manager.humgen3d.update_exception:
             return
 
         if value_cm > 184:
@@ -86,7 +86,7 @@ class HeightSettings:
             return
 
         if realtime and not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
-            context.scene.HG3D.slider_is_dragging = True
+            bpy.context.window_manager.humgen3d.slider_is_dragging = True
             bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT", hide_armature=True)
 
         self.name = livekey_name

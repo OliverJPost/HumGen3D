@@ -460,7 +460,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             data_to.objects = ["HG_Body"]
 
         hair_obj = data_to.objects[0]
-        scene = context.scene
+        scene = context.window_manager
         scene.collection.objects.link(hair_obj)
 
         return cast(bpy.types.Object, hair_obj)
@@ -471,7 +471,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """Gives the imported hair object the exact same shape as hg human."""  # noqa
         body_copy = self._human.body_obj.copy()  # TODO without copying
         body_copy.data = body_copy.data.copy()
-        context.scene.collection.objects.link(body_copy)
+        context.window_manager.collection.objects.link(body_copy)
 
         apply_shapekeys(body_copy)
         remove_broken_drivers()

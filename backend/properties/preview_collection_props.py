@@ -3,7 +3,7 @@
 # type:ignore
 # flake8: noqa CM001
 """
-context.scene.HG3D.pcoll
+context.window_manager.humgen3d.pcoll
 Stores the preview collections of Human Generator. These collections are used to allow
 the user to choose between different options by looking at thumbnail pictures.
 """
@@ -41,7 +41,7 @@ def get_folders(attr):
 
     def func(self, context):
         if attr == "humans":
-            return Human._get_categories(context.scene.HG3D.gender)
+            return Human._get_categories(context.window_manager.humgen3d.gender)
         human = Human.from_existing(context.object, strict_check=False)
         try:
             return retreiver(human)._get_categories()
@@ -83,7 +83,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         name="Human Library",
         items=get_folders("humans"),
         update=lambda _, context: preview_collections["humans"].refresh(
-            context, context.scene.HG3D.gender
+            context, bpy.context.window_manager.humgen3d.gender
         ),
     )
 

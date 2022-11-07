@@ -35,7 +35,7 @@ mollit anim id est laborum
 
 
 def draw_tips_suggestions_ui(layout, context):
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
     col = layout.column(align=True)
 
     col.separator(factor=2)
@@ -50,7 +50,7 @@ def draw_tips_suggestions_ui(layout, context):
         icon_value=get_hg_icon(f"light_{light_state}"),
     )
 
-    tips_col = context.scene.hg_tips_and_suggestions
+    tips_col = context.window_manager.hg_tips_and_suggestions
     if not tips_col:
         row = layout.row()
         row.enabled = False
@@ -125,7 +125,7 @@ def update_tips_from_context(context, sett, hg_rig):
         else sett.ui.active_tab
     )
 
-    col = context.scene.hg_tips_and_suggestions
+    col = context.window_manager.hg_tips_and_suggestions
 
     if hg_area == "BATCH":
         tips = get_batch_tips_from_context(context, sett, hg_rig)
@@ -188,7 +188,7 @@ class HG_OT_HIDE_TIP(bpy.types.Operator):
     tip_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        tips_col = context.scene.hg_tips_and_suggestions
+        tips_col = context.window_manager.hg_tips_and_suggestions
         tips_item = next(tip for tip in tips_col if tip.title == self.tip_name)
         tips_item.hidden = True
 
@@ -220,7 +220,7 @@ class HG_OT_UNHIDE_TIP(bpy.types.Operator):
     tip_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        tips_col = context.scene.hg_tips_and_suggestions
+        tips_col = context.window_manager.hg_tips_and_suggestions
         tips_item = next(tip for tip in tips_col if tip.title == self.tip_name)
         tips_item.hidden = False
 

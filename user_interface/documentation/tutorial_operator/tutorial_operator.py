@@ -85,10 +85,10 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
 
     def on_invoke(self, context, event):
         if self.first_time:
-            sett = bpy.context.scene.HG3D  # type:ignore[attr-defined]
+            sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
             sett.subscribed = False
             msgbus(self, context)
-            preview_collections["humans"].refresh(context, None)
+            preview_collections["humans"].refresh(None)
             check_update()
 
         widgets_panel = [self.button1, self.button2, self.button3, self.image1]

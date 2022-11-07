@@ -3,7 +3,7 @@
 # type:ignore
 
 """ # noqa D400
-context.scene.HG3D.ui
+context.window_manager.humgen3d.ui
 
 Properties related to the user interface of Human Generator.
 """

@@ -78,14 +78,14 @@ class PreviewCollection:
         if isinstance(self.subfolder, list):
             self.subfolder = os.path.join(*self.subfolder)
 
-    def refresh(self, context: bpy.types.Context, gender: Optional[str] = None) -> None:
+    def refresh(self, gender: Optional[str] = None) -> None:
         """Refresh the items of this preview.
 
         Args:
             context: bpy context
             gender: Gender to find options for ("male", "female")
         """
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         _check_for_HumGen_filepath_issues()
 
         subcategory = (
@@ -94,13 +94,12 @@ class PreviewCollection:
         if subcategory == "All":
             subcategory = None
 
-        self.populate(context, gender, subcategory=subcategory, use_search_term=True)
+        self.populate(gender, subcategory=subcategory, use_search_term=True)
         sett.pcoll[self.name] = "none"  # set the preview collection to
         # the 'click here to select' item
 
     def populate(
         self,
-        context: bpy.types.Context,
         gender: Optional[GenderStr],
         subcategory: Optional[str] = None,
         use_search_term: bool = True,
@@ -113,7 +112,7 @@ class PreviewCollection:
             subcategory: Only find files inside this subcategory
             use_search_term: Filter only files that match user defined search_term
         """
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         sett.load_exception = self.name != "pose"
         pref = get_prefs()
 

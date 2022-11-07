@@ -36,7 +36,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
                 `get_options` method.
             context (C): Context to use. Defaults to None.
         """
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         pref = get_prefs()
 
         if sett.load_exception:
@@ -142,11 +142,11 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         if not hg_pose:
             hg_log(
                 "Could not load pose:",
-                context.scene.HG3D.pcoll.pose,
+                bpy.context.window_manager.humgen3d.pcoll.pose,
                 level="WARNING",
             )
 
-        scene = context.scene
+        scene = context.window_manager
         scene.collection.objects.link(hg_pose)
 
         return hg_pose

@@ -123,7 +123,7 @@ class CpackEditingSystem:
         Args:
             sidebar (UILayout): layout to draw in
         """
-        coll = context.scene.custom_content_col
+        coll = context.window_manager.custom_content_col
 
         sidebar.label(text=f"Total items: {len([c for c in coll if c.include])}")
 
@@ -208,7 +208,7 @@ class CpackEditingSystem:
         )
 
         categ = self.custom_content_categ
-        coll = context.scene.custom_content_col
+        coll = context.window_manager.custom_content_col
         if categ != "all":
             coll = [c for c in coll if c.categ == categ]
         if self.cpack_content_search:

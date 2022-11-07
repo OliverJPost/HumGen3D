@@ -1,6 +1,7 @@
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 from .base_draw_functions import _draw_header_box, _draw_next_button
+import bpy
 
 
 def _draw_particle_system_selection_ui(context, layout):
@@ -21,7 +22,7 @@ def _draw_particle_system_selection_ui(context, layout):
 
     row.operator("hg3d.ulrefresh", text="Refresh hairsystems").uilist_type = "hair"
     row.prop(
-        context.scene.HG3D.custom_content,
+        bpy.context.window_manager.humgen3d.custom_content,
         "show_eyesystems",
         text="",
         icon_value=get_hg_icon("eyes"),
@@ -31,13 +32,13 @@ def _draw_particle_system_selection_ui(context, layout):
     col.template_list(
         "HG_UL_SAVEHAIR",
         "",
-        context.scene,
+        context.window_manager,
         "savehair_col",
-        context.scene,
+        context.window_manager,
         "savehair_col_index",
     )
 
-    poll = [i for i in context.scene.savehair_col if i.enabled]
+    poll = [i for i in context.window_manager.savehair_col if i.enabled]
     _draw_next_button(layout, poll)
 
 
@@ -48,7 +49,7 @@ def _draw_hair_gender_ui(context, layout):
         context (context): bl context
         layout (UIlayout): layout to draw tab in
     """
-    hair_sett = context.scene.HG3D.custom_content.hair
+    hair_sett = bpy.context.window_manager.humgen3d.custom_content.hair
 
     _draw_header_box(
         layout,
@@ -74,7 +75,7 @@ def _draw_hairtype_ui(context, layout):
         context (context):  bl context
         layout (UILayout): layout to draw tab in
     """
-    hair_sett = context.scene.HG3D.custom_content.hair
+    hair_sett = bpy.context.window_manager.humgen3d.custom_content.hair
 
     _draw_header_box(layout, "Is this style facial hair?", "COMMUNITY")
 

@@ -26,8 +26,8 @@ class HG_OT_MODAPPLY(bpy.types.Operator):
 
     @no_type_check
     def execute(self, context):  # noqa CCR001
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        col = context.scene.modapply_col
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
+        col = context.window_manager.modapply_col
         objs = build_object_list(context, sett)
 
         sk_dict = {}
@@ -173,7 +173,7 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
 
     @no_type_check
     def execute(self, context):
-        col = context.scene.modapply_col
+        col = context.window_manager.modapply_col
 
         refresh_modapply(self, context)
 
@@ -184,8 +184,8 @@ class HG_OT_SELECTMODAPPLY(bpy.types.Operator):
 
 
 def refresh_modapply(self: Any, context: bpy.types.Context) -> None:  # noqa CCR001
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
-    col = context.scene.modapply_col
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
+    col = context.window_manager.modapply_col
     col.clear()
 
     header = col.add()

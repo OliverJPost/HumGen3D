@@ -55,7 +55,7 @@ class PreviewCollectionContent:
 
     def _set(self, context: bpy.types.Context) -> None:  # noqa: CCE001
         """Internal way of setting content, only used by enum properties."""  # noqa
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         if sett.update_exception:
             return
 
@@ -90,9 +90,9 @@ class PreviewCollectionContent:
 
         if update_ui:
             # Use indirect way so the UI reflects the chosen item
-            sett = context.scene.HG3D  # type:ignore[attr-defined]
+            sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
             sett.update_exception = True
-            setattr(context.HG3D.pcoll, self.pcoll_name, chosen)
+            setattr(context.HG3D.pcoll, self.pcoll_name, chosen)  # FIXME
             sett.update_exception = False
 
     @injected_context
@@ -197,7 +197,7 @@ class PreviewCollectionContent:
             ignore_searchterm (bool): If True, the searchterm set by the user will
                 be ignored. Defaults to False.
         """
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         self._check_for_HumGen_filepath_issues()
         pcoll_name = self._pcoll_name
 

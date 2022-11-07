@@ -116,7 +116,7 @@ def find_item_amount(gender: GenderStr, folder: str) -> int:
 
 def batch_clothing_uilist_refresh(self, context):
     """Refreshes uilist."""
-    scene = context.scene
+    scene = context.window_manager
     collection = scene.batch_clothing_col
 
     enabled_dict = {i.name: i.enabled for i in collection}

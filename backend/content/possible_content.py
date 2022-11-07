@@ -68,11 +68,11 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
 
 
 def find_possible_content(context: bpy.types.Context) -> None:
-    coll = context.scene.possible_content_col
+    coll = context.window_manager.possible_content_col
     human = Human.from_existing(context.object)
     coll.clear()
 
-    show_unchanged = context.scene.HG3D.custom_content.show_unchanged
+    show_unchanged = bpy.context.window_manager.humgen3d.custom_content.show_unchanged
 
     header = coll.add()
     header.name = "Main categories:"

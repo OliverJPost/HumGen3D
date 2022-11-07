@@ -25,12 +25,12 @@ class HG_START_CREATION(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return (
-            context.scene.HG3D.pcoll.humans != "none"
-            or context.scene.HG3D.ui.active_tab == "BATCH"
+            bpy.context.window_manager.humgen3d.pcoll.humans != "none"
+            or bpy.context.window_manager.humgen3d.ui.active_tab == "BATCH"
         )
 
     def execute(self, context):
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         sett.ui.phase = "closed"
 
         human = Human.from_preset(sett.pcoll.humans, context)
@@ -138,7 +138,7 @@ class HG_DELETE(bpy.types.Operator):
     obj_override: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
         if self.obj_override:

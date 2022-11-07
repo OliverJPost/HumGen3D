@@ -19,7 +19,7 @@ def subpanel_draw(draw_method):
     @functools.wraps(draw_method)
     def wrapper(self: MainPanelPart, context):
         self.human = Human.from_existing(context.object)
-        self.sett = context.scene.HG3D  # type:ignore[attr-defined]
+        self.sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         if self.draw_info_and_warning_labels(context):
             return
 
@@ -66,7 +66,9 @@ class HGPanel:
     def poll(cls, context):
         filepath_error = False
         is_legacy = Human.is_legacy(context.object)
-        content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
+        content_saving_ui = (
+            bpy.context.window_manager.humgen3d.custom_content.content_saving_ui
+        )
         return not is_legacy and not filepath_error and not content_saving_ui
 
     def draw(self, context):
@@ -298,7 +300,7 @@ class MainPanelPart(HGPanel):
     def poll(cls, context):
         if not super().poll(context):
             return False
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
+        sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
         if (
             sett.ui.active_tab != "CREATE"
             or sett.ui.phase != cls.phase_name
@@ -321,7 +323,7 @@ class MainPanelPart(HGPanel):
             "hg3d.section_toggle", text="Back", depress=True, icon="BACK"
         ).section_name = "closed"
 
-        row.prop(context.scene.HG3D.ui, "phase", text="", icon_only=True)
+        row.prop(context.window_manager.humgen3d.ui, "phase", text="", icon_only=True)
 
     def draw_bold_title(self, layout, text: str, icon=None):
         col = layout.column()

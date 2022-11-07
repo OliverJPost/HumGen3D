@@ -166,7 +166,7 @@ class SkinSettings:
             turn_on (bool): True for turning on, False for turning off.
             context (C): Blender context. Defaults to None.
         """
-        if context.scene.HG3D.update_exception:
+        if bpy.context.window_manager.humgen3d.update_exception:
             return
 
         principled_bsdf = next(
@@ -183,7 +183,7 @@ class SkinSettings:
             turn_on (bool): True for showing underwear, False for hiding it
             context (C): Blender context. bpy.context if not provided.
         """
-        if context.scene.HG3D.update_exception:
+        if bpy.context.window_manager.humgen3d.update_exception:
             return
 
         underwear_node = self.nodes.get(

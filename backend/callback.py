@@ -42,7 +42,7 @@ class HG_ACTIVATE(bpy.types.Operator):  # noqa
     def execute(self, context):  # noqa
         from HumGen3D import bl_info
 
-        sett = bpy.context.scene.HG3D
+        sett = bpy.context.window_manager.humgen3d
 
         sett.subscribed = False  # TODO is this even used?
 
@@ -62,7 +62,7 @@ def msgbus(self: bpy.types.Operator, context: Context) -> None:
         self: Operator to make owner of this subscription
         context: Bpy context
     """
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
 
     if sett.subscribed:
         return
@@ -86,7 +86,7 @@ def hg_callback() -> None:
 
     human._verify_body_object()
 
-    sett = bpy.context.scene.HG3D  # type: ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type: ignore[attr-defined]
     ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
@@ -159,7 +159,7 @@ def tab_change_update(self, context):
 
     update_tips_from_context(
         context,
-        context.scene.HG3D,
+        bpy.context.window_manager.humgen3d,
         human.rig_obj,
     )
 

@@ -24,7 +24,7 @@ class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
     key_name: StringProperty()
 
     def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
         cc_sett.content_saving_ui = True
         cc_sett.content_saving_type = self.category
         if self.category == "key":
@@ -55,7 +55,7 @@ class HG_OT_AUTO_RENDER_THUMB(bpy.types.Operator):
     white_material: BoolProperty()
 
     def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
         human = Human.from_existing(cc_sett.content_saving_active_human)
         folder = os.path.join(get_prefs().filepath, "temp_data")
 
@@ -75,7 +75,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        cc_sett = context.scene.HG3D.custom_content
+        cc_sett = bpy.context.window_manager.humgen3d.custom_content
         category = cc_sett.content_saving_type
         human = Human.from_existing(cc_sett.content_saving_active_human)
 
@@ -108,7 +108,11 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         elif category == "hair":
             attr = "regular_hair" if cc_sett.hair.save_type == "head" else "face_hair"
             getattr(human.hair, attr).save_to_library(
-                [ps.ps_name for ps in context.scene.savehair_col if ps.enabled],
+                [
+                    ps.ps_name
+                    for ps in context.window_manager.savehair_col
+                    if ps.enabled
+                ],
                 cc_sett.hair.name,
                 subcategory,
                 for_male=cc_sett.hair.save_for_male,
@@ -150,7 +154,7 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
     )
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         col = self.layout
@@ -188,7 +192,7 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
     sk_name: StringProperty()
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         layout = self.layout

@@ -57,9 +57,9 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
     @no_type_check
     def invoke(self, context, event):
         if self.show_name_dialog:
-            return context.window_manager.invoke_props_dialog(self)
+            return bpy.context.window_manager.invoke_props_dialog(self)
 
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def draw(self, context):
         layout = self.layout
@@ -124,7 +124,7 @@ class HG_OT_EDIT_CPACK(bpy.types.Operator):
 
         item = next(
             item
-            for item in context.scene.contentpacks_col
+            for item in context.window_manager.contentpacks_col
             if item.name == self.item_name
         )
 
@@ -148,12 +148,12 @@ class HG_OT_EXIT_CPACK_EDIT(bpy.types.Operator):
     @no_type_check
     def invoke(self, context, event):
         # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     @no_type_check
     def execute(self, context):
         pref = get_prefs()
-        col = context.scene.custom_content_col
+        col = context.window_manager.custom_content_col
 
         col.clear()
         pref.editing_cpack = ""
@@ -173,14 +173,16 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             ShowMessageBox(message="No export path selected")
             return {"CANCELLED"}
         # confirmation checkbox
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     @no_type_check
     def execute(self, context):
         pref = get_prefs()
 
-        cpack = context.scene.contentpacks_col[pref.cpack_name]
-        content_to_export = [c for c in context.scene.custom_content_col if c.include]
+        cpack = context.window_manager.contentpacks_col[pref.cpack_name]
+        content_to_export = [
+            c for c in context.window_manager.custom_content_col if c.include
+        ]
 
         export_path_set, categ_set = self._build_export_set(pref, content_to_export)
 
@@ -402,10 +404,10 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
 def build_content_collection(self, context):
     """Build scene collection of custom content items."""
     pref = get_prefs()
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    sett = bpy.context.window_manager.humgen3d  # type:ignore[attr-defined]
     sett.update_exception = True
 
-    col = context.scene.custom_content_col
+    col = context.window_manager.custom_content_col
     col.clear()
 
     current_file_set = _get_current_file_set(context, pref) if pref.cpack_name else {}
@@ -413,7 +415,7 @@ def build_content_collection(self, context):
     other_cpacks_content_set = _get_other_content_set(context, pref)
 
     for categ in PREVIEW_COLLECTION_DATA:
-        preview_collections[categ].populate(context, None, use_search_term=False)
+        preview_collections[categ].populate(None, use_search_term=False)
 
         for content_item_enum in preview_collections[categ].pcoll[categ]:
             _add_to_collection(
@@ -429,7 +431,7 @@ def build_content_collection(self, context):
 
 @no_type_check
 def _get_current_file_set(context, pref):
-    cpack = context.scene.contentpacks_col[pref.cpack_name]
+    cpack = context.window_manager.contentpacks_col[pref.cpack_name]
     with open(os.path.join(pref.filepath, cpack.json_path), "r") as f:
         json_data = json.load(f)
     if "files" in json_data:
@@ -442,7 +444,7 @@ def _get_current_file_set(context, pref):
 @no_type_check
 def _get_other_content_set(context, pref):
     other_cpacks_content = []
-    for item in context.scene.contentpacks_col:
+    for item in context.window_manager.contentpacks_col:
         if item.pack_name == pref.cpack_name:
             continue
         with contextlib.suppress(KeyError, FileNotFoundError), open(
@@ -512,7 +514,7 @@ def content_callback(self, context):
 
     Handles the newly_added and removed lists
     """
-    if context.scene.HG3D.update_exception:
+    if bpy.context.window_manager.humgen3d.update_exception:
         return  # Don't update when building the list for the first time
 
     if self.include:
@@ -549,7 +551,7 @@ class HG_OT_EDIT_CONTENT_ITEM(bpy.types.Operator):
     action: bpy.props.StringProperty(default="open")
 
     def invoke(self, context, event):
-        coll = context.scene.custom_content_col
+        coll = context.window_manager.custom_content_col
         self.item = coll[self.item_name]
 
         path = os.path.join(get_prefs().filepath, self.item.path)
@@ -621,7 +623,7 @@ will open at the location of the .blend file.
         else:
             self.message = "ERROR: Unknown category"
 
-        return context.window_manager.invoke_props_dialog(self)
+        return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
         col = self.layout.column()
@@ -646,7 +648,7 @@ class HG_OT_SHOW_CONTENT_ITEM(bpy.types.Operator):
     item_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        coll = context.scene.custom_content_col
+        coll = context.window_manager.custom_content_col
         item = coll[self.item_name]
 
         open_file_in_system_browser(item.path)
@@ -673,10 +675,10 @@ class HG_OT_DELETE_CONTENT_ITEM(bpy.types.Operator):
     item_name: bpy.props.StringProperty()
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_confirm(self, event)
+        return bpy.context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        coll = context.scene.custom_content_col
+        coll = context.window_manager.custom_content_col
         item = coll.get(self.item_name)
         index = coll.find(self.item_name)
 

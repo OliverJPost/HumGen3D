@@ -202,7 +202,7 @@ def calculate_batch_statistics(batch_sett: "BatchProps") -> dict[str, str]:  # n
 
 @no_type_check
 def get_batch_marker_list(context: bpy.types.Context) -> list[bpy.types.Object]:
-    batch_sett = context.scene.HG3D.batch  # type:ignore[attr-defined]
+    batch_sett = bpy.context.window_manager.humgen3d.batch  # type:ignore[attr-defined]
 
     marker_selection = batch_sett.marker_selection
 

@@ -163,7 +163,7 @@ class ProcessSettings:
     ) -> str:
         if not os.path.isdir(folder):
             os.makedirs(folder)
-        pr_sett = context.scene.HG3D.process
+        pr_sett = bpy.context.window_manager.humgen3d.process
 
         settings_dict = {}
         if pr_sett.baking_enabled:
@@ -222,7 +222,7 @@ class ProcessSettings:
         with open(template_path, "r") as f:
             data = json.load(f)
 
-        pr_sett = context.scene.HG3D.process
+        pr_sett = bpy.context.window_manager.humgen3d.process
 
         # Disable all categories
         for prop in pr_sett.bl_rna.properties:
