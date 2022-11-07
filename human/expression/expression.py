@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class for manipulating human expression or face rig."""
+
 import json
 import os
 from typing import TYPE_CHECKING
@@ -72,18 +74,35 @@ FACE_RIG_BONE_NAMES = [
 
 
 class ExpressionSettings(PreviewCollectionContent):
+    """Class for manipulating human expression.
+
+    Either using 1-click expressions or with the facial rig.
+    """
+
     def __init__(self, _human: "Human") -> None:
-        """Create instance for manipulating human expression."""
         self._human = _human
         self._pcoll_name = "expression"
         self._pcoll_gender_split = False
 
     @property
     def shape_keys(self) -> list[ShapeKeyItem]:
+        """Filtered list from human.keys for keys part of expressions.
+
+        Returns:
+            list[ShapeKeyItem]: List of shape keys that are on this human and of type
+                expression.
+        """
         return self._human.keys.filtered("expression")
 
     def set(self, preset: str) -> None:  # noqa: A003
-        """Loads the active expression in the preview collection."""
+        """Loads the passed 1-click expression preset on the human.
+
+        This will import the shapekey from the .npz file and set the value to 1.0.
+
+        Args:
+            preset (str): Preset to load. You can get a list of available presets
+                with `get_options()`.
+        """
         pref = get_prefs()
 
         if preset == "none":
@@ -113,7 +132,11 @@ class ExpressionSettings(PreviewCollectionContent):
 
     @injected_context
     def load_facial_rig(self, context: C = None) -> None:
+        """Imports all necessary shape keys and unhides the bones used to control face.
 
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
         for b_name in FACE_RIG_BONE_NAMES:
             b = self._human.pose_bones[b_name]  # type:ignore[index]
             b.bone.hide = False
@@ -127,6 +150,13 @@ class ExpressionSettings(PreviewCollectionContent):
         self._human.body_obj["facial_rig"] = 1  # type:ignore[index]
 
     def remove_facial_rig(self) -> None:
+        """Remove the facial rig from the human, including all it's shape keys.
+
+        Will also hide the bones again.
+
+        Raises:
+            HumGenException: If no facial rig is loaded on this human.
+        """
         if "facial_rig" not in self._human.body_obj:  # type:ignore[operator]
             raise HumGenException("No facial rig found on this human")
 
@@ -154,7 +184,7 @@ class ExpressionSettings(PreviewCollectionContent):
         remove_broken_drivers()
 
     def _load_FACS_sks(self, context: bpy.types.Context) -> None:
-        """Imports the needed FACS shapekeys to be used by the rig."""
+        """Imports the needed FACS shapekeys to be used by the rig."""  # noqa
         json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
         with open(json_path, "r") as f:
             data = json.load(f)
