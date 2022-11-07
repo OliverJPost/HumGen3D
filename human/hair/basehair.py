@@ -1,5 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implement base class for classes used for manipulating human hair.
+
+Used for the four subclasses of human.hair: regular_hair, eyebrows, eyelashes, face_hair
+"""
+
 import contextlib
 import json
 import os
@@ -28,6 +33,12 @@ HAIR_NODE_NAME = "HG_Hair"
 
 
 class BaseHair:
+    """Base class used for all four hair subclasses.
+
+    Contains ways to change the material of the hair, to access modifiers and particle
+    systems and to generate haircards.
+    """
+
     def __init__(self) -> None:
         self.lightness = ShaderNodeInput(self, HAIR_NODE_NAME, "Lightness")
         self.redness = ShaderNodeInput(self, HAIR_NODE_NAME, "Redness")
@@ -42,6 +53,11 @@ class BaseHair:
 
     @property
     def particle_systems(self) -> PropCollection:
+        """Get propcollection of particle systems on the human used by this hair type.
+
+        Returns:
+            PropCollection: PropCollection of particle systems used by this hair type
+        """
         particle_systems = self._human.hair.particle_systems
 
         psys = [ps for ps in particle_systems if self._condition(ps.name)]
@@ -49,6 +65,12 @@ class BaseHair:
 
     @property
     def modifiers(self) -> PropCollection:
+        """Modifiers associated with the particle systems of this hair type.
+
+        Returns:
+            PropCollection: PropCollection of modifiers associated with the particle
+                systems of this hair type
+        """
         particle_mods = self._human.hair.modifiers
 
         modifiers = [
@@ -57,13 +79,25 @@ class BaseHair:
         return PropCollection(modifiers)
 
     @property
-    def haircard_obj(self) -> bpy.types.Object:
+    def haircard_obj(self) -> Optional[bpy.types.Object]:
+        """Blender object of haircards IF generated.
+
+        Returns:
+            bpy.types.Object: Blender object of haircards IF generated else None
+        """
         return next(  # type:ignore[call-overload]
             (obj for obj in self._human.children if self._haircap_tag in obj), None
         )
 
     @property
     def materials(self) -> list[bpy.types.Material]:
+        """List of materials used for this type of hair.
+
+        Usually singleton, but will contain multiple values if haircards are generated.
+
+        Returns:
+            list[bpy.types.Material]: List of materials used for this type of hair
+        """
         if self.haircard_obj:
             return self.haircard_obj.data.materials
         else:
@@ -71,16 +105,33 @@ class BaseHair:
 
     @property
     def nodes(self) -> PropCollection:
-        nodes = []
+        """PropCollection of nodes used in the materials for this type of hair. # noqa
+
+        Returns:
+            PropCollection: PropCollection of nodes used in the materials for this type
+        """
+        nodes: list[bpy.types.ShaderNode] = []
         for mat in self.materials:
-            nodes.extend(mat.node_tree.nodes)
+            nodes.extend(mat.node_tree.nodes)  # type:ignore[arg-type]
         return PropCollection(nodes)
 
     @injected_context
     def convert_to_haircards(
         self, quality: Literal["high"] = "high", context: C = None
     ) -> bpy.types.Object:
+        """Convert the hair of this type to haircards.
 
+        Will generate a mesh object consisting of a haircap and haircards. For eye
+        systems only a haircap will be generated.
+
+        Args:
+            quality (Literal["high"]): Quality of the haircards. Defaults to
+                high.
+            context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            bpy.types.Object: Blender object of the haircap
+        """
         hair_objs: list[bpy.types.Object] = []
         for mod in self.modifiers:
             if not mod.show_viewport:
@@ -136,16 +187,25 @@ class BaseHair:
 
     @injected_context
     def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:
+        """Get an evaluated version of the particle systems of this hair type.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            PropCollection: PropCollection of evaluated particle systems
+        """
         dg = context.evaluated_depsgraph_get()
         eval_body = self._human.body_obj.evaluated_get(dg)
         particle_systems = eval_body.particle_systems
         psys = [ps for ps in particle_systems if self._condition(ps.name)]
         return PropCollection(psys)
 
-    def delete_all(self) -> None:
+    def delete_all(self) -> None:  # noqa
         raise NotImplementedError  # FIXME
 
     def randomize_color(self) -> None:
+        """Randomize the color of the hair of this type."""
         # TODO make system more elaborate
         hair_color_dict = {
             "blonde": (4.0, 0.8, 0.0),
@@ -165,6 +225,13 @@ class BaseHair:
             hair_node.inputs["Pepper & Salt"].default_value = hair_color[2]
 
     def as_dict(self) -> dict[str, Any]:
+        """Return a dictionary representation of this hair type.
+
+        Contains information about material.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of this hair type
+        """
         return {
             "lightness": self.lightness.value,
             "redness": self.redness.value,
@@ -210,12 +277,16 @@ class BaseHair:
 
 
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
+    """Further specialization of BaseHair for hair that can be imported from a pcoll."""
+
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003, CCR001
         """Loads hair system the user selected.
 
         Args:
-            type (str): type of hair to load ('head' or 'face_hair')
+            preset (str): Name of the preset to load. Must be in the preview collection.
+                Options can be retreived from `get_options()`.
+            context (C): Blender context. bpy.context if not provided.
         """
         pref = get_prefs()
 
@@ -319,7 +390,19 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         thumbnail: Optional[Image] = None,
         context: C = None,
     ) -> None:
+        """Save the currently active hair system of this type to the HG library.
 
+        Args:
+            particle_system_names (list[str]): Names of the particle systems to save.
+            hairstyle_name (str): Name to save this hairstyle as.
+            category (str): Category to save this hairstyle in. If this category does
+                not already exist, a new folder will be created.
+            for_male (bool): Whether this hairstyle is available for male humans.
+            for_female (bool): Whether this hairstyle is available for female humans.
+            thumbnail (Optional[Image]): Thumbnail to save with this hairstyle. Pass
+                a Blender Image object here. If None, no thumbnail will be used.
+            context (C): Blender context. bpy.context if not provided.
+        """
         genders = []
         if for_male:
             genders.append("male")
@@ -339,12 +422,18 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         )
 
     def remove_all(self) -> None:
+        """Remove all modifiers of this hair type from the human."""
         modifiers = self.modifiers
         for mod in modifiers:
             self._human.body_obj.modifiers.remove(mod)
 
     @injected_context
     def randomize(self, context: C = None) -> None:
+        """Pick a random hairstyle from the library and apply it to the human.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+        """
         preset_options = self.get_options(context)
         chosen_preset = random.choice(preset_options)
         self.set(chosen_preset, context)
@@ -355,8 +444,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """Imports the object that contains the hair systems named in the json file.
 
         Args:
-            context ([type]): [description]
-            type (str): type of hair system ('facial hair' or 'head')
+            context (Context): Blender context
+            hair_type (str): type of hair system ('facial hair' or 'head')
             pref (HG_PREF): HumGen preferences
             blendfile (str): name of blendfile to open
 
@@ -378,13 +467,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
     def _morph_hair_obj_to_body_obj(
         self, context: bpy.types.Context, hair_obj: bpy.types.Object
-    ) -> None:
-        """Gives the imported hair object the exact same shape as hg human.
-
-        Args:
-            hg_body (Object): body object
-            hair_obj (Oject): imported hair object
-        """
+    ) -> None:  # noqa
+        """Gives the imported hair object the exact same shape as hg human."""  # noqa
         body_copy = self._human.body_obj.copy()  # TODO without copying
         body_copy.data = body_copy.data.copy()
         context.scene.collection.objects.link(body_copy)
@@ -457,7 +541,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """Copies vertex groups from one object to the other.
 
         Args:
-            to_obj   (Object): object to transfer vertex groups to
             from_obj (Object): object to transfer vertex group from
             vg_name  (str)   : name of vertex group to transfer
         """
@@ -504,7 +587,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """Reconnects the transferred hair systems to the skull.
 
         Args:
-            hg_body (Object): hg body object
             mod (bpy.types.modifier): Modifier of type particle system to reconnect
         """
         particle_systems = self._human.hair.particle_systems
@@ -522,7 +604,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         Args:
             new_systems (dict): modifiers and particle_systems to correct vgs for
             from_obj (Object): Object to check correct particle vertex group on
-            to_obj (Object): Object to rectify particle vertex groups on
         """
         for ps_name in new_systems.values():
 
@@ -555,7 +636,6 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
         Args:
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
-            hg_body (Object):
             hair_type (str): 'head' for normal, 'face_hair' for facial hair
         """
         search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
