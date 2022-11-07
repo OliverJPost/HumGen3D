@@ -26,7 +26,7 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
             col, self.sett.ui, "age_hairmat_ui", "Hair Color"
         )
         if is_open:
-            self.draw_hairmat_sliders(box)
+            self.draw_hairmat_sliders(box, human)
 
         is_open, box = self.draw_sub_spoiler(
             col, self.sett.ui, "age_slider_ui", "Age adjustments"
@@ -44,59 +44,19 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
                 slider=True,
                 text="Body aging",
             )
-        nodes = SkinNodes(human)
-        age_normal_strength = nodes.get("HG_Age").inputs["Strength"]
-        col.prop(
-            age_normal_strength, "default_value", slider=True, text="Skin wrinkles"
-        )
-        age_multiply_strength = nodes.get("Age_Multiply").inputs["Fac"]
-        col.prop(
-            age_multiply_strength,
-            "default_value",
-            slider=True,
-            text="Skin aging",
-        )
-        normal_input = nodes.get("Normal Map").inputs["Strength"]
-        col.prop(normal_input, "default_value", slider=True, text="Normal Strength")
+        human.age.age_wrinkles.draw_prop(col, "Wrinkles")
+        human.age.age_color.draw_prop(col, "Age Color")
+        human.skin.cavity_strength.draw_prop(col, "Cavity strength")
+        human.skin.normal_strength.draw_prop(col, "Normal Strength")
 
-    def draw_hairmat_sliders(self, box):
-        hair_mat_regular = self.human.hair.regular_hair.material
-        main_hair_node = hair_mat_regular.node_tree.nodes["HG_Hair_V4"]
-        hair_mat_eye = self.human.hair.eyebrows.material
-        eye_hair_node = hair_mat_eye.node_tree.nodes["HG_Hair_V4"]
-
+    def draw_hairmat_sliders(self, box, human):
         col = box.column(align=True)
         col.scale_y = 1.2
 
-        col.prop(
-            main_hair_node.inputs["Lightness"],
-            "default_value",
-            text="Main Lightness",
-            slider=True,
-        )
-        col.prop(
-            eye_hair_node.inputs["Lightness"],
-            "default_value",
-            text="Eye Hair Lightness",
-            slider=True,
-        )
-        col.prop(
-            main_hair_node.inputs["Redness"],
-            "default_value",
-            text="Main Redness",
-            slider=True,
-        )
-        col.prop(
-            eye_hair_node.inputs["Redness"],
-            "default_value",
-            text="Eye Hair Redness",
-            slider=True,
-        )
-        col.prop(
-            main_hair_node.inputs[3],
-            "default_value",
-            text="Main Salt & Pepper",
-            slider=True,
-        )
+        human.hair.regular_hair.lightness.draw_prop(col, "Main Lightness")
+        human.hair.eyebrows.lightness.draw_prop(col, "Eye hair Lightness")
+        human.hair.regular_hair.redness.draw_prop(col, "Main Redness")
+        human.hair.eyebrows.redness.draw_prop(col, "Eye hair Redness")
+        human.hair.regular_hair.salt_and_pepper.draw_prop(col, "Main Salt and Pepper")
 
         return col

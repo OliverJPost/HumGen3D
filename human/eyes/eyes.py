@@ -60,7 +60,7 @@ class EyeSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
-        self.pupil_color = NodeInput(self, "HG_Eye_Color", "Color2")
+        self.iris_color = NodeInput(self, "HG_Eye_Color", "Color2")
         self.sclera_color = NodeInput(self, "HG_Scelera_Color", "Color2")
 
     @property
@@ -138,7 +138,7 @@ class EyeSettings:
             dict: Dictionary containing the current eye settings. Currently color only.
         """
         return {
-            "pupil_color": self.pupil_color.value,
+            "pupil_color": self.iris_color.value,
             "sclera_color": self.sclera_color.value,
         }
 
@@ -150,7 +150,7 @@ class EyeSettings:
         Args:
             data (dict[str, Any]): Dictionary to set the eye settings from.
         """
-        self.pupil_color.value = data["pupil_color"]
+        self.iris_color.value = data["pupil_color"]
         self.sclera_color.value = data["sclera_color"]
 
     def _srgb_to_linearrgb(self, c: float) -> float:

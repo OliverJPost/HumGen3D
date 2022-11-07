@@ -592,7 +592,7 @@ class Human:
         """
         return_dict = {}
 
-        for attr in ("keys", "skin", "eyes", "height", "hair", "clothing"):
+        for attr in ("age", "keys", "skin", "eyes", "height", "hair", "clothing"):
             return_dict[attr] = getattr(self, attr).as_dict()
 
         return return_dict
