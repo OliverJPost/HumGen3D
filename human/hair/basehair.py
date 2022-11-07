@@ -18,7 +18,7 @@ from HumGen3D.backend.preferences.preferences import HG_PREF
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
-from HumGen3D.common.shadernode import ShaderNodeInput
+from HumGen3D.common.shadernode import NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
@@ -40,16 +40,16 @@ class BaseHair:
     """
 
     def __init__(self) -> None:
-        self.lightness = ShaderNodeInput(self, HAIR_NODE_NAME, "Lightness")
-        self.redness = ShaderNodeInput(self, HAIR_NODE_NAME, "Redness")
-        self.roughness = ShaderNodeInput(self, HAIR_NODE_NAME, "Roughness")
-        self.salt_and_pepper = ShaderNodeInput(self, HAIR_NODE_NAME, "Pepper & Salt")
-        self.roots = ShaderNodeInput(self, HAIR_NODE_NAME, "Roots")
-        self.root_lightness = ShaderNodeInput(self, HAIR_NODE_NAME, "Root Lightness")
-        self.root_redness = ShaderNodeInput(self, HAIR_NODE_NAME, "Root Redness")
-        self.roots_hue = ShaderNodeInput(self, HAIR_NODE_NAME, "Roots Hue")
-        self.fast_or_accurate = ShaderNodeInput(self, HAIR_NODE_NAME, "Fast/Accurate")
-        self.hue = ShaderNodeInput(self, HAIR_NODE_NAME, "Hue")
+        self.lightness = NodeInput(self, HAIR_NODE_NAME, "Lightness")
+        self.redness = NodeInput(self, HAIR_NODE_NAME, "Redness")
+        self.roughness = NodeInput(self, HAIR_NODE_NAME, "Roughness")
+        self.salt_and_pepper = NodeInput(self, HAIR_NODE_NAME, "Pepper & Salt")
+        self.roots = NodeInput(self, HAIR_NODE_NAME, "Roots")
+        self.root_lightness = NodeInput(self, HAIR_NODE_NAME, "Root Lightness")
+        self.root_redness = NodeInput(self, HAIR_NODE_NAME, "Root Redness")
+        self.roots_hue = NodeInput(self, HAIR_NODE_NAME, "Roots Hue")
+        self.fast_or_accurate = NodeInput(self, HAIR_NODE_NAME, "Fast/Accurate")
+        self.hue = NodeInput(self, HAIR_NODE_NAME, "Hue")
 
     @property
     def particle_systems(self) -> PropCollection:

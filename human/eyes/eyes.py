@@ -6,7 +6,7 @@ import random
 from typing import TYPE_CHECKING, Any, cast
 
 from bpy.types import Material, Object  # type:ignore
-from HumGen3D.common.shadernode import ShaderNodeInput  # type:ignore
+from HumGen3D.common.shadernode import NodeInput  # type:ignore
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 
 if TYPE_CHECKING:
@@ -60,8 +60,8 @@ class EyeSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
-        self.pupil_color = ShaderNodeInput(self, "HG_Eye_Color", "Color2")
-        self.sclera_color = ShaderNodeInput(self, "HG_Scelera_Color", "Color2")
+        self.pupil_color = NodeInput(self, "HG_Eye_Color", "Color2")
+        self.sclera_color = NodeInput(self, "HG_Scelera_Color", "Color2")
 
     @property
     def eye_obj(self) -> Object:

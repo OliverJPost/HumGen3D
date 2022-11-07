@@ -1,10 +1,9 @@
 from typing import Any, Union
 
-from bpy.props import FloatVectorProperty
 from bpy.types import NodeSocket  # type:ignore
 
 
-class ShaderNodeInput:
+class NodeInput:
     """Representation of a Blender Shader Node input socket."""
 
     def __init__(
