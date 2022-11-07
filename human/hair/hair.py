@@ -1,7 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import os
-from typing import TYPE_CHECKING, Literal
+from operator import attrgetter
+from typing import TYPE_CHECKING, Any, Literal
 
 import bpy
 from bpy.types import bpy_prop_collection  # type:ignore
@@ -149,6 +150,23 @@ class HairSettings:
             ps.root_radius, ps.tip_radius = self._get_root_and_tip(
                 hair_quality, max_root, max_tip
             )
+
+    def as_dict(self) -> dict[str, dict[str, Any]]:
+        return {
+            "eyebrows": self.eyebrows.as_dict(),
+            "regular_hair": self.regular_hair.as_dict(),
+            "face_hair": self.face_hair.as_dict(),
+        }
+
+    def set_from_dict(self, data: dict[str, dict[str, Any]]) -> None:
+        for hair_categ, categ_data in data.items():
+            for attr_name, attr_value in categ_data.items():
+                if attr_name == "set":
+                    if attr_value:
+                        getattr(self, hair_categ).set(attr_value)
+                else:
+                    retreiver = attrgetter(f"{hair_categ}.{attr_name}")
+                    retreiver(self).value = attr_value
 
     def _get_steps_amount(
         self, hair_quality: Literal["high", "medium", "low", "ultralow"], max_steps: int

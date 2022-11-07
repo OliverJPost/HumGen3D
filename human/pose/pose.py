@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 import bpy
 from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, hg_log
-from HumGen3D.common.type_aliases import C
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 
@@ -32,6 +32,8 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         if sett.load_exception:
             return
+
+        self._active = preset
 
         hg_rig = self._human.rig_obj
         hg_pose = self._import_pose(preset, context)
@@ -91,6 +93,9 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
             save_thumb(folder, thumb_name, name)
 
         hg_delete(pose_object)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"set": self._active}
 
     def _import_pose(self, preset: str, context: bpy.types.Context) -> bpy.types.Object:
         """Import selected pose object

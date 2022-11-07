@@ -16,7 +16,7 @@ import json
 import os
 from math import acos, pi
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Tuple, Union
+from typing import Any, Iterable, Literal, Optional, Tuple, Union
 
 import bpy
 import numpy as np
@@ -95,6 +95,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # 'click here to select' icon
         if preset == "none":
             return
+
+        self._active = preset
 
         tag = "shoe" if is_footwear else "cloth"
         # TODO as argument?
@@ -376,6 +378,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             )
 
         context.view_layer.objects.active = old_active
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"set": self._active}
 
     def _set_geometry_masks(
         self, mask_remove_list: list[str], new_mask_list: list[str]

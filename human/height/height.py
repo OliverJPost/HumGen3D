@@ -103,6 +103,13 @@ class HeightSettings:
             for shoe_obj in self._human.clothing.footwear.objects:
                 self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
+    def as_dict(self) -> dict[str, float]:
+        return {"set": self.centimeters}
+
+    @injected_context
+    def set_from_dict(self, data: dict[str, float], context: C = None) -> None:
+        self.set(data["set"], context)
+
     @injected_context
     def correct_armature(self, context: C = None) -> None:
         # FIXME symmetry

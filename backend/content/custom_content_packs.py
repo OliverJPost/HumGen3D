@@ -1,3 +1,4 @@
+# type:ignore
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """Functions and operators for exporting custom content.
@@ -33,7 +34,6 @@ from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignor
     ShowMessageBox,
     show_message,
 )
-from HumGen3D.user_interface.panel_functions import draw_paragraph
 
 from .content_packs import cpacks_refresh
 
@@ -58,9 +58,8 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
     def invoke(self, context, event):
         if self.show_name_dialog:
             return context.window_manager.invoke_props_dialog(self)
-        else:
-            # confirmation checkbox
-            return context.window_manager.invoke_confirm(self, event)
+
+        return context.window_manager.invoke_confirm(self, event)
 
     def draw(self, context):
         layout = self.layout
@@ -589,7 +588,7 @@ By pressing okay below a file browser will open
 at the location of the .blend file.
 """
         elif categ == "scripts":
-            return self._open_script(path)
+            return self._open_script(path)  # noqa
         elif categ in ("shapekeys", "livekeys", "expression"):
             self.message = """Key items are implemented as Numpy .npz
 files, which are not directly editable. The easiest

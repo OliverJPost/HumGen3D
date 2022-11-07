@@ -1,18 +1,16 @@
+# type:ignore
+
 import os
 import platform
 import subprocess
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
-from HumGen3D.backend.preferences.preference_func import (
-    get_prefs,
-    open_preferences_as_new_window,
-)
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
-from .custom_content_packs import build_content_collection
 from .possible_content import find_possible_content
 
 

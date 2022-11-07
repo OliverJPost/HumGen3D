@@ -412,7 +412,7 @@ class KeySettings:
     def get(self, name: str) -> Optional[Union[ShapeKeyItem, LiveKeyItem]]:
         try:
             return self[name]
-        except ValueError:
+        except KeyError:
             return None
 
     def filtered(
@@ -464,12 +464,27 @@ class KeySettings:
 
         return sk
 
-    def as_dict(self) -> dict[str, dict[str, float]]:
-        key_dict = {}  # noqa SIM904
-        key_dict["livekeys"] = {key.name: key.value for key in self.all_livekeys}
-        key_dict["shapekeys"] = {key.name: key.value for key in self.all_shapekeys}
+    def as_dict(self) -> dict[str, float]:
+        key_dict = {key.name: key.value for key in self.all_livekeys}
+        key_dict.update({key.name: key.value for key in self.all_deformation_shapekeys})
 
         return key_dict
+
+    @injected_context
+    def set_from_dict(self, key_dict: dict[str, float], context: C = None) -> None:
+        for key_name, value in key_dict.items():
+            key = self.get(key_name)
+            if key:
+                if hasattr(key, "set_without_update"):
+                    key.set_without_update(value)
+                else:
+                    key.value = value
+            else:
+                hg_log(
+                    f"Could not find key '{key_name}' while setting values", "WARNING"
+                )
+
+        self.update_human_from_key_change(context)
 
     @injected_context
     def update_human_from_key_change(self, context: C = None) -> None:
@@ -536,7 +551,7 @@ class KeySettings:
             return next(key for key in self.all_keys if key.name == name)
         except StopIteration:
             hg_log(f"{self.all_keys = }", level="DEBUG")
-            raise ValueError(f"Key '{name}' not found")
+            raise KeyError(f"Key '{name}' not found")
 
     def __iter__(self) -> Iterable[Union[ShapeKeyItem, LiveKeyItem]]:
         yield from self.all_keys

@@ -7,14 +7,25 @@ from typing import List, Optional
 
 import bpy
 from HumGen3D.backend import get_prefs, preview_collections
-from HumGen3D.common.type_aliases import BpyEnum, C
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.common.type_aliases import BpyEnum, C
 
 
 class PreviewCollectionContent:
     _pcoll_name: str
     _pcoll_gender_split: bool
+
+    @property
+    def _active(self) -> Optional[str]:
+        try:
+            return self._human.rig_obj[f"ACTIVE_{self.__class__.__name__}"]
+        except KeyError:
+            return None
+
+    @_active.setter
+    def _active(self, value: str) -> None:
+        self._human.rig_obj[f"ACTIVE_{self.__class__.__name__}"] = value
 
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003
