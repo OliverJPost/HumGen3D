@@ -1,12 +1,14 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements main Human class, the starting point for all human related operations."""
+
 from __future__ import annotations
 
 import contextlib
 import json
 import os
 import random
-from typing import Any, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Iterable, List, Optional, Tuple, Union, cast
 
 import bpy
 from bpy.props import FloatVectorProperty  # type:ignore
@@ -15,6 +17,7 @@ from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
+from HumGen3D.common import find_hg_rig, is_legacy
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from HumGen3D.human.age import AgeSettings
 from HumGen3D.human.materials import MaterialSettings
@@ -61,24 +64,6 @@ class Human:
             raise HumGenException("Did not pass a valid HG rig object")
 
         self.rig_obj = rig_obj
-
-    @staticmethod
-    def _obj_is_batch_result(obj: Object) -> Tuple[bool, bool]:
-        return (
-            obj.HG.batch_result,
-            obj.HG.body_obj == obj,
-        )
-
-    @staticmethod
-    def is_legacy(obj: bpy.types.Object) -> bool:
-        rig_obj = Human.find_hg_rig(obj, include_legacy=True)
-        if not rig_obj:
-            return False
-        return not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (
-            3,
-            0,
-            0,
-        )
 
     @staticmethod
     @injected_context
@@ -134,10 +119,10 @@ class Human:
         if strict_check and not isinstance(existing_human, Object):
             raise TypeError(f"Expected a Blender object, got {type(existing_human)}")
 
-        rig_obj = cls.find_hg_rig(existing_human, include_legacy=True)
+        rig_obj = find_hg_rig(existing_human, include_legacy=True)
 
         if rig_obj:
-            if not Human.is_legacy(rig_obj):
+            if not is_legacy(rig_obj):
                 return cls(rig_obj, strict_check=strict_check)
             # Cancel for legacy humans
             else:
@@ -203,53 +188,6 @@ class Human:
         human._active = preset
 
         return human
-
-    # TODO return instances instead of rigs
-    @classmethod
-    def find_multiple_in_list(
-        cls, objects: Iterable[bpy.types.Object]
-    ) -> Set[bpy.types.Object]:
-        return {r for r in [Human.find_hg_rig(obj) for obj in objects] if r}
-
-    @classmethod
-    def find_hg_rig(  # noqa
-        cls,
-        obj: Object,
-        include_applied_batch_results: bool = False,
-        include_legacy: bool = False,
-    ) -> Optional[Object]:
-        """Checks if passed object is part of a HG human. Does NOT return an instance
-
-        Args:
-            obj (bpy.types.Object): Object to check for if it's part of a HG human
-            include_applied_batch_results (bool): If enabled, this function will
-                return the body object for humans that were created with the batch
-                system and which armatures have been deleted instead of returning
-                the rig. Defaults to False
-
-        Returns:
-            Object: Armature of human (hg_rig) or None if not part of human (or body
-            object if the human is an applied batch result and
-            include_applied_batch_results is True)
-        """
-        # TODO clean up this mess
-
-        if obj and obj.HG.ishuman:
-            rig_obj = obj
-        elif obj and obj.parent and obj.parent.HG.ishuman:
-            rig_obj = obj.parent
-        else:
-            return None
-
-        if all(cls._obj_is_batch_result(rig_obj)) and not include_applied_batch_results:
-            return None
-
-        if (
-            not hasattr(rig_obj.HG, "version") or tuple(rig_obj.HG.version) == (3, 0, 0)
-        ) and not include_legacy:
-            return None
-
-        return rig_obj
 
     @staticmethod
     def get_categories(gender: GenderStr) -> list[str]:

@@ -4,6 +4,7 @@
 from collections import defaultdict
 
 import bpy
+from HumGen3D.common import find_multiple_in_list
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.panel_functions import (
@@ -22,7 +23,7 @@ class ProcessPanel(HGPanel):
 
     @classmethod
     def poll(cls, context):
-        return Human.find_multiple_in_list(context.selected_objects)
+        return find_multiple_in_list(context.selected_objects)
 
     def draw_header(self, context):
         if hasattr(self, "enabled_propname"):
@@ -79,7 +80,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row.operator("hg3d.save_process_template", text="", icon="ADD")
 
         box = col.box()
-        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        human_rigs = find_multiple_in_list(context.selected_objects)
         row = box.row()
         row.alignment = "CENTER"
         amount = len(human_rigs)

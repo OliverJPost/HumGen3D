@@ -9,6 +9,7 @@ import bpy
 from HumGen3D import bl_info
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import active_phase_enum
+from HumGen3D.common import is_legacy
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -65,9 +66,9 @@ class HGPanel:
     @classmethod
     def poll(cls, context):
         filepath_error = False
-        is_legacy = Human.is_legacy(context.object)
+        human_is_legacy = is_legacy(context.object)
         content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
-        return not is_legacy and not filepath_error and not content_saving_ui
+        return not human_is_legacy and not filepath_error and not content_saving_ui
 
     def draw(self, context):
         raise NotImplementedError
