@@ -70,11 +70,7 @@ class EyeSettings:
         Returns:
             Object: Blender object of the eyes of the human.
         """
-        return next(
-            child
-            for child in self._human.objects
-            if "hg_eyes" in child  # type:ignore[operator]
-        )
+        self._human.objects.eyes
 
     @property
     def outer_material(self) -> Material:

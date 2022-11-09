@@ -1,19 +1,16 @@
 """Implements class for accessing objects human exists of."""
 
-from typing import Optional, cast
+from typing import Any, Iterable, Optional, Union, cast
 
-from bpy.types import Object  # type:ignore
-
-from .common_baseclasses.prop_collection import PropCollection
+from bpy.types import ID, Object  # type:ignore
 
 
-class ObjectCollection(PropCollection):
+class ObjectCollection:
     """Access to objects human exists of with properties for specific ones."""
 
     def __init__(self, rig_obj: Object) -> None:
-        all_objects = list(rig_obj.children) + [rig_obj]
+        self._collection = list(rig_obj.children) + [rig_obj]
         self._rig_obj = rig_obj
-        super().__init__(all_objects)
 
     @property
     def rig(self) -> Object:
@@ -24,7 +21,7 @@ class ObjectCollection(PropCollection):
         Returns:
             Object: The human armature/rig Blender object
         """
-        return cast(Object, self.objects.rig.HG.body_obj)
+        return self._rig_obj
 
     @property
     def body(self) -> Object:
@@ -33,7 +30,7 @@ class ObjectCollection(PropCollection):
         Returns:
             Object: The human body Blender object
         """
-        return cast(Object, self.objects.rig.HG.body_obj)
+        return cast(Object, self._rig_obj.HG.body_obj)
 
     @property
     def eyes(self) -> Object:
@@ -42,7 +39,9 @@ class ObjectCollection(PropCollection):
         Returns:
             Object: The eye Blender object
         """
-        return self.eyes.objects.eyes
+        return next(
+            child for child in self if "hg_eyes" in child  # type:ignore[operator]
+        )
 
     @property
     def lower_teeth(self) -> Object:
@@ -53,7 +52,7 @@ class ObjectCollection(PropCollection):
         """
         lower_teeth = next(
             obj
-            for obj in self.children
+            for obj in self
             if "hg_teeth" in obj  # type:ignore[operator]
             and "lower" in obj.name.lower()
         )
@@ -69,7 +68,7 @@ class ObjectCollection(PropCollection):
         """
         upper_teeth = next(
             obj
-            for obj in self.children
+            for obj in self
             if "hg_teeth" in obj  # type:ignore[operator]
             and "upper" in obj.name.lower()
         )
@@ -83,4 +82,25 @@ class ObjectCollection(PropCollection):
         Returns:
             Object: The haircards Blender object or None if not generated
         """
-        return next((c for c in self.children if "hg_haircard" in c), None)
+        return next((c for c in self if "hg_haircard" in c), None)
+
+    def get(self, item_name: str, default: Any = None) -> Union[ID, Any]:  # noqa D
+        if self.is_bpy:
+            return self._collection.get(item_name, default)
+        else:
+            return next(
+                (item for item in self._collection if item.name == item_name),
+                None,
+            )
+
+    def __contains__(self, item: ID) -> bool:
+        return item in self._collection  # type:ignore[operator]
+
+    def __getitem__(self, item: str) -> ID:
+        return cast(ID, self._collection[item])  # type:ignore[index]
+
+    def __iter__(self) -> Iterable[ID]:
+        yield from self._collection  # type:ignore[misc]
+
+    def __len__(self) -> int:
+        return len(self._collection)  # type:ignore[arg-type]

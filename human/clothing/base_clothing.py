@@ -380,6 +380,11 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         context.view_layer.objects.active = old_active
 
     def as_dict(self) -> dict[str, Any]:
+        """Returns a dictionary representation of this clothing.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of this clothing.
+        """
         return {"set": self._active}
 
     def _set_geometry_masks(
