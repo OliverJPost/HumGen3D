@@ -2,8 +2,8 @@
 
 import bpy
 from HumGen3D.human.human import Human
-from HumGen3D.human.skin.skin import SkinNodes
 
+from ..panel_functions import prettify
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -42,7 +42,7 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
                 key.as_bpy(),
                 "value_positive_limited",
                 slider=True,
-                text="Body aging",
+                text=prettify(key.name),
             )
         human.age.age_wrinkles.draw_prop(col, "Wrinkles")
         human.age.age_color.draw_prop(col, "Age Color")
