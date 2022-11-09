@@ -16,7 +16,7 @@ from HumGen3D.backend.content.content_saving import (
     save_thumb,
 )
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,

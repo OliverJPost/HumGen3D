@@ -25,7 +25,7 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
