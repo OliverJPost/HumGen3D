@@ -149,7 +149,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         body_obj = self._human.objects.body
         correct_shape_to_a_pose(cloth_obj, body_obj, context)
         add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
-        auto_weight_paint(cloth_obj, body_obj)
+        auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
         rig_obj = self._human.objects.rig
         armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")

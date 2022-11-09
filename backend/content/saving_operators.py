@@ -170,6 +170,8 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         else:
             human.clothing.outfit.add_obj(cloth_obj, self.cloth_type, context)
 
+        return {"FINISHED"}
+
 
 class HG_OT_SAVE_SK(bpy.types.Operator):
     bl_idname = "hg3d.save_sk_to_library"
