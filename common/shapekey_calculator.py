@@ -93,12 +93,12 @@ def deform_obj_from_difference(
     as_shapekey: bool = False,
 ) -> None:
 
-    sk = None
-    if as_shapekey and not sk:
+    if as_shapekey:
         sk = deform_obj.data.shape_keys.key_blocks.get(name)
-        sk = deform_obj.shape_key_add(name=name)
-        sk.interpolation = "KEY_LINEAR"
-        sk.value = 1
+        if not sk:
+            sk = deform_obj.shape_key_add(name=name)
+            sk.interpolation = "KEY_LINEAR"
+            sk.value = 1
 
     # TODO fully numpy
     for vertex_index in distance_dict:
@@ -108,7 +108,7 @@ def deform_obj_from_difference(
         distance_to_vert = distance_dict[vertex_index][1]
         world_new_loc = source_new_vert_loc - distance_to_vert
 
-        if sk and as_shapekey:
+        if as_shapekey:
             sk.data[vertex_index].co = (
                 deform_obj.matrix_world.inverted() @ world_new_loc
             )
