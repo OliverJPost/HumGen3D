@@ -352,7 +352,8 @@ class ShapeKeyItem(KeyItem, SavableContent):
                 name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
-        return cast(ShapeKey, self._human.objects.body.data.shape_keys.key_blocks[name])
+        body_obj = self._human.objects.body
+        return cast(ShapeKey, body_obj.data.shape_keys.key_blocks[name])
 
     def save_to_library(
         self,
