@@ -48,7 +48,11 @@ class ClothingSettings:
         return FootwearSettings(self._human)
 
     def as_dict(self) -> dict[str, dict[str, Any]]:
-        """Returns dict of clothing settings."""
+        """Returns dict of clothing settings.
+
+        Returns:
+            dict[str, dict[str, Any]]: Dict of clothing settings.
+        """
         return_dict = {
             "outfit": self.outfit.as_dict(),
             "footwear": self.footwear.as_dict(),
@@ -56,6 +60,11 @@ class ClothingSettings:
         return return_dict
 
     def set_from_dict(self, data: dict[str, Any]) -> None:
+        """Set clothing settings from dict.
+
+        Args:
+            data (dict[str, Any]): Dict of clothing settings.
+        """
         if data["outfit"]["set"] is not None:
             self.outfit.set(data["outfit"]["set"])
         if data["footwear"]["set"] is not None:
