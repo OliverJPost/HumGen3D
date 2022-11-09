@@ -27,7 +27,7 @@ class AgeSettings:
     @property
     def _current(self) -> int:
         try:
-            return self._human.body_obj["Age"]
+            return self._human.objects.body["Age"]
         except KeyError:
             return 30
 
@@ -85,7 +85,7 @@ class AgeSettings:
         node_normal = nodes.get("Normal Map")
         node_normal.inputs["Strength"].default_value = normal_value
 
-        self._human.body_obj["Age"] = age
+        self._human.objects.body["Age"] = age
 
     def as_dict(self) -> dict[str, Any]:
         """Get the age settings of the human as a dictionary.

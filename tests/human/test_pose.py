@@ -29,6 +29,6 @@ def test_pose_hash(male_human, context):
     male_human.pose.set(a_pose, context)
     assert hash_before == hash(male_human.pose)
 
-    male_human.rig_obj.pose.bones.get("spine").rotation_euler = (125, 123, 76)
+    male_human.objects.rig.pose.bones.get("spine").rotation_euler = (125, 123, 76)
 
     assert hash_before != hash(male_human.pose)

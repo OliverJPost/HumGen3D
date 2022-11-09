@@ -102,7 +102,7 @@ class SkinSettings:
         Returns:
             Material: Human skin Blender material.
         """
-        return cast("Material", self._human.body_obj.data.materials[0])
+        return cast("Material", self._human.objects.body.data.materials[0])
 
     @property  # TODO make cached
     def gender_specific(self) -> Union[MaleSkin, FemaleSkin]:
@@ -335,7 +335,7 @@ class TextureSettings(PreviewCollectionContent):
                 ]:
                     if (
                         node.name.startswith(("skin_rough_spec", "Normal", "Color"))
-                        and obj == self._human.body_obj
+                        and obj == self._human.objects.body
                     ):
                         continue
                     current_image = node.image
@@ -417,7 +417,7 @@ class SkinNodes(bpy_prop_collection):
     """Inherits from bpy_prop_collection to add custom methods to the collection."""
 
     def __new__(cls, human: "Human") -> "SkinNodes":  # noqa D102
-        skin_mat = human.body_obj.data.materials[0]
+        skin_mat = human.objects.body.data.materials[0]
         nodes = skin_mat.node_tree.nodes
         return super().__new__(cls, nodes)  # type:ignore[call-arg]
 
@@ -434,6 +434,6 @@ class SkinLinks(bpy_prop_collection):
     """Inherits from bpy_prop_collection to add custom methods to the collection."""
 
     def __new__(cls, human: "Human") -> "SkinLinks":  # noqa D102
-        skin_mat = human.body_obj.data.materials[0]
+        skin_mat = human.objects.body.data.materials[0]
         links = skin_mat.node_tree.links
         return super().__new__(cls, links)  # type:ignore[call-arg]

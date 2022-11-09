@@ -36,7 +36,7 @@ def correct_shape_to_a_pose(
 def add_corrective_shapekeys(
     cloth_obj: bpy.types.Object, human: "Human", cloth_type: str
 ) -> None:
-    hg_body = human.body_obj
+    hg_body = human.objects.body
     hg_body_world_coords = world_coords_from_obj(hg_body)
     cloth_obj_world_coords = world_coords_from_obj(cloth_obj)
     distance_dict = build_distance_dict(hg_body_world_coords, cloth_obj_world_coords)

@@ -82,7 +82,7 @@ class HairSettings:
         Returns:
             bpy_prop_collection: Collection of particle systems on human body.
         """
-        return self._human.body_obj.particle_systems
+        return self._human.objects.body.particle_systems
 
     @property
     def modifiers(self) -> PropCollection:
@@ -94,7 +94,7 @@ class HairSettings:
         return PropCollection(
             [
                 mod
-                for mod in self._human.body_obj.modifiers
+                for mod in self._human.objects.body.modifiers
                 if mod.type == "PARTICLE_SYSTEM"
             ]
         )
@@ -108,7 +108,7 @@ class HairSettings:
         Args:
             connected (bool): True if hair should be connected, False otherwise.
         """
-        with bpy.context.temp_override(active_object=self._human.body_obj):
+        with bpy.context.temp_override(active_object=self._human.objects.body):
             if connected:
                 bpy.ops.particle.connect_hair(all=True)
             else:
@@ -137,7 +137,7 @@ class HairSettings:
             name (str): Name of the particle system to remove.
         """
         mod = next(m for m in self.modifiers if m.particle_system.name == name)
-        self._human.body_obj.modifiers.remove(mod)
+        self._human.objects.body.modifiers.remove(mod)
 
     def update_hair_shader_type(self, shader_type: Literal["fast", "accurate"]) -> None:
         """Set the shader type between accurate (Eevee comp.) and fast (Cycles only).
@@ -147,7 +147,7 @@ class HairSettings:
         """
         value = 0 if shader_type == "fast" else 1
 
-        hg_rig = self._human.rig_obj
+        hg_rig = self._human.objects.rig
         hg_body = hg_rig.HG.body_obj
 
         for mat in hg_body.data.materials[1:3]:

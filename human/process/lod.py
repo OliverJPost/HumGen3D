@@ -15,7 +15,7 @@ class LodSettings:
         self._human = _human
 
     def set_body_lod(self, lod: Literal[0, 1, 2]) -> None:
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         current_lod = body_obj["hg_lod"] if "hg_lod" in body_obj else 0
         if current_lod > lod:
             raise ValueError(

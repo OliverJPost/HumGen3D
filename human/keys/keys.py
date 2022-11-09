@@ -211,7 +211,7 @@ class LiveKeyItem(KeyItem):
         """
         self.set_without_update(value)
         self._human.keys.update_human_from_key_change(bpy.context)
-        self._human.body_obj.data.update()
+        self._human.objects.body.data.update()
 
     def set_without_update(self, value: float) -> None:
         """Set the value of the livekey without updating the human rig and clothing.
@@ -223,7 +223,7 @@ class LiveKeyItem(KeyItem):
             value (float): value to set the livekey to
         """
         # TODO repetition from set_livekey
-        body = self._human.body_obj
+        body = self._human.objects.body
         vert_count = len(body.data.vertices)
         obj_coords = np.empty(vert_count * 3, dtype=np.float64)
         body.data.vertices.foreach_get("co", obj_coords)
@@ -251,7 +251,7 @@ class LiveKeyItem(KeyItem):
             ShapeKeyItem: shapekey item representing the converted livekey
         """
         filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
-        body = self._human.body_obj
+        body = self._human.objects.body
         vert_count = len(body.data.vertices)
         new_key_relative_coords = import_npz_key(vert_count, filepath)
 
@@ -267,7 +267,7 @@ class LiveKeyItem(KeyItem):
         body.data.vertices.foreach_get("co", obj_coords)
 
         new_key_coords = obj_coords + new_key_relative_coords
-        key = self._human.body_obj.shape_key_add(name=name)
+        key = self._human.objects.body.shape_key_add(name=name)
         key.slider_max = 2
         key.slider_min = -2
 
@@ -324,7 +324,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
         Returns:
             float: value of the shape key
         """
-        key_blocks = self._human.body_obj.data.shape_keys.key_blocks
+        key_blocks = self._human.objects.body.data.shape_keys.key_blocks
         return cast(float, key_blocks[self.name].value)
 
     @value.setter
@@ -334,7 +334,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
         Args:
             value (float): value to set the shape key to
         """
-        key_blocks = self._human.body_obj.data.shape_keys.key_blocks
+        key_blocks = self._human.objects.body.data.shape_keys.key_blocks
         key_blocks[self.name].value = value
 
     def as_bpy(self) -> ShapeKey:
@@ -352,7 +352,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
                 name = f"{self.category[0]}_{self.name}"
         else:
             name = self.name
-        return cast(ShapeKey, self._human.body_obj.data.shape_keys.key_blocks[name])
+        return cast(ShapeKey, self._human.objects.body.data.shape_keys.key_blocks[name])
 
     def save_to_library(
         self,
@@ -380,7 +380,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
             delete_original (bool): Delete the original key after saving. Defaults to
                 False.
         """
-        body = self._human.body_obj
+        body = self._human.objects.body
         sk = self.as_bpy()
         sk_coords = np.empty(
             len(sk.data) * 3, dtype=np.float64  # type:ignore[arg-type]
@@ -477,7 +477,7 @@ class KeySettings:
         """
         shapekeys = []
         # TODO Skip Basis?
-        for sk in self._human.body_obj.data.shape_keys.key_blocks:
+        for sk in self._human.objects.body.data.shape_keys.key_blocks:
             shapekeys.append(ShapeKeyItem(sk.name, self._human))
         return shapekeys
 
@@ -525,7 +525,7 @@ class KeySettings:
             None,
         )
         if not temp_key:
-            temp_key = self._human.body_obj.shape_key_add(
+            temp_key = self._human.objects.body.shape_key_add(
                 name="LIVE_KEY_TEMP_"
             )  # type:ignore[assignment]
             temp_key.slider_max = 10
@@ -593,7 +593,7 @@ class KeySettings:
         if obj_override:
             obj = obj_override
         else:
-            obj = self._human.body_obj
+            obj = self._human.objects.body
 
         vert_count = len(obj.data.vertices)
 
@@ -660,7 +660,7 @@ class KeySettings:
         human.height._correct_armature(context)
         human.height._correct_eyes()
         human.height._correct_teeth()
-        for mod in human.body_obj.modifiers:
+        for mod in human.objects.body.modifiers:
             if mod.type == "MASK":
                 mod.show_viewport = True
         for cloth_obj in human.clothing.outfit.objects:
@@ -668,7 +668,7 @@ class KeySettings:
         for shoe_obj in human.clothing.footwear.objects:
             human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
 
-        human.body_obj.data.update()
+        human.objects.body.data.update()
 
     @staticmethod
     def _set_gender_specific(human: "Human") -> None:
@@ -678,7 +678,7 @@ class KeySettings:
             human (Human): The human to set gnder specific keys for.
         """
         gender = human.gender
-        hg_body = human.body_obj
+        hg_body = human.objects.body
         for sk in hg_body.data.shape_keys.key_blocks:
             if sk.name.lower().startswith(gender) and sk.name != "Male":
                 GD = gender.capitalize()
@@ -705,7 +705,7 @@ class KeySettings:
         var = driver.variables.new()
         var.type = "TRANSFORMS"
         target = var.targets[0]  # type:ignore[index]
-        target.id = self._human.rig_obj
+        target.id = self._human.objects.rig
 
         driver.expression = sett_dict["expression"]
         target.bone_target = sett_dict["target_bone"]

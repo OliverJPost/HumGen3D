@@ -203,7 +203,7 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
 
     def execute(self, context):
         human = Human.from_existing(context.object)
-        bpy_key = human.body_obj.data.shape_keys.key_blocks[self.sk_name]
+        bpy_key = human.objects.body.data.shape_keys.key_blocks[self.sk_name]
 
         key = next(key for key in human.keys if key.as_bpy() == bpy_key)
 

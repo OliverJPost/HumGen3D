@@ -43,7 +43,7 @@ def save_clothing(
 
     # TODO disable armature modifier
     depsgraph = context.evaluated_depsgraph_get()
-    body_obj_eval = human.body_obj.evaluated_get(depsgraph)
+    body_obj_eval = human.objects.body.evaluated_get(depsgraph)
     body_eval_coords_world = world_coords_from_obj(body_obj_eval)
 
     texture_folder = os.path.join(folder, "textures")
@@ -54,7 +54,7 @@ def save_clothing(
         distance_dict = build_distance_dict(body_eval_coords_world, obj_world_coords)
         obj_distance_dict[obj.name] = distance_dict
 
-    body_coords_world = world_coords_from_obj(human.body_obj)
+    body_coords_world = world_coords_from_obj(human.objects.body)
     for gender in genders:
         gender_folder = os.path.join(folder, gender, category)
         export_for_gender(
@@ -89,8 +89,8 @@ def export_for_gender(
         body_with_gender_coords_global = body_coords_world
     else:
         body_with_gender_coords_global = world_coords_from_obj(
-            human.body_obj,
-            data=human.body_obj.data.shape_keys.key_blocks["Male"].data,
+            human.objects.body,
+            data=human.objects.body.data.shape_keys.key_blocks["Male"].data,
         )
 
     for obj in objs:

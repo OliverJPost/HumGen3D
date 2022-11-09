@@ -17,7 +17,7 @@ class HG_BACK_TO_HUMAN(bpy.types.Operator):
     bl_description = "Makes the human the active object"
 
     def execute(self, context):
-        hg_rig = Human.from_existing(context.object).rig_obj
+        hg_rig = Human.from_existing(context.object).objects.rig
         context.view_layer.objects.active = hg_rig
         return {"FINISHED"}
 
@@ -30,7 +30,7 @@ class HG_DELETE_CLOTH(bpy.types.Operator):
     bl_description = "Deletes this clothing object"
 
     def execute(self, context):
-        hg_rig = Human.from_existing(context.object).rig_obj
+        hg_rig = Human.from_existing(context.object).objects.rig
         hg_body = hg_rig.HG.body_obj
 
         cloth_obj = context.object

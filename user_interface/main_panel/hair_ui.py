@@ -12,7 +12,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         sett = self.sett
-        body_obj = self.human.body_obj
+        body_obj = self.human.objects.body
 
         hair_systems = self._get_hair_systems(body_obj)
 

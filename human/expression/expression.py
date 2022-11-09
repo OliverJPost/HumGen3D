@@ -114,7 +114,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
         filepath = str(pref.filepath) + str(preset)
 
-        hg_rig = self._human.rig_obj
+        hg_rig = self._human.objects.rig
         hg_body = hg_rig.HG.body_obj
         sk_names = [sk.name for sk in hg_body.data.shape_keys.key_blocks]
 
@@ -147,7 +147,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
         self._load_FACS_sks(context)  # type:ignore[arg-type]
 
-        self._human.body_obj["facial_rig"] = 1  # type:ignore[index]
+        self._human.objects.body["facial_rig"] = 1  # type:ignore[index]
 
     def remove_facial_rig(self) -> None:
         """Remove the facial rig from the human, including all it's shape keys.
@@ -157,7 +157,7 @@ class ExpressionSettings(PreviewCollectionContent):
         Raises:
             HumGenException: If no facial rig is loaded on this human.
         """
-        if "facial_rig" not in self._human.body_obj:  # type:ignore[operator]
+        if "facial_rig" not in self._human.objects.body:  # type:ignore[operator]
             raise HumGenException("No facial rig found on this human")
 
         # TODO give bones custom property if they're part of the face rig
@@ -171,15 +171,15 @@ class ExpressionSettings(PreviewCollectionContent):
             data = json.load(f)
 
         for sk_name in data["teeth"]:
-            key_blocks = self._human.lower_teeth_obj.data.shape_keys.key_blocks
+            key_blocks = self._human.objects.lower_teeth.data.shape_keys.key_blocks
             sk = key_blocks.get(sk_name)
-            self._human.lower_teeth_obj.shape_key_remove(sk)
+            self._human.objects.lower_teeth.shape_key_remove(sk)
 
         for sk_name in data["body"]:
             sk = self._human.keys.get(sk_name)
-            self._human.body_obj.shape_key_remove(sk.as_bpy())
+            self._human.objects.body.shape_key_remove(sk.as_bpy())
 
-        del self._human.body_obj["facial_rig"]
+        del self._human.objects.body["facial_rig"]
 
         remove_broken_drivers()
 
@@ -189,8 +189,8 @@ class ExpressionSettings(PreviewCollectionContent):
         with open(json_path, "r") as f:
             data = json.load(f)
 
-        body = self._human.body_obj
-        teeth = self._human.lower_teeth_obj
+        body = self._human.objects.body
+        teeth = self._human.objects.lower_teeth
 
         for obj, object_type in ((body, "body"), (teeth, "teeth")):
             all_sks = data[object_type]

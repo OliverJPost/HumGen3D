@@ -258,7 +258,7 @@ class HGPanel:
             layout.label(text="HumGen only works in Object Mode")
             return True
 
-        if self.human and "no_body" in self.human.rig_obj:
+        if self.human and "no_body" in self.human.objects.rig:
             layout.alert = True
             layout.label(text="No body object found for this rig")
             return True
@@ -429,7 +429,7 @@ class MainPanelPart(HGPanel):
             row.scale_x = 2
             row.operator("hg3d.deselect", text="", icon="RESTRICT_SELECT_ON")
 
-            hair_systems = self._get_hair_systems(human.body_obj, eyesystems=True)
+            hair_systems = self._get_hair_systems(human.objects.body, eyesystems=True)
             self._draw_hair_children_switch(hair_systems, row)
 
         if self.phase_name != "closed":

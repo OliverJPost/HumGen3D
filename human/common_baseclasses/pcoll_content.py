@@ -29,13 +29,13 @@ class PreviewCollectionContent:
     def _active(self) -> Optional[str]:
         """Name of content preset of this type last loaded on the human.
 
-        Stored inside human.rig_obj as custom property starting with "ACTIVE"
+        Stored inside human.objects.rig as custom property starting with "ACTIVE"
 
         Returns:
             str: Name of content preset of this type last loaded on the human.
         """
         try:
-            return self._human.rig_obj[f"ACTIVE_{self.__class__.__name__}"]
+            return self._human.objects.rig[f"ACTIVE_{self.__class__.__name__}"]
         except KeyError:
             return None
 
@@ -46,7 +46,7 @@ class PreviewCollectionContent:
         Args:
             value: Name of content preset to set as active.
         """
-        self._human.rig_obj[f"ACTIVE_{self.__class__.__name__}"] = value
+        self._human.objects.rig[f"ACTIVE_{self.__class__.__name__}"] = value
 
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa
