@@ -311,7 +311,7 @@ class Human:
                 human consists of.
         """
 
-        return ObjectCollection(self._rig_obj, self._rig_obj.children)
+        return ObjectCollection(self._rig_obj)
 
     @property
     def children(self) -> Iterable[Object]:
