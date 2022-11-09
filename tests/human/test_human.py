@@ -37,7 +37,7 @@ class TestHumanCommonMethods:
 
     @staticmethod
     def test_objects(human):
-        assert human.objects, "No objects returned"
+        assert len(human.objects), "No objects returned"
 
     @staticmethod
     def test_children(human):

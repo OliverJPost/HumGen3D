@@ -36,6 +36,7 @@ from .face.face import FaceSettings
 from .hair.hair import HairSettings
 from .height.height import HeightSettings
 from .keys.keys import KeySettings
+from .objects import ObjectCollection
 from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
