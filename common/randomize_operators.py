@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Contains Blender operators for randomizing within pcolls and slider values."""
+
 import random
 
 import bpy

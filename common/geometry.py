@@ -1,6 +1,6 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-"""Functions used for """
+"""Functions used for analysing, manipulating, or creating raw geometry."""
 
 from typing import Any, Iterable, Optional, Union, cast
 
