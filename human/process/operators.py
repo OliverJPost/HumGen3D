@@ -20,6 +20,7 @@ from HumGen3D.human.human import Human
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
+from HumGen3D.common import find_multiple_in_list
 
 
 def status_text_callback(header, context):
@@ -54,7 +55,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
     def execute(self, context):  # noqa
         pr_sett = context.scene.HG3D.process
-        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        human_rigs = find_multiple_in_list(context.selected_objects)
         for rig_obj in human_rigs:
             human = Human.from_existing(rig_obj)
             if pr_sett.output != "replace":

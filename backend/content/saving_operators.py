@@ -7,6 +7,7 @@ import subprocess
 import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.common import find_hg_rig
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -30,7 +31,7 @@ class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
         if self.category == "key":
             cc_sett.key.key_to_save = self.key_name
         cc_sett.content_saving_tab_index = 0
-        cc_sett.content_saving_active_human = Human.find_hg_rig(context.object)
+        cc_sett.content_saving_active_human = find_hg_rig(context.object)
         return {"FINISHED"}
 
 
