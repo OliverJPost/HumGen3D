@@ -1,3 +1,5 @@
+"""Contain class for producing LODs for the meshes of a human."""
+
 import json
 import os
 from typing import TYPE_CHECKING, Literal
@@ -11,10 +13,23 @@ if TYPE_CHECKING:
 
 
 class LodSettings:
+    """Has methods for setting LODs for the meshes of a human."""
+
     def __init__(self, _human: "Human") -> None:
         self._human = _human
 
     def set_body_lod(self, lod: Literal[0, 1, 2]) -> None:
+        """Set the LOD of the body mesh.
+
+        Args:
+            lod (Literal[0, 1, 2]): LOD to set the body mesh to. 0 means no difference,
+                1 means lower polycount in the face and 2 means lower polycount in the
+                whole body.
+
+        Raises:
+            ValueError: If you pass a LOD value higher than the one the human currently
+                has. At this moment it's not possible to revert LODs.
+        """
         body_obj = self._human.objects.body
         current_lod = body_obj["hg_lod"] if "hg_lod" in body_obj else 0
         if current_lod > lod:
@@ -54,9 +69,16 @@ class LodSettings:
     def set_clothing_lod(
         self,
         decimate_ratio: float = 0.15,
-        remove_subdiv: float = True,
-        remove_solidify: float = True,
+        remove_subdiv: bool = True,
+        remove_solidify: bool = True,
     ) -> None:
+        """Set the LOD of the clothing meshes by decimating them.
+
+        Args:
+            decimate_ratio (float): Ratio of decimation. Defaults to 0.15.
+            remove_subdiv (bool): Whether to remove subdivision modifiers.
+            remove_solidify (bool): Whether to remove solidify modifiers.
+        """
         clothing_objs = (
             self._human.clothing.outfit.objects + self._human.clothing.footwear.objects
         )
