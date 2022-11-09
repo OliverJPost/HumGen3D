@@ -13,14 +13,14 @@ import numpy as np
 from HumGen3D import get_prefs
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.geometry import obj_from_pydata  # noqa
-from HumGen3D.common.math import create_kdtree, normalize
-from HumGen3D.common.memory_management import hg_delete
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
+    obj_from_pydata,
     world_coords_from_obj,
 )
+from HumGen3D.common.math import create_kdtree, normalize
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.type_aliases import C
 from HumGen3D.extern.rdp import rdp
 
@@ -187,23 +187,6 @@ class HairCollection:
 
             self.objects[hair_co_len] = obj
             yield obj
-
-    @staticmethod
-    def _create_obj_from_verts_and_faces(
-        obj_name: str, all_verts: np.ndarray[Any, Any], all_faces: np.ndarray[Any, Any]
-    ) -> bpy.types.Object:
-        mesh = bpy.data.meshes.new(name="hair")
-        all_verts_as_tuples = [tuple(co) for co in all_verts]
-        all_faces_as_tuples = [tuple(idxs) for idxs in all_faces]
-
-        mesh.from_pydata(all_verts_as_tuples, [], all_faces_as_tuples)
-        mesh.update()
-
-        for f in mesh.polygons:
-            f.use_smooth = True
-
-        obj = bpy.data.objects.new(obj_name, mesh)  # type:ignore[arg-type]
-        return obj
 
     @staticmethod
     def _compute_new_face_vert_idxs(

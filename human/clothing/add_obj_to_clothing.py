@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.exceptions import HumGenException  # type:ignore
 from HumGen3D.common.math import centroid
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
