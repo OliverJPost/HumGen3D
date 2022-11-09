@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Contains commonly used decorators for the addon."""
+
 import functools
 import traceback
 from typing import Any, Callable, TypeVar, cast

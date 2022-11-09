@@ -1,9 +1,10 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Contains functions for dealing with Blender's object collections."""
+
 import bpy
 
 
-# MODULE
 def add_to_collection(
     context: bpy.types.Context, obj: bpy.types.Object, collection_name: str = "HumGen"
 ) -> bpy.types.Collection:
