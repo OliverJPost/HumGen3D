@@ -1,7 +1,6 @@
 from typing import Any, Union
 
-from bpy.types import NodeSocket
-from HumGen3D.backend.logging import hg_log  # type:ignore
+from bpy.types import NodeSocket, UILayout
 
 
 class NodeInput:
@@ -35,7 +34,7 @@ class NodeInput:
         nodes = self.instance.nodes.get(self.node_name)
         return nodes.inputs[self.input_name]
 
-    def draw_prop(self, layout, text) -> None:
+    def draw_prop(self, layout: UILayout, text: str) -> None:
         layout.prop(
             self.as_bpy(),
             "default_value",
