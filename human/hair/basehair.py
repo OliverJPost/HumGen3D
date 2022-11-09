@@ -640,9 +640,10 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """
         search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
         # Search for current name of material to account for v1, v2 and v3
+        body_obj = self._human.objects.body
         mat_name = next(
             mat.name
-            for mat in self._human.objects.body.data.materials
+            for mat in body_obj.data.materials
             if mat.name.startswith(search_mat)
         )
 
