@@ -45,11 +45,11 @@ class TestHumanCommonMethods:
 
     @staticmethod
     def test_body_obj(human):
-        assert human.body_obj
+        assert human.objects.body
 
     @staticmethod
     def test_eye_obj(human):
-        assert human.eye_obj
+        assert human.objects.eyes
 
     @staticmethod
     def test_gender(human):
@@ -86,10 +86,10 @@ class TestHumanCommonMethods:
         new_loc = (1.2, 5.8, 3.1)
         human.location = new_loc
         assert_vector_tuple_equality(human.location, new_loc)
-        assert_vector_tuple_equality(human.rig_obj.location, new_loc)
+        assert_vector_tuple_equality(human.objects.rig.location, new_loc)
 
         human.location = old_loc
-        assert_vector_tuple_equality(human.rig_obj.location, old_loc)
+        assert_vector_tuple_equality(human.objects.rig.location, old_loc)
 
     @staticmethod
     def test_rotation_euler(human):
@@ -100,10 +100,10 @@ class TestHumanCommonMethods:
         new_rot = (35.1, 2.1, 84.9)
         human.rotation_euler = new_rot
         assert_vector_tuple_equality(human.rotation_euler, new_rot)
-        assert_vector_tuple_equality(human.rig_obj.rotation_euler, new_rot)
+        assert_vector_tuple_equality(human.objects.rig.rotation_euler, new_rot)
 
         human.rotation_euler = old_rot
-        assert_vector_tuple_equality(human.rig_obj.rotation_euler, old_rot)
+        assert_vector_tuple_equality(human.objects.rig.rotation_euler, old_rot)
 
     @staticmethod
     def test_props(human):
@@ -133,7 +133,7 @@ class TestHumanCommonMethods:
 
 # TODO implement batch_human
 # def test_is_batch(batch_human):
-#     rig_obj = batch_human.rig_obj
+#     rig_obj = batch_human.objects.rig
 #     assert Human._is_applied_batch_result(rig_obj)
 
 

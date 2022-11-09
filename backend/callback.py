@@ -90,7 +90,7 @@ def hg_callback() -> None:
     ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
-    update_tips_from_context(bpy.context, sett, human.rig_obj)
+    update_tips_from_context(bpy.context, sett, human.objects.rig)
     _context_specific_updates(sett, human, ui_phase)
 
 
@@ -100,7 +100,7 @@ def _set_shader_switches(human, sett):
     used to prevent an endless loop of setting the toggle
     """  # noqa
     sett.update_exception = True
-    body_obj = human.body_obj
+    body_obj = human.objects.body
     nodes = body_obj.data.materials[0].node_tree.nodes
     if not body_obj:
         return
@@ -160,7 +160,7 @@ def tab_change_update(self, context):
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        human.rig_obj,
+        human.objects.rig,
     )
 
     find_possible_content(context)

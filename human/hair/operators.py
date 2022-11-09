@@ -15,7 +15,7 @@ class HG_REMOVE_HAIR(bpy.types.Operator):
     hair_system: bpy.props.StringProperty()
 
     def execute(self, context):
-        hg_rig = Human.from_existing(context.object).rig_obj
+        hg_rig = Human.from_existing(context.object).objects.rig
         hg_body = hg_rig.HG.body_obj
 
         context.view_layer.objects.active = hg_body

@@ -18,7 +18,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         col = self.layout.column()
 
-        if "hg_baked" in self.human.rig_obj:
+        if "hg_baked" in self.human.objects.rig:
             col.label(text="Textures are baked", icon="INFO")
             return
 
@@ -98,7 +98,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        mat = self.human.eye_obj.data.materials[1]
+        mat = self.human.objects.eyes.data.materials[1]
         nodes = mat.node_tree.nodes
 
         col = boxbox.column(align=True)

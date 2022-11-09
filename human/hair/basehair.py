@@ -101,7 +101,7 @@ class BaseHair:
         if self.haircard_obj:
             return self.haircard_obj.data.materials
         else:
-            return [self._human.body_obj.data.materials[self._mat_idx]]
+            return [self._human.objects.body.data.materials[self._mat_idx]]
 
     @property
     def nodes(self) -> PropCollection:
@@ -139,7 +139,7 @@ class BaseHair:
 
             ps = mod.particle_system
             ps.settings.child_nbr = ps.settings.child_nbr // 10
-            body_obj = self._human.body_obj
+            body_obj = self._human.objects.body
             with context.temp_override(
                 active_object=body_obj,
                 object=body_obj,
@@ -196,7 +196,7 @@ class BaseHair:
             PropCollection: PropCollection of evaluated particle systems
         """
         dg = context.evaluated_depsgraph_get()
-        eval_body = self._human.body_obj.evaluated_get(dg)
+        eval_body = self._human.objects.body.evaluated_get(dg)
         particle_systems = eval_body.particle_systems
         psys = [ps for ps in particle_systems if self._condition(ps.name)]
         return PropCollection(psys)
@@ -217,7 +217,7 @@ class BaseHair:
 
         hair_color = hair_color_dict[random.choice(list(hair_color_dict))]
 
-        for mat in self._human.body_obj.data.materials[1:]:
+        for mat in self._human.objects.body.data.materials[1:]:
             nodes = mat.node_tree.nodes
             hair_node = next(n for n in nodes if n.name.startswith("HG_Hair"))
             hair_node.inputs["Lightness"].default_value = hair_color[0]
@@ -318,7 +318,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             human.hair.regular_hair.remove_all()
         remove_broken_drivers()
 
-        mask_mods = [m for m in self._human.body_obj.modifiers if m.type == "MASK"]
+        mask_mods = [m for m in self._human.objects.body.modifiers if m.type == "MASK"]
         for mod in mask_mods:
             mod.show_viewport = False
 
@@ -337,7 +337,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         for obj in context.selected_objects:
             obj.select_set(False)
         context.view_layer.objects.active = hair_obj
-        human.body_obj.select_set(True)
+        human.objects.body.select_set(True)
 
         # iterate over hair systems that need to be transferred
 
@@ -352,7 +352,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
         new_hair_systems = self._get_hair_systems_dict(hair_obj)
 
-        context.view_layer.objects.active = self._human.body_obj
+        context.view_layer.objects.active = self._human.objects.body
         for mod in new_hair_systems:
             self._reconnect_hair(mod)
             self._add_quality_props(mod)
@@ -364,7 +364,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             mod.show_expanded = False
 
         self._move_modifiers_above_masks(new_hair_systems)
-        for mod in human.body_obj.modifiers:
+        for mod in human.objects.body.modifiers:
             # Turn on masks again
             if mod.type == "MASK":
                 mod.show_viewport = True
@@ -425,7 +425,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         """Remove all modifiers of this hair type from the human."""
         modifiers = self.modifiers
         for mod in modifiers:
-            self._human.body_obj.modifiers.remove(mod)
+            self._human.objects.body.modifiers.remove(mod)
 
     @injected_context
     def randomize(self, context: C = None) -> None:
@@ -469,7 +469,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         self, context: bpy.types.Context, hair_obj: bpy.types.Object
     ) -> None:  # noqa
         """Gives the imported hair object the exact same shape as hg human."""  # noqa
-        body_copy = self._human.body_obj.copy()  # TODO without copying
+        body_copy = self._human.objects.body.copy()  # TODO without copying
         body_copy.data = body_copy.data.copy()
         context.scene.collection.objects.link(body_copy)
 
@@ -552,7 +552,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 ]  # type:ignore[index, call-overload]
                 vert_dict[vert_idx] = vg.weight(vert_idx)
 
-        target_vg = self._human.body_obj.vertex_groups.new(name=vg_name)
+        target_vg = self._human.objects.body.vertex_groups.new(name=vg_name)
         # fmt: off
         for v in vert_dict:
             target_vg.add([v, ], vert_dict[v], "ADD")
@@ -642,7 +642,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         # Search for current name of material to account for v1, v2 and v3
         mat_name = next(
             mat.name
-            for mat in self._human.body_obj.data.materials
+            for mat in self._human.objects.body.data.materials
             if mat.name.startswith(search_mat)
         )
 
@@ -655,7 +655,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         lowest_mask_index = next(
             (
                 i
-                for i, mod in enumerate(self._human.body_obj.modifiers)
+                for i, mod in enumerate(self._human.objects.body.modifiers)
                 if mod.type == "MASK"
             ),
             None,
@@ -666,13 +666,16 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         for mod in new_systems:
             # Use old method when older than 2.90
             if (2, 90, 0) > bpy.app.version:
-                while self._human.body_obj.modifiers.find(mod.name) > lowest_mask_index:
+                while (
+                    self._human.objects.body.modifiers.find(mod.name)
+                    > lowest_mask_index
+                ):
                     bpy.ops.object.modifier_move_up(  # type:ignore[misc]
-                        {"object": self._human.body_obj},  # type:ignore[arg-type]
+                        {"object": self._human.objects.body},  # type:ignore[arg-type]
                         modifier=mod.name,
                     )
 
-            elif self._human.body_obj.modifiers.find(mod.name) > lowest_mask_index:
+            elif self._human.objects.body.modifiers.find(mod.name) > lowest_mask_index:
                 bpy.ops.object.modifier_move_to_index(
                     modifier=mod.name, index=lowest_mask_index
                 )

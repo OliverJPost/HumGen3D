@@ -146,12 +146,12 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 as string, defines what kind of corrective shapekeys will be added.
             context (C): Blender context. bpy.context if not provided.
         """
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         correct_shape_to_a_pose(cloth_obj, body_obj, context)
         add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
         auto_weight_paint(cloth_obj, body_obj)
 
-        rig_obj = self._human.rig_obj
+        rig_obj = self._human.objects.rig
         armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
         armature_mod.object = rig_obj
         cloth_obj.parent = rig_obj
@@ -173,7 +173,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             context (bpy.types.Context): Blender context.
             cloth_obj (Object): cloth object to deform
         """
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         if self._human.gender == "female":
             verts = body_obj.data.vertices
         else:
@@ -185,7 +185,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
 
-        cloth_obj.parent = self._human.rig_obj
+        cloth_obj.parent = self._human.objects.rig
 
         body_eval_coords_world = world_coords_from_obj(
             body_obj,
@@ -203,8 +203,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
 
         context.view_layer.objects.active = cloth_obj
-        self._set_armature(context, cloth_obj, self._human.rig_obj)
-        context.view_layer.objects.active = self._human.rig_obj
+        self._set_armature(context, cloth_obj, self._human.objects.rig)
+        context.view_layer.objects.active = self._human.objects.rig
 
     def remove(self) -> list[str]:
         """Removes the cloth objects of this category that are currently on the human.
@@ -406,13 +406,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # remove modifiers used by old clothes
         for mask in mask_remove_list:
             with contextlib.suppress(Exception):
-                self._human.body_obj.modifiers.remove(
-                    self._human.body_obj.modifiers.get(mask)
+                self._human.objects.body.modifiers.remove(
+                    self._human.objects.body.modifiers.get(mask)
                 )
 
         # add new masks used by new clothes
         for mask in new_mask_list:
-            mod = self._human.body_obj.modifiers.new(mask, "MASK")
+            mod = self._human.objects.body.modifiers.new(mask, "MASK")
             mod.vertex_group = mask
             mod.invert_vertex_group = True
 
@@ -511,7 +511,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         for obj in cloth_objs:
             add_to_collection(context, obj)
             obj.location = (0, 0, 0)
-            obj.parent = self._human.rig_obj
+            obj.parent = self._human.objects.rig
             obj.select_set(True)
 
         # makes linked objects/textures/nodes local
@@ -533,7 +533,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
                 hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
 
-        body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
+        body_drivers = self._human.objects.body.data.shape_keys.animation_data.drivers
 
         for driver in body_drivers:
             target_sk = driver.data_path.replace('key_blocks["', "").replace(
@@ -549,7 +549,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             new_target = new_var.targets[0]
             old_var = driver.driver.variables[0]
             old_target = old_var.targets[0]
-            new_target.id = self._human.rig_obj
+            new_target.id = self._human.objects.rig
 
             new_driver.driver.expression = driver.driver.expression
             new_target.bone_target = old_target.bone_target
@@ -566,7 +566,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         Returns:
             float: From 0 to 1.0, percentage of verts that clip with human.
         """
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         for modifier in body_obj.modifiers:
             if modifier.type != "ARMATURE":
                 modifier.show_viewport = False

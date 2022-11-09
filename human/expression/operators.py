@@ -20,7 +20,7 @@ class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
     def execute(self, context):
-        hg_rig = Human.from_existing(context.active_object).rig_obj
+        hg_rig = Human.from_existing(context.active_object).objects.rig
         hg_body = hg_rig.HG.body_obj
 
         sk_delete = hg_body.data.shape_keys.key_blocks[self.shapekey]

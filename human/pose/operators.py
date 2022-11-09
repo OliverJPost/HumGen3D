@@ -25,7 +25,7 @@ class HG_RIGIFY(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        hg_rig = Human.from_existing(context.active_object).rig_obj
+        hg_rig = Human.from_existing(context.active_object).objects.rig
         human = Human.from_existing(context.object)
         context.view_layer.objects.active = hg_rig
         hg_body = hg_rig.HG.body_obj

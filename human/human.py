@@ -53,7 +53,7 @@ class Human:
 
         Args:
             rig_obj (Object): Blender Armature object that is part of an existing human.
-            strict_check (bool, optional): If True, an exception will be thrown if the
+            strict_check (bool): If True, an exception will be thrown if the
                 rig_obj is incorrect. Defaults to True.
 
         Raises:
@@ -63,12 +63,12 @@ class Human:
         if strict_check and not rig_obj.HG.ishuman:
             raise HumGenException("Did not pass a valid HG rig object")
 
-        self.rig_obj = rig_obj
+        self._rig_obj = rig_obj
 
     @staticmethod
     @injected_context
     def get_preset_options(
-        gender: str, category: str = "All", context: C = None
+        gender: GenderStr, category: str = "All", context: C = None
     ) -> List[str]:
         """
         Return a list of human possible presets for the given gender.
@@ -76,11 +76,13 @@ class Human:
         Choose one of the options to pass to Human.from_preset() constructor.
 
         Args:
-          gender (str): string in ('male', 'female')
-          context (Context): Blender context, uses bpy.context if not passed
+            gender (str): string in ('male', 'female')
+            category (str): Category to find presets for. Defaults to 'All'. You can
+                get a list of all categories by calling Human.get_categories()
+            context (Context): Blender context, uses bpy.context if not passed
 
         Returns:
-          A list of starting human presets you can choose from
+            A list of starting human presets you can choose from
         """
         preview_collections["humans"].populate(context, gender, subcategory=category)
         return [
@@ -90,7 +92,15 @@ class Human:
     # Do not remove unused arguments
     @staticmethod
     def _get_full_options(_self: Any, context: C = None) -> BpyEnum:
-        """Internal method for getting preview collection items."""
+        """Internal method for getting preview collection items.
+
+        Args:
+            _self (Any): Unused, necessary for Blender callback pattern
+            context (C): Unused, necessary for Blender callback pattern
+
+        Returns:
+            BpyEnum: Enum of preview collection items
+        """
         pcoll = preview_collections.get("humans").pcoll
         if not pcoll:
             return [
@@ -191,6 +201,14 @@ class Human:
 
     @staticmethod
     def get_categories(gender: GenderStr) -> list[str]:
+        """Get a list of categories the human presets are divided into.
+
+        Args:
+            gender (GenderStr): Gender to find categories for
+
+        Returns:
+            list[str]: List of categories, choose one to pass to get_preset_options()
+        """
         return [option[0] for option in Human._get_categories(gender)]
 
     @staticmethod
@@ -204,86 +222,95 @@ class Human:
 
     @property  # TODO make cached
     def body(self) -> BodySettings:
+        """Points to the body settings of the human.
+
+        Returns:
+            BodySettings: Class instance for changing body proportions
+        """
         return BodySettings(self)
 
     @property  # TODO make cached
     def height(self) -> HeightSettings:
+        """Points to the height settings of the human.
+
+        Returns:
+            HeightSettings: Class instance for changing height of human
+        """
         return HeightSettings(self)
 
     @property  # TODO make cached
     def face(self) -> FaceSettings:
+        """Points to the face settings of the human.
+
+        Returns:
+            FaceSettings: Class instance for changing face proportions of human
+        """
         return FaceSettings(self)
 
     @property  # TODO make cached
     def age(self) -> AgeSettings:
+        """Points to the age settings of the human.
+
+        Returns:
+            AgeSettings: Class instance for changing age of human
+        """
         return AgeSettings(self)
 
     @property  # TODO make cached
     def pose(self) -> PoseSettings:
+        """Points to the pose settings of the human.
+
+        Returns:
+            PoseSettings: Class instance for changing pose of human
+        """
         return PoseSettings(self)
 
     @property
     def clothing(self) -> ClothingSettings:
+        """Points to the clothing settings of the human.
+
+        Returns:
+            ClothingSettings: Class instance for changing clothing of human
+        """
         return ClothingSettings(self)
 
     @property  # TODO make cached
     def expression(self) -> ExpressionSettings:
+        """Points to the expression settings of the human.
+
+        Returns:
+            ExpressionSettings: Class instance for changing expression of human
+        """
         return ExpressionSettings(self)
 
     @property
     def process(self) -> ProcessSettings:
+        """Points to the class used by the process tab of HumGen.
+
+        Returns:
+            ProcessSettings: Class instance for processing the human
+        """
         return ProcessSettings(self)
 
     @property
     def materials(self) -> MaterialSettings:
+        """Points to the class giving access to different materials of human.
+
+        Returns:
+            MaterialSettings: Class instance for accessing materials of human
+        """
         return MaterialSettings(self)
 
     @property
-    def objects(self) -> Iterable[Object]:
-        """Yields all the Blender objects that the human consists of"""
-        for child in self.rig_obj.children:
-            yield from child.children
-            yield child
+    def objects(self) -> ObjectCollection:
+        """Yields all the Blender objects that the human consists of.
 
-        yield self.rig_obj
+        Returns:
+            Iterable[Object]: Generator yielding all the Blender objects that the
+                human consists of.
+        """
 
-    @property
-    def body_obj(self) -> Object:
-        """Returns the human body Blender object"""
-        return cast(Object, self.rig_obj.HG.body_obj)
-
-    @property
-    def eye_obj(self) -> Object:
-        """Returns the eye Blender object"""
-        return self.eyes.eye_obj
-
-    @property
-    def lower_teeth_obj(self) -> Object:
-        """Returns the lower teeth Blender object"""
-        lower_teeth = next(
-            obj
-            for obj in self.children
-            if "hg_teeth" in obj  # type:ignore[operator]
-            and "lower" in obj.name.lower()
-        )
-
-        return lower_teeth
-
-    @property
-    def upper_teeth_obj(self) -> Object:
-        """Returns the lower teeth Blender object"""
-        upper_teeth = next(
-            obj
-            for obj in self.children
-            if "hg_teeth" in obj  # type:ignore[operator]
-            and "upper" in obj.name.lower()
-        )
-
-        return upper_teeth
-
-    @property
-    def haircards_obj(self) -> Optional[Object]:
-        return next((c for c in self.children if "hg_haircard" in c), None)
+        return ObjectCollection(self._rig_obj, self._rig_obj.children)
 
     @property
     def children(self) -> Iterable[Object]:
@@ -291,22 +318,22 @@ class Human:
 
         Does NOT yield subchildren.
         """
-        yield from self.rig_obj.children
+        yield from self.objects.rig.children
 
     @property
     def gender(self) -> GenderStr:
         """Gender of this human in ("male", "female")"""
-        return cast(str, self.rig_obj.HG.gender)
+        return cast(str, self.objects.rig.HG.gender)
 
     @property
     def pose_bones(self) -> "bpy_prop_collection":
         """rig_obj.pose.bones prop collection"""
-        return cast("bpy_prop_collection", self.rig_obj.pose.bones)
+        return cast("bpy_prop_collection", self.objects.rig.pose.bones)
 
     @property
     def edit_bones(self) -> "bpy_prop_collection":
         """rig_obj.data.edit_bones prop collection"""
-        return cast("bpy_prop_collection", self.rig_obj.data.edit_bones)
+        return cast("bpy_prop_collection", self.objects.rig.data.edit_bones)
 
     @property
     def props(self) -> HG_OBJECT_PROPS:
@@ -314,7 +341,7 @@ class Human:
 
         Used by the add-on for storing metadata like gender, backup_human pointer,
         current phase, body_obj pointer. Points to rig_obj.HG"""
-        return cast(HG_OBJECT_PROPS, self.rig_obj.HG)
+        return cast(HG_OBJECT_PROPS, self.objects.rig.HG)
 
     @property  # TODO make cached
     def skin(self) -> SkinSettings:
@@ -345,11 +372,11 @@ class Human:
 
         Retrieved from rig_obj.location
         """
-        return self.rig_obj.location
+        return self.objects.rig.location
 
     @location.setter
     def location(self, location: Tuple[float, float, float]) -> None:  # noqa
-        self.rig_obj.location = location
+        self.objects.rig.location = location
 
     @property
     def rotation_euler(self) -> FloatVectorProperty:
@@ -357,28 +384,28 @@ class Human:
 
         Retrieved from rig_obj.rotation_euler
         """
-        return self.rig_obj.rotation_euler
+        return self.objects.rig.rotation_euler
 
     @rotation_euler.setter
     def rotation_euler(self, rotation: Tuple[float, float, float]) -> None:  # noqa
-        self.rig_obj.rotation_euler = rotation
+        self.objects.rig.rotation_euler = rotation
 
     @property
     def name(self) -> str:
         """Name of this human. Takes name of rig object and removes HG_ prefix."""
-        return cast(str, self.rig_obj.name.replace("HG_", ""))
+        return cast(str, self.objects.rig.name.replace("HG_", ""))
 
     @name.setter
     def name(self, name: str) -> None:  # noqa
-        self.rig_obj.name = name
+        self.objects.rig.name = name
 
     @property
     def _active(self) -> str:
-        return self.rig_obj["ACTIVE_HUMAN_PRESET"]
+        return self.objects.rig["ACTIVE_HUMAN_PRESET"]
 
     @_active.setter
     def _active(self, value: str) -> None:
-        self.rig_obj["ACTIVE_HUMAN_PRESET"] = value
+        self.objects.rig["ACTIVE_HUMAN_PRESET"] = value
 
     def delete(self) -> None:
         """Delete the human from Blender.
@@ -387,9 +414,9 @@ class Human:
         the backup human.
         """
         delete_list = [
-            self.rig_obj,
+            self.objects.rig,
         ]
-        for child in self.rig_obj.children:
+        for child in self.objects.rig.children:
             delete_list.append(child)
             for sub_child in child.children:
                 delete_list.append(sub_child)
@@ -455,7 +482,7 @@ class Human:
         # new hair shader?
         human.hair._add_quality_props()
 
-        for mod in human.body_obj.modifiers:
+        for mod in human.objects.body.modifiers:
             mod.show_expanded = False
 
         remove_broken_drivers()
@@ -486,8 +513,8 @@ class Human:
 
         hg_loc = self.location
         height_adjustment = (
-            self.rig_obj.dimensions[2]
-            - look_at_correction * 0.55 * self.rig_obj.dimensions[2]
+            self.objects.rig.dimensions[2]
+            - look_at_correction * 0.55 * self.objects.rig.dimensions[2]
         )
         hg_rig_loc_adjusted = Vector(
             (hg_loc[0], hg_loc[1], hg_loc[2] + height_adjustment)  # type:ignore[index]
@@ -537,8 +564,8 @@ class Human:
 
     @injected_context
     def duplicate(self, context: C = None) -> Human:
-        rig_copy = self.rig_obj.copy()
-        rig_copy.data = self.rig_obj.data.copy()
+        rig_copy = self.objects.rig.copy()
+        rig_copy.data = self.objects.rig.data.copy()
         context.collection.objects.link(rig_copy)
         add_to_collection(context, rig_copy)
 
@@ -551,7 +578,7 @@ class Human:
                     mod.object = rig_copy
 
             # Reassign body_obj pointerproperty
-            if obj == self.body_obj:
+            if obj == self.objects.body:
                 rig_copy.HG.body_obj = obj_copy
             context.collection.objects.link(obj_copy)
             add_to_collection(context, obj_copy)
@@ -570,7 +597,7 @@ class Human:
     ) -> str:
         if not folder:
             folder = os.path.join(get_prefs().filepath, "temp_data")
-        hg_rig = self.rig_obj
+        hg_rig = self.objects.rig
         type_sett = self._get_settings_dict_by_thumbnail_type(focus)
 
         hg_thumbnail_scene = bpy.data.scenes.new("HG_Thumbnail_Scene")
@@ -627,10 +654,10 @@ class Human:
             lights.append(point_light_object)
 
         if white_material:
-            old_material = self.body_obj.data.materials[0]
-            self.body_obj.data.materials[0] = None
-            old_eye_material = self.eye_obj.data.materials[1]
-            self.eye_obj.data.materials[1] = None
+            old_material = self.objects.body.data.materials[0]
+            self.objects.body.data.materials[0] = None
+            old_eye_material = self.objects.eyes.data.materials[1]
+            self.objects.eyes.data.materials[1] = None
 
         if not os.path.isdir(folder):
             os.makedirs(folder)
@@ -647,8 +674,8 @@ class Human:
         hg_delete(camera_object)
 
         if white_material:
-            self.body_obj.data.materials[0] = old_material
-            self.eye_obj.data.materials[1] = old_eye_material
+            self.objects.body_obj.data.materials[0] = old_material
+            self.objects.eyes.data.materials[1] = old_eye_material
 
         context.window.scene = old_scene
 
@@ -685,22 +712,22 @@ class Human:
         the user duplicated the human manually
         """
         # TODO clean up this mess
-        if self.body_obj not in self.objects and not self.props.batch:
+        if self.props.body_obj not in self.objects and not self.props.batch:
             new_body = (
-                [obj for obj in self.rig_obj.children if "hg_rig" in obj]
-                if self.rig_obj.children
+                [obj for obj in self.objects.rig.children if "hg_rig" in obj]
+                if self.objects.rig.children
                 else None
             )
 
             if new_body:
                 self.props.body_obj = new_body[0]
-                if "no_body" in self.rig_obj:  # type:ignore[operator]
-                    del self.rig_obj["no_body"]
+                if "no_body" in self.objects.rig:  # type:ignore[operator]
+                    del self.objects.rig["no_body"]
             else:
-                self.rig_obj["no_body"] = 1  # type:ignore[index]
+                self.objects.rig["no_body"] = 1  # type:ignore[index]
         else:
-            if "no_body" in self.rig_obj:  # type:ignore[operator]
-                del self.rig_obj["no_body"]
+            if "no_body" in self.objects.rig:  # type:ignore[operator]
+                del self.objects.rig["no_body"]
 
     def _get_settings_dict_by_thumbnail_type(
         self, thumbnail_type: str

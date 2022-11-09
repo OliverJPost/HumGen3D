@@ -44,7 +44,7 @@ def save_hair(  # noqa CCR001
     """
     pref = get_prefs()
 
-    hair_obj = human.body_obj.copy()
+    hair_obj = human.objects.body.copy()
     hair_obj.data = hair_obj.data.copy()
     hair_obj.name = "HG_Body"
     context.collection.objects.link(hair_obj)

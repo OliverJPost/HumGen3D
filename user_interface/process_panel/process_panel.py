@@ -148,7 +148,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             layout.label(text="No human selected")
             return True
 
-        if "hg_baked" in human.rig_obj:
+        if "hg_baked" in human.objects.rig:
             if context.scene.HG3D.batch_idx:
                 layout.label(text="Baking in progress")
             else:

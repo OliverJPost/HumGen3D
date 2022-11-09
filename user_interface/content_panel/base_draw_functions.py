@@ -208,7 +208,7 @@ def _draw_warning_if_different_active_human(context, layout):
     """
     cc_sett = context.scene.HG3D.custom_content
 
-    active_human = Human.from_existing(context.object).rig_obj
+    active_human = Human.from_existing(context.object).objects.rig
     try:
         if active_human and active_human != cc_sett.content_saving_active_human:
             row = layout.row()

@@ -294,11 +294,15 @@ class BakeSettings:
         bake_list = []
         for tex_type in ["Base Color", "Specular", "Roughness", "Normal"]:
             bake_list.append(
-                BakeTexture(self._human.name, "body", self._human.body_obj, 0, tex_type)
+                BakeTexture(
+                    self._human.name, "body", self._human.objects.body, 0, tex_type
+                )
             )
 
         bake_list.append(
-            BakeTexture(self._human.name, "eyes", self._human.eye_obj, 1, "Base Color")
+            BakeTexture(
+                self._human.name, "eyes", self._human.objects.eyes, 1, "Base Color"
+            )
         )
 
         cloth_objs = [
@@ -320,5 +324,5 @@ class BakeSettings:
     ) -> None:
         # TODO context override
         bake_obj.select_set(True)
-        self._human.rig_obj.select_set(False)
+        self._human.objects.rig.select_set(False)
         context.view_layer.objects.active = bake_obj

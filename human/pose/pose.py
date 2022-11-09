@@ -44,7 +44,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         self._active = preset
 
-        hg_rig = self._human.rig_obj
+        hg_rig = self._human.objects.rig
         hg_pose = self._import_pose(preset, context)
 
         self._match_rotation_mode(hg_rig, hg_pose, context)
@@ -90,7 +90,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         """
         folder = os.path.join(get_prefs().filepath, "poses", category)
 
-        pose_object = self._human.rig_obj.copy()
+        pose_object = self._human.objects.rig.copy()
         pose_object.data = pose_object.data.copy()
         pose_object.name = "HG_Pose"
         context.collection.objects.link(pose_object)
@@ -217,7 +217,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         bpy.ops.object.mode_set(mode="OBJECT")
 
     def __hash__(self) -> int:
-        armature = self._human.rig_obj
+        armature = self._human.objects.rig
 
         SKIP_GROUPS = (
             "eye_scale_grp",

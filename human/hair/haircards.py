@@ -47,13 +47,13 @@ class HairCollection:
         self.mx_world_hair_obj = hair_obj.matrix_world
 
         body_world_coords_eval = world_coords_from_obj(
-            human.body_obj, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys
         )
         self.kd = create_kdtree(body_world_coords_eval)
 
         self.hair_coords = world_coords_from_obj(hair_obj)
         nearest_vert_idx = np.array([self.kd.find(co)[1] for co in self.hair_coords])
-        verts = human.body_obj.data.vertices
+        verts = human.objects.body.data.vertices
         self.nearest_normals = np.array(
             [tuple(verts[idx].normal.normalized()) for idx in nearest_vert_idx]
         )
@@ -410,7 +410,7 @@ class HairCollection:
         Returns:
             bpy.types.Object: The haircap object.
         """
-        body_obj = human.body_obj
+        body_obj = human.objects.body
         vert_count = len(body_obj.data.vertices)
 
         vg_aggregate = np.zeros(vert_count, dtype=np.float32)
@@ -437,9 +437,9 @@ class HairCollection:
         context.scene.collection.objects.link(haircap_obj)
         haircap_obj.location = human.location
         body_obj_eval_coords = world_coords_from_obj(
-            human.body_obj, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys
         )
-        body_world_coords = world_coords_from_obj(human.body_obj)
+        body_world_coords = world_coords_from_obj(human.objects.body)
         haircap_world_coords = world_coords_from_obj(haircap_obj)
         distance_dict = build_distance_dict(body_world_coords, haircap_world_coords)
         deform_obj_from_difference(
@@ -494,7 +494,7 @@ class HairCollection:
             self.haircap_obj.data.materials[0] if hasattr(self, "haircap_obj") else None
         )
 
-        old_hair_mat = human.body_obj.data.materials[2]
+        old_hair_mat = human.objects.body.data.materials[2]
         old_node = next(
             node
             for node in old_hair_mat.node_tree.nodes

@@ -33,7 +33,7 @@ class EyebrowSettings(BaseHair):
         Returns:
             str: Name of active eyebrow system
         """
-        return self._human.rig_obj["ACTIVE_EYEBROWS"]
+        return self._human.objects.rig["ACTIVE_EYEBROWS"]
 
     @_active.setter
     def _active(self, value: str) -> None:
@@ -42,7 +42,7 @@ class EyebrowSettings(BaseHair):
         Args:
             value (str): Name of active eyebrow system
         """
-        self._human.rig_obj["ACTIVE_EYEBROWS"] = value
+        self._human.objects.rig["ACTIVE_EYEBROWS"] = value
 
     def as_dict(self) -> dict[str, Any]:
         """Returns dict of eyebrow settings.
@@ -78,7 +78,7 @@ class EyebrowSettings(BaseHair):
 
         # TODO without bpy.ops
         old_active = context.view_layer.objects.active
-        context.view_layer.objects.active = self._human.body_obj
+        context.view_layer.objects.active = self._human.objects.body
         for remove_name in remove_list:
             ps_idx = self._human.hair.particle_systems.find(remove_name)
             self.particle_systems.active_index = ps_idx

@@ -65,7 +65,7 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
         return
 
     # Get coordinates of base human mesh
-    body = human.body_obj
+    body = human.objects.body
     vert_count = len(body.data.vertices)
     obj_coords = np.empty(vert_count * 3, dtype=np.float64)
     body.data.vertices.foreach_get("co", obj_coords)
@@ -94,7 +94,7 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
     # Add a new temp_key if it didn't exist already
     if not temp_key:
-        temp_key = human.body_obj.shape_key_add(name="LIVE_KEY_TEMP_" + name)
+        temp_key = human.objects.body.shape_key_add(name="LIVE_KEY_TEMP_" + name)
         temp_key.slider_max = 10
         temp_key.slider_min = -10
 

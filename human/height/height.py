@@ -53,7 +53,7 @@ class HeightSettings:
         Returns:
             float: Height of human in meters.
         """
-        rig_obj = self._human.rig_obj
+        rig_obj = self._human.objects.rig
 
         top_coord = rig_obj.data.bones["head"].tail_local.z
         bottom_coord = rig_obj.data.bones["heel.02.L"].tail_local.z
@@ -128,12 +128,12 @@ class HeightSettings:
             context (C): Blender context. bpy.context if not provided.
         """
         # FIXME symmetry
-        body = self._human.body_obj
-        rig = self._human.rig_obj
+        body = self._human.objects.body
+        rig = self._human.objects.rig
 
         vert_count = len(body.data.vertices)
         body_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.body_obj.data.vertices.foreach_get("co", body_key_coords)
+        self._human.objects.body.data.vertices.foreach_get("co", body_key_coords)
 
         permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
         self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
@@ -193,7 +193,7 @@ class HeightSettings:
 
     def _correct_eyes(self) -> None:
         """Corrects eyes to fit the new height."""
-        eye_obj = self._human.eye_obj
+        eye_obj = self._human.objects.eyes
 
         eye_vert_count = len(eye_obj.data.vertices)
         eye_verts = np.empty(eye_vert_count * 3, dtype=np.float64)
@@ -202,7 +202,7 @@ class HeightSettings:
 
         eye_verts_right, eye_verts_left = np.split(eye_verts, 2)
 
-        armature = self._human.rig_obj.data
+        armature = self._human.objects.rig.data
         left_head_co = armature.bones.get("eyeball.L").head_local
         right_head_co = armature.bones.get("eyeball.R").head_local
 
@@ -229,9 +229,9 @@ class HeightSettings:
 
     def _correct_teeth(self) -> None:
         """Corrects teeth to fit the new height."""
-        armature = self._human.rig_obj.data
-        teeth_obj_lower = self._human.lower_teeth_obj
-        teeth_obj_upper = self._human.upper_teeth_obj
+        armature = self._human.objects.rig.data
+        teeth_obj_lower = self._human.objects.lower_teeth
+        teeth_obj_upper = self._human.objects.upper_teeth
 
         self._correct_teeth_obj(
             teeth_obj_lower, "jaw", Vector((-0.0000, 0.0128, 0.0075)), armature

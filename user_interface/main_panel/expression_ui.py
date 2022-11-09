@@ -25,7 +25,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             self._draw_frig_subsection(col)
 
     def _draw_oneclick_subsection(self, layout):
-        if "facial_rig" in self.human.body_obj:
+        if "facial_rig" in self.human.objects.body:
             layout.label(text="Library not compatible with face rig")
 
             col = layout.column()
@@ -43,7 +43,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
 
         layout.separator(factor=0.5)
 
-        filtered_obj_sks = self.human.body_obj.data.shape_keys
+        filtered_obj_sks = self.human.objects.body.data.shape_keys
         if filtered_obj_sks:
             self._draw_sk_sliders_subsection(filtered_obj_sks)
 
@@ -87,7 +87,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of expression section
         """
         col = box.column()
-        if "facial_rig" in self.human.body_obj:
+        if "facial_rig" in self.human.objects.body:
             col.label(text="Facial rig added")
             col.label(text="Use pose mode to adjust", icon="INFO")
             col_h = col.column()
