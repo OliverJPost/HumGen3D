@@ -49,6 +49,7 @@ class AgeSettings:
                 slider in the UI.
         """
         normal_value = min((age - 10) / 10, 4.0)
+        young_value = (-0.1 * age + 3) if age < 30 else 0
         if age > 30:
             skin_multiply_value = (age - 30) / 30
         else:
@@ -58,7 +59,14 @@ class AgeSettings:
         else:
             age_key_value = 0
 
+        young_key = next(k for k in self.keys if k.name == "aged_young")
+        if realtime:
+            young_key.as_bpy().value = young_value
+        else:
+            young_key.value = age_key_value
         for key in self.keys:
+            if key == young_key:
+                continue
             if realtime:
                 key.as_bpy().value = age_key_value
             else:
