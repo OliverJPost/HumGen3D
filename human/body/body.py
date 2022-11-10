@@ -63,9 +63,15 @@ class BodySettings:
         """
         for key in self.keys:
             if key.name == "skinny":
-                key.set_without_update(random.uniform(0, 0.7))
+                if hasattr(key, "set_without_update"):
+                    key.set_without_update(random.uniform(0, 0.7))
+                else:
+                    key.value = random.uniform(0, 0.7)
             else:
-                key.set_without_update(random.normalvariate(0, 0.5))
+                if hasattr(key, "set_without_update"):
+                    key.set_without_update(random.normalvariate(0, 0.5))
+                else:
+                    key.value = random.normalvariate(0, 0.5)
 
         self._human.keys.update_human_from_key_change(context)
 

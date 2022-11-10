@@ -36,19 +36,20 @@ def test_clothing_with_heightchange(human, height, clothing_category, context):
 
 
 def _test_all_clothing_options(human, category, context, all_tests=True):  # noqa CCR001
-    for i, option in enumerate(getattr(human, category).get_options(context)):
-        getattr(human, category).set(option)
+    for i, option in enumerate(getattr(human.clothing, category).get_options(context)):
+        getattr(human.clothing, category).set(option)
 
         # Check if the outfit doesn't clip too much
         assert (
-            getattr(human, category)._calc_percentage_clipping_vertices() < 0.06
+            getattr(human.clothing, category)._calc_percentage_clipping_vertices()
+            < 0.06
         ), f"{option} produces too much clipping. {i = }"
 
         if not all_tests:
             continue
 
         # Check if all textures are loaded
-        for obj in getattr(human, category).objects:
+        for obj in getattr(human.clothing, category).objects:
             mat = obj.active_material
 
             for img_node in [n for n in mat.node_tree.nodes if n.type == "TEX_IMAGE"]:
