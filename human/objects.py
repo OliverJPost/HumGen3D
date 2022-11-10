@@ -97,7 +97,7 @@ class ObjectCollection:
         return item in self._collection  # type:ignore[operator]
 
     def __getitem__(self, item: str) -> ID:
-        return cast(ID, self._collection[item])  # type:ignore[index]
+        return cast(ID, self._collection[item])  # type:ignore[index, call-overload]
 
     def __iter__(self) -> Iterable[ID]:
         yield from self._collection  # type:ignore[misc]
