@@ -780,6 +780,7 @@ class Human:
 
         img = bpy.data.images.load(full_image_path)
         context.scene.HG3D.custom_content.preset_thumbnail = img
+        img.preview_ensure()
         return cast(str, img.name)
 
     def _set_random_name(self) -> None:
@@ -842,8 +843,14 @@ class Human:
                 float: setting for camera property
         """
         type_settings_dict = {
-            "head": {
+            "head_side": {
                 "camera_x": -1.0,
+                "camera_y": -1.0,
+                "focal_length": 135,
+                "look_at_correction": 0.14,
+            },
+            "head_front": {
+                "camera_x": 0,
                 "camera_y": -1.0,
                 "focal_length": 135,
                 "look_at_correction": 0.14,

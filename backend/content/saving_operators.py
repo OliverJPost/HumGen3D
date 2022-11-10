@@ -150,6 +150,16 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         default="torso",
     )
 
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object
+            and context.object.type == "MESH"
+            and "hg_body" not in context.object
+            and "cloth" not in context.object
+            and "shoe" not in context.object
+        )
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 

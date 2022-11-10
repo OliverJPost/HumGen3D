@@ -137,7 +137,8 @@ def __draw_auto_thumbnail_ui(layout, content_type):
     row = layout.row()
     row.scale_y = 1.5
     thumbnail_type_dict = {
-        "head": ("hair", "starting_human"),
+        "head_side": ("hair",),
+        "head_front": ("starting_human",),
         "full_body_front": ("outfit",),
         "full_body_side": ("pose",),
         "foot": ("footwear",),
