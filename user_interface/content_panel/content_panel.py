@@ -2,6 +2,7 @@
 
 import bpy
 from HumGen3D.backend import get_prefs
+from HumGen3D.common.object_finding import find_hg_rig
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import HGPanel, draw_icon_title
@@ -89,7 +90,7 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
         self.layout.label(icon_value=get_hg_icon("custom_content"))
 
     def draw(self, context):
-        self.layout.enabled = bool(Human.find_hg_rig(context.object))
+        self.layout.enabled = bool(find_hg_rig(context.object))
 
         col = self.layout.column(align=True)
         row = col.row(align=True)
