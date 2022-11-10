@@ -843,6 +843,12 @@ class Human:
                 float: setting for camera property
         """
         type_settings_dict = {
+            "shoe": {
+                "camera_x": -1.5,
+                "camera_y": -0.5,
+                "focal_length": 240,
+                "look_at_correction": 2.1,
+            },
             "head_side": {
                 "camera_x": -1.0,
                 "camera_y": -1.0,
