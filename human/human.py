@@ -771,7 +771,7 @@ class Human:
         hg_delete(camera_object)
 
         if white_material:
-            self.objects.body_obj.data.materials[0] = old_material
+            self.objects.body.data.materials[0] = old_material
             self.objects.eyes.data.materials[1] = old_eye_material
 
         context.window.scene = old_scene
@@ -843,7 +843,7 @@ class Human:
                 float: setting for camera property
         """
         type_settings_dict = {
-            "shoe": {
+            "foot": {
                 "camera_x": -1.5,
                 "camera_y": -0.5,
                 "focal_length": 240,
