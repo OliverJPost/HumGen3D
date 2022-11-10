@@ -108,6 +108,8 @@ def get_categories(self, context):
     if attr == "hair":
         hair_type = "regular_hair" if self.type == "head" else "face_hair"
         human_subclass = getattr(human.hair, hair_type)
+    elif attr in ("footwear", "outfits"):
+        human_subclass = getattr(human.clothing, attr)
     else:
         human_subclass = getattr(human, attr)
 

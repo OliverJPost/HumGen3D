@@ -33,12 +33,12 @@ from HumGen3D.common.geometry import (
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import clothing
 from HumGen3D.human.clothing.add_obj_to_clothing import (
-    add_corrective_shapekeys,
-    auto_weight_paint,
-    correct_shape_to_a_pose,
+    _add_corrective_shapekeys,
+    _auto_weight_paint,
+    _correct_shape_to_a_pose,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.clothing.saving import save_clothing
+from HumGen3D.human.clothing.saving import _save_clothing
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 from mathutils import Vector
@@ -147,9 +147,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             context (C): Blender context. bpy.context if not provided.
         """
         body_obj = self._human.objects.body
-        correct_shape_to_a_pose(cloth_obj, body_obj, context)
-        add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
-        auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
+        _correct_shape_to_a_pose(cloth_obj, body_obj, context)
+        _add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
+        _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
         rig_obj = self._human.objects.rig
         armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
@@ -259,7 +259,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
         folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
 
-        save_clothing(
+        _save_clothing(
             self._human,
             folder,
             category,
@@ -538,7 +538,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
                 hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
 
-        body_drivers = self._human.objects.body.data.shape_keys.animation_data.drivers
+        body_obj = self._human.objects.body
+        body_drivers = body_obj.data.shape_keys.animation_data.drivers
 
         for driver in body_drivers:
             target_sk = driver.data_path.replace('key_blocks["', "").replace(

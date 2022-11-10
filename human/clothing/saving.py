@@ -1,3 +1,5 @@
+"""Contains functions for saving clothing to the content folder."""
+
 import os
 import shutil
 from typing import TYPE_CHECKING, Any, Iterable, Optional
@@ -5,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Optional
 import bpy
 import numpy as np
 from bpy.types import Context, Image, Object
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.type_aliases import DistanceDict
 
 if TYPE_CHECKING:
@@ -23,7 +26,7 @@ from HumGen3D.common.geometry import (
 )
 
 
-def save_clothing(
+def _save_clothing(
     human: "Human",
     folder: str,
     category: str,
@@ -47,7 +50,7 @@ def save_clothing(
     body_eval_coords_world = world_coords_from_obj(body_obj_eval)
 
     texture_folder = os.path.join(folder, "textures")
-    save_material_textures(objs, texture_folder)
+    _save_material_textures(objs, texture_folder)
     obj_distance_dict = {}
     for obj in objs:
         obj_world_coords = world_coords_from_obj(obj)
@@ -57,7 +60,7 @@ def save_clothing(
     body_coords_world = world_coords_from_obj(human.objects.body)
     for gender in genders:
         gender_folder = os.path.join(folder, gender, category)
-        export_for_gender(
+        _export_for_gender(
             human,
             name,
             gender_folder,
@@ -73,7 +76,7 @@ def save_clothing(
     human.clothing.footwear.refresh_pcoll(context)
 
 
-def export_for_gender(
+def _export_for_gender(
     human: "Human",
     name: str,
     folder: str,
@@ -130,16 +133,14 @@ def export_for_gender(
         run_in_background=not open_when_finished,
     )
 
+    for obj in export_list:
+        hg_delete(obj)
+
 
 # CHECK naming adds .004 to file names, creating duplicates
-def save_material_textures(
+def _save_material_textures(
     objs: Iterable[bpy.types.Object], texture_folder: str
 ) -> None:
-    """Save the textures used by the materials of these objects to the content folder.
-
-    Args:
-        objs (list): List of objects to check for textures on
-    """
     saved_images: dict[str, str] = {}
 
     for obj in objs:
@@ -152,12 +153,6 @@ def save_material_textures(
 def _process_image(
     saved_images: dict[str, str], img_node: bpy.types.ShaderNode, texture_folder: str
 ) -> None:
-    """Prepare this image for saving and call _save_img on it.
-
-    Args:
-        saved_images (dict): Dict to keep record of what images were saved
-        img_node (ShaderNode): TexImageShaderNode the image is in
-    """
     img = img_node.image
     if not img:
         return
@@ -175,6 +170,11 @@ def _save_img(
     img: bpy.types.Image, saved_images: dict[str, str], folder: str
 ) -> tuple[Optional[str], dict[str, str]]:
     """Save image to content folder.
+
+    Args:
+        img (bpy.types.Image): Image to save.
+        saved_images (dict[str, str]): Dictionary of saved images.
+        folder (str): Folder to save image to.
 
     Returns:
         tuple[str, dict]:

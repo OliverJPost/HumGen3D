@@ -119,7 +119,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             )
         elif category in ("outfit", "footwear"):
             category_sett = getattr(cc_sett, category)
-            getattr(human, category).save_to_library(
+            getattr(human.clothing, category).save_to_library(
                 category_sett.name,
                 for_male=category_sett.save_for_male,
                 for_female=category_sett.save_for_female,

@@ -1,6 +1,9 @@
+"""Module implementing functions to add objects a clothing to human."""
+
+import contextlib
 import json
 import os
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Iterable, cast
 
 import bpy
 
@@ -17,7 +20,7 @@ from HumGen3D.common.geometry import (
 from HumGen3D.common.math import centroid
 
 
-def correct_shape_to_a_pose(
+def _correct_shape_to_a_pose(
     cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
 ) -> None:
     # TODO mask modifiers
@@ -34,7 +37,7 @@ def correct_shape_to_a_pose(
     )
 
 
-def add_corrective_shapekeys(
+def _add_corrective_shapekeys(
     cloth_obj: bpy.types.Object, human: "Human", cloth_type: str
 ) -> None:
     hg_body = human.objects.body
@@ -71,18 +74,21 @@ def add_corrective_shapekeys(
     )
 
 
-def _set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
-    """Sets up the drivers of the corrective shapekeys on the clothes
+def _set_cloth_corrective_drivers(
+    hg_body: bpy.types.Object,
+    hg_cloth: bpy.types.Object,
+    sk: Iterable[bpy.types.ShapeKey],
+) -> None:
+    """Sets up the drivers of the corrective shapekeys on the clothes.
 
     Args:
         hg_body (Object): HumGen body object
+        hg_cloth (Object): HumGen cloth object
         sk (list): List of cloth object shapekeys #CHECK
     """
-    try:
+    with contextlib.suppress(AttributeError):
         for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
             hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
-    except AttributeError:
-        pass
 
     for driver in hg_body.data.shape_keys.animation_data.drivers:
         target_sk = driver.data_path.replace('key_blocks["', "").replace(
@@ -92,7 +98,7 @@ def _set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
         if target_sk not in [shapekey.name for shapekey in sk]:
             continue
 
-        new_driver = sk[target_sk].driver_add("value")
+        new_driver = sk[target_sk].driver_add("value")  # type:ignore[index]
         new_var = new_driver.driver.variables.new()
         new_var.type = "TRANSFORMS"
         new_target = new_var.targets[0]
@@ -106,7 +112,7 @@ def _set_cloth_corrective_drivers(hg_body, hg_cloth, sk):
         new_target.transform_space = old_target.transform_space
 
 
-def auto_weight_paint(
+def _auto_weight_paint(
     cloth_obj: bpy.types.Object,
     hg_body: bpy.types.Object,
     context: bpy.types.Context,
@@ -124,7 +130,7 @@ def auto_weight_paint(
         armature = cloth_obj.modifiers.new(name="Cloth Armature", type="ARMATURE")
     armature.object = hg_rig
 
-    with context.temp_override(
+    with context.temp_override(  # type:ignore[call-arg]
         active_object=cloth_obj, object=cloth_obj, selected_objects=[cloth_obj]
     ):
         # use old method for versions older than 2.90
@@ -136,7 +142,7 @@ def auto_weight_paint(
 
     cloth_obj.parent = hg_rig
 
-    with context.temp_override(
+    with context.temp_override(  # type:ignore[call-arg]
         active_object=hg_body, object=hg_body, selected_objects=[hg_body, cloth_obj]
     ):
         bpy.ops.object.data_transfer(
@@ -154,6 +160,17 @@ def auto_weight_paint(
 
 
 def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
+    """Find the closest human to this object based on centroid distance.
+
+    Args:
+        cloth_obj (Object): The object to find the closest human to.
+
+    Returns:
+        Human: The closest human to the object.
+
+    Raises:
+        HumGenException: If the nearest human is more than 2 meters away.
+    """
     world_coords_cloth_obj = world_coords_from_obj(cloth_obj)
     centroid_cloth = centroid(world_coords_cloth_obj)
 
