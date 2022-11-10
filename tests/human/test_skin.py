@@ -14,18 +14,18 @@ from HumGen3D.tests.fixtures import (  # noqa
 
 def test_male_skin(male_human):
     skin_sett = male_human.skin.gender_specific
-    skin_sett.mustache_shadows = 0.1
+    skin_sett.mustache_shadow.value = 0.1
     assert (
         pytest.approx(male_human.skin.nodes["Gender_Group"].inputs[2].default_value)
         == 0.1
     )
-    skin_sett.mustache_shadows = 28
-    skin_sett.beard_shadow = 0.7
+    skin_sett.mustache_shadow.value = 28
+    skin_sett.beard_shadow.value = 0.7
     assert (
         pytest.approx(male_human.skin.nodes["Gender_Group"].inputs[3].default_value)
         == 0.7
     )
-    skin_sett.beard_shadow = 12
+    skin_sett.beard_shadow.value = 12
 
 
 def test_female_skin(female_human):
@@ -54,14 +54,8 @@ def test_common_inputs(human):
         ("saturation", 3, "Skin_tone"),
         ("normal_strength", 0, "Normal Map"),
         ("roughness_multiplier", 1, "R_Multiply"),
-        ("light_areas", "Value", "Lighten_hsv"),
-        ("dark_areas", "Value", "Darken_hsv"),
-        ("skin_sagging", 1, "HG_Age"),
         ("freckles", "Pos2", "Freckles_control"),
         ("splotches", "Pos2", "Splotches_control"),
-        ("beautyspots_amount", 2, "BS_Control"),
-        ("beautyspots_opacity", 1, "BS_Opacity"),
-        ("beautyspots_seed", 1, "BS_Control"),
     ]
 
     _assert_node_inputs(human, node_data, False)
@@ -83,7 +77,7 @@ def _assert_node_inputs(human, node_data, gender_specific):  # noqa CCR001
             interface = human.skin.gender_specific
         else:
             interface = human.skin
-        setattr(interface, attr_name, value)
+        getattr(interface, attr_name).value = value
         found_value = human.skin.nodes[node_name].inputs[input_name].default_value
         assert (
             pytest.approx(found_value) == value
@@ -135,7 +129,7 @@ def test_underwear(human, context):
 def test_set_texture(human, context):
     options = human.skin.texture.get_options(context)
     chosen = random.choice(options)
-    human.skin.texture.set(chosen, context)
+    human.skin.texture.set(chosen)
 
     # TODO more extensive testing
 
