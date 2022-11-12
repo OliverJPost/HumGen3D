@@ -2,8 +2,6 @@
 
 import bpy
 from HumGen3D.backend import get_prefs
-from HumGen3D.human.keys.keys import LiveKeyItem
-from HumGen3D.user_interface.panel_functions import prettify
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -41,22 +39,22 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col.separator()
         col.label(text="Other:")
         flow_custom = self._get_ff_col(col, "Custom", "custom")
-        flow_presets = self._get_ff_col(col, "Presets", "presets")
 
         for key in self.human.face.keys:
-            bpy_key = key.as_bpy()
-            if not getattr(self.sett.ui, key.subcategory):
-                continue
+            try:
+                if not getattr(self.sett.ui, str(key.subcategory)):
+                    continue
 
-            row = locals()[f"flow_{key.subcategory}"].row(align=True)
-            row.prop(bpy_key, "value", text=prettify(key.name), slider=True)
-            if isinstance(key, LiveKeyItem):
-                row.operator(
-                    "hg3d.livekey_to_shapekey",
-                    text="",
-                    icon="SHAPEKEY_DATA",
-                    emboss=False,
-                ).livekey_name = key.name
+                category_column = locals()[f"flow_{key.subcategory}"]
+                key.draw_prop(category_column)
+            except AttributeError:
+                print(f"Error: {key.name} has no subcategory")
+
+        flow_presets = self._get_ff_col(col, "Presets", "presets")
+        for key in self.human.keys.filtered("face_presets"):
+            if not self.sett.ui.presets:
+                continue
+            key.draw_prop(flow_presets, "value_limited")
 
     def _build_sk_name(self, sk_name, prefix) -> str:
         """Builds a displayable name from internal shapekey names.
