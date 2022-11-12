@@ -17,6 +17,7 @@ import numpy as np
 from bpy.types import Object, ShapeKey  # type:ignore
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
+from HumGen3D.user_interface.panel_functions import prettify
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -165,6 +166,14 @@ class KeyItem:
     def __repr__(self) -> str:
         return f"({self.name=}, {self.value=}, {self.category=}, {self.subcategory=})"
 
+    def draw_prop(
+        self, layout: bpy.types.UILayout, value_propname: str = "value"
+    ) -> bpy.types.UILayout:
+        row = layout.row(align=True)
+        row.prop(self.as_bpy(), value_propname, text=prettify(self.name), slider=True)
+
+        return row
+
 
 class LiveKeyItem(KeyItem):
     """Item representing a livekey, used for changing the value and converting it."""
@@ -289,6 +298,19 @@ class LiveKeyItem(KeyItem):
         livekey = bpy.context.window_manager.livekeys.get(self.name)
         assert livekey
         return cast("BpyLiveKey", livekey)
+
+    def draw_prop(
+        self, layout: bpy.types.UILayout, value_propname: str = "value"
+    ) -> bpy.types.UILayout:
+        row = super().draw_prop(layout, value_propname)
+        row.operator(
+            "hg3d.livekey_to_shapekey",
+            text="",
+            icon="SHAPEKEY_DATA",
+            emboss=False,
+        ).livekey_name = self.name
+
+        return row
 
     def __repr__(self) -> str:
         return "LiveKey " + super().__repr__()
@@ -417,6 +439,11 @@ class ShapeKeyItem(KeyItem, SavableContent):
             sk.name = f"$[{category}]_$[{subcategory}]_{name}"
 
         update_livekey_collection()
+
+    def draw_prop(
+        self, layout: bpy.types.UILayout, value_propname: str = "value"
+    ) -> bpy.types.UILayout:
+        return super().draw_prop(layout, "value")
 
     def __repr__(self) -> str:
         return "ShapeKey " + super().__repr__()
@@ -566,10 +593,8 @@ class KeySettings:
         for key in self:
             if key.name in ("height_200", "height_150"):
                 continue
-            if (
-                key.category == category
-                and subcategory is None
-                or key.subcategory == subcategory
+            if key.category == category and (
+                subcategory is None or key.subcategory == subcategory
             ):
                 keys.append(key)
 
