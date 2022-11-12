@@ -256,15 +256,6 @@ class SkinSettings:
             self.nodes.get("Delete_node")  # type:ignore[func-returns-value]
         )
 
-    def _set_from_preset(self, preset_data: dict[str, dict[str, float]]) -> None:
-        for node_name, input_dict in preset_data.items():
-            node = self.nodes.get(node_name)  # type:ignore[func-returns-value]
-
-            for input_name, value in input_dict.items():
-                if input_name.isnumeric():
-                    input_name = int(input_name)  # type:ignore[assignment]
-                node.inputs[input_name].default_value = value
-
 
 class TextureSettings(PreviewCollectionContent):
     """Class for changing the skin texture of the human."""
@@ -311,18 +302,6 @@ class TextureSettings(PreviewCollectionContent):
             self._change_peripheral_texture_resolution(resolution_folder)
 
         self._human.skin.material["texture_category"] = library  # type:ignore[index]
-
-    @injected_context
-    def _set_from_preset(
-        self, mat_preset_data: dict[str, str], context: C = None
-    ) -> None:
-
-        self.refresh_pcoll(context)
-        texture_name = mat_preset_data["diffuse"]
-        texture_category = mat_preset_data["texture_category"]
-        gender = self._human.gender
-
-        self.set(os.path.join("textures", gender, texture_category, texture_name))
 
     def _change_peripheral_texture_resolution(self, resolution_folder: str) -> None:
         # TODO cleanup
