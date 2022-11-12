@@ -15,6 +15,7 @@ from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Object  # type:ignore
 from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import preview_collections
+from HumGen3D.backend.content.content_saving import save_thumb
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.common import find_hg_rig, is_legacy
@@ -607,7 +608,7 @@ class Human:
             os.makedirs(folder)
 
         if thumbnail:
-            self.save_thumb(self.folder, thumbnail, name)
+            save_thumb(folder, thumbnail.name, name)
 
         preset_data = self.as_dict()
 
@@ -720,7 +721,7 @@ class Human:
 
         hg_thumbnail_scene.camera = camera_object
         hg_thumbnail_scene.render.engine = "CYCLES"
-        hg_thumbnail_scene.cycles.samples = 16
+        hg_thumbnail_scene.cycles.samples = 32
 
         with contextlib.suppress(AttributeError):
             hg_thumbnail_scene.cycles.use_denoising = True
