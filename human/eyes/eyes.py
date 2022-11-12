@@ -79,7 +79,7 @@ class EyeSettings:
         Returns:
             Material: Material used for the outer layer of the eyes.
         """
-        return cast(Material, self.objects.eyes.data.materials[0])
+        return cast(Material, self._human.objects.eyes.data.materials[0])
 
     @property
     def inner_material(self) -> Material:
@@ -88,7 +88,7 @@ class EyeSettings:
         Returns:
             Material: Material used for the inner part of the eyes.
         """
-        return cast(Material, self.objects.eyes.data.materials[1])
+        return cast(Material, self._human.objects.eyes.data.materials[1])
 
     @property
     def nodes(self) -> PropCollection:
