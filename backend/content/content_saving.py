@@ -21,19 +21,11 @@ def save_thumb(folder: str, img_name: str, save_name: str) -> None:
         save_name (str): name to save the image as
     """
     img = bpy.data.images[img_name]  # type:ignore[index, call-overload]
-    thumbnail_type = (
-        bpy.context.scene.HG3D.custom_content.thumbnail_saving_enum  # type:ignore[attr-defined] # noqa E501
-    )
 
     destination_path = os.path.join(folder, f"{save_name}.jpg")
-    if thumbnail_type in ("last_render", "auto"):
-        image_name = (
-            "temp_render_thumbnail"
-            if thumbnail_type == "last_render"
-            else "temp_thumbnail"
-        )
+    if img_name == "temp_thumbnail":
         source_image = os.path.join(
-            get_prefs().filepath, "temp_data", f"{image_name}.jpg"
+            get_prefs().filepath, "temp_data", f"temp_thumbnail.jpg"
         )
         hg_log("Copying", source_image, "to", destination_path)
         copyfile(source_image, destination_path)

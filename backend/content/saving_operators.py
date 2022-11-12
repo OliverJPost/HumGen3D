@@ -80,7 +80,14 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         category = cc_sett.content_saving_type
         human = Human.from_existing(cc_sett.content_saving_active_human)
 
-        thumbnail = cc_sett.preset_thumbnail
+        if cc_sett.thumbnail_saving_enum == "auto":
+            thumbnail = cc_sett.preset_thumbnail
+        elif cc_sett.thumbnail_saving_enum == "last_render":
+            thumbnail = bpy.data.images.get("Render Result")
+        elif cc_sett.thumbnail_saving_enum == "none":
+            thumbnail = None
+            # TODO custom iamge
+
         if getattr(cc_sett, category).existing_or_new_category == "existing":
             subcategory = getattr(cc_sett, category).chosen_existing_subcategory
         else:
