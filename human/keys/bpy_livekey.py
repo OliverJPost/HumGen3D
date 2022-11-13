@@ -57,11 +57,24 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
     if not human:
         raise HumGenException("No active human")
 
+    # If the value was not changed, for example by the user exiting the value
+    # typing modal, then do nothing. This prevents crash.
+    found_value = human.props.sk_values[name]
+    if name not in human.props.sk_values:
+        if value == 0:
+            return
+    elif round(value, 3) == round(found_value, 3):
+        return
+
     temp_key = human.keys.temp_key
+
     # Change value of existing temp_key if it matches the changing key
     if temp_key and temp_key.name.replace("LIVE_KEY_TEMP_", "") == name:
-        temp_key.value = value
-        _run_modal()
+        # If the value was not changed, for example by the user exiting the value
+        # typing modal, then do nothing. This prevents crash.
+        if round(temp_key.value, 3) != round(value, 3):
+            temp_key.value = value
+            _run_modal()
         return
 
     # Get coordinates of base human mesh
@@ -108,9 +121,8 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
 
 def _run_modal() -> None:
-
     if not HG3D_OT_SLIDER_SUBSCRIBE.is_running():
-        bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")  # , hide_armature=True)
+        bpy.ops.hg3d.slider_subscribe("INVOKE_DEFAULT")
 
 
 def _add_temp_key_to_permanent_key_coords(

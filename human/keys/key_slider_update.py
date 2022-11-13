@@ -72,6 +72,8 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
             if mod.type == "MASK":
                 mod.show_viewport = False
 
+        # Correct immediately for RET return, which occurs when clicking, typing a
+        # number and pressing enter
         if event.type == "RET":
             self.correct_when_done(context)
             cls._handler = None
