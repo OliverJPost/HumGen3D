@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import bpy
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
@@ -195,19 +196,33 @@ class HeightSettings:
         """Corrects eyes to fit the new height."""
         eye_obj = self._human.objects.eyes
 
+        body_world_coords = world_coords_from_obj(
+            self._human.objects.body, data=self._human.keys.all_deformation_shapekeys
+        )
+        eye_width = np.linalg.norm(body_world_coords[1109] - body_world_coords[7010])
+        eye_size_value = 94 * eye_width - 2.0
+        sks = self._human.objects.eyes.data.shape_keys.key_blocks
+        sks["eyeball_size"].value = eye_size_value
+
         eye_vert_count = len(eye_obj.data.vertices)
         eye_verts = np.empty(eye_vert_count * 3, dtype=np.float64)
-        eye_obj.data.vertices.foreach_get("co", eye_verts)
+        if eye_obj.data.shape_keys:
+            eye_obj.data.shape_keys.key_blocks["Basis"].data.foreach_get(
+                "co", eye_verts
+            )
+        else:
+            eye_obj.data.vertices.foreach_get("co", eye_verts)
         eye_verts = eye_verts.reshape((-1, 3))
 
         eye_verts_right, eye_verts_left = np.split(eye_verts, 2)
+        eye_verts_right, eye_verts_left = eye_verts_right.copy(), eye_verts_left.copy()
 
         armature = self._human.objects.rig.data
-        left_head_co = armature.bones.get("eyeball.L").head_local
-        right_head_co = armature.bones.get("eyeball.R").head_local
+        left_head_co = armature.bones.get("eyeball.L").tail_local
+        right_head_co = armature.bones.get("eyeball.R").tail_local
 
-        reference_left = centroid(eye_verts_left) + Vector((0.001, 0.0035, 0.0))
-        reference_right = centroid(eye_verts_right) + Vector((-0.001, 0.0035, 0.0))
+        reference_left = centroid(eye_verts_left) + Vector((0.001, -0.0175, 0.0))
+        reference_right = centroid(eye_verts_right) + Vector((-0.001, -0.0175, 0.0))
 
         transformation_left = np.array(left_head_co - reference_left)
         transformation_right = np.array(right_head_co - reference_right)
@@ -216,16 +231,19 @@ class HeightSettings:
         eye_verts_right += transformation_right
 
         eye_verts_corrected = np.concatenate((eye_verts_right, eye_verts_left))
-        eye_verts_corrected = eye_verts_corrected.reshape((-1))
+
+        eye_verts_displacement = eye_verts_corrected - eye_verts
+        eye_verts_displacement = eye_verts_displacement.reshape((-1))
 
         if eye_obj.data.shape_keys:
-            eye_obj.data.shape_keys.key_blocks["Basis"].data.foreach_set(
-                "co", eye_verts_corrected
-            )
-            eye_obj.data.shape_keys.key_blocks["Basis"].mute = True
-            eye_obj.data.shape_keys.key_blocks["Basis"].mute = False
+            for key in eye_obj.data.shape_keys.key_blocks:
+                orig_key_data = np.empty(eye_vert_count * 3, dtype=np.float64)
+                key.data.foreach_get("co", orig_key_data)
+                key_corrected = orig_key_data + eye_verts_displacement
+                key.data.foreach_set("co", key_corrected)
+                key.data.update()
         else:
-            eye_obj.data.vertices.foreach_set("co", eye_verts_corrected)
+            eye_obj.data.vertices.foreach_set("co", eye_verts_corrected.reshape((-1)))
 
     def _correct_teeth(self) -> None:
         """Corrects teeth to fit the new height."""
