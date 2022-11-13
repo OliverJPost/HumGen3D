@@ -60,6 +60,10 @@ def _draw_name_ui(context, layout, content_type):
         "OUTLINER_OB_FONT",
     )
 
+    if content_type == "starting_human":
+        human = Human.from_existing(cc_sett.content_saving_active_human)
+        layout.label(text=f"Based on {human._active}")
+
     col = layout.column()
     col.scale_y = 1.5
 
