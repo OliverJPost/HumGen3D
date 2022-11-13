@@ -21,9 +21,10 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
 
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
-        row = col.row()
+        row = col.row(align=True)
         row.scale_y = 1.5
         row.operator("hg3d.random_value", icon="FILE_REFRESH").random_type = "body"
+        row.operator("hg3d.reset_values", icon="LOOP_BACK", text="").categ = "body"
 
         col.separator()
 
