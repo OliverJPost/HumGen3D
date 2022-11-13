@@ -67,7 +67,10 @@ def thumbnail_saving_prop_update(self, context):
 
 
 def get_preset_thumbnail(self, context) -> list:
-    img = self.preset_thumbnail
+    if self.thumbnail_saving_enum == "auto":
+        img = self.preset_thumbnail
+    elif self.thumbnail_saving_enum == "last_render":
+        img = bpy.data.images.get("Render Result")
     return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []
 
 
