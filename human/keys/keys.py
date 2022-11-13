@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-from typing import TYPE_CHECKING, Any, Iterable, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Iterable, List, Literal, Optional, Union, cast
 
 import bpy
 import numpy as np
@@ -167,8 +167,22 @@ class KeyItem:
         return f"({self.name=}, {self.value=}, {self.category=}, {self.subcategory=})"
 
     def draw_prop(
-        self, layout: bpy.types.UILayout, value_propname: str = "value"
+        self,
+        layout: bpy.types.UILayout,
+        value_propname: Literal[
+            "value", "value_limited", "value_positive_limited"
+        ] = "value",
     ) -> bpy.types.UILayout:
+        """Draw a slider of this key item in the given layout.
+
+        Args:
+            layout (UILayout): layout to draw in
+            value_propname (str, optional): name of the property to draw.
+                Defaults to "value". Only used for livekeys.
+
+        Returns:
+            bpy.types.UILayout: layout with the slider drawn in it, as row.
+        """
         row = layout.row(align=True)
         row.prop(self.as_bpy(), value_propname, text=prettify(self.name), slider=True)
 
@@ -300,8 +314,22 @@ class LiveKeyItem(KeyItem):
         return cast("BpyLiveKey", livekey)
 
     def draw_prop(
-        self, layout: bpy.types.UILayout, value_propname: str = "value"
+        self,
+        layout: bpy.types.UILayout,
+        value_propname: Literal[
+            "value", "value_limited", "value_positive_limited"
+        ] = "value",
     ) -> bpy.types.UILayout:
+        """Draw the livekey as a slider in the UI.
+
+        Args:
+            layout (bpy.types.UILayout): layout to draw the livekey in
+            value_propname (str, optional): name of the property to draw. Defaults to
+                "value".
+
+        Returns:
+            bpy.types.UILayout: layout with the slider drawn in it, as row.
+        """
         row = super().draw_prop(layout, value_propname)
         row.operator(
             "hg3d.livekey_to_shapekey",
@@ -441,8 +469,21 @@ class ShapeKeyItem(KeyItem, SavableContent):
         update_livekey_collection()
 
     def draw_prop(
-        self, layout: bpy.types.UILayout, value_propname: str = "value"
+        self,
+        layout: bpy.types.UILayout,
+        value_propname: Literal[
+            "value", "value_limited", "value_positive_limited"
+        ] = "value",
     ) -> bpy.types.UILayout:
+        """Draw the shape key as a slider in the UI.
+
+        Args:
+            layout (bpy.types.UILayout): layout to draw the slider in
+            value_propname (Literal): IGNORED for shapekeys. Defaults to "value".
+
+        Returns:
+            bpy.types.UILayout: layout with the slider drawn in it
+        """
         return super().draw_prop(layout, "value")
 
     def __repr__(self) -> str:
