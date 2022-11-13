@@ -30,7 +30,7 @@ def get_livekey(self: BpyLiveKey) -> float:
     name = self.name
     temp_key = human.keys.temp_key
     current_sk_values = human.props.sk_values
-    if temp_key and temp_key.name.endswith(name):
+    if temp_key and temp_key.name.replace("LIVE_KEY_TEMP_", "") == name:
         return cast(float, temp_key.value)
     elif name in current_sk_values:
         return cast(float, current_sk_values[name])
@@ -59,7 +59,7 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
     temp_key = human.keys.temp_key
     # Change value of existing temp_key if it matches the changing key
-    if temp_key and temp_key.name.endswith(name):
+    if temp_key and temp_key.name.replace("LIVE_KEY_TEMP_", "") == name:
         temp_key.value = value
         _run_modal()
         return
