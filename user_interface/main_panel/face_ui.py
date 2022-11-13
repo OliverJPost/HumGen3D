@@ -2,6 +2,7 @@
 
 import bpy
 from HumGen3D.backend import get_prefs
+from HumGen3D.backend.logging import hg_log
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -39,7 +40,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col.separator()
         col.label(text="Other:")
         flow_custom = self._get_ff_col(col, "Custom", "custom")
-
+        flow_special = self._get_ff_col(col, "Special", "special")
         for key in self.human.face.keys:
             try:
                 if not getattr(self.sett.ui, str(key.subcategory)):
@@ -48,7 +49,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
                 category_column = locals()[f"flow_{key.subcategory}"]
                 key.draw_prop(category_column)
             except AttributeError:
-                print(f"Error: {key.name} has no subcategory")
+                hg_log(f"Error: {key.name} has no subcategory", level="WARNING")
 
         flow_presets = self._get_ff_col(col, "Presets", "presets")
         for key in self.human.keys.filtered("face_presets"):
@@ -102,6 +103,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             "ears": sett.ui.ears,
             "other": sett.ui.other,
             "custom": sett.ui.custom,
+            "special": sett.ui.special,
             "presets": sett.ui.presets,
         }
 
@@ -114,7 +116,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             toggle=True,
             emboss=False,
         )
-        if is_open_propname != "presets":
+        if is_open_propname not in ("presets", "special"):
             row.operator(
                 "hg3d.random_value", text="", icon="FILE_REFRESH", emboss=False
             ).random_type = "face_{}".format(is_open_propname)

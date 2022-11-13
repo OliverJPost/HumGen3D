@@ -139,6 +139,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "jaw",
                 "other",
                 "custom",
+                "special",
                 "presets",
             ]
         )
