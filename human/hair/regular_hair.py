@@ -22,7 +22,6 @@ class RegularHairSettings(ImportableHair):
     def __init__(self, _human: "Human") -> None:
         super().__init__()
         self._human = _human
-        self._notstartswith = ("Eye", "ff_")
         self._pcoll_name = "hair"
         self._pcoll_gender_split = True
 
