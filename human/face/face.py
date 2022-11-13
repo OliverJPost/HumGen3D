@@ -59,7 +59,7 @@ class FaceSettings(PropCollection):
             context (C): Blender context. bpy.context if not provided.
         """
         if subcategory.lower() == "all":
-            keys = self.keys
+            keys = [key for key in self.keys if key.subcategory != "special"]
         else:
             keys = [key for key in self.keys if key.subcategory == subcategory]
         all_v = 0.0
