@@ -63,6 +63,8 @@ def _draw_name_ui(context, layout, content_type):
     if content_type == "starting_human":
         human = Human.from_existing(cc_sett.content_saving_active_human)
         layout.label(text=f"Based on {human._active}")
+    elif content_type == "key":
+        layout.label(text=f"Original name: {cc_sett.key.key_to_save}")
 
     col = layout.column()
     col.scale_y = 1.5
