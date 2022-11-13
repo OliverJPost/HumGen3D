@@ -1,4 +1,7 @@
+import os
+
 import bpy
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
 
 
@@ -60,6 +63,7 @@ def _draw_name_ui(context, layout, content_type):
         "OUTLINER_OB_FONT",
     )
 
+    human = Human.from_existing(cc_sett.content_saving_active_human)
     if content_type == "starting_human":
         human = Human.from_existing(cc_sett.content_saving_active_human)
         layout.label(text=f"Based on {human._active}")
@@ -72,7 +76,37 @@ def _draw_name_ui(context, layout, content_type):
     col.prop(getattr(cc_sett, content_type), "name", text="Name")
     poll = bool(getattr(cc_sett, content_type).name)
 
+    existing_names = _get_existing_names(human, content_type)
+
+    name = getattr(cc_sett, content_type).name
+    if name and name.lower() in existing_names:
+        col_a = col.column(align=True)
+        col_a.alert = True
+        col_a.label(text="Name already exists", icon="ERROR")
+        col_a.label(text="Overwrite?")
+
+    poll = bool(name)
+
     _draw_save_button(layout, content_type, poll=poll)
+
+
+def _get_existing_names(human, content_type):
+    # TODO remove duplicity from pcoll file
+    folders = {
+        "hair": ("hair",),
+        "starting_human": (os.path.join("models", human.gender),),
+        "key": ("livekeys", "shapekeys"),
+        "outfit": ("outfits",),
+        "footwear": ("footwear",),
+        "pose": ("poses",),
+    }
+    existing_names = []
+    for folder in folders[content_type]:
+        full_path = os.path.join(get_prefs().filepath, folder)
+        for *_, files in os.walk(full_path):
+            existing_names.extend(file.split(".")[0].lower() for file in files)
+
+    return set(existing_names)
 
 
 def _draw_thumbnail_selection_ui(context, layout, content_type):
