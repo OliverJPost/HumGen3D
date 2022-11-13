@@ -60,7 +60,7 @@ def _draw_hair_gender_ui(context, layout):
     col.scale_y = 1.5
     col.prop(hair_sett, "save_for_male", text="Male", toggle=True)
     subrow = col.row(align=True)
-    subrow.enabled = hair_sett.type != "face_hair"
+    subrow.enabled = hair_sett.save_type != "face_hair"
     subrow.prop(hair_sett, "save_for_female", text="Female", toggle=True)
 
     poll = any((hair_sett.save_for_male, hair_sett.save_for_female))
@@ -80,6 +80,6 @@ def _draw_hairtype_ui(context, layout):
 
     col = layout.column()
     col.scale_y = 1.5
-    col.prop(hair_sett, "type", expand=True)
+    col.prop(hair_sett, "save_type", expand=True)
 
     _draw_next_button(layout)
