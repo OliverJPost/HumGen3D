@@ -46,6 +46,22 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class HG_RESET_VALUES(bpy.types.Operator):
+    """randomizes this specific property."""
+
+    bl_idname = "hg3d.reset_values"
+    bl_label = "Reset"
+    bl_description = "Reset values"
+    bl_options = {"UNDO", "INTERNAL"}
+
+    categ: bpy.props.StringProperty()
+
+    def execute(self, context):
+        human = Human.from_existing(context.active_object, strict_check=False)
+        getattr(human, self.categ).reset_values()
+        return {"FINISHED"}
+
+
 class HG_RANDOM_VALUE(bpy.types.Operator):
     """randomizes this specific property."""
 
@@ -64,7 +80,7 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
             # facial subcategories follow the pattern face_{category}
             ff_subcateg = random_type[5:]
             # where face_all does all facial features
-            human.face.randomize(ff_subcateg)
+            human.face.randomize(ff_subcateg, use_bell_curve=True)
         else:
             getattr(human, random_type).randomize()
         return {"FINISHED"}
