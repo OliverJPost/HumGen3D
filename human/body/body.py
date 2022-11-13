@@ -62,16 +62,20 @@ class BodySettings:
             context (C): Blender context
         """
         for key in self.keys:
-            if key.name == "skinny":
+            if key.subcategory == "main":
+                random_value = random.uniform(0, 1.0)
                 if hasattr(key, "set_without_update"):
-                    key.set_without_update(random.uniform(0, 0.7))
+                    key.set_without_update(random_value)
                 else:
-                    key.value = random.uniform(0, 0.7)
+                    key.value = random_value
+            elif key.subcategory.lower() == "special" or "length" in key.name:
+                continue
+
+            random_value = random.normalvariate(0, 0.1)
+            if hasattr(key, "set_without_update"):
+                key.set_without_update(random_value)
             else:
-                if hasattr(key, "set_without_update"):
-                    key.set_without_update(random.normalvariate(0, 0.5))
-                else:
-                    key.value = random.normalvariate(0, 0.5)
+                key.value = random_value
 
         self._human.keys.update_human_from_key_change(context)
 
