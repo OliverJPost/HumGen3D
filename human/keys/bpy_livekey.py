@@ -4,17 +4,15 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any, cast
 
 import bpy
 import numpy as np
 from bpy.props import FloatProperty, StringProperty  # type:ignore
-from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
-from HumGen3D.human.keys.keys import import_npz_key
+from HumGen3D.human.keys.keys import _get_starting_coordinates
 
 
 def get_livekey(self: BpyLiveKey) -> float:
@@ -77,39 +75,27 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
             _run_modal()
         return
 
-    # Get coordinates of base human mesh
-    body = human.objects.body
-    vert_count = len(body.data.vertices)
-    obj_coords = np.empty(vert_count * 3, dtype=np.float64)
-    body.data.vertices.foreach_get("co", obj_coords)
+    (
+        vert_count,
+        obj_coords,
+        new_key_relative_coords,
+        new_key_coords,
+    ) = _get_starting_coordinates(human, self.path)
 
-    # Load coordinates of livekey that is being changed
-    filepath = os.path.join(get_prefs().filepath, self.path)
-    new_key_relative_coords = import_npz_key(vert_count, filepath)
+    permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+    human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
+    permanent_key_coords = _add_temp_key_to_permanent_key_coords(
+        human, temp_key, vert_count, obj_coords, permanent_key_coords
+    )
 
-    new_key_coords = obj_coords + new_key_relative_coords
-    # If there was a previous livekey on the temp_key, correct for it
-    if temp_key:
-        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
-        permanent_key_coords = _add_temp_key_to_permanent_key_coords(
-            human, temp_key, vert_count, obj_coords, permanent_key_coords
-        )
+    # Correct for previous value if this shape key has been added before
+    current_sk_values = human.props.sk_values
+    if temp_key and name in current_sk_values:
+        old_value = current_sk_values[name]
+        permanent_key_coords -= new_key_relative_coords * old_value
 
-        # Correct for previous value if this shape key has been added before
-        current_sk_values = human.props.sk_values
-        if temp_key and name in current_sk_values:
-            old_value = current_sk_values[name]
-            permanent_key_coords -= new_key_relative_coords * old_value
-
-        # Write the coordinates to the permanent_key
-        human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
-
-    # Add a new temp_key if it didn't exist already
-    if not temp_key:
-        temp_key = human.objects.body.shape_key_add(name="LIVE_KEY_TEMP_" + name)
-        temp_key.slider_max = 10
-        temp_key.slider_min = -10
+    # Write the coordinates to the permanent_key
+    human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
 
     # Write the coordinates to the temp_key
     human.keys.temp_key.data.foreach_set("co", new_key_coords)

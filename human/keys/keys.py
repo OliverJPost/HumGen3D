@@ -29,6 +29,22 @@ if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey
 
 
+def _get_starting_coordinates(
+    human: Human, path: str
+) -> tuple[int, np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+    body = human.objects.body
+    vert_count = len(body.data.vertices)
+    obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+    body.data.vertices.foreach_get("co", obj_coords)
+
+    # Load coordinates of livekey that is being changed
+    filepath = os.path.join(get_prefs().filepath, path)
+    new_key_relative_coords = import_npz_key(vert_count, filepath)
+    new_key_coords = obj_coords + new_key_relative_coords
+
+    return vert_count, obj_coords, new_key_relative_coords, new_key_coords
+
+
 def import_npz_key(
     vert_count: int, filepath: str
 ) -> np.ndarray[Any, np.dtype[np.float64]]:
@@ -234,7 +250,6 @@ class LiveKeyItem(KeyItem):
         """
         self.set_without_update(value)
         self._human.keys.update_human_from_key_change(bpy.context)
-        self._human.objects.body.data.update()
 
     def set_without_update(self, value: float) -> None:
         """Set the value of the livekey without updating the human rig and clothing.
@@ -245,22 +260,25 @@ class LiveKeyItem(KeyItem):
         Args:
             value (float): value to set the livekey to
         """
-        # TODO repetition from set_livekey
-        body = self._human.objects.body
-        vert_count = len(body.data.vertices)
-        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
-        body.data.vertices.foreach_get("co", obj_coords)
+        (
+            vert_count,
+            obj_coords,
+            new_key_relative_coords,
+            new_key_coords,
+        ) = _get_starting_coordinates(self._human, self.path)
 
-        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
-        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
-
-        npz_path = os.path.join(get_prefs().filepath, self.path)
-        new_key_relative_coords = import_npz_key(vert_count, npz_path)
+        # Set temp key to base coordinates if it's the same as the key being set.
+        temp_key = self._human.keys.temp_key
+        if temp_key and self.name == temp_key.name.replace("LIVE_KEY_TEMP_", ""):
+            temp_key.data.foreach_set("co", obj_coords.reshape((-1)))
 
         current_sk_values = self._human.props.sk_values
         old_value = (
             current_sk_values[self.name] * -1 if self.name in current_sk_values else 0
         )
+
+        permanent_key_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self._human.keys.permanent_key.data.foreach_get("co", permanent_key_coords)
         permanent_key_coords += new_key_relative_coords * (old_value + value)
 
         self._human.keys.permanent_key.data.foreach_set("co", permanent_key_coords)
@@ -309,8 +327,11 @@ class LiveKeyItem(KeyItem):
         Returns:
             BpyLiveKey: CollectionProperty item representing this livekey
         """
-        livekey = bpy.context.window_manager.livekeys.get(self.name)
-        assert livekey
+        # Get livekey based on path instead of name as the name is not unique for
+        # multi-gender keys.
+        livekey = next(
+            key for key in bpy.context.window_manager.livekeys if key.path == self.path
+        )
         return cast("BpyLiveKey", livekey)
 
     def draw_prop(
