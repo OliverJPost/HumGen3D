@@ -638,7 +638,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             new_systems (dict): Dict of modifiers and particle_systems of hair systems
             hair_type (str): 'head' for normal, 'face_hair' for facial hair
         """
-        search_mat = ".HG_Hair_Face" if hair_type == "face" else ".HG_Hair_Head"
+        search_mat = ".HG_Hair_Face" if hair_type == "face_hair" else ".HG_Hair_Head"
         # Search for current name of material to account for v1, v2 and v3
         body_obj = self._human.objects.body
         mat_name = next(
