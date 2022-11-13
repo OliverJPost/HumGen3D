@@ -25,7 +25,7 @@ def save_thumb(folder: str, img_name: str, save_name: str) -> None:
     destination_path = os.path.join(folder, f"{save_name}.jpg")
     if img_name == "temp_thumbnail":
         source_image = os.path.join(
-            get_prefs().filepath, "temp_data", f"temp_thumbnail.jpg"
+            get_prefs().filepath, "temp_data", "temp_thumbnail.jpg"
         )
         hg_log("Copying", source_image, "to", destination_path)
         copyfile(source_image, destination_path)
@@ -57,19 +57,19 @@ def save_objects_optimized(
     Opens the file in the background to make it as small as possible
 
     Args:
-        objs              (list)          : List of objects to save
-        folder            (Path)          : Folder to save the file in
-        filename          (str)           : Name to save the file as
-        clear_sk          (bool, optional): Remove all shapekeys from objs.
-                                            Defaults to True.
-        clear_materials   (bool, optional): Remove all materials from objs.
-                                            Defaults to True.
-        clear_vg          (bool, optional): Remove all vertex groups from
-                                            objs. Defaults to True.
-        clear_ps          (bool, optional): Remove all particle systems from
-                                            objs. Defaults to True.
-        run_in_background (bool, optional): Open the new subprocess in the
-                                            background. Defaults to True.
+        context (Context): current Blender context
+        objs (list): List of objects to save
+        folder (Path) : Folder to save the file in
+        filename (str): Name to save the file as
+        clear_sk (bool, optional): Remove all shapekeys from objs. Defaults to True.
+        clear_materials(bool, optional): Remove all materials from objs.
+            Defaults to True.
+        clear_vg (bool, optional): Remove all vertex groups from objs. Defaults to True.
+        clear_ps (bool, optional): Remove all particle systems from objs. Defaults to
+            True.
+        run_in_background (bool, optional): Open the new subprocess in the background.
+            Defaults to True.
+        clear_drivers (bool, optional): Remove all drivers from objs. Defaults to True.
     """
     for obj in objs:
         if obj.type != "MESH":
