@@ -192,7 +192,9 @@ class HairSettings:
         return {
             "eyebrows": self.eyebrows.as_dict(),
             "regular_hair": self.regular_hair.as_dict(),
-            "face_hair": self.face_hair.as_dict(),
+            "face_hair": self.face_hair.as_dict()
+            if self._human.gender == "male"
+            else {},
         }
 
     def set_from_dict(self, data: dict[str, dict[str, Any]]) -> None:
