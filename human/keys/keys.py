@@ -213,7 +213,7 @@ class LiveKeyItem(KeyItem):
         # TODO this is repetition from get_livekey
         temp_key = self._human.keys.temp_key
         current_sk_values = self._human.props.sk_values
-        if temp_key and temp_key.name.endswith(self.name):
+        if temp_key and temp_key.name.replace("LIVE_KEY_TEMP_", "") == self.name:
             return temp_key.value
         elif self.name in current_sk_values:
             return cast(float, current_sk_values[self.name])
