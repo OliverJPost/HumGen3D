@@ -62,10 +62,8 @@ def _draw_name_ui(context, layout, content_type):
         f"Give your {content_type.replace('sk_', '')} a name",
         "OUTLINER_OB_FONT",
     )
-
     human = Human.from_existing(cc_sett.content_saving_active_human)
     if content_type == "starting_human":
-        human = Human.from_existing(cc_sett.content_saving_active_human)
         layout.label(text=f"Based on {human._active}")
     elif content_type == "key":
         layout.label(text=f"Original name: {cc_sett.key.key_to_save}")
@@ -74,7 +72,6 @@ def _draw_name_ui(context, layout, content_type):
     col.scale_y = 1.5
 
     col.prop(getattr(cc_sett, content_type), "name", text="Name")
-    poll = bool(getattr(cc_sett, content_type).name)
 
     existing_names = _get_existing_names(human, content_type)
 
@@ -134,13 +131,14 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         _draw_next_button(layout)
         return
 
-    layout.template_icon_view(
-        cc_sett,
-        "preset_thumbnail_enum",
-        show_labels=True,
-        scale=8,
-        scale_popup=10,
-    )
+    if cc_sett.thumbnail_saving_enum != "last_render":
+        layout.template_icon_view(
+            cc_sett,
+            "preset_thumbnail_enum",
+            show_labels=True,
+            scale=8,
+            scale_popup=10,
+        )
     if cc_sett.thumbnail_saving_enum == "custom":
         layout.template_ID(
             cc_sett.custom_content, "preset_thumbnail", open="image.open"
@@ -150,21 +148,19 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         __draw_auto_thumbnail_ui(layout, content_type)
 
     elif cc_sett.thumbnail_saving_enum == "last_render":
-        __draw_render_result_thumbnail_ui(layout)
+        layout.label(text="256*256px recommended", icon="INFO")
+        render_results = [
+            img for img in bpy.data.images if img.name.startswith("Render Result")
+        ]
+        if len(render_results) > 1:
+            col = layout.column(align=True)
+            col.alert = True
+            col.label(text="Multiple render results found", icon="ERROR")
+            col.label(text="Only 'Render Result' will be saved.", icon="ERROR")
+            for img in render_results:
+                col.label(text=img.name)
 
     _draw_next_button(layout, poll=cc_sett.preset_thumbnail)
-
-
-def __draw_render_result_thumbnail_ui(layout):
-    """Draw UI inside thumbnail tab for picking the last render result.
-
-    Args:
-        layout (UILayout): layout to draw in
-    """
-    layout.label(text="256*256px recommended", icon="INFO")
-    layout.separator()
-    layout.label(text="If you render does not show,", icon="INFO")
-    layout.label(text="reload thumbnail category above.")
 
 
 def __draw_auto_thumbnail_ui(layout, content_type):
