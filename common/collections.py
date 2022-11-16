@@ -18,9 +18,11 @@ def add_to_collection(
     Returns:
         bpy.types.Collection: Collection the object was added to
     """
-    collection = bpy.data.collections.get(
-        collection_name, _new_collection(context, collection_name)
-    )
+
+    try:
+        collection = bpy.data.collections[collection_name]
+    except KeyError:
+        collection = _new_collection(context, collection_name)
 
     # Unlink object from old collection
     if context.scene.collection.objects.get(obj.name):
