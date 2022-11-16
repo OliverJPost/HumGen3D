@@ -2,6 +2,7 @@
 
 import os
 import platform
+import re
 import subprocess
 
 import bpy
@@ -97,9 +98,14 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             key_to_save = cc_sett.key.key_to_save
             key_name = cc_sett.key.name
             key_category = cc_sett.key.category_to_save_to
-            as_livekey = cc_sett.key.save_as == "livekey"
+            as_livekey = key_category != "expressions"
             delete_original = as_livekey and cc_sett.key.delete_original
-            human.keys[key_to_save].save_to_library(
+            pattern = re.compile(
+                "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
+            )
+            match = pattern.match(key_to_save)
+            hg_name = match.groupdict().get("name")
+            human.keys[hg_name].save_to_library(
                 key_name,
                 key_category,
                 subcategory,
