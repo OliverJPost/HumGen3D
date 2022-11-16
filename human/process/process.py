@@ -95,7 +95,7 @@ class ProcessSettings:
         return "lod" in self._human.objects.rig
 
     @property
-    def rig_was_renamed(self) -> bool:
+    def rig_renamed(self) -> bool:
         """Checks if the rig was renamed.
 
         Returns:
