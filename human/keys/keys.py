@@ -387,6 +387,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
         name = groupdict.get("name")
         assert name
         super().__init__(name, category, human, subcategory=subcategory)
+        self.sk_name = sk_name
 
     @property
     def value(self) -> float:
@@ -396,7 +397,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
             float: value of the shape key
         """
         key_blocks = self._human.objects.body.data.shape_keys.key_blocks
-        return cast(float, key_blocks[self.name].value)
+        return cast(float, key_blocks[self.sk_name].value)
 
     @value.setter
     def value(self, value: float) -> None:
@@ -406,7 +407,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
             value (float): value to set the shape key to
         """
         key_blocks = self._human.objects.body.data.shape_keys.key_blocks
-        key_blocks[self.name].value = value
+        key_blocks[self.sk_name].value = value
 
     def as_bpy(self) -> ShapeKey:
         """Get pointer to the Blender shape key's key_block.
@@ -416,15 +417,8 @@ class ShapeKeyItem(KeyItem, SavableContent):
         Returns:
             ShapeKey: Blender shape key's key_block
         """
-        if self.category:
-            if self.subcategory:
-                name = f"{self.category[0]}{{{self.subcategory}}}_{self.name}"
-            else:
-                name = f"{self.category[0]}_{self.name}"
-        else:
-            name = self.name
         body_obj = self._human.objects.body
-        return cast(ShapeKey, body_obj.data.shape_keys.key_blocks[name])
+        return cast(ShapeKey, body_obj.data.shape_keys.key_blocks[self.sk_name])
 
     def save_to_library(
         self,
@@ -485,7 +479,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
         if delete_original:
             body.shape_key_remove(sk)
         else:
-            sk.name = f"$[{category}]_$[{subcategory}]_{name}"
+            sk.name = f"{category.lower()[0]}_{{{subcategory}}}_{name}"
 
         update_livekey_collection()
 
