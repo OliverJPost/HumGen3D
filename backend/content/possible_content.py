@@ -63,6 +63,7 @@ class POSSIBLE_CONTENT_ITEM(bpy.types.PropertyGroup):
             ("hair", "Hairstyle", "", 3),
             ("pose", "Pose", "", 4),
             ("starting_human", "Human", "", 5),
+            ("texture", "Texture", "", 6),
         ]
     )
 
@@ -81,6 +82,10 @@ def find_possible_content(context: bpy.types.Context) -> None:
     item = coll.add()
     item.name = "Human"
     item.category = "starting_human"
+
+    item = coll.add()
+    item.name = "Diffuse Texture"
+    item.category = "texture"
 
     hashes = human.props.hashes
     if str(hash(human.hair.regular_hair)) != hashes.get("$hair") or show_unchanged:
