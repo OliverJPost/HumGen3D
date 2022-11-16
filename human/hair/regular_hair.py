@@ -18,6 +18,7 @@ class RegularHairSettings(ImportableHair):
     _pcoll_gender_split: bool = True
     _notstartswith = ("Eye", "fh")
     _mat_idx = 2
+    _haircap_type = "Scalp"
 
     def __init__(self, _human: "Human") -> None:
         super().__init__()

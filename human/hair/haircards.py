@@ -395,6 +395,7 @@ class HairCollection:
     def add_haircap(
         self,  # noqa
         human: "Human",
+        haircap_type: Literal["Scalp", "Eyelashes", "Brows", "Beard"],
         density_vertex_groups: list[bpy.types.VertexGroup],
         context: C = None,
         downsample_mesh: bool = False,
@@ -425,13 +426,15 @@ class HairCollection:
 
         vg_aggregate = np.round(vg_aggregate, 4)
         vg_aggregate = np.clip(vg_aggregate, 0, 1)
+        if np.max(vg_aggregate) < 0.001:
+            vg_aggregate = np.ones(vert_count, dtype=np.float32)
 
         blendfile = os.path.join(
             get_prefs().filepath, "hair", "haircards", "haircap.blend"
         )
         with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
             data_to.objects = [
-                "HG_Haircap",
+                f"HG_Haircap_{haircap_type}",
             ]
 
         haircap_obj = data_to.objects[0]
@@ -448,20 +451,26 @@ class HairCollection:
         )
         vc = haircap_obj.data.color_attributes[0]
 
-        for i, vert_world_co in enumerate(haircap_world_coords):
-            nearest_vert_index = self.kd.find(vert_world_co)[1]
-            value = vg_aggregate[nearest_vert_index]
-            vc.data[i].color = (value, value, value, 1)
+        bm = None
+        if haircap_type in ("Scalp", "Beard"):
+            for i, vert_world_co in enumerate(haircap_world_coords):
+                nearest_vert_index = self.kd.find(vert_world_co)[1]
+                value = vg_aggregate[nearest_vert_index]
+                vc.data[i].color = (value, value, value, 1)
 
-        bm = bmesh.new()  # type:ignore[call-arg]
-        bm.from_mesh(haircap_obj.data)
-        for edge in bm.edges:
-            if edge.is_boundary:
-                v1, v2 = edge.verts
-                vc.data[v1.index].color = (0, 0, 0, 1)
-                vc.data[v2.index].color = (0, 0, 0, 1)
+            bm = bmesh.new()  # type:ignore[call-arg]
+            bm.from_mesh(haircap_obj.data)
+            for edge in bm.edges:
+                if edge.is_boundary:
+                    v1, v2 = edge.verts
+                    vc.data[v1.index].color = (0, 0, 0, 1)
+                    vc.data[v2.index].color = (0, 0, 0, 1)
 
-        if downsample_mesh:
+        if haircap_type == "Scalp" and downsample_mesh:
+            if not bm:
+                bm = bmesh.new()  # type:ignore[call-arg]
+                bm.from_mesh(haircap_obj.data)
+
             edge_json = os.path.join(get_addon_root(), "human", "hair", "haircap.json")
             with open(edge_json, "r") as f:
                 edge_idxs = set(json.load(f))
@@ -476,10 +485,10 @@ class HairCollection:
             for v in bm.verts:
                 v.co += v.normal * 0.1
 
-            bm.to_mesh(haircap_obj.data)
-
         self.haircap_obj = haircap_obj
-        bm.free()
+        if bm:
+            bm.to_mesh(haircap_obj.data)
+            bm.free()
 
         return haircap_obj
 

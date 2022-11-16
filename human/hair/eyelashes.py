@@ -16,6 +16,7 @@ class EyelashSettings(BaseHair):
     _haircap_tag = "hg_eyelashes"
     _startswith = "Eyelashes"
     _mat_idx = 1
+    _haircap_type = "Eyelashes"
 
     def __init__(self, _human: "Human") -> None:
         super().__init__()
