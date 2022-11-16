@@ -2,6 +2,7 @@
 
 import addon_utils
 import bpy
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -13,8 +14,11 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         sett = self.sett
-
         col = self.layout.column()
+
+        if self.human.process.rig_renamed:
+            col.alert = True
+            draw_paragraph(col, "Bones were renamed. Pose can't be changed.")
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5

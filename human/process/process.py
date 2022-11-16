@@ -67,6 +67,51 @@ class ProcessSettings:
         """
         return LodSettings(self._human)
 
+    @property
+    def has_haircards(self) -> bool:
+        """Checks if haircards are present.
+
+        Returns:
+            bool: True if haircards are present.
+        """
+        return "haircard" in self._human.objects.rig
+
+    @property
+    def was_baked(self) -> bool:
+        """Checks if materials were baked.
+
+        Returns:
+            bool: True if materials were baked.
+        """
+        return "hg_baked" in self._human.objects.rig
+
+    @property
+    def is_lod(self) -> bool:
+        """Checks if the human is an LOD.
+
+        Returns:
+            bool: True if the human is an LOD.
+        """
+        return "lod" in self._human.objects.rig
+
+    @property
+    def rig_was_renamed(self) -> bool:
+        """Checks if the rig was renamed.
+
+        Returns:
+            bool: True if the rig was renamed.
+        """
+        return "bones_renamed" in self._human.objects.rig
+
+    @property
+    def parts_were_renamed(self) -> bool:
+        """Checks if the parts were renamed.
+
+        Returns:
+            bool: True if the parts were renamed.
+        """
+        return "parts_renamed" in self._human.objects.rig
+
     def rename_bones_from_json(
         self, json_string: Optional[str] = None, json_path: Optional[str] = None
     ) -> None:

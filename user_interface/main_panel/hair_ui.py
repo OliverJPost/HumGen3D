@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -13,6 +14,17 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
     def draw(self, context):
         sett = self.sett
         body_obj = self.human.objects.body
+
+        if self.human.process.has_haircards:
+            col = self.layout.column()
+            col.alert = True
+            draw_paragraph(
+                col,
+                (
+                    "Haircards were generated for this human. If you select"
+                    + " a different hair system, the haircards will be deleted."
+                ),
+            )
 
         hair_systems = self._get_hair_systems(body_obj)
 

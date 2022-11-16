@@ -2,6 +2,8 @@
 
 import bpy
 
+from ..panel_functions import draw_paragraph
+
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -21,6 +23,12 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
 
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
+
+        if self.human.process.is_lod:
+            col.alert = True
+            draw_paragraph(col, "LOD models can't be edited.")
+            return
+
         row = col.row(align=True)
         row.scale_y = 1.5
         row.operator("hg3d.random_value", icon="FILE_REFRESH").random_type = "body"
