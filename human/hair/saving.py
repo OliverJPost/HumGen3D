@@ -1,5 +1,6 @@
 """Implements functions for saving hair to content library."""
 
+import contextlib
 import json
 import os
 from typing import TYPE_CHECKING, Iterable, Literal, Optional
@@ -94,7 +95,8 @@ def save_hair(  # noqa CCR001
     )
 
     human.hair.regular_hair.refresh_pcoll(context)
-    human.hair.face_hair.refresh_pcoll(context)
+    with contextlib.suppress(NotImplementedError):
+        human.hair.face_hair.refresh_pcoll(context)
 
     hg_delete(hair_obj)
 

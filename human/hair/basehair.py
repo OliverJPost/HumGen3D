@@ -403,22 +403,18 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 a Blender Image object here. If None, no thumbnail will be used.
             context (C): Blender context. bpy.context if not provided.
         """
-        genders = []
-        if for_male:
-            genders.append("male")
-        if for_female:
-            genders.append("female")
 
         hair_type = self._pcoll_name
         save_hair(
             self._human,
             hairstyle_name,
             category,
-            genders,
             particle_system_names,
             hair_type,
             context,
-            thumbnail,
+            for_male=for_male,
+            for_female=for_female,
+            thumb=thumbnail,
         )
 
     def remove_all(self) -> None:

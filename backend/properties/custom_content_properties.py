@@ -67,10 +67,11 @@ def thumbnail_saving_prop_update(self, context):
 
 
 def get_preset_thumbnail(self, context) -> list:
-    if self.thumbnail_saving_enum == "auto":
-        img = self.preset_thumbnail
-    elif self.thumbnail_saving_enum == "last_render":
+    if self.thumbnail_saving_enum == "last_render":
         img = bpy.data.images.get("Render Result")
+    else:
+        img = self.preset_thumbnail
+        img.preview_ensure()
     return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []
 
 
@@ -109,7 +110,7 @@ def get_categories(self, context):
         return human._get_categories(human.gender, include_all=False)
 
     if attr == "hair":
-        hair_type = "regular_hair" if self.type == "head" else "face_hair"
+        hair_type = "regular_hair" if self.save_type == "head" else "face_hair"
         human_subclass = getattr(human.hair, hair_type)
     elif attr in ("footwear", "outfits"):
         human_subclass = getattr(human.clothing, attr)
