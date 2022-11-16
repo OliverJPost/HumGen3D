@@ -140,9 +140,7 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
             scale_popup=10,
         )
     if cc_sett.thumbnail_saving_enum == "custom":
-        layout.template_ID(
-            cc_sett.custom_content, "preset_thumbnail", open="image.open"
-        )
+        layout.template_ID(cc_sett, "preset_thumbnail", open="image.open")
         layout.label(text="256*256px recommended", icon="INFO")
     elif cc_sett.thumbnail_saving_enum == "auto":
         __draw_auto_thumbnail_ui(layout, content_type)

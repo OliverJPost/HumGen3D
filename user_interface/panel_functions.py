@@ -43,6 +43,22 @@ def char_width(char: str):
 def draw_paragraph(
     layout, text, max_width_percentage=100, enabled=True, alignment="LEFT"
 ):
+    lines = lines_from_text(text, max_width_percentage)
+
+    col = layout.column(align=True)
+    for line in lines:
+        row = col.row()
+        if line == "WHITESPACE":
+            row.scale_y = 0.3
+            row.label(text="")
+        else:
+            row.scale_y = 0.7
+            row.alignment = alignment
+            row.enabled = enabled
+            row.label(text=" ".join(line))
+
+
+def lines_from_text(text, max_width_percentage):
     words = text.split(" ")
     length = 0
     lines = [
@@ -61,18 +77,7 @@ def draw_paragraph(
             lines.append([])
 
         lines[-1].append(word)
-
-    col = layout.column(align=True)
-    for line in lines:
-        row = col.row()
-        if line == "WHITESPACE":
-            row.scale_y = 0.3
-            row.label(text="")
-        else:
-            row.scale_y = 0.7
-            row.alignment = alignment
-            row.enabled = enabled
-            row.label(text=" ".join(line))
+    return lines
 
 
 def prettify(string: str) -> str:

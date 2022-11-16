@@ -55,13 +55,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of expression section
             obj_sks (list): list of non-basis and non-corrective shapekeys
         """
-        expr_sks = [
-            sk
-            for sk in filtered_obj_sks.key_blocks
-            if sk.name != "Basis"
-            and not sk.name.startswith("cor")
-            and not sk.name.startswith("eyeLook")
-        ]
+        expr_sks = self.human.expression.keys
         if not expr_sks:
             return
 
@@ -72,13 +66,12 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             return
 
         flow = self.get_flow(self.layout, animation=True)
-        for sk in self.human.expression.shape_keys:
-            display_name = sk.name.replace("expr_", "").replace("_", " ") + ":"
-
-            row = flow.row(align=True)
-            row.active = not sk.mute
-            row.prop(sk, "value", text=display_name.capitalize())
-            row.operator("hg3d.removesk", text="", icon="TRASH").shapekey = sk.name
+        for key in expr_sks:
+            row = key.draw_prop(flow)
+            row.active = not key.as_bpy().mute
+            row.operator(
+                "hg3d.removesk", text="", icon="TRASH"
+            ).shapekey = key.as_bpy().name
 
     def _draw_frig_subsection(self, box):
         """Draws subsection for adding facial rig.
