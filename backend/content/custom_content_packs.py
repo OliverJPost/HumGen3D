@@ -300,10 +300,8 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             cpack (CollecitonProperty item): scene.contentpacks_col item
         """
         # build export name to the template of: HG_CP_CPACKNAME_Vx_x
-        export_name = (
-            "HG_CP_"
-            + cpack.name.replace(" ", "_")
-            + "_V{}_{}".format(pref.cpack_version, pref.cpack_subversion)
+        export_name = cpack.name.replace(" ", "_") + "_V{}_{}".format(
+            pref.cpack_version, pref.cpack_subversion
         )
 
         failed_exports = 0

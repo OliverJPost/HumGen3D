@@ -40,7 +40,7 @@ def open_preferences_as_new_window() -> None:
     bpy.context.window_manager.addon_support = {"COMMUNITY"}
     bpy.context.window_manager.addon_search = "Human Generator 3D"
 
-    mod = addon_utils.addons_fake_modules.get("HumGen3D")
+    mod = addon_utils.addons_fake_modules["HumGen3D"]
     info = addon_utils.module_bl_info(mod)
     info["show_expanded"] = True
 

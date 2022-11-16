@@ -11,6 +11,7 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common import find_hg_rig
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
+from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
@@ -115,9 +116,11 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 as_livekey=as_livekey,
                 delete_original=delete_original,
             )
+            update_livekey_collection()
         elif category == "pose":
             name = cc_sett.pose.name
             human.pose.save_to_library(name, subcategory, thumbnail, context)
+            human.pose.refresh_pcoll()
         elif category == "starting_human":
             human.save_to_library(
                 cc_sett.starting_human.name, subcategory, thumbnail, context
@@ -133,6 +136,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 thumbnail=thumbnail,
                 context=context,
             )
+            getattr(human.hair, attr).refresh_pcoll(context)
         elif category in ("outfit", "footwear"):
             category_sett = getattr(cc_sett, category)
             getattr(human.clothing, category).save_to_library(
@@ -144,6 +148,15 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 thumbnail=thumbnail,
                 context=context,
             )
+            getattr(human.clothing, category).refresh_pcoll(context)
+        elif category == "texture":
+            category_sett = getattr(cc_sett, category)
+            human.skin.texture.save_to_library(
+                category_sett.name,
+                category=subcategory,
+                thumbnail=thumbnail,
+            )
+            human.skin.texture.refresh_pcoll(context)
 
         cc_sett.content_saving_ui = False
         ShowMessageBox("Succesfully saved!", title="HG Content Saving")

@@ -206,6 +206,26 @@ class CustomFootwearProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     save_when_finished: BoolProperty(default=True)
 
 
+def get_texture_categories(self, context):
+    gender = Human.from_existing(context.object).gender
+    folder = os.path.join(get_prefs().filepath, "textures", gender)
+    dirs = [f.name for f in os.scandir(folder) if f.is_dir()]
+    dirs = map(
+        lambda x: x.replace("4K", "").replace("1K", "").replace("512px", ""), dirs
+    )
+    dirs = list(set(dirs))
+
+    return [(d, d.capitalize(), "") for d in dirs]
+
+
+class CustomTextureProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
+    human_attr = "skin.texture"
+    chosen_existing_subcategory: EnumProperty(
+        name="Library", items=get_texture_categories
+    )
+
+
 class CustomContentProps(bpy.types.PropertyGroup):
     """Subclass of HG_SETTINGS, properties related to custom_content in HG."""
 
@@ -217,6 +237,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
     outfit: PointerProperty(type=CustomOutfitProps)
     footwear: PointerProperty(type=CustomFootwearProps)
     starting_human: PointerProperty(type=StartingHumanProps)
+    texture: PointerProperty(type=CustomTextureProps)
     hair_name: StringProperty()
     show_unchanged: BoolProperty(
         update=lambda self, context: find_possible_content(context)

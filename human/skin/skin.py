@@ -6,8 +6,9 @@ from __future__ import annotations
 
 import os
 import random
+import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Union, cast
+from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
@@ -16,6 +17,7 @@ from HumGen3D.common.shadernode import NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from PIL import Image
 
 from ...common.decorators import injected_context
 
@@ -302,6 +304,47 @@ class TextureSettings(PreviewCollectionContent):
             self._change_peripheral_texture_resolution(resolution_folder)
 
         self._human.skin.material["texture_category"] = library  # type:ignore[index]
+
+    def save_to_library(
+        self,
+        save_name: str,
+        category="Default",
+        thumbnail: Optional[bpy.types.Image] = None,
+    ) -> None:
+        category = category.strip()
+        nodes = self._human.materials.body.node_tree.nodes
+        image = nodes.get("Color").image
+        filepath = image.filepath
+        if not filepath:
+            raise NotImplementedError("Can only save textures that are saved to disk.")
+
+        texture_folder = os.path.join(
+            get_prefs().filepath, "textures", self._human.gender
+        )
+        ext = os.path.splitext(filepath)[-1]
+        if ext.lower() not in (".png", ".tiff"):
+            raise NotImplementedError("Can only save png and tiff textures.")
+
+        categ_folder = f"{category} 4K"
+        shutil.copy(
+            filepath, os.path.join(texture_folder, categ_folder, save_name + ext)
+        )
+        self.save_thumb(save_name, thumbnail, texture_folder, categ_folder)
+
+        image = Image.open(filepath)
+        for res_name, res in (("1K", 1024), ("512px", 512)):
+            new_image = image.resize((res, res))
+            categ_folder = f"{category} {res_name}"
+            new_image.save(os.path.join(texture_folder, categ_folder, save_name + ext))
+            self.save_thumb(save_name, thumbnail, texture_folder, categ_folder)
+
+    def save_thumb(self, save_name, thumbnail, texture_folder, categ_folder):
+        thumnbail_dest = os.path.join(texture_folder, categ_folder, save_name + ".jpg")
+        if thumbnail.filepath:
+            shutil.copyfile(thumbnail.filepath, thumnbail_dest)
+        else:
+            thumbnail.filepath = thumnbail_dest
+            thumbnail.save()
 
     def _change_peripheral_texture_resolution(self, resolution_folder: str) -> None:
         # TODO cleanup
