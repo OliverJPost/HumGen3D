@@ -19,13 +19,13 @@ def test_randomize_body(human):
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_body_keys(human):
     hash_before = hash(human.body)
-    for i, key in enumerate(human.body.keys):
+    for key in human.body.keys:
         assert key.value == key.as_bpy().value
         new_value = 0.5
         key.value = new_value
         assert pytest.approx(key.value) == new_value
         assert pytest.approx(key.as_bpy().value) == new_value, (
-            "Failed for key: " + key.name + str(i)
+            "Failed for key: " + key.name
         )
 
         new_value = 1.2
