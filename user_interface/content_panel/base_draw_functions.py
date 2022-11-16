@@ -1,4 +1,7 @@
+import os
+
 import bpy
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
 
 
@@ -59,19 +62,48 @@ def _draw_name_ui(context, layout, content_type):
         f"Give your {content_type.replace('sk_', '')} a name",
         "OUTLINER_OB_FONT",
     )
+    human = Human.from_existing(cc_sett.content_saving_active_human)
+    if content_type == "starting_human":
+        layout.label(text=f"Based on {human._active}")
+    elif content_type == "key":
+        layout.label(text=f"Original name: {cc_sett.key.key_to_save}")
 
     col = layout.column()
     col.scale_y = 1.5
 
-    # FIXME crash when spaces in name
-    if content_type in ("pose", "key", "hair", "footwear", "outfit"):
-        col.prop(getattr(cc_sett, content_type), "name", text="Name")
-        poll = bool(getattr(cc_sett, content_type).name)
-    else:
-        col.prop(cc_sett, f"{content_type}_name", text="Name")
-        poll = bool(getattr(cc_sett, f"{content_type}_name"))
+    col.prop(getattr(cc_sett, content_type), "name", text="Name")
+
+    existing_names = _get_existing_names(human, content_type)
+
+    name = getattr(cc_sett, content_type).name
+    if name and name.lower() in existing_names:
+        col_a = col.column(align=True)
+        col_a.alert = True
+        col_a.label(text="Name already exists", icon="ERROR")
+        col_a.label(text="Overwrite?")
+
+    poll = bool(name)
 
     _draw_save_button(layout, content_type, poll=poll)
+
+
+def _get_existing_names(human, content_type):
+    # TODO remove duplicity from pcoll file
+    folders = {
+        "hair": ("hair",),
+        "starting_human": (os.path.join("models", human.gender),),
+        "key": ("livekeys", "shapekeys"),
+        "outfit": ("outfits",),
+        "footwear": ("footwear",),
+        "pose": ("poses",),
+    }
+    existing_names = []
+    for folder in folders[content_type]:
+        full_path = os.path.join(get_prefs().filepath, folder)
+        for *_, files in os.walk(full_path):
+            existing_names.extend(file.split(".")[0].lower() for file in files)
+
+    return set(existing_names)
 
 
 def _draw_thumbnail_selection_ui(context, layout, content_type):
@@ -99,37 +131,34 @@ def _draw_thumbnail_selection_ui(context, layout, content_type):
         _draw_next_button(layout)
         return
 
-    layout.template_icon_view(
-        cc_sett,
-        "preset_thumbnail_enum",
-        show_labels=True,
-        scale=8,
-        scale_popup=10,
-    )
-    if cc_sett.thumbnail_saving_enum == "custom":
-        layout.template_ID(
-            cc_sett.custom_content, "preset_thumbnail", open="image.open"
+    if cc_sett.thumbnail_saving_enum != "last_render":
+        layout.template_icon_view(
+            cc_sett,
+            "preset_thumbnail_enum",
+            show_labels=True,
+            scale=8,
+            scale_popup=10,
         )
+    if cc_sett.thumbnail_saving_enum == "custom":
+        layout.template_ID(cc_sett, "preset_thumbnail", open="image.open")
         layout.label(text="256*256px recommended", icon="INFO")
     elif cc_sett.thumbnail_saving_enum == "auto":
         __draw_auto_thumbnail_ui(layout, content_type)
 
     elif cc_sett.thumbnail_saving_enum == "last_render":
-        __draw_render_result_thumbnail_ui(layout)
+        layout.label(text="256*256px recommended", icon="INFO")
+        render_results = [
+            img for img in bpy.data.images if img.name.startswith("Render Result")
+        ]
+        if len(render_results) > 1:
+            col = layout.column(align=True)
+            col.alert = True
+            col.label(text="Multiple render results found", icon="ERROR")
+            col.label(text="Only 'Render Result' will be saved.", icon="ERROR")
+            for img in render_results:
+                col.label(text=img.name)
 
     _draw_next_button(layout, poll=cc_sett.preset_thumbnail)
-
-
-def __draw_render_result_thumbnail_ui(layout):
-    """Draw UI inside thumbnail tab for picking the last render result.
-
-    Args:
-        layout (UILayout): layout to draw in
-    """
-    layout.label(text="256*256px recommended", icon="INFO")
-    layout.separator()
-    layout.label(text="If you render does not show,", icon="INFO")
-    layout.label(text="reload thumbnail category above.")
 
 
 def __draw_auto_thumbnail_ui(layout, content_type):
@@ -142,7 +171,8 @@ def __draw_auto_thumbnail_ui(layout, content_type):
     row = layout.row()
     row.scale_y = 1.5
     thumbnail_type_dict = {
-        "head": ("hair", "starting_human"),
+        "head_side": ("hair",),
+        "head_front": ("starting_human",),
         "full_body_front": ("outfit",),
         "full_body_side": ("pose",),
         "foot": ("footwear",),
@@ -213,7 +243,7 @@ def _draw_warning_if_different_active_human(context, layout):
     """
     cc_sett = context.scene.HG3D.custom_content
 
-    active_human = Human.from_existing(context.object).rig_obj
+    active_human = Human.from_existing(context.object).objects.rig
     try:
         if active_human and active_human != cc_sett.content_saving_active_human:
             row = layout.row()

@@ -20,6 +20,8 @@ from HumGen3D.human.human import Human
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
+from HumGen3D.common import find_multiple_in_list
+from HumGen3D.human.process.apply_modifiers import apply_modifiers
 
 
 def status_text_callback(header, context):
@@ -54,7 +56,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
     def execute(self, context):  # noqa
         pr_sett = context.scene.HG3D.process
-        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        human_rigs = find_multiple_in_list(context.selected_objects)
         for rig_obj in human_rigs:
             human = Human.from_existing(rig_obj)
             if pr_sett.output != "replace":
@@ -71,11 +73,13 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.hair.eyelashes.convert_to_haircards(quality, context)
                 if pr_sett.haircards.face_hair and human.hair.face_hair.modifiers:
                     human.hair.face_hair.convert_to_haircards(quality, context)
+                human.objects.rig["haircards"] = True
 
             if pr_sett.baking_enabled:
                 human.process.baking.bake_all(
                     int(context.scene.HG3D.process.baking.samples), context
                 )
+                human.objects.rig["hg_baked"] = True
 
             if pr_sett.lod_enabled:
                 human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
@@ -84,6 +88,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
                 )
+                human.objects.rig["lod"] = True
 
             if pr_sett.rig_renaming_enabled:
                 naming_sett = context.scene.HG3D.process.rig_renaming
@@ -93,6 +98,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     for prop in props
                 }
                 human.process.rename_bones_from_json(json.dumps(prop_dict))
+                human.objects.rig["bones_renamed"] = True
 
             if pr_sett.renaming_enabled:
                 obj_naming_sett = context.scene.HG3D.process.renaming
@@ -121,12 +127,17 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     if material_naming_sett.use_suffix
                     else "",
                 )
+                human.objects.rig["parts_renamed"] = True
             if pr_sett.scripting_enabled:
                 folder = os.path.join(get_prefs().filepath, "scripts")
                 sys.path.append(folder)
                 for item in context.scene.hg_scripts_col:
                     module = importlib.import_module(item.name.replace(".py", ""))
                     module.main(context, human)
+
+            if pr_sett.modapply_enabled:
+                apply_modifiers(context)
+                human.objects.rig["modifiers_applied"] = True
 
             if pr_sett.output == "export":
                 pass

@@ -24,7 +24,9 @@ def test_body_keys(human):
         new_value = 0.5
         key.value = new_value
         assert pytest.approx(key.value) == new_value
-        assert pytest.approx(key.as_bpy().value) == new_value
+        assert pytest.approx(key.as_bpy().value) == new_value, (
+            "Failed for key: " + key.name
+        )
 
         new_value = 1.2
         key.as_bpy().value = new_value

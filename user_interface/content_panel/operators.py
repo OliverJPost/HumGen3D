@@ -144,7 +144,7 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
     def execute(self, context):
         cc_sett = context.scene.HG3D.custom_content
 
-        hg_rig = Human.from_existing(context.object).rig_obj
+        hg_rig = Human.from_existing(context.object).objects.rig
 
         cc_sett.content_saving_ui = True
         cc_sett.content_saving_type = self.content_type
@@ -182,7 +182,9 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                     ),
                 )
 
-        update_tips_from_context(context, cc_sett, cc_sett.content_saving_active_human)
+        update_tips_from_context(
+            context, cc_sett, Human.from_existing(cc_sett.content_saving_active_human)
+        )
         return {"FINISHED"}
 
     def _check_if_human_uses_unsaved_shapekeys(self, cc_sett) -> list:

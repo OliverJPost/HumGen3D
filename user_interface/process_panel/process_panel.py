@@ -4,6 +4,7 @@
 from collections import defaultdict
 
 import bpy
+from HumGen3D.common import find_multiple_in_list
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.panel_functions import (
@@ -22,7 +23,7 @@ class ProcessPanel(HGPanel):
 
     @classmethod
     def poll(cls, context):
-        return Human.find_multiple_in_list(context.selected_objects)
+        return find_multiple_in_list(context.selected_objects)
 
     def draw_header(self, context):
         if hasattr(self, "enabled_propname"):
@@ -79,7 +80,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row.operator("hg3d.save_process_template", text="", icon="ADD")
 
         box = col.box()
-        human_rigs = Human.find_multiple_in_list(context.selected_objects)
+        human_rigs = find_multiple_in_list(context.selected_objects)
         row = box.row()
         row.alignment = "CENTER"
         amount = len(human_rigs)
@@ -147,7 +148,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             layout.label(text="No human selected")
             return True
 
-        if "hg_baked" in human.rig_obj:
+        if "hg_baked" in human.objects.rig:
             if context.scene.HG3D.batch_idx:
                 layout.label(text="Baking in progress")
             else:
@@ -429,3 +430,45 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row.scale_y = 1.5
         row.alert = True
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
+
+        human = Human.from_existing(context.object)
+        self.draw_warning_labels(pr_sett, human)
+
+    def draw_warning_labels(self, pr_sett, human):
+        col = self.layout.column()
+        col.alert = True
+        if pr_sett.haircards_enabled:
+            draw_paragraph(
+                col,
+                text="After adding haircards, you can't change the hair style anymore.",
+            )
+
+        if pr_sett.baking_enabled:
+            draw_paragraph(
+                col,
+                text="Baking is enabled. This will take a long time."
+                "Also, you won't be able to change the material settings"
+                " anymore.",
+            )
+
+        if pr_sett.lod_enabled:
+            draw_paragraph(
+                col,
+                text="LOD is enabled. Many features won't work anymore."
+                "For example, you can't change the height, proportions, add hair, etc.",
+            )
+
+        if pr_sett.rig_renaming_enabled:
+            draw_paragraph(
+                col,
+                text="Rig renaming is enabled. You won't be able to"
+                " change the height of the human anymore.",
+            )
+
+        if pr_sett.scripting_enabled:
+            draw_paragraph(
+                col,
+                text="Custom scripts are enabled. These may cause"
+                " certain Human Generator features to not work anymore"
+                " after processing this human.",
+            )

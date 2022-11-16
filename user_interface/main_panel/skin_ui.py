@@ -3,6 +3,7 @@
 from sys import platform
 
 import bpy
+from HumGen3D.user_interface.panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -18,8 +19,9 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         col = self.layout.column()
 
-        if "hg_baked" in self.human.rig_obj:
-            col.label(text="Textures are baked", icon="INFO")
+        if self.human.process.was_baked:
+            col.alert = True
+            draw_paragraph(col, "Textures are baked! Baked textures can't be changed.")
             return
 
         self._draw_texture_subsection(sett, col)
@@ -55,24 +57,15 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         ).random_type = "skin"
 
         col.separator()
-        nodes = self.human.skin.nodes
-        tone_node = nodes["Skin_tone"]
-        col.prop(tone_node.inputs[1], "default_value", text="Tone", slider=True)
-        col.prop(tone_node.inputs[2], "default_value", text="Redness", slider=True)
-        if len(tone_node.inputs) > 3:
-            col.prop(
-                tone_node.inputs[3],
-                "default_value",
-                text="Saturation",
-                slider=True,
-            )
+        skin = self.human.skin
+        skin.tone.draw_prop(col, "Tone")
+        skin.redness.draw_prop(col, "Redness")
+        skin.saturation.draw_prop(col, "Saturation")
 
         col.separator()
 
-        normal_node = nodes["Normal Map"]
-        r_node = nodes["R_Multiply"]
-        col.prop(normal_node.inputs[0], "default_value", text="Normal Strength")
-        col.prop(r_node.inputs[1], "default_value", text="Roughness mult.")
+        skin.normal_strength.draw_prop(col, "Normal Strength")
+        skin.roughness_multiplier.draw_prop(col, "Roughness mult.")
 
         col.separator()
 
@@ -102,52 +95,25 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         self.draw_content_selector(layout=boxbox, pcoll_name="texture")
 
-    def _draw_age_subsection(self, sett, box):
-        """Collapsable section with sliders age effects.
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            box (UILayout): layout.box of the skin section
-            nodes (Shadernode list): All nodes in the .human material
-        """
-        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "age", "Age")
-        if not is_open:
-            return
-
-        hg_body = self.human.body_obj
-        sk = hg_body.data.shape_keys.key_blocks
-
-        nodes = self.human.skin.nodes
-
-        age_sk = sk["age_old.Transferred"]
-        age_node = nodes["HG_Age"]
-
-        col = boxbox.column(align=True)
-        col.scale_y = 1.2
-        col.prop(age_sk, "value", text="Skin sagging [Mesh]", slider=True)
-        col.prop(age_node.inputs[1], "default_value", text="Wrinkles", slider=True)
-
     def _draw_eye_subsection(self, sett, col):
         is_open, boxbox = self.draw_sub_spoiler(col, sett.ui, "eyes", "Eyes")
         if not is_open:
             return
 
-        mat = self.human.eye_obj.data.materials[1]
+        mat = self.human.objects.eyes.data.materials[1]
         nodes = mat.node_tree.nodes
 
         col = boxbox.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False
         row = col.row(align=True)
-        row.prop(nodes["HG_Eye_Color"].inputs[2], "default_value", text="Iris Color")
+
+        eyes = self.human.eyes
+        eyes.iris_color.draw_prop(row, "Iris Color")
         row.operator(
             "hg3d.random_value", text="", icon="FILE_REFRESH"
         ).random_type = "eyes"
-        col.prop(
-            nodes["HG_Scelera_Color"].inputs[2],
-            "default_value",
-            text="Sclera Color",
-        )
+        eyes.sclera_color.draw_prop(col, "Sclera Color")
 
     def _draw_freckles_subsection(self, sett, box):
         """Collapsable section with sliders for freckles.
@@ -161,25 +127,10 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        nodes = self.human.skin.nodes
-
-        freckles_node = nodes["Freckles_control"]
-        splotches_node = nodes["Splotches_control"]
-
         col = boxbox.column(align=True)
         col.scale_y = 1.2
-        col.prop(
-            freckles_node.inputs["Pos2"],
-            "default_value",
-            text="Freckles",
-            slider=True,
-        )
-        col.prop(
-            splotches_node.inputs["Pos2"],
-            "default_value",
-            text="Splotches",
-            slider=True,
-        )
+        self.human.skin.freckles.draw_prop(col, "Freckles")
+        self.human.skin.splotches.draw_prop(col, "Splotches")
 
     def _draw_makeup_subsection(self, sett, box):
         """Collapsable section with sliders for makeup.
@@ -334,5 +285,5 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         flow = self.get_flow(boxbox)
         flow.scale_y = 1.2
-        flow.prop(beard_node.inputs[2], "default_value", text="Mustache", slider=True)
-        flow.prop(beard_node.inputs[3], "default_value", text="Beard", slider=True)
+        self.human.skin.gender_specific.mustache_shadow.draw_prop(flow, "Mustache")
+        self.human.skin.gender_specific.beard_shadow.draw_prop(flow, "Mustache")

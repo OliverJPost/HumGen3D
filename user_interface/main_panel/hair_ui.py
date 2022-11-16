@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -12,7 +13,18 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         sett = self.sett
-        body_obj = self.human.body_obj
+        body_obj = self.human.objects.body
+
+        if self.human.process.has_haircards:
+            col = self.layout.column()
+            col.alert = True
+            draw_paragraph(
+                col,
+                (
+                    "Haircards were generated for this human. If you select"
+                    + " a different hair system, the haircards will be deleted."
+                ),
+            )
 
         hair_systems = self._get_hair_systems(body_obj)
 
@@ -69,33 +81,18 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         row.prop(self.sett, "hair_shader_type", text="Shader")
 
         mat_names = {
-            "eye": ".HG_Hair_Eye",
-            "face": ".HG_Hair_Face",
-            "head": ".HG_Hair_Head",
+            "eye": "eyebrows",
+            "face": "face_hair",
+            "head": "regular_hair",
         }
-        hair_mat = next(
-            mat
-            for mat in self.human.body_obj.data.materials
-            if mat.name.startswith(mat_names[category])
-        )
-
-        hair_node = hair_mat.node_tree.nodes["HG_Hair_V4"]
+        hair_attr = getattr(self.human.hair, mat_names[category])
 
         col = box.column(align=True)
         col.scale_y = 1.2
         col_h = col.column(align=True)
-        col_h.prop(
-            hair_node.inputs["Lightness"],
-            "default_value",
-            text="Lightness",
-            slider=True,
-        )
-        col_h.prop(
-            hair_node.inputs["Redness"],
-            "default_value",
-            text="Redness",
-            slider=True,
-        )
+
+        hair_attr.lightness.draw_prop(col_h, "Lightness")
+        hair_attr.redness.draw_prop(col_h, "Redness")
 
         if category == "eye":
             return
@@ -103,42 +100,15 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
         col.separator()
 
         self.draw_subtitle("Effects", col, "GP_MULTIFRAME_EDITING")
-        col.prop(
-            hair_node.inputs["Hue"],
-            "default_value",
-            text="Hue (For dyed hair)",
-        )
-        col.prop(hair_node.inputs["Roughness"], "default_value", text="Roughness")
-        col.prop(
-            hair_node.inputs["Pepper & Salt"],
-            "default_value",
-            text="Pepper & Salt",
-            slider=True,
-        )
-        col.prop(
-            hair_node.inputs["Roots"],
-            "default_value",
-            text="Roots",
-            slider=True,
-        )
+        hair_attr.hue.draw_prop(col, "Hue")
+        hair_attr.roughness.draw_prop(col, "Roughness")
+        hair_attr.salt_and_pepper.draw_prop(col, "Salt and Pepper")
+        hair_attr.roots.draw_prop(col, "Roots")
 
-        if hair_node.inputs["Roots"].default_value > 0:
-            col.prop(
-                hair_node.inputs["Root Lightness"],
-                "default_value",
-                text="Root Lightness",
-            )
-            col.prop(
-                hair_node.inputs["Root Redness"],
-                "default_value",
-                text="Root Redness",
-            )
-            if "Roots Hue" in hair_node.inputs:
-                col.prop(
-                    hair_node.inputs["Roots Hue"],
-                    "default_value",
-                    text="Root Hue",
-                )
+        if hair_attr.roots.value > 0:
+            hair_attr.root_lightness.draw_prop(col, "Root Lightness")
+            hair_attr.root_redness.draw_prop(col, "Root Redness")
+            hair_attr.root_hue.draw_prop(col, "Root Hue")
 
     def _draw_hair_cards_ui(self, box):
         """Draws button for adding hair cards.

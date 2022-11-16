@@ -1,14 +1,20 @@
+# type:ignore
+
 import os
 import platform
+import re
 import subprocess
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.custom_content.possible_content import find_possible_content
+from HumGen3D.common import find_hg_rig
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
+from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+
+from .possible_content import find_possible_content
 
 
 class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
@@ -26,8 +32,10 @@ class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
         cc_sett.content_saving_type = self.category
         if self.category == "key":
             cc_sett.key.key_to_save = self.key_name
+        elif self.category == "hair":
+            refresh_hair_ul(self, context)
         cc_sett.content_saving_tab_index = 0
-        cc_sett.content_saving_active_human = Human.find_hg_rig(context.object)
+        cc_sett.content_saving_active_human = find_hg_rig(context.object)
         return {"FINISHED"}
 
 
@@ -76,20 +84,31 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
         category = cc_sett.content_saving_type
         human = Human.from_existing(cc_sett.content_saving_active_human)
 
-        thumbnail = cc_sett.preset_thumbnail
-        if category != "starting_human":
-            if getattr(cc_sett, category).existing_or_new_category == "existing":
-                subcategory = getattr(cc_sett, category).chosen_existing_subcategory
-            else:
-                subcategory = getattr(cc_sett, category).new_category_name
+        if cc_sett.thumbnail_saving_enum == "last_render":
+            thumbnail = bpy.data.images.get("Render Result")
+        elif cc_sett.thumbnail_saving_enum == "none":
+            thumbnail = None
+        else:
+            thumbnail = cc_sett.preset_thumbnail
+            # TODO custom iamge
+
+        if getattr(cc_sett, category).existing_or_new_category == "existing":
+            subcategory = getattr(cc_sett, category).chosen_existing_subcategory
+        else:
+            subcategory = getattr(cc_sett, category).new_category_name
 
         if category == "key":
             key_to_save = cc_sett.key.key_to_save
             key_name = cc_sett.key.name
             key_category = cc_sett.key.category_to_save_to
-            as_livekey = cc_sett.key.save_as == "livekey"
+            as_livekey = key_category != "expressions"
             delete_original = as_livekey and cc_sett.key.delete_original
-            human.keys[key_to_save].save_to_library(
+            pattern = re.compile(
+                "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
+            )
+            match = pattern.match(key_to_save)
+            hg_name = match.groupdict().get("name")
+            human.keys[hg_name].save_to_library(
                 key_name,
                 key_category,
                 subcategory,
@@ -100,7 +119,9 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             name = cc_sett.pose.name
             human.pose.save_to_library(name, subcategory, thumbnail, context)
         elif category == "starting_human":
-            human.save_to_library(cc_sett.starting_human_name, thumbnail, context)
+            human.save_to_library(
+                cc_sett.starting_human.name, subcategory, thumbnail, context
+            )
         elif category == "hair":
             attr = "regular_hair" if cc_sett.hair.save_type == "head" else "face_hair"
             getattr(human.hair, attr).save_to_library(
@@ -114,7 +135,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             )
         elif category in ("outfit", "footwear"):
             category_sett = getattr(cc_sett, category)
-            getattr(human, category).save_to_library(
+            getattr(human.clothing, category).save_to_library(
                 category_sett.name,
                 for_male=category_sett.save_for_male,
                 for_female=category_sett.save_for_female,
@@ -145,6 +166,16 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         default="torso",
     )
 
+    @classmethod
+    def poll(cls, context):
+        return (
+            context.object
+            and context.object.type == "MESH"
+            and "hg_body" not in context.object
+            and "cloth" not in context.object
+            and "shoe" not in context.object
+        )
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
 
@@ -164,6 +195,8 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
             human.clothing.footwear.add_obj(cloth_obj, context)
         else:
             human.clothing.outfit.add_obj(cloth_obj, self.cloth_type, context)
+
+        return {"FINISHED"}
 
 
 class HG_OT_SAVE_SK(bpy.types.Operator):
@@ -198,7 +231,7 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
 
     def execute(self, context):
         human = Human.from_existing(context.object)
-        bpy_key = human.body_obj.data.shape_keys.key_blocks[self.sk_name]
+        bpy_key = human.objects.body.data.shape_keys.key_blocks[self.sk_name]
 
         key = next(key for key in human.keys if key.as_bpy() == bpy_key)
 

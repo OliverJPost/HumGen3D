@@ -1,5 +1,5 @@
 import bpy
-from HumGen3D.human.human import Human
+from HumGen3D.common import is_legacy
 from HumGen3D.user_interface.panel_functions import draw_paragraph
 
 
@@ -12,12 +12,12 @@ class HG_PT_LEGACYINSTALL(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        is_legacy = Human.is_legacy(context.object)
+        human_is_legacy = is_legacy(context.object)
         legacy_addon_not_installed = not context.preferences.addons.get(
             "HumGen3D-Legacy"
         )
 
-        return is_legacy and legacy_addon_not_installed
+        return human_is_legacy and legacy_addon_not_installed
 
     def draw(self, context):
         col = self.layout.column()

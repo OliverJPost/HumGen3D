@@ -34,7 +34,7 @@ class HG_START_CREATION(bpy.types.Operator):
         sett.ui.phase = "closed"
 
         human = Human.from_preset(sett.pcoll.humans, context)
-        hg_rig = human.rig_obj
+        hg_rig = human.objects.rig
         hg_rig.select_set(True)
         context.view_layer.objects.active = hg_rig
 
@@ -93,7 +93,7 @@ class HG_NEXT_PREV_HUMAN(bpy.types.Operator):
             self.report({"INFO"}, "No Humans in this scene")
             return {"FINISHED"}
 
-        hg_rig = Human.from_existing(context.active_object).rig_obj
+        hg_rig = Human.from_existing(context.active_object).objects.rig
 
         index = humans.index(hg_rig) if hg_rig in humans else 0
 

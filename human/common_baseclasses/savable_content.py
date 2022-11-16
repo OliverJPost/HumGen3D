@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Implements class used as baseclass for content that can be saved to the library."""
+
 import contextlib
 import os
 import re
@@ -8,11 +10,17 @@ from typing import Iterable
 
 import bpy
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.backend.preferences.preference_func import get_addon_root
+from HumGen3D.common.memory_management import hg_delete
 
 
 class SavableContent:
+    """Class used as baseclass for all content that can be saved to the library.
+
+    It mainly contains common methods for saving Blender content to .blend files in
+    an optimized way.
+    """
+
     @staticmethod
     def save_objects_optimized(
         context: bpy.types.Context,
@@ -31,19 +39,20 @@ class SavableContent:
         opening the file in the background to make it as small as possible
 
         Args:
-            objs              (list)          : List of objects to save
-            folder            (Path)          : Folder to save the file in
-            filename          (str)           : Name to save the file as
-            clear_sk          (bool, optional): Remove all shapekeys from objs.
-                                                Defaults to True.
-            clear_materials   (bool, optional): Remove all materials from objs.
-                                                Defaults to True.
-            clear_vg          (bool, optional): Remove all vertex groups from
-                                                objs. Defaults to True.
-            clear_ps          (bool, optional): Remove all particle systems from
-                                                objs. Defaults to True.
-            run_in_background (bool, optional): Open the new subprocess in the
-                                                background. Defaults to True.
+            context (Context): Blender context.
+            objs (list) : List of objects to save
+            folder (str) : Folder to save the file in
+            filename (str) : Name to save the file as
+            clear_sk (bool): Remove all shapekeys from objs. Defaults to True.
+            clear_materials (bool): Remove all materials from objs. Defaults
+                to True.
+            clear_vg (bool): Remove all vertex groups from objs. Defaults to
+                True.
+            clear_ps (bool): Remove all particle systems from objs. Defaults
+                to True.
+            clear_drivers (bool): Remove all drivers from objs. Defaults to True.
+            run_in_background (bool): Open the new subprocess in the
+                background. Defaults to True.
         """
         for obj in objs:
             if obj.type != "MESH":
@@ -118,11 +127,7 @@ class SavableContent:
     def _remove_particle_systems(
         context: bpy.types.Context, obj: bpy.types.Object
     ) -> None:
-        """Remove particle systems from the passed object.
-
-        Args:
-            obj (Object): obj to remove particle systems from
-        """
+        """Remove particle systems from the passed object."""  # noqa
         context.view_layer.objects.active = obj
         # TODO low level
         for i, _ in enumerate(obj.particle_systems):  # type:ignore[arg-type]
@@ -157,5 +162,5 @@ class SavableContent:
         else:
             return name.replace(re_suffix.group(0), "")
 
-    def save_to_library(self) -> None:
+    def save_to_library(self) -> None:  # noqa D
         raise NotImplementedError

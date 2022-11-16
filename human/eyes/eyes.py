@@ -1,10 +1,13 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import random
-from typing import TYPE_CHECKING, Union, cast
+"""Implements class for manipulating the eyes of the human."""
 
-from bpy.types import Material, Object
-from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem  # type:ignore
+import random
+from typing import TYPE_CHECKING, Any, cast
+
+from bpy.types import Material, Object  # type:ignore
+from HumGen3D.common.shadernode import NodeInput  # type:ignore
+from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human  # type:ignore
@@ -49,26 +52,55 @@ A_CLASS = [
 
 
 class EyeSettings:
+    """Class for manipulating the eyes of the human.
+
+    Also contains properties for changing the material values.
+    """
+
     def __init__(self, human: "Human") -> None:
         self._human = human
 
+        self.iris_color = NodeInput(self, "HG_Eye_Color", "Color2")
+        self.sclera_color = NodeInput(self, "HG_Scelera_Color", "Color2")
+
     @property
     def eye_obj(self) -> Object:
-        return next(
-            child
-            for child in self._human.objects
-            if "hg_eyes" in child  # type:ignore[operator]
-        )
+        """Blender object of the eyes of the human.
+
+        Returns:
+            Object: Blender object of the eyes of the human.
+        """
+        self._human.objects.eyes
+
+    @property
+    def outer_material(self) -> Material:
+        """The material used for the outer layer of the eyes (The transparent part).
+
+        Returns:
+            Material: Material used for the outer layer of the eyes.
+        """
+        return cast(Material, self._human.objects.eyes.data.materials[0])
 
     @property
     def inner_material(self) -> Material:
-        return cast(Material, self.eye_obj.data.materials[1])
+        """The material used for the inner part of the eyes (The colored part).
+
+        Returns:
+            Material: Material used for the inner part of the eyes.
+        """
+        return cast(Material, self._human.objects.eyes.data.materials[1])
 
     @property
-    def keys(self) -> list[Union["ShapeKeyItem", "LiveKeyItem"]]:
-        return self._human.keys.filtered("special", "eyes")
+    def nodes(self) -> PropCollection:
+        """Nodes of the inner eye material.
+
+        Returns:
+            PropCollection: ShaderNodes of the inner eye material.
+        """
+        return self.inner_material.node_tree.nodes
 
     def randomize(self) -> None:
+        """Randomizes the color of the pupils based on worlwide statistics."""
         nodes = self.inner_material.node_tree.nodes
 
         # If you think the numers used here are incorrect, please contact us at
@@ -95,6 +127,28 @@ class EyeSettings:
 
         nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb  # type:ignore
 
+    def as_dict(self) -> dict[str, tuple[float, float, float, float]]:
+        """Returns the current eye settings as a dictionary.
+
+        Returns:
+            dict: Dictionary containing the current eye settings. Currently color only.
+        """
+        return {
+            "pupil_color": self.iris_color.value,
+            "sclera_color": self.sclera_color.value,
+        }
+
+    def set_from_dict(self, data: dict[str, Any]) -> None:
+        """Sets the eye settings from a dictionary.
+
+        This dict can be derived from the as_dict method.
+
+        Args:
+            data (dict[str, Any]): Dictionary to set the eye settings from.
+        """
+        self.iris_color.value = data["pupil_color"]
+        self.sclera_color.value = data["sclera_color"]
+
     def _srgb_to_linearrgb(self, c: float) -> float:
         # Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896 # noqa
         if c < 0:
@@ -111,6 +165,7 @@ class EyeSettings:
         r = (h & 0xFF0000) >> 16
         g = (h & 0x00FF00) >> 8
         b = h & 0x0000FF
+
         return cast(
             tuple[float, float, float, float],
             tuple([self._srgb_to_linearrgb(c / 0xFF) for c in (r, g, b)] + [alpha]),

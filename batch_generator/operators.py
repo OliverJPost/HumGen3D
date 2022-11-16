@@ -218,7 +218,7 @@ class HG_BATCH_GENERATE(bpy.types.Operator):
 
         human.location = marker.location
         human.rotation_euler = marker.rotation_euler
-        marker["associated_human"] = human.rig_obj
+        marker["associated_human"] = human.objects.rig
 
     def _show_dialog_to_confirm_deleting_humans(self, context):  # noqa CCE001
         generate_queue = self.generate_queue

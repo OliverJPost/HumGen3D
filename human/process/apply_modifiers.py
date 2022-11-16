@@ -1,14 +1,18 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+# type:ignore
+# flake8: noqa D101
+
 from typing import TYPE_CHECKING, Any, no_type_check
 
-import bpy  # type: ignore
+import bpy
+from HumGen3D.common.type_aliases import C  # type: ignore
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.scene_main_properties import HG_SETTINGS
 
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.backend import hg_log
+from HumGen3D.common.drivers import build_driver_dict
 from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_outfit_ul,
@@ -16,129 +20,109 @@ from HumGen3D.user_interface.content_panel.operators import (
 )
 
 
-class HG_OT_MODAPPLY(bpy.types.Operator):
-    bl_idname = "hg3d.modapply"
-    bl_label = "Apply selected modifiers"
-    bl_description = "Apply selected modifiers"
-    bl_options = {"UNDO"}
+def apply_modifiers(human, context: C = None) -> None:  # noqa CCR001
+    sett = context.scene.HG3D  # type:ignore[attr-defined]
+    col = context.scene.modapply_col
+    objs = list(human.objects)
 
-    @no_type_check
-    def execute(self, context):  # noqa CCR001
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        col = context.scene.modapply_col
-        objs = build_object_list(context, sett)
+    sk_dict = {}
+    driver_dict = {}
 
-        sk_dict = {}
-        driver_dict = {}
+    human.hair.set_connected(False)
 
-        for obj in objs:
-            if sett.process.modapply.keep_shapekeys:
-                sk_dict, driver_dict = self.copy_shapekeys(
-                    context, col, sk_dict, driver_dict, obj
-                )
-            apply_shapekeys(obj)
-
-        objs_to_apply = objs.copy()
-        for sk_list in sk_dict.values():
-            if sk_list:
-                objs_to_apply.extend(sk_list)
-
-        self.apply_modifiers(context, sett, col, sk_dict, objs_to_apply)
-
-        for obj in context.selected_objects:
-            obj.select_set(False)
-
+    for obj in objs:
         if sett.process.modapply.keep_shapekeys:
-            self.add_shapekeys_again(context, objs, sk_dict, driver_dict)
+            _copy_shapekeys(sk_dict, obj)
+            driver_dict[obj.name] = build_driver_dict(obj, remove=True)
+        _apply_shapekeys(obj)
 
-        refresh_modapply(self, context)
-        return {"FINISHED"}
+    objs_to_apply = objs.copy()
+    for sk_list in sk_dict.values():
+        if sk_list:
+            objs_to_apply.extend(sk_list)
 
-    @no_type_check
-    def copy_shapekeys(self, context, col, sk_dict, driver_dict, obj):
-        apply = False
-        for item in col:
-            if (
-                item.mod_type == "ARMATURE"
-                and (item.count or item.obj == obj)
-                and item.enabled
-            ):
-                apply = True
-        pref = get_prefs()
-        # TODO this is kind of weird
-        keep_sk_pref = pref.keep_all_shapekeys
-        pref.keep_all_shapekeys = True
-        (
-            sk_dict[obj.name],
-            driver_dict[obj.name],
-        ) = self.human.keys._extract_permanent_keys(
-            context, override_obj=obj, apply_armature=apply
-        )
-        pref.keep_all_shapekeys = keep_sk_pref
-        return sk_dict, driver_dict
+    _apply_modifiers(context, sett, col, sk_dict, objs_to_apply)
 
-    @no_type_check
-    def apply_modifiers(  # noqa CCR001 # FIXME
-        self, context, sett, col, sk_dict, objs_to_apply
-    ):
-        if sett.process.modapply.search_modifiers == "summary":
-            mod_types = [
-                item.mod_type
-                for item in col
-                if item.enabled and item.mod_name != "HEADER"
-            ]
-            for obj in objs_to_apply:
-                for mod in reversed(obj.modifiers):
-                    if mod.type in mod_types:
-                        self.apply(context, sett, mod, obj)
-        else:
-            for item in [item for item in col if item.enabled]:
-                try:
-                    obj = item.obj
-                    mod = obj.modifiers[item.mod_name]
-                    self.apply(context, sett, mod, obj)
-                    if sett.process.modapply.keep_shapekeys:
-                        for o in sk_dict[obj.name]:
-                            self.apply(context, sett, mod, o)
-                except Exception as e:  # noqa PIE786
-                    hg_log(
-                        f"Error while applying modifier {item.mod_name} on ",
-                        f"{item.obj}, with error as {e}",
-                        level="WARNING",
-                    )
+    if sett.process.modapply.keep_shapekeys:
+        _add_shapekeys_again(objs, sk_dict, driver_dict)
 
-    @no_type_check
-    def add_shapekeys_again(self, context, objs, sk_dict, driver_dict):
-        for obj in objs:
-            if not sk_dict[obj.name]:
-                continue
-            context.view_layer.objects.active = obj
-            obj.select_set(True)
-            # FIXME
-            # reapply_shapekeys(context, sk_dict[obj.name], obj, driver_dict[obj.name]) # noqa E800
-            obj.select_set(False)
+    human.hair.set_connected(True)
+    refresh_modapply(None, context)
+    return {"FINISHED"}
 
-    @no_type_check
-    def apply(self, context, sett, mod, obj):
-        if (
-            sett.process.modapply.apply_hidden
-            and not mod.show_viewport
-            and not mod.show_render
-        ):
-            apply = False
-        else:
-            apply = True
 
-        if apply:
-            context.view_layer.objects.active = obj
+@no_type_check
+def _copy_shapekeys(sk_dict, obj):
+    vert_count = len(obj.data.vertices)
+    for sk in obj.data.shape_keys.key_blocks:
+        sk_coords = np.array(vert_count * 3, dtype=np.float64)
+        sk.data.foreach_get("co", sk_coords)
+        temp_dict[sk.name] = sk_coords
+
+    sk_dict[obj.name] = temp_dict
+
+
+@no_type_check
+def _apply_modifiers(context, sett, col, sk_dict, objs_to_apply):  # noqa CCR001 # FIXME
+    if sett.process.modapply.search_modifiers == "summary":
+        mod_types = [
+            item.mod_type for item in col if item.enabled and item.mod_name != "HEADER"
+        ]
+        for obj in objs_to_apply:
+            for mod in reversed(obj.modifiers):
+                if mod.type in mod_types:
+                    _apply(context, sett, mod, obj)
+    else:
+        for item in [item for item in col if item.enabled]:
             try:
-                bpy.ops.object.modifier_apply(modifier=mod.name)
+                obj = item.obj
+                mod = obj.modifiers[item.mod_name]
+                _apply(context, sett, mod, obj)
+                if sett.process.modapply.keep_shapekeys:
+                    for o in sk_dict[obj.name]:
+                        _apply(context, sett, mod, o)
             except Exception as e:  # noqa PIE786
                 hg_log(
-                    f"Error while applying modifier {mod.name} on {obj.name}, ",
-                    f"with error as {e}",
+                    f"Error while applying modifier {item.mod_name} on ",
+                    f"{item.obj}, with error as {e}",
                     level="WARNING",
                 )
+
+
+@no_type_check
+def _add_shapekeys_again(objs, sk_dict, driver_dict):
+    for obj in objs:
+        if not sk_dict.get(obj.name):
+            continue
+        for sk_name, sk_coords in sk_dict[obj.name].items():
+            sk = obj.shape_key_add(name=sk_name)
+            sk.data.foreach_set("co", sk_coords)
+            sk.value = 1.0
+        for target_sk_name, sett_dict in driver_dict[obj.name].items():
+            human.keys._add_driver(sks[target_sk_name], sett_dict)
+
+
+@no_type_check
+def _apply(context, sett, mod, obj):
+    if (
+        sett.process.modapply.apply_hidden
+        and not mod.show_viewport
+        and not mod.show_render
+    ):
+        apply = False
+    else:
+        apply = True
+
+    if apply:
+        context.view_layer.objects.active = obj
+        try:
+            bpy.ops.object.modifier_apply(modifier=mod.name)
+        except Exception as e:  # noqa PIE786
+            hg_log(
+                f"Error while applying modifier {mod.name} on {obj.name}, ",
+                f"with error as {e}",
+                level="WARNING",
+            )
 
 
 class HG_OT_REFRESH_UL(bpy.types.Operator):

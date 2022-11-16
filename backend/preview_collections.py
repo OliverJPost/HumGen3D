@@ -17,18 +17,22 @@ from . import get_prefs, hg_log
 preview_collections: Dict[str, PreviewCollection] = {}  # global dict of all pcolls
 
 # fmt: off
-# (extension, gender_dependent, folder, category_propname, search_term_propname) # noqa
-PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], str], Optional[str], Optional[str]]] #FIXME # noqa
+# (extension, gender_dependent, folder, category_propname, search_term_propname, custom_icon) # noqa
+PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], str], Optional[str], Optional[str], Optional[str]]] #FIXME # noqa
 PREVIEW_COLLECTION_DATA: PcollDict = {
-    "humans": (".json", True, "models", "humans_category", None),
-    "pose": (".blend", False, "poses", "pose_category", "search_term_pose"),
-    "outfit": (".blend", True, "outfits", "outfit_category", "search_term_outfit"),
-    "footwear": (".blend", True, "footwear", "footwear_category", "search_term_footwear"), # noqa
-    "hair": (".json", True, ["hair", "head"], "hair_category", None),
-    "face_hair": (".json", False, ["hair", "face_hair"], "face_hair_category", None),
-    "expression": (".npz", False, ["shapekeys", "expressions"], "expression_category", "search_term_expression"), # noqa
-    "pattern": (".png", False, "patterns", "pattern_category", "search_term_pattern"),
-    "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_category", None),
+    "humans": (".json", True, "models", "humans_category", None, None),
+    "pose": (".blend", False, "poses", "pose_category", "search_term_pose", None),
+    "outfit": (".blend", True, "outfits", "outfit_category", "search_term_outfit", None), # noqa
+    "footwear": (".blend", True, "footwear", "footwear_category", "search_term_footwear", None), # noqa
+    "hair": (".json", True, ["hair", "head"], "hair_category", None, None),
+    "face_hair": (".json", False, ["hair", "face_hair"], "face_hair_category", None, None), # noqa
+    "expression": (".npz", False, ["shapekeys", "expressions"], "expression_category", "search_term_expression", None), # noqa
+    "pattern": (".png", False, "patterns", "pattern_category", "search_term_pattern", None), # noqa
+    "texture": ((".png", ".tiff", ".tga"), True, "textures", "texture_category", None, None), # noqa
+    "scripts": (".py", False, "scripts", None, None, "script.png"),
+    "process_templates": (".json", False, "process_templates", None, None, "template.png"), # noqa
+    "shapekeys": (".npz", False, "shapekeys", None, None, "shapekey.png"),
+    "livekeys": (".npz", False, "livekeys", None, None, "livekey.png"),
 }
 # fmt: on
 
@@ -68,6 +72,7 @@ class PreviewCollection:
             self.subfolder,
             self.category_prop,
             self.search_term_prop,
+            self.custom_icon,
         ) = PREVIEW_COLLECTION_DATA[self.name]
 
         if isinstance(self.subfolder, list):
@@ -140,6 +145,9 @@ class PreviewCollection:
             none_thumb = self._add_info_thumbnail("pcoll_placeholder")
             pcoll_enum = [("none", "", "", none_thumb.icon_id, 0)]
             for i, full_path in enumerate(all_files):
+                # Skip expression shapekeys to prevent double items
+                if self.name == "shapekeys" and "expressions" in full_path:
+                    continue
                 short_path = os.path.relpath(full_path, pref.filepath)
 
                 pcoll_enum.append(
@@ -212,7 +220,12 @@ class PreviewCollection:
             return enum_list
 
     def _get_thumbnail_for_item(self, full_path: str) -> bpy.types.ImagePreview:
-        filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"
+        if self.custom_icon:
+            filepath_thumb = os.path.join(
+                get_addon_root(), "user_interface", "icons", self.custom_icon
+            )
+        else:
+            filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"
         if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
             return self.pcoll.load(filepath_thumb, filepath_thumb, "IMAGE")
         else:

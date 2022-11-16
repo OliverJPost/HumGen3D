@@ -4,13 +4,13 @@
 This is an interface class for getting to OutfitSettings and FootwearSettings.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .footwear import FootwearSettings
 from .outfit import OutfitSettings
 
 if TYPE_CHECKING:
-    from human.human import Human
+    from HumGen3D.human.human import Human
 
 
 class ClothingSettings:
@@ -46,3 +46,26 @@ class ClothingSettings:
             FootwearSettings: Instance of FootwearSettings belonging to this human.
         """
         return FootwearSettings(self._human)
+
+    def as_dict(self) -> dict[str, dict[str, Any]]:
+        """Returns dict of clothing settings.
+
+        Returns:
+            dict[str, dict[str, Any]]: Dict of clothing settings.
+        """
+        return_dict = {
+            "outfit": self.outfit.as_dict(),
+            "footwear": self.footwear.as_dict(),
+        }
+        return return_dict
+
+    def set_from_dict(self, data: dict[str, Any]) -> None:
+        """Set clothing settings from dict.
+
+        Args:
+            data (dict[str, Any]): Dict of clothing settings.
+        """
+        if data["outfit"]["set"] is not None:
+            self.outfit.set(data["outfit"]["set"])
+        if data["footwear"]["set"] is not None:
+            self.footwear.set(data["footwear"]["set"])

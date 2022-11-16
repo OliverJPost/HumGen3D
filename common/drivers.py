@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Functions for dealing with Blender drivers."""
+
 from typing import Any
 
 import bpy
@@ -11,9 +13,9 @@ def build_driver_dict(
     """Builds a dictionary of drivers on this object, to be re-used later.
 
     Args:
-        obj    (Object)        : object to index drivers from
-        remove (bool, optional): Remove the drivers after saving their settings.
-                                Defaults to True.
+        obj (Object) : object to index drivers from
+        remove (bool): Remove the drivers after saving their settings.
+            Defaults to True.
 
     Returns:
         dict:

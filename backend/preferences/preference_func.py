@@ -3,6 +3,7 @@
 import os
 from typing import TYPE_CHECKING
 
+import addon_utils  # type:ignore
 import bpy
 import HumGen3D
 
@@ -28,3 +29,20 @@ def get_addon_root() -> str:
         str: path of the root directory of the add-on
     """
     return os.path.dirname(os.path.abspath(HumGen3D.__file__))  # type: ignore
+
+
+def open_preferences_as_new_window() -> None:
+    old_area = bpy.context.area
+    old_ui_type = old_area.ui_type
+
+    bpy.context.area.ui_type = "PREFERENCES"
+    bpy.context.preferences.active_section = "ADDONS"
+    bpy.context.window_manager.addon_support = {"COMMUNITY"}
+    bpy.context.window_manager.addon_search = "Human Generator 3D"
+
+    mod = addon_utils.addons_fake_modules.get("HumGen3D")
+    info = addon_utils.module_bl_info(mod)
+    info["show_expanded"] = True
+
+    bpy.ops.screen.area_dupli("INVOKE_DEFAULT")  # type:ignore[call-arg]
+    old_area.ui_type = old_ui_type

@@ -61,13 +61,14 @@ def update(attr):
     )
 
 
-def refresh(attr):
+def refresh(attr, propname):
     """Supplies function that refreshes the content of the preview collection.
     For args & return see get_items()"""
     retreiver = attrgetter(attr)
+
     return lambda self, context: retreiver(
         Human.from_existing(context.object)
-    ).refresh_pcoll(context)
+    ).refresh_pcoll(context, override_category=getattr(self, propname))
 
 
 # TODO create repetetive properties in loop
@@ -95,12 +96,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     pose_category: EnumProperty(
         name="Pose Library",
         items=get_folders("pose"),
-        update=refresh("pose"),
+        update=refresh("pose", "pose_category"),
     )
     search_term_pose: StringProperty(
         name="Search:",
         default="",
-        update=refresh("pose"),
+        update=refresh("pose", "pose_category"),
     )
 
     # outfits
@@ -110,12 +111,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     outfit_category: EnumProperty(
         name="Outfit Library",
         items=get_folders("clothing.outfit"),
-        update=refresh("clothing.outfit"),
+        update=refresh("clothing.outfit", "outfit_category"),
     )
     search_term_outfit: StringProperty(
         name="Search:",
         default="",
-        update=refresh("clothing.outfit"),
+        update=refresh("clothing.outfit", "outfit_category"),
     )
 
     # hair
@@ -126,12 +127,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     hair_category: EnumProperty(
         name="Hair Library",
         items=get_folders("hair.regular_hair"),
-        update=refresh("hair.regular_hair"),
+        update=refresh("hair.regular_hair", "hair_category"),
     )
     search_term_hair: StringProperty(
         name="Search:",
         default="",
-        update=refresh("hair"),
+        update=refresh("hair", "hair_category"),
     )
     face_hair: EnumProperty(
         items=get_items("hair.face_hair"),
@@ -140,12 +141,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     face_hair_category: EnumProperty(
         name="Facial Hair Library",
         items=get_folders("hair.face_hair"),
-        update=refresh("hair.face_hair"),
+        update=refresh("hair.face_hair", "face_hair_category"),
     )
     search_term_face_hair: StringProperty(
         name="Search:",
         default="",
-        update=refresh("hair.face_hair"),
+        update=refresh("hair.face_hair", "face_hair_category"),
     )
     # expression
     expression: EnumProperty(
@@ -155,12 +156,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     expression_category: EnumProperty(
         name="Expressions Library",
         items=get_folders("expression"),
-        update=refresh("expression"),
+        update=refresh("expression", "expression_category"),
     )
     search_term_expression: StringProperty(
         name="Search:",
         default="",
-        update=refresh("expression"),
+        update=refresh("expression", "expression_category"),
     )
 
     # footwear # noqa
@@ -171,12 +172,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     footwear_category: EnumProperty(
         name="Footwear Library",
         items=get_folders("clothing.footwear"),
-        update=refresh("clothing.footwear"),
+        update=refresh("clothing.footwear", "footwear_category"),
     )
     search_term_footwear: StringProperty(
         name="Search:",
         default="",
-        update=refresh("clothing.footwear"),
+        update=refresh("clothing.footwear", "footwear_category"),
     )
 
     # patterns
@@ -187,12 +188,12 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     pattern_category: EnumProperty(
         name="Pattern Library",
         items=get_folders("clothing.outfit.pattern"),
-        update=refresh("clothing.outfit.pattern"),
+        update=refresh("clothing.outfit.pattern", "pattern_category"),
     )
     search_term_pattern: StringProperty(
         name="Search:",
         default="",
-        update=refresh("clothing.outfit.pattern"),
+        update=refresh("clothing.outfit.pattern", "pattern_category"),
     )
 
     texture: EnumProperty(
@@ -202,10 +203,10 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
     texture_category: EnumProperty(
         name="Texture Library",
         items=get_folders("skin.texture"),
-        update=refresh("skin.texture"),
+        update=refresh("skin.texture", "texture_category"),
     )
     search_term_texture: StringProperty(
         name="Search:",
         default="",
-        update=refresh("skin.texture"),
+        update=refresh("skin.texture", "texture_category"),
     )

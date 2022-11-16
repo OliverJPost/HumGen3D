@@ -17,8 +17,8 @@ from typing import no_type_check
 import bpy
 from bpy.types import Context  # type:ignore[import]
 from HumGen3D.backend import hg_log, preview_collections
+from HumGen3D.backend.content.possible_content import find_possible_content
 from HumGen3D.backend.properties.batch_props import BatchProps
-from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.user_interface.content_panel.operators import (
@@ -90,7 +90,7 @@ def hg_callback() -> None:
     ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
-    update_tips_from_context(bpy.context, sett, human.rig_obj)
+    update_tips_from_context(bpy.context, sett, human)
     _context_specific_updates(sett, human, ui_phase)
 
 
@@ -100,7 +100,7 @@ def _set_shader_switches(human, sett):
     used to prevent an endless loop of setting the toggle
     """  # noqa
     sett.update_exception = True
-    body_obj = human.body_obj
+    body_obj = human.objects.body
     nodes = body_obj.data.materials[0].node_tree.nodes
     if not body_obj:
         return
@@ -160,7 +160,7 @@ def tab_change_update(self, context):
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        human.rig_obj,
+        human,
     )
 
     find_possible_content(context)

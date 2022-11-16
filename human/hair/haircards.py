@@ -1,9 +1,11 @@
+"""Implements class for generating haircards from a particle system."""
+
 import contextlib
 import json
 import os
 import random
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Iterable, Literal, Set
+from typing import TYPE_CHECKING, Any, Iterable, Literal
 
 import bmesh
 import bpy
@@ -11,14 +13,14 @@ import numpy as np
 from HumGen3D import get_prefs
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.geometry import obj_from_pydata  # noqa
-from HumGen3D.common.math import create_kdtree, normalize
-from HumGen3D.common.memory_management import hg_delete
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
+    obj_from_pydata,
     world_coords_from_obj,
 )
+from HumGen3D.common.math import create_kdtree, normalize
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.type_aliases import C
 from HumGen3D.extern.rdp import rdp
 
@@ -29,21 +31,29 @@ UVCoords = list[list[list[float]]]
 
 
 class HairCollection:
+    """Class for generating haircards from a particle system."""
+
     def __init__(
         self,
         hair_obj: bpy.types.Object,
         human: "Human",
     ) -> None:
+        """Get a new instance based on a particle system converted to a mesh.
+
+        Args:
+            hair_obj (bpy.types.Object): Particle system converted to mesh.
+            human (Human): Human instance
+        """
         self.mx_world_hair_obj = hair_obj.matrix_world
 
         body_world_coords_eval = world_coords_from_obj(
-            human.body_obj, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys
         )
         self.kd = create_kdtree(body_world_coords_eval)
 
         self.hair_coords = world_coords_from_obj(hair_obj)
         nearest_vert_idx = np.array([self.kd.find(co)[1] for co in self.hair_coords])
-        verts = human.body_obj.data.vertices
+        verts = human.objects.body.data.vertices
         self.nearest_normals = np.array(
             [tuple(verts[idx].normal.normalized()) for idx in nearest_vert_idx]
         )
@@ -57,7 +67,14 @@ class HairCollection:
 
     @staticmethod
     def _walk_island(vert: bmesh.types.BMVert) -> Iterable[int]:
-        """walk all un-tagged linked verts"""
+        """Walk all un-tagged linked verts.
+
+        Args:
+            vert (bmesh.types.BMVert): Start vert to walk from.
+
+        Yields:
+            int: Index of the next vert.
+        """
         vert.tag = True
         yield vert.index
         linked_verts = [
@@ -94,7 +111,15 @@ class HairCollection:
     def create_mesh(
         self, quality: Literal["low", "medium", "high", "ultra"] = "high"
     ) -> Iterable[bpy.types.Object]:
+        """Create a haircard mesh for downsampled hairs.
 
+        Args:
+            quality (Literal["low", "medium", "high", "ultra"], optional): Quality of
+                the haircards. Defaults to "high".
+
+        Yields:
+            bpy.types.Object: Haircard objects for each resolution.
+        """
         long_hairs = [hair for hair, length in self.hairs if length > 0.1]
         medium_hairs = [hair for hair, length in self.hairs if 0.1 >= length > 0.05]
         short_hairs = [hair for hair, length in self.hairs if 0.05 >= length]
@@ -162,23 +187,6 @@ class HairCollection:
 
             self.objects[hair_co_len] = obj
             yield obj
-
-    @staticmethod
-    def _create_obj_from_verts_and_faces(
-        obj_name: str, all_verts: np.ndarray[Any, Any], all_faces: np.ndarray[Any, Any]
-    ) -> bpy.types.Object:
-        mesh = bpy.data.meshes.new(name="hair")
-        all_verts_as_tuples = [tuple(co) for co in all_verts]
-        all_faces_as_tuples = [tuple(idxs) for idxs in all_faces]
-
-        mesh.from_pydata(all_verts_as_tuples, [], all_faces_as_tuples)
-        mesh.update()
-
-        for f in mesh.polygons:
-            f.use_smooth = True
-
-        obj = bpy.data.objects.new(obj_name, mesh)  # type:ignore[arg-type]
-        return obj
 
     @staticmethod
     def _compute_new_face_vert_idxs(
@@ -251,7 +259,15 @@ class HairCollection:
 
     @staticmethod
     def _calculate_segment_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
-        """Makes an array of scalars to make the hair get narrower with each segment."""
+        """Makes an array of scalars to make the hair get narrower with each segment.
+
+        Args:
+            hair_co_len (int): Number of coordinates per hair.
+
+        Returns:
+            np.ndarray[Any, Any]: Array of scalars to multiply with the perpendicular
+                vector.
+        """
         length_correction = np.arange(0.01, 0.03, 0.02 / hair_co_len, dtype=np.float32)
 
         length_correction = length_correction[::-1]
@@ -259,6 +275,7 @@ class HairCollection:
         return length_correction
 
     def add_uvs(self) -> None:
+        """Add uvs to all hair objects."""
         haircard_json = os.path.join(
             get_prefs().filepath,
             "hair",
@@ -352,6 +369,7 @@ class HairCollection:
                     loop.uv = (x_min, y_min + y_diff * y_relative)
 
     def add_material(self) -> None:
+        """Add a material to all hair objects."""
         mat = bpy.data.materials.get("HG_Haircards")
         if not mat:
             blendpath = os.path.join(
@@ -370,18 +388,31 @@ class HairCollection:
         self.material = mat
 
         for obj in self.objects.values():
-            obj.data.materials.append(mat)
+            if not obj.data.materials:
+                obj.data.materials.append(mat)
 
     @injected_context
     def add_haircap(
-        self,
+        self,  # noqa
         human: "Human",
         haircap_type: Literal["Scalp", "Eyelashes", "Brows", "Beard"],
         density_vertex_groups: list[bpy.types.VertexGroup],
         context: C = None,
         downsample_mesh: bool = False,
     ) -> bpy.types.Object:
-        body_obj = human.body_obj
+        """Add a haircap object based on the vertex groups of the human hair systems.
+
+        Args:
+            human (Human): The human to add the haircap to.
+            density_vertex_groups (list[bpy.types.VertexGroup]): The vertex groups that
+                belong to the hair systems the haircards are generated for.
+            context (C): The blender context. Defaults to None.
+            downsample_mesh (bool): Whether to downsample the haircap mesh.
+
+        Returns:
+            bpy.types.Object: The haircap object.
+        """
+        body_obj = human.objects.body
         vert_count = len(body_obj.data.vertices)
 
         vg_aggregate = np.zeros(vert_count, dtype=np.float32)
@@ -410,9 +441,9 @@ class HairCollection:
         context.scene.collection.objects.link(haircap_obj)
         haircap_obj.location = human.location
         body_obj_eval_coords = world_coords_from_obj(
-            human.body_obj, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys
         )
-        body_world_coords = world_coords_from_obj(human.body_obj)
+        body_world_coords = world_coords_from_obj(human.objects.body)
         haircap_world_coords = world_coords_from_obj(haircap_obj)
         distance_dict = build_distance_dict(body_world_coords, haircap_world_coords)
         deform_obj_from_difference(
@@ -462,13 +493,18 @@ class HairCollection:
         return haircap_obj
 
     def set_node_values(self, human: "Human") -> None:
+        """Set values of the hair material node on all materials of the haircards.
+
+        Args:
+            human: The human object to get the values from.
+        """
         card_material = self.material if hasattr(self, "material") else None
 
         cap_material = (
             self.haircap_obj.data.materials[0] if hasattr(self, "haircap_obj") else None
         )
 
-        old_hair_mat = human.body_obj.data.materials[2]
+        old_hair_mat = human.objects.body.data.materials[2]
         old_node = next(
             node
             for node in old_hair_mat.node_tree.nodes
@@ -487,18 +523,3 @@ class HairCollection:
                 node.inputs[inp_name].default_value = old_node.inputs[
                     inp_name
                 ].default_value
-
-
-def expand_region(
-    obj: bpy.types.Object, vert_idxs: np.ndarray[Any, Any]
-) -> np.ndarray[Any, Any]:
-    bm = bmesh.new()  # type:ignore
-    bm.from_mesh(obj.data)
-    bm.verts.ensure_lookup_table()
-    other_verts: Set[int] = set()
-    for vert_idx in vert_idxs:
-        v = bm.verts[vert_idx]  # type:ignore[index]
-        other_verts.update((e.other_vert(v).index for e in v.link_edges))
-
-    with_added_verts = np.append(vert_idxs, list(other_verts))
-    return np.unique(with_added_verts)
