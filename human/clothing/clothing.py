@@ -10,7 +10,7 @@ from .footwear import FootwearSettings
 from .outfit import OutfitSettings
 
 if TYPE_CHECKING:
-    from human.human import Human
+    from HumGen3D.human.human import Human
 
 
 class ClothingSettings:

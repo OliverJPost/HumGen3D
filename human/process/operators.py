@@ -21,7 +21,7 @@ from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 from HumGen3D.common import find_multiple_in_list
-from human.process.apply_modifiers import apply_modifiers
+from HumGen3D.human.process.apply_modifiers import apply_modifiers
 
 
 def status_text_callback(header, context):
