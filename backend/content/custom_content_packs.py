@@ -307,7 +307,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         )
 
         failed_exports = 0
-        zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + ".zip"
+        zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + ".hgpack"
         if get_prefs().compress_zip:
             try:
                 cpack_zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
