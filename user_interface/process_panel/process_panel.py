@@ -430,3 +430,45 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row.scale_y = 1.5
         row.alert = True
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
+
+        human = Human.from_existing(context.object)
+        self.draw_warning_labels(pr_sett, human)
+
+    def draw_warning_labels(self, pr_sett, human):
+        col = self.layout.column()
+        col.alert = True
+        if pr_sett.haircards_enabled:
+            draw_paragraph(
+                col,
+                text="After adding haircards, you can't change the hair style anymore.",
+            )
+
+        if pr_sett.baking_enabled:
+            draw_paragraph(
+                col,
+                text="Baking is enabled. This will take a long time."
+                "Also, you won't be able to change the material settings"
+                " anymore.",
+            )
+
+        if pr_sett.lod_enabled:
+            draw_paragraph(
+                col,
+                text="LOD is enabled. Many features won't work anymore."
+                "For example, you can't change the height, proportions, add hair, etc.",
+            )
+
+        if pr_sett.rig_renaming_enabled:
+            draw_paragraph(
+                col,
+                text="Rig renaming is enabled. You won't be able to"
+                " change the height of the human anymore.",
+            )
+
+        if pr_sett.scripting_enabled:
+            draw_paragraph(
+                col,
+                text="Custom scripts are enabled. These may cause"
+                " certain Human Generator features to not work anymore"
+                " after processing this human.",
+            )

@@ -3,6 +3,7 @@
 from sys import platform
 
 import bpy
+from user_interface.panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -18,8 +19,9 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         col = self.layout.column()
 
-        if "hg_baked" in self.human.objects.rig:
-            col.label(text="Textures are baked", icon="INFO")
+        if self.human.process.was_baked:
+            col.alert = True
+            draw_paragraph(col, "Textures are baked! Baked textures can't be changed.")
             return
 
         self._draw_texture_subsection(sett, col)

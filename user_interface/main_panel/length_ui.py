@@ -2,6 +2,8 @@
 
 import bpy
 
+from ..panel_functions import draw_paragraph
+
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -12,6 +14,15 @@ class HG_PT_HEIGHT(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         col = self.layout.column(align=True)
+
+        if self.human.process.is_lod:
+            col.alert = True
+            draw_paragraph(col, "LOD models can't be edited.")
+            return
+        elif self.human.process.rig_renamed:
+            col.alert = True
+            draw_paragraph(col, "Bones were renamed. Height can't be changed.")
+            return
 
         height_m = self.human.height.meters
         height_feet = height_m / 0.3048

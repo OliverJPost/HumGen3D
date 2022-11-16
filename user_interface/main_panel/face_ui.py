@@ -3,6 +3,7 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.backend.logging import hg_log
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -15,6 +16,12 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
     def draw(self, context):
 
         col = self.layout.column()
+
+        if self.human.process.is_lod:
+            col.alert = True
+            draw_paragraph(col, "LOD models can't be edited.")
+            return
+
         col.scale_y = 1.5
 
         row = col.row(align=True)
