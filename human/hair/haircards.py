@@ -388,7 +388,8 @@ class HairCollection:
         self.material = mat
 
         for obj in self.objects.values():
-            obj.data.materials.append(mat)
+            if not obj.data.materials:
+                obj.data.materials.append(mat)
 
     @injected_context
     def add_haircap(
