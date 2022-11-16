@@ -317,6 +317,27 @@ class BakeSettings:
                     BakeTexture(self._human.name, cloth.name, cloth, 0, tex_type)
                 )
 
+        if self._human.proces.has_haircards:
+            for tex_type in ["Base Color", "Roughness", "Normal"]:
+                bake_list.append(
+                    BakeTexture(
+                        self._human.name,
+                        "hair",
+                        self._human.objects.haircards,  # type:ignore[arg-type]
+                        0,
+                        tex_type,
+                    )
+                )
+                bake_list.append(
+                    BakeTexture(
+                        self._human.name,
+                        "hair",
+                        self._human.objects.haircards,  # type:ignore[arg-type]
+                        1,
+                        tex_type,
+                    )
+                )
+
         return bake_list
 
     def _set_up_scene_for_baking(
