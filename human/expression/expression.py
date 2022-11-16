@@ -85,14 +85,14 @@ class ExpressionSettings(PreviewCollectionContent):
         self._pcoll_gender_split = False
 
     @property
-    def shape_keys(self) -> list[ShapeKeyItem]:
+    def keys(self) -> list[ShapeKeyItem]:
         """Filtered list from human.keys for keys part of expressions.
 
         Returns:
             list[ShapeKeyItem]: List of shape keys that are on this human and of type
                 expression.
         """
-        return self._human.keys.filtered("expression")
+        return self._human.keys.filtered("expressions")
 
     def set(self, preset: str) -> None:  # noqa: A003
         """Loads the passed 1-click expression preset on the human.
@@ -122,9 +122,9 @@ class ExpressionSettings(PreviewCollectionContent):
             new_key = hg_body.data.shape_keys.key_blocks["expr_{}".format(sk_name)]
         else:
             new_key = self._human.keys.load_from_npz(filepath)
-            new_key.name = "expr_" + new_key.name
+            new_key.name = "e_" + new_key.name
 
-        for sk in self.shape_keys:
+        for sk in self.keys:
             sk.value = 0
 
         new_key.mute = False
