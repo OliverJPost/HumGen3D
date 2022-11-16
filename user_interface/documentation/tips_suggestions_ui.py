@@ -11,6 +11,7 @@ from .tips_and_suggestions.batch_tips_and_suggestions import get_batch_tips_from
 from .tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
+from .tips_and_suggestions.content_tips import get_content_tips_from_context
 from .tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
 )
