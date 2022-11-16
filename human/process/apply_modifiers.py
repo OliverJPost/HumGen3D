@@ -6,7 +6,7 @@
 from typing import TYPE_CHECKING, Any, no_type_check
 
 import bpy
-from common.type_aliases import C  # type: ignore
+from HumGen3D.common.type_aliases import C  # type: ignore
 
 if TYPE_CHECKING:
     from HumGen3D.backend.properties.scene_main_properties import HG_SETTINGS
