@@ -16,7 +16,7 @@ import json
 import os
 from math import acos, pi
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Tuple, Union
+from typing import Any, Iterable, Literal, Optional, Tuple, Union
 
 import bpy
 import numpy as np
@@ -25,7 +25,7 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.shapekey_calculator import (
+from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
@@ -33,12 +33,12 @@ from HumGen3D.common.shapekey_calculator import (
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import clothing
 from HumGen3D.human.clothing.add_obj_to_clothing import (
-    add_corrective_shapekeys,
-    auto_weight_paint,
-    correct_shape_to_a_pose,
+    _add_corrective_shapekeys,
+    _auto_weight_paint,
+    _correct_shape_to_a_pose,
 )
 from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.clothing.saving import save_clothing
+from HumGen3D.human.clothing.saving import _save_clothing
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 from mathutils import Vector
@@ -96,6 +96,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         if preset == "none":
             return
 
+        self._active = preset
+
         tag = "shoe" if is_footwear else "cloth"
         # TODO as argument?
         mask_remove_list = self.remove() if pref.remove_clothes else []
@@ -144,12 +146,12 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 as string, defines what kind of corrective shapekeys will be added.
             context (C): Blender context. bpy.context if not provided.
         """
-        body_obj = self._human.body_obj
-        correct_shape_to_a_pose(cloth_obj, body_obj, context)
-        add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
-        auto_weight_paint(cloth_obj, body_obj)
+        body_obj = self._human.objects.body
+        _correct_shape_to_a_pose(cloth_obj, body_obj, context)
+        _add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
+        _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
-        rig_obj = self._human.rig_obj
+        rig_obj = self._human.objects.rig
         armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
         armature_mod.object = rig_obj
         cloth_obj.parent = rig_obj
@@ -171,7 +173,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             context (bpy.types.Context): Blender context.
             cloth_obj (Object): cloth object to deform
         """
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         if self._human.gender == "female":
             verts = body_obj.data.vertices
         else:
@@ -183,7 +185,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
 
-        cloth_obj.parent = self._human.rig_obj
+        cloth_obj.parent = self._human.objects.rig
 
         body_eval_coords_world = world_coords_from_obj(
             body_obj,
@@ -201,8 +203,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
 
         context.view_layer.objects.active = cloth_obj
-        self._set_armature(context, cloth_obj, self._human.rig_obj)
-        context.view_layer.objects.active = self._human.rig_obj
+        self._set_armature(context, cloth_obj, self._human.objects.rig)
+        context.view_layer.objects.active = self._human.objects.rig
 
     def remove(self) -> list[str]:
         """Removes the cloth objects of this category that are currently on the human.
@@ -257,7 +259,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
         folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
 
-        save_clothing(
+        _save_clothing(
             self._human,
             folder,
             category,
@@ -377,6 +379,14 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         context.view_layer.objects.active = old_active
 
+    def as_dict(self) -> dict[str, Any]:
+        """Returns a dictionary representation of this clothing.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of this clothing.
+        """
+        return {"set": self._active}
+
     def _set_geometry_masks(
         self, mask_remove_list: list[str], new_mask_list: list[str]
     ) -> None:
@@ -401,13 +411,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # remove modifiers used by old clothes
         for mask in mask_remove_list:
             with contextlib.suppress(Exception):
-                self._human.body_obj.modifiers.remove(
-                    self._human.body_obj.modifiers.get(mask)
+                self._human.objects.body.modifiers.remove(
+                    self._human.objects.body.modifiers.get(mask)
                 )
 
         # add new masks used by new clothes
         for mask in new_mask_list:
-            mod = self._human.body_obj.modifiers.new(mask, "MASK")
+            mod = self._human.objects.body.modifiers.new(mask, "MASK")
             mod.vertex_group = mask
             mod.invert_vertex_group = True
 
@@ -506,7 +516,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         for obj in cloth_objs:
             add_to_collection(context, obj)
             obj.location = (0, 0, 0)
-            obj.parent = self._human.rig_obj
+            obj.parent = self._human.objects.rig
             obj.select_set(True)
 
         # makes linked objects/textures/nodes local
@@ -528,7 +538,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             for driver in hg_cloth.data.shape_keys.animation_data.drivers[:]:
                 hg_cloth.data.shape_keys.animation_data.drivers.remove(driver)
 
-        body_drivers = self._human.body_obj.data.shape_keys.animation_data.drivers
+        body_obj = self._human.objects.body
+        body_drivers = body_obj.data.shape_keys.animation_data.drivers
 
         for driver in body_drivers:
             target_sk = driver.data_path.replace('key_blocks["', "").replace(
@@ -544,7 +555,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             new_target = new_var.targets[0]
             old_var = driver.driver.variables[0]
             old_target = old_var.targets[0]
-            new_target.id = self._human.rig_obj
+            new_target.id = self._human.objects.rig
 
             new_driver.driver.expression = driver.driver.expression
             new_target.bone_target = old_target.bone_target
@@ -561,7 +572,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         Returns:
             float: From 0 to 1.0, percentage of verts that clip with human.
         """
-        body_obj = self._human.body_obj
+        body_obj = self._human.objects.body
         for modifier in body_obj.modifiers:
             if modifier.type != "ARMATURE":
                 modifier.show_viewport = False

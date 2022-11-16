@@ -20,13 +20,13 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.custom_content.possible_content import find_possible_content
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.user_interface.panel_functions import prettify
 
-from ..content_packs.custom_content_packs import build_content_collection
+from ..content.custom_content_packs import build_content_collection
+from ..content.possible_content import find_possible_content
 
 
 def poll_mtc_armature(self, obj):
@@ -67,7 +67,11 @@ def thumbnail_saving_prop_update(self, context):
 
 
 def get_preset_thumbnail(self, context) -> list:
-    img = self.preset_thumbnail
+    if self.thumbnail_saving_enum == "last_render":
+        img = bpy.data.images.get("Render Result")
+    else:
+        img = self.preset_thumbnail
+        img.preview_ensure()
     return [(img.name, "Selected Thumbnail", "", img.preview.icon_id, 0)] if img else []
 
 
@@ -102,9 +106,14 @@ def get_categories(self, context):
     human = Human.from_existing(custom_content_saving_human)
 
     attr = self.human_attr
+    if not attr:
+        return human._get_categories(human.gender, include_all=False)
+
     if attr == "hair":
-        hair_type = "regular_hair" if self.type == "head" else "face_hair"
+        hair_type = "regular_hair" if self.save_type == "head" else "face_hair"
         human_subclass = getattr(human.hair, hair_type)
+    elif attr in ("footwear", "outfits"):
+        human_subclass = getattr(human.clothing, attr)
     else:
         human_subclass = getattr(human, attr)
 
@@ -157,6 +166,11 @@ class CustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     human_attr = "pose"
 
 
+class StartingHumanProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
+    _register_priority = 3
+    human_attr = None
+
+
 class CustomHairProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     _register_priority = 3
     human_attr = "hair"
@@ -202,7 +216,7 @@ class CustomContentProps(bpy.types.PropertyGroup):
     hair: PointerProperty(type=CustomHairProps)
     outfit: PointerProperty(type=CustomOutfitProps)
     footwear: PointerProperty(type=CustomFootwearProps)
-    starting_human_name: StringProperty()
+    starting_human: PointerProperty(type=StartingHumanProps)
     hair_name: StringProperty()
     show_unchanged: BoolProperty(
         update=lambda self, context: find_possible_content(context)

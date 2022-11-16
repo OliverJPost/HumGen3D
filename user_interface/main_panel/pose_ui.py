@@ -2,6 +2,7 @@
 
 import addon_utils
 import bpy
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -13,8 +14,11 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
     @subpanel_draw
     def draw(self, context):
         sett = self.sett
-
         col = self.layout.column()
+
+        if self.human.process.rig_renamed:
+            col.alert = True
+            draw_paragraph(col, "Bones were renamed. Pose can't be changed.")
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5
@@ -31,7 +35,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
         Args:
             box (UILayout): layout.box of pose section
         """
-        if "hg_rigify" in self.human.rig_obj.data:
+        if "hg_rigify" in self.human.objects.rig.data:
             box.label(text="Rigify rig active")
             box.label(text="Use Rigify add-on to adjust", icon="INFO")
         elif addon_utils.check("rigify"):
@@ -50,7 +54,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             sett (PropertyGroup): HumGen properties
             box (UILayout): layout.box of pose section
         """
-        if "hg_rigify" in self.human.rig_obj.data:
+        if "hg_rigify" in self.human.objects.rig.data:
             col = layout.column(align=True)
 
             row = col.row(align=True)

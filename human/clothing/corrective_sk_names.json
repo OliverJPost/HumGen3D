@@ -5,7 +5,7 @@
         "cor_FootDown_Lt",
         "cor_FootDown_Rt"
     ],
-    "top": [
+    "torso": [
         "cor_ElbowBend_Lt",
         "cor_ElbowBend_Rt",
         "cor_ShoulderSideRaise_Lt",

@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
+from HumGen3D.common import find_hg_rig
 from HumGen3D.human.human import Human
 
 from ..panel_functions import draw_panel_switch_header
@@ -15,7 +16,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         if not HGPanel.poll(context):
             return False
         ui_sett = context.scene.HG3D.ui
-        return not Human.find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
+        return not find_hg_rig(context.object) and ui_sett.active_tab == "CREATE"
 
     def draw_header(self, context):
         draw_panel_switch_header(

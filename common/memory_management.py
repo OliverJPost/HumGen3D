@@ -1,5 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Contains functions for minimizing the memory usage of the addon."""
+
 from typing import no_type_check
 
 import bpy

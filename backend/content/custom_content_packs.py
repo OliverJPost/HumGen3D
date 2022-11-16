@@ -1,3 +1,4 @@
+# type:ignore
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """Functions and operators for exporting custom content.
@@ -16,6 +17,8 @@ be saved/exported
 import contextlib
 import json
 import os
+import platform
+import subprocess
 from pathlib import Path
 from typing import no_type_check
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -24,6 +27,8 @@ import bpy
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences import get_prefs
+from HumGen3D.backend.preferences.preference_func import open_preferences_as_new_window
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.extern.blendfile import open_blend
 from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignore
     ShowMessageBox,
@@ -38,12 +43,6 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
 
     Adds a new json file it the content_packs folder and opens the cpack
     editing UI for the user to start creating this pack.
-
-    Operator type:
-        Content pack creation
-
-    Prereq:
-        pref.cpack_name given
     """
 
     bl_idname = "hg3d.create_cpack"
@@ -52,15 +51,28 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         """Creates a pack and changes the preferences window to the editing UI"""
     )
 
+    show_name_dialog: bpy.props.BoolProperty(default=False)
+    name: bpy.props.StringProperty(name="Name")
+
     @no_type_check
     def invoke(self, context, event):
-        # confirmation checkbox
+        if self.show_name_dialog:
+            return context.window_manager.invoke_props_dialog(self)
+
         return context.window_manager.invoke_confirm(self, event)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Give your content pack a name:")
+        layout.prop(self, "name")
 
     @no_type_check
     def execute(self, context):
         pref = get_prefs()
-        cpack_name = pref.cpack_name
+        if self.show_name_dialog:
+            cpack_name = self.name
+        else:
+            cpack_name = pref.cpack_name
 
         cpack_folder = os.path.join(pref.filepath, "content_packs")
 
@@ -71,6 +83,8 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
         cpacks_refresh(self, context)
 
         build_content_collection(self, context)
+        if self.show_name_dialog:
+            open_preferences_as_new_window()
         return {"FINISHED"}
 
     @no_type_check
@@ -293,7 +307,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         )
 
         failed_exports = 0
-        zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + ".zip"
+        zip_path = bpy.path.abspath(pref.cpack_export_folder) + export_name + ".hgpack"
         if get_prefs().compress_zip:
             try:
                 cpack_zip = ZipFile(zip_path, "w", ZIP_DEFLATED)
@@ -394,29 +408,21 @@ def build_content_collection(self, context):
     col = context.scene.custom_content_col
     col.clear()
 
-    current_file_set = _get_current_file_set(context, pref)
+    current_file_set = _get_current_file_set(context, pref) if pref.cpack_name else {}
 
     other_cpacks_content_set = _get_other_content_set(context, pref)
 
-    pcoll_dict = {
-        "starting_humans": "humans",
-        "texture_sets": "texture",
-        "hairstyles": "hair",
-        "face_hair": "face_hair",
-        "poses": "poses",
-        "outfits": "outfit",
-        "footwear": "footwear",
-    }
+    for categ in PREVIEW_COLLECTION_DATA:
+        preview_collections[categ].populate(context, None, use_search_term=False)
 
-    _iterate_items_to_collection(
-        self,
-        context,
-        pref,
-        col,
-        current_file_set,
-        other_cpacks_content_set,
-        pcoll_dict,
-    )
+        for content_item_enum in preview_collections[categ].pcoll[categ]:
+            _add_to_collection(
+                col,
+                current_file_set,
+                categ,
+                content_item_enum,
+                other_cpacks_content_set,
+            )
 
     sett.update_exception = False
 
@@ -447,71 +453,6 @@ def _get_other_content_set(context, pref):
 
     other_cpacks_content_set = set(map(os.path.normpath, other_cpacks_content))
     return other_cpacks_content_set
-
-
-@no_type_check
-def _iterate_items_to_collection(
-    self,
-    context,
-    pref,
-    col,
-    current_file_set,
-    other_cpacks_content_set,
-    pcoll_dict,
-):
-    """Iterates trough all categories and adds items to the custom_content collection.
-
-    Separate procress for shapekeys, since those don't have an
-    associated preview collection
-
-    Args:
-        context ([type]): [description]
-        pref (AddonPreferences): HumGen preferences
-        col (CollectionProperty): collection to add the content items to
-        current_file_set (set): set of files which are already in this cpack
-        other_cpacks_content_set (set): set of files that are already in other
-            content packs
-        pcoll_dict (dict):
-            key (str): name of custom_content item
-            value (str): name of corresponding preview collection
-    """
-    # add everything except shapekeys
-    for categ in pcoll_dict:
-        preview_collections[pcoll_dict[categ]].refresh(context, None)
-
-        for (
-            content_item_enum
-        ) in None:  # FIXME get_pcoll_enum_items(self, context, pcoll_dict[categ]):
-            if categ == "starting_humans" and "shapekeys" in content_item_enum[0]:
-                continue
-
-            _add_to_collection(
-                col,
-                current_file_set,
-                categ,
-                content_item_enum,
-                other_cpacks_content_set,
-            )
-
-    # add shapekeys
-    path_to_walk = pref.filepath + str(Path("/models/shapekeys"))
-    for _, _, filenames in os.walk(path_to_walk):
-        for fn in filenames:
-            if not fn.endswith(".blend"):
-                continue
-
-            relative_path = str(Path(f"/models/shapekeys/{fn}"))
-            filename_only = os.path.splitext(fn)[0]
-
-            content_item_enum = [relative_path, filename_only, "", 0]
-
-            _add_to_collection(
-                col,
-                current_file_set,
-                "shapekeys",
-                content_item_enum,
-                other_cpacks_content_set,
-            )
 
 
 @no_type_check
@@ -596,3 +537,179 @@ class CUSTOM_CONTENT_ITEM(bpy.types.PropertyGroup):
     existing_content: bpy.props.BoolProperty()  # if item is already in another cpack
     newly_added: bpy.props.BoolProperty()  # if it's been added in this editing session
     removed: bpy.props.BoolProperty()  # if it's been removed in this editing session
+
+
+class HG_OT_EDIT_CONTENT_ITEM(bpy.types.Operator):
+    bl_idname = "hg3d.edit_content_item"
+    bl_label = "Edit item"
+    bl_description = "Opens a new window to edit this item."
+
+    item_name: bpy.props.StringProperty()
+    message: bpy.props.StringProperty()
+    action: bpy.props.StringProperty(default="open")
+
+    def invoke(self, context, event):
+        coll = context.scene.custom_content_col
+        self.item = coll[self.item_name]
+
+        path = os.path.join(get_prefs().filepath, self.item.path)
+        categ = self.item.categ
+
+        if categ in ("humans", "process_templates"):
+            self.message = """This item is implemented as .json file.
+There are two ways to edit it:
+- Load the item inside Blender, change your
+settings, then export it again with the samen name.
+- Edit the .json file directly. By pressing okay
+below, a file browser will open to the file location.
+"""
+        elif categ in ("hair", "face_hair"):
+            self.message = """Hair items are implemented as a combination
+of one or multiple .json files and a single .blend
+file. The easiest way to edit hair systems is by
+loading them on a human, editing them, and then
+saving them again with the same name.
+
+If you want to edit the files directly, pressing
+okay below will open the folder with the .json file.
+"""
+        elif categ in ("outfit", "footwear"):
+            self.message = """Clothing items are implemented as one .blend
+file per gender you saved the item for. The easiest
+way to edit clothing items is by loading them on a
+human, making your changes, and then saving them
+again using the content saving panel.
+
+You can also edit the .blend files directly,
+but please take into account that there might
+be two .blend files, one for each gender.
+
+By pressing okay below a file browser will open
+at the location of the .blend file.
+"""
+        elif categ == "scripts":
+            return self._open_script(path)  # noqa
+        elif categ in ("shapekeys", "livekeys", "expression"):
+            self.message = """Key items are implemented as Numpy .npz
+files, which are not directly editable. The easiest
+way to edit this item is by loading it on a human
+(for shapekeys) or by pressing the "convert to
+shape key" button for livekeys. Then make the
+changes you want and save the item again with
+the same name. This will overwrite the original
+file.
+"""
+            self.action = "cancel"
+        elif categ in ("pattern", "texture"):
+            self.message = """Texture items are implemented as image
+files. The easiest way to edit this item is by
+opening the image file in an image editor of
+your choosing. If you press okay below a file
+browser window will open at the location of
+the image file.
+"""
+        elif categ == "pose":
+            self.message = """Pose items are implemented as
+.blend files. You can either edit the pose
+directly in the .blend file, or load it on a
+human, make your changes, and then save it
+again with the same name.
+
+If you press okay below a file browser
+will open at the location of the .blend file.
+"""
+        else:
+            self.message = "ERROR: Unknown category"
+
+        return context.window_manager.invoke_props_dialog(self)
+
+    def draw(self, context):
+        col = self.layout.column()
+        col.scale_y = 0.7
+        for line in self.message.splitlines():
+            col.label(text=line)
+
+    def execute(self, context):
+        if self.action == "cancel":
+            return {"CANCELLED"}
+
+        open_file_in_system_browser(self.item.path)
+
+        return {"FINISHED"}
+
+
+class HG_OT_SHOW_CONTENT_ITEM(bpy.types.Operator):
+    bl_idname = "hg3d.show_content_item"
+    bl_label = "Show content item in folder."
+    bl_description = "Opens a new file explorer window."
+
+    item_name: bpy.props.StringProperty()
+
+    def execute(self, context):
+        coll = context.scene.custom_content_col
+        item = coll[self.item_name]
+
+        open_file_in_system_browser(item.path)
+
+        return {"FINISHED"}
+
+
+def open_file_in_system_browser(relpath):
+    path = os.path.join(get_prefs().filepath, relpath)
+
+    if platform.system() == "Windows":
+        os.startfile(path)
+    elif platform.system() == "Darwin":
+        subprocess.Popen(["open", "-R", path])
+    else:
+        subprocess.Popen(["xdg-open", path])
+
+
+class HG_OT_DELETE_CONTENT_ITEM(bpy.types.Operator):
+    bl_idname = "hg3d.delete_content_item"
+    bl_label = "Permanently delete this item? Cannot be undone!"
+    bl_description = "Opens a new window to edit this item."
+
+    item_name: bpy.props.StringProperty()
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_confirm(self, event)
+
+    def execute(self, context):
+        coll = context.scene.custom_content_col
+        item = coll.get(self.item_name)
+        index = coll.find(self.item_name)
+
+        relpath = item.path
+        abspath = os.path.join(get_prefs().filepath, relpath)
+        os.remove(abspath)
+
+        iconpath = os.path.join(
+            get_prefs().filepath, os.path.splitext(relpath)[0] + ".jpg"
+        )
+        if os.path.exists(iconpath):
+            os.remove(iconpath)
+
+        # TODO remove further file reverences
+
+        coll.remove(index)
+        return {"FINISHED"}
+
+
+class HG_OT_TOGGLE_CONTENT_OVERVIEW(bpy.types.Operator):
+    bl_idname = "hg3d.toggle_content_overview"
+    bl_label = "Open/close content overview"
+    bl_description = "Opens or closes the content overview screen."
+
+    toggle_state: bpy.props.BoolProperty()
+
+    def execute(self, context):
+        pref = get_prefs()
+        pref.show_content_overview = self.toggle_state
+        pref.cpack_name = ""
+
+        if self.toggle_state:
+            build_content_collection(self, context)
+            open_preferences_as_new_window()
+
+        return {"FINISHED"}

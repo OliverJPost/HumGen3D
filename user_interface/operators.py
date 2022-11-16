@@ -4,7 +4,10 @@ import contextlib
 
 import bpy
 from HumGen3D import Human
-from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.preferences.preference_func import (
+    get_prefs,
+    open_preferences_as_new_window,
+)
 
 from .documentation.info_popups import HG_OT_INFO
 from .documentation.tips_suggestions_ui import update_tips_from_context
@@ -85,16 +88,7 @@ class HG_OPENPREF(bpy.types.Operator):
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
-        old_area = bpy.context.area
-        old_ui_type = old_area.ui_type
-
-        bpy.context.area.ui_type = "PREFERENCES"
-        bpy.context.preferences.active_section = "ADDONS"
-        bpy.context.window_manager.addon_support = {"COMMUNITY"}
-        bpy.context.window_manager.addon_search = "Human Generator 3D"
-
-        bpy.ops.screen.area_dupli("INVOKE_DEFAULT")
-        old_area.ui_type = old_ui_type
+        open_preferences_as_new_window()
         return {"FINISHED"}
 
 
@@ -132,7 +126,9 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett.custom_content.content_saving_tab_index += 1 if self.go_next else -1
 
         update_tips_from_context(
-            context, sett, sett.custom_content.content_saving_active_human
+            context,
+            sett,
+            Human.from_existing(sett.custom_content.content_saving_active_human),
         )
 
         return {"FINISHED"}
@@ -155,6 +151,8 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
         sett.custom_content.content_saving_ui = False
 
         update_tips_from_context(
-            context, sett, sett.custom_content.content_saving_active_human
+            context,
+            sett,
+            Human.from_existing(sett.custom_content.content_saving_active_human),
         )
         return {"FINISHED"}

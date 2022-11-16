@@ -118,6 +118,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "other",
                 "main",
                 "eyes",
+                "expression_sliders",
                 "age_hairmat_ui",
                 "age_slider_ui",
             ]
@@ -139,6 +140,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "jaw",
                 "other",
                 "custom",
+                "special",
                 "presets",
             ]
         )

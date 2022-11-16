@@ -16,7 +16,6 @@ from .save_hair_ui import (
     _draw_hairtype_ui,
     _draw_particle_system_selection_ui,
 )
-from .save_keys import _draw_key_type_ui
 
 
 class HG_PT_CONTENT_SAVING(bpy.types.Panel):
@@ -44,11 +43,11 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
         ],
         "starting_human": [
             _draw_thumbnail_selection_ui,
+            draw_category_ui,
             _draw_name_ui
         ],
         "key": [
             draw_category_ui,
-            _draw_key_type_ui,
             _draw_name_ui
         ],
         "outfit": [

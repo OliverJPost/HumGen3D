@@ -2,8 +2,8 @@
 
 import bpy
 from HumGen3D.backend import get_prefs
-from HumGen3D.human.keys.keys import LiveKeyItem
-from HumGen3D.user_interface.panel_functions import prettify
+from HumGen3D.backend.logging import hg_log
+from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -16,6 +16,12 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
     def draw(self, context):
 
         col = self.layout.column()
+
+        if self.human.process.is_lod:
+            col.alert = True
+            draw_paragraph(col, "LOD models can't be edited.")
+            return
+
         col.scale_y = 1.5
 
         row = col.row(align=True)
@@ -41,22 +47,22 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col.separator()
         col.label(text="Other:")
         flow_custom = self._get_ff_col(col, "Custom", "custom")
-        flow_presets = self._get_ff_col(col, "Presets", "presets")
-
+        flow_special = self._get_ff_col(col, "Special", "special")
         for key in self.human.face.keys:
-            bpy_key = key.as_bpy()
-            if not getattr(self.sett.ui, key.subcategory):
-                continue
+            try:
+                if not getattr(self.sett.ui, str(key.subcategory)):
+                    continue
 
-            row = locals()[f"flow_{key.subcategory}"].row(align=True)
-            row.prop(bpy_key, "value", text=prettify(key.name), slider=True)
-            if isinstance(key, LiveKeyItem):
-                row.operator(
-                    "hg3d.livekey_to_shapekey",
-                    text="",
-                    icon="SHAPEKEY_DATA",
-                    emboss=False,
-                ).livekey_name = key.name
+                category_column = locals()[f"flow_{key.subcategory}"]
+                key.draw_prop(category_column)
+            except AttributeError:
+                hg_log(f"Error: {key.name} has no subcategory", level="WARNING")
+
+        flow_presets = self._get_ff_col(col, "Presets", "presets")
+        for key in self.human.keys.filtered("face_presets"):
+            if not self.sett.ui.presets:
+                continue
+            key.draw_prop(flow_presets, "value_limited")
 
     def _build_sk_name(self, sk_name, prefix) -> str:
         """Builds a displayable name from internal shapekey names.
@@ -104,6 +110,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             "ears": sett.ui.ears,
             "other": sett.ui.other,
             "custom": sett.ui.custom,
+            "special": sett.ui.special,
             "presets": sett.ui.presets,
         }
 
@@ -116,7 +123,7 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             toggle=True,
             emboss=False,
         )
-        if is_open_propname != "presets":
+        if is_open_propname not in ("presets", "special"):
             row.operator(
                 "hg3d.random_value", text="", icon="FILE_REFRESH", emboss=False
             ).random_type = "face_{}".format(is_open_propname)

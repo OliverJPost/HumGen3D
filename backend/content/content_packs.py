@@ -270,7 +270,7 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
         Returns:
             str: alert code
         """
-        if not os.path.basename(filepath).startswith("HG_CP"):
+        if not filepath.endswith("hgpack"):
             return "not_cpack"  # return error code if the prefix is not correct
 
         zf = zipfile.ZipFile(filepath)

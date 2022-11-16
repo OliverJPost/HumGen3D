@@ -1,3 +1,5 @@
+"""File containing commonly used type aliases."""
+
 from typing import List, Literal, Optional, Union
 
 import bpy

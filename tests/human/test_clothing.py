@@ -32,16 +32,16 @@ def human_with_outfit(male_human):
 
 def test_remove_outfit(human_with_outfit):
     old_child_count = len(list(human_with_outfit.children))
-    cloth_obj_len = len(human_with_outfit.outfit.objects)
-    human_with_outfit.outfit.remove()
+    cloth_obj_len = len(human_with_outfit.clothing.outfit.objects)
+    human_with_outfit.clothing.outfit.remove()
 
     assert len(list(human_with_outfit.children)) == old_child_count - cloth_obj_len
 
 
 def test_set_texture_resolution(human_with_outfit):
-    for obj in human_with_outfit.outfit.objects:
+    for obj in human_with_outfit.clothing.outfit.objects:
         for res_categ in ("high", "performance", "optimised"):
-            human_with_outfit.outfit.set_texture_resolution(obj, res_categ)
+            human_with_outfit.clothing.outfit.set_texture_resolution(obj, res_categ)
             # TODO add asserts
 
 

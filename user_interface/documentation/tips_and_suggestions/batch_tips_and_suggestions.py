@@ -2,8 +2,10 @@
 
 import bpy
 
+from .tip_baseclasses import Tip, URLOperator
 
-def get_batch_tips_from_context(context, sett, hg_rig):
+
+def get_batch_tips_from_context(context, sett, human):
 
     yield batch_tutorial
 
@@ -12,29 +14,22 @@ def get_batch_tips_from_context(context, sett, hg_rig):
         yield no_markers_in_scene
 
 
-batch_tutorial = [
+batch_tutorial = Tip(
     "Batch mode tutorial",
-    "HELP",
-    """You can find the tutorial about
-the batch mode here:
-""",
-    (
-        "URL",
-        "wm.url_open",
+    "You can find the tutorial about the batch mode here:",
+    icon="HELP",
+    operator=URLOperator(
         "Open tutorial in browser",
-        "url",
-        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",  # TODO correct url # noqa
-    ),
-]
+        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",
+    ),  # TODO correct url
+)
 
 
-no_markers_in_scene = [
+no_markers_in_scene = Tip(
     "No markers in scene?",
-    "INFO",
     """If the purple button says
 "Generate 0 Humans", add some
 Human Generator markers from
 the Add Object (Shift+A) menu.
 """,
-    (),
-]
+)
