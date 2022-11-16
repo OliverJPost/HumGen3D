@@ -90,7 +90,7 @@ def hg_callback() -> None:
     ui_phase = sett.ui.phase
 
     _set_shader_switches(human, sett)
-    update_tips_from_context(bpy.context, sett, human.objects.rig)
+    update_tips_from_context(bpy.context, sett, human)
     _context_specific_updates(sett, human, ui_phase)
 
 
@@ -160,7 +160,7 @@ def tab_change_update(self, context):
     update_tips_from_context(
         context,
         context.scene.HG3D,
-        human.objects.rig,
+        human,
     )
 
     find_possible_content(context)

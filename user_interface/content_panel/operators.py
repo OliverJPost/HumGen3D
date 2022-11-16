@@ -182,7 +182,9 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
                     ),
                 )
 
-        update_tips_from_context(context, cc_sett, cc_sett.content_saving_active_human)
+        update_tips_from_context(
+            context, cc_sett, Human.from_existing(cc_sett.content_saving_active_human)
+        )
         return {"FINISHED"}
 
     def _check_if_human_uses_unsaved_shapekeys(self, cc_sett) -> list:

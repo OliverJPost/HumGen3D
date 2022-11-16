@@ -11,11 +11,11 @@ from .tips_and_suggestions.batch_tips_and_suggestions import get_batch_tips_from
 from .tips_and_suggestions.content_saving_tips_and_suggestions import (
     get_content_saving_tips_from_context,
 )
-from .tips_and_suggestions.extras_menu_tips_and_suggestions import (
-    get_extras_menu_tips_from_context,
-)
 from .tips_and_suggestions.main_ui_tips_and_suggestions import (
     get_main_ui_tips_from_context,
+)
+from .tips_and_suggestions.process_tips_and_suggestions import (
+    get_process_tips_from_context,
 )
 
 lorum_ipsum = """
@@ -118,7 +118,7 @@ def _draw_tips_bloc(layout, tip_item):
             setattr(operator, tip_item.operator_keyword, tip_item.operator_argument)
 
 
-def update_tips_from_context(context, sett, hg_rig):
+def update_tips_from_context(context, sett, human):
     hg_area = (
         "content_saving"
         if sett.custom_content.content_saving_ui
@@ -128,13 +128,15 @@ def update_tips_from_context(context, sett, hg_rig):
     col = context.scene.hg_tips_and_suggestions
 
     if hg_area == "BATCH":
-        tips = get_batch_tips_from_context(context, sett, hg_rig)
+        tips = get_batch_tips_from_context(context, sett, human)
     elif hg_area == "content_saving":
-        tips = get_content_saving_tips_from_context(context, sett, hg_rig)
-    elif hg_area == "TOOLS":
-        tips = get_extras_menu_tips_from_context(context, sett, hg_rig)
+        tips = get_content_saving_tips_from_context(context, sett, human)
+    elif hg_area == "CONTENT":
+        tips = get_content_tips_from_context(context, sett, human)
+    elif hg_area == "PROCESS":
+        tips = get_process_tips_from_context(context, sett, human)
     else:
-        tips = get_main_ui_tips_from_context(context, sett, hg_rig)
+        tips = get_main_ui_tips_from_context(context, sett, human)
 
     if not tips:
         col.clear()
@@ -149,21 +151,22 @@ def update_tips_from_context(context, sett, hg_rig):
         hidden_tips_list = []
 
     col.clear()
-    for title, icon_name, tip_text, operator in tips:
+    for tip in tips:
         item = col.add()
-        item.title = title
-        item.icon_name = icon_name
-        item.tip_text = tip_text
+        item.title = tip.title
+        item.icon_name = tip.icon
+        item.tip_text = tip.text_wrapped
 
-        if title in hidden_tips_list:
+        if tip.title in hidden_tips_list:
             item.hidden = True
 
+        operator = tip.operator
         if operator:
-            item.operator_icon = operator[0]
-            item.operator_name = operator[1]
-            item.operator_label = operator[2]
-            item.operator_keyword = operator[3]
-            item.operator_argument = operator[4]
+            item.operator_icon = operator.icon
+            item.operator_name = operator.bl_idname
+            item.operator_label = operator.text
+            item.operator_keyword = operator.parameter_name
+            item.operator_argument = operator.parameter_value
 
 
 class TIPS_ITEM(bpy.types.PropertyGroup):
