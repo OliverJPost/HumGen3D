@@ -113,16 +113,17 @@ def find_possible_content(context: bpy.types.Context) -> None:
         header.name = "No changes found!"
         header.is_header = True
 
-    header = coll.add()
-    header.name = " "
-    header.is_header = True
+    if human.keys.all_added_shapekeys:
+        header = coll.add()
+        header.name = " "
+        header.is_header = True
 
-    header = coll.add()
-    header.name = "Shape keys:"
-    header.is_header = True
+        header = coll.add()
+        header.name = "Shape keys:"
+        header.is_header = True
 
-    for key in human.keys.all_added_shapekeys:
-        # if hash(key) != key.stored_hash:
-        item = coll.add()
-        item.name = key.as_bpy().name
-        item.category = "key"
+        for key in human.keys.all_added_shapekeys:
+            # if hash(key) != key.stored_hash:
+            item = coll.add()
+            item.name = key.as_bpy().name
+            item.category = "key"
