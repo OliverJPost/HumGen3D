@@ -67,10 +67,11 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
             if pr_sett.haircards_enabled:
                 quality = pr_sett.haircards.quality
-                human.hair.regular_hair.convert_to_haircards(quality, context)
+                if human.hair.regular_hair.modifiers:
+                    human.hair.regular_hair.convert_to_haircards(quality, context)
                 human.hair.eyebrows.convert_to_haircards(quality, context)
                 human.hair.eyelashes.convert_to_haircards(quality, context)
-                if pr_sett.haircards.face_hair:
+                if pr_sett.haircards.face_hair and human.hair.face_hair.modifiers:
                     human.hair.face_hair.convert_to_haircards(quality, context)
                 human.objects.rig["haircards"] = True
 

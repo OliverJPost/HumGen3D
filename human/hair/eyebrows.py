@@ -20,6 +20,7 @@ class EyebrowSettings(BaseHair):
     _haircap_tag = "hg_eyebrows"
     _startswith = "Eyebrows"
     _mat_idx = 1
+    _haircap_type = "Brows"
 
     def __init__(self, human: "Human") -> None:
         super().__init__()
