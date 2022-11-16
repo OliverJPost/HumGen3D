@@ -86,7 +86,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
     @property
     def keys(self) -> list[ShapeKeyItem]:
-        """Filtered list from human.keys for keys part of expressions.
+        """Filtered list from HumGen3D.human.keys for keys part of expressions.
 
         Returns:
             list[ShapeKeyItem]: List of shape keys that are on this human and of type

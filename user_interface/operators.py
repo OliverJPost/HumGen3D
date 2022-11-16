@@ -126,7 +126,9 @@ class HG_NEXTPREV_CONTENT_SAVING_TAB(bpy.types.Operator):
         sett.custom_content.content_saving_tab_index += 1 if self.go_next else -1
 
         update_tips_from_context(
-            context, sett, Human.from_existing(sett.custom_content.content_saving_active_human)
+            context,
+            sett,
+            Human.from_existing(sett.custom_content.content_saving_active_human),
         )
 
         return {"FINISHED"}
@@ -149,6 +151,8 @@ class HG_OT_CANCEL_CONTENT_SAVING_UI(bpy.types.Operator):
         sett.custom_content.content_saving_ui = False
 
         update_tips_from_context(
-            context, sett, Human.from_existing(sett.custom_content.content_saving_active_human_
+            context,
+            sett,
+            Human.from_existing(sett.custom_content.content_saving_active_human),
         )
         return {"FINISHED"}
