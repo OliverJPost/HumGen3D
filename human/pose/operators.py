@@ -96,6 +96,7 @@ class HG_RIGIFY(bpy.types.Operator):
         new_HG.gender = old_HG.gender
         new_HG.body_obj = old_HG.body_obj
         new_HG.length = old_HG.length
+        new_HG.version = old_HG.version
 
     def _iterate_children(self, hg_rig, rigify_rig):
         """Iterates over the children of the rig (clothes, eyes etc.) and
