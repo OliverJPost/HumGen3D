@@ -48,5 +48,7 @@ class Tip:
 
     @property
     def text_wrapped(self) -> str:
-        lines = [l for l in lines_from_text(self.text) if l != "WHITEPSACE"]
+        lines = [
+            " ".join(l) for l in lines_from_text(self.text, 100) if l != "WHITESPACE"
+        ]
         return "\n".join(lines)
