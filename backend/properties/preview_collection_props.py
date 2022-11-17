@@ -204,6 +204,7 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         name="Texture Library",
         items=get_folders("skin.texture"),
         update=refresh("skin.texture", "texture_category"),
+        default=1,
     )
     search_term_texture: StringProperty(
         name="Search:",

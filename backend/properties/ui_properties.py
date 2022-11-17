@@ -187,4 +187,5 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("outfit", "Outfit", "", get_hg_icon("outfit"), 0),
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 1),
         ],
+        update=lambda self, context: hg_callback(),
     )

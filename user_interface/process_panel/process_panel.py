@@ -408,13 +408,18 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
         self.draw_subtitle("Output", box, icon="SETTINGS")
 
-        if pr_sett.baking:
+        if pr_sett.baking_enabled or pr_sett.output == "export":
             col = box.column(align=True)
             col.use_property_split = True
             col.use_property_decorate = False
+
             bake_sett = sett.process.baking
-            col.prop(bake_sett, "file_type", text="Format:", icon="TEXTURE")
-            col.prop(pr_sett, "file_type", text=" ", icon="MESH_CUBE")
+            if pr_sett.baking_enabled:
+                col.prop(bake_sett, "file_type", text="Format:", icon="TEXTURE")
+
+            if pr_sett.output == "export":
+                col.prop(pr_sett, "file_type", text=" ", icon="MESH_CUBE")
+
             label = "Tex. Folder" if pr_sett.output != "export" else "Folder"
             col.prop(bake_sett, "export_folder", text=label)
 
