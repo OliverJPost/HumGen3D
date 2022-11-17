@@ -678,7 +678,16 @@ class HG_OT_DELETE_CONTENT_ITEM(bpy.types.Operator):
         item = coll.get(self.item_name)
         index = coll.find(self.item_name)
 
-        relpath = item.path
+        try:
+            relpath = item.path
+        except AttributeError:
+            ShowMessageBox(
+                "You can't click on the same place twice, please move your mouse.",
+                "Error",
+                "ERROR",
+            )
+            return {"CANCELLED"}
+
         abspath = os.path.join(get_prefs().filepath, relpath)
         os.remove(abspath)
 

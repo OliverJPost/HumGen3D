@@ -299,7 +299,7 @@ class LiveKeyItem(KeyItem):
         if self.category:
             if self.subcategory:
                 # Tripe curly braces for result of f{chin}_chin_size
-                name = f"{self.category[0]}]_{{{self.subcategory}}}_{self.name}"
+                name = f"{self.category[0]}_{{{self.subcategory}}}_{self.name}"
             else:
                 name = f"{self.category[0]}_{self.name}"
         else:
@@ -373,6 +373,7 @@ class ShapeKeyItem(KeyItem, SavableContent):
         "b": "body_proportions",
         "p": "presets",
         "e": "expressions",
+        "s": "special",
     }
 
     def __init__(self, sk_name: str, human: "Human") -> None:

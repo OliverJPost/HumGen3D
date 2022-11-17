@@ -15,13 +15,13 @@ import bpy
 from HumGen3D.backend import hg_log
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.process_props import get_preset_list
+from HumGen3D.common import find_multiple_in_list
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.apply_modifiers import apply_modifiers
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
-from HumGen3D.common import find_multiple_in_list
-from HumGen3D.human.process.apply_modifiers import apply_modifiers
 
 
 def status_text_callback(header, context):
@@ -142,6 +142,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
             if pr_sett.output == "export":
                 pass
 
+        ShowMessageBox("Processing finished", "Success", "INFO")
         return {"FINISHED"}
 
 

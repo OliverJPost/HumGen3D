@@ -126,20 +126,18 @@ def _context_specific_updates(sett, human, ui_phase):
     """  # noqa
     sett.update_exception = False
     context = bpy.context
-    if sett.ui.active_tab == "TOOLS":
-        try:
-            refresh_shapekeys_ul(None, context)
-            refresh_hair_ul(None, context)
-            refresh_outfit_ul(None, context)
-        except AttributeError:
-            pass
-        return
-    elif ui_phase == "apply":
+
+    if ui_phase == "apply":
         refresh_modapply(None, context)
     elif ui_phase == "hair":
-        preview_collections["hair"].refresh(context, human.gender)
+        human.hair.regular_hair.refresh_pcoll(context, human.gender)
         if human.gender == "male":
-            preview_collections["face_hair"].refresh(context)
+            human.hair.face_hair.refresh_pcoll(context)
+    elif ui_phase == "clothing":
+        human.clothing.outfit.refresh_pcoll(context)
+        human.clothing.footwear.refresh_pcoll(context)
+    elif ui_phase == "skin":
+        human.skin.texture.refresh_pcoll(context)
     else:
         with contextlib.suppress(AttributeError, RecursionError):
             getattr(human, ui_phase).refresh_pcoll(context)

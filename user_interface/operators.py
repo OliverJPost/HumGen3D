@@ -4,6 +4,7 @@ import contextlib
 
 import bpy
 from HumGen3D import Human
+from HumGen3D.backend.callback import hg_callback
 from HumGen3D.backend.preferences.preference_func import (
     get_prefs,
     open_preferences_as_new_window,
@@ -40,13 +41,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         sett.ui.phase = self.section_name
 
-        if self.section_name == "hair":
-            human.hair.regular_hair.refresh_pcoll(context)
-            if human.gender == "male":
-                human.hair.face_hair.refresh_pcoll(context)
-        else:
-            with contextlib.suppress(AttributeError, RecursionError):
-                getattr(human, self.section_name).refresh_pcoll(context)
+        hg_callback()
 
         pref = get_prefs()
         if (

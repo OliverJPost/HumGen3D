@@ -134,9 +134,9 @@ class HG_PT_MANAGE_CONTENT(HGPanel, bpy.types.Panel):
         col.operator(
             "hg3d.toggle_content_overview", text="Open Content Overview"
         ).toggle_state = True
-        col.operator(
-            "hg3d.toggle_content_overview", text="Edit existing pack"
-        ).toggle_state = True
+        # col.operator(
+        #     "hg3d.toggle_content_overview", text="Edit existing pack"
+        # ).toggle_state = True
         col.operator(
             "hg3d.create_cpack", text="Create new pack"
         ).show_name_dialog = True

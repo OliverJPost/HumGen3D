@@ -274,6 +274,11 @@ class ProcessSettings:
         pr_sett = context.scene.HG3D.process
 
         settings_dict = {}
+        settings_dict["main"] = {
+            "bake_file_type": pr_sett.baking.file_type,
+            "export_file_type": pr_sett.file_type,
+            "output_type": pr_sett.output,
+        }
         if pr_sett.baking_enabled:
             settings_dict["baking"] = ProcessSettings._props_from_propgroup(
                 pr_sett.baking
@@ -301,15 +306,39 @@ class ProcessSettings:
             settings_dict["modapply"] = ProcessSettings._props_from_propgroup(
                 pr_sett.modapply
             )
+            settings_dict["modapply"]["enabled_items"] = [
+                item.mod_type
+                for item in context.scene.modapply_col
+                if item.enabled and item.mod_type
+            ]
 
         if pr_sett.lod_enabled:
             settings_dict["lod"] = ProcessSettings._props_from_propgroup(pr_sett.lod)
 
+        if pr_sett.scripting_enabled:
+            settings_dict["scripting"] = ProcessSettings._props_from_collection(
+                context.scene.hg_scripts_col
+            )
         full_path = os.path.join(folder, template_name + ".json")
         with open(full_path, "w") as f:
             json.dump(settings_dict, f, indent=4)
 
         return full_path
+
+    @staticmethod
+    def _props_from_collection(collection: bpy.types.Collection) -> Dict[str, Any]:
+        """Returns a dict of properties from a collection.
+
+        Args:
+            collection (bpy.types.Collection): The collection.
+
+        Returns:
+            Dict[str, Any]: The dict of properties.
+        """
+        props = {}
+        for item in collection:
+            props[item.name] = ProcessSettings._props_from_propgroup(item)
+        return props
 
     @staticmethod
     def _props_from_propgroup(prop_group: bpy.types.PropertyGroup) -> Dict[str, Any]:
@@ -344,20 +373,43 @@ class ProcessSettings:
                 setattr(pr_sett, prop.identifier, False)
 
         for attr, prop_dict in data.items():
-            if attr == "material_renaming":
+            if attr in ("material_renaming", "main"):
                 continue
 
             # Set enabled = True because attr being in the dict means it was enabled
             setattr(pr_sett, f"{attr}_enabled", True)
             prop_group = getattr(pr_sett, attr)
 
-            for prop_name, prop_value in prop_dict.items():
-                # Set the nested material properties if encountered
-                if prop_name == "materials":
-                    mat_renaming_data = data["material_renaming"]
-                    for mat_prop_name, mat_prop_value in mat_renaming_data.items():
-                        setattr(
-                            pr_sett.renaming.materials, mat_prop_name, mat_prop_value
-                        )
-                else:
-                    setattr(prop_group, prop_name, prop_value)
+            if attr == "scripting":
+                for script in prop_dict:
+                    script_obj = context.scene.hg_scripts_col.add()
+                    script_obj.name = script
+            else:
+                ProcessSettings.add_props_from_dict(
+                    data, pr_sett, prop_dict, prop_group
+                )
+
+        main_data = data.get("main")
+        pr_sett.baking.file_type = main_data["bake_file_type"]
+        pr_sett.output = main_data["output_type"]
+        pr_sett.file_type = main_data["export_file_type"]
+
+        # Disable all categories for default settings template
+        if "Default Settings" in template_path:
+            for prop in pr_sett.bl_rna.properties:
+                if "_enabled" in prop.identifier:
+                    setattr(pr_sett, prop.identifier, False)
+
+    @staticmethod
+    def add_props_from_dict(data, pr_sett, prop_dict, prop_group):
+        for prop_name, prop_value in prop_dict.items():
+            # Set the nested material properties if encountered
+            if prop_name == "materials":
+                mat_renaming_data = data["material_renaming"]
+                for mat_prop_name, mat_prop_value in mat_renaming_data.items():
+                    setattr(pr_sett.renaming.materials, mat_prop_name, mat_prop_value)
+            elif prop_name == "enabled_items":
+                for item in bpy.context.scene.modapply_col:
+                    item.enabled = item.mod_type in prop_value
+            else:
+                setattr(prop_group, prop_name, prop_value)
