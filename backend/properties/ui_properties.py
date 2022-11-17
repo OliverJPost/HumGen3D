@@ -46,7 +46,7 @@ def panel_update(self, context):
     if active_panel in ("create", "batch", "content", "process"):
         self.active_tab = active_panel.upper()
         self.phase = "closed"
-    hg_callback(self)
+    hg_callback()
 
 
 # As separate function so icon_id updates correctly
