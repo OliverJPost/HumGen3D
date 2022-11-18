@@ -197,22 +197,32 @@ class HairSettings:
             else {},
         }
 
-    def set_from_dict(self, data: dict[str, dict[str, Any]]) -> None:
+    def set_from_dict(self, data: dict[str, dict[str, Any]]) -> list[str]:
         """Set the hair settings from a dictionary representation.
 
         See `as_dict` for structure.
 
         Args:
             data (dict[str, dict[str, Any]]): Dictionary representation of the hair
+
+        Returns:
+            list[str]: List of errors that occurred during setting.
         """
+        errors = []
         for hair_categ, categ_data in data.items():
             for attr_name, attr_value in categ_data.items():
                 if attr_name == "set":
                     if attr_value:
-                        getattr(self, hair_categ).set(attr_value)
+                        try:
+                            getattr(self, hair_categ).set(attr_value)
+                        except FileNotFoundError:
+                            errors.append("Hair error:")
+                            errors.append(f"'{attr_value}' not found.")
                 else:
                     retreiver = attrgetter(f"{hair_categ}.{attr_name}")
                     retreiver(self).value = attr_value
+
+        return errors
 
     def _get_steps_amount(
         self, hair_quality: Literal["high", "medium", "low", "ultralow"], max_steps: int

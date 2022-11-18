@@ -108,3 +108,5 @@ class AgeSettings:
         self.set(data["set"])
         self.age_color.value = data["age_color"]
         self.age_wrinkles.value = data["age_wrinkles"]
+
+        return []

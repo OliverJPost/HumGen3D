@@ -707,13 +707,17 @@ class KeySettings:
         return key_dict
 
     @injected_context
-    def set_from_dict(self, key_dict: dict[str, float], context: C = None) -> None:
+    def set_from_dict(self, key_dict: dict[str, float], context: C = None) -> list[str]:
         """Set the shape key and live key values from a dictionary.
 
         Args:
             key_dict (dict[str, float]): Dictionary of shape key and live key values
             context (C): Blender context. Defaults to None.
+
+        Returns:
+            list[str]: List of errors that occurred during setting the values
         """
+        errors = []
         for key_name, value in key_dict.items():
             key = self.get(key_name)
             if key:
@@ -725,8 +729,11 @@ class KeySettings:
                 hg_log(
                     f"Could not find key '{key_name}' while setting values", "WARNING"
                 )
+                errors.append("Key not found: " + key_name)
 
         self.update_human_from_key_change(context)
+
+        return errors
 
     @injected_context
     def update_human_from_key_change(self, context: C = None) -> None:

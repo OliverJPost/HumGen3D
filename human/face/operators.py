@@ -16,5 +16,5 @@ class HG_RESET_FACE(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        Human.from_existing(context.object).creation_phase.face.reset()
+        Human.from_existing(context.object).face.reset()
         return {"FINISHED"}

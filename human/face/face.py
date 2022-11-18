@@ -64,8 +64,8 @@ class FaceSettings(PropCollection):
             keys = [key for key in self.keys if key.subcategory == subcategory]
         all_v = 0.0
         for key in keys:
-            if use_bell_curve:
-                new_value = np.random.normal(loc=0, scale=0.5)
+            if "distance" in key.name.lower():
+                new_value = np.random.normal(loc=0, scale=0.2)
             else:
                 new_value = np.random.normal(loc=0, scale=0.5)
             all_v += new_value

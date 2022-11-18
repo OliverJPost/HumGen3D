@@ -89,7 +89,7 @@ def refresh_outfit_ul(self, context):
 
     col.clear()
 
-    hg_rig = sett.content_saving_active_human
+    hg_rig = sett.content_saving.content_saving_active_human
 
     for obj in [
         o
