@@ -15,6 +15,7 @@ import bpy
 from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
+from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
@@ -192,6 +193,8 @@ class BaseHair:
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
+        joined_object.parent = self._human.objects.rig
+        add_to_collection(context, joined_object, "HumGen")
         return joined_object
 
     @injected_context
