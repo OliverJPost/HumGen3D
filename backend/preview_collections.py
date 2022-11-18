@@ -297,7 +297,7 @@ def get_display_name(full_path: str) -> str:
     Returns:
         str: display name
     """
-    display_name: str = os.path.basename(full_path)
+    display_name: str = os.path.splitext(os.path.basename(full_path))[0]
     for remove_string in ("HG", "Male", "Female"):
         display_name = display_name.replace(remove_string, "")
     return display_name.replace("_", " ")
