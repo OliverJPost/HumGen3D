@@ -143,7 +143,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 category_sett.name,
                 for_male=category_sett.save_for_male,
                 for_female=category_sett.save_for_female,
-                open_when_finished=category_sett.save_when_finished,
+                open_when_finished=cc_sett.open_when_finished,
                 category=subcategory,
                 thumbnail=thumbnail,
                 context=context,

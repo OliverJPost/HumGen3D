@@ -112,7 +112,7 @@ def get_categories(self, context):
     if attr == "hair":
         hair_type = "regular_hair" if self.save_type == "head" else "face_hair"
         human_subclass = getattr(human.hair, hair_type)
-    elif attr in ("footwear", "outfits"):
+    elif attr in ("footwear", "outfit"):
         human_subclass = getattr(human.clothing, attr)
     else:
         human_subclass = getattr(human, attr)
@@ -250,6 +250,8 @@ class CustomContentProps(bpy.types.PropertyGroup):
         ],
         default="outfit",
     )
+
+    open_when_finished: BoolProperty(default=False)
 
     clothing_name: StringProperty(default="")
 

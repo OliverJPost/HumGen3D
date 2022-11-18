@@ -44,10 +44,9 @@ def _save_clothing(
         if thumbnail:
             save_thumb(gender_folder, thumbnail.name, name)
 
-    # TODO disable armature modifier
-    depsgraph = context.evaluated_depsgraph_get()
-    body_obj_eval = human.objects.body.evaluated_get(depsgraph)
-    body_eval_coords_world = world_coords_from_obj(body_obj_eval)
+    body_eval_coords_world = world_coords_from_obj(
+        human.objects.body, data=human.keys.all_deformation_shapekeys
+    )
 
     texture_folder = os.path.join(folder, "textures")
     _save_material_textures(objs, texture_folder)

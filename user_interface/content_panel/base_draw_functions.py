@@ -82,6 +82,9 @@ def _draw_name_ui(context, layout, content_type):
         col_a.label(text="Name already exists", icon="ERROR")
         col_a.label(text="Overwrite?")
 
+    if content_type in ("footwear", "outfit"):
+        col.prop(cc_sett, "open_when_finished", text="Open when finished")
+
     poll = bool(name)
 
     _draw_save_button(layout, content_type, poll=poll)

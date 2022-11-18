@@ -152,10 +152,8 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
         rig_obj = self._human.objects.rig
-        armature_mod = cloth_obj.modifiers.new("Armature", "ARMATURE")
-        armature_mod.object = rig_obj
         cloth_obj.parent = rig_obj
-        cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
+        # cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
         tag = "shoe" if cloth_type == "footwear" else "cloth"
         cloth_obj[tag] = 1  # type:ignore[index]
 
