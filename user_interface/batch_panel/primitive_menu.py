@@ -23,17 +23,17 @@ class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):
         for primitive in [
             "a_pose",
             "t_pose",
-            "standing_around",
-            "sitting",
-            "socializing",
-            "walking",
-            "running",
+            "Standing_around",
+            "Sitting",
+            "Socializing",
+            "Walking",
+            "Running",
         ]:
             primitive_name_formatted = primitive.capitalize().replace("_", " ")
             operator = layout.operator(
                 "hg3d.add_batch_marker",
                 text=primitive_name_formatted,
-                icon_value=get_hg_icon(primitive),
+                icon_value=get_hg_icon(primitive.lower()),
             )
             operator.marker_type = primitive
 

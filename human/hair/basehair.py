@@ -133,10 +133,10 @@ class BaseHair:
             bpy.types.Object: Blender object of the haircap
         """
         hair_objs: list[bpy.types.Object] = []
-        
+
         if not self.modifiers:
             raise HumGenException("No hair to convert")
-            
+
         for mod in self.modifiers:
             if not mod.show_viewport:
                 continue
@@ -385,7 +385,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
 
         hg_delete(hair_obj)
         remove_broken_drivers()
-
+        human.hair._add_quality_props()
         human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
 
     @injected_context
