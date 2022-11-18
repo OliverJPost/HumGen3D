@@ -100,6 +100,8 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         categories = set(Human.get_categories("male") + Human.get_categories("female"))
 
         for category in categories:
+            if category == "All":
+                continue
             flow.prop(batch_sett, f"{category}_chance")
 
 
