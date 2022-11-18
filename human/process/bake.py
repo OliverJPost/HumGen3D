@@ -229,7 +229,10 @@ class BakeSettings:
             ].preferences.compute_device_type = "OPTIX"
         context.scene.cycles.samples = old_samples
         if was_eevee:
-            context.scene.render.engine = "EEVEE"
+            try:
+                context.scene.render.engine = "EEVEE"
+            except TypeError:
+                context.scene.render.engine = "BLENDER_EEVEE"
 
     @injected_context
     def bake_single_texture(
