@@ -138,16 +138,21 @@ class EyeSettings:
             "sclera_color": self.sclera_color.value,
         }
 
-    def set_from_dict(self, data: dict[str, Any]) -> None:
+    def set_from_dict(self, data: dict[str, Any]) -> list[str]:
         """Sets the eye settings from a dictionary.
 
         This dict can be derived from the as_dict method.
 
         Args:
             data (dict[str, Any]): Dictionary to set the eye settings from.
+
+        Returns:
+            list[str]: List of errors that occured during setting the eye settings.
         """
         self.iris_color.value = data["pupil_color"]
         self.sclera_color.value = data["sclera_color"]
+
+        return []
 
     def _srgb_to_linearrgb(self, c: float) -> float:
         # Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896 # noqa

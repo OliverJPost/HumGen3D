@@ -22,6 +22,7 @@ from HumGen3D.common import find_hg_rig, is_legacy
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from HumGen3D.human.age import AgeSettings
 from HumGen3D.human.materials import MaterialSettings
+from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
@@ -185,10 +186,11 @@ class Human:
         gender = preset.split(os.sep)[1]
 
         human = cls._import_human(context, gender)
-
         # Set human settings from preset dictionary
+        errors = []
         for attr, data in preset_data.items():
-            getattr(human, attr).set_from_dict(data)
+            occurred_errors = getattr(human, attr).set_from_dict(data)
+            errors.extend(occurred_errors)
 
         human._set_random_name()
 
@@ -201,6 +203,10 @@ class Human:
         human.props.hashes["$hair"] = str(hash(human.hair.regular_hair))
 
         human._active = preset
+
+        if errors:
+            error_lines = "\n".join(errors)
+            ShowMessageBox(f"Occurred errors: {error_lines}", "Error")
 
         return human
 

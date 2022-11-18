@@ -57,7 +57,10 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
 
     # If the value was not changed, for example by the user exiting the value
     # typing modal, then do nothing. This prevents crash.
-    found_value = human.props.sk_values[name]
+    try:
+        found_value = human.props.sk_values[name]
+    except KeyError:
+        found_value = 0
     if name not in human.props.sk_values:
         if value == 0:
             return

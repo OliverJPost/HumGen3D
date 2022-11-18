@@ -112,14 +112,19 @@ class HeightSettings:
         return {"set": self.centimeters}
 
     @injected_context
-    def set_from_dict(self, data: dict[str, float], context: C = None) -> None:
+    def set_from_dict(self, data: dict[str, float], context: C = None) -> list[str]:
         """Sets height of human from dictionary.
 
         Args:
             data (dict[str, float]): Dictionary with height of human.
             context (C): Blender context. Defaults to None.
+
+        Returns:
+            list[str]: List of occurred errors.
         """
         self.set(data["set"], context)
+
+        return []
 
     @injected_context
     def _correct_armature(self, context: C = None) -> None:

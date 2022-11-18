@@ -219,22 +219,33 @@ class SkinSettings:
         }
 
     @injected_context
-    def set_from_dict(self, data: dict[str, Any], context: C = None) -> None:
+    def set_from_dict(self, data: dict[str, Any], context: C = None) -> list[str]:
         """Set the skin material from a dictionary representation.
 
         Args:
             data (dict[str, Any]): Dictionary representation of the skin material.
             context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            list[str]: List of occurred errors.
         """
+        errors = []
         for attr_name, attr_value in data.items():
             if attr_name == "gender_specific":
                 for gs_attr_name, gs_attr_value in attr_value.items():
                     setattr(self.gender_specific, gs_attr_name, gs_attr_value)
             elif "texture.set" in attr_name:
                 if attr_value is not None:
-                    self.texture.set(attr_value)
+                    try:
+                        self.texture.set(attr_value)
+                    except RuntimeError:
+                        errors.append("Texture error:")
+                        errors.append(f"'{attr_value}' not found.")
+
             else:
                 getattr(self, attr_name).value = attr_value
+
+        return errors
 
     def _set_gender_specific(self) -> None:
         """Male and female humans of HumGen use the same shader, but one node # noqa

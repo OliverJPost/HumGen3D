@@ -77,7 +77,6 @@ def msgbus(self: bpy.types.Operator, context: Context) -> None:
     sett.subscribed = True
 
 
-@no_type_check
 def hg_callback() -> None:
     """Runs every time the active object changes."""
     human = Human.from_existing(bpy.context.object, strict_check=False)

@@ -44,7 +44,12 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         self._draw_clothmat_header(context, col)
 
         nodes = context.object.data.materials[0].node_tree.nodes
-        control_node = nodes["HG_Control"]
+        control_node = nodes.get("HG_Control")
+        if not control_node:
+            row = col.row()
+            row.scale_y = 1.5
+            row.label(text="Not a HG material.", icon="ERROR")
+            return
 
         self._draw_clothmat_color_subsection(layout, control_node)
         self._draw_clothmat_options_subsection(layout, control_node)

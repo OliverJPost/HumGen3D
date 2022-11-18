@@ -4,6 +4,7 @@
 This is an interface class for getting to OutfitSettings and FootwearSettings.
 """
 
+import os
 from typing import TYPE_CHECKING, Any
 
 from .footwear import FootwearSettings
@@ -59,13 +60,29 @@ class ClothingSettings:
         }
         return return_dict
 
-    def set_from_dict(self, data: dict[str, Any]) -> None:
+    def set_from_dict(self, data: dict[str, Any]) -> list[str]:
         """Set clothing settings from dict.
 
         Args:
             data (dict[str, Any]): Dict of clothing settings.
+
+        Returns:
+            list[str]: List of errors occurred during setting.
         """
+        errors = []
         if data["outfit"]["set"] is not None:
-            self.outfit.set(data["outfit"]["set"])
+            try:
+                self.outfit.set(data["outfit"]["set"])
+            except FileNotFoundError:
+                outfitname = os.path.basename(data["outfit"]["set"])
+                errors.append("Outfit error:")
+                errors.append(f"'{outfitname}' not found.")
         if data["footwear"]["set"] is not None:
-            self.footwear.set(data["footwear"]["set"])
+            try:
+                self.footwear.set(data["footwear"]["set"])
+            except FileNotFoundError:
+                footwearname = os.path.basename(data["footwear"]["set"])
+                errors.append("Footwear error:")
+                errors.append(f"'{footwearname}' not found.")
+
+        return errors
