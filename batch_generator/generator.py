@@ -59,10 +59,13 @@ class BatchHumanGenerator:
         if not self.human_preset_category_chances:
             presets = Human.get_preset_options(gender)
         else:
-            chosen_category: str = random.choices(
-                *zip(*self.human_preset_category_chances.items())  # type:ignore
-            )[0]
-            presets = Human.get_preset_options(gender, chosen_category, context)
+            presets = []
+            # While loop to ensure at least one preset is in the list
+            while not presets:
+                chosen_category: str = random.choices(
+                    *zip(*self.human_preset_category_chances.items())  # type:ignore
+                )[0]
+                presets = Human.get_preset_options(gender, chosen_category, context)
 
         chosen_preset = random.choice(presets)
         human = Human.from_preset(chosen_preset)
@@ -105,7 +108,9 @@ class BatchHumanGenerator:
             if pose_type == "t_pose":
                 human.pose.set(os.path.join("poses", "Base Poses", "HG_T_Pose.blend"))
             else:
-                options = human.pose.get_options(context, category=pose_type)
+                options = human.pose.get_options(
+                    context, category=pose_type.replace("_", " ")
+                )
                 human.pose.set(random.choice(options))
 
         if self.add_expression:

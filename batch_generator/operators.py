@@ -84,7 +84,8 @@ def set_generator_settings(generator, batch_sett):
     categories = set(Human.get_categories("male") + Human.get_categories("female"))
     categories.remove("All")
     for category in categories:
-        category_chance_dict[category] = batch_sett[f"{category}_chance"] / 100
+        chance_amount = batch_sett.get(f"{category}_chance", 100)
+        category_chance_dict[category] = chance_amount / 100
     generator.human_preset_category_chances = category_chance_dict
     generator.add_clothing = batch_sett.clothing
     generator.clothing_categories = _choose_category_list()
