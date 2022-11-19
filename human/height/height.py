@@ -163,7 +163,8 @@ class HeightSettings:
             obj.select_set(False)
         rig.select_set(True)
 
-        bpy.ops.object.mode_set(mode="EDIT")
+        with context.temp_override(active_object=rig, selected_objects=[rig]):
+            bpy.ops.object.mode_set(mode="EDIT")
         for ebone in rig.data.edit_bones:
             if "head_verts" not in ebone:
                 continue
@@ -180,7 +181,8 @@ class HeightSettings:
 
             ebone.tail = centroid_co + vert_vec_tail
 
-        bpy.ops.object.mode_set(mode="OBJECT")
+        with context.temp_override(active_object=rig, selected_objects=[rig]):
+            bpy.ops.object.mode_set(mode="OBJECT")
 
         context.view_layer.objects.active = old_active
         rig.select_set(False)
