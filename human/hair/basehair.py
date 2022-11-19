@@ -194,6 +194,8 @@ class BaseHair:
             mod.show_viewport = False
 
         joined_object.parent = self._human.objects.rig
+        joined_object.modifiers.new("Armature", "ARMATURE")
+
         add_to_collection(context, joined_object, "HumGen")
         return joined_object
 
