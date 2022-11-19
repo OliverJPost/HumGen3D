@@ -126,7 +126,7 @@ class PreviewCollectionContent:
 
         # Return only the name from the enum. Skip the first one
         # FIXME check all pcolls if 0 is always skipped
-        self.refresh_pcoll(context, ignore_searchterm=True)
+        self.refresh_pcoll(context, override_category=category, ignore_searchterm=True)
         options = [option[0] for option in self._get_full_options()[1:]]
         if not options:
             raise HumGenException(
