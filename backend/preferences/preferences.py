@@ -3,8 +3,8 @@
 
 """HumGen add-on preferences and associated functions."""
 
+import json
 import os
-from pathlib import Path
 
 import bpy  # type: ignore
 from HumGen3D import bl_info
@@ -37,9 +37,23 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
     def draw(self, context):
         # check if base content is installed, otherwise show installation ui
-        base_content_found = self._check_if_basecontent_is_installed()
+        base_content_found, is_legacy = self._check_if_basecontent_is_installed()
         if not base_content_found:
             self._draw_first_time_ui(context)
+            return
+
+        if is_legacy:
+            legacy_text = [
+                "Folder selected, but contains legacy content.",
+                "To prevent textures dissapearing from old humans, select a new folder!",
+                "Follow the update instructions from the button below.",
+            ]
+            for line in legacy_text:
+                row = self.layout.box().row()
+                row.alignment = "CENTER"
+                row.alert = True
+                row.label(text=line)
+            self._draw_first_time_ui(context, is_legacy=True)
             return
 
         layout = self.layout
@@ -66,7 +80,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         elif self.pref_tabs == "cpacks":
             self._draw_cpack_ui(context)
 
-    def _check_if_basecontent_is_installed(self) -> bool:
+    def _check_if_basecontent_is_installed(self) -> tuple[bool, bool]:
         """Determines if this is the first time loading Human Generator.
 
         Checks if the base content is installed
@@ -74,13 +88,21 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         Returns:
             bool: True if base content is installed
         """
+        base_humans_path = os.path.join(
+            self.filepath, "content_packs", "Base_Humans.json"
+        )
         base_content_found = (
-            os.path.exists(self.filepath + str(Path("content_packs/Base_Humans.json")))
-            if self.filepath
-            else False
+            os.path.exists(base_humans_path) if self.filepath else False
         )
 
-        return base_content_found  # noqa
+        # Check if base content is legacy
+        if base_content_found:
+            with open(base_humans_path, "r") as f:
+                base_content = json.load(f)
+            if base_content["config"]["pack_version"][0] < 4:
+                return True, True
+
+        return base_content_found, False  # noqa
 
     def _get_update_statuscode(self) -> str:
         """Gets update code from check that was done when Blender was opened.
@@ -326,7 +348,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.alignment = "RIGHT"
         row.label(text=message, icon="ERROR")
 
-    def _draw_first_time_ui(self, context):
+    def _draw_first_time_ui(self, context, is_legacy=False):
         """UI for when no base humans found, promting to install the content packs."""
         layout = self.layout
 
@@ -339,16 +361,22 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.alert = True
         row.operator(
             "wm.url_open",
-            text="Installation tutorial [Opens browser]",
+            text="Updating tutorial [Opens browser]"
+            if is_legacy
+            else "Installation tutorial [Opens browser]",
             icon="HELP",
             depress=True,
-        ).url = "https://www.humgen3d.com/install"
+        ).url = (
+            "https://help.humgen3d.com/update"
+            if is_legacy
+            else "https://help.humgen3d.com/install"
+        )
 
         # select path section
         box = layout.box()
         box.scale_y = 1.5
         box.label(
-            text="STEP 2: Select a folder for HumGen to install content packs in. 2 GB free space recommended."  # noqa
+            text="STEP 2: Select a folder for HumGen to install content packs in. 2.5 GB free space recommended."  # noqa
         )
 
         if self.filepath:
