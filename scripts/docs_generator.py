@@ -59,7 +59,7 @@ class Docstring:
                 if "Args:" in line:
                     continue
                 elif ":" in line:
-                    name, description = line.strip().split(":")
+                    name, description = line.strip().split(":", 1)
                     name = name.split(" ")[0]
                     prev_name = name
                     self.params[name] = description.strip()
