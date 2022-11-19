@@ -159,7 +159,11 @@ class Human:
     @classmethod
     @injected_context
     def from_preset(
-        cls, preset: str, context: C = None, prettify_eevee: bool = True
+        cls,
+        preset: str,
+        context: C = None,
+        prettify_eevee: bool = True,
+        from_batch_generator: bool = False,
     ) -> Human:
         """Creates human in Blender based on passed preset and returns Human instance.
 
@@ -169,6 +173,8 @@ class Human:
             context (C): The Blender context. Defaults to bpy.context if None
             prettify_eevee (bool): If True, the AO and Strip settings will be set to
                 settings that look nicer. Defaults to True
+            from_batch_generator (bool): If True, some settings will be skipped as they
+                are defined in the batch generator. Defaults to False
 
         Returns:
             Human: A Human instance
@@ -186,9 +192,30 @@ class Human:
         gender = preset.split(os.sep)[1]
 
         human = cls._import_human(context, gender)
+
+        def scrub(obj: dict[Any, Any], bad_key: str) -> None:
+            if isinstance(obj, dict):
+                for key in list(obj.keys()):
+                    if key == bad_key:
+                        obj[key] = None
+                    else:
+                        scrub(obj[key], bad_key)
+            elif isinstance(obj, list):
+                for i in reversed(range(len(obj))):
+                    if obj[i] == bad_key:
+                        obj[i] = None
+                    else:
+                        scrub(obj[i], bad_key)
+            else:
+                pass
+
         # Set human settings from preset dictionary
         errors = []
         for attr, data in preset_data.items():
+            # Do not set hairstyles or clothes if we are in batch generator mode
+            if from_batch_generator and attr not in ("skin", "age", "height"):
+                scrub(data, "set")
+
             occurred_errors = getattr(human, attr).set_from_dict(data)
             errors.extend(occurred_errors)
 
