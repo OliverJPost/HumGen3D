@@ -23,7 +23,6 @@ from HumGen3D.human.keys.keys import update_livekey_collection
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
-    refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
 
@@ -161,7 +160,6 @@ def tab_change_update(self, context):
     )
 
     find_possible_content(context)
-    refresh_outfit_ul(None, context)
 
 
 def set_human_categ_props() -> None:

@@ -80,45 +80,6 @@ def refresh_hair_ul(self, context):
             item.enabled = True
 
 
-# TODO if old list, make cloth_types the same again
-def refresh_outfit_ul(self, context):
-    sett = context.scene.HG3D  # type:ignore[attr-defined]
-    col = context.scene.saveoutfit_col
-
-    previously_enabled_items = [i.obj_name for i in col if i.enabled]
-
-    col.clear()
-
-    hg_rig = sett.content_saving.content_saving_active_human
-
-    for obj in [
-        o
-        for o in hg_rig.children
-        if o.type == "MESH"
-        and "hg_body" not in o
-        and "hg_eyes" not in o
-        and "hg_teeth" not in o
-    ]:
-
-        item = col.add()
-        item.obj_name = obj.name
-
-        if obj.data.shape_keys:
-            item.cor_sks_present = next(
-                (
-                    True
-                    for sk in obj.data.shape_keys.key_blocks
-                    if sk.name.startswith("cor")
-                ),
-                False,
-            )
-
-        item.weight_paint_present = "spine" in [vg.name for vg in obj.vertex_groups]
-
-        if obj.name in previously_enabled_items:
-            item.enabled = True
-
-
 class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
     """Opens the Content Saving UI, hiding the regular UI.
 
@@ -157,8 +118,6 @@ class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
             refresh_shapekeys_ul(self, context)
         elif self.content_type == "hair":
             refresh_hair_ul(self, context)
-        elif self.content_type == "clothing":
-            refresh_outfit_ul(self, context)
 
         if self.content_type == "starting_human":
             unsaved_sks = self._check_if_human_uses_unsaved_shapekeys(cc_sett)
