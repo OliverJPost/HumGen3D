@@ -34,7 +34,10 @@ class EyebrowSettings(BaseHair):
         Returns:
             str: Name of active eyebrow system
         """
-        return self._human.objects.rig["ACTIVE_EYEBROWS"]
+        try:
+            return self._human.objects.rig["ACTIVE_EYEBROWS"]
+        except KeyError:
+            return "Eyebrows_001"
 
     @_active.setter
     def _active(self, value: str) -> None:
