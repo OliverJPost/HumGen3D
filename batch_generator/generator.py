@@ -68,7 +68,7 @@ class BatchHumanGenerator:
                 presets = Human.get_preset_options(gender, chosen_category, context)
 
         chosen_preset = random.choice(presets)
-        human = Human.from_preset(chosen_preset)
+        human = Human.from_preset(chosen_preset, from_batch_generator=True)
 
         human.body.randomize()
         human.face.randomize(use_bell_curve=gender == "female")
@@ -78,10 +78,10 @@ class BatchHumanGenerator:
 
         if self.add_hair:
             human.hair.regular_hair.randomize(context)
-            human.hair.regular_hair.randomize_color()
-            if human.gender == "male":
+            if human.gender == "male" and random.choice((1, 2, 3)) == 1:
                 human.hair.face_hair.randomize(context)
-                human.hair.face_hair.randomize_color()
+                human.hair.face_hair.lightness = human.hair.regular_hair.lightness
+                human.hair.face_hair.redness = human.hair.regular_hair.redness
 
         human.hair.eyebrows.randomize_color()
         if self.hair_type == "particle":
