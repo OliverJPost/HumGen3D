@@ -447,6 +447,13 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     def draw_warning_labels(self, pr_sett, human):
         col = self.layout.column()
         col.alert = True
+
+        if pr_sett.haircards_enabled and pr_sett.baking_enabled:
+            draw_paragraph(
+                col,
+                text="NOTE: In the BETA haircard textures are not baked.",
+            )
+
         if pr_sett.haircards_enabled:
             draw_paragraph(
                 col,
