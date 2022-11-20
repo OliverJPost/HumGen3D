@@ -46,7 +46,7 @@ def panel_update(self, context):
     if active_panel in ("create", "batch", "content", "process"):
         self.active_tab = active_panel.upper()
         self.phase = "closed"
-    hg_callback()
+    hg_callback(self)
 
 
 # As separate function so icon_id updates correctly
@@ -187,5 +187,5 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
             ("outfit", "Outfit", "", get_hg_icon("outfit"), 0),
             ("footwear", "Footwear", "", get_hg_icon("footwear"), 1),
         ],
-        update=lambda self, context: hg_callback(),
+        update=lambda self, context: hg_callback(self),
     )
