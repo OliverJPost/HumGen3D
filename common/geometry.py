@@ -57,7 +57,9 @@ def obj_from_pydata(
 
 
 def world_coords_from_obj(
-    obj: Object, data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None
+    obj: Object,
+    data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None,
+    local=False,
 ) -> np.ndarray[Any, Any]:
     """Get a ndarray of the coordinates of this object's vertices in world space.
 
@@ -69,6 +71,7 @@ def world_coords_from_obj(
         data: The data to use. If None, the base form coordinates are used. You can
             pass a collection of ShapeKeyItems to use the coordinates of a shapkeys or
             a bpy_prop_collection like vertex coordinates.
+        local: If True, the coordinates are returned in local space.
 
     Returns:
         A ndarray of the coordinates of this object's vertices in world space.
@@ -87,9 +90,9 @@ def world_coords_from_obj(
         iterate_data = True
 
     if not iterate_data:
-        world_coords = _get_world_co(obj, data)  # type:ignore[arg-type]
+        world_coords = _get_world_co(obj, data, local)  # type:ignore[arg-type]
     else:
-        base_coords = _get_world_co(obj, obj.data.vertices)
+        base_coords = _get_world_co(obj, obj.data.vertices, local)
         world_coords = base_coords.copy()
         for keyitem in data:
             if not keyitem.value:
@@ -103,15 +106,18 @@ def world_coords_from_obj(
 
 
 def _get_world_co(
-    obj: bpy.types.Object, data: bpy_prop_collection
+    obj: bpy.types.Object, data: bpy_prop_collection, local=False
 ) -> np.ndarray[Any, Any]:
     vert_count = len(data)  # type:ignore[arg-type]
-    local_coords = np.empty(vert_count * 3, dtype=np.float64)
-    data.foreach_get("co", local_coords)
+    coords = np.empty(vert_count * 3, dtype=np.float64)
+    data.foreach_get("co", coords)
 
-    mx: Matrix = obj.matrix_world  # type:ignore[assignment]
-    world_coords = matrix_multiplication(mx, local_coords.reshape((-1, 3)))
-    return world_coords
+    if not local:
+        mx: Matrix = obj.matrix_world  # type:ignore[assignment]
+        coords = matrix_multiplication(mx, coords.reshape((-1, 3)))
+    else:
+        coords = coords.reshape((-1, 3))
+    return coords
 
 
 def build_distance_dict(
