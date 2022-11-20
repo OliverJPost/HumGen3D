@@ -41,7 +41,7 @@ class HG_SECTION_TOGGLE(bpy.types.Operator):
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         sett.ui.phase = self.section_name
 
-        hg_callback()
+        hg_callback(self)
 
         pref = get_prefs()
         if (
