@@ -209,7 +209,6 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         col.prop(self, "auto_hide_popup", text="Show popup when auto-hiding hair")
         col.prop(self, "compact_ff_ui")
-        col.prop(self, "hair_section", text="Show hair section:")
 
         layout.separator()
 
@@ -219,12 +218,6 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             "remove_clothes",
             text="Remove old clothes when adding new ones",
         )
-        col.prop(self, "keep_all_shapekeys")
-        if self.keep_all_shapekeys:
-            self._draw_warning(
-                col,
-                "Keeping all shapekeys makes finishing creation phase take longer",
-            )
 
         layout.separator()
 
