@@ -143,7 +143,7 @@ class BaseHair:
                 continue
 
             ps = mod.particle_system
-            ps.settings.child_nbr = ps.settings.child_nbr // 10
+            ps.settings.child_nbr = ps.settings.rendered_child_count // 10
             body_obj = self._human.objects.body
             with context.temp_override(
                 active_object=body_obj,
