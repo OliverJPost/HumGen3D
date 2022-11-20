@@ -7,6 +7,8 @@ from __future__ import annotations
 import os
 import random
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
 
@@ -17,7 +19,6 @@ from HumGen3D.common.shadernode import NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from PIL import Image
 
 from ...common.decorators import injected_context
 
@@ -322,6 +323,27 @@ class TextureSettings(PreviewCollectionContent):
         category="Default",
         thumbnail: Optional[bpy.types.Image] = None,
     ) -> None:
+        try:
+            from PIL import Image
+        except ImportError:
+            python_exe = os.path.join(sys.prefix, "bin", "python.exe")
+            target = os.path.join(sys.prefix, "lib", "site-packages")
+            subprocess.call([python_exe, "-m", "ensurepip"])
+            subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
+            subprocess.call(
+                [
+                    python_exe,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    "Pillow",
+                    "-t",
+                    target,
+                ]
+            )
+            from PIL import Image
+
         category = category.strip()
         nodes = self._human.materials.body.node_tree.nodes
         image = nodes.get("Color").image
