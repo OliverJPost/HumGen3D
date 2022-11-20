@@ -3,7 +3,7 @@ import os
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.human import Human
-from user_interface.panel_functions import draw_paragraph
+from HumGen3D.user_interface.panel_functions import draw_paragraph
 
 
 def draw_category_ui(context, layout, content_type):
