@@ -163,7 +163,14 @@ def deform_obj_from_difference(
 ) -> None:
 
     if as_shapekey:
-        sk = deform_obj.data.shape_keys.key_blocks.get(name)
+        key_blocks = deform_obj.data.shape_keys
+        if not key_blocks:
+            sk = deform_obj.shape_key_add(name="BASIS")
+            sk.interpolation = "KEY_LINEAR"
+            sk.value = 1
+            key_blocks = deform_obj.data.shape_keys
+
+        sk = key_blocks.key_blocks.get(name)
         if not sk:
             sk = deform_obj.shape_key_add(name=name)
             sk.interpolation = "KEY_LINEAR"
