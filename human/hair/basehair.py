@@ -166,7 +166,7 @@ class BaseHair:
                 hc.add_material()
 
         density_vertex_groups = [
-            body_obj.vertex_groups[ps.vertex_group_density]
+            self._human.objects.body.vertex_groups[ps.vertex_group_density]
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
