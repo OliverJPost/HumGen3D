@@ -3,7 +3,11 @@
 from typing import TYPE_CHECKING, Any, Union
 
 from HumGen3D.common.shadernode import NodeInput
-from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
+from HumGen3D.human.keys.keys import (
+    LiveKeyItem,
+    ShapeKeyItem,
+    update_livekey_collection,
+)
 from HumGen3D.human.skin.skin import SkinNodes
 
 if TYPE_CHECKING:
@@ -59,7 +63,11 @@ class AgeSettings:
         else:
             age_key_value = 0
 
-        young_key = next(k for k in self.keys if k.name == "aged_young")
+        young_key = next((k for k in self.keys if k.name == "aged_young"), None)
+        if not young_key:
+            update_livekey_collection()
+            young_key = next(k for k in self.keys if k.name == "aged_young")
+
         if realtime:
             young_key.as_bpy().value = young_value
         else:
