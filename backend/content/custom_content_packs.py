@@ -389,7 +389,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         )  # removes double dots in list
         if categ not in ("hair", "face_hair"):
             path_split.insert(
-                0, categ
+                0, "outfits" if categ == "outfit" else "footwear"
             )  # adds the category name to the start of the path
         path = os.path.join(*path_split)  # rebuilds the path from the path_split
 
