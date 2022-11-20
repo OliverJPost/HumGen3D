@@ -68,6 +68,7 @@ class HairCollection:
         bm.free()
         hg_delete(hair_obj)
         self.objects: dict[int, bpy.types.Object] = {}
+        self.materials = []
 
     @staticmethod
     def _walk_island(vert: bmesh.types.BMVert) -> Iterable[int]:
@@ -389,7 +390,7 @@ class HairCollection:
         else:
             mat = mat.copy()
 
-        self.material = mat
+        self.materials.append(mat)
 
         for obj in self.objects.values():
             if not obj.data.materials:
@@ -509,7 +510,7 @@ class HairCollection:
         Args:
             human: The human object to get the values from.
         """
-        card_material = self.material if hasattr(self, "material") else None
+        card_materials = self.materials if hasattr(self, "materials") else []
 
         cap_material = (
             self.haircap_obj.data.materials[0] if hasattr(self, "haircap_obj") else None
@@ -522,7 +523,7 @@ class HairCollection:
             if node.bl_idname == "ShaderNodeGroup"
         )
 
-        for mat in (card_material, cap_material):
+        for mat in [cap_material] + card_materials:
             if not mat:
                 continue
             node = next(
