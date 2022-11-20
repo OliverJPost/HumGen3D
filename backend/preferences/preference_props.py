@@ -19,7 +19,7 @@ class HGPreferenceBackend:
     # RELEASE remove default path
     filepath: StringProperty(
         name="Install Filepath",
-        default="/Users/ole/Documents/Human Generator/",
+        default="",
     )
 
     # update props
