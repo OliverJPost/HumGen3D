@@ -23,11 +23,11 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
     pcoll_name: bpy.props.StringProperty()
 
     def execute(self, context):
-        random_type = self.random_type
+        pcoll_name = self.pcoll_name
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         human = Human.from_existing(context.active_object, strict_check=False)
 
-        if random_type in (
+        if pcoll_name in (
             "pose",
             "expression",
             "outfit",
@@ -35,8 +35,8 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
             "footwear",
             "hair",
         ):
-            getattr(human, random_type).set_random(update_ui=True)
-        elif random_type == "humans":
+            getattr(human, pcoll_name).set_random(update_ui=True)
+        elif pcoll_name == "humans":
             sett.gender = random.choice(["male", "female"])
             current = sett.pcoll.humans
             options = human.get_preset_options(sett.gender, context)
