@@ -47,9 +47,13 @@ class HairCollection:
         self.mx_world_hair_obj = hair_obj.matrix_world
 
         body_world_coords_eval = world_coords_from_obj(
-            human.objects.body, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys, local=False
+        )
+        body_local_coords_eval = world_coords_from_obj(
+            human.objects.body, data=human.keys.all_deformation_shapekeys, local=True
         )
         self.kd = create_kdtree(body_world_coords_eval)
+        self.kd_local = create_kdtree(body_local_coords_eval)
 
         self.hair_coords = world_coords_from_obj(hair_obj)
         nearest_vert_idx = np.array([self.kd.find(co)[1] for co in self.hair_coords])
@@ -441,19 +445,26 @@ class HairCollection:
         context.scene.collection.objects.link(haircap_obj)
         haircap_obj.location = human.location
         body_obj_eval_coords = world_coords_from_obj(
-            human.objects.body, data=human.keys.all_deformation_shapekeys
+            human.objects.body, data=human.keys.all_deformation_shapekeys, local=True
         )
-        body_world_coords = world_coords_from_obj(human.objects.body)
-        haircap_world_coords = world_coords_from_obj(haircap_obj)
-        distance_dict = build_distance_dict(body_world_coords, haircap_world_coords)
+        body_coords = np.empty(
+            len(human.objects.body.data.vertices) * 3, dtype=np.float64
+        )
+        human.objects.body.data.vertices.foreach_get("co", body_coords)
+        body_coords = body_coords.reshape((-1, 3))
+        haircap_coords = np.empty(len(haircap_obj.data.vertices) * 3, dtype=np.float64)
+        haircap_obj.data.vertices.foreach_get("co", haircap_coords)
+        haircap_coords = haircap_coords.reshape((-1, 3))
+        distance_dict = build_distance_dict(body_coords, haircap_coords)
         deform_obj_from_difference(
             "test", distance_dict, body_obj_eval_coords, haircap_obj, as_shapekey=False
         )
+
         vc = haircap_obj.data.color_attributes[0]
 
         bm = None
         if haircap_type in ("Scalp", "Beard"):
-            for i, vert_world_co in enumerate(haircap_world_coords):
+            for i, vert_world_co in enumerate(haircap_coords):
                 nearest_vert_index = self.kd.find(vert_world_co)[1]
                 value = vg_aggregate[nearest_vert_index]
                 vc.data[i].color = (value, value, value, 1)

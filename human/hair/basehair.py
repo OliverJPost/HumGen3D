@@ -170,11 +170,14 @@ class BaseHair:
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
-        if density_vertex_groups or self._haircap_type != "Scalp":
+        if (
+            density_vertex_groups or self._haircap_type != "Scalp"
+        ) and self._haircap_type != "Scalp":  # FIXME
             cap_obj = hc.add_haircap(
                 self._human, self._haircap_type, density_vertex_groups, context
             )
             hair_objs.append(cap_obj)
+
         hc.set_node_values(self._human)
 
         if len(hair_objs) > 1:
@@ -194,6 +197,9 @@ class BaseHair:
             mod.show_viewport = False
 
         joined_object.parent = self._human.objects.rig
+        joined_object.matrix_parent_inverse = (
+            self._human.objects.rig.matrix_world.inverted()
+        )
         joined_object.modifiers.new("Armature", "ARMATURE")
 
         add_to_collection(context, joined_object, "HumGen")
