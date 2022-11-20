@@ -69,6 +69,9 @@ class FaceSettings(PropCollection):
             else:
                 new_value = np.random.normal(loc=0, scale=0.5)
             all_v += new_value
-            key.set_without_update(new_value)
+            if hasattr(key, "set_without_update"):
+                key.set_without_update(new_value)
+            else:
+                key.value = new_value
 
         self._human.keys.update_human_from_key_change(context)
