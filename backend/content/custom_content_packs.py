@@ -344,7 +344,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             set: relative filepaths of associated files
         """
         associated_files = []
-        if categ in ["outfits", "footwear"]:
+        if categ in ["outfit", "footwear"]:
             # find linked textures for clothing and shoe items
             bf = open_blend(filepath)
             img_blocks = bf.find_blocks_from_code(b"IM")
@@ -352,12 +352,12 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
                 image_path = block.get(b"name")
                 associated_files.append(image_path)
             bf.close()
-        if categ in ["hairstyles", "face_hair"]:
+        if categ in ["hair", "face_hair"]:
             # find hair collection blendfile for hairstyles
             with open(filepath, "r") as f:
                 data = json.load(f)
                 blendfile = data["blend_file"]
-                folder = "head" if categ == "hairstyles" else "face_hair"
+                folder = "head" if categ == "hair" else "face_hair"
                 associated_files.append(str(Path(f"/hair/{folder}/{blendfile}")))
 
         mapped_associated_files = [
@@ -387,7 +387,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
         path_split = list(
             filter(lambda x: x != "..", path_split)
         )  # removes double dots in list
-        if categ not in ("hairstyles", "face_hair"):
+        if categ not in ("hair", "face_hair"):
             path_split.insert(
                 0, categ
             )  # adds the category name to the start of the path
