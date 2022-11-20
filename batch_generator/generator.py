@@ -89,6 +89,8 @@ class BatchHumanGenerator:
             human.hair.children_set_hide(True)
         else:
             for hairtype in ("regular_hair", "face_hair", "eyebrows", "eyelashes"):
+                if hairtype == "face_hair" and human.gender == "female":
+                    continue
                 hair_attr = getattr(human.hair, hairtype)
                 hair_attr.convert_to_haircards(self.hair_quality, context)
 
