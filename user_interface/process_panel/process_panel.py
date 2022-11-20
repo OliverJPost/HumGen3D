@@ -368,6 +368,7 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     enabled_propname = "scripting_enabled"
 
     def draw(self, context):
+        self.check_enabled(context)
         col = self.layout.column()
         self.draw_subtitle("Available Scripts", col)
         row = col.row(align=True)
