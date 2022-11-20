@@ -126,6 +126,8 @@ class BatchHumanGenerator:
         else:
             clothing_category = "All"
         clothing_options = human.clothing.outfit.get_options(context, clothing_category)
+        if not clothing_options:
+            clothing_options = human.clothing.outfit.get_options(context)
 
         human.clothing.outfit.set(random.choice(clothing_options))
         human.clothing.footwear.set_random(context)

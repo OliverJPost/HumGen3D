@@ -128,7 +128,7 @@ class PreviewCollectionContent:
         # FIXME check all pcolls if 0 is always skipped
         self.refresh_pcoll(context, override_category=category, ignore_searchterm=True)
         options = [option[0] for option in self._get_full_options()[1:]]
-        if not options:
+        if not options and category == "All":
             raise HumGenException(
                 "No options found, did you install the content packs?"
             )
