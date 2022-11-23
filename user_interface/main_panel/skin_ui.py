@@ -232,39 +232,6 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
 
         return flow
 
-    def _draw_beautyspots_subsection(self, sett, box):
-        """Collapsable section with sliders for beautyspots.
-
-        Args:
-            sett (PropertyGroup): HumGen props
-            box (UILayout): layout.box of the skin section
-            nodes (Shadernode list): All nodes in the .human material
-        """
-        if platform == "darwin":  # not compatible with MacOS 8-texture material
-            return
-
-        is_open, boxbox = self.draw_sub_spoiler(
-            box, sett.ui, "beautyspots", "Beauty Spots"
-        )
-        if not is_open:
-            return
-
-        nodes = self.human.skin.nodes
-
-        bs_node = nodes["BS_Control"]
-        opacity_node = nodes["BS_Opacity"]
-
-        col = boxbox.column(align=True)
-        col.scale_y = 1.2
-        col.prop(bs_node.inputs[2], "default_value", text="Amount", slider=True)
-        col.prop(
-            opacity_node.inputs[1],
-            "default_value",
-            text="Opacity",
-            slider=True,
-        )
-        col.prop(bs_node.inputs[1], "default_value", text="Seed [Randomize]")
-
     def _draw_beard_shadow_subsection(self, sett, box):
         """Collapsable section with sliders for beard shadow.
 
