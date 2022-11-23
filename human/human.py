@@ -8,7 +8,7 @@ import contextlib
 import json
 import os
 import random
-from typing import Any, Iterable, List, Optional, Tuple, Union, cast
+from typing import Any, Iterable, List, Literal, Optional, Tuple, Union, cast
 
 import bpy
 from bpy.props import FloatVectorProperty  # type:ignore
@@ -699,6 +699,93 @@ class Human:
             add_to_collection(context, obj_copy)
 
         return Human.from_existing(obj_copy)  # type:ignore[return-value]
+
+    @injected_context
+    def export(
+        self,
+        folder: str,
+        name,
+        file_type: Literal[".fbx", ".obj", ".abc", ".glb", ".glTF"],
+        context: C = None,
+        from_ui: bool = False,
+    ) -> None:
+        """Export the human to a 3D file from a predefined list of file types.
+
+        Args:
+            filepath (str): The path to the file to export to.
+            file_type (Literal[".blend", ".fbx", ".obj", ".abc", ".glb", ".glTF"]): The
+                file type to export to.
+        """
+        if "." in name:
+            raise HumGenException(
+                "Name must not contain a dot/file extension, got %s" % name
+            )
+
+        filepath = os.path.join(folder, name + file_type)
+        with context.temp_override(selected_objects=self.objects):
+            if file_type == ".fbx":
+                bpy.ops.export_scene.fbx(
+                    "EXEC_DEFAULT",
+                    filepath=filepath,
+                    check_existing=False,
+                    use_selection=True,
+                )
+            elif file_type == ".obj":
+                bpy.ops.export_scene.obj(
+                    "EXEC_DEFAULT",
+                    filepath=filepath,
+                    check_existing=False,
+                    use_selection=True,
+                )
+            elif file_type == ".abc":
+                bpy.ops.wm.alembic_export(
+                    "EXEC_DEFAULT",
+                    filepath=filepath,
+                    check_existing=False,
+                    selected=True,
+                )
+            elif file_type == ".glb":
+                try:
+                    bpy.ops.export_scene.gltf(
+                        "EXEC_DEFAULT",
+                        filepath=filepath,
+                        check_existing=False,
+                        export_format="GLB",
+                        use_selection=True,
+                    )
+                except (ZeroDivisionError, RuntimeError) as exc:
+                    if from_ui:
+                        ShowMessageBox(
+                            "Export failed because of a Blender bug, update to 3.3.2, See console for details.",
+                            "Error",
+                        )
+                    else:
+                        raise HumGenException(
+                            "Exporting to GLB failed because of Blender bug, expect to be fixed in 3.3.2. See #T102272"
+                        ) from exc
+            elif file_type == ".glTF":
+                try:
+                    bpy.ops.export_scene.gltf(
+                        "EXEC_DEFAULT",
+                        filepath=filepath,
+                        check_existing=False,
+                        export_format="GLTF_EMBEDDED",
+                        use_selection=True,
+                    )
+                except (ZeroDivisionError, RuntimeError) as exc:
+                    if from_ui:
+                        ShowMessageBox(
+                            "Export failed because of a Blender bug, update to 3.3.2, See console for details.",
+                            "Error",
+                        )
+                    else:
+                        raise HumGenException(
+                            "Exporting to GLB failed because of Blender bug, expect to be fixed in 3.3.2. See #T102272"
+                        ) from exc
+            else:
+                raise HumGenException(
+                    f"File type {file_type} not supported. Pass one of the following: .fbx, .obj, .abc, .glb, .glTF"
+                )
 
     @injected_context
     def render_thumbnail(
