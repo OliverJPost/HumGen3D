@@ -81,10 +81,14 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
         layout = self.layout
         layout.prop(self, "suffix", text="Suffix")
 
-    def execute(self, context):
-        human = Human.from_existing(context.object)
+    def execute(self, context):  # FIXME
+        import bpy
+        from HumGen3D import Human
 
-        for sk in human.keys:
+        human = Human.from_existing(bpy.context.object)
+
+        for key in human.keys.all_added_shapekeys:
+            sk = key.as_bpy()
             if sk.name == "Basis" or sk.name.startswith("cor_"):
                 continue
             sk.driver_remove("value")
