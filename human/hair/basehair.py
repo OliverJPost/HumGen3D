@@ -29,6 +29,7 @@ from HumGen3D.human.hair.haircards import HairCollection
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
+from mathutils import Matrix
 
 HAIR_NODE_NAME = "HG_Hair"
 
@@ -196,9 +197,18 @@ class BaseHair:
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
-        joined_object.parent = self._human.objects.rig
+        rig = self._human.objects.rig
+
+        joined_object.parent = rig
+        joined_object.parent_type = "BONE"
+        joined_object.parent_bone = "head"
+        bone = self._human.objects.rig.pose.bones["head"]
+        T = Matrix.Translation((bone.tail - bone.head))
+        tmw = rig.matrix_world @ T @ bone.matrix
+        cmw = joined_object.matrix_world.copy()
+        cml = tmw.inverted() @ cmw
         joined_object.matrix_parent_inverse = (
-            self._human.objects.rig.matrix_world.inverted()
+            cml @ joined_object.matrix_basis.inverted()
         )
         joined_object.modifiers.new("Armature", "ARMATURE")
 
