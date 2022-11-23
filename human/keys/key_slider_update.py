@@ -8,6 +8,19 @@ from typing import Optional, no_type_check
 
 import bpy
 
+NUMERICS = [
+    "ONE",
+    "TWO",
+    "THREE",
+    "FOUR",
+    "FIVE",
+    "SIX",
+    "SEVEN",
+    "EIGHT",
+    "NINE",
+    "ZERO",
+    "PERIOD",
+]
 
 class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     bl_idname = "hg3d.slider_subscribe"
@@ -74,7 +87,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
 
         # Correct immediately for RET return, which occurs when clicking, typing a
         # number and pressing enter
-        if event.type == "RET":
+        if event.type == "RET" or event.type_prev in NUMERICS:
             self.correct_when_done(context)
             cls._handler = None
             return {"FINISHED"}
