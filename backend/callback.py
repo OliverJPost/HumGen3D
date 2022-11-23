@@ -128,7 +128,7 @@ def _context_specific_updates(sett, human, ui_phase):
     if ui_phase == "apply":
         refresh_modapply(None, context)
     elif ui_phase == "hair":
-        human.hair.regular_hair.refresh_pcoll(context, human.gender)
+        human.hair.regular_hair.refresh_pcoll(context)
         if human.gender == "male":
             human.hair.face_hair.refresh_pcoll(context)
     elif ui_phase == "clothing":
