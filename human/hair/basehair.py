@@ -171,9 +171,8 @@ class BaseHair:
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
-        if (
-            density_vertex_groups or self._haircap_type != "Scalp"
-        ) and self._haircap_type != "Scalp":  # FIXME
+        cap_obj = None
+        if density_vertex_groups or self._haircap_type != "Scalp":
             cap_obj = hc.add_haircap(
                 self._human, self._haircap_type, density_vertex_groups, context
             )
@@ -182,9 +181,9 @@ class BaseHair:
         hc.set_node_values(self._human)
 
         if len(hair_objs) > 1:
-            join_obj_name = hair_objs[0].name
+            join_obj_name = cap_obj.name if cap_obj else hair_objs[0].name
             with context.temp_override(
-                active_object=hair_objs[0],
+                active_object=cap_obj if cap_obj else hair_objs[0],
                 selected_editable_objects=hair_objs,
             ):
                 bpy.ops.object.join()
@@ -193,6 +192,13 @@ class BaseHair:
             joined_object.name = "Haircards"
         else:
             joined_object = cap_obj
+
+        for face in joined_object.data.polygons:
+            if face.material_index != 0:
+                face.material_index = 1
+
+        for i in range(2, len(joined_object.data.materials)):
+            joined_object.data.materials.pop(index=2)
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
