@@ -90,6 +90,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             )
             tutorial_op.first_time = False
             tutorial_op.tutorial_name = "arkit_tutorial"
+            col_h.operator("hg3d.prepare_for_arkit", text="Prepare for ARKit")
         else:
             col.scale_y = 2
             col.alert = True
