@@ -16,7 +16,7 @@ class FacialHairSettings(ImportableHair):
     _haircap_tag = "hg_face_hair"
     _pcoll_name = "face_hair"
     _pcoll_gender_split = False
-    _startswith = "fh"
+    _startswith = "fh_"
     _mat_idx = 3
     _haircap_type = "Beard"
 
@@ -28,7 +28,6 @@ class FacialHairSettings(ImportableHair):
             )
 
         self._human = _human
-        self._startswith = "ff_"
 
     def as_dict(self) -> dict[str, Any]:
         """Returns dict of face hair settings.
