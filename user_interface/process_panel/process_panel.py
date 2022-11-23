@@ -420,6 +420,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
             if pr_sett.output == "export":
                 col.prop(pr_sett, "file_type", text=" ", icon="MESH_CUBE")
+                col.prop(pr_sett, "output_name", text="Filename")
 
             label = "Tex. Folder" if pr_sett.output != "export" else "Folder"
             col.prop(bake_sett, "export_folder", text=label)
@@ -435,12 +436,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row = col.row(align=True)
         row.scale_y = 1.5
         row.alert = True
-        row.enabled = pr_sett.output != "export"
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
-        if pr_sett.output == "export":
-            row = col.row(align=True)
-            row.alert = True
-            row.label(text="Export not in BETA", icon="ERROR")
 
         human = Human.from_existing(context.object)
         self.draw_warning_labels(pr_sett, human)

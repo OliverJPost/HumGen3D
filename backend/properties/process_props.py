@@ -209,6 +209,8 @@ class ProcessProps(bpy.types.PropertyGroup):
     renaming_enabled: BoolProperty(default=False)
     scripting_enabled: BoolProperty(default=False)
 
+    output_name: StringProperty(name="Output name", default="{name}")
+
     human_list_isopen: BoolProperty(default=False)
     output: EnumProperty(
         items=[
@@ -219,11 +221,11 @@ class ProcessProps(bpy.types.PropertyGroup):
     )
     file_type: EnumProperty(
         items=[
-            ("obj", "OBJ", "", 0),
-            ("fbx", "FBX", "", 1),
-            ("abc", "Alembic", "", 2),
-            ("glb", "glTF Binary (.glb)", "", 3),
-            ("gltf", "glTF Embedded (.glTF", "", 4),
+            (".obj", "OBJ", "", 0),
+            (".fbx", "FBX", "", 1),
+            (".abc", "Alembic", "", 2),
+            (".glb", "glTF Binary (.glb)", "", 3),
+            (".glTF", "glTF Embedded (.glTF", "", 4),
         ]
     )
 

@@ -13,6 +13,7 @@ import uuid
 
 import bpy
 from HumGen3D.backend import hg_log
+from HumGen3D.backend.content.content_saving import remove_number_suffix
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.process_props import get_preset_list
 from HumGen3D.common import find_multiple_in_list
@@ -130,7 +131,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.objects.rig["parts_renamed"] = True
             if pr_sett.scripting_enabled:
                 folder = os.path.join(get_prefs().filepath, "scripts")
-                sys.path.append(folder)
+                sys.path.insert(1, folder)
                 for item in context.scene.hg_scripts_col:
                     module = importlib.import_module(item.name.replace(".py", ""))
                     module.main(context, human)
@@ -140,9 +141,22 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.objects.rig["modifiers_applied"] = True
 
             if pr_sett.output == "export":
-                pass
+                fn = pr_sett.output_name.replace("{name}", human.name).strip()
+                human.export(
+                    pr_sett.baking.export_folder,
+                    remove_number_suffix(fn),
+                    pr_sett.file_type,
+                    context,
+                    from_ui=True,
+                )
+                human.delete()
 
-        ShowMessageBox("Processing finished", "Success", "INFO")
+        if not pr_sett.output == "export":
+            ShowMessageBox("Processing completed", "Processing completed", "INFO")
+        else:
+            ShowMessageBox(
+                f"Saved to {pr_sett.baking.export_folder}", "Export completed", "INFO"
+            )
         return {"FINISHED"}
 
 
