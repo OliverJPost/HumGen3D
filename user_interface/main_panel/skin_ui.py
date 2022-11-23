@@ -227,7 +227,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         row.alignment = "CENTER"
         row.label(text=label, icon="HANDLETYPE_AUTO_CLAMP_VEC")
 
-        flow = self.get_flow(self.sett, layout)
+        flow = self.get_flow(layout)
         flow.scale_y = 1.2
 
         return flow
