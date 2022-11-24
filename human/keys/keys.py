@@ -314,9 +314,6 @@ class LiveKeyItem(KeyItem):
 
         key.data.foreach_set("co", new_key_coords)
 
-        idx = bpy.context.window_manager.livekeys.find(self.name)
-        bpy.context.window_manager.livekeys.remove(idx)  # FIXME
-
         return ShapeKeyItem(name, self._human)
 
     def as_bpy(self) -> "BpyLiveKey":
