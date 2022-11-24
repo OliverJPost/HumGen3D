@@ -75,6 +75,7 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
         # typing modal, then do nothing. This prevents crash.
         if round(temp_key.value, 3) != round(value, 3):
             temp_key.value = value
+            human.props.sk_values[name] = value
             _run_modal()
         return
 
@@ -105,6 +106,8 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
     human.keys.temp_key.name = "LIVE_KEY_TEMP_" + name
 
     temp_key.value = value
+
+    human.props.sk_values[name] = value
 
     _run_modal()
 
