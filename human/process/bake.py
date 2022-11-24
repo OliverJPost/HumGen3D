@@ -56,6 +56,8 @@ class BakeTexture:
             return int(bake_sett.res_body)
         elif self.texture_name == "eyes":
             return int(bake_sett.res_eyes)
+        elif "hair" in self.texture_name:
+            return int(bake_sett.res_haircards)
         else:
             return int(bake_sett.res_clothes)
 
@@ -110,6 +112,7 @@ class BakeSettings:
             "Roughness": (-600, 100),
             "Metallic": (-1000, 300),
             "Specular": (-1000, -100),
+            "Alpha": (-1000, -400),
         }
         img_node.location = node_locs[input_type]
 
@@ -320,26 +323,47 @@ class BakeSettings:
                     BakeTexture(self._human.name, cloth.name, cloth, 0, tex_type)
                 )
 
-        if self._human.process.has_haircards:
-            for tex_type in ["Base Color", "Roughness", "Normal", "Alpha"]:
+        for tex_type in ["Base Color", "Roughness", "Normal"]:
+            bake_list.append(
+                BakeTexture(
+                    self._human.name,
+                    "lower_teeth",
+                    self._human.objects.lower_teeth,
+                    0,
+                    tex_type,
+                )
+            )
+            bake_list.append(
+                BakeTexture(
+                    self._human.name,
+                    "upper_teeth",
+                    self._human.objects.upper_teeth,
+                    0,
+                    tex_type,
+                )
+            )
+
+        for obj in self._human.objects.haircards:
+            for tex_type in ["Base Color", "Normal", "Alpha"]:
                 bake_list.append(
                     BakeTexture(
                         self._human.name,
-                        "hair",
-                        self._human.objects.haircards,  # type:ignore[arg-type]
+                        "hair" + obj.name,
+                        obj,  # type:ignore[arg-type]
                         0,
                         tex_type,
                     )
                 )
-                bake_list.append(
-                    BakeTexture(
-                        self._human.name,
-                        "hair",
-                        self._human.objects.haircards,  # type:ignore[arg-type]
-                        1,
-                        tex_type,
+                if len(obj.data.materials) > 1:
+                    bake_list.append(
+                        BakeTexture(
+                            self._human.name,
+                            "hair" + obj.name,
+                            obj,  # type:ignore[arg-type]
+                            1,
+                            tex_type,
+                        )
                     )
-                )
 
         return bake_list
 

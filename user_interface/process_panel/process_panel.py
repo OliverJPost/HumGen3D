@@ -133,6 +133,10 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
         for res_type in ["body", "eyes", "teeth", "clothes"]:
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
 
+        row = col.row(align=True)
+        row.enabled = context.scene.HG3D.process.haircards_enabled
+        row.prop(bake_sett, "res_haircards", text="Haircards")
+
     def _draw_baking_warning_labels(self, context, layout) -> bool:
         """Draws warning if no human is selected or textures are already baked.
 
@@ -444,12 +448,6 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     def draw_warning_labels(self, pr_sett, human):
         col = self.layout.column()
         col.alert = True
-
-        if pr_sett.haircards_enabled and pr_sett.baking_enabled:
-            draw_paragraph(
-                col,
-                text="NOTE: In the BETA haircard textures are not baked.",
-            )
 
         if pr_sett.haircards_enabled:
             draw_paragraph(

@@ -216,9 +216,10 @@ class BaseHair:
         joined_object.matrix_parent_inverse = (
             cml @ joined_object.matrix_basis.inverted()
         )
-        joined_object.modifiers.new("Armature", "ARMATURE")
+        joined_object["hg_haircard"] = True
 
         add_to_collection(context, joined_object, "HumGen")
+        self._human.objects.rig["haircard"] = True
         return joined_object
 
     @injected_context
