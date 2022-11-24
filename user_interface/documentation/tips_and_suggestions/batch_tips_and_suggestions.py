@@ -20,8 +20,8 @@ batch_tutorial = Tip(
     icon="HELP",
     operator=URLOperator(
         "Open tutorial in browser",
-        "https://publish.obsidian.md/human-generator/Using+the+batch+generator",
-    ),  # TODO correct url
+        "https://help.humgen3d.com/batch",
+    ),
 )
 
 

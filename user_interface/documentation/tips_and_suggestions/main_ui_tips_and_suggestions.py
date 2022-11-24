@@ -3,7 +3,7 @@
 
 from HumGen3D.user_interface.documentation.tips_and_suggestions.tip_baseclasses import (
     Tip,
-    TutorialOperator,
+    URLOperator,
 )
 
 
@@ -12,8 +12,8 @@ def get_main_ui_tips_from_context(context, sett, human):
 
 
 main_tutorial = Tip(
-    "Quickstart tutorial",
-    "You can find the quick start guide again here:",
+    "Documentation",
+    "You can find the HG documentation here:",
     icon="HELP",
-    operator=TutorialOperator("Open tutorial in Blender", "get_started_tutorial"),
+    operator=URLOperator("Open website", "https://help.humgen3d.com"),
 )

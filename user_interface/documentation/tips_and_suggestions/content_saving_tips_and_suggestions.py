@@ -1,7 +1,16 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 
-def get_content_saving_tips_from_context(context, sett, human):
-    tab_idx = sett.custom_content.content_saving_tab_index
+from .tip_baseclasses import Tip, URLOperator
 
-    pass
+
+def get_content_saving_tips_from_context(context, sett, human):
+    yield main_tutorial
+
+
+main_tutorial = Tip(
+    "Documentation",
+    "You can find the content saving documentation here:",
+    icon="HELP",
+    operator=URLOperator("Open website", "https://help.humgen3d.com/content"),
+)

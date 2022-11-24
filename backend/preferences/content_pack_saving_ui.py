@@ -78,7 +78,7 @@ class CpackEditingSystem:
 
         sidebar.operator(
             "wm.url_open", text="Tutorial", icon="URL"
-        ).url = "https://humgen3d.com/support/editor"
+        ).url = "https://help.humgen3d.com/editor"
 
         # Metadata header
         titlebar = sidebar.box().row()
