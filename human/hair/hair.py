@@ -3,10 +3,12 @@
 """Implements class for accessing hair types of human."""
 
 from operator import attrgetter
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 import bpy
-from bpy.types import bpy_prop_collection  # type:ignore
+from bpy.types import bpy_prop_collection
+from HumGen3D.common.os import correct_presetpath  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -214,8 +216,11 @@ class HairSettings:
                 if attr_name == "set":
                     if attr_value:
                         try:
-                            getattr(self, hair_categ).set(attr_value)
-                        except FileNotFoundError:
+                            getattr(self, hair_categ).set(
+                                correct_presetpath(attr_value)
+                            )
+                        except FileNotFoundError as e:
+                            raise e
                             errors.append("Hair error:")
                             errors.append(f"'{attr_value}' not found.")
                 else:
