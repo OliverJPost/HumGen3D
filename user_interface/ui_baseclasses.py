@@ -351,7 +351,7 @@ class MainPanelPart(HGPanel):
         # Center title with icon prop
         row_center = row.row()
         row_center.alignment = "CENTER"
-        row_center.scale_x = 0.7
+        row_center.scale_x = 0.8
         if icon:
             row_center.prop(
                 self.sett.ui, "phase", text="", emboss=False, icon_only=True
