@@ -58,7 +58,10 @@ class BakeProps(bpy.types.PropertyGroup):
         items=RESOLUTIONS_ENUM,
         default="1024",
     )
-
+    res_haircards: EnumProperty(
+        items=RESOLUTIONS_ENUM,
+        default="512",
+    )
     export_folder: StringProperty(
         name="Baking export",
         subtype="DIR_PATH",

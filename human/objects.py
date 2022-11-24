@@ -76,13 +76,13 @@ class ObjectCollection:
         return upper_teeth
 
     @property
-    def haircards(self) -> Optional[Object]:
+    def haircards(self) -> list[Optional[Object]]:
         """Returns the haircards Blender object if generated.
 
         Returns:
             Object: The haircards Blender object or None if not generated
         """
-        return next((c for c in self if "hg_haircard" in c), None)
+        return [obj for obj in self if "hg_haircard" in obj]
 
     def get(self, item_name: str, default: Any = None) -> Union[ID, Any]:  # noqa D
         if self.is_bpy:
