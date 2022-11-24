@@ -5,7 +5,10 @@ This is an interface class for getting to OutfitSettings and FootwearSettings.
 """
 
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from HumGen3D.common.os import correct_presetpath
 
 from .footwear import FootwearSettings
 from .outfit import OutfitSettings
@@ -72,14 +75,14 @@ class ClothingSettings:
         errors = []
         if data["outfit"]["set"] is not None:
             try:
-                self.outfit.set(data["outfit"]["set"])
+                self.outfit.set(correct_presetpath(data["outfit"]["set"]))
             except FileNotFoundError:
                 outfitname = os.path.basename(data["outfit"]["set"])
                 errors.append("Outfit error:")
                 errors.append(f"'{outfitname}' not found.")
         if data["footwear"]["set"] is not None:
             try:
-                self.footwear.set(data["footwear"]["set"])
+                self.footwear.set(correct_presetpath(data["footwear"]["set"]))
             except FileNotFoundError:
                 footwearname = os.path.basename(data["footwear"]["set"])
                 errors.append("Footwear error:")
