@@ -26,7 +26,7 @@ def round_vector_to_tuple(vec: Vector, precision: int = 2) -> TuplePoint:
     )
 
 
-Coordinates = Union[Iterable[tuple[float, float, float]], np.ndarray[Any, Any]]
+Coordinates = Union[Iterable[tuple[float, float, float]], np.ndarray]
 
 
 def centroid(coordinates: Coordinates) -> Vector:
@@ -67,18 +67,16 @@ def create_kdtree(coordinates: Coordinates) -> kdtree:
     return kd
 
 
-def normalize(
-    vector_array: np.ndarray[Any, Any], axis: int = -1, order: int = 2
-) -> np.ndarray[Any, Any]:
+def normalize(vector_array: np.ndarray, axis: int = -1, order: int = 2) -> np.ndarray:
     """Normalize all vectors in a numpy array.
 
     Args:
-        vector_array (np.ndarray[Any, Any]): Array of vectors to normalize
+        vector_array (np.ndarray): Array of vectors to normalize
         axis (int, optional): Axis the vectors can be found at. Defaults to -1.
         order (int, optional): Order of the normal. Defaults to 2.
 
     Returns:
-        np.ndarray[Any, Any]: Normalized array of vectors
+        np.ndarray: Normalized array of vectors
     """
     l2 = np.atleast_1d(np.linalg.norm(vector_array, order, axis))
     l2[l2 == 0] = 1

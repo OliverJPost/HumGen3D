@@ -13,7 +13,7 @@ from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.keys import ShapeKeyItem
 from mathutils import Matrix, Vector, kdtree
 
-NDArrayOrList = Union[list, np.ndarray[Any, Any]]
+NDArrayOrList = Union[list, np.ndarray]
 
 
 @injected_context
@@ -60,7 +60,7 @@ def world_coords_from_obj(
     obj: Object,
     data: Union[None, bpy_prop_collection, Iterable[ShapeKeyItem]] = None,
     local=False,
-) -> np.ndarray[Any, Any]:
+) -> np.ndarray:
     """Get a ndarray of the coordinates of this object's vertices in world space.
 
     By default the meshes base form coordinates are used (mesh.vertices[].co), but
@@ -107,7 +107,7 @@ def world_coords_from_obj(
 
 def _get_world_co(
     obj: bpy.types.Object, data: bpy_prop_collection, local=False
-) -> np.ndarray[Any, Any]:
+) -> np.ndarray:
     vert_count = len(data)  # type:ignore[arg-type]
     coords = np.empty(vert_count * 3, dtype=np.float64)
     data.foreach_get("co", coords)
@@ -121,8 +121,8 @@ def _get_world_co(
 
 
 def build_distance_dict(
-    body_coordinates_world: np.ndarray[Any, Any],
-    target_coordinates_world: np.ndarray[Any, Any],
+    body_coordinates_world: np.ndarray,
+    target_coordinates_world: np.ndarray,
 ) -> DistanceDict:
     kd = kdtree.KDTree(len(body_coordinates_world))  # type:ignore[call-arg]
 
@@ -140,9 +140,7 @@ def build_distance_dict(
     return distance_dict
 
 
-def matrix_multiplication(
-    matrix: Matrix, coordinates: np.ndarray[Any, Any]
-) -> np.ndarray[Any, Any]:
+def matrix_multiplication(matrix: Matrix, coordinates: np.ndarray) -> np.ndarray:
     vert_count = coordinates.shape[0]
     coords_4d = np.ones((vert_count, 4), "f")
     coords_4d[:, :-1] = coordinates
@@ -151,13 +149,13 @@ def matrix_multiplication(
         :, :-1
     ]
 
-    return cast(np.ndarray[Any, Any], coords)
+    return cast(np.ndarray, coords)
 
 
 def deform_obj_from_difference(
     name: str,
     distance_dict: DistanceDict,
-    body_eval_coords_woorld: np.ndarray[Any, Any],
+    body_eval_coords_woorld: np.ndarray,
     deform_obj: bpy.types.Object,
     as_shapekey: bool = False,
 ) -> None:
