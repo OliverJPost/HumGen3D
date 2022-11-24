@@ -93,13 +93,13 @@ class HairCollection:
 
     def _get_individual_hairs(
         self, bm: bmesh.types.BMesh
-    ) -> Iterable[tuple[np.ndarray[Any, Any], float]]:  # noqa[TAE002]
+    ) -> Iterable[tuple[np.ndarray, float]]:  # noqa[TAE002]
 
         start_verts = []
         for v in bm.verts:
             if len(v.link_edges) == 1:
                 start_verts.append(v)
-        islands_dict: dict[int, list[np.ndarray[Any, Any]]] = defaultdict()  # noqa
+        islands_dict: dict[int, list[np.ndarray]] = defaultdict()  # noqa
 
         found_verts = set()
         for start_vert in start_verts:
@@ -158,7 +158,7 @@ class HairCollection:
         for hair_vert_idxs in rdp_downsized_hair_co_idxs:
             hair_len_dict.setdefault(len(hair_vert_idxs), []).append(hair_vert_idxs)
 
-        hair_len_dict_np: dict[int, np.ndarray[Any, Any]] = {
+        hair_len_dict_np: dict[int, np.ndarray] = {
             i: np.array(hairs) for i, hairs in hair_len_dict.items()
         }
 
@@ -195,8 +195,8 @@ class HairCollection:
 
     @staticmethod
     def _compute_new_face_vert_idxs(
-        hair_co_len: int, hair_coords: np.ndarray[Any, Any]
-    ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+        hair_co_len: int, hair_coords: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         faces = np.empty((len(hair_coords), hair_co_len - 1, 4), dtype=np.int64)
 
         for i in range(hair_coords.shape[0]):
@@ -214,10 +214,10 @@ class HairCollection:
     @staticmethod
     def _compute_new_ver_coordinaes(
         hair_co_len: int,
-        hair_coords: np.ndarray[Any, Any],
-        nearest_normals: np.ndarray[Any, Any],
-        perpendicular: np.ndarray[Any, Any],
-    ) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+        hair_coords: np.ndarray,
+        nearest_normals: np.ndarray,
+        perpendicular: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray]:
         segment_correction = HairCollection._calculate_segment_correction(hair_co_len)
         hair_length = np.linalg.norm(hair_coords[:, 0] - hair_coords[:, -1], axis=1)
         length_correction = np.ones(hair_coords.shape[0])
@@ -247,9 +247,9 @@ class HairCollection:
     @staticmethod
     def _calculate_perpendicular_vec(
         hair_co_len: int,
-        hair_coords: np.ndarray[Any, Any],
-        nearest_normals: np.ndarray[Any, Any],
-    ) -> np.ndarray[Any, Any]:
+        hair_coords: np.ndarray,
+        nearest_normals: np.ndarray,
+    ) -> np.ndarray:
         hair_keys_next_coords = np.roll(hair_coords, -1, axis=1)
         hair_key_vectors = normalize(hair_keys_next_coords - hair_coords)
         if hair_co_len > 1:
@@ -263,14 +263,14 @@ class HairCollection:
         return perpendicular
 
     @staticmethod
-    def _calculate_segment_correction(hair_co_len: int) -> np.ndarray[Any, Any]:
+    def _calculate_segment_correction(hair_co_len: int) -> np.ndarray:
         """Makes an array of scalars to make the hair get narrower with each segment.
 
         Args:
             hair_co_len (int): Number of coordinates per hair.
 
         Returns:
-            np.ndarray[Any, Any]: Array of scalars to multiply with the perpendicular
+            np.ndarray: Array of scalars to multiply with the perpendicular
                 vector.
         """
         length_correction = np.arange(0.01, 0.03, 0.02 / hair_co_len, dtype=np.float32)

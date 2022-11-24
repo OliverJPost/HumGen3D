@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
 def _get_starting_coordinates(
     human: Human, path: str
-) -> tuple[int, np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
     body = human.objects.body
     vert_count = len(body.data.vertices)
     obj_coords = np.empty(vert_count * 3, dtype=np.float64)

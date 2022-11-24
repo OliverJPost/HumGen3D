@@ -118,9 +118,9 @@ def _add_temp_key_to_permanent_key_coords(
     human: "Human",
     temp_key: bpy.types.ShapeKey,
     vert_count: int,
-    obj_coords: np.ndarray[Any, Any],
-    permanent_key_coords: np.ndarray[Any, Any],
-) -> np.ndarray[Any, Any]:
+    obj_coords: np.ndarray,
+    permanent_key_coords: np.ndarray,
+) -> np.ndarray:
     temp_key_coords = np.empty(vert_count * 3, dtype=np.float64)
     human.keys.temp_key.data.foreach_get("co", temp_key_coords)
 

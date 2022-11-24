@@ -73,11 +73,11 @@ class PropCollection:
             )
 
     @bpy_only
-    def foreach_get(self, attr: str, sequence: ndarray[Any, Any]) -> None:  # noqa D
+    def foreach_get(self, attr: str, sequence: ndarray) -> None:  # noqa D
         self._collection.foreach_get(attr, sequence)
 
     @bpy_only
-    def foreach_set(self, attr: str, sequence: ndarray[Any, Any]) -> None:  # noqa D
+    def foreach_set(self, attr: str, sequence: ndarray) -> None:  # noqa D
         self._collection.foreach_set(attr, sequence)
 
     @bpy_only

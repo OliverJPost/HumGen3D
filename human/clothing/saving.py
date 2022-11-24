@@ -84,7 +84,7 @@ def _export_for_gender(
     open_when_finished: bool,
     gender: str,
     obj_distance_dict: DistanceDict,
-    body_coords_world: np.ndarray[Any, Any],
+    body_coords_world: np.ndarray,
 ) -> None:
     export_list = []
     if gender == "female":
