@@ -254,7 +254,8 @@ class LiveKeyItem(KeyItem):
     def set_without_update(self, value: float) -> None:
         """Set the value of the livekey without updating the human rig and clothing.
 
-        This can be used for faster livekey changes. Call `update_human_from_key_change()` # noqa
+        This can be used for faster livekey changes. Call
+        `{human}.keys.update_human_from_key_change()`
         when done with setting your livekeys.
 
         Args:
