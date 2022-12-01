@@ -13,6 +13,8 @@ from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
 
+from .rigify import RigifySettings
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
@@ -26,6 +28,10 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         self._human: "Human" = _human
         self._pcoll_name = "pose"
         self._pcoll_gender_split = False
+
+    @property
+    def rigify(self) -> RigifySettings:
+        return RigifySettings(self._human)
 
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003
@@ -117,6 +123,12 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
             dict[str, Any]: Pose settings as dict.
         """
         return {"set": self._active}
+
+    def reset(self) -> None:
+        for bone in self._human.objects.rig.pose.bones:
+            bone.location = (0, 0, 0)
+            bone.rotation_quaternion = (1, 0, 0, 0)
+            bone.scale = (1, 1, 1)
 
     def _import_pose(self, preset: str, context: bpy.types.Context) -> bpy.types.Object:
         """Import selected pose object.

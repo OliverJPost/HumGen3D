@@ -85,6 +85,10 @@ class ExpressionSettings(PreviewCollectionContent):
         self._pcoll_gender_split = False
 
     @property
+    def has_facial_rig(self) -> bool:
+        return "facial_rig" in self._human.objects.body
+
+    @property
     def keys(self) -> list[ShapeKeyItem]:
         """Filtered list from HumGen3D.human.keys for keys part of expressions.
 
