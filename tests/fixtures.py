@@ -9,9 +9,7 @@ import pytest  # type:ignore
 from HumGen3D.human.human import Human
 from pytest_lazyfixture import lazy_fixture  # type:ignore
 
-_standard_fixtures = [
-    "male_human",
-]
+_standard_fixtures = ["male_human", "male_rigify_human"]
 _all_female_fixtures = [
     "female_human",
 ]
@@ -31,6 +29,14 @@ def male_human() -> "Human":
 @pytest.fixture(scope="class")
 def female_human() -> "Human":
     human = _create_human("female")
+    yield human
+    human.delete()
+
+
+@pytest.fixture(scope="class")
+def male_rigify_human() -> "Human":
+    human = _create_human("male")
+    human.pose.rigify.generate(bpy.context)
     yield human
     human.delete()
 
