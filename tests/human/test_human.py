@@ -5,12 +5,7 @@ import bpy
 import pytest  # type:ignore
 from HumGen3D import Human
 from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.tests.fixtures import (  # noqa
-    ALL_HUMAN_FIXTURES,
-    context,
-    female_human,
-    male_human,
-)
+from HumGen3D.tests.fixtures import *
 
 
 def assert_vector_tuple_equality(vec, tup):

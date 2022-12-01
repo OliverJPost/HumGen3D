@@ -4,12 +4,7 @@
 import random
 
 import pytest  # type:ignore
-from HumGen3D.tests.fixtures import (  # noqa
-    ALL_HUMAN_FIXTURES,
-    context,
-    female_human,
-    male_human,
-)
+from HumGen3D.tests.fixtures import *
 
 
 def test_male_skin(male_human):
@@ -136,7 +131,7 @@ def test_set_texture(human, context):
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_lower_resoluton_set_texture(human, context):
-    categories = human.skin.texture.get_categories(context)
+    categories = human.skin.texture.get_categories()
     chosen = next(cat for cat in categories if "512" in cat)
     options = human.skin.texture.get_options(context, category=chosen)
     chosen = random.choice(options)
