@@ -7,12 +7,7 @@ import random
 import pytest
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.expression.expression import FACE_RIG_BONE_NAMES
-from HumGen3D.tests.fixtures import (  # noqa
-    ALL_HUMAN_FIXTURES,
-    context,
-    female_human,
-    male_human,
-)
+from HumGen3D.tests.fixtures import *
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
@@ -20,12 +15,14 @@ def test_facial_rig(human, context):
     human.expression.load_facial_rig(context)
 
     for bone_name in FACE_RIG_BONE_NAMES:
-        assert not human.pose_bones.get(bone_name).bone.hide
+        bone = human.pose.get_posebone_by_original_name(bone_name).bone
+        assert not bone.hide
 
     human.expression.remove_facial_rig()
 
     for bone_name in FACE_RIG_BONE_NAMES:
-        assert human.pose_bones.get(bone_name).bone.hide
+        bone = human.pose.get_posebone_by_original_name(bone_name).bone
+        assert bone.hide
 
     try:
         human.expression.remove_facial_rig()
@@ -46,7 +43,7 @@ def test_set(human, context):
     human.expression.set(chosen)
     sk_name, _ = os.path.splitext(os.path.basename(chosen))
 
-    sk = human.keys.get(f"expr_{sk_name}")
+    sk = human.keys.get(sk_name)
     assert sk
     assert sk.value
     assert not sk.as_bpy().mute

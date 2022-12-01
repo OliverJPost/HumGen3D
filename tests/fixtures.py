@@ -9,6 +9,15 @@ import pytest  # type:ignore
 from HumGen3D.human.human import Human
 from pytest_lazyfixture import lazy_fixture  # type:ignore
 
+__all__ = [
+    "ALL_FEMALE_FIXTURES",
+    "ALL_HUMAN_FIXTURES",
+    "male_human",
+    "context",
+    "female_human",
+    "male_rigify_human",
+]
+
 _standard_fixtures = ["male_human", "male_rigify_human"]
 _all_female_fixtures = [
     "female_human",

@@ -3,12 +3,7 @@
 
 import bpy
 import pytest  # type:ignore
-from HumGen3D.tests.fixtures import (  # noqa
-    ALL_HUMAN_FIXTURES,
-    context,
-    female_human,
-    male_human,
-)
+from HumGen3D.tests.fixtures import *
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
