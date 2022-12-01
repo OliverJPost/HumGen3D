@@ -24,7 +24,14 @@ def get_livekey(self: BpyLiveKey) -> float:
     Returns:
         The value of the livekey.
     """
-    human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
+    try:
+        human = Human.from_existing(
+            bpy.context.object
+        )  # TODO better way than bpy.context
+    except HumGenException as e:
+        raise HumGenException(
+            "`as_bpy()` only works when a part of the human is selected in Blender."
+        ) from e
     name = self.name
     temp_key = human.keys.temp_key
     current_sk_values = human.props.sk_values
@@ -51,9 +58,14 @@ def set_livekey(self: BpyLiveKey, value: float) -> None:
         HumGenException: If the active object is not part of a human.
     """
     name = self.name
-    human = Human.from_existing(bpy.context.object)  # TODO better way than bpy.context
-    if not human:
-        raise HumGenException("No active human")
+    try:
+        human = Human.from_existing(
+            bpy.context.object
+        )  # TODO better way than bpy.context
+    except HumGenException as e:
+        raise HumGenException(
+            "`as_bpy()` only works when a part of the human is selected in Blender."
+        ) from e
 
     # If the value was not changed, for example by the user exiting the value
     # typing modal, then do nothing. This prevents crash.
