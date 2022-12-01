@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Literal
 
 import bpy
 from HumGen3D.common.collections import add_to_collection
+from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.drivers import build_driver_dict
 from HumGen3D.common.exceptions import HumGenException
@@ -31,13 +32,18 @@ class RigifySettings:
         human.pose.reset()
 
         driver_dict = build_driver_dict(human.objects.body, remove=True)
-        rigify.generate.generate_rig(context, human.objects.rig)
+
+        old_rig = human.objects.rig
+        with context_override(context, old_rig, [old_rig], False):
+            rigify.generate.generate_rig(context, human.objects.rig)
+
         rigify_rig = self._find_created_rigify_rig(context)
         rigify_rig.data["hg_rigify"] = 1
         rigify_rig.name = human.name + "_RIGIFY"
         add_to_collection(context, rigify_rig)
 
         self._rename_vertex_groups(human.objects.body)
+        self._add_original_name_bone_tags(rigify_rig)
         self._iterate_children(human.objects.rig, rigify_rig)
         self._set_HG_props(human.objects.rig, rigify_rig)
 
@@ -52,6 +58,8 @@ class RigifySettings:
 
         for child in rigify_rig.children:
             self._correct_drivers(child, rigify_rig)
+
+        human._rig_obj = rigify_rig
 
         if human.expression.has_facial_rig:
             for bone in human.pose_bones:
