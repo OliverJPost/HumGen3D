@@ -28,6 +28,8 @@ def ShowMessageBox(message="", title="Human Generator - Alert", icon="INFO"):
         title (str, optional): Title for popup. Defaults to "Human Generator - Alert".
         icon (str, optional): Icon code. Defaults to 'INFO'.
     """
+    if bpy.app.background:
+        return
 
     def draw(self, context):
         for line in message.splitlines():
