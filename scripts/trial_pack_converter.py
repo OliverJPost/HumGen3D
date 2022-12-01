@@ -26,16 +26,21 @@ def replace_with_trial_content(source_zip, target_zip):
     return replaced
 
 
-for file in os.listdir(PATH):
-    if not file.endswith(".hgpack"):
-        print(f"Skipping {file}")
-        continue
-    path = os.path.join(PATH, file)
-    print(f"Processing {path}")
+def main():
+    for file in os.listdir(PATH):
+        if not file.endswith(".hgpack"):
+            print(f"Skipping {file}")
+            continue
+        path = os.path.join(PATH, file)
+        print(f"Processing {path}")
 
-    with ZipFile(path) as source_zip:
-        new_path = os.path.join(PATH, "TRIAL_" + file)
-        with ZipFile(new_path, "w", ZIP_DEFLATED) as target_zip:
-            replaced = replace_with_trial_content(source_zip, target_zip)
+        with ZipFile(path) as source_zip:
+            new_path = os.path.join(PATH, "TRIAL_" + file)
+            with ZipFile(new_path, "w", ZIP_DEFLATED) as target_zip:
+                replaced = replace_with_trial_content(source_zip, target_zip)
 
-    print(f"Replaced {replaced} files with trial content.")
+        print(f"Replaced {replaced} files with trial content.")
+
+
+if __name__ == "__main__":
+    main()
