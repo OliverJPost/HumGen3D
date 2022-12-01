@@ -76,6 +76,20 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         self._human.props.hashes["$pose"] = str(hash(self))
 
+    def get_posebone_by_original_name(self, original_name: str) -> bpy.types.PoseBone:
+        bone = next(
+            (
+                bone
+                for bone in self._human.objects.rig.pose.bones
+                if bone.get("original_name") == original_name
+            ),
+            None,
+        )
+        if not bone:
+            raise ValueError(f"Could not find bone with original name {original_name}")
+
+        return bone
+
     @injected_context
     def save_to_library(
         self,
