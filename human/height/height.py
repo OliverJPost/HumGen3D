@@ -54,10 +54,10 @@ class HeightSettings:
         Returns:
             float: Height of human in meters.
         """
-        rig_obj = self._human.objects.rig
-
-        top_coord = rig_obj.data.bones["head"].tail_local.z
-        bottom_coord = rig_obj.data.bones["heel.02.L"].tail_local.z
+        head_bone = self._human.pose.get_posebone_by_original_name("head").bone
+        heel_bone = self._human.pose.get_posebone_by_original_name("heel.02.L").bone
+        top_coord = head_bone.tail_local.z
+        bottom_coord = heel_bone.tail_local.z
 
         return cast(float, top_coord - bottom_coord)
 
@@ -224,9 +224,14 @@ class HeightSettings:
         eye_verts_right, eye_verts_left = np.split(eye_verts, 2)
         eye_verts_right, eye_verts_left = eye_verts_right.copy(), eye_verts_left.copy()
 
-        armature = self._human.objects.rig.data
-        left_head_co = armature.bones.get("eyeball.L").tail_local
-        right_head_co = armature.bones.get("eyeball.R").tail_local
+        left_eyeball_bone = self._human.pose.get_posebone_by_original_name(
+            "eyeball.L"
+        ).bone
+        left_head_co = left_eyeball_bone.tail_local
+        right_eyeball_bone = self._human.pose.get_posebone_by_original_name(
+            "eyeball.R"
+        ).bone
+        right_head_co = right_eyeball_bone.tail_local
 
         reference_left = centroid(eye_verts_left) + Vector((0.001, -0.0175, 0.0))
         reference_right = centroid(eye_verts_right) + Vector((-0.001, -0.0175, 0.0))
@@ -254,30 +259,29 @@ class HeightSettings:
 
     def _correct_teeth(self) -> None:
         """Corrects teeth to fit the new height."""
-        armature = self._human.objects.rig.data
         teeth_obj_lower = self._human.objects.lower_teeth
         teeth_obj_upper = self._human.objects.upper_teeth
 
         self._correct_teeth_obj(
-            teeth_obj_lower, "jaw", Vector((-0.0000, 0.0128, 0.0075)), armature
+            teeth_obj_lower, "jaw", Vector((-0.0000, 0.0128, 0.0075))
         )
         self._correct_teeth_obj(
-            teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003)), armature
+            teeth_obj_upper, "jaw_upper", Vector((-0.0000, 0.0247, -0.0003))
         )
 
-    @staticmethod
     def _correct_teeth_obj(
+        self,
         obj: bpy.types.Object,
         bone_name: str,
         reference_vector: Vector,
-        armature: bpy.types.Armature,
     ) -> None:
         vert_count = len(obj.data.vertices)
         verts = np.empty(vert_count * 3, dtype=np.float64)
         obj.data.vertices.foreach_get("co", verts)
         verts = verts.reshape((-1, 3))
 
-        reference_bone_tail_co = armature.bones.get(bone_name).tail_local
+        reference_bone = self._human.pose.get_posebone_by_original_name(bone_name).bone
+        reference_bone_tail_co = reference_bone.tail_local
         transformation = np.array(
             reference_bone_tail_co - centroid(verts) + reference_vector  # type:ignore
         )

@@ -208,7 +208,7 @@ class BaseHair:
         joined_object.parent = rig
         joined_object.parent_type = "BONE"
         joined_object.parent_bone = "head"
-        bone = self._human.objects.rig.pose.bones["head"]
+        bone = self._human.pose.get_posebone_by_original_name("head")
         T = Matrix.Translation((bone.tail - bone.head))
         tmw = rig.matrix_world @ T @ bone.matrix
         cmw = joined_object.matrix_world.copy()
