@@ -142,8 +142,8 @@ class ExpressionSettings(PreviewCollectionContent):
             context (C): Blender context. bpy.context if not provided.
         """
         for b_name in FACE_RIG_BONE_NAMES:
-            b = self._human.pose_bones[b_name]  # type:ignore[index]
-            b.bone.hide = False
+            bone = self._human.pose.get_posebone_by_original_name(b_name).bone
+            bone.hide = False
 
         for sk in self._human.keys:
             if sk.name.startswith("expr"):
@@ -166,8 +166,8 @@ class ExpressionSettings(PreviewCollectionContent):
 
         # TODO give bones custom property if they're part of the face rig
         for b_name in FACE_RIG_BONE_NAMES:
-            b = self._human.pose_bones[b_name]  # type:ignore[index]
-            b.bone.hide = True
+            bone = self._human.pose.get_posebone_by_original_name(b_name).bone
+            bone.hide = True
 
         # TODO this is a bit heavy if we don't need the coordinates
         json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")

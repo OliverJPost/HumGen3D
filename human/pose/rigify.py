@@ -64,6 +64,18 @@ class RigifySettings:
             if not vg.name.lower().startswith(prefix_list):
                 vg.name = "DEF-" + vg.name
 
+    def _add_original_name_bone_tags(self, rigify_rig: bpy.types.Object) -> None:
+        """Adds the original name of the bone as a bone tag on deformation bones
+
+        Args:
+            rigify_rig (Object): Rigify HumGen armature
+        """
+        deformation_bones = [
+            bone for bone in rigify_rig.pose.bones if bone.name.startswith("DEF-")
+        ]
+        for bone in deformation_bones:
+            bone["hg_original_name"] = bone.name.replace("DEF-", "")
+
     def _set_HG_props(
         self, hg_rig: bpy.types.Object, rigify_rig: bpy.types.Object
     ) -> None:
