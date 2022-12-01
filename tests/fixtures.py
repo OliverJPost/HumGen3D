@@ -42,7 +42,11 @@ def male_rigify_human() -> "Human":
 
 
 def _create_human(gender="male"):
-    chosen_preset = Human.get_preset_options(gender, context=bpy.context)[0]
+    chosen_preset = next(
+        p
+        for p in Human.get_preset_options(gender, context=bpy.context)
+        if "base" in p.lower()
+    )
     return Human.from_preset(chosen_preset, bpy.context)
 
 
