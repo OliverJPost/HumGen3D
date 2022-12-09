@@ -1,18 +1,10 @@
 import os
 import random
 
-import cv2
 import numpy as np
-from PIL import Image
 
 PATH = "/Users/ole/Documents/HG_TRIAL/footwear"
 EXPORT_PATH = "/Users/ole/Documents/HG_TRIAL/footwear2"
-
-wm = cv2.imread(
-    "/Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/scripts/trial_watermark.png",
-    -1,
-)
-hwm, wwm, _ = wm.shape
 
 
 def get_xy_quarters(img):
@@ -26,6 +18,13 @@ def get_xy_quarters(img):
 
 
 def main():
+    import cv2
+
+    wm = cv2.imread(
+        "/Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/scripts/trial_watermark.png",
+        -1,
+    )
+    hwm, wwm, _ = wm.shape
     for root, dirs, files in os.walk(PATH):
         for file in files:
             if not file.endswith(".png"):
