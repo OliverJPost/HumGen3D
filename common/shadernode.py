@@ -2,10 +2,14 @@
 
 This is used to interact with known nodes in the materials used by the addon.
 """
-
 from typing import Any, Union
 
+import bpy
 from bpy.types import NodeSocket, UILayout
+
+FACTOR_INPUT_NAME = "Factor" if bpy.app.version >= (3, 4, 0) else "Fac"
+COLOR1_INPUT_NAME = 6 if bpy.app.version >= (3, 4, 0) else "Color1"
+COLOR2_INPUT_NAME = 7 if bpy.app.version >= (3, 4, 0) else "Color2"
 
 
 class NodeInput:

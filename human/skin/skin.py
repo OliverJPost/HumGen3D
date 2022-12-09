@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
 from HumGen3D.backend import get_prefs
-from HumGen3D.common.shadernode import NodeInput
+from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -60,7 +60,7 @@ class SkinSettings:
     def __init__(self, human: "Human"):
         self._human = human
 
-        self.cavity_strength = NodeInput(self, "Cavity_Multiply", "Fac")
+        self.cavity_strength = NodeInput(self, "Cavity_Multiply", FACTOR_INPUT_NAME)
         self.tone = NodeInput(self, "Skin_tone", 1)
         self.redness = NodeInput(self, "Skin_tone", 2)
         self.saturation = NodeInput(self, "Skin_tone", 3)

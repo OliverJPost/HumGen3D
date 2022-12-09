@@ -8,8 +8,7 @@ from typing import Any, Callable, TypeVar, cast
 
 import bpy
 from HumGen3D.backend import hg_log
-
-from common.exceptions import HumGenException
+from HumGen3D.common.exceptions import HumGenException
 
 F = TypeVar("F", bound=Callable[..., Any])
 
