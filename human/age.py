@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, Union
 
-from HumGen3D.common.shadernode import NodeInput
+from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
 from HumGen3D.human.keys.keys import (
     LiveKeyItem,
     ShapeKeyItem,
@@ -25,7 +25,7 @@ class AgeSettings:
         """
         self._human: "Human" = human
 
-        self.age_color = NodeInput(human.skin, "Age_Multiply", "Fac")
+        self.age_color = NodeInput(human.skin, "Age_Multiply", FACTOR_INPUT_NAME)
         self.age_wrinkles = NodeInput(human.skin, "HG_Age", "Strength")
 
     @property
@@ -85,10 +85,10 @@ class AgeSettings:
         node_age_normal.inputs["Strength"].default_value = age_key_value * 6
 
         node_age_color = nodes.get("Age_Multiply")
-        node_age_color.inputs["Fac"].default_value = age_key_value
+        node_age_color.inputs[FACTOR_INPUT_NAME].default_value = age_key_value
 
         node_age_color = nodes.get("Cavity_Multiply")
-        node_age_color.inputs["Fac"].default_value = skin_multiply_value
+        node_age_color.inputs[FACTOR_INPUT_NAME].default_value = skin_multiply_value
 
         node_normal = nodes.get("Normal Map")
         node_normal.inputs["Strength"].default_value = normal_value

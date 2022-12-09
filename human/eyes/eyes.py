@@ -2,11 +2,13 @@
 
 """Implements class for manipulating the eyes of the human."""
 
+
 import random
 from typing import TYPE_CHECKING, Any, cast
 
 from bpy.types import Material, Object  # type:ignore
 from HumGen3D.common.shadernode import NodeInput  # type:ignore
+from HumGen3D.common.shadernode import COLOR2_INPUT_NAME
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 
 if TYPE_CHECKING:
@@ -60,8 +62,8 @@ class EyeSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
-        self.iris_color = NodeInput(self, "HG_Eye_Color", "Color2")
-        self.sclera_color = NodeInput(self, "HG_Scelera_Color", "Color2")
+        self.iris_color = NodeInput(self, "HG_Eye_Color", COLOR2_INPUT_NAME)
+        self.sclera_color = NodeInput(self, "HG_Scelera_Color", COLOR2_INPUT_NAME)
 
     @property
     def eye_obj(self) -> Object:
