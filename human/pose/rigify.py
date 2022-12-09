@@ -102,6 +102,8 @@ class RigifySettings:
         new_HG.body_obj = old_HG.body_obj
         new_HG.length = old_HG.length
         new_HG.version = old_HG.version
+        if "pytest_human" in hg_rig:
+            rigify_rig["pytest_human"] = True
 
     def _iterate_children(
         self, hg_rig: bpy.types.Object, rigify_rig: bpy.types.Object

@@ -56,7 +56,9 @@ def _create_human(gender="male"):
         for p in Human.get_preset_options(gender, context=bpy.context)
         if "base" in p.lower()
     )
-    return Human.from_preset(chosen_preset, bpy.context)
+    human = Human.from_preset(chosen_preset, bpy.context)
+    human._rig_obj["pytest_human"] = True
+    return human
 
 
 @pytest.fixture()
