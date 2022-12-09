@@ -11,3 +11,4 @@ debug.log
 .coverage
 /htmlcov
 /.VSCodeCounter
+*.log
