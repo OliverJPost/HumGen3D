@@ -9,7 +9,19 @@ from typing import Any, Callable, TypeVar, cast
 import bpy
 from HumGen3D.backend import hg_log
 
+from common.exceptions import HumGenException
+
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def raise_if_pytest_human(args):
+    self = args[0]
+    if hasattr(self, "_human"):
+        human = self._human
+    else:
+        human = self
+    if "pytest_human" in human._rig_obj:
+        raise HumGenException("No context passed for injected context.")
 
 
 def injected_context(func: F) -> F:
@@ -30,6 +42,8 @@ def injected_context(func: F) -> F:
         context_arg_index = varnames.index("context")
         context_in_args = len(args) >= (context_arg_index + 1)
         if not context_in_args and "context" not in kwargs:
+            raise_if_pytest_human(args)
+
             kwargs["context"] = bpy.context
 
             hg_log(traceback.extract_stack()[-2])
