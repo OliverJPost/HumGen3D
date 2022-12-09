@@ -2,6 +2,7 @@
 
 """Functions used for analysing, manipulating, or creating raw geometry."""
 
+import hashlib
 from typing import Any, Iterable, Optional, Union, cast
 
 import bpy
@@ -190,3 +191,26 @@ def deform_obj_from_difference(
             deform_obj.data.vertices[vertex_index].co = (
                 deform_obj.matrix_world.inverted() @ world_new_loc
             )
+
+
+def hash_mesh_object(obj: bpy.types.Object) -> int:
+    """Hash an object.
+
+    Args:
+        obj: The object to hash.
+
+    Returns:
+        The hash of the object.
+    """
+    if obj.data.shape_keys:
+        keys = obj.data.shape_keys.key_blocks
+        coordinates = np.empty(
+            (len(keys), len(obj.data.vertices) * 3), dtype=np.float64
+        )
+        for key in keys:
+            key.data.foreach_get("data", coordinates[key.index])
+    else:
+        coordinates = world_coords_from_obj(obj)
+
+    np.round(coordinates, 3, out=coordinates)
+    return hash(tuple(coordinates))
