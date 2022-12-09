@@ -11,12 +11,21 @@ import bpy
 from mathutils import Vector
 
 from ...core.HG_PCOLL import refresh_pcoll  # type: ignore
-from ...core.HG_SHAPEKEY_CALCULATOR import (build_distance_dict,
-                                            deform_obj_from_difference)
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, apply_shapekeys,
-                                               find_human, get_addon_root,
-                                               get_prefs, hg_delete, hg_log,
-                                               show_message, unhide_human)
+from ...core.HG_SHAPEKEY_CALCULATOR import (
+    build_distance_dict,
+    deform_obj_from_difference,
+)
+from ...features.common.HG_COMMON_FUNC import (
+    ShowMessageBox,
+    apply_shapekeys,
+    find_human,
+    get_addon_root,
+    get_prefs,
+    hg_delete,
+    hg_log,
+    show_message,
+    unhide_human,
+)
 from ...features.creation_phase.HG_LENGTH import apply_armature, correct_origin
 
 
@@ -519,9 +528,10 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
 
         eye_mat = hg_eyes[0].data.materials[1]
         eye_nodes = eye_mat.node_tree.nodes
+        INP_NAME = 'Factor' if bpy.app.version >= (3, 4, 0) else 'Fac'
         mat_dict['eyes'] = {
-            'HG_Eye_Color': tuple(eye_nodes['HG_Eye_Color'].inputs[2].default_value),
-            'HG_Scelera_Color': tuple(eye_nodes['HG_Scelera_Color'].inputs[2].default_value)
+            'HG_Eye_Color': tuple(eye_nodes['HG_Eye_Color'].inputs[INP_NAME].default_value),
+            'HG_Scelera_Color': tuple(eye_nodes['HG_Scelera_Color'].inputs[INP_NAME].default_value)
         }
 
         preset_data['material'] = mat_dict

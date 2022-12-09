@@ -4,8 +4,7 @@ from pathlib import Path
 
 import bpy  # type: ignore
 
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox, find_human,
-                                               get_prefs)
+from ...features.common.HG_COMMON_FUNC import ShowMessageBox, find_human, get_prefs
 
 
 def load_textures(self, context):
@@ -253,8 +252,8 @@ def randomize_iris_color(hg_rig):
         )[0])
     
     pupil_color_rgb = _hex_to_rgb(pupil_color_hex)
-    
-    nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb
+    INP_NAME = 7 if bpy.app.version >= (3, 4, 0) else 'Color2'
+    nodes["HG_Eye_Color"].inputs[INP_NAME].default_value = pupil_color_rgb
     
 def _srgb_to_linearrgb(c):
     #Source: https://blender.stackexchange.com/questions/158896/how-set-hex-in-rgb-node-python?noredirect=1#comment269316_158896 

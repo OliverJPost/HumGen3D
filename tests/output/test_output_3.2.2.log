@@ -1,0 +1,355 @@
+Starting time is Fri  9 Dec 2022 16:23:17 CET
+Blender PIP user site: /Users/ole/.local/lib/python3.10/site-packages
+Adding site to path
+Exception in module register(): /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/quick_instance/__init__.py
+Exception in module register(): /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/asset_browser_utilities/__init__.py
+WARNING: Keyconfig not availabe, skipping DECALmachine keymaps
+Registered DECALmachine 2.6.4 with 4 decal libraries, 1 trim sheet libraries and 2 atlases. PIL is not installed.
+Decals, Trimsheets and Atlases are located in /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/DECALmachine/assets/
+ • decal library: Aircraft
+ • decal library: Example Panels
+ • decal library: Examples
+ • decal library: MyDecals
+ • trim sheet library: Example Sheet
+ • atlas: Aircraft Atlas
+ • atlas: Example Atlas
+Substance 3D in Blender: INFO - Shader Presets initialized...
+module changed on disk: '/Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/__init__.py' reloading...
+WARNING: Failed to retrieve 'icon_id' of material 'Material'
+Substance 3D in Blender: INFO - Scene Substances loaded correctly
+HG_INFO:	[0m Activating LEGACY HumGen
+HG_INFO:	[0m Activating HumGen, version (4, 0, 1)
+============================= test session starts ==============================
+platform darwin -- Python 3.10.2, pytest-7.2.0, pluggy-1.0.0
+rootdir: /Users/ole/Documents/HumGen3D
+plugins: cov-4.0.0, lazy-fixture-0.6.3
+collected 9 items
+
+tests/human/test_body.py FEFFEF.E.                                       [100%]
+
+==================================== ERRORS ====================================
+___________ ERROR at setup of test_randomize_body[male_rigify_human] ___________
+
+request = <FixtureRequest for <Function test_randomize_body[male_rigify_human]>>
+
+    def fill(request):
+        item = request._pyfuncitem
+        fixturenames = getattr(item, "fixturenames", None)
+        if fixturenames is None:
+            fixturenames = request.fixturenames
+    
+        if hasattr(item, 'callspec'):
+            for param, val in sorted_by_dependency(item.callspec.params, fixturenames):
+                if val is not None and is_lazy_fixture(val):
+>                   item.callspec.params[param] = request.getfixturevalue(val.name)
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/python/lib/python3.10/site-packages/pytest_lazyfixture.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/fixtures.py:52: in male_rigify_human
+    human.pose.rigify.generate(bpy.context)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:57: in wrapper
+    return func(*args, **kwargs)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/pose/rigify.py:38: in generate
+    rigify.generate.generate_rig(context, human.objects.rig)
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:614: in generate_rig
+    raise e
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:602: in generate_rig
+    generator.generate()
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:411: in generate
+    self.obj = obj = self.ensure_rig_object()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rigify.generate.Generator object at 0x1602a85b0>
+
+    def ensure_rig_object(self) -> bpy.types.Object:
+        """Check if the generated rig already exists, so we can
+        regenerate in the same object. If not, create a new
+        object to generate the rig in.
+        """
+        print("Fetch rig.")
+        meta_data = self.metarig.data
+    
+>       target_rig = meta_data.rigify_target_rig
+E       AttributeError: 'Armature' object has no attribute 'rigify_target_rig'
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:68: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+Fetch rig.
+Rigify: failed to generate rig.
+_____________ ERROR at setup of test_reset_body[male_rigify_human] _____________
+
+request = <FixtureRequest for <Function test_reset_body[male_rigify_human]>>
+
+    def fill(request):
+        item = request._pyfuncitem
+        fixturenames = getattr(item, "fixturenames", None)
+        if fixturenames is None:
+            fixturenames = request.fixturenames
+    
+        if hasattr(item, 'callspec'):
+            for param, val in sorted_by_dependency(item.callspec.params, fixturenames):
+                if val is not None and is_lazy_fixture(val):
+>                   item.callspec.params[param] = request.getfixturevalue(val.name)
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/python/lib/python3.10/site-packages/pytest_lazyfixture.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/fixtures.py:52: in male_rigify_human
+    human.pose.rigify.generate(bpy.context)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:57: in wrapper
+    return func(*args, **kwargs)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/pose/rigify.py:38: in generate
+    rigify.generate.generate_rig(context, human.objects.rig)
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:614: in generate_rig
+    raise e
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:602: in generate_rig
+    generator.generate()
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:411: in generate
+    self.obj = obj = self.ensure_rig_object()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rigify.generate.Generator object at 0x16049efe0>
+
+    def ensure_rig_object(self) -> bpy.types.Object:
+        """Check if the generated rig already exists, so we can
+        regenerate in the same object. If not, create a new
+        object to generate the rig in.
+        """
+        print("Fetch rig.")
+        meta_data = self.metarig.data
+    
+>       target_rig = meta_data.rigify_target_rig
+E       AttributeError: 'Armature' object has no attribute 'rigify_target_rig'
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:68: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+Fetch rig.
+Rigify: failed to generate rig.
+_____________ ERROR at setup of test_body_keys[male_rigify_human] ______________
+
+request = <FixtureRequest for <Function test_body_keys[male_rigify_human]>>
+
+    def fill(request):
+        item = request._pyfuncitem
+        fixturenames = getattr(item, "fixturenames", None)
+        if fixturenames is None:
+            fixturenames = request.fixturenames
+    
+        if hasattr(item, 'callspec'):
+            for param, val in sorted_by_dependency(item.callspec.params, fixturenames):
+                if val is not None and is_lazy_fixture(val):
+>                   item.callspec.params[param] = request.getfixturevalue(val.name)
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/python/lib/python3.10/site-packages/pytest_lazyfixture.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/fixtures.py:52: in male_rigify_human
+    human.pose.rigify.generate(bpy.context)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:57: in wrapper
+    return func(*args, **kwargs)
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/pose/rigify.py:38: in generate
+    rigify.generate.generate_rig(context, human.objects.rig)
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:614: in generate_rig
+    raise e
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:602: in generate_rig
+    generator.generate()
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:411: in generate
+    self.obj = obj = self.ensure_rig_object()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <rigify.generate.Generator object at 0x16055d210>
+
+    def ensure_rig_object(self) -> bpy.types.Object:
+        """Check if the generated rig already exists, so we can
+        regenerate in the same object. If not, create a new
+        object to generate the rig in.
+        """
+        print("Fetch rig.")
+        meta_data = self.metarig.data
+    
+>       target_rig = meta_data.rigify_target_rig
+E       AttributeError: 'Armature' object has no attribute 'rigify_target_rig'
+
+../../blender_executables/blender-3.2.2-macos-x64.app/Contents/Resources/3.2/scripts/addons/rigify/generate.py:68: AttributeError
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+Fetch rig.
+Rigify: failed to generate rig.
+=================================== FAILURES ===================================
+_______________________ test_randomize_body[male_human] ________________________
+
+human = Human 'Tommy' [Male] instance.
+context = <bpy_struct, Context at 0x7f99868042e8>
+
+    @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+    def test_randomize_body(human, context):
+        hash_before = hash(human.body)
+>       human.body.randomize()
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/human/test_body.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:45: in wrapper
+    raise_if_pytest_human(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<HumGen3D.human.body.body.BodySettings object at 0x160240f70>,)
+
+    def raise_if_pytest_human(args):
+        self = args[0]
+        if hasattr(self, "_human"):
+            human = self._human
+        else:
+            human = self
+        if "pytest_human" in human._rig_obj:
+>           raise HumGenException("No context passed for injected context.")
+E           common.exceptions.HumGenException: No context passed for injected context.
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:24: HumGenException
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+______________________ test_randomize_body[female_human] _______________________
+
+human = Human 'Angela' [Female] instance.
+context = bpy.data.scenes['Scene']...Context
+
+    @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+    def test_randomize_body(human, context):
+        hash_before = hash(human.body)
+>       human.body.randomize()
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/human/test_body.py:16: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:45: in wrapper
+    raise_if_pytest_human(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<HumGen3D.human.body.body.BodySettings object at 0x160555b40>,)
+
+    def raise_if_pytest_human(args):
+        self = args[0]
+        if hasattr(self, "_human"):
+            human = self._human
+        else:
+            human = self
+        if "pytest_human" in human._rig_obj:
+>           raise HumGenException("No context passed for injected context.")
+E           common.exceptions.HumGenException: No context passed for injected context.
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:24: HumGenException
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m Could not find key 'LIVE_KEY_TEMP_caucasian' while setting values WARNING
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+_________________________ test_reset_body[male_human] __________________________
+
+human = Human 'Mary' [Male] instance.
+context = bpy.data.scenes['Scene']...Context
+
+    @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+    def test_reset_body(human: "Human", context):
+>       human.body.randomize()
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/human/test_body.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:45: in wrapper
+    raise_if_pytest_human(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<HumGen3D.human.body.body.BodySettings object at 0x160506a70>,)
+
+    def raise_if_pytest_human(args):
+        self = args[0]
+        if hasattr(self, "_human"):
+            human = self._human
+        else:
+Blender 3.2.2 (hash bcfdb14560e7 built 2022-08-02 23:36:40)
+Read prefs: /Users/ole/Library/Application Support/Blender/3.2/config/userpref.blend
+            human = self
+        if "pytest_human" in human._rig_obj:
+>           raise HumGenException("No context passed for injected context.")
+E           common.exceptions.HumGenException: No context passed for injected context.
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:24: HumGenException
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+________________________ test_reset_body[female_human] _________________________
+
+human = Human 'Tonya' [Female] instance.
+context = bpy.data.scenes['Scene']...Context
+
+    @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+    def test_reset_body(human: "Human", context):
+>       human.body.randomize()
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/tests/human/test_body.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:45: in wrapper
+    raise_if_pytest_human(args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (<HumGen3D.human.body.body.BodySettings object at 0x1605808e0>,)
+
+    def raise_if_pytest_human(args):
+        self = args[0]
+        if hasattr(self, "_human"):
+            human = self._human
+        else:
+            human = self
+        if "pytest_human" in human._rig_obj:
+>           raise HumGenException("No context passed for injected context.")
+E           common.exceptions.HumGenException: No context passed for injected context.
+
+../../Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/common/decorators.py:24: HumGenException
+---------------------------- Captured stdout setup -----------------------------
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m Could not find key 'LIVE_KEY_TEMP_caucasian' while setting values WARNING
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+HG_INFO:	[0m <FrameSummary file /Users/ole/Library/Application Support/Blender/3.2/scripts/addons/HumGen3D/human/human.py, line 220 in from_preset>
+[93mHG_WARNING:	[0m Argument 'context' for function 'set_from_dict' substituted with bpy.context.  It's highly recommended to pass your own context!
+=========================== short test summary info ============================
+FAILED tests/human/test_body.py::test_randomize_body[male_human] - common.exc...
+FAILED tests/human/test_body.py::test_randomize_body[female_human] - common.e...
+FAILED tests/human/test_body.py::test_reset_body[male_human] - common.excepti...
+FAILED tests/human/test_body.py::test_reset_body[female_human] - common.excep...
+ERROR tests/human/test_body.py::test_randomize_body[male_rigify_human] - Attr...
+ERROR tests/human/test_body.py::test_reset_body[male_rigify_human] - Attribut...
+ERROR tests/human/test_body.py::test_body_keys[male_rigify_human] - Attribute...
+==================== 4 failed, 2 passed, 3 errors in 42.88s ====================
+ • unloaded decal library: Aircraft
+ • unloaded decal library: Example Panels
+ • unloaded decal library: Examples
+ • unloaded decal library: MyDecals
+ • unloaded trim sheet library: Example Sheet
+Unregistered DECALmachine 2.6.4
+Substance 3D in Blender: INFO - Shader Presets fully removed...

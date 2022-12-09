@@ -10,11 +10,15 @@ from sys import platform
 import bpy  # type: ignore
 
 from ...core.HG_PCOLL import refresh_pcoll
-from ...features.common.HG_COMMON_FUNC import (ShowMessageBox,
-                                               add_to_collection, get_prefs,
-                                               hg_delete, hg_log, show_message)
-from .HG_HAIR import (add_quality_props_to_hair_system,
-                      convert_to_new_hair_shader)
+from ...features.common.HG_COMMON_FUNC import (
+    ShowMessageBox,
+    add_to_collection,
+    get_prefs,
+    hg_delete,
+    hg_log,
+    show_message,
+)
+from .HG_HAIR import add_quality_props_to_hair_system, convert_to_new_hair_shader
 from .HG_MATERIAL import set_gender_specific_shader
 from .HG_NAMEGEN import get_name
 
@@ -328,7 +332,8 @@ class HG_CREATION_BASE():
 
         eye_nodes = hg_eyes.data.materials[1].node_tree.nodes
         for node_name, value in preset_data['material']['eyes'].items():
-            eye_nodes[node_name].inputs[2].default_value = value
+            INP_NAME = 7 if bpy.app.version >= (3, 4, 0) else 'Color2'
+            eye_nodes[node_name].inputs[INP_NAME].default_value = value
 
         if 'eyebrows' in preset_data:  
             self._set_preset_eyebrows(hg_body, preset_data)

@@ -8,13 +8,18 @@ import bpy
 from .. import bl_info
 from ..core.HG_PCOLL import preview_collections
 from ..data.HG_COLORS import color_dict
-from ..features.common.HG_COMMON_FUNC import (find_human, get_prefs,
-                                              is_batch_result)
-from ..user_interface.HG_TIPS_SUGGESTIONS_UI import \
-    draw_tips_suggestions_ui  # type: ignore
-from .HG_PANEL_FUNCTIONS import (draw_panel_switch_header, draw_spoiler_box,
-                                 draw_sub_spoiler, get_flow, in_creation_phase,
-                                 searchbox)
+from ..features.common.HG_COMMON_FUNC import find_human, get_prefs, is_batch_result
+from ..user_interface.HG_TIPS_SUGGESTIONS_UI import (
+    draw_tips_suggestions_ui,  # type: ignore
+)
+from .HG_PANEL_FUNCTIONS import (
+    draw_panel_switch_header,
+    draw_spoiler_box,
+    draw_sub_spoiler,
+    get_flow,
+    in_creation_phase,
+    searchbox,
+)
 
 
 class HG_PT_PANEL(bpy.types.Panel):
@@ -1055,11 +1060,12 @@ class HG_PT_PANEL(bpy.types.Panel):
         col.use_property_split = True
         col.use_property_decorate = False
         row = col.row(align = True)
-        row.prop(nodes['HG_Eye_Color'].inputs[2], 'default_value',
+        INP_NAME = 7 if bpy.app.version >= (3, 4, 0) else "Color2"
+        row.prop(nodes['HG_Eye_Color'].inputs[INP_NAME], 'default_value',
                  text = 'Iris Color'
                  )
         row.operator('hg3d.random', text = '', icon = 'FILE_REFRESH').random_type = 'iris_color'
-        col.prop(nodes['HG_Scelera_Color'].inputs[2],
+        col.prop(nodes['HG_Scelera_Color'].inputs[INP_NAME],
                  'default_value', text = 'Sclera Color'
                  )
 
