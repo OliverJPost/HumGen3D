@@ -127,7 +127,9 @@ class EyeSettings:
 
         pupil_color_rgb = self._hex_to_rgb(pupil_color_hex)
 
-        nodes["HG_Eye_Color"].inputs[2].default_value = pupil_color_rgb  # type:ignore
+        nodes["HG_Eye_Color"].inputs[
+            COLOR2_INPUT_NAME
+        ].default_value = pupil_color_rgb  # type:ignore
 
     def as_dict(self) -> dict[str, tuple[float, float, float, float]]:
         """Returns the current eye settings as a dictionary.
