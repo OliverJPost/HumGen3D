@@ -12,12 +12,16 @@ from pytest_lazyfixture import lazy_fixture  # type:ignore
 __all__ = [
     "ALL_FEMALE_FIXTURES",
     "ALL_HUMAN_FIXTURES",
+    "TESTFILES_PATH",
+    "CLIPPING_THRESHOLD",
     "male_human",
     "context",
     "female_human",
     "male_rigify_human",
 ]
 
+CLIPPING_THRESHOLD = 0.05
+TESTFILES_PATH = "/Users/ole/Documents/HG_EXTRAS/Testfiles"
 _standard_fixtures = ["male_human", "male_rigify_human"]
 _all_female_fixtures = [
     "female_human",
@@ -64,3 +68,6 @@ def _create_human(gender="male"):
 @pytest.fixture()
 def context():
     return bpy.context
+
+
+FIXTURE_FUNCTIONS = [female_human, male_human, male_rigify_human, context]
