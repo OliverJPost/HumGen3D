@@ -19,11 +19,8 @@ def test_randomize_body(human, context):
 
     converted_key = human.body.keys[0].to_shapekey()
     randomized_values = []
-    for i in range(4):
-        if i == 0:
-            human.body.randomize()
-        else:
-            human.body.randomize(context)
+    for _ in range(4):
+        human.body.randomize(context)
         randomized_values.append(converted_key.value)
     assert sum(randomized_values) != 0, "Randomized values are always 0"
 
