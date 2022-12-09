@@ -16,6 +16,7 @@ from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
 from HumGen3D.common.collections import add_to_collection
+from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
@@ -146,13 +147,7 @@ class BaseHair:
             ps = mod.particle_system
             ps.settings.child_nbr = ps.settings.rendered_child_count // 10
             body_obj = self._human.objects.body
-            with context.temp_override(
-                active_object=body_obj,
-                object=body_obj,
-                selected_objects=[
-                    body_obj,
-                ],
-            ):
+            with context_override(context, body_obj, [body_obj]):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
             hair_obj = context.object  # TODO this is bound to fail
@@ -182,9 +177,8 @@ class BaseHair:
 
         if len(hair_objs) > 1:
             join_obj_name = cap_obj.name if cap_obj else hair_objs[0].name
-            with context.temp_override(
-                active_object=cap_obj if cap_obj else hair_objs[0],
-                selected_editable_objects=hair_objs,
+            with context_override(
+                context, cap_obj if cap_obj else hair_objs[0], hair_objs
             ):
                 bpy.ops.object.join()
 

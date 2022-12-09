@@ -19,6 +19,7 @@ from HumGen3D.backend.content.content_saving import save_thumb
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
 from HumGen3D.common import find_hg_rig, is_legacy
+from HumGen3D.common.context import context_override
 from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
 from HumGen3D.human.age import AgeSettings
 from HumGen3D.human.materials import MaterialSettings
@@ -722,7 +723,7 @@ class Human:
             )
 
         filepath = os.path.join(folder, name + file_type)
-        with context.temp_override(selected_objects=self.objects):
+        with context_override(context, self.objects[0], self.objects):
             if file_type == ".fbx":
                 bpy.ops.export_scene.fbx(
                     "EXEC_DEFAULT",

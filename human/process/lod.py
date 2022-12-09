@@ -7,6 +7,9 @@ from typing import TYPE_CHECKING, Literal
 import bmesh
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
+from HumGen3D.common.context import context_override
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -66,11 +69,13 @@ class LodSettings:
         body_obj["hg_lod"] = lod
         self._human.hair.set_connected(True)
 
+    @injected_context
     def set_clothing_lod(
         self,
         decimate_ratio: float = 0.15,
         remove_subdiv: bool = True,
         remove_solidify: bool = True,
+        context: C = None,
     ) -> None:
         """Set the LOD of the clothing meshes by decimating them.
 
@@ -87,7 +92,7 @@ class LodSettings:
             if decimate_ratio < 1.0:
                 dec_mod = obj.modifiers.new("Decimate", "DECIMATE")
                 dec_mod.ratio = decimate_ratio
-                with bpy.context.temp_override(active_object=obj):
+                with context_override(context, obj, [obj]):
                     bpy.ops.object.modifier_apply(modifier=dec_mod.name)
 
             for mod in obj.modifiers[:]:
