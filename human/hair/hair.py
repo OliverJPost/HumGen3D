@@ -8,7 +8,10 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import bpy
 from bpy.types import bpy_prop_collection
-from HumGen3D.common.os import correct_presetpath  # type:ignore
+from HumGen3D.common.context import context_override
+from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.os import correct_presetpath
+from HumGen3D.common.type_aliases import C  # type:ignore
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -101,7 +104,8 @@ class HairSettings:
             ]
         )
 
-    def set_connected(self, connected: bool) -> None:
+    @injected_context
+    def set_connected(self, connected: bool, context: C = None) -> None:
         """Shortcut for using `connect_hair` and `disconnect_hair` operators.
 
         This should be used when modifying the body mesh (the actual mesh, not the shape
@@ -110,7 +114,9 @@ class HairSettings:
         Args:
             connected (bool): True if hair should be connected, False otherwise.
         """
-        with bpy.context.temp_override(active_object=self._human.objects.body):
+        with context_override(
+            context, self._human.objects.body, self._human.objects.body
+        ):
             if connected:
                 bpy.ops.particle.connect_hair(all=True)
             else:

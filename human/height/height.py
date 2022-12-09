@@ -6,6 +6,7 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
+from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.type_aliases import C
@@ -163,7 +164,7 @@ class HeightSettings:
             obj.select_set(False)
         rig.select_set(True)
 
-        with context.temp_override(active_object=rig, selected_objects=[rig]):
+        with context_override(context, rig, [rig]):
             bpy.ops.object.mode_set(mode="EDIT")
         for ebone in rig.data.edit_bones:
             if "head_verts" not in ebone:
@@ -181,7 +182,7 @@ class HeightSettings:
 
             ebone.tail = centroid_co + vert_vec_tail
 
-        with context.temp_override(active_object=rig, selected_objects=[rig]):
+        with context_override(context, rig, [rig]):
             bpy.ops.object.mode_set(mode="OBJECT")
 
         context.view_layer.objects.active = old_active

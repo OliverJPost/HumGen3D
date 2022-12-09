@@ -6,6 +6,7 @@ import os
 from typing import TYPE_CHECKING, Iterable, cast
 
 import bpy
+from HumGen3D.common.context import context_override
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -130,9 +131,7 @@ def _auto_weight_paint(
         armature = cloth_obj.modifiers.new(name="Cloth Armature", type="ARMATURE")
     armature.object = hg_rig
 
-    with context.temp_override(  # type:ignore[call-arg]
-        active_object=cloth_obj, object=cloth_obj, selected_objects=[cloth_obj]
-    ):
+    with context_override(context, cloth_obj, [cloth_obj]):
         # use old method for versions older than 2.90
         if (2, 90, 0) > bpy.app.version:
             while cloth_obj.modifiers.find(armature.name) != 0:
@@ -142,9 +141,7 @@ def _auto_weight_paint(
 
     cloth_obj.parent = hg_rig
 
-    with context.temp_override(  # type:ignore[call-arg]
-        active_object=hg_body, object=hg_body, selected_objects=[hg_body, cloth_obj]
-    ):
+    with context_override(context, hg_body, [hg_body, cloth_obj]):
         bpy.ops.object.data_transfer(
             data_type="VGROUP_WEIGHTS",
             vert_mapping="NEAREST",
