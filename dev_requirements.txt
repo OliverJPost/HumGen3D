@@ -1,3 +1,4 @@
+# Install these packages in BOTH your regular Python and Blender's internal Python
 pre-commit
 # Linting
 mypy
@@ -29,7 +30,7 @@ pylint
 # Formatting
 black
 isort
-# Install these packages in BOTH your regular Python and Blender's internal Python
+# Testing
 pytest>=7.1.2
 pytest-blender>=3.0.3
 pytest-cov>=3.0.0
