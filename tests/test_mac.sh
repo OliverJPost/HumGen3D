@@ -12,6 +12,7 @@ echo "Testing version $version"
 source /opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh
 conda activate blender
 
+mkdir -p /Users/ole/Documents/HumGen3D/tests/output
 blender_versions=("2.93.11" "3.1.2" "3.2.2" "3.3.1" "3.4.0") # "3.0.1"
 for blender_version in "${blender_versions[@]}"; do
     if [[ $blender_version != $version* ]]; then
@@ -35,9 +36,9 @@ for blender_version in "${blender_versions[@]}"; do
     echo "STARTING TESTS FOR BLENDER $blender_version"
     echo "Starting time is $(date)" > $LOG_FILE
     if [ "$lf_flag" = 'true' ]; then
-        python -m pytest ./tests/human/test_body.py --blender-executable $blender_executable --lf >> $LOG_FILE
+        python -m pytest ./tests/human/ --blender-executable $blender_executable --lf >> $LOG_FILE
     else
-        python -m pytest ./tests/human/test_body.py --blender-executable $blender_executable >> $LOG_FILE
+        python -m pytest ./tests/human/ --blender-executable $blender_executable >> $LOG_FILE
     fi
     echo "Wrote log to $LOG_FILE"
 done
