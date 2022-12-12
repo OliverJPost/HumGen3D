@@ -10,6 +10,8 @@ import bpy
 from HumGen3D.backend import hg_log
 from HumGen3D.common.exceptions import HumGenException
 
+from HumGen3D.human.human import Human
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -19,6 +21,9 @@ def raise_if_pytest_human(args):
         human = self._human
     else:
         human = self
+        if not isinstance(human, Human):
+            return
+
     if "pytest_human" in human._rig_obj:
         raise HumGenException("No context passed for injected context.")
 
