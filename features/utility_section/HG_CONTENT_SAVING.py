@@ -906,7 +906,7 @@ class HG_OT_SAVEOUTFIT(bpy.types.Operator, Content_Saving_Operator):
         if img_name in saved_images:
             return saved_images[img_name], saved_images
         
-        path = self.pref.filepath + str(Path(f'{self.sett.saveoutfit_categ}/textures/'))
+        path = os.path.join(self.pref.filepath, self.sett.saveoutfit_categ, "textures")
         if not os.path.exists(path):
             os.makedirs(path)  
 
