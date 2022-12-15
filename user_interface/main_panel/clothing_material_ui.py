@@ -265,7 +265,6 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         )
 
 
-# TODO incorrect naming per Blender scheme
 class HG_PT_ROT_LOC_SCALE(bpy.types.Panel):
     """Popover for the rot, loc and scale of the pattern."""
 

@@ -512,8 +512,6 @@ class BlendFileBlock:
         Generates a 'hash' that can be used instead of addr_old as block id, and that should be 'stable' across .blend
         file load & save (i.e. it does not changes due to pointer addresses variations).
         """
-        # TODO This implementation is most likely far from optimal... and CRC32 is not renown as the best hashing
-        #      algo either. But for now does the job!
         import zlib
 
         def _is_pointer(self, k):

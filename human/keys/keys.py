@@ -633,7 +633,7 @@ class KeySettings:
             return None
 
     def filtered(
-        self, category: str, subcategory: Optional[str] = None  # FIXME
+        self, category: str, subcategory: Optional[str] = None
     ) -> List[Union[LiveKeyItem, ShapeKeyItem]]:
         """Get all keys that match the given category and subcategory.
 

@@ -30,7 +30,7 @@ class HairSettings:
     def __init__(self, human: "Human") -> None:
         self._human = human
 
-    @property  # TODO make cached
+    @property
     def eyebrows(self) -> EyebrowSettings:
         """Property for accessing eyebrow settings.
 
@@ -39,7 +39,7 @@ class HairSettings:
         """
         return EyebrowSettings(self._human)
 
-    @property  # TODO make cached
+    @property
     def eyelashes(self) -> EyelashSettings:
         """Property for accessing eyelash settings.
 
@@ -48,7 +48,7 @@ class HairSettings:
         """
         return EyelashSettings(self._human)
 
-    @property  # TODO make cached
+    @property
     def face_hair(self) -> FacialHairSettings:
         """Property for accessing facial hair settings.
 
@@ -57,7 +57,7 @@ class HairSettings:
         """
         return FacialHairSettings(self._human)
 
-    @property  # TODO make cached
+    @property
     def regular_hair(self) -> RegularHairSettings:
         """Property for accessing regular hair settings.
 

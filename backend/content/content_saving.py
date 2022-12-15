@@ -100,7 +100,6 @@ def save_objects_optimized(
     blend_filepath = os.path.join(folder, f"{filename}.blend")
     bpy.data.libraries.write(blend_filepath, {new_scene})
 
-    # FIXME
     python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
     if run_in_background:
         hg_log("STARTING HumGen background process", level="BACKGROUND")

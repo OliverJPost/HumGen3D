@@ -28,7 +28,7 @@ class ClothingSettings:
         """
         self._human = human
 
-    @property  # TODO make cached
+    @property
     def outfit(self) -> OutfitSettings:
         """Use this property to access OutfitSettings.
 
@@ -40,7 +40,7 @@ class ClothingSettings:
         """
         return OutfitSettings(self._human)
 
-    @property  # TODO make cached
+    @property
     def footwear(self) -> FootwearSettings:
         """Use this property to access FootwearSettings.
 

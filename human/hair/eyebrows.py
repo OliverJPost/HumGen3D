@@ -80,12 +80,13 @@ class EyebrowSettings(BaseHair):
             )
             return
 
-        # TODO without bpy.ops
+
         old_active = context.view_layer.objects.active
         context.view_layer.objects.active = self._human.objects.body
         for remove_name in remove_list:
             ps_idx = self._human.hair.particle_systems.find(remove_name)
             self.particle_systems.active_index = ps_idx
+            # TODO without bpy.ops
             bpy.ops.object.particle_system_remove()
         context.view_layer.objects.active = old_active
 
