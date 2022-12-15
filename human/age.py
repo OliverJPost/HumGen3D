@@ -113,7 +113,8 @@ class AgeSettings:
         Args:
             data (dict): Dictionary with the age of the human.
         """
-        self.set(data["set"])
+        if data["set"] != 30:
+            self.set(data["set"])
         self.age_color.value = data["age_color"]
         self.age_wrinkles.value = data["age_wrinkles"]
 

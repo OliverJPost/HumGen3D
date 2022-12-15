@@ -2,7 +2,7 @@
 # flake8:noqa: F811
 
 import pytest
-from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.test_fixtures import *
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)

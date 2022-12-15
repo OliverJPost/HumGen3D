@@ -4,7 +4,7 @@
 import random
 
 import pytest  # type:ignore
-from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.test_fixtures import *
 
 
 def test_male_skin(male_human):
