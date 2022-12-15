@@ -1,7 +1,7 @@
 # flake8:noqa: F811
 
 import pytest
-from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.test_fixtures import *
 
 POSE_NAMES = ["plank", "sitting_body_forward", "running_7", "squat"]
 

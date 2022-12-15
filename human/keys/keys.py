@@ -717,6 +717,8 @@ class KeySettings:
         """
         errors = []
         for key_name, value in key_dict.items():
+            if value == 0:
+                continue
             key = self.get(key_name)
             if key:
                 if hasattr(key, "set_without_update"):

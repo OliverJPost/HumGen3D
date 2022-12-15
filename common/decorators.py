@@ -3,6 +3,7 @@
 """Contains commonly used decorators for the addon."""
 
 import functools
+import time
 import traceback
 from typing import Any, Callable, TypeVar, cast
 
@@ -11,6 +12,16 @@ from HumGen3D.backend import hg_log
 from HumGen3D.common.exceptions import HumGenException
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+def timing(f):
+    def wrap(*args):
+        time1 = time.perf_counter()
+        ret = f(*args)
+        time2 = time.perf_counter()
+        print(f"function {f.__name__} took {time2 - time1} seconds")
+        return ret
+
+    return wrap
 
 
 def raise_if_pytest_human(args):

@@ -10,8 +10,8 @@ from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.geometry import hash_mesh_object
 from HumGen3D.common.objects import import_objects_to_scene_collection
-from HumGen3D.tests.fixtures import *
-from HumGen3D.tests.fixtures import (
+from HumGen3D.tests.test_fixtures import *
+from HumGen3D.tests.test_fixtures import (
     ALL_HUMAN_FIXTURES,
     CLIPPING_THRESHOLD,
     TESTFILES_PATH,

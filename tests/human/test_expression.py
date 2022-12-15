@@ -7,7 +7,7 @@ import random
 import pytest
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.expression.expression import FACE_RIG_BONE_NAMES
-from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.test_fixtures import *
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)

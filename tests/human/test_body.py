@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 from HumGen3D.common.context import context_override
-from HumGen3D.tests.fixtures import *
+from HumGen3D.tests.test_fixtures import *
 
 if TYPE_CHECKING:
     from human.human import Human
