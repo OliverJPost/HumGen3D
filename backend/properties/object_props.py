@@ -26,7 +26,6 @@ class HG_HASHES(bpy.types.PropertyGroup):
     _register_priority = 3
 
 
-# FIXME register order
 class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     """Properties added to every Blender object as object.HG.
 

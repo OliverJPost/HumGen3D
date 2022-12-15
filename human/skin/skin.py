@@ -19,6 +19,7 @@ from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from HumGen3D.common.exceptions import HumGenException
 
 from ...common.decorators import injected_context
 
@@ -69,7 +70,7 @@ class SkinSettings:
         self.freckles = NodeInput(self, "Freckles_control", "Pos2")
         self.splotches = NodeInput(self, "Splotches_control", "Pos2")
 
-    @property  # TODO make cached
+    @property
     def texture(self) -> TextureSettings:
         """Gives acces to texture settings, for setting and changing textures.
 
@@ -107,7 +108,7 @@ class SkinSettings:
         """
         return cast("Material", self._human.objects.body.data.materials[0])
 
-    @property  # TODO make cached
+    @property
     def gender_specific(self) -> Union[MaleSkin, FemaleSkin]:
         """Returns an instance to change node settings specifically related to gender.
 
@@ -287,7 +288,7 @@ class TextureSettings(PreviewCollectionContent):
                 the `get_options` method.
         """
         diffuse_texture = textureset_path
-        library = "Default 4K"  # TODO
+        library = "Default 4K"  # FIXME!!!
 
         if diffuse_texture == "none":
             return
@@ -462,9 +463,8 @@ class TextureSettings(PreviewCollectionContent):
                 except TypeError:
                     pass
             if not found:
-                # TODO raise
-                ShowMessageBox(
-                    message="Could not find colorspace alternative for non-color data, default colorspace used"  # noqa
+                raise HumGenException(
+                    "Could not find colorspace alternative for non-color data, default colorspace used."
                 )
 
 

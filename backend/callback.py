@@ -43,7 +43,7 @@ class HG_ACTIVATE(bpy.types.Operator):  # noqa
 
         sett = bpy.context.scene.HG3D
 
-        sett.subscribed = False  # TODO is this even used?
+        sett.subscribed = False
 
         msgbus(self, context)
         preview_collections["humans"].refresh(context, gender=sett.gender)

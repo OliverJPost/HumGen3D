@@ -130,7 +130,6 @@ class ContentSavingSubgroup:
     chosen_existing_subcategory: EnumProperty(name="Library", items=get_categories)
 
 
-# FIXME load order with class property instead of alphabetical
 class CustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     _register_priority = 3
 
@@ -160,7 +159,6 @@ class CustomKeyProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     )
 
 
-# FIXME load order with class property instead of alphabetical
 class CustomPoseProps(ContentSavingSubgroup, bpy.types.PropertyGroup):
     _register_priority = 3
     human_attr = "pose"

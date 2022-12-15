@@ -348,7 +348,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             )
             return
 
-        # TODO Rewrite color_random so it doesn't need to be called as operator
+
         old_active = context.view_layer.objects.active
 
         colorgroups_json = os.path.join(
@@ -371,6 +371,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
             context.view_layer.objects.active = cloth_obj
 
+            # TODO Rewrite color_random so it doesn't need to be called as operator
             bpy.ops.hg3d.color_random(
                 input_name=input_socket.name, color_group=color_group
             )

@@ -259,7 +259,7 @@ class Human:
     # endregion
     # region Properties
 
-    @property  # TODO make cached
+    @property
     def body(self) -> BodySettings:
         """Points to the body settings of the human.
 
@@ -268,7 +268,7 @@ class Human:
         """
         return BodySettings(self)
 
-    @property  # TODO make cached
+    @property
     def height(self) -> HeightSettings:
         """Points to the height settings of the human.
 
@@ -277,7 +277,7 @@ class Human:
         """
         return HeightSettings(self)
 
-    @property  # TODO make cached
+    @property
     def face(self) -> FaceSettings:
         """Points to the face settings of the human.
 
@@ -286,7 +286,7 @@ class Human:
         """
         return FaceSettings(self)
 
-    @property  # TODO make cached
+    @property
     def age(self) -> AgeSettings:
         """Points to the age settings of the human.
 
@@ -295,7 +295,7 @@ class Human:
         """
         return AgeSettings(self)
 
-    @property  # TODO make cached
+    @property
     def pose(self) -> PoseSettings:
         """Points to the pose settings of the human.
 
@@ -313,7 +313,7 @@ class Human:
         """
         return ClothingSettings(self)
 
-    @property  # TODO make cached
+    @property
     def expression(self) -> ExpressionSettings:
         """Points to the expression settings of the human.
 
@@ -392,7 +392,7 @@ class Human:
         """
         return cast(HG_OBJECT_PROPS, self.objects.rig.HG)
 
-    @property  # TODO make cached
+    @property
     def skin(self) -> SkinSettings:
         """Subclass used to change the skin material of the human body.
 
@@ -413,7 +413,7 @@ class Human:
         """
         return KeySettings(self)
 
-    @property  # TODO make cached
+    @property
     def eyes(self) -> EyeSettings:
         """Subclass used to access and change the eye object and material.
 
@@ -423,7 +423,7 @@ class Human:
         """
         return EyeSettings(self)
 
-    @property  # TODO make cached
+    @property
     def hair(self) -> HairSettings:
         """Subclass used to access and change the hair systems and materials.
 

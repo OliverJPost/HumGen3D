@@ -697,7 +697,7 @@ class HG_OT_DELETE_CONTENT_ITEM(bpy.types.Operator):
         if os.path.exists(iconpath):
             os.remove(iconpath)
 
-        # TODO remove further file reverences
+        # TODO remove further file references
 
         coll.remove(index)
         return {"FINISHED"}

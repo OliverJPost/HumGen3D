@@ -15,6 +15,8 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.type_aliases import C
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
+from common.context import context_override
+
 if TYPE_CHECKING:
     from ..human import Human
 
@@ -253,27 +255,27 @@ class BakeSettings:
             width=baketexture.get_resolution(bake_sett),
             height=baketexture.get_resolution(bake_sett),
         )
-        self._set_up_scene_for_baking(bake_obj, context)  # type:ignore
-        self._set_up_material_for_baking(baketexture, image)
+        with context_override(context, bake_obj, [bake_obj, self._human.objects.rig]):
+            self._set_up_material_for_baking(baketexture, image)
 
-        bake_type = "NORMAL" if baketexture.texture_type == "Normal" else "EMIT"
-        override = {
-            "object": bake_obj,
-            "active object": bake_obj,
-            "selectect objects": [
-                bake_obj,
-            ],
-        }
-        bpy.ops.object.bake(override, type=bake_type)  # type:ignore[misc, arg-type]
+            bake_type = "NORMAL" if baketexture.texture_type == "Normal" else "EMIT"
+            override = {
+                "object": bake_obj,
+                "active object": bake_obj,
+                "selectect objects": [
+                    bake_obj,
+                ],
+            }
+            bpy.ops.object.bake(override, type=bake_type)  # type:ignore[misc, arg-type]
 
-        image_filename = f"{image.name}.{bake_sett.file_type}"
-        image.filepath_raw = os.path.join(export_path, image_filename)
-        image.file_format = bake_sett.file_type.upper()
-        image.save()
+            image_filename = f"{image.name}.{bake_sett.file_type}"
+            image.filepath_raw = os.path.join(export_path, image_filename)
+            image.file_format = bake_sett.file_type.upper()
+            image.save()
 
-        if was_solidified:
-            for mod in [m for m in bake_obj.modifiers if m.type == "SOLIDIFY"]:
-                mod.show_viewport = mod.show_render = False
+            if was_solidified:
+                for mod in [m for m in bake_obj.modifiers if m.type == "SOLIDIFY"]:
+                    mod.show_viewport = mod.show_render = False
 
         return image
 
@@ -366,11 +368,3 @@ class BakeSettings:
                     )
 
         return bake_list
-
-    def _set_up_scene_for_baking(
-        self, bake_obj: bpy.types.Object, context: bpy.types.Context
-    ) -> None:
-        # TODO context override
-        bake_obj.select_set(True)
-        self._human.objects.rig.select_set(False)
-        context.view_layer.objects.active = bake_obj
