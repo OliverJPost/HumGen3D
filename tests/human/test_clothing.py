@@ -5,6 +5,7 @@ import os
 
 import bpy
 import pytest  # type:ignore
+from pytest_lazyfixture import lazy_fixture
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.geometry import hash_mesh_object
@@ -72,7 +73,7 @@ def rigify_human_with_outfit(male_rigify_human):
     yield male_rigify_human
 
 
-@pytest.mark.parametrize("human", [human_with_outfit, rigify_human_with_outfit])
+@pytest.mark.parametrize("human", [lazy_fixture(f) for f in ["human_with_outfit", "rigify_human_with_outfit"]])
 def test_remove_outfit(human):
     old_child_count = len(list(human.children))
     cloth_obj_len = len(human.clothing.outfit.objects)
@@ -81,7 +82,7 @@ def test_remove_outfit(human):
     assert len(list(human.children)) == old_child_count - cloth_obj_len
 
 
-@pytest.mark.parametrize("human", [human_with_outfit, rigify_human_with_outfit])
+@pytest.mark.parametrize("human", [lazy_fixture(f) for f in ["human_with_outfit", "rigify_human_with_outfit"]])
 def test_set_texture_resolution(human):
     for obj in human.clothing.outfit.objects:
         for res_categ in ("high", "performance", "optimised"):
