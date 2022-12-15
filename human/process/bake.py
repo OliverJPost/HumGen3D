@@ -15,7 +15,7 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.type_aliases import C
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
-from common.context import context_override
+from HumGen3D.common.context import context_override
 
 if TYPE_CHECKING:
     from ..human import Human
