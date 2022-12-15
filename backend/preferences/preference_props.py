@@ -4,6 +4,7 @@
 
 from typing import no_type_check
 
+import getpass
 from bpy.props import (  # type:ignore
     BoolProperty,
     EnumProperty,
@@ -16,11 +17,21 @@ from ..content.content_packs import cpacks_refresh
 
 
 class HGPreferenceBackend:
-    # RELEASE remove default path
-    filepath: StringProperty(
+    filepath_: StringProperty(
         name="Install Filepath",
         default="",
     )
+
+    @property
+    def filepath(self) -> str:
+        if self.filepath_:
+            return self.filepath_
+        else:
+            # Return hard coded path if developing from my computer, prevents having to remove path for every release.
+            if getpass.getuser() == "ole":
+                return "/Users/ole/Documents/HG3D/Human Generator/"
+            else:
+                return ""
 
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))
