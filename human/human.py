@@ -8,6 +8,7 @@ import contextlib
 import json
 import os
 import random
+import time
 from typing import Any, Iterable, List, Literal, Optional, Tuple, Union, cast
 
 import bpy
@@ -27,9 +28,11 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
+from ..backend.logging import time_update
 from ..common.collections import add_to_collection
-from ..common.decorators import injected_context
+from ..common.decorators import injected_context, timing
 from ..common.exceptions import HumGenException
+from ..common.materials import verify_no_undefined_nodes_in_mat
 from ..common.render import set_eevee_ao_and_strip
 from .body.body import BodySettings
 from .clothing.clothing import ClothingSettings
@@ -180,6 +183,7 @@ class Human:
         Returns:
             Human: A Human instance
         """
+        t = time.perf_counter()
         preset_path = os.path.join(
             get_prefs().filepath, preset.replace("jpg", "json")  # TODO
         )
@@ -190,10 +194,12 @@ class Human:
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
+        t = time_update("load preset", t)
+
         gender = preset.split(os.sep)[1]
 
         human = cls._import_human(context, gender)
-
+        t = time_update("import", t)
         def scrub(obj: dict[Any, Any], bad_key: str) -> None:
             if isinstance(obj, dict):
                 for key in list(obj.keys()):
@@ -210,6 +216,8 @@ class Human:
             else:
                 pass
 
+        t = time_update("scrub", t)
+
         # Set human settings from preset dictionary
         errors = []
         for attr, data in preset_data.items():
@@ -219,6 +227,7 @@ class Human:
 
             occurred_errors = getattr(human, attr).set_from_dict(data)
             errors.extend(occurred_errors)
+            t = time_update(f"load {attr}", t)
 
         human._set_random_name()
 
@@ -236,6 +245,7 @@ class Human:
             error_lines = "\n".join(errors)
             ShowMessageBox(f"Occurred errors: {error_lines}", "Error")
 
+        t = time_update("end", t)
         return human
 
     @staticmethod
@@ -999,6 +1009,10 @@ class Human:
 
         type_sett = type_settings_dict[thumbnail_type]
         return type_sett
+
+    def _verify_integrity(self):
+        for mat in [mat for mat in self.materials if mat]:
+            verify_no_undefined_nodes_in_mat(mat)
 
     def __repr__(self) -> str:
         """Return a string representation of this object.
