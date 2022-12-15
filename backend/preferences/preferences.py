@@ -5,6 +5,7 @@
 
 import json
 import os
+from typing import Optional
 
 import bpy  # type: ignore
 from HumGen3D import bl_info
@@ -104,23 +105,20 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         return base_content_found, False  # noqa
 
-    def _get_update_statuscode(self) -> str:
+    def _get_update_statuscode(self) -> Optional[str]:
         """Gets update code from check that was done when Blender was opened.
 
         Returns:
             str: Code determining what kind of update is available, if any
         """
-        update_statuscode = (  # FIXME
-            "cpack_required"
-            if self.cpack_update_required
-            else "addon"
-            if tuple(bl_info["version"]) < tuple(self.latest_version)
-            else "cpack_available"
-            if self.cpack_update_available
-            else None
-        )
-
-        return update_statuscode  # noqa
+        if self.cpack_update_required:
+            return "cpack_required"
+        elif tuple(bl_info["version"]) < tuple(self.latest_version):
+            return "addon"
+        elif self.cpack_update_available:
+            return "cpack_available"
+        else:
+            return None
 
     def _draw_update_notification(self, context, col, update_statuscode):
         """Draws notification if there is an update available.
