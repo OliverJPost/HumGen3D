@@ -91,7 +91,6 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             thumbnail = None
         else:
             thumbnail = cc_sett.preset_thumbnail
-            # TODO custom iamge
 
         if getattr(cc_sett, category).existing_or_new_category == "existing":
             subcategory = getattr(cc_sett, category).chosen_existing_subcategory
