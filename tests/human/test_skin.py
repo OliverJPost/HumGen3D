@@ -114,9 +114,9 @@ def test_underwear(human, context):
         assert underwear_node.inputs[1].default_value == int(on)
 
     assert_underwear(True, human)
-    human.skin.set_underwear(False)
+    human.skin.set_underwear(False, context)
     assert_underwear(False, human)
-    human.skin.set_underwear(True)
+    human.skin.set_underwear(True, context)
     assert_underwear(True, human)
 
 
