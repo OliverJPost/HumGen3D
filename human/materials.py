@@ -66,3 +66,11 @@ class MaterialSettings:
             bpy.types.Material: Inner eye material.
         """
         return self._human.objects.eyes.data.materials[1]
+
+    def __iter__(self):
+        """Iterate over all materials of human."""
+        yield self.body
+        yield from self.clothing
+        yield self.teeth
+        yield self.eye_outer
+        yield self.eye_inner
