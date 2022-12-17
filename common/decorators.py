@@ -3,15 +3,38 @@
 """Contains commonly used decorators for the addon."""
 
 import functools
+import os
 import time
 import traceback
 from typing import Any, Callable, TypeVar, cast
-
+import addon_utils
 import bpy
 from HumGen3D.backend import hg_log
 from HumGen3D.common.exceptions import HumGenException
+from functools import wraps
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def check_for_addon_issues():
+    addon = bpy.context.preferences.addons.get("HumGen3D")
+    if not addon:
+        raise HumGenException("HumGen3D addon not enabled.")
+    if not addon.preferences.filepath:
+        raise HumGenException("HumGen3D filepath not set.")
+    base_humans_path = os.path.join(addon.preferences.filepath, "content_packs", "Base_Humans.json")
+    if not os.path.exists(base_humans_path):
+        raise HumGenException("Base humans content pack not installed.")
+
+def verify_addon(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print("{} called".format(func.__name__))
+        check_for_addon_issues()
+        return func(*args, **kwargs)
+
+    return wrapper
+
 
 def timing(f):
     def wrap(*args):
