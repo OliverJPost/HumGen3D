@@ -32,6 +32,10 @@ ALL_HUMAN_FIXTURES = [
 ALL_FEMALE_FIXTURES = [lazy_fixture(name) for name in _all_female_fixtures]
 
 
+# enable addon in Bpy python module
+if not bpy.context.preferences.addons.get("HumGen3D"):
+    bpy.ops.preferences.addon_enable(module="HumGen3D")
+
 @pytest.fixture(scope="class")
 def male_human() -> "Human":
     human = _create_human("male")
