@@ -39,7 +39,7 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
         elif pcoll_name == "humans":
             sett.gender = random.choice(["male", "female"])
             current = sett.pcoll.humans
-            options = Human.get_preset_options(sett.gender, context)
+            options = Human.get_preset_options(sett.gender, context=context)
             chosen = random.choice([o for o in options if o != current])
             sett.pcoll.humans = chosen
 
