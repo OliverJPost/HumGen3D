@@ -7,7 +7,7 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.drivers import build_driver_dict
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.type_aliases import C
-
+import rigify
 if TYPE_CHECKING:
     from human.human import Human
 
@@ -22,12 +22,10 @@ class RigifySettings:
 
     @injected_context
     def generate(self, context: C = None) -> None:
-        try:
-            import rigify
-        except ImportError:
-            raise HumGenException(
-                "Rigify is not enabled! Enable it in the addons panel of the Blender preferences."
-            )
+        rigify_addon = context.preferences.addons.get("rigify")
+        if not rigify_addon:
+            raise HumGenException("Rigify addon not enabled. Please enable it in Blender preferences.")
+
         human = self._human
         human.pose.reset()
 
