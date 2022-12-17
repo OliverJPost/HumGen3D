@@ -28,7 +28,6 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
-from ..backend.logging import time_update
 from ..common.collections import add_to_collection
 from ..common.decorators import injected_context, verify_addon
 from ..common.exceptions import HumGenException
@@ -185,7 +184,6 @@ class Human:
         Returns:
             Human: A Human instance
         """
-        t = time.perf_counter()
         preset_path = os.path.join(
             get_prefs().filepath, preset.replace("jpg", "json")  # TODO
         )
@@ -196,12 +194,10 @@ class Human:
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-        t = time_update("load preset", t)
 
         gender = preset.split(os.sep)[1]
 
         human = cls._import_human(context, gender)
-        t = time_update("import", t)
         def scrub(obj: dict[Any, Any], bad_key: str) -> None:
             if isinstance(obj, dict):
                 for key in list(obj.keys()):
@@ -218,7 +214,6 @@ class Human:
             else:
                 pass
 
-        t = time_update("scrub", t)
 
         # Set human settings from preset dictionary
         errors = []
@@ -229,8 +224,6 @@ class Human:
 
             occurred_errors = getattr(human, attr).set_from_dict(data)
             errors.extend(occurred_errors)
-            t = time_update(f"load {attr}", t)
-
         human._set_random_name()
 
         from HumGen3D import bl_info
@@ -247,7 +240,6 @@ class Human:
             error_lines = "\n".join(errors)
             ShowMessageBox(f"Occurred errors: {error_lines}", "Error")
 
-        t = time_update("end", t)
         return human
 
     @staticmethod
