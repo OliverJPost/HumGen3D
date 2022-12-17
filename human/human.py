@@ -30,7 +30,7 @@ from mathutils import Vector
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
 from ..backend.logging import time_update
 from ..common.collections import add_to_collection
-from ..common.decorators import injected_context, timing
+from ..common.decorators import injected_context, verify_addon
 from ..common.exceptions import HumGenException
 from ..common.materials import verify_no_undefined_nodes_in_mat
 from ..common.render import set_eevee_ao_and_strip
@@ -46,7 +46,6 @@ from .objects import ObjectCollection
 from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
-
 
 class Human:
     """Python representation of a Human Generator human.
@@ -73,6 +72,7 @@ class Human:
         self._rig_obj = rig_obj
 
     @staticmethod
+    @verify_addon
     @injected_context
     def get_preset_options(
         gender: GenderStr, category: str = "All", context: C = None
@@ -117,6 +117,7 @@ class Human:
         return cast(BpyEnum, pcoll["humans"])
 
     @classmethod
+    @verify_addon
     def from_existing(
         cls, existing_human: Object, strict_check: bool = True
     ) -> Human | None:
@@ -161,6 +162,7 @@ class Human:
             return None
 
     @classmethod
+    @verify_addon
     @injected_context
     def from_preset(
         cls,
