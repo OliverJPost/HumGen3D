@@ -29,7 +29,6 @@ def check_for_addon_issues():
 def verify_addon(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        print("{} called".format(func.__name__))
         check_for_addon_issues()
         return func(*args, **kwargs)
 
