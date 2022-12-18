@@ -85,7 +85,7 @@ def test_remove_outfit(human):
 @pytest.mark.parametrize("human", [lazy_fixture(f) for f in ["human_with_outfit", "rigify_human_with_outfit"]])
 def test_set_texture_resolution(human):
     for obj in human.clothing.outfit.objects:
-        for res_categ in ("high", "performance", "optimised"):
+        for res_categ in ("high", "low", "medium"):
             human.clothing.outfit.set_texture_resolution(obj, res_categ)
             # TODO add asserts
 

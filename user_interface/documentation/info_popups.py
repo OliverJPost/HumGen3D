@@ -195,7 +195,7 @@ than the resolution of the currently active 'source' textures.
 This is probably because you have selected a lower resolution
 texture set than the default textures in the quality tab.
 
-For example, with the "Performance" option, the eye
+For example, with the "low" option, the eye
 texture is 128 * 128 px. If you choose to bake at a higher
 resolution than this, the quality may be lower than expected.
 
