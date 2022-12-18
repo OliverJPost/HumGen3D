@@ -273,19 +273,19 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def set_texture_resolution(
         self,
         clothing_item: bpy.types.Object,
-        resolution_category: Literal["high", "optimised", "performance"],
+        resolution_category: Literal["high", "medium", "low"],
     ) -> None:
         """Sets the texture resolution of the passed clothing to the passed resolution.
 
         Args:
             clothing_item (bpy.types.Object): Blender object that is currently loaded
                 on this human as clothing.
-            resolution_category (Literal["high", "optimised", "performance"]):
+            resolution_category (Literal["high", "medium", "low"]):
                 Resolution category to set the textures to.
         """
-        if resolution_category == "performance":
+        if resolution_category == "low":
             resolution_tag = "low"
-        elif resolution_category == "optimised":
+        elif resolution_category == "medium":
             resolution_tag = "medium"
 
         mat = clothing_item.data.materials[0]
@@ -347,7 +347,6 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 level="WARNING",
             )
             return
-
 
         old_active = context.view_layer.objects.active
 

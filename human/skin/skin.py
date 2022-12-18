@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
@@ -22,6 +22,7 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.common.exceptions import HumGenException
 
 from ...common.decorators import injected_context
+from ...common.os import correct_presetpath
 
 if TYPE_CHECKING:
 
@@ -287,13 +288,13 @@ class TextureSettings(PreviewCollectionContent):
             textureset_path (str): Relative path to the textureset. Can be found from
                 the `get_options` method.
         """
-        diffuse_texture = textureset_path
+        diffuse_texture = correct_presetpath(textureset_path)
         library = "Default 4K"  # FIXME!!!
 
         if diffuse_texture == "none":
             return
 
-        self._active = textureset_path
+        self._active = diffuse_texture
 
         if diffuse_texture.startswith(os.sep):
             diffuse_texture = diffuse_texture[1:]
@@ -317,6 +318,23 @@ class TextureSettings(PreviewCollectionContent):
             self._change_peripheral_texture_resolution(resolution_folder)
 
         self._human.skin.material["texture_category"] = library  # type:ignore[index]
+
+    def set_resolution(self, resolution: Literal["high", "medium", "low"]) -> None:
+        """Set the skin texture resolution.
+
+        Args:
+            resolution (str): Resolution to set. Can be found from the `get_options`
+                method.
+        """
+        resolution_names = {
+            "high": "4K",
+            "medium": "1K",
+            "low": "512px",
+        }
+        path = self._active.split(os.sep)
+        folder_name = path[-2]
+        path[-2] = folder_name[:-2] + resolution_names[resolution]
+        self.set(os.sep.join(path))
 
     def save_to_library(
         self,

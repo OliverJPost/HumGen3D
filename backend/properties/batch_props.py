@@ -98,10 +98,10 @@ class BatchProps(bpy.types.PropertyGroup):
         name="Texture Resolution",
         items=[
             ("high", "High (~4K)", "", 0),
-            ("optimised", "Optimised (~1K)", "", 1),
-            ("performance", "Performance (~512px)", "", 2),
+            ("medium", "Medium (~1K)", "", 1),
+            ("low", "Performance (~512px)", "", 2),
         ],
-        default="optimised",
+        default="medium",
     )
 
     hair_quality_particle: EnumProperty(

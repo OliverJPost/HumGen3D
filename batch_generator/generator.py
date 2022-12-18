@@ -34,7 +34,7 @@ class BatchHumanGenerator:
     average_height_male: int = 177
     average_height_female: int = 172
     height_one_standard_deviation: float = 0.05
-    texture_resolution: Literal["high", "optimised", "performance"] = "optimised"
+    texture_resolution: Literal["high", "medium", "low"] = "medium"
 
     def __init__(
         self,
@@ -74,6 +74,7 @@ class BatchHumanGenerator:
         human.face.randomize(use_bell_curve=gender == "female")
 
         human.skin.randomize()
+        human.skin.texture.set_resolution(self.texture_resolution)
         human.eyes.randomize()
 
         if self.add_hair:
@@ -92,6 +93,8 @@ class BatchHumanGenerator:
                 if hairtype == "face_hair" and human.gender == "female":
                     continue
                 hair_attr = getattr(human.hair, hairtype)
+                if not hair_attr.particle_systems:
+                    continue
                 hair_attr.convert_to_haircards(self.hair_quality, context)
 
         human.height.set(
