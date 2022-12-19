@@ -226,7 +226,8 @@ class HG_OT_ADD_SCRIPT(bpy.types.Operator):
     def execute(self, context):
         textblock = bpy.data.texts.new(self.name + ".py")
         textblock.write(
-            '''# This is a script template. DON'T FORGET TO SAVE!
+            '''"""You can place a decsription of your script here, it will be displayed in the interface."""
+# This is a script template. DON'T FORGET TO SAVE!
 # Saved scripts will appear in available scripts list.
 # For API documentation, see https://help.humgen3d.com
 
