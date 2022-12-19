@@ -389,6 +389,14 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
         for item in coll:
             box = col.box()
             row = box.row(align=True)
+            row.prop(
+                item,
+                "menu_open",
+                text="",
+                icon="TRIA_DOWN" if item.menu_open else "TRIA_RIGHT",
+                emboss=False,
+            )
+            row.label(text=item.name)
             subrow = row.row(align=True)
             subrow.scale_x = 0.8
             op = subrow.operator("hg3d.move_script", text="", icon="TRIA_UP")
@@ -400,12 +408,20 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
 
             row.separator()
 
-            row.label(text=item.name)
             row.operator("hg3d.remove_script", text="", icon="X").name = item.name
+
+            if not item.menu_open:
+                continue
 
             row = box.row()
             row.enabled = False
             draw_paragraph(row, text=item.description, alignment="LEFT")
+            if not item.args:
+                continue
+            col = box.column()
+            col.label(text="Arguments:")
+            for arg in item.args:
+                arg.draw_prop(col)
 
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):

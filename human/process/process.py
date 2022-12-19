@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """Implements class for the process system of HumGen3D."""
-
+import builtins
 import json
 import os
 from typing import TYPE_CHECKING, Any, Dict, Optional
@@ -35,6 +35,30 @@ def _fill_tokens(
     return name
 
 
+class ARGUMENT_ITEM(bpy.types.PropertyGroup):
+    _register_priority = 1
+    name: bpy.props.StringProperty()
+    type: bpy.props.EnumProperty(
+        items=[
+            ("str", "String", "", 0),
+            ("int", "Integer", "", 1),
+            ("float", "Float", "", 2),
+            ("bool", "Boolean", "", 3),
+        ]
+    )
+    value_str: bpy.props.StringProperty()
+    value_int: bpy.props.IntProperty(min=-1000000, max=1000000)
+    value_float: bpy.props.FloatProperty(min=-1000000, max=1000000)
+    value_bool: bpy.props.BoolProperty()
+
+    def draw_prop(self, layout) -> Any:
+        layout.prop(self, f"value_{self.type}", text=self.name)
+
+    def set_default(self, value: Any) -> None:
+        if value:
+            setattr(self, f"value_{self.type}", getattr(builtins, self.type)(value))
+
+
 class SCRIPT_ITEM(bpy.types.PropertyGroup):
     """Item for collectionproprety representing a script that will be run."""
 
@@ -42,7 +66,8 @@ class SCRIPT_ITEM(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty()
     path: bpy.props.StringProperty()
     description: bpy.props.StringProperty()
-    menu_open: bpy.props.BoolProperty(default=False)
+    menu_open: bpy.props.BoolProperty(default=True)
+    args: bpy.props.CollectionProperty(type=ARGUMENT_ITEM)
 
 
 class ProcessSettings:
