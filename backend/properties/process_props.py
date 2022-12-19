@@ -172,14 +172,26 @@ class ModApplyProps(bpy.types.PropertyGroup):
 
 def get_script_list(self, context):
     folder = os.path.join(get_prefs().filepath, "scripts")
-    files = [file for file in os.listdir(folder) if file.endswith(".py")]
-    return [(file, file, "") for file in files]
+    files = [
+        os.path.join(folder, file)
+        for file in os.listdir(folder)
+        if file.endswith(".py")
+    ]
+    folder = os.path.join(get_addon_root(), "scripts", "preset_scripts")
+    files += [
+        os.path.join(folder, file)
+        for file in os.listdir(folder)
+        if file.endswith(".py")
+    ]
+    return [(file, os.path.basename(file), "") for file in files]
 
 
 def add_script_to_collection(self, context):
     """Adds a script to the collection."""
     scripts_col = context.scene.hg_scripts_col
-    scripts_col.add().name = self.available_scripts
+    item = scripts_col.add()
+    item.name = os.path.basename(self.available_scripts)
+    item.path = os.path.dirname(self.available_scripts)
 
 
 class ScriptingProps(bpy.types.PropertyGroup):

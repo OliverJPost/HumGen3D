@@ -5,6 +5,7 @@
 
 import importlib
 import json
+import logging
 import os
 import sys
 import uuid
@@ -128,10 +129,14 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 )
                 human.objects.rig["parts_renamed"] = True
             if pr_sett.scripting_enabled:
-                folder = os.path.join(get_prefs().filepath, "scripts")
-                sys.path.insert(1, folder)
                 for item in context.scene.hg_scripts_col:
-                    module = importlib.import_module(item.name.replace(".py", ""))
+                    if item.name in sys.modules:
+                        module = importlib.reload(sys.modules[item.name])
+                    else:
+                        sys.path.append(item.path)
+                        module = importlib.import_module(item.name[:-3])
+                        module = importlib.reload(module)
+                        sys.path.remove(item.path)
                     module.main(context, human)
 
             if pr_sett.modapply_enabled:
