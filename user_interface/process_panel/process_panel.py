@@ -387,7 +387,8 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
                 col, text="Executed top to bottom.", alignment="CENTER", enabled=False
             )
         for item in coll:
-            row = col.box().row(align=True)
+            box = col.box()
+            row = box.row(align=True)
             subrow = row.row(align=True)
             subrow.scale_x = 0.8
             op = subrow.operator("hg3d.move_script", text="", icon="TRIA_UP")
@@ -401,6 +402,10 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
 
             row.label(text=item.name)
             row.operator("hg3d.remove_script", text="", icon="X").name = item.name
+
+            row = box.row()
+            row.enabled = False
+            draw_paragraph(row, text=item.description, alignment="LEFT")
 
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):

@@ -1,5 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
-
+import ast
 import json
 import os
 
@@ -192,6 +192,9 @@ def add_script_to_collection(self, context):
     item = scripts_col.add()
     item.name = os.path.basename(self.available_scripts)
     item.path = os.path.dirname(self.available_scripts)
+    with open(self.available_scripts, "r") as f:
+        docstring = ast.get_docstring(ast.parse(f.read()))
+    item.description = docstring or "No description found."
 
 
 class ScriptingProps(bpy.types.PropertyGroup):
