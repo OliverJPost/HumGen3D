@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 import ast
 import json
+import logging
 import os
 
 import bpy
@@ -192,9 +193,47 @@ def add_script_to_collection(self, context):
     item = scripts_col.add()
     item.name = os.path.basename(self.available_scripts)
     item.path = os.path.dirname(self.available_scripts)
+    ast_tree = _get_ast_tree(self)
+    item.description = ast.get_docstring(ast_tree) or "No description found."
+    _add_parameters(ast_tree, item)
+
+
+def _add_parameters(ast_tree, item):
+    for node in ast.walk(ast_tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "main":
+            args = node.args.args[2:]
+            break
+    # ast list of keyword arguments
+    defaults = node.args.defaults
+    non_kw_args_len = len(args) - len(defaults)
+    defaults = [None] * non_kw_args_len + defaults
+
+    for i, arg in enumerate(args):
+        if not arg.annotation:
+            raise ValueError(
+                f"Parameter {arg.arg} in {item.name} has no type annotation. Please contact creator of the script."
+            )
+        arg_type = arg.annotation.id
+        allowed_argtypes = ["str", "int", "float", "bool"]
+        if arg_type not in allowed_argtypes:
+            raise TypeError(
+                f"Invalid argument type: {arg_type}, can only be one of {allowed_argtypes}. "
+                f"This is an error in the script, if you are not the creator of the script, "
+                f"please report this to the creator."
+            )
+
+        arg_item = item.args.add()
+        arg_item.name = arg.arg
+        arg_item.type = arg_type
+        if defaults[i]:
+            arg_item.set_default(defaults[i].value)
+
+
+def _get_ast_tree(self):
     with open(self.available_scripts, "r") as f:
-        docstring = ast.get_docstring(ast.parse(f.read()))
-    item.description = docstring or "No description found."
+        code = f.read()
+    ast_tree = ast.parse(code)
+    return ast_tree
 
 
 class ScriptingProps(bpy.types.PropertyGroup):
