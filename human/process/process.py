@@ -40,6 +40,7 @@ class SCRIPT_ITEM(bpy.types.PropertyGroup):
 
     _register_priority = 2
     name: bpy.props.StringProperty()
+    path: bpy.props.StringProperty()
     menu_open: bpy.props.BoolProperty(default=False)
 
 
