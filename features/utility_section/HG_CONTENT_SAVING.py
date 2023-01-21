@@ -528,7 +528,7 @@ class HG_OT_SAVEPRESET(bpy.types.Operator, Content_Saving_Operator):
 
         eye_mat = hg_eyes[0].data.materials[1]
         eye_nodes = eye_mat.node_tree.nodes
-        INP_NAME = 'Factor' if bpy.app.version >= (3, 4, 0) else 'Fac'
+        INP_NAME = 7 if bpy.app.version >= (3, 4, 0) else 'Color2'
         mat_dict['eyes'] = {
             'HG_Eye_Color': tuple(eye_nodes['HG_Eye_Color'].inputs[INP_NAME].default_value),
             'HG_Scelera_Color': tuple(eye_nodes['HG_Scelera_Color'].inputs[INP_NAME].default_value)
