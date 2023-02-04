@@ -40,6 +40,7 @@ import bpy  # type: ignore
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent
 
+from . import addon_updater_ops
 from .backend.auto_classes import _get_bpy_classes
 from .backend.content import content_packs  # type: ignore
 from .backend.content.content_packs import cpacks_refresh as _cpacks_refresh
@@ -139,6 +140,8 @@ hg_classes = _get_bpy_classes()
 
 
 def register() -> None:
+    addon_updater_ops.register(bl_info)
+
     _initiate_custom_icons()
 
     # RELEASE remove print statements
@@ -168,6 +171,7 @@ def register() -> None:
 
 
 def unregister() -> None:
+    addon_updater_ops.unregister()
     # from .classes import hg_classes
 
     for cls in hg_classes:

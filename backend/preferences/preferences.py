@@ -8,6 +8,7 @@ import os
 from typing import Optional
 
 import bpy  # type: ignore
+import HumGen3D.addon_updater_ops as addon_updater_ops
 from HumGen3D import bl_info
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
@@ -80,6 +81,8 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             self._draw_settings_ui()
         elif self.pref_tabs == "cpacks":
             self._draw_cpack_ui(context)
+
+        addon_updater_ops.update_settings_ui(self, context)
 
     def _check_if_basecontent_is_installed(self) -> tuple[bool, bool]:
         """Determines if this is the first time loading Human Generator.
