@@ -1189,6 +1189,7 @@ class SingletonUpdater:
             return ()
 
         segments = list()
+        text = text.replace(".beta.", ".0.")
         tmp = ""
         for char in str(text):
             if not char.isdigit():
