@@ -113,9 +113,9 @@ def get_user_preferences(context=None):
         context = bpy.context
     prefs = None
     if hasattr(context, "user_preferences"):
-        prefs = context.user_preferences.addons.get(__package__, None)
+        prefs = context.user_preferences.addons.get("HumGen3D", None)
     elif hasattr(context, "preferences"):
-        prefs = context.preferences.addons.get(__package__, None)
+        prefs = context.preferences.addons.get("HumGen3D", None)
     if prefs:
         return prefs.preferences
     # To make the addon stable and non-exception prone, return None
@@ -1367,7 +1367,7 @@ def register(bl_info):
     # Addon subfolder path.
     # "sample/path/to/addon"
     # default is "" or None, meaning root
-    updater.subfolder_path = ""
+    updater.subfolder_path = "../../"
 
     # Used to check/compare versions.
     updater.current_version = bl_info["version"]

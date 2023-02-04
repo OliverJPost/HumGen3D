@@ -976,7 +976,9 @@ class SingletonUpdater:
                 if self._subfolder_path == "" or self._subfolder_path is None:
                     unpath = os.path.join(unpath, dirlist[0])
                 else:
-                    unpath = os.path.join(unpath, self._subfolder_path)
+                    unpath = os.path.normpath(
+                        os.path.join(unpath, self._subfolder_path)
+                    )
 
             # Smarter check for additional sub folders for a single folder
             # containing the __init__.py file.
