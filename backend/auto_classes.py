@@ -39,7 +39,7 @@ def _get_bpy_classes() -> list[Class]:
                 or "_updater" in obj.__module__
             ):
                 continue
-            print(obj.__module__)
+
             if obj in [cls for cls, _ in class_priority_tuples]:
                 continue
 
