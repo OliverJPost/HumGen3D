@@ -37,6 +37,7 @@ import urllib
 import urllib.request
 import zipfile
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import addon_utils
 
@@ -114,7 +115,7 @@ class SingletonUpdater:
         self._updater_path = os.path.join(
             os.path.dirname(__file__), self._addon + "_updater"
         )
-        self._addon_root = os.path.dirname(__file__)
+        self._addon_root = Path(os.path.dirname(__file__)).parent.parent
         self._json = dict()
         self._error = None
         self._error_msg = None
