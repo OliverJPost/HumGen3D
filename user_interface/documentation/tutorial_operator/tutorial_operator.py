@@ -6,7 +6,7 @@ from pathlib import Path
 import bpy  # type: ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.backend.callback import msgbus
-from HumGen3D.backend.updater.update import check_update
+from HumGen3D.backend.updates.update import check_update
 
 from .bl_ui_button import *
 from .bl_ui_drag_panel import *

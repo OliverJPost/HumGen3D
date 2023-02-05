@@ -26,7 +26,7 @@ from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
-from ..updater.update import check_update
+from ..updates.update import check_update
 
 ICON_DICT = {
     "humans": "humans",
