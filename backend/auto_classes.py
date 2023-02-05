@@ -36,7 +36,7 @@ def _get_bpy_classes() -> list[Class]:
                 not inspect.isclass(obj)
                 or not issubclass(obj, BPY_CLASSES)
                 or obj in BPY_CLASSES
-                or "_updater" in obj.__module__
+                or "updater" in obj.__module__
             ):
                 continue
 

@@ -8,7 +8,7 @@ import os
 from typing import Optional
 
 import bpy  # type: ignore
-import HumGen3D.backend.updater.addon_updater_ops as addon_updater_ops
+import HumGen3D.backend.updates.addon_updater_ops as addon_updater_ops
 from HumGen3D import bl_info
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
