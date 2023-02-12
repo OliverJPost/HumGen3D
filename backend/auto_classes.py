@@ -29,6 +29,8 @@ def _get_bpy_classes() -> list[Class]:
 
     class_priority_tuples: list[tuple[Class, int]] = []
     for root, filename in py_files:
+        if "updater" in root:
+            continue
         module = _import_pyfile_as_module(dir_path, root, filename)
 
         for _, obj in inspect.getmembers(module):
@@ -36,7 +38,6 @@ def _get_bpy_classes() -> list[Class]:
                 not inspect.isclass(obj)
                 or not issubclass(obj, BPY_CLASSES)
                 or obj in BPY_CLASSES
-                or "updater" in obj.__module__
             ):
                 continue
 
