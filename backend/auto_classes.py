@@ -29,7 +29,7 @@ def _get_bpy_classes() -> list[Class]:
 
     class_priority_tuples: list[tuple[Class, int]] = []
     for root, filename in py_files:
-        if "updater" in root:
+        if "updater" in root or "updater" in filename:
             continue
         module = _import_pyfile_as_module(dir_path, root, filename)
 
