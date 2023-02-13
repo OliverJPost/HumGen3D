@@ -72,6 +72,10 @@ class HGPreferenceBackend:
             else:
                 return ""
 
+    @filepath.setter
+    def filepath(self, value: str) -> None:
+        self.filepath_ = value
+
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))
     cpack_update_available: BoolProperty(default=False)
