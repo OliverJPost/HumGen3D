@@ -47,8 +47,8 @@ from .backend.preferences.preference_func import get_prefs
 from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
 from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties.object_props import HG_OBJECT_PROPS
-from .backend.updater import addon_updater_ops
-from .backend.updater.update import check_update as _check_update
+from .backend.updates import addon_updater_ops
+from .backend.updates.update import check_update as _check_update
 from .backend.vscode_reload import _post_vscode_reload  # noqa
 from .batch_generator.generator import BatchHumanGenerator
 from .common.exceptions import HumGenException
@@ -110,7 +110,7 @@ def _initiate_ui_lists() -> None:
     # Import in local namespace to prevent cluttering package namespace
     from .backend.content import custom_content_packs
     from .backend.content.possible_content import POSSIBLE_CONTENT_ITEM
-    from .backend.updater import update
+    from .backend.updates import update
     from .user_interface.documentation import tips_suggestions_ui
 
     collections = {
