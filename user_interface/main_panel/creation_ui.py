@@ -40,7 +40,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
 
         col.separator()
         box = col.box().column(align=True)
-        self.draw_subtitle("Select2 a starting human", box)
+        self.draw_subtitle("Select a starting human", box)
         box.template_icon_view(
             context.scene.HG3D.pcoll,
             "humans",
