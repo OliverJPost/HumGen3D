@@ -13,7 +13,7 @@ source /opt/homebrew/Caskroom/miniforge/base/etc/profile.d/conda.sh
 conda activate blender
 
 mkdir -p /Users/ole/Documents/HumGen3D/tests/output
-blender_versions=("2.93.11" "3.1.2" "3.2.2" "3.4.0") # "3.0.1" "3.3.1"
+blender_versions=("2.93.11" "3.1.2" "3.2.2" "3.3.0") # "3.0.1" "3.3.1"
 for blender_version in "${blender_versions[@]}"; do
     if [[ $blender_version != $version* ]]; then
         continue
