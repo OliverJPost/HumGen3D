@@ -1,6 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "/Users/ole/Library/Application Support/Blender/3.2/scripts/addons/"
+        "/Users/ole/Library/Application Support/Blender/3.3/scripts/addons/"
+    ],
+    "python.analysis.exclude": [
+        "backend/updates/humgen3d.backend.updates_updater"
     ],
     "fileHeaderComment.template": {
         "*": [
