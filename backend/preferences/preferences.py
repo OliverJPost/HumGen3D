@@ -271,7 +271,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         if self.filepath:
             subrow = row.row()
             subrow.enabled = False
-            subrow.prop(self, "filepath", text="")
+            subrow.prop(self, "filepath_", text="")
 
         row.operator("hg3d.pathchange", text="Change" if self.filepath else "Select")
 
