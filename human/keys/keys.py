@@ -717,7 +717,7 @@ class KeySettings:
         """
         errors = []
         for key_name, value in key_dict.items():
-            if value == 0:
+            if value == 0 and key_name != "Male":
                 continue
             key = self.get(key_name)
             if key:
