@@ -1,9 +1,16 @@
 {
-    "last_check": "",
+    "last_check": "2023-02-14 09:57:59.307122",
     "backup_date": "",
-    "update_ready": false,
+    "update_ready": true,
     "ignore": false,
     "just_restored": false,
     "just_updated": false,
-    "version_text": {}
+    "version_text": {
+        "link": "https://api.github.com/repos/OliverJPost/HumGen3D/zipball/refs/tags/v4.beta.11",
+        "version": [
+            4,
+            0,
+            11
+        ]
+    }
 }
