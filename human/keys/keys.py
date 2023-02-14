@@ -726,7 +726,7 @@ class KeySettings:
                 else:
                     key.value = value
             else:
-                if key_name.startswith("hg_temp_key"):
+                if key_name.startswith("LIVE_KEY_TEMP_"):
                     continue
                 hg_log(
                     f"Could not find key '{key_name}' while setting values", "WARNING"
