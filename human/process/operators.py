@@ -145,13 +145,9 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
             if pr_sett.output == "export":
                 fn = pr_sett.output_name.replace("{name}", human.name).strip()
-                human.export(
-                    pr_sett.baking.export_folder,
-                    remove_number_suffix(fn),
-                    pr_sett.file_type,
-                    context,
-                    from_ui=True,
-                )
+                export_method = getattr(human.export, f"to_{pr_sett.file_type[1:]}")
+                filepath = os.path.join(pr_sett.baking.export_folder, fn)
+                export_method(filepath)
                 human.delete()
 
         if not pr_sett.output == "export":
