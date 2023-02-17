@@ -27,6 +27,7 @@ from HumGen3D.human.materials import MaterialSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
+from .export.exporting import ExportBuilder
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
 from ..common.collections import add_to_collection
 from ..common.decorators import injected_context, verify_addon
@@ -45,6 +46,7 @@ from .objects import ObjectCollection
 from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
+
 
 class Human:
     """Python representation of a Human Generator human.
@@ -194,10 +196,10 @@ class Human:
         with open(preset_path) as json_file:
             preset_data = json.load(json_file)
 
-
         gender = preset.split(os.sep)[1]
 
         human = cls._import_human(context, gender)
+
         def scrub(obj: dict[Any, Any], bad_key: str) -> None:
             if isinstance(obj, dict):
                 for key in list(obj.keys()):
@@ -213,7 +215,6 @@ class Human:
                         scrub(obj[i], bad_key)
             else:
                 pass
-
 
         # Set human settings from preset dictionary
         errors = []
@@ -436,6 +437,15 @@ class Human:
                 materials.
         """
         return HairSettings(self)
+
+    @property
+    def export(self) -> ExportBuilder:
+        """Subclass used to export the human.
+
+        Returns:
+            ExportBuilder: Class instance for exporting the human
+        """
+        return ExportBuilder(self)
 
     @property
     def location(self) -> FloatVectorProperty:
@@ -704,93 +714,6 @@ class Human:
             add_to_collection(context, obj_copy)
 
         return Human.from_existing(obj_copy)  # type:ignore[return-value]
-
-    @injected_context
-    def export(
-        self,
-        folder: str,
-        name,
-        file_type: Literal[".fbx", ".obj", ".abc", ".glb", ".glTF"],
-        context: C = None,
-        from_ui: bool = False,
-    ) -> None:
-        """Export the human to a 3D file from a predefined list of file types.
-
-        Args:
-            filepath (str): The path to the file to export to.
-            file_type (Literal[".blend", ".fbx", ".obj", ".abc", ".glb", ".glTF"]): The
-                file type to export to.
-        """
-        if "." in name:
-            raise HumGenException(
-                "Name must not contain a dot/file extension, got %s" % name
-            )
-
-        filepath = os.path.join(folder, name + file_type)
-        with context_override(context, self.objects[0], self.objects):
-            if file_type == ".fbx":
-                bpy.ops.export_scene.fbx(
-                    "EXEC_DEFAULT",
-                    filepath=filepath,
-                    check_existing=False,
-                    use_selection=True,
-                )
-            elif file_type == ".obj":
-                bpy.ops.export_scene.obj(
-                    "EXEC_DEFAULT",
-                    filepath=filepath,
-                    check_existing=False,
-                    use_selection=True,
-                )
-            elif file_type == ".abc":
-                bpy.ops.wm.alembic_export(
-                    "EXEC_DEFAULT",
-                    filepath=filepath,
-                    check_existing=False,
-                    selected=True,
-                )
-            elif file_type == ".glb":
-                try:
-                    bpy.ops.export_scene.gltf(
-                        "EXEC_DEFAULT",
-                        filepath=filepath,
-                        check_existing=False,
-                        export_format="GLB",
-                        use_selection=True,
-                    )
-                except (ZeroDivisionError, RuntimeError) as exc:
-                    if from_ui:
-                        ShowMessageBox(
-                            "Export failed because of a Blender bug, update to 3.3.2, See console for details.",
-                            "Error",
-                        )
-                    else:
-                        raise HumGenException(
-                            "Exporting to GLB failed because of Blender bug, expect to be fixed in 3.3.2. See #T102272"
-                        ) from exc
-            elif file_type == ".glTF":
-                try:
-                    bpy.ops.export_scene.gltf(
-                        "EXEC_DEFAULT",
-                        filepath=filepath,
-                        check_existing=False,
-                        export_format="GLTF_EMBEDDED",
-                        use_selection=True,
-                    )
-                except (ZeroDivisionError, RuntimeError) as exc:
-                    if from_ui:
-                        ShowMessageBox(
-                            "Export failed because of a Blender bug, update to 3.3.2, See console for details.",
-                            "Error",
-                        )
-                    else:
-                        raise HumGenException(
-                            "Exporting to GLB failed because of Blender bug, expect to be fixed in 3.3.2. See #T102272"
-                        ) from exc
-            else:
-                raise HumGenException(
-                    f"File type {file_type} not supported. Pass one of the following: .fbx, .obj, .abc, .glb, .glTF"
-                )
 
     @injected_context
     def render_thumbnail(
