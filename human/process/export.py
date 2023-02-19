@@ -89,8 +89,8 @@ class ExportBuilder:
         path_mode: Literal[
             "AUTO", "ABSOLUTE", "RELATIVE", "MATCH", "STRIP", "COPY"
         ] = "AUTO",
-        axis_forward: Literal["X", "Y", "Z", "-X", "-Y", "-Z"] = "-Z",
-        axis_up: Literal["X", "Y", "Z", "-X", "-Y", "-Z"] = "Y",
+        axis_forward: Axis = "-Z",
+        axis_up: Axis = "Y",
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
