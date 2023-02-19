@@ -27,7 +27,7 @@ from HumGen3D.human.materials import MaterialSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
-from .export.exporting import ExportBuilder
+from .process.export import ExportBuilder
 from ..backend import get_prefs, hg_delete, remove_broken_drivers
 from ..common.collections import add_to_collection
 from ..common.decorators import injected_context, verify_addon
