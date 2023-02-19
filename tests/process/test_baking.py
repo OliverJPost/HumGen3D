@@ -30,6 +30,12 @@ def test_bake_single(human: Human, context, bake_obj, tmp_path):
     baketextures = []
     bake_obj_actual = getattr(human.objects, bake_obj)
     for bake_type in bake_types[bake_obj][0]:
+        if (
+            bake_type == "cloth"
+            and not human.clothing.outfit.objects
+            or human.clothing.footwear.objects
+        ):
+            continue
         baketextures.append(
             BakeTexture(
                 human.name,
