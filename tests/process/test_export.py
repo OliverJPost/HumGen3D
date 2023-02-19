@@ -22,6 +22,11 @@ UPPER_TEETH_VERT_COUNT = 3_201
 BODY_VERT_COUNT = 25_286
 
 
+def _assert_object(object_iterator, starts_with):
+    objects = [obj for obj in object_iterator if obj.name.startswith(starts_with)]
+    assert len(objects) == 1
+
+
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_obj_export(human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""
@@ -44,11 +49,6 @@ def test_obj_export(human: Human, context, tmp_path):
     _assert_object(scene.mesh_list, "HG_Body")
 
 
-def _assert_object(object_iterator, starts_with):
-    objects = [obj for obj in object_iterator if obj.name.startswith(starts_with)]
-    assert len(objects) == 1
-
-
 def test_obj_export_baked(male_human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""
     human = male_human
@@ -57,4 +57,19 @@ def test_obj_export_baked(male_human: Human, context, tmp_path):
     human.export.to_obj(path, context=context)
 
     scene = pywavefront.Wavefront(path)
+
+
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+def test_fbx_export(human: Human, context, tmp_path):
+    """Test that a gltf file can be exported from a human."""
+    path = os.path.join(tmp_path, "test.fbx")
+    human.export.to_fbx(path, context=context)
+
+
+def test_fbx_export_baked(male_human: Human, context, tmp_path):
+    """Test that a gltf file can be exported from a human."""
+    human = male_human
+    human.process.baking.bake_all(folder_path=tmp_path, context=context)
+    path = os.path.join(tmp_path, "test.fbx")
+    human.export.to_fbx(path, context=context)
 
