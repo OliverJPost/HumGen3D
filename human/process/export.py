@@ -10,6 +10,7 @@ from HumGen3D.common.type_aliases import C
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
+Axis = Literal["X", "Y", "Z", "-X", "-Y", "-Z"]
 
 # Template for decorator
 def exporter(func):
@@ -48,33 +49,34 @@ class ExportBuilder:
     def to_fbx(
         self,
         filepath: str,
+        export_custom_props: bool = False,
+        triangulate: bool = False,
+        axis_forward: Axis = "-Z",
+        axis_up: Axis = "Y",
+        primary_bone_axis: Axis = "Y",
+        secondary_bone_axis: Axis = "X",
+        use_leaf_bones=True,
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
     ):
+        self.remove_eye_outer_material()
         bpy.ops.export_scene.fbx(
             filepath=filepath,
-            use_selection=False,
-            use_active_collection=False,
-            object_types={"ARMATURE", "MESH", "EMPTY"},
-            add_leaf_bones=False,
-            use_mesh_modifiers=True,
-            use_mesh_modifiers_render=True,
+            use_selection=True,
+            object_types={
+                "ARMATURE",
+                "MESH",
+            },
+            use_mesh_modifiers=False,  # To make sure shape keys are exported
             mesh_smooth_type="FACE",
-            use_tspace=False,
-            use_custom_props=True,
-            bake_anim=True,
-            bake_anim_use_all_bones=True,
-            bake_anim_use_nla_strips=True,
-            bake_anim_use_all_actions=True,
-            bake_anim_force_startend_keying=True,
-            bake_anim_step=1.0,
-            bake_anim_simplify_factor=1.0,
-            path_mode="AUTO",
-            embed_textures=False,
-            batch_mode="OFF",
-            use_batch_own_dir=True,
-            use_metadata=True,
+            use_custom_props=export_custom_props,
+            use_triangles=triangulate,
+            primary_bone_axis=primary_bone_axis,
+            secondary_bone_axis=secondary_bone_axis,
+            axis_up=axis_up,
+            axis_forward=axis_forward,
+            add_leaf_bones=use_leaf_bones,
         )
 
     @exporter
@@ -93,9 +95,7 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
-        eyes = self._human.objects.eyes
-        # Remove transparent outer material, not supported by obj
-        eyes.data.materials.pop(index=0)
+        self.remove_eye_outer_material()
         bpy.ops.export_scene.obj(
             filepath=filepath,
             use_selection=True,
@@ -109,6 +109,11 @@ class ExportBuilder:
             axis_forward=axis_forward,
             axis_up=axis_up,
         )
+
+    def remove_eye_outer_material(self):
+        eyes = self._human.objects.eyes
+        # Remove transparent outer material, not supported by obj
+        eyes.data.materials.pop(index=0)
 
     @exporter
     def to_gltf(
