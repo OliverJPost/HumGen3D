@@ -47,3 +47,14 @@ def test_obj_export(human: Human, context, tmp_path):
 def _assert_object(object_iterator, starts_with):
     objects = [obj for obj in object_iterator if obj.name.startswith(starts_with)]
     assert len(objects) == 1
+
+
+def test_obj_export_baked(male_human: Human, context, tmp_path):
+    """Test that a gltf file can be exported from a human."""
+    human = male_human
+    human.process.baking.bake_all(folder_path=tmp_path, context=context)
+    path = os.path.join(tmp_path, "test.obj")
+    human.export.to_obj(path, context=context)
+
+    scene = pywavefront.Wavefront(path)
+

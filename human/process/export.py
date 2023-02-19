@@ -1,8 +1,14 @@
+from typing import TYPE_CHECKING, Literal
+
 import bpy
 
+from HumGen3D.common import os
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
+
+if TYPE_CHECKING:
+    from HumGen3D.human.human import Human
 
 
 # Template for decorator
@@ -18,7 +24,13 @@ def exporter(func):
                 "Filepath does not end with extension. Either remove the extension or use the correct one."
             )
         args = (self, filepath, *args)
-        context = kwargs.get("context")
+        context = kwargs.get("context", bpy.context)
+        bake_textures = kwargs.get("bake_textures", False)
+
+        if bake_textures:
+            folder = os.path.dirname(filepath)
+            self._human.process.baking.bake_all(folder, 4, context=context)
+
         with context_override(context, self._human.objects[0], self._human.objects):
             result = func(*args, **kwargs)
 
@@ -27,12 +39,19 @@ def exporter(func):
     return wrapper
 
 
+# NOTE: Do not remove the context arguments, they are used by the decorator
 class ExportBuilder:
-    def __init__(self, _human):
+    def __init__(self, _human: "Human"):
         self._human = _human
 
     @exporter
-    def to_fbx(self, filepath: str, context: C = None):
+    def to_fbx(
+        self,
+        filepath: str,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
         bpy.ops.export_scene.fbx(
             filepath=filepath,
             use_selection=False,
@@ -59,35 +78,46 @@ class ExportBuilder:
         )
 
     @exporter
-    def to_obj(self, filepath: str, context: C = None):
+    def to_obj(
+        self,
+        filepath: str,
+        apply_modifiers: bool = True,
+        triangulate: bool = False,
+        export_vertex_groups: bool = False,
+        path_mode: Literal[
+            "AUTO", "ABSOLUTE", "RELATIVE", "MATCH", "STRIP", "COPY"
+        ] = "AUTO",
+        axis_forward: Literal["X", "Y", "Z", "-X", "-Y", "-Z"] = "-Z",
+        axis_up: Literal["X", "Y", "Z", "-X", "-Y", "-Z"] = "Y",
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
+        eyes = self._human.objects.eyes
+        # Remove transparent outer material, not supported by obj
+        eyes.data.materials.pop(index=0)
         bpy.ops.export_scene.obj(
             filepath=filepath,
-            check_existing=True,
-            filter_glob="*.obj;*.mtl",
             use_selection=True,
-            use_animation=False,
-            use_mesh_modifiers=True,
-            use_edges=True,
-            use_smooth_groups=True,
-            use_smooth_groups_bitflags=False,
+            use_mesh_modifiers=apply_modifiers,
             use_normals=True,
             use_uvs=True,
             use_materials=True,
-            use_triangles=False,
-            use_nurbs=False,
-            use_vertex_groups=False,
-            use_blen_objects=True,
-            group_by_object=False,
-            group_by_material=False,
-            keep_vertex_order=False,
-            global_scale=1,
-            path_mode="AUTO",
-            axis_forward="-Z",
-            axis_up="Y",
+            use_triangles=triangulate,
+            use_vertex_groups=export_vertex_groups,
+            path_mode=path_mode,
+            axis_forward=axis_forward,
+            axis_up=axis_up,
         )
 
     @exporter
-    def to_gltf(self, filepath: str, context: C = None):
+    def to_gltf(
+        self,
+        filepath: str,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
         bpy.ops.export_scene.gltf(
             filepath=filepath,
             export_format="GLTF_SEPARATE",
@@ -123,7 +153,13 @@ class ExportBuilder:
         )
 
     @exporter
-    def to_glb(self, filepath: str, context: C = None):
+    def to_glb(
+        self,
+        filepath: str,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
         bpy.ops.export_scene.gltf(
             filepath=filepath,
             export_format="GLB",
