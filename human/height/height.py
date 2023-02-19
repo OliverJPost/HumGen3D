@@ -255,8 +255,8 @@ class HeightSettings:
                 key_corrected = orig_key_data + eye_verts_displacement
                 key.data.foreach_set("co", key_corrected)
                 key.data.update()
-        else:
-            eye_obj.data.vertices.foreach_set("co", eye_verts_corrected.reshape((-1)))
+
+        eye_obj.data.vertices.foreach_set("co", eye_verts_corrected.reshape((-1)))
 
     def _correct_teeth(self) -> None:
         """Corrects teeth to fit the new height."""
