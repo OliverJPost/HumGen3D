@@ -215,7 +215,7 @@ class BakeSettings:
         return False, switched_to_cuda, old_samples, switched_from_eevee
 
     @injected_context
-    def bake_all(self, samples: int = 4, context: C = None) -> None:
+    def bake_all(self, folder_path=None, samples: int = 4, context: C = None) -> None:
         (
             _,
             was_optix,
@@ -223,8 +223,12 @@ class BakeSettings:
             was_eevee,
         ) = self._check_bake_render_settings(context, samples, force_cycles=True)
         baketextures = self.get_baking_list()
+        if not folder_path:
+            bake_sett = context.scene.HG3D.process.baking
+            folder_path = self._get_bake_export_path(bake_sett, bake_sett.export_folder)
+
         for baketexture in baketextures:
-            self.bake_single_texture(baketexture)
+            self.bake_single_texture(baketexture, folder_path, context=context)
 
         self.set_up_new_materials(baketextures)
 
@@ -241,13 +245,11 @@ class BakeSettings:
 
     @injected_context
     def bake_single_texture(
-        self, baketexture: BakeTexture, context: C = None
+        self, baketexture: BakeTexture, export_path: str, context: C = None
     ) -> bpy.types.Image:
         bake_sett = context.scene.HG3D.process.baking
         bake_obj = baketexture.bake_object
         was_solidified = self._disable_solidify_if_enabled(bake_obj)
-
-        export_path = self._get_bake_export_path(bake_sett, bake_sett.export_folder)
 
         # TODO nonsquare textures?
         image = bpy.data.images.new(
@@ -255,18 +257,11 @@ class BakeSettings:
             width=baketexture.get_resolution(bake_sett),
             height=baketexture.get_resolution(bake_sett),
         )
-        with context_override(context, bake_obj, [bake_obj, self._human.objects.rig]):
+        with context_override(context, bake_obj, [bake_obj]):
             self._set_up_material_for_baking(baketexture, image)
 
             bake_type = "NORMAL" if baketexture.texture_type == "Normal" else "EMIT"
-            override = {
-                "object": bake_obj,
-                "active object": bake_obj,
-                "selectect objects": [
-                    bake_obj,
-                ],
-            }
-            bpy.ops.object.bake(override, type=bake_type)  # type:ignore[misc, arg-type]
+            bpy.ops.object.bake(type=bake_type)  # type:ignore[misc, arg-type]
 
             image_filename = f"{image.name}.{bake_sett.file_type}"
             image.filepath_raw = os.path.join(export_path, image_filename)
