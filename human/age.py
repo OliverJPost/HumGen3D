@@ -52,6 +52,10 @@ class AgeSettings:
             realtime: (bool): Use true if the value will be changed in realtime by a
                 slider in the UI.
         """
+        # Return early if same age, prevents crash when user cancels the slider.
+        if age == self._current:
+            return
+
         normal_value = min((age - 10) / 10, 4.0)
         young_value = (-0.1 * age + 3) if age < 30 else 0
         if age > 30:
