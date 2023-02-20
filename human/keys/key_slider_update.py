@@ -86,7 +86,12 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
                 mod.show_viewport = False
 
         # Correct immediately for single value change (for example when typing in a value)
-        if event.type == "RET" or event.type_prev in NUMERICS or event.type.startswith("NUMPAD"):
+        if (
+            event.type == "RET"
+            or event.type_prev in NUMERICS
+            or event.type.startswith("NUMPAD")
+            or (event.type == "LEFTMOUSE" and event.value == "RELEASE")
+        ):
             self.correct_when_done(context)
             cls._handler = None
             return {"FINISHED"}
