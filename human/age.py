@@ -75,7 +75,7 @@ class AgeSettings:
         if realtime:
             young_key.as_bpy().value = young_value
         else:
-            young_key.value = age_key_value
+            young_key.value = young_value
         for key in self.keys:
             if key == young_key:
                 continue
