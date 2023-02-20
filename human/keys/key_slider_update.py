@@ -38,7 +38,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     @no_type_check
     def modal(self, context, event):
         if self.stop:
-            self.correct_when_done(context)
+            self.correct_human_for_changes(context)
 
             cls = self.__class__
             cls._handler = None
@@ -49,7 +49,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         return {"PASS_THROUGH"}
 
     @no_type_check
-    def correct_when_done(self, context):
+    def correct_human_for_changes(self, context):
         self.armature_modifier.show_viewport = True
         self.human.keys.update_human_from_key_change(context)
         if not self.children_hidden_before:
@@ -86,15 +86,28 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
                 mod.show_viewport = False
 
         # Correct immediately for single value change (for example when typing in a value)
-        if (
-            event.type == "RET"
-            or event.type_prev in NUMERICS
-            or event.type.startswith("NUMPAD")
-            or (event.type == "LEFTMOUSE" and event.value == "RELEASE")
-        ):
-            self.correct_when_done(context)
+        if self.value_is_final(event):
+            self.correct_human_for_changes(context)
             cls._handler = None
             return {"FINISHED"}
 
         context.window_manager.modal_handler_add(self)
         return {"RUNNING_MODAL"}
+
+    def value_is_final(self, event):
+        # When user presses enter, the value won't change afterwards. The user pressed enter to confirm
+        if event.type == "RET":
+            return True
+
+        # When last event was a numeric key, the value won't change afterwards. The user typed in a value
+        if (
+            event.type_prev in NUMERICS
+            or event.type.startswith("NUMPAD")
+        ):
+            return True
+
+        # When user clicks left or right arrow on a slider. Value won't change afterwards
+        if event.type == "LEFTMOUSE" and event.value == "RELEASE":
+            return True
+
+        return False
