@@ -102,7 +102,9 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
         # When last event was a numeric key, the value won't change afterwards. The user typed in a value
         if (
             event.type_prev in NUMERICS
+            or event.type in NUMERICS
             or event.type.startswith("NUMPAD")
+            or event.type_prev.startswith("NUMPAD")
         ):
             return True
 
