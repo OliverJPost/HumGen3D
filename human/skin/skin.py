@@ -272,6 +272,9 @@ class SkinSettings:
             self.nodes.get("Delete_node")  # type:ignore[func-returns-value]
         )
 
+    def _unlink_all_textures(self):
+        self.nodes.remove(self.nodes.get("Principled BSDF"))
+
 
 class TextureSettings(PreviewCollectionContent):
     """Class for changing the skin texture of the human."""
