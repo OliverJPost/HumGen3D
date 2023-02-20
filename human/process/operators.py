@@ -77,7 +77,8 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
             if pr_sett.baking_enabled:
                 human.process.baking.bake_all(
-                    int(context.scene.HG3D.process.baking.samples), context
+                    samples=int(context.scene.HG3D.process.baking.samples),
+                    context=context,
                 )
                 human.objects.rig["hg_baked"] = True
 
@@ -144,8 +145,12 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.objects.rig["modifiers_applied"] = True
 
             if pr_sett.output == "export":
-                fn = pr_sett.output_name.replace("{name}", human.name).strip()
-                export_method = getattr(human.export, f"to_{pr_sett.file_type[1:]}")
+                fn = remove_number_suffix(
+                    pr_sett.output_name.replace("{name}", human.name).strip()
+                )
+                export_method = getattr(
+                    human.export, f"to_{pr_sett.file_type[1:].lower()}"
+                )
                 filepath = os.path.join(pr_sett.baking.export_folder, fn)
                 export_method(filepath)
                 human.delete()
