@@ -363,3 +363,7 @@ class BakeSettings:
                     )
 
         return bake_list
+
+    def is_baked(self) -> bool:
+        mat = self._human.objects.body.material_slots[0].material  # type:ignore[index]
+        return not bool(mat.node_tree.nodes.get("skin_rough_spec"))  # todo more robust

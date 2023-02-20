@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Literal
 
 import bpy
 
+from HumGen3D.backend import hg_log
 from HumGen3D.common import os
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
@@ -11,31 +12,52 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 Axis = Literal["X", "Y", "Z", "-X", "-Y", "-Z"]
+LICENSE_TEXT = """Made with Human Generator for Blender3D.
+Licensed under the Human Generator Asset License.
+Does not permit redistribution except embedded in software or in other formats that do not allow easy extraction.
+See https://humgen3d.com for more information.
+"""
 
-# Template for decorator
-def exporter(func):
+
+def exporter(exporter_func):
     @injected_context
     def wrapper(self, filepath, *args, **kwargs):
-        # Get name of function
-        extension = func.__name__.split("_")[-1]
+        context = kwargs.get("context", bpy.context)
+        filepath = _check_extension(filepath)
+        human = self._human
+
+        if _bake_argument_enabled(kwargs):
+            _bake_textures(human, filepath, context)
+
+        with context_override(context, human.objects.rig, human.objects):
+            _remove_eye_outer_material(human)
+            # todo remove face bones if not face rig
+            result = exporter_func(self, filepath, *args, **kwargs)
+            # todo re-add outer material
+
+        return result
+
+    def _bake_argument_enabled(kwargs):
+        return "bake_textures" in kwargs and kwargs["bake_textures"]
+
+    def _bake_textures(human, filepath, context):
+        folder = os.path.dirname(filepath)
+        human.process.baking.bake_all(folder, 4, context=context)
+
+    def _check_extension(filepath):
+        extension = exporter_func.__name__.split("_")[-1]
         if not "." in filepath:
             filepath += "." + extension
         elif not filepath.endswith(extension):
             raise Exception(
                 "Filepath does not end with extension. Either remove the extension or use the correct one."
             )
-        args = (self, filepath, *args)
-        context = kwargs.get("context", bpy.context)
-        bake_textures = kwargs.get("bake_textures", False)
+        return filepath
 
-        if bake_textures:
-            folder = os.path.dirname(filepath)
-            self._human.process.baking.bake_all(folder, 4, context=context)
-
-        with context_override(context, self._human.objects[0], self._human.objects):
-            result = func(*args, **kwargs)
-
-        return result
+    def _remove_eye_outer_material(human):
+        eyes = human.objects.eyes
+        # Remove transparent outer material, not supported by most formats
+        eyes.data.materials.pop(index=0)
 
     return wrapper
 
@@ -60,7 +82,6 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
-        self.remove_eye_outer_material()
         bpy.ops.export_scene.fbx(
             filepath=filepath,
             use_selection=True,
@@ -95,7 +116,6 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
-        self.remove_eye_outer_material()
         bpy.ops.export_scene.obj(
             filepath=filepath,
             use_selection=True,
@@ -110,11 +130,6 @@ class ExportBuilder:
             axis_up=axis_up,
         )
 
-    def remove_eye_outer_material(self):
-        eyes = self._human.objects.eyes
-        # Remove transparent outer material, not supported by obj
-        eyes.data.materials.pop(index=0)
-
     @exporter
     def to_gltf(
         self,
@@ -123,39 +138,37 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
+        self._export_common_gltf(filepath, "GLTF_EMBEDDED")
+
+    def _export_common_gltf(
+        self, filepath, format: str, img_format: Literal["AUTO", "JPEG"] = "AUTO"
+    ):
+        if not self._human.process.baking.is_baked():
+            hg_log(
+                "Exporting GLTF without baking textures. This will result in empty textures.",
+                level="WARNING",
+            )
+            self._human.skin._unlink_all_textures()
+
+        # Create an export collection, since use_selection does not work.
+        collection = bpy.data.collections.new("Export")
+        bpy.context.scene.collection.children.link(collection)
+        for obj in self._human.objects:
+            collection.objects.link(obj)
+        bpy.context.view_layer.active_layer_collection = (
+            bpy.context.view_layer.layer_collection.children[collection.name]
+        )
+
         bpy.ops.export_scene.gltf(
             filepath=filepath,
-            export_format="GLTF_SEPARATE",
-            export_image_format="AUTO",
-            export_texcoords=True,
-            export_normals=True,
-            export_draco_mesh_compression_enable=False,
-            export_draco_mesh_compression_level=7,
-            export_draco_position_quantization=14,
-            export_draco_normal_quantization=10,
-            export_draco_texcoord_quantization=12,
-            export_draco_generic_quantization=12,
-            export_tangents=False,
-            export_materials="EXPORT",
-            export_colors=True,
-            export_cameras=False,
-            use_selection=True,
-            export_extras=False,
-            export_yup=False,
-            export_apply=False,
-            export_animations=True,
-            export_frame_range=True,
-            export_frame_step=1,
-            export_force_sampling=False,
-            export_nla_strips=False,
-            export_def_bones=False,
-            export_current_frame=False,
-            export_skins=True,
-            export_morph=True,
-            export_morph_normal=True,
-            export_morph_tangent=False,
-            export_lights=False,
+            export_format=format,
+            export_copyright=LICENSE_TEXT,
+            export_image_format=img_format,
+            use_active_collection=True,
         )
+
+        bpy.context.scene.collection.children.unlink(collection)
+        bpy.data.collections.remove(collection)
 
     @exporter
     def to_glb(
@@ -165,36 +178,4 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
-        bpy.ops.export_scene.gltf(
-            filepath=filepath,
-            export_format="GLB",
-            export_image_format="AUTO",
-            export_texcoords=True,
-            export_normals=True,
-            export_draco_mesh_compression_enable=False,
-            export_draco_mesh_compression_level=7,
-            export_draco_position_quantization=14,
-            export_draco_normal_quantization=10,
-            export_draco_texcoord_quantization=12,
-            export_draco_generic_quantization=12,
-            export_tangents=False,
-            export_materials="EXPORT",
-            export_colors=True,
-            export_cameras=False,
-            use_selection=True,
-            export_extras=False,
-            export_yup=False,
-            export_apply=False,
-            export_animations=True,
-            export_frame_range=True,
-            export_frame_step=1,
-            export_force_sampling=False,
-            export_nla_strips=False,
-            export_def_bones=False,
-            export_current_frame=False,
-            export_skins=True,
-            export_morph=True,
-            export_morph_normal=True,
-            export_morph_tangent=False,
-            export_lights=False,
-        )
+        self._export_common_gltf(filepath, "GLB")
