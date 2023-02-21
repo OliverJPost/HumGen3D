@@ -223,7 +223,12 @@ class Human:
             if from_batch_generator and attr not in ("skin", "age", "height"):
                 scrub(data, "set")
 
-            occurred_errors = getattr(human, attr).set_from_dict(data)
+            from_dict_method = getattr(human, attr).set_from_dict
+            try:
+                occurred_errors = from_dict_method(data, context=context)
+            except TypeError:
+                occurred_errors = from_dict_method(data)
+
             errors.extend(occurred_errors)
         human._set_random_name()
 
