@@ -16,6 +16,33 @@ from functools import wraps
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+def disable_mesh_changing_modifiers(func: F) -> F:
+    @wraps(func)
+    def wrapper(self, *args: Any, **kwargs: Any) -> Any:
+        body = getattr(self, "_human", self).objects.body
+        disable_list = get_modifiers_to_disable(body)
+
+        for mod in disable_list:
+            mod.show_viewport = False
+
+        result = func(self, *args, **kwargs)
+
+        for mod in disable_list:
+            mod.show_viewport = True
+
+        return result
+
+    def get_modifiers_to_disable(body):
+        disable_list = []
+        for mod in body.modifiers:
+            if mod.type not in {"ARMATURE", "PARTICLE_SYSTEM"} and mod.show_viewport:
+                disable_list.append(mod)
+
+        return disable_list
+
+    return cast(F, wrapper)
+
+
 def check_for_addon_issues():
     addon = bpy.context.preferences.addons.get("HumGen3D")
     if not addon:
