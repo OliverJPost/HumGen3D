@@ -17,7 +17,7 @@ from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.decorators import disable_mesh_changing_modifiers, injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.math import round_vector_to_tuple
 from HumGen3D.common.shadernode import NodeInput
@@ -310,6 +310,7 @@ class BaseHair:
 class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
     """Further specialization of BaseHair for hair that can be imported from a pcoll."""
 
+    @disable_mesh_changing_modifiers
     @injected_context
     def set(self, preset: str, context: C = None) -> None:  # noqa: A003, CCR001
         """Loads hair system the user selected.
