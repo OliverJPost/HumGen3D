@@ -1,5 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
-
+import contextlib
 import os
 import re
 import subprocess
@@ -157,10 +157,11 @@ def _remove_shapekeys(obj: bpy.types.Object) -> None:
     Args:
         obj (Object): obj to remove shapekeys from
     """
-    for sk in [sk for sk in obj.data.shape_keys.key_blocks if sk.name != "Basis"]:
-        obj.shape_key_remove(sk)
-    if obj.data.shape_keys:
-        obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
+    with contextlib.suppress(AttributeError):
+        for sk in [sk for sk in obj.data.shape_keys.key_blocks if sk.name != "Basis"]:
+            obj.shape_key_remove(sk)
+        if obj.data.shape_keys:
+            obj.shape_key_remove(obj.data.shape_keys.key_blocks["Basis"])
 
 
 def remove_number_suffix(name: str) -> str:

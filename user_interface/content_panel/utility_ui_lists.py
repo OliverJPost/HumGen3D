@@ -26,11 +26,6 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
         )
 
         row = layout.row(align=True)
-
-        if item.mod_name == "HEADER":
-            self._draw_header_row(item, row)
-            return
-
         row.prop(item, "enabled", text="", icon=enabledicon, emboss=False)
 
         modifier_icon = (
@@ -42,20 +37,6 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
             row.label(text=item.mod_name, icon=modifier_icon)
         except KeyError:
             row.label(text=item.mod_name, icon="QUESTION")
-
-        if item.count:
-            row.separator()
-            row.label(text=str(item.count))
-        else:
-            row.label(text="", icon=viewport_visible_icon)
-            row.label(text="", icon=render_visible_icon)
-
-    def _draw_header_row(self, item, row):
-        """Header with label for uilists."""
-        row.label(text="", icon="BLANK1")
-        row.label(text="Type:" if item.count else "Name:", icon="BLANK1")
-        row.separator()
-        row.label(text="Amount:" if item.count else "")
 
 
 class MODAPPLY_ITEM(bpy.types.PropertyGroup):

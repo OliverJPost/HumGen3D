@@ -89,7 +89,10 @@ def hg_callback(self) -> None:
 
     _set_shader_switches(human, sett)
     update_tips_from_context(bpy.context, sett, human)
-    _context_specific_updates(sett, human, ui_phase)
+    if sett.ui.active_tab == "CREATE":
+        _context_specific_updates(sett, human, ui_phase)
+    elif sett.ui.active_tab == "PROCESS":
+        refresh_modapply(None, bpy.context)
 
 
 @no_type_check

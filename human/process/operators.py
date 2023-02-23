@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 import uuid
+from typing import no_type_check
 
 import bpy
 from HumGen3D.backend import hg_log
@@ -18,8 +19,15 @@ from HumGen3D.backend.properties.process_props import get_preset_list
 from HumGen3D.common import find_multiple_in_list
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
-from HumGen3D.human.process.apply_modifiers import apply_modifiers
+from HumGen3D.human.process.apply_modifiers import (
+    refresh_modapply,
+    get_selected_modifiers,
+)
 from HumGen3D.human.process.process import ProcessSettings
+from HumGen3D.user_interface.content_panel.operators import (
+    refresh_shapekeys_ul,
+    refresh_hair_ul,
+)
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
@@ -141,8 +149,18 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     module.main(context, human)
 
             if pr_sett.modapply_enabled:
-                apply_modifiers(context)
+                modifier_names = get_selected_modifiers(context)
+                ma_sett = pr_sett.modapply
+                human.process.apply_modifiers(
+                    modifier_names,
+                    to_body=ma_sett.apply_body,
+                    to_eyes=ma_sett.apply_eyes,
+                    to_teeth=ma_sett.apply_teeth,
+                    to_clothing=ma_sett.apply_clothing,
+                    context=context,
+                )
                 human.objects.rig["modifiers_applied"] = True
+                refresh_modapply(None, context)
 
             if pr_sett.output == "export":
                 fn = remove_number_suffix(
@@ -458,3 +476,21 @@ class HG_BAKE(bpy.types.Operator):
 
         else:
             return {"RUNNING_MODAL"}
+
+
+class HG_OT_REFRESH_UL(bpy.types.Operator):
+    bl_idname = "hg3d.ulrefresh"
+    bl_label = "Refresh list"
+    bl_description = "Refresh list"
+
+    uilist_type: bpy.props.StringProperty()
+
+    @no_type_check
+    def execute(self, context):
+        if self.uilist_type == "modapply":
+            refresh_modapply(self, context)
+        elif self.uilist_type == "shapekeys":
+            refresh_shapekeys_ul(self, context)
+        elif self.uilist_type == "hair":
+            refresh_hair_ul(self, context)
+        return {"FINISHED"}

@@ -183,7 +183,6 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
             context.scene,
             "modapply_col_index",
         )
-        col.prop(sett.process.modapply, "search_modifiers", text="")
 
         row = col.row(align=True)
         row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
@@ -193,13 +192,16 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col = layout.column(align=True)
         col.label(text="Objects to apply:")
         row = col.row(align=True)
-        row.prop(sett.process.modapply, "search_objects", text="")
+        row.prop(sett.process.modapply, "apply_body", toggle=True)
+        row.prop(sett.process.modapply, "apply_eyes", toggle=True)
+        row = col.row(align=True)
+        row.prop(sett.process.modapply, "apply_teeth", toggle=True)
+        row.prop(sett.process.modapply, "apply_clothing", toggle=True)
 
         layout.separator()
         col = layout.column(align=True)
         self.draw_subtitle("Options", col, "SETTINGS")
         col.prop(sett.process.modapply, "keep_shapekeys", text="Keep shapekeys")
-        col.prop(sett.process.modapply, "apply_hidden", text="Apply hidden modifiers")
 
 
 class HG_PT_LOD(ProcessPanel, bpy.types.Panel):

@@ -157,18 +157,12 @@ class ModApplyProps(bpy.types.PropertyGroup):
         update=refresh_modapply,
     )
 
-    search_modifiers: EnumProperty(
-        name="Modifier display method",
-        items=[
-            ("summary", "Modifier summary", "", 0),
-            ("individual", "Individual modifiers", "", 1),
-        ],
-        default="summary",
-        update=refresh_modapply,
-    )
-
-    apply_hidden: BoolProperty(default=False)
     keep_shapekeys: BoolProperty(default=True)
+
+    apply_body: BoolProperty(name="Body", default=True, update=refresh_modapply)
+    apply_eyes: BoolProperty(name="Eyes", default=True, update=refresh_modapply)
+    apply_teeth: BoolProperty(name="Teeth", default=True, update=refresh_modapply)
+    apply_clothing: BoolProperty(name="Clothing", default=True, update=refresh_modapply)
 
 
 def get_script_list(self, context):

@@ -7,16 +7,27 @@ import os
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import bpy
+
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
+from HumGen3D.common.type_aliases import C, BpyModifierName
+from .apply_modifiers import (
+    _build_obj_list,
+    _copy_key_data,
+    _remove_drivers,
+    _apply_selected_modifiers,
+    _restore_key_data,
+)
 
 from .lod import LodSettings
+from ...backend.content.content_saving import _remove_shapekeys
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from .bake import BakeSettings
+
+ALL = None
 
 
 def _fill_tokens(
@@ -95,6 +106,15 @@ class ProcessSettings:
         return LodSettings(self._human)
 
     @property
+    def modifiers_applied(self) -> bool:
+        """Checks if modifiers were applied.
+
+        Returns:
+            bool: True if modifiers were applied.
+        """
+        return "modifiers_applied" in self._human.objects.rig
+
+    @property
     def has_haircards(self) -> bool:
         """Checks if haircards are present.
 
@@ -138,6 +158,32 @@ class ProcessSettings:
             bool: True if the parts were renamed.
         """
         return "parts_renamed" in self._human.objects.rig
+
+    @injected_context
+    def apply_modifiers(
+        self,
+        modifiers: Optional[list[BpyModifierName]],  # = ALL,
+        keep_shapekeys: bool = True,
+        to_body: bool = True,
+        to_eyes: bool = True,
+        to_teeth: bool = True,
+        to_clothing: bool = True,
+        context: C = None,
+    ):
+        self._human.hair.set_connected(False, context=context)
+        obj_list = _build_obj_list(self._human, to_body, to_eyes, to_teeth, to_clothing)
+
+        if keep_shapekeys:
+            shapekeys, drivers = _copy_key_data(obj_list)
+
+        for obj in obj_list:
+            _remove_shapekeys(obj)
+            _remove_drivers(obj)
+            _apply_selected_modifiers(context, modifiers, obj)
+
+        if keep_shapekeys:
+            _restore_key_data(obj_list, shapekeys, drivers)
+        self._human.hair.set_connected(True, context=context)
 
     def rename_bones_from_json(
         self, json_string: Optional[str] = None, json_path: Optional[str] = None
