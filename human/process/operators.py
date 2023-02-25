@@ -66,7 +66,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     add_to_collection(context, obj, "Processing Results")
 
             if pr_sett.haircards_enabled:
-                quality = pr_sett.haircards.quality
+                quality = pr_sett.haircards._quality
                 if human.hair.regular_hair.modifiers:
                     human.hair.regular_hair.convert_to_haircards(quality, context)
                 human.hair.eyebrows.convert_to_haircards(quality, context)

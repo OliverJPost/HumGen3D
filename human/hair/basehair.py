@@ -26,7 +26,7 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair.haircards import HairCollection
+from HumGen3D.human.hair.oldhaircards import HairCollection
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
