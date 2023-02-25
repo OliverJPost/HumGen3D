@@ -68,6 +68,7 @@ class RigifySettings:
             for bone in human.pose_bones:
                 self._relink_constraints(bone, rigify_rig)
 
+        hg_delete(old_rig)
         rigify_rig.location = old_location
 
     def _rename_vertex_groups(self, obj: bpy.types.Object) -> None:
