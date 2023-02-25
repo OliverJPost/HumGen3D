@@ -30,7 +30,9 @@ def test_pose_hash(male_human, context):
 
 
 def test_rigify(male_human, context):
+    old_rig_name = male_human.objects.rig.name
     male_human.pose.rigify.generate(context=context)
+    assert not bpy.data.objects.get(old_rig_name)
     assert male_human.objects.rig
     assert "rig_id" in male_human.objects.rig.data
 
