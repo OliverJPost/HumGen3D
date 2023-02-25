@@ -6,8 +6,10 @@ from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.drivers import build_driver_dict
 from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.type_aliases import C
 import rigify
+
 if TYPE_CHECKING:
     from human.human import Human
 
@@ -24,7 +26,9 @@ class RigifySettings:
     def generate(self, context: C = None) -> None:
         rigify_addon = context.preferences.addons.get("rigify")
         if not rigify_addon:
-            raise HumGenException("Rigify addon not enabled. Please enable it in Blender preferences.")
+            raise HumGenException(
+                "Rigify addon not enabled. Please enable it in Blender preferences."
+            )
 
         human = self._human
         human.pose.reset()
@@ -62,6 +66,7 @@ class RigifySettings:
         if human.expression.has_facial_rig:
             for bone in human.pose_bones:
                 self._relink_constraints(bone, rigify_rig)
+
 
     def _rename_vertex_groups(self, obj: bpy.types.Object) -> None:
         """Renames vertex groups to match the rigify naming convention"""
