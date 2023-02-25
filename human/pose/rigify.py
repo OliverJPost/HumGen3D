@@ -31,6 +31,7 @@ class RigifySettings:
             )
 
         human = self._human
+        old_location = human.objects.rig.location
         human.pose.reset()
 
         driver_dict = build_driver_dict(human.objects.body, remove=True)
@@ -67,6 +68,7 @@ class RigifySettings:
             for bone in human.pose_bones:
                 self._relink_constraints(bone, rigify_rig)
 
+        rigify_rig.location = old_location
 
     def _rename_vertex_groups(self, obj: bpy.types.Object) -> None:
         """Renames vertex groups to match the rigify naming convention"""
