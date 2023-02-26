@@ -1,8 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from ..panel_functions import draw_paragraph
 
+from ..panel_functions import draw_paragraph
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -70,7 +70,7 @@ class HG_PT_HAIR(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of hair section
         """
         is_open, box = self.draw_sub_spoiler(
-            layout, self.sett.ui, "hair_mat", "Material"
+            layout, self.sett.ui, "hair_mat", "Ⓜ️ Material"
         )
 
         if not is_open:

@@ -23,13 +23,13 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
         col.separator()
 
         is_open, box = self.draw_sub_spoiler(
-            col, self.sett.ui, "age_hairmat_ui", "Hair Color"
+            col, self.sett.ui, "age_hairmat_ui", "🦱 Hair Color"
         )
         if is_open:
             self.draw_hairmat_sliders(box, human)
 
         is_open, box = self.draw_sub_spoiler(
-            col, self.sett.ui, "age_slider_ui", "Age adjustments"
+            col, self.sett.ui, "age_slider_ui", "⚙️ Age adjustments"
         )
         if is_open:
             self.draw_general_sliders(human, box)

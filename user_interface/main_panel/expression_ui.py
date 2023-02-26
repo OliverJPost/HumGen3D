@@ -60,7 +60,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             return
 
         is_open, boxbox = self.draw_sub_spoiler(
-            self.layout, self.sett.ui, "expression_sliders", "Strength"
+            self.layout, self.sett.ui, "expression_sliders", "⚙️ Strength"
         )
         if not is_open:
             return

@@ -529,7 +529,7 @@ class MainPanelPart(HGPanel):
             box (UILayout): layout.box of hair section
         """
         is_open, box = self.draw_sub_spoiler(
-            layout, self.sett.ui, "hair_length", "Hair Length"
+            layout, self.sett.ui, "hair_length", "📏 Hair Length"
         )
 
         if not is_open:
