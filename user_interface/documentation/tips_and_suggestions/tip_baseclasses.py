@@ -43,6 +43,8 @@ class Tip:
         operator: Optional[Operator] = None,
     ) -> None:
         self.title = title
+        # Remove newlines except when multiple subsequent
+        text = text.replace("\r\n", " ").replace("\n", " ")
         self.text = text
         self.icon = icon
         self.operator = operator
@@ -50,6 +52,6 @@ class Tip:
     @property
     def text_wrapped(self) -> str:
         lines = [
-            " ".join(l) for l in lines_from_text(self.text, 100) if l != "WHITESPACE"
+            " ".join(l) for l in lines_from_text(self.text, 85) if l != "WHITESPACE"
         ]
         return "\n".join(lines)
