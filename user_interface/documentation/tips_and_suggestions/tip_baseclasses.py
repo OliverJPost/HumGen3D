@@ -36,8 +36,9 @@ class TutorialOperator(Operator):
 class Tip:
     def __init__(
         self,
-        title: str,
-        text: str,
+        *,
+        title: str = "",
+        text: str = "",
         icon: str = "HELP",
         operator: Optional[Operator] = None,
     ) -> None:
