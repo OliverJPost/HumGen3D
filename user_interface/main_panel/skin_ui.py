@@ -44,7 +44,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = self.draw_sub_spoiler(
-            box, sett.ui, "main_skin", "Main settings"
+            box, sett.ui, "main_skin", "⚙️ Main settings"
         )
         if not is_open:
             return
@@ -89,14 +89,14 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             sett (PropertyGroup): HumGen props
             box (UILayout): layout.box of the skin section
         """
-        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "texture", "Texture sets")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "texture", "🌃 Texture sets")
         if not is_open:
             return
 
         self.draw_content_selector(layout=boxbox, pcoll_name="texture")
 
     def _draw_eye_subsection(self, sett, col):
-        is_open, boxbox = self.draw_sub_spoiler(col, sett.ui, "eyes", "Eyes")
+        is_open, boxbox = self.draw_sub_spoiler(col, sett.ui, "eyes", "👁️ Eyes")
         if not is_open:
             return
 
@@ -123,7 +123,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             box (UILayout): layout.box of the skin section
             nodes (Shadernode list): All nodes in the .human material
         """
-        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "freckles", "Freckles")
+        is_open, boxbox = self.draw_sub_spoiler(box, sett.ui, "freckles", "⋰ Freckles")
         if not is_open:
             return
 
@@ -241,7 +241,7 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
             nodes (Shadernode list): All nodes in the .human material
         """
         is_open, boxbox = self.draw_sub_spoiler(
-            box, sett.ui, "beard_shadow", "Beard Shadow"
+            box, sett.ui, "beard_shadow", "🧔 Beard Shadow"
         )
         if not is_open:
             return

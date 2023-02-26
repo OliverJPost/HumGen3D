@@ -3,8 +3,8 @@
 import bpy
 from HumGen3D.backend import get_prefs
 from HumGen3D.backend.logging import hg_log
-from ..panel_functions import draw_paragraph
 
+from ..panel_functions import draw_paragraph
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
 
@@ -31,18 +31,18 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         col = self.layout.column(align=True)
 
         col.label(text="Upper Face:")
-        flow_u_skull = self._get_ff_col(col, "Upper Skull", "u_skull")
-        flow_eyes = self._get_ff_col(col, "Eyes", "eyes")
-        flow_ears = self._get_ff_col(col, "Ears", "ears")
-        flow_nose = self._get_ff_col(col, "Nose", "nose")
+        flow_u_skull = self._get_ff_col(col, "💀 Upper Skull", "u_skull")
+        flow_eyes = self._get_ff_col(col, "👁️ Eyes", "eyes")
+        flow_ears = self._get_ff_col(col, "👂 Ears", "ears")
+        flow_nose = self._get_ff_col(col, "👃 Nose", "nose")
 
         col.separator()
         col.label(text="Lower Face:")
-        flow_l_skull = self._get_ff_col(col, "Lower Skull", "l_skull")
-        flow_mouth = self._get_ff_col(col, "Mouth", "mouth")
-        flow_cheeks = self._get_ff_col(col, "Cheeks", "cheeks")
-        flow_jaw = self._get_ff_col(col, "Jaw", "jaw")
-        flow_chin = self._get_ff_col(col, "Chin", "chin")
+        flow_l_skull = self._get_ff_col(col, "💀 Lower Skull", "l_skull")
+        flow_mouth = self._get_ff_col(col, "👄 Mouth", "mouth")
+        flow_cheeks = self._get_ff_col(col, "😊 Cheeks", "cheeks")
+        flow_jaw = self._get_ff_col(col, "😬 Jaw", "jaw")
+        flow_chin = self._get_ff_col(col, "🤔 Chin", "chin")
 
         col.separator()
         col.label(text="Other:")
