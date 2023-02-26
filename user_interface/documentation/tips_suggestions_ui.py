@@ -35,13 +35,44 @@ mollit anim id est laborum
 """
 
 
-def draw_tips_suggestions_ui(layout, context):
+def draw_tips_suggestions_ui(layout, context, docs_name=""):
     sett = context.scene.HG3D  # type:ignore[attr-defined]
     col = layout.column(align=True)
 
-    col.separator(factor=2)
-
     important_tip = True
+
+    if docs_name:
+        row = col.row()
+        row.alignment = "CENTER"
+        row.enabled = False
+        row.label(text="⎯" * 15)
+        col.operator(
+            "wm.url_open",
+            text=f"🌐 {docs_name.replace('+', ' ')} Tutorial",
+            # icon="HELP",
+            emboss=False,
+        ).url = f"https://help.humgen3d.com/{docs_name}"
+
+    tips_col = context.scene.hg_tips_and_suggestions
+    if not tips_col:
+        return
+    col.separator(factor=1)
+    if all([tip.hidden for tip in tips_col]) and not sett.show_hidden_tips:
+        hidden_tips_amount = len([tip for tip in tips_col if tip.hidden])
+        row = col.row()
+        row.alignment = "CENTER"
+        row.prop(
+            sett,
+            "show_hidden_tips",
+            text="{tag} {amount} hidden tip{plural}".format(
+                tag="Hide" if sett.show_hidden_tips else "Show",
+                amount=hidden_tips_amount,
+                plural="s" if hidden_tips_amount > 1 else "",
+            ),
+            toggle=True,
+            emboss=False,
+        )
+        return
 
     box = col.box()
     box.enabled = False  # important_tip
@@ -50,12 +81,6 @@ def draw_tips_suggestions_ui(layout, context):
         text="Tips & Suggestions",
         icon_value=get_hg_icon(f"light_{light_state}"),
     )
-
-    tips_col = context.scene.hg_tips_and_suggestions
-    if not tips_col:
-        row = layout.row()
-        row.enabled = False
-        row.label(text="No active tips.")
 
     for tip_item in tips_col:
         if tip_item.hidden:

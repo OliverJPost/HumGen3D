@@ -34,7 +34,9 @@ def subpanel_draw(draw_method):
         draw_method(self, context)
 
         if get_prefs().show_tips:
-            draw_tips_suggestions_ui(self.layout, context)
+            draw_tips_suggestions_ui(
+                self.layout, context, docs_name=self.phase_name.capitalize()
+            )
 
     return wrapper
 
