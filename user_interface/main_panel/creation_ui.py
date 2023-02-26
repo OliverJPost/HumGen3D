@@ -3,11 +3,11 @@
 import bpy
 from HumGen3D.common import find_hg_rig
 from HumGen3D.human.human import Human
-from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 
+from ... import get_prefs
+from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 from ..panel_functions import draw_panel_switch_header
 from ..ui_baseclasses import HGPanel, MainPanelPart
-from ... import get_prefs
 
 
 class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
@@ -69,7 +69,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         col_a.operator("hg3d.startcreation", icon="COMMUNITY", depress=True)
 
         if context.object and "hg_batch_marker" in context.object:
-            self._draw_batch_marker_notification(col)
+            self._draw_batch_marker_notification(col_a)
 
         if get_prefs().show_tips:
             draw_tips_suggestions_ui(col, context, docs_name="creation")
