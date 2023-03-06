@@ -241,7 +241,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         """
         row_h = p_flow.row(align=True)
         row_h.scale_y = 1.5 * 0.8  # quick fix because history
-        row_h.prop(sett, "pattern_category", text="")
+        row_h.prop(sett.pcoll, "pattern_category", text="")
         row_h.operator(
             "hg3d.random_choice", text="Random", icon="FILE_REFRESH"
         ).pcoll_name = "pattern"
