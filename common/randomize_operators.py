@@ -31,7 +31,6 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
             "pose",
             "expression",
             "outfit",
-            "pattern",
             "footwear",
             "hair",
         ):
@@ -42,7 +41,8 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
             options = Human.get_preset_options(sett.gender, context=context)
             chosen = random.choice([o for o in options if o != current])
             sett.pcoll.humans = chosen
-
+        elif pcoll_name == "pattern":
+            human.clothing.outfit.pattern.set_random(context.object, context=context)
         return {"FINISHED"}
 
 
