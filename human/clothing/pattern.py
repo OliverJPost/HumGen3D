@@ -4,6 +4,7 @@
 
 import os
 import random
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal, cast
 
 import bpy
@@ -18,8 +19,65 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 
 
+@dataclass
+class _PatternNode:
+    node_name: str
+    node_type: Literal["ShaderNodeTexImage", "ShaderNodeMapping", "ShaderNodeTexCoord"]
+    output_slot: int
+    input_slot: int
+    output_node_name: str
+
+    def exists_in(self, mat: bpy.types.Material) -> bool:
+        return self.node_name in mat.node_tree.nodes
+
+    def create_in(self, mat: bpy.types.Material) -> None:
+        node_tree = mat.node_tree
+        node = node_tree.nodes.new(self.node_type)
+        node.name = self.node_name
+        node.label = self.node_name
+        node_tree.links.new(
+            node.outputs[self.output_slot],
+            node_tree.nodes[self.output_node_name].inputs[self.input_slot],
+        )
+
+    def remove_from(self, mat: bpy.types.Material) -> None:
+        node_tree = mat.node_tree
+        node = node_tree.nodes[self.node_name]
+        node_tree.nodes.remove(node)
+
+        # Make sure the pattern input is set to black
+        pattern_input = mat.node_tree.nodes["HG_Control"].inputs["Pattern"]
+        pattern_input.default_value = (0, 0, 0, 1)
+
+
 class PatternSettings(PreviewCollectionContent):
     """Class for changing patterns on individual clothing items."""
+
+    _pcoll_gender_split = False
+    _pcoll_name = "pattern"
+    _nodes = [
+        _PatternNode(
+            node_name="HG_Pattern",
+            node_type="ShaderNodeTexImage",
+            output_slot=0,
+            input_slot=9,
+            output_node_name="HG_Control",
+        ),
+        _PatternNode(
+            node_name="HG_Pattern_Mapping",
+            node_type="ShaderNodeMapping",
+            output_slot=0,
+            input_slot=0,
+            output_node_name="HG_Pattern",
+        ),
+        _PatternNode(
+            node_name="HG_Pattern_Coordinates",
+            node_type="ShaderNodeTexCoord",
+            output_slot=2,
+            input_slot=0,
+            output_node_name="HG_Pattern_Mapping",
+        ),
+    ]
 
     def __init__(self, _human: "Human") -> None:
         """Creates new instance to manipulate pattern of clothing items.
@@ -28,13 +86,6 @@ class PatternSettings(PreviewCollectionContent):
             _human (Human): Human instance.
         """
         self._human = _human
-        self._pcoll_gender_split = False
-        self._pcoll_name = "pattern"
-        self._node_names = (
-            "HG_Pattern",
-            "HG_Pattern_Mapping",
-            "HG_Pattern_Coordinates",
-        )
 
     def set(self, preset: str, obj: bpy.types.Object) -> None:  # noqa: A003
         """Loads passed pattern on passed object.
@@ -48,10 +99,14 @@ class PatternSettings(PreviewCollectionContent):
         pref = get_prefs()
         mat = obj.active_material
 
+        if not self._is_hg_material(mat):
+            raise ValueError("Passed object does not use HG material.")
+
         self._active = preset
 
-        for node_name in self._node_names:
-            self._create_node_if_doesnt_exist(node_name)  # type:ignore[arg-type]
+        for node_template in self._nodes:
+            if not node_template.exists_in(mat):
+                node_template.create_in(mat)
 
         img_node = mat.node_tree.nodes["HG_Pattern"]  # type:ignore
 
@@ -80,21 +135,8 @@ class PatternSettings(PreviewCollectionContent):
             obj (bpy.types.Object): Object to remove pattern from.
         """
         mat = obj.active_material
-        for node_name in self._node_names:
-            mat.node_tree.nodes.remove(
-                mat.node_tree.nodes.get(node_name)  # type:ignore[arg-type]
-            )
-            pattern_input = mat.node_tree.nodes[  # type:ignore[call-overload]
-                "HG_Control"
-            ].inputs[  # type:ignore[index]
-                "Pattern"
-            ]
-            pattern_input.default_value = (
-                0,
-                0,
-                0,
-                1,
-            )
+        for node in self._nodes:
+            node.remove_from(mat)
 
     def _set(self, context: bpy.types.Context) -> None:
         """Internal method for calling from update function.
@@ -103,45 +145,19 @@ class PatternSettings(PreviewCollectionContent):
             context (bpy.types.Context): Blender context.
         """
         obj = context.object
-        active_item = getattr(context.scene.HG3D, f"pcoll_{self._pcoll_name}")
+        active_item = getattr(context.scene.HG3D.pcoll, self._pcoll_name)
         self.set(active_item, obj)
 
-    def _create_node_if_doesnt_exist(
-        self,
-        name: Literal["HG_Pattern", "HG_Pattern_Mapping", "HG_Pattern_Coordinates"],
-    ) -> ShaderNode:
-        """Returns the node, creating it if it doesn't exist.
+    def _is_hg_material(self, mat: bpy.types.Material) -> bool:
+        """Checks if passed material is an HG material."""
+        if mat is None:
+            return False
 
-        Args:
-            name (str): name of node to check
+        node_tree = mat.node_tree
+        if node_tree is None:
+            return False
 
-        Returns:
-            node (ShaderNode): node that was being searched for
-        """
-        # try to find the node, returns it if it already exists
-        for node in self._human.skin.nodes:
-            if node.name == name:
-                return cast(ShaderNode, node)
+        if "HG_Control" not in node_tree.nodes:
+            return False
 
-        # adds the node, because it doesn't exist yet
-        type_dict = {
-            "HG_Pattern": "ShaderNodeTexImage",
-            "HG_Pattern_Mapping": "ShaderNodeMapping",
-            "HG_Pattern_Coordinates": "ShaderNodeTexCoord",
-        }
-
-        node: ShaderNode = self._human.skin.nodes.new(type_dict[name])  # type:ignore
-        node.name = name
-
-        link_dict = {
-            "HG_Pattern": (0, "HG_Control", 9),
-            "HG_Pattern_Mapping": (0, "HG_Pattern", 0),
-            "HG_Pattern_Coordinates": (2, "HG_Pattern_Mapping", 0),
-        }
-        target_node = self._human.skin.nodes[link_dict[name][1]]  # type:ignore[index]
-        self._human.skin.links.new(
-            node.outputs[link_dict[name][0]],
-            target_node.inputs[link_dict[name][2]],
-        )
-
-        return cast(ShaderNode, node)
+        return True
