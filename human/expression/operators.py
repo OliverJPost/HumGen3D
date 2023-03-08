@@ -87,7 +87,13 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
 
         human = Human.from_existing(bpy.context.object)
 
-        for key in human.keys.all_added_shapekeys:
+        keys = human.keys.all_added_shapekeys
+        # Also add eyelook keys, which are on the model by default
+        for key in human.keys.all_shapekeys:
+            if key.name.startswith("eyeLook"):
+                keys.append(key)
+
+        for key in keys:
             sk = key.as_bpy()
             if sk.name == "Basis" or sk.name.startswith("cor_"):
                 continue
