@@ -44,3 +44,8 @@ def test_rigify_position(male_human, context):
     male_human.pose.rigify.generate(context=context)
 
     assert tuple(male_human.objects.rig.location) == TEST_LOCATION
+
+
+def test_rigify_on_face_rig(male_human, context):
+    male_human.expression.load_facial_rig(context=context)
+    male_human.pose.rigify.generate(context=context)
