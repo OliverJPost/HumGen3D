@@ -181,7 +181,7 @@ class RigifySettings:
             return
 
         old_loc_constraint = next(
-            (c for c in bone.constraints if c.type == "LIMIT_LOCATION")
+            (c for c in bone.constraints if c.type == "LIMIT_LOCATION"), None
         )
         if not old_loc_constraint:
             return
