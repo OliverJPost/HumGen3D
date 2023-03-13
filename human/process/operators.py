@@ -141,7 +141,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     module.main(context, human)
 
             if pr_sett.modapply_enabled:
-                apply_modifiers(context)
+                apply_modifiers(human, context=context)
                 human.objects.rig["modifiers_applied"] = True
 
             if pr_sett.output == "export":

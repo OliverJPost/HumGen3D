@@ -27,6 +27,9 @@ def build_driver_dict(
     driver_dict = {}
     remove_list = []
 
+    if not obj.data.shape_keys:
+        return driver_dict
+
     for driver in obj.data.shape_keys.animation_data.drivers:
 
         target_sk = driver.data_path.replace('key_blocks["', "").replace('"].value', "")
