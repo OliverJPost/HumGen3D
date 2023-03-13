@@ -53,9 +53,9 @@ class HG_UL_MODAPPLY(bpy.types.UIList):
     def _draw_header_row(self, item, row):
         """Header with label for uilists."""
         row.label(text="", icon="BLANK1")
-        row.label(text="Type:" if item.count else "Name:", icon="BLANK1")
+        row.label(text="Type:", icon="BLANK1")
         row.separator()
-        row.label(text="Amount:" if item.count else "")
+        row.label(text="Amount:")
 
 
 class MODAPPLY_ITEM(bpy.types.PropertyGroup):

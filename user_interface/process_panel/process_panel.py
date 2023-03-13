@@ -1,6 +1,5 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
-
-
+from abc import ABC, abstractmethod
 from collections import defaultdict
 
 import bpy
@@ -21,6 +20,16 @@ class ProcessPanel(HGPanel):
     bl_options = {"DEFAULT_CLOSED"}
     icon_name: str
 
+    @property
+    def enabled_propname(self):
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement enabled propname"
+        )
+
+    @property
+    def help_url(self):
+        raise NotImplementedError(f"{self.__class__.__name__} must implement help_url")
+
     @classmethod
     def poll(cls, context):
         return find_multiple_in_list(context.selected_objects)
@@ -35,6 +44,11 @@ class ProcessPanel(HGPanel):
 
     def check_enabled(self, context):
         self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+
+    def _draw_documentation_button(self):
+        self.layout.operator("wm.url_open", text="Documentation", icon="HELP",).url = (
+            "https://help.humgen3d.com/" + self.help_url
+        )
 
 
 class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
@@ -168,9 +182,11 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_label = "Apply Modifiers"
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
+    help_url = "modapply"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         layout = self.layout
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = layout.column(align=True)
@@ -183,17 +199,22 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
             context.scene,
             "modapply_col_index",
         )
-        col.prop(sett.process.modapply, "search_modifiers", text="")
 
         row = col.row(align=True)
         row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
         row.operator("hg3d.selectmodapply", text="All").select_all = True
         row.operator("hg3d.selectmodapply", text="None").select_all = False
 
+        layout.separator(factor=0.5)
+
         col = layout.column(align=True)
         col.label(text="Objects to apply:")
         row = col.row(align=True)
-        row.prop(sett.process.modapply, "search_objects", text="")
+        row.prop(sett.process.modapply, "apply_body", toggle=True)
+        row.prop(sett.process.modapply, "apply_eyes", toggle=True)
+        row = col.row(align=True)
+        row.prop(sett.process.modapply, "apply_teeth", toggle=True)
+        row.prop(sett.process.modapply, "apply_clothing", toggle=True)
 
         layout.separator()
         col = layout.column(align=True)
