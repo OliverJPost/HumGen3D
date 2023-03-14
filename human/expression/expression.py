@@ -145,9 +145,8 @@ class ExpressionSettings(PreviewCollectionContent):
             bone = self._human.pose.get_posebone_by_original_name(b_name).bone
             bone.hide = False
 
-        for sk in self._human.keys:
-            if sk.name.startswith("expr"):
-                sk.mute = True
+        for key in self._human.expression.keys:
+            key.value = 0
 
         self._load_FACS_sks(context)  # type:ignore[arg-type]
 
