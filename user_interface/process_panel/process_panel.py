@@ -182,7 +182,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_label = "Apply Modifiers"
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
-    help_url = "modapply"
+    help_url = "process/modapply"
 
     def draw(self, context):
         self.check_enabled(context)

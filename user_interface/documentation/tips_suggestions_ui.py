@@ -46,9 +46,11 @@ def draw_tips_suggestions_ui(layout, context, docs_name=""):
         row.alignment = "CENTER"
         row.enabled = False
         row.label(text="⎯" * 15)
+        # Split on url separator (nested website), remove + used for url, capitalize
+        label = docs_name.split("/")[-1].replace("+", " ").capitalize()
         col.operator(
             "wm.url_open",
-            text=f"🌐 {docs_name.replace('+', ' ')} Tutorial",
+            text=f"🌐 {label} Guide",
             # icon="HELP",
             emboss=False,
         ).url = f"https://help.humgen3d.com/{docs_name}"

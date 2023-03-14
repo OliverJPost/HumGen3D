@@ -72,7 +72,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
             self._draw_batch_marker_notification(col_a)
 
         if get_prefs().show_tips:
-            draw_tips_suggestions_ui(col, context, docs_name="creation")
+            draw_tips_suggestions_ui(col, context, docs_name="guide/creation")
 
     def _draw_batch_marker_notification(self, layout):
         col = layout.column(align=True)
