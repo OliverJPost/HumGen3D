@@ -20,11 +20,19 @@ from bpy.props import (  # type: ignore
 from HumGen3D.backend import preview_collections
 from HumGen3D.human.human import Human
 
+from ...user_interface.documentation.tips_suggestions_ui import update_tips_from_context
 from .batch_props import BatchProps
 from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
+
+
+def hair_shader_update(self, context):
+    """Update the hair shader of the human."""
+    human = Human.from_existing(context.object)
+    human.hair.update_hair_shader_type(self.hair_shader_type)
+    update_tips_from_context(context, context.scene.HG3D, human)
 
 
 class HG_SETTINGS(bpy.types.PropertyGroup):
@@ -166,9 +174,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
             ("accurate", "Accurate (Cycles only)", "", 1),
         ],
         default="fast",
-        update=lambda s, c: Human.from_existing(c.object).hair.update_hair_shader_type(
-            s.hair_shader_type
-        ),
+        update=hair_shader_update,
     )
 
     show_hidden_tips: BoolProperty(default=False)

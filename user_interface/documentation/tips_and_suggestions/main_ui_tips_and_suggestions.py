@@ -30,9 +30,28 @@ This menu allows you to change the colors of the clothing
 and also add patterns to it.""",
 )
 
+HAIR_RENDER_TIP = Tip(
+    title="Hair Rendering",
+    text="""It looks like you are using Cycles.
+For the best results, set the hair rendering to
+"Accurate" instead of "Fast".
+
+NOTE: This setting looks better in Cycles, but
+does not show correctly in the material preview.
+""",
+)
+
 
 def get_main_ui_tips_from_context(context, sett, human):
     active_tab = sett.ui.phase
 
     if active_tab == ActiveSection.CLOTHING and human.clothing.outfit.objects:
         yield CLOTHING_MATERIAL_MENU_TIP
+
+    if (
+        active_tab == ActiveSection.HAIR
+        and context.scene.render.engine == "CYCLES"
+        and sett.hair_shader_type == "fast"
+    ):
+
+        yield HAIR_RENDER_TIP
