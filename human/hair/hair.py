@@ -13,6 +13,8 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.os import correct_presetpath
 from HumGen3D.common.type_aliases import C  # type:ignore
 
+from ...backend import hg_log
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
@@ -158,9 +160,10 @@ class HairSettings:
         hg_rig = self._human.objects.rig
         hg_body = hg_rig.HG.body_obj
 
-        for mat in hg_body.data.materials[1:3]:
-            hair_group = mat.node_tree.nodes.get("HG_Hair_V3")
+        for mat in hg_body.data.materials[1:4]:
+            hair_group = mat.node_tree.nodes.get("HG_Hair")
             if not hair_group:
+                hg_log("Hair group not found in material", mat.name, level="WARNING")
                 continue
 
             hair_group.inputs["Fast/Accurate"].default_value = value
