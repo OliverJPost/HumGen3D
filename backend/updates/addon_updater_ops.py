@@ -967,6 +967,14 @@ def update_settings_ui(self, context, element=None):
     # auto-update settings
     box.label(text="Updater Settings")
     row = box.row()
+    row.scale_y = 1.5
+    row.operator(
+        "wm.url_open", text="Updater tutorial", icon="HELP"
+    ).url = "https://help.humgen3d.com/update"
+    row.operator(
+        "wm.url_open", text="Open GitHub repository", icon="URL"
+    ).url = "https://github.com/oliverjpost/humgen3d"
+    row = box.row()
 
     # special case to tell user to restart blender, if set that way
     if not updater.auto_reload_post_update:
