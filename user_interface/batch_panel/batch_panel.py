@@ -353,6 +353,3 @@ class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
         layout = self.layout
 
         draw_tips_suggestions_ui(layout, context)
-
-        if get_prefs().full_height_menu:
-            layout.separator(factor=200)

@@ -136,4 +136,3 @@ class HGPreferenceBackend:
 
     show_tips: BoolProperty(default=True)
     compress_zip: BoolProperty(default=True)
-    full_height_menu: BoolProperty(default=False)
