@@ -104,5 +104,3 @@ class HG_PT_CONTENT_SAVING(bpy.types.Panel):
 
         if get_prefs().show_tips:
             draw_tips_suggestions_ui(layout, context)
-            if get_prefs().full_height_menu:
-                layout.separator(factor=150)

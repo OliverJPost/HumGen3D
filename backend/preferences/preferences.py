@@ -229,11 +229,6 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         col = layout.column(heading="Tips and suggestions:")
         col.prop(self, "show_tips", text='Show "Tips and Suggestions" interface')
-        col.prop(
-            self,
-            "full_height_menu",
-            text="Make Tips and Suggestions full height",
-        )
 
         layout.separator()
 

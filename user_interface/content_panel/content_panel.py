@@ -156,5 +156,3 @@ class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
         layout = self.layout
 
         draw_tips_suggestions_ui(layout, context)
-        if get_prefs().full_height_menu:
-            layout.separator(factor=200)
