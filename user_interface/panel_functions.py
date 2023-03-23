@@ -65,9 +65,9 @@ def lines_from_text(text, max_width_percentage):
         [],
     ]
     for word in words:
-        if "\n" in word:
+        if word.endswith("\n"):
             length = 0
-            lines[-1].append(word)
+            lines[-1].append(word + " ")
             lines.append("WHITESPACE")
             lines.append([])
             continue
