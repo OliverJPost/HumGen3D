@@ -44,12 +44,16 @@ class FootwearSettings(BaseClothing):
         ]
 
     @injected_context
-    def add_obj(self, cloth_obj: bpy.types.Object, context: C = None) -> None:
+    def add_obj(
+        self, cloth_obj: bpy.types.Object, recalculate_weights=True, context: C = None
+    ) -> None:
         """Add an object you created yourself as footwear to this human.
 
         Args:
             cloth_obj (bpy.types.Object): Blender object to add as footwear. Make
                 sure it's located in the correct place (on the feet of this human).
+            recalculate_weights (bool): Whether to recalculate weights of the
+                vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
         """
-        super().add_obj(cloth_obj, "footwear", context)
+        super().add_obj(cloth_obj, "footwear", recalculate_weights, context)

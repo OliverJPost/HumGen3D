@@ -2,7 +2,7 @@
 
 import os
 import shutil
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable, Literal, Optional
 
 import bpy
 import numpy as np
@@ -24,6 +24,38 @@ from HumGen3D.common.geometry import (
     deform_obj_from_difference,
     world_coords_from_obj,
 )
+
+
+def is_valid_clothing_object(obj: bpy.types.Object) -> bool:
+    if "shoe" not in obj and "cloth" not in obj:
+        return False
+
+    if not obj.data.shape_keys:
+        return False
+
+    if not obj.parent or not obj.parent.type == "ARMATURE":
+        return False
+
+    corrective_sks = []
+    for key in obj.data.shape_keys.key_blocks:
+        if key.name.startswith("cor_"):
+            corrective_sks.append(key.name)
+
+    # Check if all corrective sks have a driver
+    for driver in obj.data.shape_keys.animation_data.drivers:
+        if not driver.data_path.split('"')[1] in corrective_sks:
+            return False
+
+    for o in obj.parent.children:
+        if "hg_body" in o:
+            body = o
+            break
+
+    for vertex_group in body.vertex_groups:
+        if vertex_group.name not in obj.vertex_groups:
+            return False
+
+    return True
 
 
 def _save_clothing(
