@@ -46,6 +46,7 @@ class OutfitSettings(BaseClothing):
         self,
         cloth_obj: bpy.types.Object,
         cloth_type: Literal["pants", "top", "full"],
+        recalculate_weights=True,
         context: C = None,
     ) -> None:
         """Add an object you created yourself as footwear to this human.
@@ -56,6 +57,8 @@ class OutfitSettings(BaseClothing):
             cloth_type (Literal["pants", "top", "full"]): What part of the body
                 this clothing item covers. This influences what corrective shapekeys
                 are added to the item.
+            recalculate_weights (bool): Whether to recalculate weights of the
+                vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
         """
-        super().add_obj(cloth_obj, cloth_type, context)
+        super().add_obj(cloth_obj, cloth_type, recalculate_weights, context)

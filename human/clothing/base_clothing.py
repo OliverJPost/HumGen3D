@@ -133,6 +133,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self,
         cloth_obj: bpy.types.Object,
         cloth_type: Literal["pants", "top", "footwear", "full"],
+        recalculate_weights: bool,
         context: bpy.types.Context,
     ) -> None:
         """Base method for adding new object to the clothing of this human.
@@ -144,18 +145,24 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             cloth_obj (bpy.types.Object): Object you want to add to the clothing.
             cloth_type (Literal["pants", "top", "footwear", "full"]): Type of clothing
                 as string, defines what kind of corrective shapekeys will be added.
+            recalculate_weights (bool): Whether to recalculate weights of the
+                vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
         """
         body_obj = self._human.objects.body
         _correct_shape_to_a_pose(cloth_obj, body_obj, context)
         _add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
-        _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
+        if recalculate_weights:
+            _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
         rig_obj = self._human.objects.rig
         cloth_obj.parent = rig_obj
         # cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
         tag = "shoe" if cloth_type == "footwear" else "cloth"
         cloth_obj[tag] = 1  # type:ignore[index]
+
+        if "hg_body" in cloth_obj:
+            del cloth_obj["hg_body"]
 
     def deform_cloth_to_human(
         self, context: bpy.types.Context, cloth_obj: bpy.types.Object

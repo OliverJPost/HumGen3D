@@ -6,6 +6,7 @@ import re
 import subprocess
 
 import bpy
+import numpy as np
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common import find_hg_rig
@@ -16,6 +17,8 @@ from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from .possible_content import find_possible_content
+from ...human.clothing.saving import is_valid_clothing_object
+from ...user_interface.panel_functions import draw_paragraph
 
 
 class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
@@ -178,35 +181,110 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
         default="torso",
     )
 
+    override_weights: BoolProperty(default=False)
+
     @classmethod
     def poll(cls, context):
-        return (
-            context.object
-            and context.object.type == "MESH"
-            and "hg_body" not in context.object
-            and "cloth" not in context.object
-            and "shoe" not in context.object
-        )
+        return context.object and context.object.type == "MESH"
 
     def invoke(self, context, event):
+        cloth_object = context.object
+        self.human = get_human_from_distance(cloth_object)
+        if not self.human:
+            if cloth_object.parent:
+                self.human = Human.from_existing(cloth_object.parent)
+            else:
+                ShowMessageBox(
+                    "Clothing object is too far from any human, make sure it's on a human. Is this message incorrect? Manually parent it to a human rig."
+                )
+                return {"CANCELLED"}
+
+        self.has_valid_vertex_groups = True
+        for vg in self.human.objects.body.vertex_groups:
+            if vg.name not in cloth_object.vertex_groups:
+                self.has_valid_vertex_groups = False
+                break
+
         return context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-        col = self.layout
+        obj = context.object
+        self._draw_info_labels(context, obj)
+
+        col = self.layout.column()
         col.label(text="What type of clothing is this?")
 
         col = col.column()
         col.scale_y = 1.5
         col.prop(self, "cloth_type", expand=True)
 
+        if self.has_valid_vertex_groups:
+            col = self.layout.column()
+            col.label(text="Valid weights found.")
+            col.prop(self, "override_weights", text="Recalculate weights")
+
+    def _draw_info_labels(self, context, obj):
+        if "hg_body" in obj:
+            col = self.layout.column()
+            col.alert = True
+            draw_paragraph(
+                col,
+                """
+This object seems to be the body object. 
+
+If you made clothing by separating part of the body, you can ignore this message.
+If you accidentily selected the body object, please select the clothing object instead.
+Press ESC to cancel.
+""",
+                max_width_percentage=140,
+            )
+        if "cloth" in obj or "shoe" in obj:
+            col = self.layout.column()
+            col.alert = True
+            if is_valid_clothing_object(context.object):
+                draw_paragraph(
+                    col,
+                    """
+It looks like you selected an object which has been previously added as clothing
+and fulfills all the requirements to be clothing.
+If you want to reset the clothing properties and add it as clothing again, please
+continue. Otherwise, press ESC to cancel.
+""",
+                    max_width_percentage=140,
+                )
+            else:
+                draw_paragraph(
+                    col,
+                    """
+It looks like you selected an object which has been previously added as clothing
+but does not fulfill all the requirements to be clothing.
+Continuing will reset the clothing properties and add it as clothing again.
+NOTE: This will reset weight painting.
+Press ESC to cancel.
+""",
+                    max_width_percentage=140,
+                )
+
     def execute(self, context):
         cloth_obj = context.object
-        human = get_human_from_distance(cloth_obj)
+
+        recalculate_weights = self.has_valid_vertex_groups and self.override_weights
 
         if self.cloth_type == "footwear":
-            human.clothing.footwear.add_obj(cloth_obj, context)
+            self.human.clothing.footwear.add_obj(
+                cloth_obj, recalculate_weights, context
+            )
         else:
-            human.clothing.outfit.add_obj(cloth_obj, self.cloth_type, context)
+            self.human.clothing.outfit.add_obj(
+                cloth_obj, self.cloth_type, recalculate_weights, context
+            )
+
+        find_possible_content(context)
+
+        ShowMessageBox(
+            "Succesfully added weight painting and corrective shape keys! This is now a valid clothing object. Save it to the library in the panel below.",
+            title="HG Clothing",
+        )
 
         return {"FINISHED"}
 
