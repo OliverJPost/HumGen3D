@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import bpy
-from HumGen3D import bl_info
+from HumGen3D import bl_info, HumGenException
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import active_phase_enum
 from HumGen3D.common import is_legacy
@@ -308,7 +308,10 @@ class MainPanelPart(HGPanel):
             or sett.custom_content.content_saving_ui
         ):
             return False
-        human = Human.from_existing(context.object, strict_check=False)
+        try:
+            human = Human.from_existing(context.object, strict_check=False)
+        except HumGenException:  # Error for base humans not installed
+            return True
         if not human:
             return False
         if "cloth" in context.object or "shoe" in context.object:  # noqa
