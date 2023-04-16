@@ -79,9 +79,30 @@ def test_fbx_export_baked(male_human: Human, context, tmp_path):
 def test_gltf_export(human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""
     path = os.path.join(tmp_path, "test.gltf")
+    human.location = (5, 2, 7)
     human.export.to_gltf(path, context=context)
     gltf = GLTF2().load(path)
     assert len(gltf.meshes) == 4
+
+    # Check if HG_Body has its origin at scene 0,0,0
+    # Find the HG_Body node index
+    hg_body_node_index = None
+    for index, node in enumerate(gltf.nodes):
+        if node.mesh is not None:
+            mesh = gltf.meshes[node.mesh]
+            if mesh.name == "Female_Body_Default":
+                hg_body_node_index = index
+                break
+
+    assert hg_body_node_index is not None, "HG_Body node not found"
+
+    hg_body_node = gltf.nodes[hg_body_node_index]
+
+    # Check if HG_Body node has its translation set to [0, 0, 0]
+    assert hg_body_node.translation in (
+        [0, 0, 0],
+        None,
+    ), "HG_Body node does not have its origin at (0, 0, 0)"
 
 
 def test_gltf_export_baked(male_human, context, tmp_path):

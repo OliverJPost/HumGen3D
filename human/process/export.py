@@ -25,6 +25,7 @@ def exporter(exporter_func):
         context = kwargs.get("context", bpy.context)
         filepath = _check_extension(filepath)
         human = self._human
+        human.location = (0, 0, 0)
 
         if _bake_argument_enabled(kwargs):
             _bake_textures(human, filepath, context)
