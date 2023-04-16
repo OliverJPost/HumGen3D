@@ -61,7 +61,8 @@ class HG_OT_PROCESS(bpy.types.Operator):
             human = Human.from_existing(rig_obj)
             if pr_sett.output != "replace":
                 human = human.duplicate(context)
-                human.location += Vector((0, 2, 0))
+                if pr_sett.output == "duplicate":
+                    human.location += Vector((0, 2, 0))
                 for obj in human.objects:
                     add_to_collection(context, obj, "Processing Results")
 
