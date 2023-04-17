@@ -92,7 +92,7 @@ class PreviewCollectionContent:
             # Use indirect way so the UI reflects the chosen item
             sett = context.scene.HG3D  # type:ignore[attr-defined]
             sett.update_exception = True
-            setattr(context.scene.HG3D.pcoll, self.pcoll_name, chosen)
+            setattr(context.scene.HG3D.pcoll, self._pcoll_name, chosen)
             sett.update_exception = False
 
     @injected_context
