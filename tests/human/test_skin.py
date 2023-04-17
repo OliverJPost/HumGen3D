@@ -101,7 +101,7 @@ def test_subsurface_scattering(human, context):
     assert_sss(0, human)
 
     human.skin.set_subsurface_scattering(True, context)
-    assert_sss(0.015, human)
+    assert_sss(0.01, human)
 
     human.skin.set_subsurface_scattering(False, context)
     assert_sss(0, human)

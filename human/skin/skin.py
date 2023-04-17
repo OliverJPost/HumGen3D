@@ -179,7 +179,7 @@ class SkinSettings:
             node for node in self.nodes if node.type == "BSDF_PRINCIPLED"
         )
 
-        principled_bsdf.inputs["Subsurface"].default_value = 0.015 if turn_on else 0
+        principled_bsdf.inputs["Subsurface"].default_value = 0.01 if turn_on else 0
 
     @injected_context
     def set_underwear(self, turn_on: bool, context: C = None) -> None:
