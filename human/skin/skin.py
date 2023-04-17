@@ -402,7 +402,7 @@ class TextureSettings(PreviewCollectionContent):
     def _change_peripheral_texture_resolution(self, library: str) -> None:
         # TODO cleanup
         for obj in self._human.children:
-            if obj == self._human.objects.body:
+            if obj in (self._human.objects.body, self._human.objects.lower_teeth, self._human.objects.upper_teeth):
                 continue
             for mat in obj.data.materials:
                 for node in [
@@ -427,7 +427,11 @@ class TextureSettings(PreviewCollectionContent):
 
                     fn, ext = os.path.splitext(os.path.basename(current_path))
                     resolution_tag = (
-                        "4K" if library in ("Default 4K", "Default 8K") else "MEDIUM" if library == "Default 1K" else "LOW"
+                        "4K"
+                        if library in ("Default 4K", "Default 8K")
+                        else "MEDIUM"
+                        if library == "Default 1K"
+                        else "LOW"
                     )
                     corrected_fn = (
                         fn.replace("_4K", "")
@@ -444,6 +448,17 @@ class TextureSettings(PreviewCollectionContent):
                     old_color_mode = current_image.colorspace_settings.name
 
                     new_path = os.path.join(current_dir, new_fn)
+                    if not os.path.isfile(new_path):
+                        res_dir = (
+                            "Default 8K"
+                            if library  == "Default 8K"
+                            else "Default 4K"
+                            if library == "Default 4K"
+                            else "MEDIUM_RES"
+                            if library == "Default 1K"
+                            else "LOW_RES"
+                        )
+                        new_path = os.path.join(current_dir, res_dir, new_fn)
                     if not os.path.isfile(new_path):
                         hg_log("Could not find texture: " + new_path, "ERROR")
                         continue

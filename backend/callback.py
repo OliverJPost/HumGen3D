@@ -136,6 +136,7 @@ def _context_specific_updates(sett, human, ui_phase):
         human.clothing.footwear.refresh_pcoll(context)
     elif ui_phase == "skin":
         human.skin.texture.refresh_pcoll(context)
+        sett.pcoll.texture_category = "Default 4K"
     else:
         with contextlib.suppress(AttributeError, RecursionError):
             getattr(human, ui_phase).refresh_pcoll(context)
