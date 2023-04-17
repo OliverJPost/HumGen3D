@@ -120,7 +120,8 @@ def _draw_tips_bloc(layout, tip_item):
 
     subrow = row.row()
     subrow.alignment = "CENTER"
-    subrow.enabled = False
+    subrow.enabled = tip_item.alert
+    subrow.alert = tip_item.alert
     subrow.label(text=tip_item.title, icon=tip_item.icon_name)
     row.operator(
         "hg3d.unhide_tip" if tip_item.hidden else "hg3d.hide_tip",
@@ -184,6 +185,7 @@ def update_tips_from_context(context, sett, human):
         item.title = tip.title
         item.icon_name = tip.icon
         item.tip_text = tip.text_wrapped
+        item.alert = tip.alert
 
         if tip.title in hidden_tips_list:
             item.hidden = True
@@ -195,6 +197,7 @@ def update_tips_from_context(context, sett, human):
             item.operator_label = operator.text
             item.operator_keyword = operator.parameter_name
             item.operator_argument = operator.parameter_value
+
 
 
 class TIPS_ITEM(bpy.types.PropertyGroup):
@@ -209,6 +212,7 @@ class TIPS_ITEM(bpy.types.PropertyGroup):
     operator_argument: bpy.props.StringProperty(default="")
     operator_icon: bpy.props.StringProperty(default="")
     hidden: bpy.props.BoolProperty(default=False)
+    alert: bpy.props.BoolProperty(default=False)
 
 
 class HG_OT_HIDE_TIP(bpy.types.Operator):
