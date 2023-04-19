@@ -511,6 +511,15 @@ class Human:
         self.objects.rig.name = name
 
     @property
+    def is_trial(self) -> bool:
+        """Whether this human is a trial human.
+
+        Returns:
+            bool: Whether this human is a trial human
+        """
+        return "HG_TRIAL" in self.objects.rig
+
+    @property
     def _active(self) -> str:
         return self.objects.rig["ACTIVE_HUMAN_PRESET"]  # type: ignore[index]
 
