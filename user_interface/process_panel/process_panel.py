@@ -232,6 +232,12 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
     def draw(self, context):
         self.check_enabled(context)
         col = self.layout.column()
+        human = Human.from_existing(context.object)
+        if human.is_trial:
+            col.label(text="Not available in trial version.")
+            col.label(text="Reason: LOD won't work properly")
+            col.label(text="on mesh with holes.")
+            return
 
         lod_sett = context.scene.HG3D.process.lod
 
