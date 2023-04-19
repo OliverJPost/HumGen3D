@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
-from HumGen3D.backend import get_prefs
+from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
@@ -179,7 +179,7 @@ class SkinSettings:
             node for node in self.nodes if node.type == "BSDF_PRINCIPLED"
         )
 
-        principled_bsdf.inputs["Subsurface"].default_value = 0.015 if turn_on else 0
+        principled_bsdf.inputs["Subsurface"].default_value = 0.01 if turn_on else 0
 
     @injected_context
     def set_underwear(self, turn_on: bool, context: C = None) -> None:
@@ -292,7 +292,7 @@ class TextureSettings(PreviewCollectionContent):
                 the `get_options` method.
         """
         diffuse_texture = correct_presetpath(textureset_path)
-        library = "Default 4K"  # FIXME!!!
+        library = textureset_path.split(os.sep)[-2]
 
         if diffuse_texture == "none":
             return
@@ -316,9 +316,7 @@ class TextureSettings(PreviewCollectionContent):
                     pbr_path = os.path.join("textures", gender, library, "PBR")
                     self._add_texture_to_node(node, pbr_path, tx_type)
 
-        if library in ["Default 1K", "Default 512px"]:
-            resolution_folder = "MEDIUM_RES" if library == "Default 1K" else "LOW_RES"
-            self._change_peripheral_texture_resolution(resolution_folder)
+        self._change_peripheral_texture_resolution(library)
 
         self._human.skin.material["texture_category"] = library  # type:ignore[index]
 
@@ -401,9 +399,11 @@ class TextureSettings(PreviewCollectionContent):
             thumbnail.filepath = thumnbail_dest
             thumbnail.save()
 
-    def _change_peripheral_texture_resolution(self, resolution_folder: str) -> None:
+    def _change_peripheral_texture_resolution(self, library: str) -> None:
         # TODO cleanup
         for obj in self._human.children:
+            if obj in (self._human.objects.body, self._human.objects.lower_teeth, self._human.objects.upper_teeth):
+                continue
             for mat in obj.data.materials:
                 for node in [
                     node
@@ -416,6 +416,8 @@ class TextureSettings(PreviewCollectionContent):
                     ):
                         continue
                     current_image = node.image
+                    if not current_image:
+                        continue
                     current_path = current_image.filepath
 
                     if "MEDIUM_RES" in current_path or "LOW_RES" in current_path:
@@ -423,19 +425,43 @@ class TextureSettings(PreviewCollectionContent):
                     else:
                         current_dir = os.path.dirname(current_path)
 
-                    directory = os.path.join(current_dir, resolution_folder)
                     fn, ext = os.path.splitext(os.path.basename(current_path))
-                    resolution_tag = resolution_folder.replace("_RES", "")
+                    resolution_tag = (
+                        "4K"
+                        if library in ("Default 4K", "Default 8K")
+                        else "MEDIUM"
+                        if library == "Default 1K"
+                        else "LOW"
+                    )
                     corrected_fn = (
                         fn.replace("_4K", "")
+                        .replace("_8K", "")
                         .replace("_MEDIUM", "")
                         .replace("_LOW", "")
                         .replace("_2K", "")
                     )
-                    new_fn = corrected_fn + f"_{resolution_tag}" + ext
-                    new_path = os.path.join(directory, new_fn)
+                    if library in ("Default 4K", "Default 8K"):
+                        new_fn = corrected_fn + ext
+                    else:
+                        new_fn = corrected_fn + f"_{resolution_tag}" + ext
 
                     old_color_mode = current_image.colorspace_settings.name
+
+                    new_path = os.path.join(current_dir, new_fn)
+                    if not os.path.isfile(new_path):
+                        res_dir = (
+                            "Default 8K"
+                            if library  == "Default 8K"
+                            else "Default 4K"
+                            if library == "Default 4K"
+                            else "MEDIUM_RES"
+                            if library == "Default 1K"
+                            else "LOW_RES"
+                        )
+                        new_path = os.path.join(current_dir, res_dir, new_fn)
+                    if not os.path.isfile(new_path):
+                        hg_log("Could not find texture: " + new_path, "ERROR")
+                        continue
                     node.image = bpy.data.images.load(new_path, check_existing=True)
                     node.image.colorspace_settings.name = old_color_mode
 

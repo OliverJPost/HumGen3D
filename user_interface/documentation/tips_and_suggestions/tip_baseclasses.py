@@ -41,6 +41,7 @@ class Tip:
         text: str = "",
         icon: str = "HELP",
         operator: Optional[Operator] = None,
+        important: bool = False,
     ) -> None:
         self.title = title
         # Remove newlines except when multiple subsequent
@@ -48,6 +49,7 @@ class Tip:
         self.text = text
         self.icon = icon
         self.operator = operator
+        self.alert = important
 
     @property
     def text_wrapped(self) -> str:
