@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Literal
 
 import bmesh
 import bpy
+from human.keys.keys import apply_shapekeys
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
@@ -90,6 +91,7 @@ class LodSettings:
 
         for obj in clothing_objs:
             if decimate_ratio < 1.0:
+                apply_shapekeys(obj)
                 dec_mod = obj.modifiers.new("Decimate", "DECIMATE")
                 dec_mod.ratio = decimate_ratio
                 with context_override(context, obj, [obj]):
