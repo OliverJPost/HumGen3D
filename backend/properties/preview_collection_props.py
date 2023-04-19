@@ -44,7 +44,7 @@ def get_folders(attr):
             return Human._get_categories(context.scene.HG3D.gender)
         human = Human.from_existing(context.object, strict_check=False)
         try:
-            return retreiver(human)._get_categories()
+            return retreiver(human)._get_categories(include_all=attr != "skin.texture")
         # Catch for weird behaviour where pose_category refreshes early
         except (AttributeError, HumGenException):
             return [("ERROR", "ERROR", "", i) for i in range(99)]

@@ -41,6 +41,21 @@ does not show correctly in the material preview.
 """,
 )
 
+A_LOT_OF_EXPRESSIONS_TIP = Tip(
+    title="Many Expressions",
+    text="""It looks like you have a lot
+(more than 10) expressions loaded on
+this human. Consider removing some of
+them to improve performance.
+
+You can remove expressions by clicking
+the trash icon next to the expression
+name in the strength dropdown.
+""",
+    important=True,
+)
+
+
 
 def get_main_ui_tips_from_context(context, sett, human):
     active_tab = sett.ui.phase
@@ -55,3 +70,6 @@ def get_main_ui_tips_from_context(context, sett, human):
     ):
 
         yield HAIR_RENDER_TIP
+
+    if active_tab == ActiveSection.EXPRESSION and len(human.expression.keys) > 10:
+        yield A_LOT_OF_EXPRESSIONS_TIP
