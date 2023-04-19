@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Literal
 
 import bmesh
 import bpy
-from human.keys.keys import apply_shapekeys
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
+from HumGen3D.human.keys.keys import apply_shapekeys
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
