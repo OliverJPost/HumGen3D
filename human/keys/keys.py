@@ -559,7 +559,8 @@ class KeySettings:
             List[ShapeKeyItem]: List of all shapekeys
         """
         shapekeys = []
-        # TODO Skip Basis?
+        if not self._human.objects.body.shape_keys:
+            return shapekeys
         for sk in self._human.objects.body.data.shape_keys.key_blocks:
             shapekeys.append(ShapeKeyItem(sk.name, self._human))
         return shapekeys
