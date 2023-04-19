@@ -167,7 +167,7 @@ class BaseHair:
             if ps.vertex_group_density
         ]
         cap_obj = None
-        if density_vertex_groups or self._haircap_type != "Scalp":
+        if hc and (density_vertex_groups or self._haircap_type != "Scalp"):
             cap_obj = hc.add_haircap(
                 self._human, self._haircap_type, density_vertex_groups, context
             )
