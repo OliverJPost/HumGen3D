@@ -83,7 +83,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 )
                 human.objects.rig["hg_baked"] = True
 
-            if pr_sett.lod_enabled:
+            if pr_sett.lod_enabled and not human.is_trial:
                 human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
                 human.process.lod.set_clothing_lod(
                     pr_sett.lod.decimate_ratio,
