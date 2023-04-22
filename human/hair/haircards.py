@@ -203,10 +203,10 @@ class HairCollection:
             for j in range(hair_co_len - 1):
                 corr = i * hair_co_len * 2
                 faces[i, j, :] = (
-                    corr + j,
-                    corr + j + 1,
-                    corr + hair_co_len * 2 - j - 2,
                     corr + hair_co_len * 2 - j - 1,
+                    corr + hair_co_len * 2 - j - 2,
+                    corr + j + 1,
+                    corr + j,
                 )
         faces_parallel = faces.copy()
         return faces, faces_parallel
