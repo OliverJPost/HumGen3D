@@ -1,6 +1,5 @@
 # flake8: noqa
 
-import bgl  # type:ignore
 import gpu  # type:ignore
 from gpu_extras.batch import batch_for_shader  # type:ignore
 
@@ -46,9 +45,9 @@ class BL_UI_Widget:
         self.shader.bind()
         self.shader.uniform_float("color", self._bg_color)
 
-        bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
         self.batch_panel.draw(self.shader)
-        bgl.glDisable(bgl.GL_BLEND)
+        gpu.state.blend_set("NONE")
 
     def init(self, context):
         self.context = context
