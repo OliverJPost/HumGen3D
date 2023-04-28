@@ -2,8 +2,9 @@
 
 import blf  # type: ignore # noqa
 import bpy  # type: ignore
-
+import gpu
 from .bl_ui_widget import *
+from gpu_extras.batch import batch_for_shader
 
 
 class BL_UI_Image(BL_UI_Widget):
@@ -23,7 +24,7 @@ class BL_UI_Image(BL_UI_Widget):
     def set_image(self, rel_filepath):
         try:
             self.__image = bpy.data.images.load(rel_filepath, check_existing=True)
-            self.__image.gl_load()
+            self.texture = gpu.texture.from_image(self.__image)
         except:
             pass
 
@@ -58,22 +59,19 @@ class BL_UI_Image(BL_UI_Widget):
 
         self.shader.bind()
 
-        bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
 
         self.batch_panel.draw(self.shader)
 
         self.draw_image()
 
-        bgl.glDisable(bgl.GL_BLEND)
+        gpu.state.blend_set("NONE")
 
     def draw_image(self):
         if self.__image is not None:
             try:
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.__image.bindcode)
-
                 self.shader_img.bind()
-                self.shader_img.uniform_int("image", 0)
+                self.shader_img.uniform_sampler("image", self.texture)
                 self.batch_img.draw(self.shader_img)
                 return True
             except:

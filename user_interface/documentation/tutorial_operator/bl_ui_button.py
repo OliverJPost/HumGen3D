@@ -2,6 +2,7 @@
 
 import blf  # type: ignore
 import bpy  # type: ignore
+import gpu
 
 from .bl_ui_widget import *
 
@@ -109,13 +110,13 @@ class BL_UI_Button(BL_UI_Widget):
 
         self.set_colors()
 
-        bgl.glEnable(bgl.GL_BLEND)
+        gpu.state.blend_set("ALPHA")
 
         self.batch_panel.draw(self.shader)
 
         self.draw_image()
 
-        bgl.glDisable(bgl.GL_BLEND)
+        gpu.state.blend_set("NONE")
 
         # Draw text
         self.draw_text(area_height)
