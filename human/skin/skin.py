@@ -401,7 +401,11 @@ class TextureSettings(PreviewCollectionContent):
     def _change_peripheral_texture_resolution(self, library: str) -> None:
         # TODO cleanup
         for obj in self._human.children:
-            if obj in (self._human.objects.body, self._human.objects.lower_teeth, self._human.objects.upper_teeth):
+            if obj in (
+                self._human.objects.body,
+                self._human.objects.lower_teeth,
+                self._human.objects.upper_teeth,
+            ):
                 continue
             for mat in obj.data.materials:
                 for node in [
