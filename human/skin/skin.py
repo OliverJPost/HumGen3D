@@ -450,7 +450,7 @@ class TextureSettings(PreviewCollectionContent):
                     if not os.path.isfile(new_path):
                         res_dir = (
                             "Default 8K"
-                            if library  == "Default 8K"
+                            if library == "Default 8K"
                             else "Default 4K"
                             if library == "Default 4K"
                             else "MEDIUM_RES"
