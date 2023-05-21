@@ -137,8 +137,10 @@ class BaseHair:
         """
         hair_objs: list[bpy.types.Object] = []
 
-        if not self.modifiers:
-            raise HumGenException("No hair to convert")
+        if not [m for m in self.modifiers if m.show_viewport]:
+            raise HumGenException(
+                "No hair to convert. The particle systems might be set to hidden."
+            )
 
         for mod in self.modifiers:
             if not mod.show_viewport:
@@ -152,7 +154,7 @@ class BaseHair:
 
             hair_obj = context.object  # TODO this is bound to fail
             hc = HairCollection(hair_obj, self._human)
-            if self._haircap_type == "Scalp":
+            if self._haircap_type == "Scalp" and not quality == "haircap_only":
                 objs = hc.create_mesh(quality)
                 hair_objs.extend(objs)
                 for obj in objs:
