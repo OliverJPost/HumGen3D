@@ -25,7 +25,6 @@ from ...common.decorators import injected_context
 from ...common.os import correct_presetpath
 
 if TYPE_CHECKING:
-
     from ..human import Human
 
 
@@ -292,7 +291,7 @@ class TextureSettings(PreviewCollectionContent):
                 the `get_options` method.
         """
         diffuse_texture = correct_presetpath(textureset_path)
-        library = textureset_path.split(os.sep)[-2]
+        library = diffuse_texture.split(os.sep)[-2]
 
         if diffuse_texture == "none":
             return
