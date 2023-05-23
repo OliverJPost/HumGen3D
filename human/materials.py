@@ -67,6 +67,35 @@ class MaterialSettings:
         """
         return self._human.objects.eyes.data.materials[1]
 
+    @property
+    def haircards(self) -> list[bpy.types.Material]:
+        mats = []
+        for obj in self._human.objects.haircards:
+            mats.append(obj.data.materials[0])
+
+        return mats
+
+    @property
+    def haircap(self) -> list[bpy.types.Material]:
+        mats = []
+        for obj in self._human.objects.haircards:
+            if len(obj.data.materials) > 1:
+                mats.append(obj.data.materials[1])
+
+        return mats
+
+    @property
+    def eye_hair(self) -> bpy.types.Material:
+        return self._human.objects.body.data.materials[1]
+
+    @property
+    def head_hair(self) -> bpy.types.Material:
+        return self._human.objects.body.data.materials[2]
+
+    @property
+    def face_hair(self) -> bpy.types.Material:
+        return self._human.objects.body.data.materials[3]
+
     def __iter__(self):
         """Iterate over all materials of human."""
         yield self.body
