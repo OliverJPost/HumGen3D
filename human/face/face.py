@@ -4,6 +4,7 @@
 
 from typing import TYPE_CHECKING, List, Union
 
+import bpy
 import numpy as np
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
@@ -48,20 +49,38 @@ class FaceSettings(PropCollection):
 
     @injected_context
     def randomize(
-        self, subcategory: str = "all", use_bell_curve: bool = False, context: C = None
+        self,
+        subcategory: str = "all",
+        use_bell_curve: bool = False,
+        use_locks: bool = False,
+        context: C = None,
     ) -> None:
         """Randomize facial proportions.
 
         Args:
             subcategory (str): Subcategory of facial proportions to randomize. Defaults
                 to "all".
+            use_locks (bool): Whether to use locks to prevent randomization of certain
+                facial proportions. Defaults to False. Locks are in UI.
             use_bell_curve (bool): Whether to use a bell curve for randomization.
             context (C): Blender context. bpy.context if not provided.
         """
+        locks = bpy.context.scene.HG3D.locks
+
         if subcategory.lower() == "all":
-            keys = [key for key in self.keys if key.subcategory != "special"]
+            keys = [
+                key
+                for key in self.keys
+                if key.subcategory != "special"
+                and not getattr(locks, key.subcategory, False)
+            ]
         else:
-            keys = [key for key in self.keys if key.subcategory == subcategory]
+            keys = [
+                key
+                for key in self.keys
+                if key.subcategory == subcategory
+                and not getattr(locks, key.subcategory, False)
+            ]
         all_v = 0.0
         for key in keys:
             if "distance" in key.name.lower():

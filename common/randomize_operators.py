@@ -79,7 +79,13 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
             # facial subcategories follow the pattern face_{category}
             ff_subcateg = random_type[5:]
             # where face_all does all facial features
-            human.face.randomize(ff_subcateg, use_bell_curve=True)
+            human.face.randomize(ff_subcateg, use_bell_curve=True, use_locks=True)
+        elif random_type.startswith("body_"):
+            subcategory = random_type[5:]
+            human.body.randomize(category=subcategory, use_locks=True)
         else:
-            getattr(human, random_type).randomize()
+            try:
+                getattr(human, random_type).randomize(use_locks=True)
+            except TypeError:
+                getattr(human, random_type).randomize()
         return {"FINISHED"}

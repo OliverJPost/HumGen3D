@@ -14,7 +14,6 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
 
     @subpanel_draw
     def draw(self, context):
-
         col = self.layout.column()
 
         if self.human.process.is_lod:
@@ -124,7 +123,20 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             emboss=False,
         )
         if is_open_propname not in ("presets", "special"):
-            row.operator(
+            icon = (
+                "LOCKED" if getattr(sett.locks, is_open_propname, None) else "UNLOCKED"
+            )
+            subrow = row.row(align=True)
+            subrow.scale_x = 1.05
+            subrow.prop(
+                sett.locks,
+                is_open_propname,
+                text="",
+                icon=icon,
+                toggle=True,
+                emboss=False,
+            )
+            subrow.operator(
                 "hg3d.random_value", text="", icon="FILE_REFRESH", emboss=False
             ).random_type = "face_{}".format(is_open_propname)
         else:
