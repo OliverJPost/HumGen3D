@@ -142,6 +142,12 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "custom",
                 "special",
                 "presets",
+                "Special",
+                "Arms",
+                "Legs",
+                "Torso",
+                "Head",
+                "Muscles",
             ]
         )
     )

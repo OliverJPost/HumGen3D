@@ -20,7 +20,6 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
 
     @subpanel_draw
     def draw(self, context):
-
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
 
@@ -51,13 +50,41 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
                 any_without_category = True
                 continue
 
-            is_open, box = self.draw_sub_spoiler(
-                col.column(align=True),
+            box = col.column(align=True).box()
+            row = box.row(align=True)
+            row.prop(
                 sett.ui,
                 subcategory,
-                subcategory.capitalize(),
+                icon="TRIA_DOWN" if getattr(sett.ui, subcategory) else "TRIA_RIGHT",
+                text=subcategory.capitalize(),
+                emboss=False,
+                toggle=True,
             )
-            if not is_open:
+
+            if (
+                subcategory not in ["main", "Special", "Other"]
+                and not any_without_category
+            ):
+
+                icon = "LOCKED" if getattr(sett.locks, subcategory) else "UNLOCKED"
+                row.prop(
+                    sett.locks,
+                    subcategory,
+                    icon=icon,
+                    toggle=True,
+                    emboss=False,
+                    text="",
+                )
+                row.operator(
+                    "hg3d.random_value", icon="FILE_REFRESH", text="", emboss=False
+                ).random_type = ("body_" + subcategory)
+            else:
+                row.label(text="", icon="BLANK1")
+                row.label(text="", icon="BLANK1")
+
+            spoiler_open = getattr(sett.ui, subcategory)
+
+            if not spoiler_open:
                 continue
             box_aligned = box.column(align=True)
             box_aligned.scale_y = 1.3

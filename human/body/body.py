@@ -4,12 +4,16 @@
 import random
 from typing import TYPE_CHECKING, Union, cast
 
+import bpy
+
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 
 if TYPE_CHECKING:
     from HumGen3D import Human
     from HumGen3D.human.keys.keys import LiveKeyItem, ShapeKeyItem
+
+ALL = "ALL"
 
 
 class BodySettings:
@@ -52,16 +56,25 @@ class BodySettings:
         )
 
     @injected_context
-    def randomize(self, context: C = None) -> None:
+    def randomize(
+        self, category: str = ALL, use_locks: bool = False, context: C = None
+    ) -> None:
         """Randomizes the values of the body keys of this human.
 
         Uses a random value retreived from a normal distrubition with mean 0 and sigma
         of 0.5.
 
         Args:
+            category (str, optional): Category of keys to randomize. Defaults to ALL.
+            use_locks (bool, optional): Whether to use locks shown in UI. Defaults to False.
             context (C): Blender context
         """
+        locks = bpy.context.scene.HG3D.locks
+
         for key in self.keys:
+            if category != ALL and key.subcategory != category:
+                continue
+
             if key.subcategory.lower() == "main":
                 random_value = random.uniform(0, 1.0)
                 if hasattr(key, "set_without_update"):
@@ -70,6 +83,10 @@ class BodySettings:
                     key.value = random_value
                 continue
             if key.subcategory.lower() == "special" or "length" in key.name.lower():
+                continue
+
+            # Skip if category is locked
+            if getattr(locks, key.subcategory, False) and use_locks:
                 continue
 
             random_value = random.normalvariate(0, 0.1)

@@ -18,6 +18,7 @@ from bpy.types import Object, ShapeKey  # type:ignore
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 from HumGen3D.user_interface.panel_functions import prettify
+from ...backend.properties.randomize_locks import RandomizeLockProps, get_prop
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -111,6 +112,9 @@ def update_livekey_collection() -> None:
             category,
             bpy.props.BoolProperty(default=False),  # type:ignore[func-returns-value]
         )
+
+        if not hasattr(RandomizeLockProps, category):
+            setattr(RandomizeLockProps, category, get_prop())
 
 
 def transfer_shapekey(sk: bpy.types.ShapeKey, to_obj: bpy.types.Object) -> None:

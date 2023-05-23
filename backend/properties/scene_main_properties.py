@@ -26,6 +26,7 @@ from .custom_content_properties import CustomContentProps
 from .preview_collection_props import PreviewCollectionProps
 from .process_props import ProcessProps
 from .ui_properties import UserInterfaceProps
+from .randomize_locks import RandomizeLockProps
 
 
 def hair_shader_update(self, context):
@@ -47,6 +48,7 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
     ui: PointerProperty(type=UserInterfaceProps)
     custom_content: PointerProperty(type=CustomContentProps)
     batch: PointerProperty(type=BatchProps)
+    locks: PointerProperty(type=RandomizeLockProps)
 
     process: PointerProperty(type=ProcessProps)
 
