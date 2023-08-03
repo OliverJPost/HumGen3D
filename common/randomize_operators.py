@@ -30,11 +30,13 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
         if pcoll_name in (
             "pose",
             "expression",
-            "outfit",
-            "footwear",
             "hair",
         ):
             getattr(human, pcoll_name).set_random(update_ui=True)
+        elif pcoll_name in ("outfit", "footwear"):
+            getattr(human.clothing, pcoll_name).set_random(
+                update_ui=True, context=context
+            )
         elif pcoll_name == "humans":
             current = sett.pcoll.humans
             options = Human.get_preset_options(sett.gender, context=context)
