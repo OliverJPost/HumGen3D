@@ -1,5 +1,5 @@
 # flake8: noqa
-
+import math
 import os
 from pathlib import Path
 
@@ -91,6 +91,42 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
             preview_collections["humans"].refresh(context, None)
             check_update()
 
+        # Get the dimensions of the 3D viewport
+        viewport_width = context.area.width
+        viewport_height = context.area.height
+
+        # Calculate the scale factor based on the minimum viewport dimension
+        scale_factor = min(viewport_width / self.image_width, viewport_height / self.image_height) * 0.9  # 10% smaller
+
+        # Ensure scale factor is at least 0.5 to avoid rendering too small
+        if scale_factor < 0.5:
+            scale_factor = 0.5
+
+        # Scale image dimensions
+        scaled_image_width = math.floor(self.image_width * scale_factor)
+        scaled_image_height = math.floor(self.image_height * scale_factor)
+
+        # Update image size and position
+        self.image1.set_image_size((scaled_image_width, scaled_image_height))
+        self.image1.set_image_position((0, 0))
+
+        # Scale button dimensions
+        button_width = math.floor(self.image_width / 3 * scale_factor)
+        button_height = math.floor(30 * scale_factor)
+
+        # Update button sizes and positions
+        self.button1.width = button_width
+        self.button1.height = button_height
+        self.button1.set_location(0, scaled_image_height)
+
+        self.button2.width = button_width
+        self.button2.height = button_height
+        self.button2.set_location(button_width, scaled_image_height)
+
+        self.button3.width = button_width
+        self.button3.height = button_height
+        self.button3.set_location(2 * button_width, scaled_image_height)
+
         widgets_panel = [self.button1, self.button2, self.button3, self.image1]
         widgets = [self.panel]
 
@@ -100,11 +136,15 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
 
         self.panel.add_widgets(widgets_panel)
 
-        self.panel.set_location(
-            (context.area.width / 2.0) - (self.image_width / 2),
-            (context.area.height / 2.0) - (self.image_height / 2),
-        )
+        # Update panel dimensions
+        self.panel.width = scaled_image_width
+        self.panel.height = scaled_image_height + button_height
 
+        # Center the panel within the viewport
+        self.panel.set_location(
+            (viewport_width / 2.0) - (scaled_image_width / 2),
+            (viewport_height / 2.0) - ((scaled_image_height + button_height) / 2),
+        )
     def on_chb_visibility_state_change(self, checkbox, state):
         active_obj = bpy.context.view_layer.objects.active
         if active_obj is not None:
