@@ -55,10 +55,40 @@ name in the strength dropdown.
     important=True,
 )
 
+TRIAL_HUMAN_TIP = Tip(
+    title="Trial Human",
+    text="""This human was created using the trial 
+version of HumGen. The functionality of the
+trial version is almost identical to the full
+version, but the trial models and textures
+have watermarks/holes.
+
+NOTE: You cannot upgrade a trial human to a
+full version human! You will have to create
+a new human from scratch after purchasing.
+
+Also, note that the trial version only permits
+trial use. Both personal and commercial use
+are not permitted.
+
+Want to purchase a full version? Click the
+link below to go to the BlenderMarket.
+""",
+    important=True,
+    operator =
+        URLOperator(
+            url="https://blendermarket.com/products/humgen3d",
+            text="Shop page",
+        )
+
+)
 
 
 def get_main_ui_tips_from_context(context, sett, human):
     active_tab = sett.ui.phase
+
+    if human.is_trial:
+        yield TRIAL_HUMAN_TIP
 
     if active_tab == ActiveSection.CLOTHING and human.clothing.outfit.objects:
         yield CLOTHING_MATERIAL_MENU_TIP
