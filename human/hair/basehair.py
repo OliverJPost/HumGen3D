@@ -137,10 +137,8 @@ class BaseHair:
         """
         hair_objs: list[bpy.types.Object] = []
 
-        if not [m for m in self.modifiers if m.show_viewport]:
-            raise HumGenException(
-                "No hair to convert. The particle systems might be set to hidden."
-            )
+        if not self.modifiers:
+            raise HumGenException("No hair to convert")
 
         for mod in self.modifiers:
             if not mod.show_viewport:
