@@ -22,3 +22,9 @@ class RandomizeLockProps(bpy.types.PropertyGroup):
     cheeks: get_prop()
     chin: get_prop()
     custom: get_prop()
+
+    Torso: get_prop()
+    Arms: get_prop()
+    Legs: get_prop()
+    Muscles: get_prop()
+    Head: get_prop()
