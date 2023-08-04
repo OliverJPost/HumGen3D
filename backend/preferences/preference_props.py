@@ -18,7 +18,6 @@ from ..content.content_packs import cpacks_refresh
 
 
 class HGPreferenceBackend:
-
     auto_check_update: BoolProperty(
         name="Auto-check for Update",
         description="If enabled, auto-check for updates using an interval",
@@ -68,7 +67,7 @@ class HGPreferenceBackend:
         else:
             # Return hard coded path if developing from my computer, prevents having to remove path for every release.
             if getpass.getuser() == "ole":
-                return "/Users/ole/Documents/HG3D/Human Generator/"
+                return "/Users/ole/Documents/Work/HG3D/Human Generator/"
             else:
                 return ""
 
