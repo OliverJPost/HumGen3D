@@ -89,7 +89,8 @@ class BodySettings:
             if getattr(locks, key.subcategory, False) and use_locks:
                 continue
 
-            random_value = random.normalvariate(0, 0.1)
+            std_deviation = 0.1 if category == ALL else 0.5
+            random_value = random.normalvariate(0, std_deviation)
             if hasattr(key, "set_without_update"):
                 key.set_without_update(random_value)
             else:
