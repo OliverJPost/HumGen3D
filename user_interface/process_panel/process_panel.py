@@ -46,7 +46,11 @@ class ProcessPanel(HGPanel):
         self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
     def _draw_documentation_button(self):
-        self.layout.operator("wm.url_open", text="Documentation", icon="HELP",).url = (
+        self.layout.operator(
+            "wm.url_open",
+            text="Documentation",
+            icon="HELP",
+        ).url = (
             "https://help.humgen3d.com/" + self.help_url
         )
 
