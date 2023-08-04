@@ -84,10 +84,10 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
             human.face.randomize(ff_subcateg, use_bell_curve=True, use_locks=True)
         elif random_type.startswith("body_"):
             subcategory = random_type[5:]
-            human.body.randomize(category=subcategory, use_locks=True)
+            human.body.randomize(category=subcategory, use_locks=True, context=context)
         else:
             try:
-                getattr(human, random_type).randomize(use_locks=True)
+                getattr(human, random_type).randomize(use_locks=True, context=context)
             except TypeError:
                 getattr(human, random_type).randomize()
         return {"FINISHED"}
