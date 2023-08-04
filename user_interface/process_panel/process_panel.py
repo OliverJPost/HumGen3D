@@ -252,8 +252,6 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
         col.prop(lod_sett, "remove_clothing_subdiv", text="Remove clothing subdiv")
         col.prop(lod_sett, "remove_clothing_solidify", text="Remove clothing solidify")
 
-        col.label(text="Texture resolution:")
-
 
 class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_HAIRCARDS"
