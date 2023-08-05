@@ -290,6 +290,10 @@ class BakeSettings:
             mat = baketexture.bake_object.material_slots[
                 baketexture.material_slot  # type:ignore[index]
             ].material
+            if "alpha" in baketexture.texture_type.lower():
+                mat.blend_method = "BLEND"
+                mat.shadow_method = "CLIP"
+
             image = bpy.data.images.get(baketexture.output_image_name)
             self._add_image_node(image, baketexture.texture_type, mat)  # type:ignore
 
