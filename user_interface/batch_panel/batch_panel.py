@@ -351,5 +351,7 @@ class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
+        self.layout.operator(
+            "wm.url_open", text="Batch Guide", icon="URL", emboss=False
+        ).url = "https://help.humgen3d.com/batch/overview"
         draw_tips_suggestions_ui(layout, context)

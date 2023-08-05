@@ -72,13 +72,16 @@ class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):
         self.layout.label(icon="COMMUNITY")
 
     def draw(self, context):
-        subcol = self.layout.column()
-        subcol.scale_y = 1.5
-        subcol.operator(
+        row = self.layout.row(align=True)
+        row.scale_y = 1.5
+        row.operator(
             "hg3d.add_obj_to_outfit",
             text="Add object as clothing",
             icon_value=get_hg_icon("clothing"),
         )
+        row.operator(
+            "wm.url_open", text="", icon="HELP"
+        ).url = f"https://help.humgen3d.com/customclothing"
 
 
 class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
@@ -140,6 +143,10 @@ class HG_PT_MANAGE_CONTENT(HGPanel, bpy.types.Panel):
         col.operator(
             "hg3d.create_cpack", text="Create new pack"
         ).show_name_dialog = True
+
+        col.operator(
+            "wm.url_open", text="Content Pack Guide", icon="HELP", emboss=False
+        ).url = f"https://help.humgen3d.com/custompack"
 
 
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):
