@@ -147,7 +147,7 @@ class BaseHair:
 
             ps = mod.particle_system
 
-            set_children_percent(ps.settings.rendered_child_count // 10)
+            set_children_percent(ps.settings, ps.settings.rendered_child_count // 10)
             body_obj = self._human.objects.body
             with context_override(context, body_obj, [body_obj]):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
