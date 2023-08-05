@@ -359,7 +359,7 @@ class BakeSettings:
                     bake_list.append(
                         BakeTexture(
                             self._human.name,
-                            "hair" + obj.name,
+                            "hair2" + obj.name,
                             obj,  # type:ignore[arg-type]
                             1,
                             tex_type,
