@@ -12,6 +12,7 @@ from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.os import correct_presetpath
 from HumGen3D.common.type_aliases import C  # type:ignore
+from .compatibility import set_children_percent, get_children_percent
 
 from ...backend import hg_log
 
@@ -77,7 +78,7 @@ class HairSettings:
         """
         ishidden = True
         for ps in self._human.hair.particle_systems:
-            if ps.settings.child_nbr > 1:
+            if get_children_percent(ps.settings) > 1:
                 ishidden = False
 
         return ishidden
@@ -135,10 +136,10 @@ class HairSettings:
         """
         for ps in self._human.hair.particle_systems:
             if hide:
-                ps.settings.child_nbr = 1
+                set_children_percent(ps.settings, 1)
             else:
                 render_children = ps.settings.rendered_child_count
-                ps.settings.child_nbr = render_children
+                set_children_percent(ps.settings, render_children)
 
     def remove_system_by_name(self, name: str) -> None:
         """Remove a certain particle system from the human by its name.
@@ -187,9 +188,11 @@ class HairSettings:
             ps.render_step = ps.display_step = self._get_steps_amount(
                 hair_quality, max_steps
             )
-            ps.rendered_child_count = ps.child_nbr = self._get_child_amount(
+            child_amount = self._get_child_amount(
                 hair_quality, max_children
             )
+            ps.rendered_child_count = child_amount
+            set_children_percent(ps, child_amount)
             ps.root_radius, ps.tip_radius = self._get_root_and_tip(
                 hair_quality, max_root, max_tip
             )
