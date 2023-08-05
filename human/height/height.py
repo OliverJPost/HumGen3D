@@ -234,8 +234,8 @@ class HeightSettings:
         ).bone
         right_head_co = right_eyeball_bone.tail_local
 
-        reference_left = centroid(eye_verts_left) + Vector((0.001, -0.0175, 0.0))
-        reference_right = centroid(eye_verts_right) + Vector((-0.001, -0.0175, 0.0))
+        reference_left = centroid(eye_verts_left) + Vector((0.0008, -0.0173, 0.0))
+        reference_right = centroid(eye_verts_right) + Vector((-0.0008, -0.0173, 0.0))
 
         transformation_left = np.array(left_head_co - reference_left)
         transformation_right = np.array(right_head_co - reference_right)
