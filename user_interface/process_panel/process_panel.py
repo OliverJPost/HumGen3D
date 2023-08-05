@@ -173,11 +173,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             return True
 
         if "hg_baked" in human.objects.rig:
-            if context.scene.HG3D.batch_idx:
-                layout.label(text="Baking in progress")
-            else:
-                layout.label(text="Already baked")
-
+            layout.label(text="Already baked")
             return True
 
         return False
