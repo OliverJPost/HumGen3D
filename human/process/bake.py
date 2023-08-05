@@ -45,7 +45,7 @@ class BakeTexture:
 
     @property
     def output_image_name(self) -> str:
-        return f"{self.human_name}_{self.texture_name}_{self.texture_type}_{self.texture_type.lower()}"  # noqa
+        return f"{self.human_name}_{self.texture_name}_{self.texture_type.lower()}"  # noqa
 
     @property
     def material(self) -> Material:
