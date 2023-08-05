@@ -534,12 +534,19 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
                 self._set_particle_settings(json_systems, mod, ps_name)  # type:ignore
                 break
 
-        # FIXME uses old override method
-        override = context.copy()  # type:ignore[func-returns-value]
-        override["particle_system"] = hair_obj.particle_systems[ps_name]  # type:ignore
-        bpy.ops.particle.copy_particle_systems(
-            override, remove_target_particles=False, use_active=True
-        )
+        if bpy.app.version >= (3, 3, 0):
+            with context.temp_override(
+                particle_system = hair_obj.particle_systems[ps_name]  # type:ignore
+            ):
+                bpy.ops.particle.copy_particle_systems(
+                    remove_target_particles=False, use_active=True
+                )
+        else:
+            override = context.copy()
+            override["particle_system"] = hair_obj.particle_systems[ps_name]  # type:ignore
+            bpy.ops.particle.copy_particle_systems(
+                override, remove_target_particles=False, use_active=True
+            )
 
     def _set_particle_settings(
         self,
