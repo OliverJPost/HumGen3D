@@ -378,6 +378,8 @@ class TextureSettings(PreviewCollectionContent):
             raise NotImplementedError("Can only save png and tiff textures.")
 
         categ_folder = f"{category} 4K"
+        if not os.path.exists(os.path.join(texture_folder, categ_folder)):
+            os.makedirs(os.path.join(texture_folder, categ_folder))
         shutil.copy(
             filepath, os.path.join(texture_folder, categ_folder, save_name + ext)
         )
@@ -387,6 +389,8 @@ class TextureSettings(PreviewCollectionContent):
         for res_name, res in (("1K", 1024), ("512px", 512)):
             new_image = image.resize((res, res))
             categ_folder = f"{category} {res_name}"
+            if not os.path.exists(os.path.join(texture_folder, categ_folder)):
+                os.makedirs(os.path.join(texture_folder, categ_folder))
             new_image.save(os.path.join(texture_folder, categ_folder, save_name + ext))
             self.save_thumb(save_name, thumbnail, texture_folder, categ_folder)
 
