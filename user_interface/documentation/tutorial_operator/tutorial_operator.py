@@ -96,7 +96,7 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
         viewport_height = context.area.height
 
         # Calculate the scale factor based on the minimum viewport dimension
-        scale_factor = min(viewport_width / self.image_width, viewport_height / self.image_height) * 0.9  # 10% smaller
+        scale_factor = min(viewport_width / self.image_width, viewport_height / self.image_height) * 0.6  # 20% smaller
 
         # Ensure scale factor is at least 0.5 to avoid rendering too small
         if scale_factor < 0.5:
