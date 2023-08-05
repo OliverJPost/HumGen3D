@@ -117,14 +117,17 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
         # Update button sizes and positions
         self.button1.width = button_width
         self.button1.height = button_height
+        self.button1.init(context)
         self.button1.set_location(0, scaled_image_height)
 
         self.button2.width = button_width
         self.button2.height = button_height
+        self.button2.init(context)
         self.button2.set_location(button_width, scaled_image_height)
 
         self.button3.width = button_width
         self.button3.height = button_height
+        self.button3.init(context)
         self.button3.set_location(2 * button_width, scaled_image_height)
 
         widgets_panel = [self.button1, self.button2, self.button3, self.image1]
