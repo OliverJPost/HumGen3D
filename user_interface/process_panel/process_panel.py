@@ -154,7 +154,8 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
 
         row = col.row(align=True)
-        row.enabled = context.scene.HG3D.process.haircards_enabled
+        human = Human.from_existing(context.object)
+        row.enabled = context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
         row.prop(bake_sett, "res_haircards", text="Haircards")
 
     def _draw_baking_warning_labels(self, context, layout) -> bool:
