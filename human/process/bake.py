@@ -132,6 +132,8 @@ class BakeSettings:
                 img_node.outputs[0], principled.inputs[input_type]  # type:ignore
             )
 
+        image.reload()
+
     @staticmethod
     def _disable_solidify_if_enabled(obj: bpy.types.Object) -> bool:
         return_value = False
