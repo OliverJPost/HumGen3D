@@ -48,6 +48,7 @@ def save_hair(  # noqa CCR001
     hair_obj = human.objects.body.copy()
     hair_obj.data = hair_obj.data.copy()
     hair_obj.name = "HG_Body"
+
     context.collection.objects.link(hair_obj)
 
     context.view_layer.objects.active = hair_obj
@@ -57,6 +58,7 @@ def save_hair(  # noqa CCR001
     keep_vgs = _find_vgs_used_by_hair(hair_obj)
     for vg in [vg for vg in hair_obj.vertex_groups if vg.name not in keep_vgs]:
         hair_obj.vertex_groups.remove(vg)
+    hair_obj.show_instancer_for_viewport = False
 
     def create_for_gender(gender: GenderStr) -> Optional[str]:
         if hair_type == "face_hair" and gender == "female":
