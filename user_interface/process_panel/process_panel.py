@@ -126,9 +126,11 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     bl_label = "Bake Textures"
     icon_name = "RENDERLAYERS"
     enabled_propname = "baking_enabled"
+    help_url = "baking"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         layout = self.layout
         layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
@@ -186,7 +188,7 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_label = "Apply Modifiers"
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
-    help_url = "process/modapply"
+    help_url = "modapply"
 
     def draw(self, context):
         self.check_enabled(context)
@@ -232,9 +234,11 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
     bl_label = "Levels of Detail"
     icon_name = "NORMALS_VERTEX"
     enabled_propname = "lod_enabled"
+    help_url = "lod"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         col = self.layout.column()
         human = Human.from_existing(context.object)
         if human.is_trial:
@@ -262,9 +266,11 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     bl_label = "Haircards"
     icon_name = "hair"
     enabled_propname = "haircards_enabled"
+    help_url = "haircards"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         col = self.layout.column()
         col.scale_y = 1.5
         hairc_sett = context.scene.HG3D.process.haircards
@@ -290,9 +296,11 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
     bl_label = "Bone Renaming"
     icon_name = "MOD_ARMATURE"
     enabled_propname = "rig_renaming_enabled"
+    help_url = "bonerename"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         naming_sett = context.scene.HG3D.process.rig_renaming
         col = self.layout.column(align=True)
         col.use_property_split = True
@@ -338,9 +346,11 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_label = "Other Renaming"
     icon_name = "OUTLINER_OB_FONT"
     enabled_propname = "renaming_enabled"
+    help_url = "otherrename"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         rename_sett = context.scene.HG3D.process.renaming
 
         box = self.layout.box()
@@ -399,9 +409,11 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_label = "Custom scripts"
     icon_name = "FILE_SCRIPT"
     enabled_propname = "scripting_enabled"
+    help_url = "scripts"
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         col = self.layout.column()
         self.draw_subtitle("Available Scripts", col)
         row = col.row(align=True)
@@ -493,6 +505,9 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
 
         human = Human.from_existing(context.object)
+        self.layout.operator(
+            "wm.url_open", text="Process Guide", icon="URL", emboss=False
+        ).url = "https://help.humgen3d.com/process/overview"
         self.draw_warning_labels(pr_sett, human)
 
     def draw_warning_labels(self, pr_sett, human):

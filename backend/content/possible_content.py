@@ -47,6 +47,18 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
         right_row.alert = True
         operator = right_row.operator("hg3d.start_saving", text="Save", depress=True)
         operator.category = item.category
+        rr = right_row.row(align=True)
+        rr.alert = False
+        categ_tag = (
+            "human"
+            if item.category == "starting_human"
+            else "clothing"
+            if item.category in ("outfit", "footwear")
+            else item.category
+        )
+        rr.operator(
+            "wm.url_open", text="", icon="HELP"
+        ).url = f"https://help.humgen3d.com/custom{categ_tag}"
         if item.category == "key":
             operator.key_name = item.name
 
