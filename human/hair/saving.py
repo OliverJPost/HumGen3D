@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 import bpy
 from HumGen3D.common.type_aliases import GenderStr
+from HumGen3D.human.hair.compatibility import get_children_percent
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -169,7 +170,7 @@ def _make_hair_json(hair_obj: bpy.types.Object, folder: str, style_name: str) ->
         if mod.type == "PARTICLE_SYSTEM":
             ps = mod.particle_system
             ps_length = ps.settings.child_length
-            ps_children = ps.settings.child_nbr
+            ps_children = get_children_percent(ps.settings)
             ps_steps = ps.settings.display_step
             ps_dict[ps.name] = {
                 "length": ps_length,

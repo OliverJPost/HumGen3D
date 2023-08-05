@@ -30,6 +30,7 @@ from HumGen3D.human.hair.haircards import HairCollection
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
+from HumGen3D.human.hair.compatibility import set_children_percent
 from mathutils import Matrix
 
 HAIR_NODE_NAME = "HG_Hair"
@@ -145,7 +146,8 @@ class BaseHair:
                 continue
 
             ps = mod.particle_system
-            ps.settings.child_nbr = ps.settings.rendered_child_count // 10
+
+            set_children_percent(ps.settings.rendered_child_count // 10)
             body_obj = self._human.objects.body
             with context_override(context, body_obj, [body_obj]):
                 bpy.ops.object.modifier_convert(modifier=mod.name)
@@ -404,7 +406,8 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             # Show all hair systems
             elif mod.type == "PARTICLE_SYSTEM":
                 ps_sett = mod.particle_system.settings
-                ps_sett.child_nbr = ps_sett.rendered_child_count
+                set_children_percent(ps_sett, ps_sett.rendered_child_count)
+
 
         hg_delete(hair_obj)
         remove_broken_drivers()
@@ -559,7 +562,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         if "length" in json_sett:
             psys.child_length = json_sett["length"]
         if "children_amount" in json_sett:
-            psys.child_nbr = json_sett["children_amount"]
+            set_children_percent(psys, json_sett["children_amount"])
             psys.rendered_child_count = json_sett["children_amount"]
         if "path_steps" in json_sett:
             psys.display_step = json_sett["path_steps"]
