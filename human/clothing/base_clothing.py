@@ -631,13 +631,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             hash_coll.append(
                 hashlib.sha1(vert_co).hexdigest()  # type:ignore[arg-type] # noqa DUO130
             )
-
-            for sk in obj.data.shape_keys.key_blocks:
-                co = np.empty(vert_count * 3, dtype=np.float64)
-                sk.data.foreach_get("co", co)
-                hash_coll.append(
-                    hashlib.sha1(co).hexdigest()  # type:ignore[arg-type] # noqa DUO130
-                )
+            if obj.data.shape_keys:
+                for sk in obj.data.shape_keys.key_blocks:
+                    co = np.empty(vert_count * 3, dtype=np.float64)
+                    sk.data.foreach_get("co", co)
+                    hash_coll.append(
+                        hashlib.sha1(co).hexdigest()  # type:ignore[arg-type] # noqa DUO130
+                    )
 
             mat = obj.active_material
             if mat:
