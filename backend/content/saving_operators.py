@@ -230,7 +230,7 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
             draw_paragraph(
                 col,
                 """
-This object seems to be the body object. 
+This object seems to be the body object.
 
 If you made clothing by separating part of the body, you can ignore this message.
 If you accidentily selected the body object, please select the clothing object instead.
@@ -268,7 +268,7 @@ Press ESC to cancel.
     def execute(self, context):
         cloth_obj = context.object
 
-        recalculate_weights = self.has_valid_vertex_groups and self.override_weights
+        recalculate_weights = not self.has_valid_vertex_groups or self.override_weights
 
         if self.cloth_type == "footwear":
             self.human.clothing.footwear.add_obj(
