@@ -96,6 +96,8 @@ def apply_sk_to_mesh(sk: bpy.types.ShapeKey, obj: bpy.types.Object) -> None:
     sk.data.foreach_get("co", sk_coords)
     obj_coords = np.empty(len(obj.data.vertices) * 3, dtype=np.float64)
     obj.data.vertices.foreach_get("co", obj_coords)
-    diff = obj_coords - sk_coords * sk.value
-    obj.data.vertices.foreach_set("co", diff)
+    diff = (obj_coords - sk_coords) * sk.value
+    obj.data.vertices.foreach_set("co", obj_coords - diff)
+    if obj.data.shape_keys:
+        obj.data.shape_keys.key_blocks["Basis"].data.foreach_set("co", obj_coords - diff)
     obj.data.update()
