@@ -66,7 +66,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 for obj in human.objects:
                     add_to_collection(context, obj, "Processing Results")
 
-            if pr_sett.haircards_enabled:
+            if pr_sett.haircards_enabled and not human.process.has_haircards:
                 quality = pr_sett.haircards.quality
                 if human.hair.regular_hair.modifiers:
                     human.hair.regular_hair.convert_to_haircards(quality, context)
@@ -76,21 +76,23 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     human.hair.face_hair.convert_to_haircards(quality, context)
                 human.objects.rig["haircards"] = True
 
-            if pr_sett.baking_enabled:
+            if pr_sett.baking_enabled and not human.process.was_baked:
                 human.process.baking.bake_all(
                     samples=int(context.scene.HG3D.process.baking.samples),
                     context=context,
                 )
                 human.objects.rig["hg_baked"] = True
 
-            if pr_sett.lod_enabled and not human.is_trial:
+            if pr_sett.lod_enabled and not human.is_trial and not human.process.is_lod:
                 human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
                 human.process.lod.set_clothing_lod(
                     pr_sett.lod.decimate_ratio,
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
                 )
-                human.objects.rig["lod"] = True
+                # Only set lod as enabled if it actually changes topology
+                if pr_sett.lod.body_lod != "0":
+                    human.objects.rig["lod"] = True
 
             if pr_sett.rig_renaming_enabled:
                 naming_sett = context.scene.HG3D.process.rig_renaming

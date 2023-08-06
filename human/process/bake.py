@@ -224,6 +224,9 @@ class BakeSettings:
             old_samples,
             was_eevee,
         ) = self._check_bake_render_settings(context, samples, force_cycles=True)
+        if self._human.process.was_baked:
+            raise HumGenException("Human was already baked")
+
         baketextures = self.get_baking_list()
         if not folder_path:
             bake_sett = context.scene.HG3D.process.baking
@@ -233,6 +236,8 @@ class BakeSettings:
             self.bake_single_texture(baketexture, folder_path, context=context)
 
         self.set_up_new_materials(baketextures)
+
+        self._human.objects.rig["hg_baked"] = True
 
         if was_optix:
             context.preferences.addons[  # type:ignore[index, call-overload]
@@ -244,6 +249,7 @@ class BakeSettings:
                 context.scene.render.engine = "EEVEE"
             except TypeError:
                 context.scene.render.engine = "BLENDER_EEVEE"
+
 
     @injected_context
     def bake_single_texture(

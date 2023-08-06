@@ -101,7 +101,7 @@ class ProcessSettings:
         Returns:
             bool: True if haircards are present.
         """
-        return "haircard" in self._human.objects.rig
+        return bool(self._human.objects.haircards)
 
     @property
     def was_baked(self) -> bool:
