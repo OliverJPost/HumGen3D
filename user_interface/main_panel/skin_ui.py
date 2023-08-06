@@ -5,7 +5,7 @@ from sys import platform
 import bpy
 from HumGen3D.user_interface.panel_functions import draw_paragraph
 
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, forbidden_for_baked, subpanel_draw
 
 
 class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
@@ -13,16 +13,12 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
     phase_name = "skin"
 
     @subpanel_draw
+    @forbidden_for_baked
     def draw(self, context):
         """Collapsable section with options for changing the shader of the human."""
         sett = self.sett
 
         col = self.layout.column()
-
-        if self.human.process.was_baked:
-            col.alert = True
-            draw_paragraph(col, "Textures are baked! Baked textures can't be changed.")
-            return
 
         self._draw_texture_subsection(sett, col)
         self._draw_main_skin_subsection(sett, col)

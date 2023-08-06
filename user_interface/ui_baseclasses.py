@@ -14,7 +14,37 @@ from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
+from functools import partial
 
+
+def forbidden_for_lod(draw_method):
+    @functools.wraps(draw_method)
+    def wrapper(self, context):
+        human = Human.from_existing(context.object)
+        if human.process.is_lod:
+            self.layout.alert = True
+            self.layout.label(text="LOD was generated.")
+            self.layout.label(text="Section has been disabled.")
+            self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/lod")
+            self.layout.alert = False
+            return
+
+
+    return wrapper
+
+def forbidden_for_baked(draw_method):
+    @functools.wraps(draw_method)
+    def wrapper(self, context):
+        human = Human.from_existing(context.object)
+        if human.process.was_baked:
+            self.layout.alert = True
+            self.layout.label(text="Materials were baked.")
+            self.layout.label(text="Section has been disabled.")
+            self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/bake")
+            self.layout.alert = False
+            return
+
+    return wrapper
 
 def subpanel_draw(draw_method):
     @functools.wraps(draw_method)

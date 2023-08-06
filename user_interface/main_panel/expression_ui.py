@@ -2,7 +2,7 @@
 
 import bpy
 
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 
 class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
@@ -10,6 +10,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
     phase_name = "expression"
 
     @subpanel_draw
+    @forbidden_for_lod
     def draw(self, context):
         """UI for selecting expressions from template_icon_view or adding facial rig."""
 
