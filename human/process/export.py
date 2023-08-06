@@ -7,6 +7,7 @@ from HumGen3D.common import os
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
+from HumGen3D.common.objects import apply_sk_to_mesh
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -32,6 +33,7 @@ def exporter(exporter_func):
 
         with context_override(context, human.objects.rig, human.objects):
             _remove_eye_outer_material(human)
+            _apply_base_shape_keys(human)
             # todo remove face bones if not face rig
             result = exporter_func(self, filepath, *args, **kwargs)
             # todo re-add outer material
@@ -59,6 +61,16 @@ def exporter(exporter_func):
         eyes = human.objects.eyes
         # Remove transparent outer material, not supported by most formats
         eyes.data.materials.pop(index=0)
+
+    def _apply_base_shape_keys(human):
+        # Apply "Male", "LIVE_KEY_PERMANENT" and "LIVE_KEY_TEMP_*" shape keys
+        body = human.objects.body
+
+        for sk_name in ["male", "live_key_permanent", "live_key_temp"]:
+            sk = next((sk for sk in body.data.shape_keys.key_blocks if sk.name.lower().startswith(sk_name)), None)
+            if sk:
+                apply_sk_to_mesh(sk, body)
+                body.shape_key_remove(sk)
 
     return wrapper
 
