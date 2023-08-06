@@ -78,9 +78,12 @@ class HG_OT_CREATE_CPACK(bpy.types.Operator):
 
         self._create_cpack_json(cpack_name, cpack_folder)
 
-        pref.editing_cpack = cpack_name
-
         cpacks_refresh(self, context)
+
+        pref.editing_cpack = cpack_name
+        pref.cpack_name = cpack_name
+        pref.cpack_creator = "Your Name"
+        pref.cpack_weblink = "https://www.[Your website].com"
 
         build_content_collection(self, context)
         if self.show_name_dialog:
