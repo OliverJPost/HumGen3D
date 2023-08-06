@@ -37,6 +37,7 @@ if not bpy.context.preferences.addons.get("HumGen3D"):
     bpy.ops.preferences.addon_enable(module="HumGen3D")
     bpy.ops.preferences.addon_enable(module="rigify")
 
+
 @pytest.fixture(scope="class")
 def male_human() -> "Human":
     human = _create_human("male")
@@ -60,11 +61,10 @@ def male_rigify_human() -> "Human":
 
 
 def _create_human(gender="male"):
-    chosen_preset = next(
-        p
-        for p in Human.get_preset_options(gender, context=bpy.context)
-        if "base" in p.lower()
-    )
+    chosen_preset = Human.get_preset_options(
+        gender, category="Asian presets", context=bpy.context
+    )[0]
+
     human = Human.from_preset(chosen_preset, bpy.context)
     human._rig_obj["pytest_human"] = True
     return human
