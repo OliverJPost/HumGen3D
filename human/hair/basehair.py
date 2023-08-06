@@ -179,6 +179,7 @@ class BaseHair:
 
         if len(hair_objs) > 1:
             join_obj_name = cap_obj.name if cap_obj else hair_objs[0].name
+            meshes = [obj.data for obj in hair_objs]
             with context_override(
                 context, cap_obj if cap_obj else hair_objs[0], hair_objs
             ):
@@ -186,6 +187,9 @@ class BaseHair:
 
             joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
             joined_object.name = "Haircards"
+            for mesh in meshes:
+                if mesh.users == 0:
+                    bpy.data.meshes.remove(mesh)
         else:
             joined_object = cap_obj
 
