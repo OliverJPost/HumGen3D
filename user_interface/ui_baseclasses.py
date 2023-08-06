@@ -28,6 +28,7 @@ def forbidden_for_lod(draw_method):
             self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/lod")
             self.layout.alert = False
             return
+        return draw_method(self, context)
 
 
     return wrapper
@@ -43,6 +44,7 @@ def forbidden_for_baked(draw_method):
             self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/bake")
             self.layout.alert = False
             return
+        return draw_method(self, context)
 
     return wrapper
 
