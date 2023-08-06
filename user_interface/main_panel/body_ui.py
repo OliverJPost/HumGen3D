@@ -4,7 +4,7 @@ import bpy
 
 from ..panel_functions import draw_paragraph
 
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 
 class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
@@ -19,14 +19,10 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
     phase_name = "body"
 
     @subpanel_draw
+    @forbidden_for_lod
     def draw(self, context):
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         col = self.layout.column()
-
-        if self.human.process.is_lod:
-            col.alert = True
-            draw_paragraph(col, "LOD models can't be edited.")
-            return
 
         row = col.row(align=True)
         row.scale_y = 1.5

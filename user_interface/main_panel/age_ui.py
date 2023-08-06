@@ -4,7 +4,7 @@ import bpy
 from HumGen3D.human.human import Human
 
 from ..panel_functions import prettify
-from ..ui_baseclasses import MainPanelPart, subpanel_draw
+from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 
 class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
@@ -12,6 +12,7 @@ class HG_PT_AGE(MainPanelPart, bpy.types.Panel):
     phase_name = "age"
 
     @subpanel_draw
+    @forbidden_for_lod
     def draw(self, context):
         human = Human.from_existing(context.object)
         col = self.layout.column()
