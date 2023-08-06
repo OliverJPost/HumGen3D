@@ -37,10 +37,21 @@ class ProcessPanel(HGPanel):
     def draw_header(self, context):
         if hasattr(self, "enabled_propname"):
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
+
+        icon_name = self.icon_name
+        if hasattr(self, "forbidden_propname"):
+            is_forbidden = getattr(Human.from_existing(context.object).process, self.forbidden_propname)
+            is_enabled = getattr(context.scene.HG3D.process, self.enabled_propname, False)
+            if is_forbidden and is_enabled:
+                self.layout.alert = True
+                icon_name = "ERROR"
+            if is_forbidden and not is_enabled:
+                icon_name = "CHECKMARK"
+
         try:
-            self.layout.label(text="", icon_value=get_hg_icon(self.icon_name))
+            self.layout.label(text="", icon_value=get_hg_icon(icon_name))
         except KeyError:
-            self.layout.label(text="", icon=self.icon_name)
+            self.layout.label(text="", icon=icon_name)
 
     def check_enabled(self, context):
         self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
@@ -127,12 +138,18 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     icon_name = "RENDERLAYERS"
     enabled_propname = "baking_enabled"
     help_url = "baking"
+    forbidden_propname = "was_baked"
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
+        human = Human.from_existing(context.object)
         layout = self.layout
         layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+        if human.process.was_baked:
+            layout.alert = True
+            layout.label(text="Already baked!")
+            return
 
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         bake_sett = sett.process.baking
@@ -154,7 +171,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
             col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
 
         row = col.row(align=True)
-        human = Human.from_existing(context.object)
+
         row.enabled = context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
         row.prop(bake_sett, "res_haircards", text="Haircards")
 
@@ -232,6 +249,7 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
     icon_name = "NORMALS_VERTEX"
     enabled_propname = "lod_enabled"
     help_url = "lod"
+    forbidden_propname = "is_lod"
 
     def draw(self, context):
         self.check_enabled(context)
@@ -242,6 +260,10 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
             col.label(text="Not available in trial version.")
             col.label(text="Reason: LOD won't work properly")
             col.label(text="on mesh with holes.")
+            return
+        if human.process.is_lod:
+            col.alert = True
+            col.label(text="LOD already generated!")
             return
 
         lod_sett = context.scene.HG3D.process.lod
@@ -264,10 +286,17 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     icon_name = "hair"
     enabled_propname = "haircards_enabled"
     help_url = "haircards"
+    forbidden_propname = "has_haircards"
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
+        human = Human.from_existing(context.object)
+        if human.process.has_haircards:
+            self.layout.alert = True
+            self.layout.label(text="Haircards already generated!")
+            return
+
         col = self.layout.column()
         col.scale_y = 1.5
         hairc_sett = context.scene.HG3D.process.haircards
