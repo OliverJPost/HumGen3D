@@ -3,7 +3,9 @@
 # flake8: noqa F722
 
 import getpass
+import bpy
 from typing import no_type_check
+from HumGen3D.backend.auto_classes import _get_bpy_classes
 
 from bpy.props import (  # type:ignore
     BoolProperty,
@@ -15,6 +17,25 @@ from bpy.props import (  # type:ignore
 from bpy.types import AddonPreferences  # type:ignore
 
 from ..content.content_packs import cpacks_refresh
+
+def update_tab_name(self, context):
+    """Dynamically change category & reload some panel upon update.
+    Taken from Geo-Scatter addon.
+    """
+
+    hg_classes = _get_bpy_classes()
+    ui_tab_classes = [cls for cls in hg_classes if hasattr(cls, "bl_category")]
+
+    for cls in reversed(ui_tab_classes):
+        if (cls.is_registered):
+            bpy.utils.unregister_class(cls)
+
+    for cls in ui_tab_classes:
+        if (not cls.is_registered):
+            cls.bl_category = self.tab_name
+            bpy.utils.register_class(cls)
+
+    return None
 
 
 class HGPreferenceBackend:
@@ -59,6 +80,11 @@ class HGPreferenceBackend:
         name="Install Filepath",
         default="",
     )
+
+    tab_name : StringProperty(
+        default="HumGen",
+        update=update_tab_name,
+        )
 
     @property
     def filepath(self) -> str:

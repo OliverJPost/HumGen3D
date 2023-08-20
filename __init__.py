@@ -137,6 +137,8 @@ def _initiate_ui_lists() -> None:
 
 
 hg_classes = _get_bpy_classes()
+ui_tab_classes = [cls for cls in hg_classes if hasattr(cls, "bl_category")]
+non_ui_tab_classes = [cls for cls in hg_classes if cls not in ui_tab_classes]
 
 
 def register() -> None:
@@ -144,8 +146,7 @@ def register() -> None:
 
     _initiate_custom_icons()
 
-    # RELEASE remove print statements
-    for cls in hg_classes:
+    for cls in non_ui_tab_classes:
         bpy.utils.register_class(cls)
 
     # Main props
@@ -154,6 +155,11 @@ def register() -> None:
     bpy.types.Scene.HG3D = bpy.props.PointerProperty(type=HG_SETTINGS)  # type:ignore
     # Object specific props
     bpy.types.Object.HG = bpy.props.PointerProperty(type=HG_OBJECT_PROPS)  # type:ignore
+
+    for cls in ui_tab_classes:
+        # Add custom tab name to class so people can organize their tabs
+        cls.bl_category = get_prefs().tab_name
+        bpy.utils.register_class(cls)
 
     _initiate_preview_collections()
     _initiate_ui_lists()
