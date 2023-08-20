@@ -250,6 +250,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         )
         col.prop(self, "dev_tools")
         col.prop(self, "skip_url_request", text="Skip URL request")
+        col.prop(self, "tab_name", text="N-panel tab name")
 
     def _draw_cpack_ui(self, context):
         """UI displaying installed content packs.
