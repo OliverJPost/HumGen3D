@@ -203,7 +203,11 @@ class PreviewCollection:
         ext = (".jpg", "png", ".jpeg", ".blend")
         # FIXME
         for item in dirlist:
-            if not item.endswith(ext) and ".DS_Store" not in item:
+            if (
+                not item.endswith(ext)
+                and ".DS_Store" not in item
+                and not item.startswith(".")
+            ):  # noqa
                 categ_list.append(item)
 
         if not categ_list:
@@ -277,6 +281,8 @@ def list_files_in_dir(
             if not fn.lower().endswith(ext):
                 continue
             if search_term.lower() not in fn.lower():
+                continue
+            if fn.startswith("."):
                 continue
 
             full_path = os.path.join(root, fn)
