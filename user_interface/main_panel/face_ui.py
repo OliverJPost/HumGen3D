@@ -44,14 +44,18 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
         flow_custom = self._get_ff_col(col, "Custom", "custom")
         flow_special = self._get_ff_col(col, "Special", "special")
         for key in self.human.face.keys:
-            try:
-                if not getattr(self.sett.ui, str(key.subcategory)):
-                    continue
+            if key.subcategory and f"flow_{key.subcategory}" not in locals():
+                locals()[f"flow_{key.subcategory}"] = self._get_ff_col(
+                    col, key.subcategory.capitalize(), key.subcategory
+                )
 
-                category_column = locals()[f"flow_{key.subcategory}"]
-                key.draw_prop(category_column)
-            except AttributeError:
-                hg_log(f"Error: {key.name} has no subcategory", level="WARNING")
+        for key in self.human.face.keys:
+            # Skip if category not opened
+            if not getattr(self.sett.ui, str(key.subcategory), True):
+                continue
+
+            category_column = locals()[f"flow_{key.subcategory}"]
+            key.draw_prop(category_column)
 
         flow_presets = self._get_ff_col(col, "Presets", "presets")
         for key in self.human.keys.filtered("face_presets"):
@@ -108,6 +112,14 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             "special": sett.ui.special,
             "presets": sett.ui.presets,
         }
+
+        row = boxbox.row()
+
+        if is_open_propname not in ui_bools:
+            row.label(text=categ_name)
+            col = layout.column(align=True)
+            col.scale_y = 1 if get_prefs().compact_ff_ui else 1.5
+            return col
 
         row = boxbox.row()
         row.prop(
