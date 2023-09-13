@@ -61,7 +61,6 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
                 subcategory not in ["main", "Special", "Other"]
                 and not any_without_category
             ):
-
                 icon = "LOCKED" if getattr(sett.locks, subcategory) else "UNLOCKED"
                 row.prop(
                     sett.locks,
@@ -110,10 +109,4 @@ class HG_PT_BODY(MainPanelPart, bpy.types.Panel):
                 continue
             else:
                 section = getattr(self, f"box_{key.subcategory}")
-            key_bpy = key.as_bpy()
-            section.prop(
-                key_bpy,
-                "value_limited",
-                text=key.name.capitalize(),
-                expand=True,
-            )
+            key.draw_prop(section, "value_limited")
