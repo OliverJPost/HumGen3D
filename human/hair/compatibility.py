@@ -1,5 +1,10 @@
 import bpy
 
+SUBSURFACE_INPUT_NAME = (
+    "Subsurface" if bpy.app.version < (4, 0, 0) else "Subsurface Weight"
+)
+
+
 def set_children_percent(particle_settings, amount) -> None:
     if bpy.app.version >= (4, 0 ,0):
         particle_settings.child_percent = amount
