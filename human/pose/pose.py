@@ -257,8 +257,20 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         for bone in armature.pose.bones:
             if bone.name.lower().startswith("eye"):
                 continue
-            if bone.bone_group and bone.bone_group.name in SKIP_GROUPS:
-                continue
+
+            # Do not include bones part of eye scale, eye looking, and face rig
+            if bpy.app.version < (4, 0, 0):
+                if bone.bone_group and bone.bone_group.name in SKIP_GROUPS:
+                    continue
+            else:
+                skip = False
+                for bcoll in armature.data.collections:
+                    if bcoll.name not in SKIP_GROUPS:
+                        continue
+                    if bone.name in bcoll.bones:
+                        skip = True
+                if skip:
+                    continue
 
             rotation_mode = bone.rotation_mode
             if rotation_mode == "QUATERNION":
