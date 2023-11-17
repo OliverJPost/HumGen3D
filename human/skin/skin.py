@@ -20,6 +20,7 @@ from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.common.exceptions import HumGenException
+from ..hair.compatibility import SUBSURFACE_INPUT_NAME
 
 from ...common.decorators import injected_context
 from ...common.os import correct_presetpath
@@ -178,7 +179,7 @@ class SkinSettings:
             node for node in self.nodes if node.type == "BSDF_PRINCIPLED"
         )
 
-        principled_bsdf.inputs["Subsurface"].default_value = 0.01 if turn_on else 0
+        principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value = 0.01 if turn_on else 0
 
     @injected_context
     def set_underwear(self, turn_on: bool, context: C = None) -> None:

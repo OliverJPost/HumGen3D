@@ -4,6 +4,8 @@
 import random
 
 import pytest  # type:ignore
+
+from HumGen3D.human.hair.compatibility import SUBSURFACE_INPUT_NAME
 from HumGen3D.tests.test_fixtures import *
 
 
@@ -95,7 +97,8 @@ def test_subsurface_scattering(human, context):
         principled_bsdf = next(
             node for node in human.skin.nodes if node.type == "BSDF_PRINCIPLED"
         )
-        sss_value = principled_bsdf.inputs["Subsurface"].default_value
+
+        sss_value = principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value
         assert pytest.approx(sss_value) == value
 
     assert_sss(0, human)

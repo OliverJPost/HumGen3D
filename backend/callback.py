@@ -25,6 +25,7 @@ from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
 )
+from ..human.hair.compatibility import SUBSURFACE_INPUT_NAME
 
 from ..human.human import Human
 from ..user_interface.documentation.tips_suggestions_ui import update_tips_from_context
@@ -105,7 +106,7 @@ def _set_shader_switches(human, sett):
 
     principled_bsdf = next(node for node in nodes if node.type == "BSDF_PRINCIPLED")
     sett.skin_sss = (
-        "off" if principled_bsdf.inputs["Subsurface"].default_value == 0 else "on"
+        "off" if principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value == 0 else "on"
     )
 
     uw_node = nodes.get("Underwear_Opacity")
