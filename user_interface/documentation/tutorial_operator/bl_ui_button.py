@@ -136,7 +136,10 @@ class BL_UI_Button(BL_UI_Widget):
         self.shader.uniform_float("color", color)
 
     def draw_text(self, area_height):
-        blf.size(0, self._text_size, 72)
+        if bpy.app.version < (4,0,0):
+            blf.size(0, self._text_size, 72)
+        else:
+            blf.size(0, self._text_size)
         size = blf.dimensions(0, self._text)
 
         textpos_y = area_height - self._textpos[1] - (self.height + size[1]) / 2.0
