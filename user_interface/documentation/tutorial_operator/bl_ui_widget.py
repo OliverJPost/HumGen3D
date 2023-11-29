@@ -1,5 +1,5 @@
 # flake8: noqa
-
+import bpy
 import gpu  # type:ignore
 from gpu_extras.batch import batch_for_shader  # type:ignore
 
@@ -72,7 +72,7 @@ class BL_UI_Widget:
             (self.x_screen + self.width, y_screen_flip),
         )
 
-        self.shader = gpu.shader.from_builtin("2D_UNIFORM_COLOR")
+        self.shader = gpu.shader.from_builtin("2D_UNIFORM_COLOR" if bpy.app.version < (4, 0, 0) else "UNIFORM_COLOR")
         self.batch_panel = batch_for_shader(
             self.shader, "TRIS", {"pos": vertices}, indices=indices
         )
