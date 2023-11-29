@@ -17,6 +17,8 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from HumGen3D.common.context import context_override
 
+from ..hair.compatibility import SPECULAR_INPUT_NAME
+
 if TYPE_CHECKING:
     from ..human import Human
 
@@ -96,7 +98,7 @@ class BakeSettings:
     def _add_image_node(
         image: bpy.types.Image,
         input_type: Literal[
-            "Base Color", "Normal", "Roughness", "Metallic", "Specular"
+            "Base Color", "Normal", "Roughness", "Metallic", "Specular",
         ],
         mat: bpy.types.Material,
     ) -> None:
@@ -125,11 +127,16 @@ class BakeSettings:
             links.new(img_node.outputs[0], normal_node.inputs[1])  # type:ignore[index]
             links.new(
                 normal_node.outputs[0],  # type:ignore[index]
+
                 principled.inputs[input_type],  # type:ignore
             )
         else:
+            if input_type == "Specular":
+                input_name = SPECULAR_INPUT_NAME
+            else:
+                input_name = input_type
             links.new(
-                img_node.outputs[0], principled.inputs[input_type]  # type:ignore
+                img_node.outputs[0], principled.inputs[input_name]  # type:ignore
             )
 
         image.reload()
@@ -178,8 +185,13 @@ class BakeSettings:
         if baketexture.texture_type == "Normal":
             links.new(principled.outputs[0], mat_output.inputs[0])  # type:ignore
         else:
+            if baketexture.texture_type == "Specular":
+                input_name = SPECULAR_INPUT_NAME
+            else:
+                input_name = baketexture.texture_type
+
             source_socket = follow_links(
-                principled, baketexture.texture_type  # type:ignore
+                principled, input_name  # type:ignore
             )
             if not source_socket:
                 raise HumGenException("Can't find node", baketexture.texture_type)
