@@ -46,7 +46,7 @@ class BL_UI_Image(BL_UI_Widget):
             (self.x_screen + off_x + sx, y_screen_flip - off_x),
         )
 
-        self.shader_img = gpu.shader.from_builtin("2D_IMAGE")
+        self.shader_img = gpu.shader.from_builtin("2D_IMAGE" if bpy.app.version < (4,0,0) else "IMAGE")
         self.batch_img = batch_for_shader(
             self.shader_img,
             "TRI_FAN",
