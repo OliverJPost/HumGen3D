@@ -55,6 +55,12 @@ class HG_OT_PROCESS(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):  # noqa
+        # Temporarily remove hooks that cause issue #69 crash
+        temp_depsgraph_callbacks = []
+        for callback in bpy.app.handlers.depsgraph_update_post:
+            temp_depsgraph_callbacks.append(callback)
+        bpy.app.handlers.depsgraph_update_post.clear()
+
         pr_sett = context.scene.HG3D.process
         human_rigs = find_multiple_in_list(context.selected_objects)
         for rig_obj in human_rigs:
@@ -164,6 +170,10 @@ class HG_OT_PROCESS(bpy.types.Operator):
             ShowMessageBox(
                 f"Saved to {pr_sett.baking.export_folder}", "Export completed", "INFO"
             )
+
+        for callback in temp_depsgraph_callbacks:
+            bpy.app.handlers.depsgraph_update_post.append(callback)
+
         return {"FINISHED"}
 
 
