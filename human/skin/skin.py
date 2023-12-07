@@ -179,7 +179,9 @@ class SkinSettings:
             node for node in self.nodes if node.type == "BSDF_PRINCIPLED"
         )
 
-        principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value = 0.01 if turn_on else 0
+        sss_weight = 0.01 if bpy.app.version < (4, 0, 0) else 1.0
+
+        principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value = sss_weight if turn_on else 0
 
     @injected_context
     def set_underwear(self, turn_on: bool, context: C = None) -> None:
@@ -247,6 +249,12 @@ class SkinSettings:
 
             else:
                 getattr(self, attr_name).value = attr_value
+
+        if bpy.app.version >= (4, 0, 0):
+            # Correction for new IOR value in Blender 4.0
+            self.nodes["Principled BSDF"].inputs["IOR"].default_value = 1.45
+            # Correction for Christensen Burley SSS scale in Blender 4.0
+            self.nodes["Principled BSDF"].inputs["Subsurface Scale"].default_value = 0.01
 
         return errors
 
