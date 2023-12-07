@@ -93,7 +93,7 @@ class HGPreferenceBackend:
         else:
             # Return hard coded path if developing from my computer, prevents having to remove path for every release.
             if getpass.getuser() == "ole":
-                return "/Users/ole/Documents/Work/HG3D/Human Generator/"
+                return "/Users/ole/Library/Mobile Documents/com~apple~CloudDocs/Areas/Human Generator/Content"
             else:
                 return ""
 
