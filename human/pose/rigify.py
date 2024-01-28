@@ -38,6 +38,8 @@ class RigifySettings:
 
         old_rig = human.objects.rig
         with context_override(context, old_rig, [old_rig], False):
+            if bpy.app.version >= (4,0,0):
+                rigify.utils.rig.upgrade_metarig_layers(human.objects.rig)
             rigify.generate.generate_rig(context, human.objects.rig)
 
         rigify_rig = self._find_created_rigify_rig(context)
