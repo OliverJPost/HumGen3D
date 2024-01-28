@@ -116,7 +116,7 @@ class ExpressionSettings(PreviewCollectionContent):
 
         sk_name, _ = os.path.splitext(os.path.basename(preset))
 
-        filepath = str(pref.filepath) + str(preset)
+        filepath = os.path.join(pref.filepath, preset)
 
         hg_rig = self._human.objects.rig
         hg_body = hg_rig.HG.body_obj

@@ -157,7 +157,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         """
         pref = get_prefs()
 
-        blendfile = str(pref.filepath) + preset
+        blendfile = os.path.join(pref.filepath, preset)
         with bpy.data.libraries.load(blendfile, link=False) as (
             _,
             data_to,
