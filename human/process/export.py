@@ -208,3 +208,24 @@ class ExportBuilder:
         context: C = None,
     ):
         self._export_common_gltf(filepath, "GLB")
+
+    @exporter
+    def to_abc(
+        self,
+        filepath: str,
+
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None
+    ):
+        # Context override doesn't seem to work for this operator
+        for obj in context.selected_objects:
+            obj.select_set(False)
+
+        for obj in self._human.objects:
+            obj.select_set(True)
+
+        bpy.ops.wm.alembic_export(
+            filepath=filepath,
+            selected=True
+        )
