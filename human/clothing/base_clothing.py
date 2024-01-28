@@ -496,7 +496,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         # load the whole collection from the outfit file. It loads collections
         # instead of objects because this allows loading of linked objects
 
-        blendfile = str(get_prefs().filepath) + str(Path(preset))
+        blendfile = os.path.join(get_prefs().filepath, preset)
         with bpy.data.libraries.load(blendfile, link=False) as (
             data_from,
             data_to,
