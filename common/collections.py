@@ -18,10 +18,20 @@ def add_to_collection(
     Returns:
         bpy.types.Collection: Collection the object was added to
     """
+    # Dirty hack for making HG work with multiple scenes. Appends scene name if it's not the "main" scene
+    if context.scene != bpy.data.scenes[0]:
+        collection_name += context.scene.name
 
-    try:
-        collection = bpy.data.collections[collection_name]
-    except KeyError:
+    collection = bpy.data.collections.get(collection_name)
+    collection_in_active_scene = collection.name in context.scene.view_layers[0].layer_collection.children if collection else False
+
+    # Handle edge case of deleted scene (Collection was connected to scene with same name, but is now dangling)
+    collection_removed = False
+    if collection and not collection_in_active_scene:
+        bpy.data.collections.remove(collection)
+        collection_removed = True
+
+    if not collection or collection_removed:
         collection = _new_collection(context, collection_name)
 
     # Unlink object from old collection

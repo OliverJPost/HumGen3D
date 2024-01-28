@@ -18,11 +18,12 @@ __all__ = [
     "context",
     "female_human",
     "male_rigify_human",
+    "male_2nd_scene_human"
 ]
 
 CLIPPING_THRESHOLD = 0.05
 TESTFILES_PATH = "/Users/ole/Documents/HG_EXTRAS/Testfiles"
-_standard_fixtures = ["male_human", "male_rigify_human"]
+_standard_fixtures = ["male_human", "male_rigify_human", "male_2nd_scene_human"]
 _all_female_fixtures = [
     "female_human",
 ]
@@ -58,6 +59,30 @@ def male_rigify_human() -> "Human":
     human.pose.rigify.generate(bpy.context)
     yield human
     human.delete()
+
+@pytest.fixture
+def male_2nd_scene_human() -> "Human":
+    original_scene = bpy.context.window.scene
+    original_viewlayer = original_scene.view_layers[0]
+    new_scene = bpy.data.scenes.new("Second Scene")
+    new_viewlayer = new_scene.view_layers[0]
+    new_viewlayer.name = "NewViewlayer"
+    assert len(new_scene.view_layers) == 1
+    bpy.context.window.scene = new_scene
+
+    human = _create_human("male")
+
+    for obj in human.objects:
+        assert obj.name in new_viewlayer.objects
+        assert obj.name not in original_viewlayer.objects
+
+    yield human
+    human.delete()
+    bpy.context.window.scene = original_scene
+    bpy.data.scenes.remove(new_scene)
+    assert bpy.context.scene == original_scene
+    assert bpy.context.view_layer == original_viewlayer
+
 
 
 def _create_human(gender="male"):
