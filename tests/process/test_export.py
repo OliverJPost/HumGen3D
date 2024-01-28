@@ -119,3 +119,9 @@ def test_glb_export(human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""
     path = os.path.join(tmp_path, "test.glb")
     human.export.to_glb(path, context=context)
+
+@pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
+def test_alembic_export(human: Human, context, tmp_path):
+    """Test that a gltf file can be exported from a human."""
+    path = os.path.join(tmp_path, "test.abc")
+    human.export.to_abc(path, context=context)
