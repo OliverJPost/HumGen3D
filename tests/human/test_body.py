@@ -13,21 +13,21 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_randomize_body(human, context):
     hash_before = hash(human.body)
-    human.body.randomize(context)
+    human.body.randomize(context=context)
     assert hash(human.body) != hash_before, "Human body hash has not changed"
     assert len([k for k in human.body.keys if k.value > 0.001]) > 10
 
     converted_key = human.body.keys[0].to_shapekey()
     randomized_values = []
     for _ in range(4):
-        human.body.randomize(context)
+        human.body.randomize(context=context)
         randomized_values.append(converted_key.value)
     assert sum(randomized_values) != 0, "Randomized values are always 0"
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_reset_body(human: "Human", context):
-    human.body.randomize(context)
+    human.body.randomize(context=context)
     human.body.reset_values(context)
     assert all(x.value == 0 for x in human.body.keys)
 
