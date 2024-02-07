@@ -49,12 +49,5 @@ def _new_collection(
     context: bpy.types.Context, collection_name: str
 ) -> bpy.types.Collection:
     collection = bpy.data.collections.new(name=collection_name)
-    if collection_name == "HG Batch Markers":
-        hg_collection = bpy.data.collections.get("HumGen")
-        if not hg_collection:
-            hg_collection = bpy.data.collections.new(name="HumGen")
-            context.scene.collection.children.link(hg_collection)
-        hg_collection.children.link(collection)
-    else:
-        context.scene.collection.children.link(collection)
+    context.scene.collection.children.link(collection)
     return collection
