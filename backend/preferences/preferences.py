@@ -9,11 +9,11 @@ from typing import Optional
 
 import bpy  # type: ignore
 import HumGen3D.backend.updates.addon_updater_ops as addon_updater_ops
-from HumGen3D import bl_info
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from .content_pack_saving_ui import CpackEditingSystem
 from .preference_props import HGPreferenceBackend
+from HumGen3D import __version__
 
 ALERT_DICT = {
     "cpack_required": [
@@ -116,7 +116,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         """
         if self.cpack_update_required:
             return "cpack_required"
-        elif tuple(bl_info["version"]) < tuple(self.latest_version):
+        elif tuple(__version__) < tuple(self.latest_version):
             return "addon"
         elif self.cpack_update_available:
             return "cpack_available"

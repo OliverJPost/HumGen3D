@@ -27,6 +27,8 @@ import traceback
 import bpy
 from bpy.app.handlers import persistent
 
+from .. import hg_log
+
 # Safely import the updater.
 # Prevents popups for users with invalid python installs e.g. missing libraries
 # and will replace with a fake class instead if it fails (so UI draws work).
@@ -1545,7 +1547,10 @@ def register(bl_info):
 def unregister():
     for cls in reversed(classes):
         # Comment out this line if using bpy.utils.unregister_module(__name__).
-        bpy.utils.unregister_class(cls)
+        try:
+            bpy.utils.unregister_class(cls)
+        except Exception as e:
+            hg_log(f"Could not unregister {cls}.", level="ERROR")
 
     # Clear global vars since they may persist if not restarting blender.
     updater.clear_state()  # Clear internal vars, avoids reloading oddities.
