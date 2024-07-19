@@ -47,6 +47,7 @@ from .pose.pose import PoseSettings  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
 
+import HumGen3D
 
 class Human:
     """Python representation of a Human Generator human.
@@ -234,7 +235,7 @@ class Human:
 
         from HumGen3D import bl_info
 
-        human.props.version = bl_info["version"]
+        human.props.version = HumGen3D.__version__
         human.props.hashes["$pose"] = str(hash(human.pose))
         human.props.hashes["$outfit"] = str(hash(human.clothing.outfit))
         human.props.hashes["$footwear"] = str(hash(human.clothing.footwear))

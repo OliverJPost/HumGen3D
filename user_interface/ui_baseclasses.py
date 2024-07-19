@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import bpy
-from HumGen3D import bl_info, HumGenException
+from HumGen3D import HumGenException, __version__
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import active_phase_enum
 from HumGen3D.common import is_legacy
@@ -228,7 +228,7 @@ class HGPanel:
         # find out what kind of update is available
         if self.pref.cpack_update_required:
             self.update = "cpack_required"
-        elif tuple(bl_info["version"]) < tuple(self.pref.latest_version):
+        elif tuple(__version__) < tuple(self.pref.latest_version):
             self.update = "addon"
         elif self.pref.cpack_update_available:
             self.update = "cpack_available"

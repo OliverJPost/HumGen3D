@@ -17,12 +17,14 @@
 
 # flake8: noqa E402
 
+__version__ = (4, 0, 19)
+
 bl_info = {
     "name": "Human Generator 3D",
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",  # noqa
     "blender": (3, 2, 0),
-    "version": (4, 0, 18),  # RELEASE update version number
+    "version": (4, 0, 19),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "https://humgen3d.com",
     "tracker_url": "https://humgen3d.com",
@@ -30,11 +32,18 @@ bl_info = {
     "category": "",
 }
 
+
+
 import os
 import sys
 from typing import Any
 
 import bpy  # type: ignore
+
+import importlib
+# sys.path.append("somepath")
+# import HumGen3D
+# importlib.reload(HumGen3D)
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
@@ -142,7 +151,8 @@ non_ui_tab_classes = [cls for cls in hg_classes if cls not in ui_tab_classes]
 
 
 def register() -> None:
-    addon_updater_ops.register(bl_info)
+    if bpy.app.version < (4, 2, 0):
+        addon_updater_ops.register(bl_info)
 
     _initiate_custom_icons()
 
