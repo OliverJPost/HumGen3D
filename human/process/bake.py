@@ -18,7 +18,7 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.common.context import context_override
 
 from ..hair.compatibility import SPECULAR_INPUT_NAME
-
+from HumGen3D.common.compatibility import EEVEE_RENDER_ENGINE
 if TYPE_CHECKING:
     from ..human import Human
 
@@ -260,7 +260,7 @@ class BakeSettings:
             try:
                 context.scene.render.engine = "EEVEE"
             except TypeError:
-                context.scene.render.engine = "BLENDER_EEVEE"
+                context.scene.render.engine = EEVEE_RENDER_ENGINE
 
 
     @injected_context
