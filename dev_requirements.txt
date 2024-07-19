@@ -1,6 +1,6 @@
 # Testing
-pytest>=7.1.2
-pytest-cov>=3.0.0
-pytest-lazy-fixture>=0.6.3
-pywavefront>=1.3.3
-pygltflib>=1.15.5
+pytest~=7.1.2
+pytest-cov~=3.0.0
+pytest-lazy-fixture~=0.6.3
+pywavefront~=1.3.3
+pygltflib~=1.15.5
