@@ -151,8 +151,7 @@ non_ui_tab_classes = [cls for cls in hg_classes if cls not in ui_tab_classes]
 
 
 def register() -> None:
-    if bpy.app.version < (4, 2, 0):
-        addon_updater_ops.register(bl_info)
+    addon_updater_ops.register(bl_info)
 
     _initiate_custom_icons()
 
