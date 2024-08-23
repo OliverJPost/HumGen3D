@@ -207,9 +207,11 @@ class PreviewCollectionContent:
             subcategory=override_category,
             use_search_term=not ignore_searchterm,
         )
-
-        sett.pcoll[pcoll_name] = "none"  # set the preview collection to
-        # the 'click here to select' item
+        # set the preview collection to the 'click here to select' item
+        if bpy.app.version >= (4,2,0):
+            sett.pcoll[pcoll_name] = 0
+        else:
+            sett.pcoll[pcoll_name] = "none"
 
     def _check_for_HumGen_filepath_issues(self) -> None:
         pref = get_prefs()
