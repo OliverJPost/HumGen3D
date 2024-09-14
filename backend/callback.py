@@ -107,7 +107,7 @@ def _set_shader_switches(human, sett):
     skin_sss = "off"
     for node in nodes:
         if node.type == "BSDF_PRINCIPLED":
-            skin_sss = "off" if principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value == 0 else "on"
+            skin_sss = "off" if node.inputs[SUBSURFACE_INPUT_NAME].default_value == 0 else "on"
         
     sett.skin_sss = skin_sss
 
