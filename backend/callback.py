@@ -104,10 +104,12 @@ def _set_shader_switches(human, sett):
     if not body_obj:
         return
 
-    principled_bsdf = next(node for node in nodes if node.type == "BSDF_PRINCIPLED")
-    sett.skin_sss = (
-        "off" if principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value == 0 else "on"
-    )
+    skin_sss = "off"
+    for node in nodes:
+        if node.type == "BSDF_PRINCIPLED":
+            skin_sss = "off" if node.inputs[SUBSURFACE_INPUT_NAME].default_value == 0 else "on"
+        
+    sett.skin_sss = skin_sss
 
     uw_node = nodes.get("Underwear_Opacity")
     if uw_node:
