@@ -434,7 +434,7 @@ class TextureSettings(PreviewCollectionContent):
                     current_image = node.image
                     if not current_image:
                         continue
-                    current_path = current_image.filepath
+                    current_path = bpy.path.abspath(current_image.filepath)
 
                     if "MEDIUM_RES" in current_path or "LOW_RES" in current_path:
                         current_dir = Path(os.path.dirname(current_path)).parent
