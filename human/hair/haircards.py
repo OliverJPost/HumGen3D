@@ -443,8 +443,10 @@ class HairCollection:
             ]
 
         haircap_obj = data_to.objects[0]
-        context.scene.collection.objects.link(haircap_obj)
+        old_loc = haircap_obj.location.copy()
         haircap_obj.location = human.location
+        context.scene.collection.objects.link(haircap_obj)
+
         body_obj_eval_coords = world_coords_from_obj(
             human.objects.body, data=human.keys.all_deformation_shapekeys, local=True
         )

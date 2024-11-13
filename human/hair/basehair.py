@@ -141,6 +141,9 @@ class BaseHair:
         if not self.modifiers:
             raise HumGenException("No hair to convert")
 
+        old_loc = self._human.location.copy()
+        self._human.location = (0,0,0)
+
         for mod in self.modifiers:
             if not mod.show_viewport:
                 continue
@@ -220,6 +223,8 @@ class BaseHair:
 
         add_to_collection(context, joined_object, "HumGen")
         self._human.objects.rig["haircard"] = True
+
+        self._human.location = old_loc
         return joined_object
 
     @injected_context
