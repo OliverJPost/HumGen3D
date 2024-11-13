@@ -4,6 +4,7 @@
 import os
 import random
 
+import bpy
 import pytest
 import pywavefront
 
@@ -80,7 +81,11 @@ def test_gltf_export(human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""
     path = os.path.join(tmp_path, "test.gltf")
     human.location = (5, 2, 7)
-    human.export.to_gltf(path, context=context)
+    if bpy.app.version < (4, 0, 0):
+        human.export.to_gltf_combined(path, context=context)
+    else:
+        human.export.to_gltf_separate(path, context=context)
+
     gltf = GLTF2().load(path)
     assert len(gltf.meshes) == 4
 

@@ -264,7 +264,8 @@ class ProcessProps(bpy.types.PropertyGroup):
             (".fbx", "FBX", "", 1),
             (".abc", "Alembic", "", 2),
             (".glb", "glTF Binary (.glb)", "", 3),
-            (".glTF", "glTF Embedded (.glTF", "", 4),
+            (".glTF Embedded", "glTF Embedded (.glTF)", "", 4),
+            (".glTF Separate", "glTF Separate (.glTF + .bin + textures)", "", 5)
         ]
     )
 
