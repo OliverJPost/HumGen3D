@@ -100,7 +100,7 @@ def world_coords_from_obj(
                 continue
 
             sk_data = keyitem.as_bpy().data
-            sk_world_co = _get_world_co(obj, sk_data)
+            sk_world_co = _get_world_co(obj, sk_data, local)
             world_coords += (sk_world_co - base_coords) * keyitem.value
 
     return world_coords
