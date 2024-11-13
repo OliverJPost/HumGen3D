@@ -10,6 +10,7 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 from HumGen3D.common.objects import apply_sk_to_mesh
 from HumGen3D.common.decorators import deprecated
+from HumGen3D.common.exceptions import HumGenException
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -210,13 +211,19 @@ class ExportBuilder:
             bpy.context.view_layer.layer_collection.children[collection.name]
         )
 
-        bpy.ops.export_scene.gltf(
-            filepath=filepath,
-            export_format=format,
-            export_copyright=LICENSE_TEXT,
-            export_image_format=img_format,
-            use_active_collection=True,
-        )
+        try:
+            bpy.ops.export_scene.gltf(
+                filepath=filepath,
+                export_format=format,
+                export_copyright=LICENSE_TEXT,
+                export_image_format=img_format,
+                use_active_collection=True,
+            )
+        except TypeError as e:
+            if str(e) == "Converting py args to operator properties: enum \"GLTF_EMBEDDED\" not found in ('GLB', 'GLTF_SEPARATE')":
+                raise HumGenException("You need to enable glTF Embedded in the 'glTF 2.0 Format' add-on preferences.") from None
+            else:
+                raise
 
         bpy.context.scene.collection.children.unlink(collection)
         bpy.data.collections.remove(collection)
