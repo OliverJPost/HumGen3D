@@ -80,9 +80,26 @@ def rigify_human_with_outfit(male_rigify_human):
 def test_remove_outfit(human):
     old_child_count = len(list(human.children))
     cloth_obj_len = len(human.clothing.outfit.objects)
+    assert len(list(mod for mod in human.objects.body.modifiers if mod.type == "MASK")) != 0
+
     human.clothing.outfit.remove()
 
     assert len(list(human.children)) == old_child_count - cloth_obj_len
+    assert len(list(mod for mod in human.objects.body.modifiers if mod.type == "MASK")) == 0
+
+@pytest.mark.parametrize(
+    "human",
+    [lazy_fixture(f) for f in ["human_with_outfit", "rigify_human_with_outfit"]],
+)
+def test_remove_outfit_without_removing_masks(human):
+    old_child_count = len(list(human.children))
+    cloth_obj_len = len(human.clothing.outfit.objects)
+    assert len(list(mod for mod in human.objects.body.modifiers if mod.type == "MASK")) != 0
+
+    human.clothing.outfit.remove(remove_masks=False)
+
+    assert len(list(human.children)) == old_child_count - cloth_obj_len
+    assert len(list(mod for mod in human.objects.body.modifiers if mod.type == "MASK")) != 0
 
 
 @pytest.mark.parametrize(

@@ -100,7 +100,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
 
         tag = "shoe" if is_footwear else "cloth"
         # TODO as argument?
-        mask_remove_list = self.remove() if pref.remove_clothes else []
+        mask_remove_list = self.remove(remove_masks=False) if pref.remove_clothes else []
 
         hg_log("Importing cloth item", preset, level="DEBUG")
         cloth_objs, collections = self._import_cloth_items(preset, context)
@@ -211,8 +211,11 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         self._set_armature(context, cloth_obj, self._human.objects.rig)
         context.view_layer.objects.active = self._human.objects.rig
 
-    def remove(self) -> list[str]:
+    def remove(self, remove_masks=True) -> list[str]:
         """Removes the cloth objects of this category that are currently on the human.
+
+        Args:
+              remove_masks (bool): Remove geometry masks used by this clothing, default True
 
         Returns:
             list: list of geometry masks that need to be removed
@@ -223,6 +226,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         for obj in self.objects:
             mask_remove_list.extend(find_masks(obj))
             hg_delete(obj)
+
+        if remove_masks:
+            for mask in mask_remove_list:
+                with contextlib.suppress(Exception):
+                    self._human.objects.body.modifiers.remove(
+                        self._human.objects.body.modifiers.get(mask)
+                    )
 
         return mask_remove_list
 
