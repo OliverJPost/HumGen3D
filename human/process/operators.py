@@ -63,6 +63,12 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
         pr_sett = context.scene.HG3D.process
         human_rigs = find_multiple_in_list(context.selected_objects)
+        export_folder = pr_sett.baking.export_folder
+        if not export_folder:
+            export_folder = os.path.join(get_prefs().filepath, "export_results")
+            if not os.path.exists(export_folder):
+                os.makedirs(export_folder)
+
         for rig_obj in human_rigs:
             human = Human.from_existing(rig_obj)
             if pr_sett.output != "replace":
@@ -165,7 +171,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     export_method = getattr(
                         human.export, f"to_{pr_sett.file_type[1:].lower()}"
                     )
-                filepath = os.path.join(pr_sett.baking.export_folder, fn)
+                filepath = os.path.join(export_folder, fn)
                 export_method(filepath)
                 human.delete()
 
@@ -173,7 +179,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
             ShowMessageBox("Processing completed", "Processing completed", "INFO")
         else:
             ShowMessageBox(
-                f"Saved to {pr_sett.baking.export_folder}", "Export completed", "INFO"
+                f"Saved to {export_folder}", "Export completed", "INFO"
             )
 
         for callback in temp_depsgraph_callbacks:
