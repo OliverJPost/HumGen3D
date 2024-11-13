@@ -157,9 +157,14 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 fn = remove_number_suffix(
                     pr_sett.output_name.replace("{name}", human.name).strip()
                 )
-                export_method = getattr(
-                    human.export, f"to_{pr_sett.file_type[1:].lower()}"
-                )
+                if pr_sett.file_type == ".glTF Separate":
+                    export_method = human.export.to_gltf_separate
+                elif pr_sett.file_type == ".glTF Embedded":
+                    export_method = human.export.to_gltf_embedded
+                else:
+                    export_method = getattr(
+                        human.export, f"to_{pr_sett.file_type[1:].lower()}"
+                    )
                 filepath = os.path.join(pr_sett.baking.export_folder, fn)
                 export_method(filepath)
                 human.delete()

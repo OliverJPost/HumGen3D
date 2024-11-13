@@ -9,6 +9,7 @@ from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 from HumGen3D.common.objects import apply_sk_to_mesh
+from HumGen3D.common.decorators import deprecated
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -49,12 +50,12 @@ def exporter(exporter_func):
         human.process.baking.bake_all(folder, 4, context=context)
 
     def _check_extension(filepath):
-        extension = exporter_func.__name__.split("_")[-1]
+        extension = exporter_func.__name__.replace("_separate", "").replace("_embedded", "").split("_")[-1]
         if not "." in filepath:
             filepath += "." + extension
         elif not filepath.endswith(extension):
             raise Exception(
-                "Filepath does not end with extension. Either remove the extension or use the correct one."
+                f"Filepath '{filepath}' does not end with extension '{extension}'. Either remove the extension or use the correct one."
             )
         return filepath
 
@@ -160,7 +161,18 @@ class ExportBuilder:
         )
 
     @exporter
+    @deprecated("Use .to_gltf_embedded or .to_gltf_separate instead.")
     def to_gltf(
+        self,
+        filepath: str,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+        ):
+        self._export_common_gltf(filepath, "GLTF_EMBEDDED")
+
+    @exporter
+    def to_gltf_embedded(
         self,
         filepath: str,
         # DON'T REMOVE, used by decorator
@@ -168,6 +180,16 @@ class ExportBuilder:
         context: C = None,
     ):
         self._export_common_gltf(filepath, "GLTF_EMBEDDED")
+
+    @exporter
+    def to_gltf_separate(
+        self,
+        filepath: str,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
+        self._export_common_gltf(filepath, "GLTF_SEPARATE")
 
     def _export_common_gltf(
         self, filepath, format: str, img_format: Literal["AUTO", "JPEG"] = "AUTO"
