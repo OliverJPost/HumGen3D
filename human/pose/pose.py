@@ -20,6 +20,16 @@ if TYPE_CHECKING:
 
 from HumGen3D.backend.content.content_saving import save_objects_optimized, save_thumb
 
+def remove_broken_constraints(armature):
+
+    for bone in armature.pose.bones:
+        const_remove_list = []
+        for const in bone.constraints:
+            if const.name == "Stretch To":
+                const_remove_list.append(const)
+
+        for const in const_remove_list:
+            bone.constraints.remove(const)
 
 class PoseSettings(PreviewCollectionContent, SavableContent):
     """Class for manipulating pose of human."""

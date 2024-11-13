@@ -43,7 +43,7 @@ from .hair.hair import HairSettings
 from .height.height import HeightSettings
 from .keys.keys import KeySettings
 from .objects import ObjectCollection
-from .pose.pose import PoseSettings  # type:ignore
+from .pose.pose import PoseSettings, remove_broken_constraints  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
 
@@ -608,6 +608,7 @@ class Human:
             mod.show_expanded = False
 
         remove_broken_drivers()
+        remove_broken_constraints(hg_rig)
 
         return human
 
