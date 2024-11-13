@@ -147,19 +147,33 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
-        bpy.ops.export_scene.obj(
-            filepath=filepath,
-            use_selection=True,
-            use_mesh_modifiers=apply_modifiers,
-            use_normals=True,
-            use_uvs=True,
-            use_materials=True,
-            use_triangles=triangulate,
-            use_vertex_groups=export_vertex_groups,
-            path_mode=path_mode,
-            axis_forward=axis_forward,
-            axis_up=axis_up,
-        )
+        if bpy.app.version < (4, 0, 0):
+            bpy.ops.export_scene.obj(
+                filepath=filepath,
+                use_selection=True,
+                use_mesh_modifiers=apply_modifiers,
+                use_normals=True,
+                use_uvs=True,
+                use_materials=True,
+                use_triangles=triangulate,
+                use_vertex_groups=export_vertex_groups,
+                path_mode=path_mode,
+                axis_forward=axis_forward,
+                axis_up=axis_up,
+            )
+        else:
+            bpy.ops.wm.obj_export(
+                filepath=filepath,
+                export_selected_objects=True,
+                apply_modifiers=apply_modifiers,
+                export_normals=True,
+                export_uv=True,
+                export_materials=True,
+                export_triangulated_mesh=triangulate,
+                path_mode=path_mode,
+                forward_axis=axis_forward.replace("-", "NEGATIVE_"),
+                up_axis=axis_up.replace("-", "NEGATIVE_"),
+            )
 
     @exporter
     @deprecated("Use .to_gltf_embedded or .to_gltf_separate instead.")
