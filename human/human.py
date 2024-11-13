@@ -724,11 +724,17 @@ class Human:
 
             # Reassign body_obj pointerproperty
             if obj == self.objects.body:
-                rig_copy.HG.body_obj = obj_copy
+                body_copy = obj_copy
+                rig_copy.HG.body_obj = body_copy
+
             context.collection.objects.link(obj_copy)
             add_to_collection(context, obj_copy)
 
-        return Human.from_existing(obj_copy)  # type:ignore[return-value]
+        new_human = Human.from_existing(obj_copy)
+        jaw_bone = new_human.pose.get_posebone_by_original_name("jaw")
+        damped_track_modifier = jaw_bone.constraints["Damped Track"].target = body_copy
+
+        return new_human
 
     @injected_context
     def render_thumbnail(
