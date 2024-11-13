@@ -51,7 +51,7 @@ def _add_corrective_shapekeys(
         sk.interpolation = "KEY_LINEAR"
 
     json_path = os.path.join(
-        get_addon_root(), "human", "clothing", "corrective_sk_names.json"
+        get_addon_root(), "human", "clothing", "corrective_sk_names_v2.json"
     )
 
     with open(json_path, "r") as f:
