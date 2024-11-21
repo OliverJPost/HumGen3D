@@ -269,7 +269,11 @@ class ProcessSettings:
         for mat_type, new_name in data.items():
             if mat_type in ("bl_rna", "rna_type", "name", "materials", "use_suffix"):
                 continue
-            mats = getattr(self._human.materials, mat_type)
+            try:
+                mats = getattr(self._human.materials, mat_type)
+            except AttributeError:
+                print(f"No material of type {mat_type} found.")
+                continue
             if not isinstance(mats, list):
                 mats = [mats]
 
