@@ -110,6 +110,7 @@ class RigifySettings:
         new_HG.body_obj = old_HG.body_obj
         new_HG.length = old_HG.length
         new_HG.version = old_HG.version
+        new_rig["ACTIVE_HUMAN_PRESET"] = old_HG["ACTIVE_HUMAN_PRESET"]
         if "pytest_human" in hg_rig:
             rigify_rig["pytest_human"] = True
 
