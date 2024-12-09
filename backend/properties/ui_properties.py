@@ -53,10 +53,10 @@ def panel_update(self, context):
 def active_tab_enum(self, context):
     try:
         return [
-            ("CREATE", "Create", "", get_hg_icon("create"), 0),
-            ("BATCH", "Batch Generator", "", get_hg_icon("batch"), 1),
-            ("CONTENT", "Custom Content", "", get_hg_icon("custom_content"), 2),
-            ("PROCESS", "Process", "", get_hg_icon("export"), 3),
+            ("CREATE", "Create", "Create", get_hg_icon("create"), 0),
+            ("BATCH", "Batch Generator", "Batch Generator", get_hg_icon("batch"), 1),
+            ("CONTENT", "Custom Content", "Custom Content", get_hg_icon("custom_content"), 2),
+            ("PROCESS", "Process", "Process", get_hg_icon("export"), 3),
         ]
     except IndexError:
         return []
