@@ -401,7 +401,7 @@ class HairCollection:
         self,  # noqa
         human: "Human",
         haircap_type: Literal["Scalp", "Eyelashes", "Brows", "Beard"],
-        density_vertex_groups: list[bpy.types.VertexGroup],
+        density_vertex_groups: list[tuple[bpy.types.VertexGroup, float]],
         context: C = None,
         downsample_mesh: bool = False,
     ) -> bpy.types.Object:
@@ -422,11 +422,11 @@ class HairCollection:
 
         vg_aggregate = np.zeros(vert_count, dtype=np.float32)
 
-        for vg in density_vertex_groups:
+        for vg, vg_weight in density_vertex_groups:
             vg_values = np.zeros(vert_count, dtype=np.float32)
             for i in range(vert_count):
                 with contextlib.suppress(RuntimeError):
-                    vg_values[i] = vg.weight(i)
+                    vg_values[i] = vg.weight(i) * vg_weight
             vg_aggregate += vg_values
 
         vg_aggregate = np.round(vg_aggregate, 4)
@@ -464,10 +464,10 @@ class HairCollection:
         )
 
         vc = haircap_obj.data.color_attributes[0]
-
+        haircap_coords_world = world_coords_from_obj(haircap_obj)
         bm = None
         if haircap_type in ("Scalp", "Beard"):
-            for i, vert_world_co in enumerate(haircap_coords):
+            for i, vert_world_co in enumerate(haircap_coords_world):
                 nearest_vert_index = self.kd.find(vert_world_co)[1]
                 value = vg_aggregate[nearest_vert_index]
                 vc.data[i].color = (value, value, value, 1)
