@@ -156,6 +156,8 @@ class BaseHair:
                 bpy.ops.object.modifier_convert(modifier=mod.name)
 
             hair_obj = context.object  # TODO this is bound to fail
+            if not hair_obj:
+                continue
             hc = HairCollection(hair_obj, self._human)
             if self._haircap_type == "Scalp" and not quality == "haircap_only":
                 objs = hc.create_mesh(quality)
@@ -167,7 +169,7 @@ class BaseHair:
                 hc.add_material()
 
         density_vertex_groups = [
-            self._human.objects.body.vertex_groups[ps.vertex_group_density]
+            (self._human.objects.body.vertex_groups[ps.vertex_group_density], ps.settings.child_length)
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
