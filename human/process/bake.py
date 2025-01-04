@@ -311,8 +311,11 @@ class BakeSettings:
                 baketexture.material_slot  # type:ignore[index]
             ].material
             if "alpha" in baketexture.texture_type.lower():
-                mat.blend_method = "BLEND"
-                mat.shadow_method = "CLIP"
+                if bpy.app.version < (4, 3, 0):
+                    mat.blend_method = "BLEND"
+                    mat.shadow_method = "CLIP"
+                else:
+                    mat.surface_render_method = "BLENDED"
 
             image = bpy.data.images.get(baketexture.output_image_name)
             self._add_image_node(image, baketexture.texture_type, mat)  # type:ignore
