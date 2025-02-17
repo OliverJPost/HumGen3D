@@ -22,20 +22,31 @@ from HumGen3D.common.math import centroid
 
 
 def _correct_shape_to_a_pose(
-    cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
+    self, cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
 ) -> None:
     # TODO mask modifiers
     depsgraph = context.evaluated_depsgraph_get()
 
     hg_body_eval = hg_body.evaluated_get(depsgraph)
+
+    if self._human.gender == "female":
+        verts = hg_body.data.vertices
+    else:
+        verts = hg_body.data.shape_keys.key_blocks["Male"].data
+    hg_body_coords_world = world_coords_from_obj(hg_body, data=verts)
+
     hg_body_eval_coords_world = world_coords_from_obj(hg_body_eval)
     cloth_obj_coords_world = world_coords_from_obj(cloth_obj)
     distance_dict = build_distance_dict(
         hg_body_eval_coords_world, cloth_obj_coords_world
     )
+
+
     deform_obj_from_difference(
-        "", distance_dict, hg_body_eval_coords_world, cloth_obj, as_shapekey=False
+        "", distance_dict, hg_body_coords_world, cloth_obj, as_shapekey=False
     )
+
+    self.deform_cloth_to_human(context=context, cloth_obj=cloth_obj)
 
 
 def _add_corrective_shapekeys(

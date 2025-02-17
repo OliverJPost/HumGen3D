@@ -150,7 +150,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             context (C): Blender context. bpy.context if not provided.
         """
         body_obj = self._human.objects.body
-        _correct_shape_to_a_pose(cloth_obj, body_obj, context)
+        _correct_shape_to_a_pose(self, cloth_obj, body_obj, context)
         _add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
         if recalculate_weights:
             _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
