@@ -51,6 +51,7 @@ class HG_OBJECT_PROPS(bpy.types.PropertyGroup):
     experimental: BoolProperty(default=False)
     length: FloatProperty()
     backup: PointerProperty(type=bpy.types.Object)
+    active_human_preset: bpy.props.StringProperty(default="")
     phase: EnumProperty(
         name="phase",
         items=[

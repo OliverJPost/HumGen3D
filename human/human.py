@@ -522,11 +522,11 @@ class Human:
 
     @property
     def _active(self) -> str:
-        return self.objects.rig["ACTIVE_HUMAN_PRESET"]  # type: ignore[index]
+        return self.objects.rig.HG.active_human_preset  # type: ignore[index]
 
     @_active.setter
     def _active(self, value: str) -> None:
-        self.objects.rig["ACTIVE_HUMAN_PRESET"] = value  # type: ignore[index]
+        self.objects.rig.HG.active_human_preset = value
 
     def delete(self) -> None:
         """Delete the human from Blender.

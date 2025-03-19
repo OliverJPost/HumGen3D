@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal
+from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal, Self
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
@@ -88,7 +88,7 @@ class SkinSettings:
             SkinNodes: All nodes of the human skin material. Basically a
                 bpy_prop_collection with one extra method.
         """
-        return SkinNodes(self._human)
+        return SkinNodes.from_human(self._human)
 
     @property
     def links(self) -> SkinLinks:
@@ -98,7 +98,7 @@ class SkinSettings:
             SkinLinks: All links on the human skin material. Basically a
                 bpy_prop_collection.
         """
-        return SkinLinks(self._human)
+        return SkinLinks.from_human(self._human)
 
     @property
     def material(self) -> "Material":
@@ -534,10 +534,12 @@ class TextureSettings(PreviewCollectionContent):
 class SkinNodes(bpy_prop_collection):
     """Inherits from bpy_prop_collection to add custom methods to the collection."""
 
-    def __new__(cls, human: "Human") -> "SkinNodes":  # noqa D102
+    @staticmethod
+    def from_human(human: "Human") -> "SkinNodes":
         skin_mat = human.objects.body.data.materials[0]
         nodes = skin_mat.node_tree.nodes
-        return super().__new__(cls, nodes)  # type:ignore[call-arg]
+        return SkinNodes(nodes)  # type:ignore[call-arg]
+
 
     def get_image_nodes(self) -> List[ShaderNode]:
         """Get all nodes that are ShaderNodeTexImage.
@@ -551,7 +553,8 @@ class SkinNodes(bpy_prop_collection):
 class SkinLinks(bpy_prop_collection):
     """Inherits from bpy_prop_collection to add custom methods to the collection."""
 
-    def __new__(cls, human: "Human") -> "SkinLinks":  # noqa D102
+    @staticmethod
+    def from_human(human: "Human") -> "SkinLinks":  # noqa D102
         skin_mat = human.objects.body.data.materials[0]
         links = skin_mat.node_tree.links
-        return super().__new__(cls, links)  # type:ignore[call-arg]
+        return SkinLinks(links)  # type:ignore[call-arg]
