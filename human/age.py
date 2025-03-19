@@ -84,7 +84,7 @@ class AgeSettings:
             else:
                 key.value = age_key_value
 
-        nodes = SkinNodes(self._human)
+        nodes = SkinNodes.from_human(self._human)
         node_age_normal = nodes.get("HG_Age")
         node_age_normal.inputs["Strength"].default_value = age_key_value * 6
 
