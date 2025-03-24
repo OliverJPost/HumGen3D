@@ -12,6 +12,7 @@ import random
 from typing import Any, Literal, Optional, cast
 
 import bpy
+import numpy as np
 from bpy.types import Image  # type:ignore
 from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
 from HumGen3D.backend.preferences.preferences import HG_PREF
@@ -340,7 +341,7 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         full_path = str(pref.filepath) + preset
         with open(full_path) as f:
             hair_data = json.load(f)
-
+        print(1)
         blendfile = hair_data["blend_file"]
         json_systems = hair_data["hair_systems"]
 
@@ -353,62 +354,66 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         hair_obj = self._import_hair_obj(
             context, hair_type, pref, blendfile  # type:ignore
         )
-
+        print(2)
         human = self._human
         human.hide_set(False)
-
+        print(3)
         if hair_type == "face_hair":
             human.hair.face_hair.remove_all()
         else:
             human.hair.regular_hair.remove_all()
+        print(4)
         remove_broken_drivers()
-
+        print(5)
         mask_mods = [m for m in self._human.objects.body.modifiers if m.type == "MASK"]
         for mod in mask_mods:
             mod.show_viewport = False
-
+        print(6)
         # IMPORTANT: Hair systems do not transfer correctly if they are hidden in the
         # viewport
         for mod in hair_obj.modifiers:
             if mod.type == "PARTICLE_SYSTEM":
                 mod.show_viewport = True
-
+        print(7)
         context.view_layer.objects.active = hair_obj
+        print(8)
         self._morph_hair_obj_to_body_obj(context, hair_obj)  # type:ignore
-
+        print(9)
         context.view_layer.objects.active = hair_obj
         bpy.ops.particle.disconnect_hair(all=True)
-
+        print(10)
         for obj in context.selected_objects:
             obj.select_set(False)
         context.view_layer.objects.active = hair_obj
         human.objects.body.select_set(True)
-
+        print(11)
         # iterate over hair systems that need to be transferred
 
         for ps_name in json_systems:
             self._transfer_hair_system(
                 context, json_systems, hair_obj, ps_name  # type:ignore
             )
-
+        print(12)
         for vg in hair_obj.vertex_groups:
             if vg.name.lower().startswith(("hair", "fh")):
                 self._transfer_vertexgroup(hair_obj, vg.name)
-
+        print(13)
         new_hair_systems = self._get_hair_systems_dict(hair_obj)
-
+        print(14)
         context.view_layer.objects.active = self._human.objects.body
         for mod in new_hair_systems:
             self._reconnect_hair(mod)
             self._add_quality_props(mod)
-
+        print(15)
         self._set_correct_particle_vertexgroups(new_hair_systems, hair_obj)
+        print(16)
         self._set_correct_hair_material(new_hair_systems, hair_type)
-
+        print(17)
         for mod in self._human.hair.modifiers:
             mod.show_expanded = False
 
         self._move_modifiers_above_masks(new_hair_systems)
+        print(18)
         for mod in human.objects.body.modifiers:
             # Turn on masks again
             if mod.type == "MASK":
@@ -418,12 +423,15 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
             elif mod.type == "PARTICLE_SYSTEM":
                 ps_sett = mod.particle_system.settings
                 set_children_percent(ps_sett, ps_sett.rendered_child_count)
-
+        print(19)
 
         hg_delete(hair_obj)
+        print(20)
         remove_broken_drivers()
+        print(21)
         human.hair._add_quality_props()
         human.props.hashes[f"${self._pcoll_name}"] = str(hash(self))
+        print(22)
 
     @injected_context
     def save_to_library(
@@ -511,26 +519,20 @@ class ImportableHair(BaseHair, PreviewCollectionContent, SavableContent):
         self, context: bpy.types.Context, hair_obj: bpy.types.Object
     ) -> None:  # noqa
         """Gives the imported hair object the exact same shape as hg human."""  # noqa
-        body_copy = self._human.objects.body.copy()  # TODO without copying
-        body_copy.data = body_copy.data.copy()
-        context.scene.collection.objects.link(body_copy)
+        dg = context.evaluated_depsgraph_get()
+        body_eval = self._human.objects.body.evaluated_get(dg)
+        body_eval_coords = np.empty(len(body_eval.data.vertices) * 3, dtype=np.float32)
+        body_eval.data.vertices.foreach_get("co", body_eval_coords)
 
-        apply_shapekeys(body_copy)
-        remove_broken_drivers()
-        apply_armature(body_copy)
-
-        for obj in context.selected_objects:
-            obj.select_set(False)
-
-        hair_obj.select_set(True)
-        body_copy.select_set(True)
-        context.view_layer.objects.active = hair_obj
-        bpy.ops.object.join_shapes()
-
-        sk = hair_obj.data.shape_keys.key_blocks
-        sk[body_copy.name].value = 1
-
-        hg_delete(body_copy)
+        # Add body_eval coordinates as shape key to hair_obj
+        hair_obj.shape_key_add(name="body")
+        body_shape_key = hair_obj.data.shape_keys.key_blocks["body"]
+        body_shape_key.data.foreach_set(
+            "co",
+            body_eval_coords
+        )
+        hair_obj.data.update()
+        hair_obj.data.shape_keys.key_blocks["body"].value = 1
 
     def _transfer_hair_system(
         self,
