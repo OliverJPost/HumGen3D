@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal, Self
+from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
