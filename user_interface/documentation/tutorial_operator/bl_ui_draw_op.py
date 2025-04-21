@@ -10,7 +10,9 @@ class BL_UI_OT_draw_operator(Operator):
     bl_description = "Operator for bl ui widgets"
     bl_options = {"REGISTER"}
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
         self.draw_handle = None
         self.draw_event = None
         self._finished = False

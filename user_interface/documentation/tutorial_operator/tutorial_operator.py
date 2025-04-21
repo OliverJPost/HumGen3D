@@ -13,7 +13,6 @@ from .bl_ui_drag_panel import *
 from .bl_ui_draw_op import *
 from .bl_ui_image import *
 
-
 class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
     """
     Opens a custom ui panel in the 3D viewport, showing
@@ -29,9 +28,8 @@ class HG_DRAW_PANEL(BL_UI_OT_draw_operator):
     first_time: bpy.props.BoolProperty(default=False)
     tutorial_name: bpy.props.StringProperty()
 
-    def __init__(self):
-
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.image_width = 1200
         self.image_height = 600
