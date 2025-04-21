@@ -96,7 +96,7 @@ class PreviewCollection:
 
         self.populate(context, gender, subcategory=subcategory, use_search_term=True)
         if bpy.app.version >= (4,2,0):
-            sett.pcoll[pcoll_name] = 0
+            sett.pcoll[self.name] = 0
         else:
             sett.pcoll[self.name] = "none"  # set the preview collection to
                                             # the 'click here to select' item
