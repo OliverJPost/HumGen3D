@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Iterable, cast
 
 import bpy
 from HumGen3D.common.context import context_override
-
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
@@ -17,6 +16,8 @@ from HumGen3D.common.geometry import (
     build_distance_dict,
     deform_obj_from_difference,
     world_coords_from_obj,
+    deform_obj_from_difference_SMOOTH,
+    build_distance_dict_SMOOTH
 )
 from HumGen3D.common.math import centroid
 
@@ -25,8 +26,11 @@ def _correct_shape_to_a_pose(
     self, cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
 ) -> None:
     # TODO mask modifiers
-    depsgraph = context.evaluated_depsgraph_get()
+    for modifier in hg_body.modifiers:
+        if modifier.type == "MASK":
+            modifier.show_viewport = False
 
+    depsgraph = context.evaluated_depsgraph_get()
     hg_body_eval = hg_body.evaluated_get(depsgraph)
 
     if self._human.gender == "female":
@@ -37,17 +41,20 @@ def _correct_shape_to_a_pose(
 
     hg_body_eval_coords_world = world_coords_from_obj(hg_body_eval)
     cloth_obj_coords_world = world_coords_from_obj(cloth_obj)
-    distance_dict = build_distance_dict(
+    distance_dict = build_distance_dict_SMOOTH(
         hg_body_eval_coords_world, cloth_obj_coords_world
     )
 
 
-    deform_obj_from_difference(
+    deform_obj_from_difference_SMOOTH(
         "", distance_dict, hg_body_coords_world, cloth_obj, as_shapekey=False
     )
 
     self.deform_cloth_to_human(context=context, cloth_obj=cloth_obj)
 
+    for modifier in hg_body.modifiers:
+        if modifier.type == "MASK":
+            modifier.show_viewport = True
 
 def _add_corrective_shapekeys(
     cloth_obj: bpy.types.Object, human: "Human", cloth_type: str
@@ -134,6 +141,8 @@ def _auto_weight_paint(
         if mod.type == "MASK":
             mod.show_viewport = False
             mod.show_render = False
+        if mod.type == "ARMATURE":
+            mod.show_viewport = False
 
     armature = next(
         (mod for mod in cloth_obj.modifiers if mod.type == "ARMATURE"), None
@@ -165,6 +174,8 @@ def _auto_weight_paint(
         if mod.type == "MASK":
             mod.show_viewport = True
             mod.show_render = True
+        if mod.type == "ARMATURE":
+            mod.show_viewport = True
 
 
 def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
