@@ -192,6 +192,112 @@ def deform_obj_from_difference(
                 deform_obj.matrix_world.inverted() @ world_new_loc
             )
 
+def build_distance_dict_SMOOTH(
+    body_coordinates_world: np.ndarray,
+    target_coordinates_world: np.ndarray,
+    k_neighbors: int = 5,
+    falloff_power: float = 2.0,
+) -> DistanceDict:
+    """
+    Build a distance dictionary using k nearest neighbors instead of just one.
+
+    Args:
+        body_coordinates_world: Source body coordinates in world space
+        target_coordinates_world: Target coordinates in world space
+        k_neighbors: Number of nearest neighbors to consider
+        falloff_power: Power for distance weighting (higher values give more weight to closer points)
+
+    Returns:
+        A dictionary mapping target indices to a list of (source_idx, distance_vector, weight) tuples
+    """
+    kd = kdtree.KDTree(len(body_coordinates_world))  # type:ignore[call-arg]
+
+    for i, co in enumerate(body_coordinates_world):
+        kd.insert(co, i)
+
+    kd.balance()
+
+    distance_dict = {}
+    for idx_target, co_target in enumerate(target_coordinates_world):
+        # Find k nearest neighbors
+        nearest_points = kd.find_n(co_target, k_neighbors)
+
+        # Calculate distances for weighting
+        distances = [Vector(result[0]).length for result in nearest_points]
+
+        # Handle edge case when some points are at exact same position (distance = 0)
+        if any(d < 1e-7 for d in distances):
+            # If any point is extremely close, just use the closest one
+            co_body, idx_body, _ = nearest_points[0]
+            distance_dict[idx_target] = [(idx_body, co_body - Vector(co_target), 1.0)]
+        else:
+            # Calculate weights based on inverse distance
+            weights_raw = [1.0 / (d**falloff_power) for d in distances]
+            weight_sum = sum(weights_raw)
+            weights = [
+                w / weight_sum for w in weights_raw
+            ]  # Normalize weights to sum to 1
+
+            # Store all neighbors with their weights
+            neighbors_data = []
+            for i, (co_body, idx_body, _) in enumerate(nearest_points):
+                neighbors_data.append(
+                    (idx_body, co_body - Vector(co_target), weights[i])
+                )
+
+            distance_dict[idx_target] = neighbors_data
+
+    return distance_dict
+
+
+
+def deform_obj_from_difference_SMOOTH(
+    name: str,
+    distance_dict: DistanceDict,
+    body_eval_coords_world: np.ndarray,
+    deform_obj: bpy.types.Object,
+    as_shapekey: bool = False,
+) -> None:
+    """
+    Deform an object using multiple nearest neighbors for smoother results.
+    """
+    if as_shapekey:
+        key_blocks = deform_obj.data.shape_keys
+        if not key_blocks:
+            sk = deform_obj.shape_key_add(name="BASIS")
+            sk.interpolation = "KEY_LINEAR"
+            sk.value = 1
+            key_blocks = deform_obj.data.shape_keys
+
+        sk = key_blocks.key_blocks.get(name)
+        if not sk:
+            sk = deform_obj.shape_key_add(name=name)
+            sk.interpolation = "KEY_LINEAR"
+            sk.value = 1
+
+    # Process each vertex using the weighted average of multiple nearest neighbors
+    for vertex_index in distance_dict:
+        neighbors = distance_dict[vertex_index]
+
+        # Initialize the new world position as a zero vector
+        world_new_loc = Vector((0, 0, 0))
+
+        # Calculate the weighted average position
+        for idx_body, distance_to_vert, weight in neighbors:
+            source_new_vert_loc = Vector(body_eval_coords_world[idx_body])
+            # Add the weighted contribution of this neighbor
+            world_new_loc += (source_new_vert_loc - distance_to_vert) * weight
+
+        # Apply the result
+        if as_shapekey:
+            sk.data[vertex_index].co = (
+                deform_obj.matrix_world.inverted() @ world_new_loc
+            )
+        else:
+            deform_obj.data.vertices[vertex_index].co = (
+                deform_obj.matrix_world.inverted() @ world_new_loc
+            )
+
 
 def hash_mesh_object(obj: bpy.types.Object) -> int:
     """Hash an object.
