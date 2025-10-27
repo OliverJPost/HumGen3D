@@ -228,6 +228,10 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             "remove_clothes",
             text="Remove old clothes when adding new ones",
         )
+        col.prop(
+            self,
+            "sss_by_default",
+        )
 
         layout.separator()
 

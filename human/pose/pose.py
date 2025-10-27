@@ -244,10 +244,19 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         pose.select_set(True)
         context.view_layer.objects.active = pose
 
-        bpy.ops.object.mode_set(mode="POSE")
 
-        for posebone in pose.pose.bones:
-            posebone.bone.select = True
+
+        if bpy.app.version < (5, 0, 0):
+            bpy.ops.object.mode_set(mode="POSE")
+            for posebone in pose.pose.bones:
+                posebone.bone.select = True
+        else:
+            # use edit bones to select instead
+            bpy.ops.object.mode_set(mode="EDIT")
+            for editbone in pose.data.edit_bones:
+                editbone.select = True
+
+            bpy.ops.object.mode_set(mode="POSE")
 
         bpy.ops.pose.copy()
         bpy.ops.object.mode_set(mode="OBJECT")

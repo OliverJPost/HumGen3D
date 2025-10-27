@@ -56,7 +56,7 @@ class AgeSettings:
         if age == self._current:
             return
 
-        normal_value = min((age - 10) / 10, 4.0)
+        normal_value = min((age - 10) / 10, 2.5)
         young_value = (-0.1 * age + 3) if age < 30 else 0
         if age > 30:
             skin_multiply_value = (age - 30) / 30
