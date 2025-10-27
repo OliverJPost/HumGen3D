@@ -17,7 +17,7 @@
 
 # flake8: noqa E402
 
-__version__ = (4, 0, 26)
+__version__ = (4, 0, 27)
 
 bl_info = {
     "name": "Human Generator 3D",
