@@ -293,6 +293,8 @@ def list_files_in_dir(
         if skip_pbr_folder and "PBR" in root:
             continue  # don't show textures in PBR folder of texture sets``
         for fn in files:
+            if "skin_norm" in fn or "skin_rough" in fn or fn == "Male Trial.png":
+                continue
             if fn.lower().endswith(".trial.jpg"):
                 file_paths.append(os.path.join(root, fn.replace(".jpg", "")))
             if not fn.lower().endswith(ext):

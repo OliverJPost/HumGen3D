@@ -453,6 +453,11 @@ class MainPanelPart(HGPanel):
 
     def draw_top_widget(self, layout, human):
         col = layout
+        is_trial = get_prefs().is_trial
+        if is_trial:
+            row = col.row(align=True)
+            row.label(text="Trial version")
+
 
         row = col.row(align=True)
         row.scale_y = 1.5

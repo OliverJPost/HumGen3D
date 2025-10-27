@@ -88,6 +88,12 @@ class HGPreferenceBackend:
         update=update_tab_name,
         )
 
+    sss_by_default: BoolProperty(
+        default=True,
+        description="Enabled subsurface scattering on the skin material by default. Looks more realistic at the cost of render time.",
+        name="Subsurface Scattering by default",
+    )
+
     @property
     def filepath(self) -> str:
         if self.filepath_:

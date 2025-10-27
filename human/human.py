@@ -243,6 +243,9 @@ class Human:
 
         human._active = preset
 
+        if get_prefs().sss_by_default:
+            human.skin.set_subsurface_scattering(True, context=context)
+
         if errors:
             error_lines = "\n".join(errors)
             ShowMessageBox(f"Occurred errors: {error_lines}", "Error")
