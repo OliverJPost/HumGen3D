@@ -131,7 +131,8 @@ def check_for_addon_issues():
     if not addon.preferences.filepath:
         raise HumGenException("HumGen3D filepath not set.")
     base_humans_path = os.path.join(addon.preferences.filepath, "content_packs", "Base_Humans.json")
-    if not os.path.exists(base_humans_path):
+    trial_content_path = os.path.join(addon.preferences.filepath, "content_packs", "Trial_Content.json")
+    if not os.path.exists(base_humans_path) and not os.path.exists(trial_content_path):
         raise HumGenException("Base humans content pack not installed.")
 
 def verify_addon(func):

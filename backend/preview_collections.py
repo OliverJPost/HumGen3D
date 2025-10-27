@@ -50,7 +50,10 @@ def _check_for_HumGen_filepath_issues() -> None:
 
     base_content = os.path.exists(base_humans_path)
 
-    if not base_content:
+    trial_content_path = os.path.join(pref.filepath, "content_packs", "Trial_Content.json")
+    trial_content = os.path.exists(trial_content_path)
+
+    if not base_content and not trial_content:
         raise HumGenException("Filepath selected, but no humans found in path")
 
 
@@ -164,6 +167,13 @@ class PreviewCollection:
                 )
                 path_list.append(short_path)
 
+        # sort .trial items last
+        pcoll_enum.sort(
+            key=lambda pcoll_enum_item: pcoll_enum_item[0]
+            .lower()
+            .endswith(".trial")
+        )
+
         self.pcoll[self.name] = pcoll_enum  # type:ignore[index]
         sett[f"previews_list_{self.name}"] = path_list
 
@@ -231,6 +241,8 @@ class PreviewCollection:
             filepath_thumb = os.path.join(
                 get_addon_root(), "user_interface", "icons", self.custom_icon
             )
+        if full_path.endswith(".trial"):
+            filepath_thumb = full_path + ".jpg"
         else:
             filepath_thumb = os.path.splitext(full_path)[0] + ".jpg"
         if not self.pcoll.get(filepath_thumb):  # type:ignore[attr-defined]
@@ -281,6 +293,8 @@ def list_files_in_dir(
         if skip_pbr_folder and "PBR" in root:
             continue  # don't show textures in PBR folder of texture sets``
         for fn in files:
+            if fn.lower().endswith(".trial.jpg"):
+                file_paths.append(os.path.join(root, fn.replace(".jpg", "")))
             if not fn.lower().endswith(ext):
                 continue
             if search_term.lower() not in fn.lower():

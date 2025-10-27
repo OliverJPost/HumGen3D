@@ -221,5 +221,8 @@ class PreviewCollectionContent:
 
         base_content = os.path.exists(base_humans_path)
 
-        if not base_content:
+        trial_content_path = os.path.join(pref.filepath, "content_packs", "Trial_Content.json")
+        trial_content = os.path.exists(trial_content_path)
+
+        if not base_content and not trial_content:
             raise HumGenException("Filepath selected, but no humans found in path")

@@ -3,6 +3,7 @@
 import os
 import shutil
 from typing import TYPE_CHECKING, Any, Iterable, Literal, Optional
+from pathlib import Path
 
 import bpy
 import numpy as np
@@ -222,6 +223,10 @@ def _save_img(
         os.makedirs(folder)
 
     full_path = os.path.join(folder, img_name)
+    if not Path(bpy.path.abspath(img.filepath_raw)).exists():
+        img.save(filepath=full_path)
+        saved_images[img_name] = full_path
+        return full_path, saved_images
     try:
         shutil.copy(
             bpy.path.abspath(img.filepath_raw),
