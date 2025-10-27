@@ -32,42 +32,37 @@ bl_info = {
     "category": "",
 }
 
-
-
 import os
 import sys
 from typing import Any
 
 import bpy  # type: ignore
 
-import importlib
-# sys.path.append("somepath")
-# import HumGen3D
-# importlib.reload(HumGen3D)
+
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent
-
-from .backend.auto_classes import _get_bpy_classes
-from .backend.content import content_packs  # type: ignore
-from .backend.content.content_packs import cpacks_refresh as _cpacks_refresh
-from .backend.preferences.preference_func import get_prefs
-from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
-from .backend.preview_collections import preview_collections as _preview_collections
-from .backend.properties.object_props import HG_OBJECT_PROPS
-from .backend.updates import addon_updater_ops
-from .backend.updates.update import check_update as _check_update
-from .backend.vscode_reload import _post_vscode_reload  # noqa
-from .batch_generator.generator import BatchHumanGenerator
-from .common.exceptions import HumGenException
-from .human.human import Human
-from .human.keys.bpy_livekey import BpyLiveKey
-from .human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
-from .human.process.process import SCRIPT_ITEM
-from .user_interface.batch_panel import batch_ui_lists
-from .user_interface.content_panel import utility_ui_lists
-from .user_interface.icons.icons import hg_icons
+import HumGen3D
+from HumGen3D.backend.auto_classes import _get_bpy_classes
+from HumGen3D.backend.content import content_packs  # type: ignore
+from HumGen3D.backend.content.content_packs import cpacks_refresh as _cpacks_refresh
+from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
+from HumGen3D.backend.preview_collections import preview_collections as _preview_collections
+from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
+from HumGen3D.backend.updates import addon_updater_ops
+from HumGen3D.backend.updates.update import check_update as _check_update
+from HumGen3D.backend.vscode_reload import _post_vscode_reload  # noqa
+from HumGen3D.batch_generator.generator import BatchHumanGenerator
+from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.human.human import Human
+from HumGen3D.human.keys.bpy_livekey import BpyLiveKey
+from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
+from HumGen3D.human.process.process import SCRIPT_ITEM
+from HumGen3D.user_interface.batch_panel import batch_ui_lists
+from HumGen3D.user_interface.content_panel import utility_ui_lists
+from HumGen3D.user_interface.icons.icons import hg_icons
 
 __all__ = [
     "Human",

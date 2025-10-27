@@ -2,6 +2,7 @@
 
 import bpy
 
+from HumGen3D.backend import get_prefs
 from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 
@@ -80,7 +81,20 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         Args:
             box (UILayout): layout.box of expression section
         """
+        is_trial = get_prefs().is_trial
+        if is_trial:
+            tbox = box.box()
+            row = tbox.row(align=True)
+            row.alert = True
+            row.label(text="Disabled in Trial Version")
+            tbox.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
         col = box.column()
+        col.enabled = not is_trial
         if "facial_rig" in self.human.objects.body:
             col.label(text="Facial rig added")
             col.label(text="Use pose mode to adjust", icon="INFO")
@@ -94,5 +108,4 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
             col_h.operator("hg3d.prepare_for_arkit", text="Prepare for ARKit")
         else:
             col.scale_y = 2
-            col.alert = True
             col.operator("hg3d.addfrig", text="Add facial rig", depress=True)

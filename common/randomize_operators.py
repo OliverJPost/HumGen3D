@@ -6,6 +6,7 @@ import random
 
 import bpy
 
+from ..backend import get_prefs
 from ..human.human import Human
 
 
@@ -25,6 +26,11 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
     def execute(self, context):
         pcoll_name = self.pcoll_name
         sett = context.scene.HG3D  # type:ignore[attr-defined]
+        is_trial = get_prefs().is_trial
+        if is_trial:
+            self.report({'INFO'}, "Random selection is disabled for the trial version")
+            return {'CANCELLED'}
+
         human = Human.from_existing(context.active_object, strict_check=False)
 
         if pcoll_name in (
@@ -78,6 +84,14 @@ class HG_RANDOM_VALUE(bpy.types.Operator):
 
     def execute(self, context):
         random_type = self.random_type
+        is_trial = get_prefs().is_trial
+        if is_trial:
+            self.report(
+                {"INFO"},
+                "Randomization is disabled in the trial version.",
+            )
+            return {"FINISHED"}
+
         human = Human.from_existing(context.active_object, strict_check=False)
 
         if random_type.startswith("face"):

@@ -50,22 +50,33 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
             scale=8,
             scale_popup=6,
         )
+        selected_preset = context.scene.HG3D.pcoll.humans
+        is_trial_selected = selected_preset and selected_preset.lower().endswith(".trial")
+        if is_trial_selected:
+            row = col.row(align=True)
+            row.scale_y = 1.5
+            row.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
 
         row = box.row(align=True)
         row.scale_y = 2
         row.scale_x = 1.3
         row.prop(context.scene.HG3D, "gender", expand=True)
-        row.operator(
-            "hg3d.random_choice", text="", icon="FILE_REFRESH"
-        ).pcoll_name = "humans"
+        row.operator("hg3d.random_choice", text="", icon="FILE_REFRESH").pcoll_name = (
+            "humans"
+        )
 
         row = box.row(align=True)
         row.scale_y = 1.5
         row.prop(context.scene.HG3D.pcoll, "humans_category", text="")
 
         col_a = col.column()
+        col_a.enabled = not is_trial_selected
         col_a.scale_y = 2
-        col_a.alert = True
         col_a.operator("hg3d.startcreation", icon="COMMUNITY", depress=True)
 
         if context.object and "hg_batch_marker" in context.object:

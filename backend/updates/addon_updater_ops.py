@@ -25,6 +25,7 @@ import os
 import traceback
 
 import bpy
+from HumGen3D import get_prefs
 from bpy.app.handlers import persistent
 
 from .. import hg_log
@@ -968,6 +969,13 @@ def update_settings_ui(self, context, element=None):
 
     # auto-update settings
     box.label(text="Updater Settings")
+
+    is_trial = get_prefs().is_trial
+    if is_trial:
+        row = box.row(align=True)
+        row.alert = True
+        row.label(text="Using the auto updater with the trial version might break the add-on!", icon="ERROR")
+
     row = box.row()
     row.scale_y = 1.5
     row.operator(

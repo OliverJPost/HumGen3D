@@ -38,7 +38,7 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-
+        is_trial = get_prefs().is_trial
         col = layout.column()
 
         row = col.row(align=True)
@@ -62,6 +62,18 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
             message = "No human selected, select a human to see greyed out options."
             draw_paragraph(box, message, alignment="CENTER")
 
+        if is_trial:
+            box = self.layout.box()
+            row = box.row(align=True)
+            row.alert = True
+            row.label(text="Disabled in Trial Version")
+            box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
+
 
 class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):
     bl_parent_id = "HG_PT_CONTENT"
@@ -69,9 +81,13 @@ class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):
     bl_label = "Add to human"
 
     def draw_header(self, context) -> None:
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         self.layout.label(icon="COMMUNITY")
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         row = self.layout.row(align=True)
         row.scale_y = 1.5
         row.operator(
@@ -90,10 +106,13 @@ class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
     bl_label = "Save to library"
 
     def draw_header(self, context) -> None:
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         self.layout.label(icon_value=get_hg_icon("custom_content"))
 
     def draw(self, context):
-        self.layout.enabled = bool(find_hg_rig(context.object))
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial and bool(find_hg_rig(context.object))
 
         col = self.layout.column(align=True)
         row = col.row(align=True)
@@ -132,6 +151,8 @@ class HG_PT_MANAGE_CONTENT(HGPanel, bpy.types.Panel):
         self.layout.label(icon_value=get_hg_icon("custom_content"))
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         col = self.layout.column(align=True)
         col.scale_y = 1.5
         col.operator(

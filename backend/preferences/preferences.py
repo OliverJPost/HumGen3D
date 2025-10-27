@@ -99,6 +99,15 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             os.path.exists(base_humans_path) if self.filepath else False
         )
 
+        trial_humans_path = os.path.join(
+            self.filepath, "content_packs", "Trial_Content.json"
+        )
+        trial_content_found = (
+            os.path.exists(trial_humans_path) if self.filepath else False
+        )
+        if trial_content_found:
+            return True, False
+
         # Check if base content is legacy
         if base_content_found:
             with open(base_humans_path, "r") as f:

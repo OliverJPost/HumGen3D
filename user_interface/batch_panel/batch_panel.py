@@ -41,8 +41,10 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
+        is_trial = get_prefs().is_trial
 
         col = layout.column(align=True)
+        col.enabled = not is_trial
 
         row = col.row(align=True)
         row.scale_x = 0.7
@@ -67,13 +69,24 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
         if batch_sett.idx:
             col.prop(batch_sett, "progress", text=f"Building Human {batch_sett.idx}")
         else:
-            col.alert = True
             col.operator(
                 "hg3d.generate",
                 text=f"Generate {marker_total} humans",
                 depress=True,
                 icon="TIME",
             ).run_immediately = False
+
+        if is_trial:
+            box = self.layout.box()
+            row = box.row(align=True)
+            row.alert = True
+            row.label(text="Disabled in Trial Version")
+            box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
 
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
@@ -86,6 +99,8 @@ class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):
         self.layout.label(text="", icon="MOD_TINT")
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
 
@@ -117,6 +132,8 @@ class HG_PT_B_HEIGHT_VARIATION(bpy.types.Panel, Batch_PT_Base):
         self.layout.label(text="", icon_value=get_hg_icon("height"))
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
 
@@ -229,6 +246,8 @@ class HG_PT_B_QUALITY(Batch_PT_Base, bpy.types.Panel):
         self.layout.label(text="", icon="OPTIONS")
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
 
@@ -251,6 +270,9 @@ class HG_PT_B_HAIR(Batch_PT_Base, bpy.types.Panel):
         self.layout.label(text="", icon_value=get_hg_icon("hair"))
 
     def draw(self, context):
+        batch_sett = context.scene.HG3D.batch
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
         layout.enabled = batch_sett.hair
@@ -281,6 +303,8 @@ class HG_PT_B_CLOTHING(Batch_PT_Base, bpy.types.Panel):
         self.layout.label(text="", icon_value=get_hg_icon("clothing"))
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
         layout.enabled = batch_sett.clothing
@@ -326,6 +350,8 @@ class HG_PT_B_EXPRESSION(Batch_PT_Base, bpy.types.Panel):
         self.layout.label(text="", icon_value=get_hg_icon("expression"))
 
     def draw(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
         layout = self.layout
         batch_sett = context.scene.HG3D.batch
         layout.enabled = batch_sett.expression

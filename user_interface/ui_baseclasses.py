@@ -197,10 +197,14 @@ class HGPanel:
         base_humans_path = self.pref.filepath + str(
             Path("content_packs/Base_Humans.json")
         )
+        trial_content_path = self.pref.filepath + str(
+            Path("content_packs/Trial_Content.json")
+        )
 
         base_content = os.path.exists(base_humans_path)
+        trial_content = os.path.exists(trial_content_path)
 
-        if not base_content:
+        if not base_content and not trial_content:
             layout.alert = True
 
             layout.label(text="Filepath selected, but couldn't")
@@ -212,7 +216,7 @@ class HGPanel:
                 "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
             )
 
-        return base_content
+        return (base_content or trial_content)
 
     def _update_notification(self, layout) -> bool:
         """Shows notifications for updates.
@@ -354,7 +358,6 @@ class MainPanelPart(HGPanel):
         layout = self.layout
         row = layout.row(align=True)
         subrow = row.row(align=True)
-        subrow.alert = True
         subrow.operator(
             "hg3d.section_toggle", text="Back", depress=True, icon="BACK"
         ).section_name = "closed"
@@ -430,6 +433,16 @@ class MainPanelPart(HGPanel):
             scale=8.4,
             scale_popup=6,
         )
+        selected_item = getattr(self.sett.pcoll, pcoll_name)
+        if selected_item and selected_item.lower().endswith(".trial"):
+            row = col.row(align=True)
+            row.scale_y = 1.5
+            row.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5

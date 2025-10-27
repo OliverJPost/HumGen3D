@@ -12,6 +12,7 @@ from HumGen3D.user_interface.panel_functions import (
     get_flow,
 )
 
+from HumGen3D.backend import get_prefs
 from ..ui_baseclasses import HGPanel, draw_icon_title
 
 
@@ -35,6 +36,9 @@ class ProcessPanel(HGPanel):
         return find_multiple_in_list(context.selected_objects)
 
     def draw_header(self, context):
+        is_trial = get_prefs().is_trial
+        self.layout.enabled = not is_trial
+
         if hasattr(self, "enabled_propname"):
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
 
@@ -84,7 +88,10 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
 
     def draw(self, context):
         process_sett = context.scene.HG3D.process
+        is_trial = get_prefs().is_trial
+
         col = self.layout.column()
+        col.enabled = not is_trial
 
         row = col.row(align=True)
         row.scale_x = 0.7
@@ -130,6 +137,18 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         if process_sett.human_list_isopen:
             for human_rig in human_rigs:
                 box.label(text=human_rig.name, icon="DOT")
+
+        if is_trial:
+            box = self.layout.box()
+            row = box.row(align=True)
+            row.alert = True
+            row.label(text="Disabled in Trial Version")
+            box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
 
 
 class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
@@ -496,6 +515,9 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         box = self.layout.box()
+        is_trial = get_prefs().is_trial
+        box.enabled = not is_trial
+
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         pr_sett = sett.process
 
@@ -527,7 +549,6 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         row.prop(pr_sett, "output", text="")
         row = col.row(align=True)
         row.scale_y = 1.5
-        row.alert = True
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
 
         human = Human.from_existing(context.object)

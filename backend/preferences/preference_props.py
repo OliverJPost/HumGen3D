@@ -3,6 +3,8 @@
 # flake8: noqa F722
 
 import getpass
+import os.path
+
 import bpy
 from typing import no_type_check
 from HumGen3D.backend.auto_classes import _get_bpy_classes
@@ -100,6 +102,13 @@ class HGPreferenceBackend:
     @filepath.setter
     def filepath(self, value: str) -> None:
         self.filepath_ = value
+
+    @property
+    def is_trial(self) -> bool:
+        trial_pack_name = "Trial_Content.json"
+        search_path = os.path.join(self.filepath, "content_packs", trial_pack_name)
+
+        return os.path.isfile(search_path)
 
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))

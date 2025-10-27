@@ -204,7 +204,8 @@ class KeyItem:
             bpy.types.UILayout: layout with the slider drawn in it, as row.
         """
         row = layout.row(align=True)
-        row.prop(self.as_bpy(), value_propname, text=prettify(self.name), slider=True)
+        row.enabled = not self.name.lower().endswith(".trial")
+        row.prop(self.as_bpy(), value_propname, text=prettify(self.name).replace(".Trial", " (Trial lock)"), slider=True)
 
         return row
 
