@@ -3,6 +3,7 @@
 import blf  # type: ignore
 import bpy  # type: ignore
 import gpu
+from gpu_extras.batch import batch_for_shader
 
 from .bl_ui_widget import *
 
@@ -155,12 +156,30 @@ class BL_UI_Button(BL_UI_Widget):
     def draw_image(self):
         if self.__image is not None:
             try:
-                bgl.glActiveTexture(bgl.GL_TEXTURE0)
-                bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.__image.bindcode)
+                if bpy.app.version >= (4, 3, 0):
+                    # Blender 4.3+ uses gpu.texture
+                    # Save original colorspace and temporarily set to Linear
+                    # to match gpu.texture.from_image's linear color handling
+                    original_colorspace = self.__image.colorspace_settings.name
+                    self.__image.colorspace_settings.name = 'Linear'
 
-                self.shader_img.bind()
-                self.shader_img.uniform_int("image", 0)
-                self.batch_img.draw(self.shader_img)
+                    texture = gpu.texture.from_image(self.__image)
+
+                    # Restore original colorspace
+                    self.__image.colorspace_settings.name = original_colorspace
+
+                    self.shader_img.bind()
+                    self.shader_img.uniform_sampler("image", texture)
+                    self.batch_img.draw(self.shader_img)
+                else:
+                    # Legacy support for Blender < 4.0 using bgl
+                    import bgl
+                    bgl.glActiveTexture(bgl.GL_TEXTURE0)
+                    bgl.glBindTexture(bgl.GL_TEXTURE_2D, self.__image.bindcode)
+
+                    self.shader_img.bind()
+                    self.shader_img.uniform_int("image", 0)
+                    self.batch_img.draw(self.shader_img)
                 return True
             except:
                 pass
