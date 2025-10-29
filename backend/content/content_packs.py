@@ -468,7 +468,10 @@ def cpacks_refresh(self: Any, context: bpy.types.Context) -> None:
     header = coll.add()
     header.name = "header"
 
-    json_folder = str(pref.filepath) + str(Path("/content_packs/"))
+    json_folder = (str(pref.filepath) + str(Path("/content_packs/"))).replace("\\\\", "\\").replace("//", "/")
+    if not os.path.exists(json_folder):
+        os.makedirs(json_folder)
+
     dirlist = os.listdir(json_folder)
 
     for fn in dirlist:

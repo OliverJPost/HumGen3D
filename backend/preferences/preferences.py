@@ -284,6 +284,13 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         row.operator("hg3d.pathchange", text="Change" if self.filepath else "Select")
 
+        trial_pack_installed = "Trial Content" in [f.name for f in context.scene.contentpacks_col]
+
+        if trial_pack_installed:
+            row = col.row()
+            row.alert = True
+            row.label(text="Are you upgrading from the trial to full HG? First delete the Trial Content Pack below", icon="ERROR")
+
         row = col.row(align=False)
         row.template_list(
             "HG_UL_CONTENTPACKS",
