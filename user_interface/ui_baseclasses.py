@@ -455,8 +455,22 @@ class MainPanelPart(HGPanel):
         col = layout
         is_trial = get_prefs().is_trial
         if is_trial:
-            row = col.row(align=True)
-            row.label(text="Trial version")
+            row = col.row(align=False)
+            subrow = row.row(align=True)
+            subrow.alert = True
+            subrow.label(text="Trial version")
+            row.operator(
+                "wm.url_open",
+                text="Buy full version",
+                # icon="VIEWZOOM",
+                depress=True,
+            ).url = (
+                "https://humgen3d.com/pricing"
+                "?utm_source=addon"
+                "&utm_medium=ui_link"
+                "&utm_campaign=trial_click"
+            )
+
 
 
         row = col.row(align=True)
