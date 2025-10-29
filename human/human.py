@@ -220,6 +220,8 @@ class Human:
         # Set human settings from preset dictionary
         errors = []
         for attr, data in preset_data.items():
+            if attr == 'height':
+                continue
             # Do not set hairstyles or clothes if we are in batch generator mode
             if from_batch_generator and attr not in ("skin", "age", "height"):
                 scrub(data, "set")
