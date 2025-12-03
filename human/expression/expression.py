@@ -11,6 +11,8 @@ import numpy as np
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.keys import ShapeKeyItem
 
+from HumGen3D.common.context import context_override
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
@@ -141,9 +143,14 @@ class ExpressionSettings(PreviewCollectionContent):
         Args:
             context (C): Blender context. bpy.context if not provided.
         """
+#        with context_override(context, active_object=self._human.objects.rig, selected_objects=[self._human.objects.rig]):
         for b_name in FACE_RIG_BONE_NAMES:
-            bone = self._human.pose.get_posebone_by_original_name(b_name).bone
-            bone.hide = False
+            posebone = self._human.pose.get_posebone_by_original_name(b_name)
+            bone = posebone.bone
+            if bpy.app.version < (5, 0, 0):
+                bone.hide = False
+            else:
+                posebone.hide = False
 
         for key in self._human.expression.keys:
             key.value = 0
@@ -165,8 +172,12 @@ class ExpressionSettings(PreviewCollectionContent):
 
         # TODO give bones custom property if they're part of the face rig
         for b_name in FACE_RIG_BONE_NAMES:
-            bone = self._human.pose.get_posebone_by_original_name(b_name).bone
-            bone.hide = True
+            posebone = self._human.pose.get_posebone_by_original_name(b_name)
+            bone = posebone.bone
+            if bpy.app.version < (5, 0, 0):
+                bone.hide = True
+            else:
+                posebone.hide = True
 
         # TODO this is a bit heavy if we don't need the coordinates
         json_path = os.path.join(get_prefs().filepath, "models", "face_rig.json")
