@@ -24,7 +24,7 @@ bl_info = {
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",  # noqa
     "blender": (3, 2, 0),
-    "version": (4, 0, 28),  # RELEASE update version number
+    "version": (4, 0, 29),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "https://humgen3d.com",
     "tracker_url": "https://humgen3d.com",
