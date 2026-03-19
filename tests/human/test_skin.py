@@ -102,14 +102,15 @@ def test_subsurface_scattering(human, context):
         sss_value = principled_bsdf.inputs[SUBSURFACE_INPUT_NAME].default_value
         assert pytest.approx(sss_value) == value
 
-    assert_sss(0, human)
-
-    human.skin.set_subsurface_scattering(True, context)
     sss_value = 0.01 if bpy.app.version < (4, 0, 0) else 1.0
     assert_sss(sss_value, human)
 
     human.skin.set_subsurface_scattering(False, context)
+
     assert_sss(0, human)
+
+    human.skin.set_subsurface_scattering(True, context)
+    assert_sss(sss_value, human)
 
 
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
