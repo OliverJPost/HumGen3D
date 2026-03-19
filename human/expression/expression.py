@@ -184,14 +184,33 @@ class ExpressionSettings(PreviewCollectionContent):
         with open(json_path, "r") as f:
             data = json.load(f)
 
-        for sk_name in data["teeth"]:
-            key_blocks = self._human.objects.lower_teeth.data.shape_keys.key_blocks
-            sk = key_blocks.get(sk_name)
-            self._human.objects.lower_teeth.shape_key_remove(sk)
+        # Remove drivers BEFORE removing shape keys to prevent Blender's
+        # dependency graph from evaluating dangling driver references on
+        # background threads, which causes an access violation crash.
+        teeth_obj = self._human.objects.lower_teeth
+        teeth_shape_keys = teeth_obj.data.shape_keys
+        if teeth_shape_keys:
+            for sk_name in data["teeth"]:
+                sk = teeth_shape_keys.key_blocks.get(sk_name)
+                if sk:
+                    sk.driver_remove("value")
 
         for sk_name in data["body"]:
-            sk = self._human.keys.get(sk_name)
-            self._human.objects.body.shape_key_remove(sk.as_bpy())
+            sk_item = self._human.keys.get(sk_name)
+            if sk_item:
+                sk_item.as_bpy().driver_remove("value")
+
+        # Now safe to remove the shape keys themselves
+        if teeth_shape_keys:
+            for sk_name in data["teeth"]:
+                sk = teeth_shape_keys.key_blocks.get(sk_name)
+                if sk:
+                    teeth_obj.shape_key_remove(sk)
+
+        for sk_name in data["body"]:
+            sk_item = self._human.keys.get(sk_name)
+            if sk_item:
+                self._human.objects.body.shape_key_remove(sk_item.as_bpy())
 
         del self._human.objects.body["facial_rig"]
 
