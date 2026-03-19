@@ -21,8 +21,11 @@ def test_facial_rig(human, context):
     human.expression.remove_facial_rig()
 
     for bone_name in FACE_RIG_BONE_NAMES:
-        bone = human.pose.get_posebone_by_original_name(bone_name).bone
-        assert bone.hide
+        posebone = human.pose.get_posebone_by_original_name(bone_name)
+        if bpy.app.version < (5,0,0):
+            assert posebone.bone.hide
+        else:
+            assert posebone.hide
 
     try:
         human.expression.remove_facial_rig()
