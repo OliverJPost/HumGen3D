@@ -54,8 +54,9 @@ class HG_PT_FACE(MainPanelPart, bpy.types.Panel):
             if not getattr(self.sett.ui, str(key.subcategory), True):
                 continue
 
-            category_column = locals()[f"flow_{key.subcategory}"]
-            key.draw_prop(category_column)
+            category_column = locals().get(f"flow_{key.subcategory}", None)
+            if category_column:
+                key.draw_prop(category_column)
 
         flow_presets = self._get_ff_col(col, "Presets", "presets")
         for key in self.human.keys.filtered("face_presets"):
