@@ -25,7 +25,6 @@ if TYPE_CHECKING:
 
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-
 if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey
 
@@ -33,15 +32,30 @@ if TYPE_CHECKING:
 def _get_starting_coordinates(
     human: Human, path: str
 ) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+    import time
+
+    t0 = time.perf_counter()
+
     body = human.objects.body
     vert_count = len(body.data.vertices)
     obj_coords = np.empty(vert_count * 3, dtype=np.float64)
     body.data.vertices.foreach_get("co", obj_coords)
 
+    t1 = time.perf_counter()
+    print(f"[_get_starting_coordinates] foreach_get coords: {t1 - t0:.4f}s")
+
     # Load coordinates of livekey that is being changed
     filepath = os.path.join(get_prefs().filepath, path)
     new_key_relative_coords = import_npz_key(vert_count, filepath)
+
+    t2 = time.perf_counter()
+    print(f"[_get_starting_coordinates] import_npz_key: {t2 - t1:.4f}s")
+
     new_key_coords = obj_coords + new_key_relative_coords
+
+    t3 = time.perf_counter()
+    print(f"[_get_starting_coordinates] add coords: {t3 - t2:.4f}s")
+    print(f"[_get_starting_coordinates] total: {t3 - t0:.4f}s")
 
     return vert_count, obj_coords, new_key_relative_coords, new_key_coords
 
