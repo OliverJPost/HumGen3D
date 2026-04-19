@@ -249,4 +249,4 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         flow = self.get_flow(boxbox)
         flow.scale_y = 1.2
         self.human.skin.gender_specific.mustache_shadow.draw_prop(flow, "Mustache")
-        self.human.skin.gender_specific.beard_shadow.draw_prop(flow, "Mustache")
+        self.human.skin.gender_specific.beard_shadow.draw_prop(flow, "Beard Shadow")
