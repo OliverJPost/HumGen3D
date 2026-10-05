@@ -6,91 +6,109 @@ import os
 from typing import TYPE_CHECKING, Iterable, cast
 
 import bpy
-from HumGen3D.common.context import context_override
+import numpy as np
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.exceptions import HumGenException  # type:ignore
-from HumGen3D.common.geometry import (
-    build_distance_dict,
-    deform_obj_from_difference,
-    world_coords_from_obj,
-    deform_obj_from_difference_SMOOTH,
-    build_distance_dict_SMOOTH
-)
+from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.math import centroid
+from HumGen3D.human.clothing.garment_fit import (
+    convert_worn,
+    corrective_deltas,
+    triangles,
+    write_weights,
+)
+from mathutils import Matrix
 
 
-def _correct_shape_to_a_pose(
-    self, cloth_obj: bpy.types.Object, hg_body: bpy.types.Object, context: bpy.types.Context
-) -> None:
-    # TODO mask modifiers
-    for modifier in hg_body.modifiers:
-        if modifier.type == "MASK":
-            modifier.show_viewport = False
+def convert_obj_to_clothing(
+    human: "Human",
+    cloth_obj: bpy.types.Object,
+    cloth_type: str,
+    recalculate_weights: bool,
+    context: bpy.types.Context,
+) -> str:
+    """Turn a mesh that sits on this human into a clothing object.
 
-    depsgraph = context.evaluated_depsgraph_get()
-    hg_body_eval = hg_body.evaluated_get(depsgraph)
+    The object is taken the way it currently looks on the human, in any pose
+    and with any body shape. Afterwards its base shape fits the unmodified body,
+    a "Body Proportions" shape key holds the shape for this human, it has
+    corrective shape keys and is weighted to the deform bones of the rig. On
+    this human, in this pose, it looks the same as before.
 
-    if self._human.gender == "female":
-        verts = hg_body.data.vertices
-    else:
-        verts = hg_body.data.shape_keys.key_blocks["Male"].data
-    hg_body_coords_world = world_coords_from_obj(hg_body, data=verts)
+    Args:
+        human: Human the object sits on.
+        cloth_obj: Mesh object to convert.
+        cloth_type: "torso", "pants", "full" or "footwear". Decides which
+            corrective shape keys are added.
+        recalculate_weights: Transfer weights from the body. If False the
+            existing vertex groups are kept.
+        context: Blender context.
 
-    hg_body_eval_coords_world = world_coords_from_obj(hg_body_eval)
-    cloth_obj_coords_world = world_coords_from_obj(cloth_obj)
-    distance_dict = build_distance_dict_SMOOTH(
-        hg_body_eval_coords_world, cloth_obj_coords_world
-    )
+    Returns:
+        How the weights were computed: "kept", "none", "bilaplacian" or
+        "harmonic". "closest_point" means the solver failed and the weights are
+        of lower quality.
+    """
+    rig, body_obj = human.objects.rig, human.objects.body
+    context.view_layer.update()
+    conversion = convert_worn(human, cloth_obj, context, recalculate_weights)
+    tris = triangles(cloth_obj)
 
+    # From here on the local space of the object is that of the rig, which is
+    # what clothing loaded from the library expects.
+    cloth_obj.parent = rig
+    cloth_obj.matrix_parent_inverse = Matrix.Identity(4)
+    cloth_obj.matrix_basis = Matrix.Identity(4)
 
-    deform_obj_from_difference_SMOOTH(
-        "", distance_dict, hg_body_coords_world, cloth_obj, as_shapekey=False
-    )
-
-    self.deform_cloth_to_human(context=context, cloth_obj=cloth_obj)
-
-    for modifier in hg_body.modifiers:
-        if modifier.type == "MASK":
-            modifier.show_viewport = True
-
-def _add_corrective_shapekeys(
-    cloth_obj: bpy.types.Object, human: "Human", cloth_type: str
-) -> None:
-    hg_body = human.objects.body
-    hg_body_world_coords = world_coords_from_obj(hg_body)
-    cloth_obj_world_coords = world_coords_from_obj(cloth_obj)
-    distance_dict = build_distance_dict(hg_body_world_coords, cloth_obj_world_coords)
-
-    if not cloth_obj.data.shape_keys:
-        sk = cloth_obj.shape_key_add(name="Basis")
-        sk.interpolation = "KEY_LINEAR"
+    if cloth_obj.data.shape_keys:
+        cloth_obj.shape_key_clear()
+    cloth_obj.data.vertices.foreach_set("co", conversion.base.ravel())
+    _add_key(cloth_obj, "Basis", conversion.base)
 
     json_path = os.path.join(
         get_addon_root(), "human", "clothing", "corrective_sk_names_v2.json"
     )
-
     with open(json_path, "r") as f:
-        sk_name_dict = json.load(f)
-
-    corrective_shapekey_names = sk_name_dict[cloth_type]
-    for cor_sk_name in corrective_shapekey_names:
-        evaluated_body_coords_world = world_coords_from_obj(
-            hg_body, data=hg_body.data.shape_keys.key_blocks[cor_sk_name].data
-        )
-        deform_obj_from_difference(
-            cor_sk_name,
-            distance_dict,
-            evaluated_body_coords_world,
-            cloth_obj,
-            as_shapekey=True,
-        )
-
+        names = json.load(f)["torso" if cloth_type == "top" else cloth_type]
+    deltas = corrective_deltas(human, conversion.base, tris, names)
+    for name, delta in deltas.items():
+        _add_key(cloth_obj, name, conversion.base + delta)
     _set_cloth_corrective_drivers(
-        hg_body, cloth_obj, cloth_obj.data.shape_keys.key_blocks
+        body_obj, cloth_obj, cloth_obj.data.shape_keys.key_blocks
     )
+
+    # Correctives driven by the current pose are part of how the object looks
+    # now, and will be added again by the drivers.
+    body_keys = body_obj.evaluated_get(
+        context.evaluated_depsgraph_get()
+    ).data.shape_keys.key_blocks
+    fitted = conversion.rest.copy()
+    for name, delta in deltas.items():
+        fitted -= delta * body_keys[name].value
+    _add_key(cloth_obj, "Body Proportions", fitted).value = 1
+
+    if recalculate_weights:
+        write_weights(
+            cloth_obj,
+            conversion.bones,
+            conversion.weights,
+            remove=[group.name for group in body_obj.vertex_groups],
+        )
+    cloth_obj.data.update()
+    return conversion.solver
+
+
+def _add_key(
+    cloth_obj: bpy.types.Object, name: str, co: np.ndarray
+) -> bpy.types.ShapeKey:
+    key = cloth_obj.shape_key_add(name=name)
+    key.interpolation = "KEY_LINEAR"
+    key.data.foreach_set("co", co.ravel())
+    return key
 
 
 def _set_cloth_corrective_drivers(
@@ -129,53 +147,6 @@ def _set_cloth_corrective_drivers(
         new_target.bone_target = old_target.bone_target
         new_target.transform_type = old_target.transform_type
         new_target.transform_space = old_target.transform_space
-
-
-def _auto_weight_paint(
-    cloth_obj: bpy.types.Object,
-    hg_body: bpy.types.Object,
-    context: bpy.types.Context,
-    hg_rig: bpy.types.Object,
-) -> None:
-    for mod in hg_body.modifiers:
-        if mod.type == "MASK":
-            mod.show_viewport = False
-            mod.show_render = False
-        if mod.type == "ARMATURE":
-            mod.show_viewport = False
-
-    armature = next(
-        (mod for mod in cloth_obj.modifiers if mod.type == "ARMATURE"), None
-    )
-    if not armature:
-        armature = cloth_obj.modifiers.new(name="Cloth Armature", type="ARMATURE")
-    armature.object = hg_rig
-
-    with context_override(context, cloth_obj, [cloth_obj]):
-        # use old method for versions older than 2.90
-        if (2, 90, 0) > bpy.app.version:
-            while cloth_obj.modifiers.find(armature.name) != 0:
-                bpy.ops.object.modifier_move_up(modifier=armature.name)
-        else:
-            bpy.ops.object.modifier_move_to_index(modifier=armature.name, index=0)
-
-    cloth_obj.parent = hg_rig
-
-    with context_override(context, hg_body, [hg_body, cloth_obj]):
-        bpy.ops.object.data_transfer(
-            data_type="VGROUP_WEIGHTS",
-            vert_mapping="NEAREST",
-            layers_select_src="ALL",
-            layers_select_dst="NAME",
-            mix_mode="REPLACE",
-        )
-
-    for mod in hg_body.modifiers:
-        if mod.type == "MASK":
-            mod.show_viewport = True
-            mod.show_render = True
-        if mod.type == "ARMATURE":
-            mod.show_viewport = True
 
 
 def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
