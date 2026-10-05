@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from .bake import BakeSettings
+from .rest_pose import set_t_pose_as_rest
 
 
 def _fill_tokens(
@@ -138,6 +139,28 @@ class ProcessSettings:
             bool: True if the parts were renamed.
         """
         return "parts_renamed" in self._human.objects.rig
+
+    @property
+    def has_t_pose_rest(self) -> bool:
+        """Checks if the T-pose was baked into the rest pose.
+
+        Returns:
+            bool: True if the rest pose is the T-pose.
+        """
+        return "t_pose_rest" in self._human.objects.rig
+
+    @injected_context
+    def set_t_pose_as_rest(self, context: C = None) -> None:
+        """Bakes the T-pose into the rest pose of the meshes and armature.
+
+        Discards the current pose and removes the shoulder side raise corrective
+        shape keys. Features that rely on the A-pose rest pose, like changing the
+        pose, height, proportions or clothing, won't work on this human anymore.
+
+        Args:
+            context (C): The Blender context. Defaults to None.
+        """
+        set_t_pose_as_rest(self._human, context)
 
     def rename_bones_from_json(
         self, json_string: Optional[str] = None, json_path: Optional[str] = None
@@ -333,6 +356,9 @@ class ProcessSettings:
                 pr_sett.renaming.materials
             )
 
+        if pr_sett.rest_pose_enabled:
+            settings_dict["rest_pose"] = {}
+
         if pr_sett.modapply_enabled:
             settings_dict["modapply"] = ProcessSettings._props_from_propgroup(
                 pr_sett.modapply
@@ -409,7 +435,7 @@ class ProcessSettings:
 
             # Set enabled = True because attr being in the dict means it was enabled
             setattr(pr_sett, f"{attr}_enabled", True)
-            prop_group = getattr(pr_sett, attr)
+            prop_group = getattr(pr_sett, attr, None)
 
             if attr == "scripting":
                 for script in prop_dict:

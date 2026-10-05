@@ -39,6 +39,7 @@ from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
 from .eyes.eyes import EyeSettings
 from .face.face import FaceSettings
+from .hair import hair_binding
 from .hair.hair import HairSettings
 from .height.height import HeightSettings
 from .keys.keys import KeySettings
@@ -737,6 +738,13 @@ class Human:
             add_to_collection(context, obj_copy)
 
         new_human = Human.from_existing(obj_copy)
+        # The shape keys of haircards follow the shape keys of the body
+        for hair_obj in new_human.objects.haircards:
+            hair_binding.retarget_drivers(
+                hair_obj,
+                self.objects.body.data.shape_keys,
+                body_copy.data.shape_keys,
+            )
         jaw_bone = new_human.pose.get_posebone_by_original_name("jaw")
         damped_track_modifier = jaw_bone.constraints["Damped Track"].target = body_copy
 

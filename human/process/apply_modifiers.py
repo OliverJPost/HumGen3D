@@ -75,7 +75,7 @@ def apply_modifiers(human, context: C = None) -> None:  # noqa CCR001
     objs = list(human.objects)
     objs.remove(human.objects.rig)
     selected_modifier_types = {item.mod_type for item in col if item.enabled}
-    human.hair.set_connected(False)
+    human.hair.set_connected(False, context)
 
     for obj in objs:
         obj_modifier_types = {mod.type for mod in obj.modifiers}
@@ -92,7 +92,7 @@ def apply_modifiers(human, context: C = None) -> None:  # noqa CCR001
         # else:
         #    quick_apply_modifiers(modifiers_to_apply, obj) todo
 
-    human.hair.set_connected(True)
+    human.hair.set_connected(True, context)
     refresh_modapply(None, context)
 
 
@@ -115,11 +115,33 @@ def apply_topology_changing_modifiers(context, modifier_types, obj, human):
         new_sk.value = sk_value
         if sk.name in driver_dict:
             human.keys._add_driver(new_sk, driver_dict[sk.name])
-        if sk.name.startswith("LIVE_KEY"):
-            apply_sk_to_mesh(new_sk, obj)
         delete_object(temp_sk_object)
 
+    if obj.data.shape_keys:
+        for sk in obj.data.shape_keys.key_blocks:
+            if sk.name.startswith("LIVE_KEY"):
+                _apply_live_key_to_basis(sk, obj)
+
     delete_object(sk_cache_object)
+
+
+def _apply_live_key_to_basis(sk, obj):
+    vert_count = len(obj.data.vertices)
+    basis_coords = np.empty(vert_count * 3, dtype=np.float64)
+    obj.data.vertices.foreach_get("co", basis_coords)
+    sk_coords = np.empty(vert_count * 3, dtype=np.float64)
+    sk.data.foreach_get("co", sk_coords)
+    offset = (sk_coords - basis_coords) * sk.value
+
+    apply_sk_to_mesh(sk, obj)
+
+    # The other shape keys are relative to the basis, so they have to move with it
+    for other_sk in obj.data.shape_keys.key_blocks:
+        if other_sk.name in (sk.name, "Basis"):
+            continue
+        coords = np.empty(vert_count * 3, dtype=np.float64)
+        other_sk.data.foreach_get("co", coords)
+        other_sk.data.foreach_set("co", coords + offset)
 
 
 def apply_selected_modifiers(modifier_types, obj, context):

@@ -69,18 +69,30 @@ class MaterialSettings:
 
     @property
     def haircards(self) -> list[bpy.types.Material]:
+        """Materials of the haircards, if generated.
+
+        Returns:
+            list[bpy.types.Material]: Materials of the haircards.
+        """
         mats = []
         for obj in self._human.objects.haircards:
-            mats.append(obj.data.materials[0])
+            if len(obj.data.materials) > 1:
+                mats.append(obj.data.materials[1])
 
         return mats
 
     @property
     def haircap(self) -> list[bpy.types.Material]:
+        """Materials of the haircaps, if generated.
+
+        The haircap is in the first material slot of the haircard objects.
+
+        Returns:
+            list[bpy.types.Material]: Materials of the haircaps.
+        """
         mats = []
         for obj in self._human.objects.haircards:
-            if len(obj.data.materials) > 1:
-                mats.append(obj.data.materials[1])
+            mats.append(obj.data.materials[0])
 
         return mats
 

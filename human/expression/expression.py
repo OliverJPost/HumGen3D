@@ -20,6 +20,7 @@ from HumGen3D.backend import get_prefs, remove_broken_drivers
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from HumGen3D.human.hair import hair_binding
 
 FACE_RIG_BONE_NAMES = [
     "brow_inner_up",
@@ -136,6 +137,9 @@ class ExpressionSettings(PreviewCollectionContent):
         new_key.mute = False
         new_key.value = 1
 
+        # Haircards need the same shape key to follow the expression
+        hair_binding.sync_haircards(self._human)
+
     @injected_context
     def load_facial_rig(self, context: C = None) -> None:
         """Imports all necessary shape keys and unhides the bones used to control face.
@@ -158,6 +162,7 @@ class ExpressionSettings(PreviewCollectionContent):
         self._load_FACS_sks(context)  # type:ignore[arg-type]
 
         self._human.objects.body["facial_rig"] = 1  # type:ignore[index]
+        hair_binding.sync_haircards(self._human)
 
     def remove_facial_rig(self) -> None:
         """Remove the facial rig from the human, including all it's shape keys.
@@ -199,6 +204,10 @@ class ExpressionSettings(PreviewCollectionContent):
             sk_item = self._human.keys.get(sk_name)
             if sk_item:
                 sk_item.as_bpy().driver_remove("value")
+
+        # The shape keys of haircards are driven by the body shape keys
+        for hair_obj in self._human.objects.haircards:
+            hair_binding.remove_shape_keys(hair_obj, names=data["body"])
 
         # Now safe to remove the shape keys themselves
         if teeth_shape_keys:

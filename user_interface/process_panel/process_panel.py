@@ -191,8 +191,15 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
 
         row = col.row(align=True)
 
-        row.enabled = context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
+        has_haircards = (
+            context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
+        )
+        row.enabled = has_haircards
         row.prop(bake_sett, "res_haircards", text="Haircards")
+
+        row = col.row(align=True)
+        row.enabled = has_haircards and bake_sett.file_type != "jpeg"
+        row.prop(bake_sett, "pack_haircard_alpha")
 
     def _draw_baking_warning_labels(self, context, layout) -> bool:
         """Draws warning if no human is selected or textures are already baked.
@@ -322,17 +329,40 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
 
         col.prop(hairc_sett, "quality")
 
-        row = self.layout.row(align=True)
-        row.prop(hairc_sett, "face_hair")
-        r_row = row.row(align=True)
-        r_row.alert = True
-        r_row.label(text="ALPHA")
+        self.layout.prop(hairc_sett, "face_hair")
 
         message = (
             "If you are baking textures, see Bake Textures menu for haircard"
             + "baking resolution."
         )
 
+        draw_paragraph(self.layout, text=message, enabled=False)
+
+
+class HG_PT_REST_POSE(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_REST_POSE"
+    bl_label = "T-Pose Rest Pose"
+    icon_name = "ARMATURE_DATA"
+    enabled_propname = "rest_pose_enabled"
+    forbidden_propname = "has_t_pose_rest"
+
+    def draw(self, context):
+        self.check_enabled(context)
+        human = Human.from_existing(context.object)
+        if human.process.has_t_pose_rest:
+            self.layout.alert = True
+            self.layout.label(text="Rest pose is already a T-pose!")
+            return
+        if human.pose.rigify.is_rigify:
+            self.layout.alert = True
+            self.layout.label(text="Not available for Rigify humans.")
+            return
+
+        message = (
+            "Makes the T-pose the rest pose of the armature and meshes, as"
+            + " expected by most game engines and retargeting tools. The current"
+            + " pose is discarded."
+        )
         draw_paragraph(self.layout, text=message, enabled=False)
 
 
@@ -581,6 +611,20 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
                 text="LOD is enabled. Many features won't work anymore."
                 "For example, you can't change the height, proportions, add hair, etc.",
             )
+
+        if pr_sett.rest_pose_enabled:
+            draw_paragraph(
+                col,
+                text="T-pose rest pose is enabled. This removes the shoulder side"
+                " raise corrective shape keys of the human.",
+            )
+            if pr_sett.output == "replace":
+                draw_paragraph(
+                    col,
+                    text="Many features won't work anymore on a human with a"
+                    " T-pose rest pose. For example, you can't change the pose,"
+                    " height, proportions or clothing.",
+                )
 
         if pr_sett.rig_renaming_enabled:
             draw_paragraph(

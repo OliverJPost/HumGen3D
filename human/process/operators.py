@@ -155,6 +155,13 @@ class HG_OT_PROCESS(bpy.types.Operator):
                         sys.path.remove(item.path)
                     module.main(context, human)
 
+            if (
+                pr_sett.rest_pose_enabled
+                and not human.process.has_t_pose_rest
+                and not human.pose.rigify.is_rigify
+            ):
+                human.process.set_t_pose_as_rest(context)
+
             if pr_sett.modapply_enabled:
                 apply_modifiers(human, context=context)
                 human.objects.rig["modifiers_applied"] = True

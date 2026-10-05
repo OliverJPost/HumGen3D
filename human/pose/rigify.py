@@ -20,7 +20,7 @@ class RigifySettings:
 
     @property
     def is_rigify(self) -> bool:
-        return "hg_rigify" in self._human.objects.rig
+        return "hg_rigify" in self._human.objects.rig.data
 
     @injected_context
     def generate(self, context: C = None) -> None:
@@ -165,6 +165,9 @@ class RigifySettings:
 
         for driver in obj.data.shape_keys.animation_data.drivers:
             var = driver.driver.variables[0]
+            # The shape keys of haircards are driven by the shape keys of the body
+            if var.type != "TRANSFORMS":
+                continue
             target = var.targets[0]
             target.id = rigify_rig
             if target.bone_target.startswith(("forearm", "upper_arm", "thigh", "foot")):
