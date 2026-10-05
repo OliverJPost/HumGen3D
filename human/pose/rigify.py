@@ -20,7 +20,7 @@ class RigifySettings:
 
     @property
     def is_rigify(self) -> bool:
-        return "hg_rigify" in self._human.objects.rig
+        return "hg_rigify" in self._human.objects.rig.data
 
     @injected_context
     def generate(self, context: C = None) -> None:
