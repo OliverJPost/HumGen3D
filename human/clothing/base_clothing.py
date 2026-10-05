@@ -6,8 +6,7 @@ The outfit and footwear system are almost exactly the same, the distinction betw
 the two is made to give the user the option to choose footwear separately from
 clothing. This class contains the functionality that is shared between the two.
 
-The clothing system heavily relies on `build_distance_dict` and
-`deform_obj_from_difference`.
+The fitting of clothing to the body lives in `garment_fit`.
 """
 
 import contextlib
@@ -25,18 +24,10 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.geometry import (
-    build_distance_dict,
-    deform_obj_from_difference,
-    world_coords_from_obj,
-)
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import clothing
-from HumGen3D.human.clothing.add_obj_to_clothing import (
-    _add_corrective_shapekeys,
-    _auto_weight_paint,
-    _correct_shape_to_a_pose,
-)
+from HumGen3D.human.clothing.add_obj_to_clothing import convert_obj_to_clothing
+from HumGen3D.human.clothing.garment_fit import fit_to_human, missing_correctives
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.clothing.saving import _save_clothing
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
@@ -112,6 +103,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             obj[tag] = 1
 
             self.deform_cloth_to_human(context, obj)
+            self._add_missing_correctives(obj)
 
             for mod in obj.modifiers:
                 mod.show_expanded = False  # collapse modifiers
@@ -132,80 +124,79 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
     def add_obj(
         self,
         cloth_obj: bpy.types.Object,
-        cloth_type: Literal["pants", "top", "footwear", "full"],
+        cloth_type: Literal["pants", "torso", "footwear", "full"],
         recalculate_weights: bool,
         context: bpy.types.Context,
-    ) -> None:
+    ) -> str:
         """Base method for adding new object to the clothing of this human.
 
-        Will correct the shape of the object to A pose, add corrective shapekeys, do
-        automatic weight painting and add the object to the armature.
+        The object can sit on the human in any pose and with any body shape. Its
+        pose and the body shape are taken out so it fits the unmodified body,
+        corrective shapekeys are added, it is weight painted and added to the
+        armature. On this human it keeps looking the way it did.
 
         Args:
             cloth_obj (bpy.types.Object): Object you want to add to the clothing.
-            cloth_type (Literal["pants", "top", "footwear", "full"]): Type of clothing
-                as string, defines what kind of corrective shapekeys will be added.
+            cloth_type (Literal["pants", "torso", "footwear", "full"]): Type of
+                clothing as string, defines what kind of corrective shapekeys will
+                be added.
             recalculate_weights (bool): Whether to recalculate weights of the
                 vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
-        """
-        body_obj = self._human.objects.body
-        _correct_shape_to_a_pose(self, cloth_obj, body_obj, context)
-        _add_corrective_shapekeys(cloth_obj, self._human, cloth_type)
-        if recalculate_weights:
-            _auto_weight_paint(cloth_obj, body_obj, context, self._human.objects.rig)
 
-        rig_obj = self._human.objects.rig
-        cloth_obj.parent = rig_obj
-        # cloth_obj.matrix_parent_inverse = rig_obj.matrix_world.inverted()
+        Returns:
+            str: How the weights were computed. "closest_point" means the weight
+                solver failed and the weights will need manual cleanup.
+        """
+        old_active = context.view_layer.objects.active
+        solver = convert_obj_to_clothing(
+            self._human, cloth_obj, cloth_type, recalculate_weights, context
+        )
+        self._set_armature(context, cloth_obj, self._human.objects.rig)
+        context.view_layer.objects.active = old_active
+
         tag = "shoe" if cloth_type == "footwear" else "cloth"
         cloth_obj[tag] = 1  # type:ignore[index]
 
         if "hg_body" in cloth_obj:
             del cloth_obj["hg_body"]
 
+        if solver == "closest_point":
+            hg_log(
+                f"Weight solver did not converge for {cloth_obj.name}",
+                level="WARNING",
+            )
+        return solver
+
     def deform_cloth_to_human(
         self, context: bpy.types.Context, cloth_obj: bpy.types.Object
     ) -> None:
         """Deforms the cloth object to the shape of the active HumGen human.
 
-        Mainly meant for internal use, but might be useful. Expects the passed
-        cloth_obj to fit for a standard HG human with no adjustments. Will modify
-        the hsape of the object to fit the evaluated shape of the human, with body
-        proportions and height taken into account.
+        Mainly meant for internal use, but might be useful. Expects the base
+        shape of the passed cloth_obj to fit a standard HG human with no
+        adjustments. Stores the shape that fits the current body proportions and
+        height of the human in the "Body Proportions" shape key.
+
+        See `HumGen3D.human.clothing.garment_fit` for the vertex group and custom
+        properties a clothing object can use to steer how loosely it is fitted.
 
         Args:
             context (bpy.types.Context): Blender context.
             cloth_obj (Object): cloth object to deform
         """
-        body_obj = self._human.objects.body
-        if self._human.gender == "female":
-            verts = body_obj.data.vertices
-        else:
-            verts = body_obj.data.shape_keys.key_blocks["Male"].data
-
-        body_coords_world = world_coords_from_obj(body_obj, data=verts)
-
-        cloth_coords_world = world_coords_from_obj(cloth_obj)
-
-        distance_dict = build_distance_dict(body_coords_world, cloth_coords_world)
-
         cloth_obj.parent = self._human.objects.rig
+        fitted = fit_to_human(self._human, cloth_obj)
 
-        body_eval_coords_world = world_coords_from_obj(
-            body_obj,
-            data=self._human.keys.all_deformation_shapekeys,
-        )
-
-        deform_obj_from_difference(
-            "Body Proportions",
-            distance_dict,
-            body_eval_coords_world,
-            cloth_obj,
-            as_shapekey=True,
-        )
-
-        cloth_obj.data.shape_keys.key_blocks["Body Proportions"].value = 1
+        if not cloth_obj.data.shape_keys:
+            cloth_obj.shape_key_add(name="Basis").interpolation = "KEY_LINEAR"
+        key = cloth_obj.data.shape_keys.key_blocks.get("Body Proportions")
+        if not key:
+            key = cloth_obj.shape_key_add(name="Body Proportions")
+            key.interpolation = "KEY_LINEAR"
+        key.data.foreach_set("co", fitted.ravel())
+        key.value = 1
+        cloth_obj.data.update()
 
         context.view_layer.objects.active = cloth_obj
         self._set_armature(context, cloth_obj, self._human.objects.rig)
@@ -436,6 +427,23 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             mod.vertex_group = mask
             mod.invert_vertex_group = True
 
+    def _add_missing_correctives(self, cloth_obj: bpy.types.Object) -> None:
+        """Gives clothing that was saved without corrective shapekeys its own.
+
+        Clothing that already has corrective shapekeys is left as it was made.
+
+        Args:
+            cloth_obj (Object): cloth object to add the shapekeys to
+        """
+        key_blocks = cloth_obj.data.shape_keys.key_blocks
+        if any(key.name.startswith("cor_") for key in key_blocks):
+            return
+        for name, coords in missing_correctives(self._human, cloth_obj).items():
+            key = cloth_obj.shape_key_add(name=name, from_mix=False)
+            key.interpolation = "KEY_LINEAR"
+            key.data.foreach_set("co", coords.ravel())
+            key.value = 0
+
     def _set_armature(
         self,
         context: bpy.types.Context,
@@ -457,6 +465,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             armature_mods.append(obj.modifiers.new("Armature", "ARMATURE"))
 
         armature_mods[0].object = hg_rig
+        # Clothing has to deform the same way as the body underneath it
+        for body_mod in self._human.objects.body.modifiers:
+            if body_mod.type == "ARMATURE":
+                armature_mods[0].use_deform_preserve_volume = (
+                    body_mod.use_deform_preserve_volume
+                )
+                break
         self._move_armature_to_top(context, obj, armature_mods)  # type:ignore[arg-type]
 
     def _move_armature_to_top(

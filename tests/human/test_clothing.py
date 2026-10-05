@@ -6,9 +6,7 @@ import os
 import bpy
 import pytest  # type:ignore
 from pytest_lazyfixture import lazy_fixture
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.geometry import hash_mesh_object
+from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.objects import import_objects_to_scene_collection
 from HumGen3D.tests.test_fixtures import *
 from HumGen3D.tests.test_fixtures import (
@@ -35,26 +33,27 @@ def test_add_obj(human):
         pytest.skip("Testfiles not found")
     path = os.path.join(TESTFILES_PATH, "clothing", "test_add_obj.blend")
     test_cloth_obj = import_objects_to_scene_collection(path, "test_cloth")
-    reference_path = os.path.join(
-        get_prefs().filepath, "outfits", "male", "Casual", "Casual_Weekday.blend"
-    )
-    reference_cloth_obj = import_objects_to_scene_collection(
-        reference_path, "HG_TSHIRT_Male.001"
-    )
-    test_cloth_obj.location = (5, 5, 5)
-    try:
-        human.clothing.outfit.add_obj(test_cloth_obj)
-        assert False, "Should throw exception"
-    except HumGenException:
-        assert True
-
     test_cloth_obj.location = human.location
-    human.clothing.outfit.add_obj(test_cloth_obj)
+    bpy.context.view_layer.update()
+    worn_coords = world_coords_from_obj(test_cloth_obj)
+
+    solver = human.clothing.outfit.add_obj(test_cloth_obj, "torso")
+    assert solver != "closest_point"
     assert (
         human.clothing.outfit._calc_percentage_clipping_vertices(bpy.context)
         < CLIPPING_THRESHOLD
     )
-    assert hash_mesh_object(test_cloth_obj) == hash_mesh_object(reference_cloth_obj)
+
+    # Only weighted to deform bones, and every vertex is weighted
+    bones = human.objects.rig.data.bones
+    assert all(vg.name in bones for vg in test_cloth_obj.vertex_groups)
+    assert all(len(v.groups) > 0 for v in test_cloth_obj.data.vertices)
+
+    # On the human it was added to, the object still looks like it did
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    evaluated = test_cloth_obj.evaluated_get(depsgraph)
+    new_coords = world_coords_from_obj(evaluated, data=evaluated.data.vertices)
+    assert abs(new_coords - worn_coords).max() < 0.002
 
 
 @pytest.fixture(scope="class")

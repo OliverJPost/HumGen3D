@@ -45,20 +45,24 @@ class OutfitSettings(BaseClothing):
     def add_obj(
         self,
         cloth_obj: bpy.types.Object,
-        cloth_type: Literal["pants", "top", "full"],
+        cloth_type: Literal["pants", "torso", "full"],
         recalculate_weights=True,
         context: C = None,
-    ) -> None:
+    ) -> str:
         """Add an object you created yourself as footwear to this human.
 
         Args:
             cloth_obj (bpy.types.Object): Blender object to add as footwear. Make
                 sure it's located in the correct place (on the feet of this human).
-            cloth_type (Literal["pants", "top", "full"]): What part of the body
+            cloth_type (Literal["pants", "torso", "full"]): What part of the body
                 this clothing item covers. This influences what corrective shapekeys
                 are added to the item.
             recalculate_weights (bool): Whether to recalculate weights of the
                 vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            str: How the weights were computed. "closest_point" means the weight
+                solver failed and the weights will need manual cleanup.
         """
-        super().add_obj(cloth_obj, cloth_type, recalculate_weights, context)
+        return super().add_obj(cloth_obj, cloth_type, recalculate_weights, context)

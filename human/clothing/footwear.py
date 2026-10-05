@@ -46,7 +46,7 @@ class FootwearSettings(BaseClothing):
     @injected_context
     def add_obj(
         self, cloth_obj: bpy.types.Object, recalculate_weights=True, context: C = None
-    ) -> None:
+    ) -> str:
         """Add an object you created yourself as footwear to this human.
 
         Args:
@@ -55,5 +55,9 @@ class FootwearSettings(BaseClothing):
             recalculate_weights (bool): Whether to recalculate weights of the
                 vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            str: How the weights were computed. "closest_point" means the weight
+                solver failed and the weights will need manual cleanup.
         """
-        super().add_obj(cloth_obj, "footwear", recalculate_weights, context)
+        return super().add_obj(cloth_obj, "footwear", recalculate_weights, context)

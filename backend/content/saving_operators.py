@@ -17,7 +17,7 @@ from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from .possible_content import find_possible_content
-from ...human.clothing.saving import is_valid_clothing_object
+from ...human.clothing.saving import has_deform_weights, is_valid_clothing_object
 from ...user_interface.panel_functions import draw_paragraph
 
 
@@ -199,11 +199,9 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
                 )
                 return {"CANCELLED"}
 
-        self.has_valid_vertex_groups = True
-        for vg in self.human.objects.body.vertex_groups:
-            if vg.name not in cloth_object.vertex_groups:
-                self.has_valid_vertex_groups = False
-                break
+        self.has_valid_vertex_groups = has_deform_weights(
+            cloth_object, self.human.objects.rig
+        )
 
         return context.window_manager.invoke_props_dialog(self)
 
@@ -271,20 +269,20 @@ Press ESC to cancel.
         recalculate_weights = not self.has_valid_vertex_groups or self.override_weights
 
         if self.cloth_type == "footwear":
-            self.human.clothing.footwear.add_obj(
+            solver = self.human.clothing.footwear.add_obj(
                 cloth_obj, recalculate_weights, context
             )
         else:
-            self.human.clothing.outfit.add_obj(
+            solver = self.human.clothing.outfit.add_obj(
                 cloth_obj, self.cloth_type, recalculate_weights, context
             )
 
         find_possible_content(context)
 
-        ShowMessageBox(
-            "Succesfully added weight painting and corrective shape keys! This is now a valid clothing object. Save it to the library in the panel below.",
-            title="HG Clothing",
-        )
+        message = "Succesfully added weight painting and corrective shape keys! This is now a valid clothing object. Save it to the library in the panel below."
+        if solver == "closest_point":
+            message += " NOTE: Automatic weight painting could not be fully solved for this mesh, check the weights before saving."
+        ShowMessageBox(message, title="HG Clothing")
 
         return {"FINISHED"}
 
