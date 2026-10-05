@@ -27,7 +27,7 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair import haircards
+from HumGen3D.human.hair import hair_binding, haircap, haircards
 from HumGen3D.human.hair.compatibility import set_children_percent
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
@@ -129,8 +129,8 @@ class BaseHair:
         """Convert the hair of this type to haircards.
 
         Will generate a mesh object consisting of a haircap and haircards, skinned to
-        the rig of the human. For eye systems and face hair only a haircap will be
-        generated.
+        the rig of the human. For eye systems only a haircap will be generated. The
+        object follows the expressions of the human.
 
         Args:
             quality (Literal["ultra", "high", "medium", "low", "haircap_only"]):
@@ -148,13 +148,18 @@ class BaseHair:
         """
         if not self.modifiers:
             raise HumGenException("No hair to convert")
-        is_scalp = self._haircap_type == "Scalp"
+        # Hair on the scalp and face gets cards, eyebrows and eyelashes only a haircap
+        has_cards = self._haircap_type in ("Scalp", "Beard")
         visible_modifiers = [mod for mod in self.modifiers if mod.show_viewport]
-        if is_scalp and not visible_modifiers:
+        if has_cards and not visible_modifiers:
             raise HumGenException("No visible hair to convert")
 
         rig = self._human.objects.rig
-        body = haircards.BodyReference(self._human)
+        settings = (
+            haircards.SCALP_SETTINGS
+            if self._haircap_type == "Scalp"
+            else haircards.FACE_SETTINGS
+        )
         density_vertex_groups = [
             (
                 self._human.objects.body.vertex_groups[ps.vertex_group_density],
@@ -165,36 +170,37 @@ class BaseHair:
         ]
 
         card_obj = None
-        density_roots = np.zeros((0, 3))
+        strands = None
         with haircards.rest_pose(rig, context):
-            if is_scalp:
+            body = haircards.BodyReference(self._human, context)
+            if has_cards:
                 strands = haircards.extract_strands(
-                    self._human, visible_modifiers, context
+                    self._human, visible_modifiers, context, settings
                 )
-                density_roots = strands.density_roots
 
-            cap_obj = haircards.create_haircap(
+            cap_obj = haircap.create_haircap(
                 self._human,
                 body,
                 self._haircap_type,
                 density_vertex_groups,
-                density_roots,
+                strands,
                 context,
             )
 
-            if is_scalp and quality != "haircap_only":
+            if has_cards and quality != "haircap_only":
                 if triangle_budget is None:
-                    triangle_budget = haircards.QUALITY_TRIANGLE_BUDGETS[quality]
+                    triangle_budget = settings.triangle_budgets[quality]
                 cap_obj.data.calc_loop_triangles()
                 geometry = haircards.build_card_geometry(
-                    strands,
-                    haircards.HeadProxy.from_human(self._human),
+                    strands.card_strands(),
+                    haircards.outward_proxy(self._human, body, settings),
                     body,
                     triangle_budget - len(cap_obj.data.loop_triangles),
+                    settings,
                 )
                 if geometry:
                     card_obj = haircards.create_card_object(
-                        geometry, self._human, body, context
+                        geometry, self._human, body, context, settings
                     )
 
         # The haircap material is in the first slot, the cards in the second
@@ -210,7 +216,7 @@ class BaseHair:
             bpy.data.meshes.remove(card_mesh)
 
         hair_obj = cap_obj
-        if is_scalp:
+        if self._haircap_type == "Scalp":
             hair_obj.name = "Haircards"
 
         old_hair_mat = self._human.objects.body.data.materials[self._mat_idx]
@@ -219,6 +225,8 @@ class BaseHair:
             for node in old_hair_mat.node_tree.nodes
             if node.bl_idname == "ShaderNodeGroup"
         )
+        grey_hair_input = old_hair_node.inputs.get("Pepper & Salt")
+        grey_hair = grey_hair_input.default_value if grey_hair_input else 0
         for mat in materials:
             node = next(
                 node
@@ -232,10 +240,23 @@ class BaseHair:
                     input_name
                 ].default_value
 
+            haircards.match_particle_color(
+                mat,
+                (
+                    haircards.HAIRCAP_COLOR_MATCH
+                    if mat == materials[0]
+                    else settings.color_match
+                ),
+                old_hair_node.inputs["Redness"].default_value,
+                grey_hair,
+            )
+
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
         haircards.parent_to_rig(hair_obj, rig)
+        # Makes the hair follow expressions and changes of the shape of the body
+        hair_binding.bind_to_body(self._human, hair_obj, body.dynamic_values)
         hair_obj["hg_haircard"] = True
         hair_obj[self._haircap_tag] = True
 

@@ -329,11 +329,7 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
 
         col.prop(hairc_sett, "quality")
 
-        row = self.layout.row(align=True)
-        row.prop(hairc_sett, "face_hair")
-        r_row = row.row(align=True)
-        r_row.alert = True
-        r_row.label(text="ALPHA")
+        self.layout.prop(hairc_sett, "face_hair")
 
         message = (
             "If you are baking textures, see Bake Textures menu for haircard"

@@ -10,13 +10,16 @@ fit a triangle budget, so the result has a predictable size for every hairstyle.
 Extracting the strands (extract_strands) is separated from building the cards
 (build_card_geometry), so cards for multiple budgets can be built from the same
 strands.
+
+The haircap that goes under the cards is implemented in haircap.py, keeping the hair
+attached to the skin in hair_binding.py.
 """
 
 import contextlib
 import json
 import os
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Literal, Optional
+from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Union
 
 import bpy
 import numpy as np
@@ -25,7 +28,10 @@ from HumGen3D.common.context import context_override
 from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.math import create_kdtree
 from HumGen3D.common.memory_management import hg_delete
+from HumGen3D.common.shadernode import COLOR1_INPUT_NAME, COLOR2_INPUT_NAME
+from HumGen3D.human.hair import hair_binding
 from HumGen3D.human.hair.compatibility import (
+    SPECULAR_INPUT_NAME,
     get_children_percent,
     set_children_percent,
 )
@@ -34,18 +40,116 @@ from mathutils import Matrix
 if TYPE_CHECKING:
     from ..human import Human
 
-HaircapType = Literal["Scalp", "Eyelashes", "Brows", "Beard"]
 Rect = tuple[tuple[float, float], tuple[float, float]]
 # Names of the vertex groups, their weights per usable vertex and a kdtree of those
 SkinData = tuple[list[str], np.ndarray, Any]
 
-# Triangle budgets of the whole scalp hair object, so cards plus haircap
-QUALITY_TRIANGLE_BUDGETS = {
-    "ultra": 24000,
-    "high": 12000,
-    "medium": 7000,
-    "low": 4500,
-}
+
+
+@dataclass(frozen=True)
+class ColorMatch:
+    """Corrections that make a material look like particle hair of the same color.
+
+    Measured by comparing renders of particle hair with renders of the material,
+    for several values of the lightness and redness of the hair.
+    """
+
+    #: Factor for the brightness of the hair color
+    value: float
+    #: Factors for the saturation of the hair color, for a redness of 0.3 and 0.8
+    saturations: tuple[float, float]
+    #: Specular of the material, or the factor for its specular texture if it has
+    #: one. None to leave it as it is.
+    specular: Optional[float] = None
+    #: Roughness of the material, None to leave it as it is
+    roughness: Optional[float] = None
+
+    def saturation(self, redness: float) -> float:
+        """Get the saturation factor for hair with the passed redness.
+
+        Args:
+            redness (float): Redness of the hair.
+
+        Returns:
+            float: Factor to multiply the saturation of the hair color with.
+        """
+        low, high = self.saturations
+        factor = low + (high - low) * (redness - 0.3) / 0.5
+        return float(np.clip(factor, min(low, high) * 0.8, max(low, high) * 1.2))
+
+
+# The haircap material is as shiny as skin, which makes dark hair look grey
+HAIRCAP_COLOR_MATCH = ColorMatch(
+    value=0.95, saturations=(1.3, 0.88), specular=0.15, roughness=0.7
+)
+
+
+@dataclass(frozen=True)
+class CardSettings:
+    """Sizes of haircards, which differ between the hair on the scalp and the face."""
+
+    #: Maximum triangle count of the whole hair object, so cards plus haircap, for
+    #: every quality
+    triangle_budgets: dict[str, int]
+    #: Particle systems with hairs shorter than this only show on the haircap
+    short_system_length: float
+    #: Hairs shorter than this don't get a card
+    min_strand_length: float
+    #: Hairs shorter than this don't count as hair growing on that part of the skin
+    min_root_length: float
+    max_segment_length: float
+    #: Segments are added until the cards deviate less than this from the clumps
+    wanted_tolerance: float
+    min_tolerance: float
+    min_half_width: float
+    max_half_width: float
+    width_padding: float
+    #: Maximum of half the width of a card, relative to its length
+    max_width_to_length: float
+    #: Only skin the cards to the bones of the head, neck and spine
+    scalp_only_skin: bool
+    #: Use the normals of the skin as outward direction, instead of the head proxy
+    skin_normals: bool
+    #: Corrections for the color of the card material
+    color_match: ColorMatch
+
+
+SCALP_SETTINGS = CardSettings(
+    triangle_budgets={"ultra": 24000, "high": 12000, "medium": 7000, "low": 4500},
+    short_system_length=0.02,
+    min_strand_length=0.01,
+    min_root_length=0.002,
+    max_segment_length=0.08,
+    wanted_tolerance=0.002,
+    min_tolerance=0.0004,
+    min_half_width=0.004,
+    max_half_width=0.04,
+    width_padding=0.003,
+    max_width_to_length=0.25,
+    scalp_only_skin=True,
+    skin_normals=False,
+    color_match=ColorMatch(value=0.26, saturations=(0.97, 0.89)),
+)
+# Face hair is a lot shorter and its skin moves with the expressions of the face
+FACE_SETTINGS = CardSettings(
+    triangle_budgets={"ultra": 10000, "high": 7000, "medium": 5000, "low": 3500},
+    short_system_length=0.003,
+    min_strand_length=0.002,
+    min_root_length=0.0001,
+    max_segment_length=0.03,
+    wanted_tolerance=0.0007,
+    min_tolerance=0.0002,
+    min_half_width=0.0015,
+    max_half_width=0.012,
+    width_padding=0.001,
+    max_width_to_length=0.5,
+    scalp_only_skin=False,
+    skin_normals=True,
+    # Darker than the cards on the scalp: face hair cards stand apart on the skin,
+    # without other cards casting shadows on them
+    color_match=ColorMatch(value=0.36, saturations=(1.1, 1.0)),
+)
+QUALITY_TRIANGLE_BUDGETS = SCALP_SETTINGS.triangle_budgets
 
 # Name of the color attribute. On the haircap it contains the hair density, on the
 # cards R is the position along the card (0 at the root, 1 at the tip), G is a random
@@ -62,23 +166,10 @@ MAX_BONE_INFLUENCES = 4
 # Number of points every strand is resampled to. Has to be a power of two plus one.
 STATIONS = 33
 MAX_STRANDS_PER_SYSTEM = 6000
-# Particle systems with hairs shorter than this are only represented by the haircap
-SHORT_SYSTEM_LENGTH = 0.02
-MIN_STRAND_LENGTH = 0.01
-# Hairs shorter than this don't count as hair growing on that part of the scalp
-MIN_ROOT_LENGTH = 0.002
 MIN_STRANDS_PER_CLUMP = 4
+# Every this many stations of a strand is used to find out where hair covers the skin
+DENSITY_STATION_STEP = 4
 
-MAX_SEGMENT_LENGTH = 0.08
-# Segments are added until the cards deviate less than this from the clumps
-WANTED_TOLERANCE = 0.002
-MIN_TOLERANCE = 0.0004
-
-MIN_HALF_WIDTH = 0.004
-MAX_HALF_WIDTH = 0.04
-WIDTH_PADDING = 0.003
-# Maximum of half the width of a card, relative to its length
-MAX_WIDTH_TO_LENGTH = 0.25
 # Number of standard deviations of the clump the card extends to each side
 SPREAD_FACTOR = 1.6
 # Number of standard deviations of the tips of the clump the card is extended with
@@ -86,6 +177,14 @@ TIP_SPREAD_FACTOR = 1.0
 # Extra weight of the distance to the head when comparing strands, to get clumps that
 # are layers on top of each other instead of thick bundles
 LAYER_WEIGHT = 1.5
+
+
+# How far the hair color is mixed with white for the maximum amount of grey hairs,
+# measured in the same way
+GREY_HAIR_SHARE = 0.09
+COLOR_MATCH_NODE_NAME = "HG_Color_Match"
+SPECULAR_MATCH_NODE_NAME = "HG_Specular_Match"
+GREY_HAIR_NODE_NAME = "HG_Grey_Hair"
 
 # Part of the hair texture without gaps between the hairs, not in the zones json
 SOLID_ZONE: Rect = ((0.0, 0.3), (0.2, 1.0))
@@ -107,9 +206,25 @@ class HairStrands:
     system: np.ndarray
     #: (n,) number of rendered hairs every strand stands for
     weights: np.ndarray
-    #: (m, 3) roots of all hairs of systems without a density vertex group, also of
-    #: the hairs that are too short to get a card
-    density_roots: np.ndarray
+    #: (n,) mask of the strands that are long enough to get a card
+    for_cards: np.ndarray
+    #: (m, 3) points on the hairs of systems without a density vertex group, to
+    #: find out where those systems cover the skin
+    density_points: np.ndarray
+
+    def card_strands(self) -> "HairStrands":
+        """Get the strands that are long enough to get a card.
+
+        Returns:
+            HairStrands: Strands to build cards for with build_card_geometry.
+        """
+        return replace(
+            self,
+            points=self.points[self.for_cards],
+            system=self.system[self.for_cards],
+            weights=self.weights[self.for_cards],
+            for_cards=self.for_cards[self.for_cards],
+        )
 
 
 @dataclass
@@ -128,6 +243,8 @@ class CardGeometry:
     normals: np.ndarray
     #: (v, 3) point on the middle of the card, to look up the skin weights with
     skin_points: np.ndarray
+    #: (v, 3) root of the card of every vertex
+    root_points: np.ndarray
     card_count: int
 
     @property
@@ -265,23 +382,39 @@ class HeadProxy:
 class BodyReference:
     """Rest pose shape and skin weights of the body, to fit hair objects to."""
 
-    def __init__(self, human: "Human") -> None:
-        """Gather the data of the body of this human.
+    def __init__(self, human: "Human", context: bpy.types.Context) -> None:
+        """Gather the data of the body of this human, in its current pose.
+
+        The human is expected to be in its rest pose, see rest_pose().
 
         Args:
             human (Human): Human to get the body data of.
+            context (bpy.types.Context): Blender context.
         """
         self._human = human
         body = human.objects.body
-        self.base_coords_local = world_coords_from_obj(body, local=True)
-        self.coords_local = world_coords_from_obj(
-            body, data=human.keys.all_deformation_shapekeys, local=True
-        )
-        self.coords_world = world_coords_from_obj(
-            body, data=human.keys.all_deformation_shapekeys, local=False
+        self.base_coords_local = hair_binding.get_coords(body.data.vertices)
+        #: Values of the animated shape keys, like expressions, the body has now
+        self.dynamic_values = hair_binding.dynamic_key_values(human, context)
+        self.coords_local = hair_binding.static_body_coords(
+            human
+        ) + hair_binding.dynamic_displacement(human, self.dynamic_values)
+        self.coords_world = hair_binding.transform_coords(
+            body.matrix_world, self.coords_local
         )
         self.kd = create_kdtree(self.coords_world)
         self._skin_cache: dict[bool, SkinData] = {}
+
+    def nearest_verts(self, points: np.ndarray) -> np.ndarray:
+        """Get the index of the nearest body vertex for all points.
+
+        Args:
+            points (np.ndarray): (n, 3) world space coordinates.
+
+        Returns:
+            np.ndarray: (n,) indices of body vertices.
+        """
+        return np.array([self.kd.find(point)[1] for point in points], dtype=np.int64)
 
     def distances(self, points: np.ndarray) -> np.ndarray:
         """Get the distance to the nearest body vertex for all points.
@@ -378,6 +511,76 @@ class BodyReference:
                 )
 
 
+class SkinProxy:
+    """Uses the normals of the skin as outward direction of the hair.
+
+    For short hair on the face, where the skin under the chin and on the neck does
+    not face away from the center of the head.
+    """
+
+    def __init__(self, human: "Human", body: BodyReference) -> None:
+        """Create a new proxy.
+
+        Args:
+            human (Human): Human to create the proxy for.
+            body (BodyReference): Body data of the human.
+        """
+        self._body = body
+        body_obj = human.objects.body
+        mesh = body_obj.data
+        normals = np.empty(len(mesh.vertices) * 3, dtype=np.float64)
+        mesh.vertices.foreach_get("normal", normals)
+        rotation = np.array(body_obj.matrix_world)[:3, :3]
+        normals = _normalized(normals.reshape((-1, 3)) @ rotation.T)
+
+        # Smooth the normals, so neighbouring cards face the same way
+        edges = np.empty(len(mesh.edges) * 2, dtype=np.int32)
+        mesh.edges.foreach_get("vertices", edges)
+        edges = edges.reshape((-1, 2))
+        for _ in range(3):
+            summed = normals.copy()
+            np.add.at(summed, edges[:, 0], normals[edges[:, 1]])
+            np.add.at(summed, edges[:, 1], normals[edges[:, 0]])
+            normals = _normalized(summed)
+        self._normals = normals
+
+    def outward(self, points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Get the direction away from the skin and the distance to the skin.
+
+        Args:
+            points (np.ndarray): (n, 3) world space coordinates.
+
+        Returns:
+            tuple[np.ndarray, np.ndarray]: (n, 3) normals of the nearest body
+                vertices and the (n,) distances to those vertices.
+        """
+        vert_idxs = np.empty(len(points), dtype=np.int64)
+        distances = np.empty(len(points))
+        for i, point in enumerate(points):
+            _, vert_idxs[i], distances[i] = self._body.kd.find(point)
+
+        return self._normals[vert_idxs], distances
+
+
+Proxy = Union[HeadProxy, SkinProxy]
+
+
+def outward_proxy(human: "Human", body: BodyReference, settings: CardSettings) -> Proxy:
+    """Get the proxy for the outward direction of hair with the passed settings.
+
+    Args:
+        human (Human): Human to get the proxy for.
+        body (BodyReference): Body data of the human.
+        settings (CardSettings): Settings of the hair type.
+
+    Returns:
+        Proxy: Proxy to build cards with.
+    """
+    if settings.skin_normals:
+        return SkinProxy(human, body)
+    return HeadProxy.from_human(human)
+
+
 @contextlib.contextmanager
 def _limited_children(particle_system: bpy.types.ParticleSystem) -> Iterator[float]:
     """Temporarily shows a workable number of child hairs in the viewport.
@@ -472,6 +675,7 @@ def extract_strands(
     human: "Human",
     modifiers: Iterable[bpy.types.ParticleSystemModifier],
     context: bpy.types.Context,
+    settings: CardSettings = SCALP_SETTINGS,
 ) -> HairStrands:
     """Gets the hairs of the passed particle systems as resampled strands.
 
@@ -482,13 +686,14 @@ def extract_strands(
         modifiers (Iterable[bpy.types.ParticleSystemModifier]): Modifiers of the
             particle systems to get the hairs of.
         context (bpy.types.Context): Blender context.
+        settings (CardSettings): Settings of the hair type.
 
     Returns:
         HairStrands: Strands of all the particle systems.
     """
     body_obj = human.objects.body
-    all_points, all_systems, all_weights = [], [], []
-    density_roots = []
+    all_points, all_systems, all_weights, all_for_cards = [], [], [], []
+    density_points = []
     for system_idx, modifier in enumerate(modifiers):
         particle_system = modifier.particle_system
         with _limited_children(particle_system) as hairs_per_strand:
@@ -497,23 +702,36 @@ def extract_strands(
             continue
 
         points, lengths = _resample(coords, starts, ends)
-        if not particle_system.vertex_group_density:
-            # Hairs can have no length because of a length vertex group
-            density_roots.append(coords[starts[lengths > MIN_ROOT_LENGTH]])
-        if np.quantile(lengths, 0.9) < SHORT_SYSTEM_LENGTH:
+        # Hairs can have no length because of a length vertex group
+        has_length = lengths > settings.min_root_length
+        if not has_length.any():
             continue
-        long_enough = lengths > MIN_STRAND_LENGTH
-        all_points.append(points[long_enough])
-        strand_count = int(long_enough.sum())
-        all_systems.append(np.full(strand_count, system_idx))
-        all_weights.append(np.full(strand_count, hairs_per_strand))
+        points, lengths = points[has_length], lengths[has_length]
+        if not particle_system.vertex_group_density:
+            density_points.append(points[:, ::DENSITY_STATION_STEP].reshape((-1, 3)))
+
+        is_long_system = np.quantile(lengths, 0.9) >= settings.short_system_length
+        all_points.append(points)
+        all_systems.append(np.full(len(points), system_idx))
+        all_weights.append(np.full(len(points), hairs_per_strand))
+        all_for_cards.append(is_long_system & (lengths > settings.min_strand_length))
+
+    if not all_points:
+        return HairStrands(
+            points=np.zeros((0, STATIONS, 3)),
+            system=np.zeros(0, dtype=int),
+            weights=np.zeros(0),
+            for_cards=np.zeros(0, dtype=bool),
+            density_points=np.zeros((0, 3)),
+        )
 
     return HairStrands(
-        points=np.concatenate(all_points) if all_points else np.zeros((0, STATIONS, 3)),
-        system=np.concatenate(all_systems) if all_systems else np.zeros(0, dtype=int),
-        weights=np.concatenate(all_weights) if all_weights else np.zeros(0),
-        density_roots=(
-            np.concatenate(density_roots) if density_roots else np.zeros((0, 3))
+        points=np.concatenate(all_points),
+        system=np.concatenate(all_systems),
+        weights=np.concatenate(all_weights),
+        for_cards=np.concatenate(all_for_cards),
+        density_points=(
+            np.concatenate(density_points) if density_points else np.zeros((0, 3))
         ),
     )
 
@@ -556,7 +774,7 @@ def _kmeans(
 
 
 def _cluster_strands(
-    strands: HairStrands, proxy: HeadProxy, clump_count: int
+    strands: HairStrands, proxy: Proxy, clump_count: int
 ) -> np.ndarray:
     """Divides the strands into clumps of strands that follow a similar path.
 
@@ -597,7 +815,9 @@ def _cluster_strands(
     return labels
 
 
-def _significance(centers: np.ndarray, arc: np.ndarray) -> np.ndarray:
+def _significance(
+    centers: np.ndarray, arc: np.ndarray, settings: CardSettings
+) -> np.ndarray:
     """Calculates how much every station matters for the shape of its card.
 
     Stations are judged from coarse to fine: the middle station by its distance to
@@ -616,7 +836,8 @@ def _significance(centers: np.ndarray, arc: np.ndarray) -> np.ndarray:
         relative = centers[:, mids] - centers[:, mids - step]
         chord_length = np.maximum(np.linalg.norm(chord, axis=2), 1e-9)
         error = np.linalg.norm(np.cross(chord, relative), axis=2) / chord_length
-        too_long = arc[:, mids + step] - arc[:, mids - step] > MAX_SEGMENT_LENGTH
+        span = arc[:, mids + step] - arc[:, mids - step]
+        too_long = span > settings.max_segment_length
         significance[:, mids] = np.where(too_long, np.inf, error)
         step //= 2
 
@@ -723,7 +944,11 @@ def _smooth_along_card(values: np.ndarray) -> np.ndarray:
 
 
 def _fit_cards(
-    strands: HairStrands, labels: np.ndarray, proxy: HeadProxy, body: BodyReference
+    strands: HairStrands,
+    labels: np.ndarray,
+    proxy: Proxy,
+    body: BodyReference,
+    settings: CardSettings,
 ) -> _Cards:
     """Fits a card to every clump, and a second crossing card to standing clumps."""
     points = strands.points
@@ -766,7 +991,9 @@ def _fit_cards(
         np.add.at(variance, labels, distance**2)
         deviation = np.sqrt(variance / strand_counts[:, None])
         widths = np.clip(
-            deviation * SPREAD_FACTOR + WIDTH_PADDING, MIN_HALF_WIDTH, MAX_HALF_WIDTH
+            deviation * SPREAD_FACTOR + settings.width_padding,
+            settings.min_half_width,
+            settings.max_half_width,
         )
         return _smooth_along_card(widths)
 
@@ -774,7 +1001,9 @@ def _fit_cards(
     arc[:, 1:] = np.cumsum(np.linalg.norm(np.diff(centers, axis=1), axis=2), axis=1)
     # Clumps of hairs that point in different directions are short and wide, the
     # hairs of the texture would be stretched sideways on a card of that shape
-    max_widths = np.maximum(arc[:, -1:] * MAX_WIDTH_TO_LENGTH, MIN_HALF_WIDTH)
+    max_widths = np.maximum(
+        arc[:, -1:] * settings.max_width_to_length, settings.min_half_width
+    )
     side_widths = np.minimum(half_widths(sides), max_widths)
     front_widths = np.maximum(half_widths(fronts), side_widths * 0.6)
     front_widths = np.minimum(front_widths, max_widths)
@@ -783,7 +1012,7 @@ def _fit_cards(
     depths = body.distances(depth_stations.reshape((-1, 3)))
     depths = depths.reshape((clump_count, -1)).mean(axis=1)
     hair_counts = np.bincount(labels, weights=strands.weights, minlength=clump_count)
-    significance = _significance(centers, arc)
+    significance = _significance(centers, arc, settings)
 
     def with_crossing(
         values: np.ndarray, crossing: Optional[np.ndarray] = None
@@ -802,7 +1031,9 @@ def _fit_cards(
     )
 
 
-def _select_stations(cards: _Cards, triangle_budget: int) -> np.ndarray:
+def _select_stations(
+    cards: _Cards, triangle_budget: int, settings: CardSettings
+) -> np.ndarray:
     """Chooses the stations that become the segments of the cards.
 
     Returns:
@@ -814,7 +1045,7 @@ def _select_stations(cards: _Cards, triangle_budget: int) -> np.ndarray:
     inner = cards.significance[:, 1:-1]
     order = np.argsort(-inner, axis=None, kind="stable")
     affordable = max((triangle_budget - 2 * len(cards)) // 2, 0)
-    useful = int((inner >= MIN_TOLERANCE).sum())
+    useful = int((inner >= settings.min_tolerance).sum())
     chosen = order[: min(affordable, useful)]
     selected[:, 1:-1].flat[chosen] = True
 
@@ -900,18 +1131,21 @@ class HairAtlas:
 
 def build_card_geometry(
     strands: HairStrands,
-    proxy: HeadProxy,
+    proxy: Proxy,
     body: BodyReference,
     triangle_budget: int,
+    settings: CardSettings = SCALP_SETTINGS,
     seed: int = 0,
 ) -> Optional[CardGeometry]:
     """Builds haircards for the strands that fit within the triangle budget.
 
     Args:
-        strands (HairStrands): Strands to build cards for.
-        proxy (HeadProxy): Proxy of the head of the human.
+        strands (HairStrands): Strands to build cards for, see
+            HairStrands.card_strands.
+        proxy (Proxy): Proxy for the outward direction of the hair.
         body (BodyReference): Body data of the human.
         triangle_budget (int): Maximum number of triangles of the cards.
+        settings (CardSettings): Settings of the hair type.
         seed (int): Seed for the random choices, the same seed gives the same cards.
 
     Returns:
@@ -927,13 +1161,13 @@ def build_card_geometry(
     clump_count = min(max_clumps, max(1, triangle_budget // 8))
     for attempt in range(4):
         labels = _cluster_strands(strands, proxy, clump_count)
-        cards = _fit_cards(strands, labels, proxy, body)
+        cards = _fit_cards(strands, labels, proxy, body, settings)
         if attempt == 3:
             break
         # Change the number of clumps until the cards with the segments they need
         # fill the budget
-        wanted_stations = (cards.significance[:, 1:-1] >= WANTED_TOLERANCE).sum()
-        wanted_triangles = 2 * len(cards) + 2 * int(wanted_stations)
+        is_wanted = cards.significance[:, 1:-1] >= settings.wanted_tolerance
+        wanted_triangles = 2 * len(cards) + 2 * int(is_wanted.sum())
         fits = 0.8 * triangle_budget <= wanted_triangles <= triangle_budget
         new_count = int(clump_count * 0.95 * triangle_budget / wanted_triangles)
         new_count = int(np.clip(new_count, 1, max_clumps))
@@ -949,7 +1183,7 @@ def build_card_geometry(
     # From the inner to the outer cards, the order engines should draw them in
     order = np.argsort(cards.depths, kind="stable")
     cards = _Cards(**{name: value[order] for name, value in vars(cards).items()})
-    selected = _select_stations(cards, triangle_budget)
+    selected = _select_stations(cards, triangle_budget, settings)
 
     card_count = len(cards)
     rng = np.random.default_rng(seed)
@@ -1011,6 +1245,7 @@ def build_card_geometry(
         colors=per_side(color, color),
         normals=normals,
         skin_points=per_side(centers, centers),
+        root_points=cards.centers[np.repeat(card_idxs, 2), 0],
         card_count=card_count,
     )
 
@@ -1025,11 +1260,6 @@ def set_custom_normals(mesh: bpy.types.Mesh, normals: np.ndarray) -> None:
     if hasattr(mesh, "use_auto_smooth"):
         mesh.use_auto_smooth = True
     mesh.normals_split_custom_set_from_vertices(normals.tolist())
-
-
-def _transform(matrix: Matrix, coords: np.ndarray) -> np.ndarray:
-    matrix_np = np.array(matrix)
-    return coords @ matrix_np[:3, :3].T + matrix_np[:3, 3]
 
 
 def parent_to_rig(obj: bpy.types.Object, rig: bpy.types.Object) -> None:
@@ -1053,6 +1283,7 @@ def create_card_object(
     human: "Human",
     body: BodyReference,
     context: bpy.types.Context,
+    settings: CardSettings = SCALP_SETTINGS,
 ) -> bpy.types.Object:
     """Creates a skinned mesh object from the geometry of haircards.
 
@@ -1061,12 +1292,13 @@ def create_card_object(
         human (Human): Human the cards belong to.
         body (BodyReference): Body data of the human.
         context (bpy.types.Context): Blender context.
+        settings (CardSettings): Settings of the hair type.
 
     Returns:
         bpy.types.Object: Object with the cards, in the space of the rig.
     """
     mx_to_rig = human.objects.rig.matrix_world.inverted()
-    vertices = _transform(mx_to_rig, geometry.vertices)
+    vertices = hair_binding.transform_coords(mx_to_rig, geometry.vertices)
     normals = _normalized(geometry.normals @ np.array(mx_to_rig)[:3, :3].T)
 
     mesh = bpy.data.meshes.new("Haircards")
@@ -1080,18 +1312,26 @@ def create_card_object(
     color_attribute = mesh.color_attributes.new(COLOR_ATTRIBUTE, "FLOAT_COLOR", "POINT")
     color_attribute.data.foreach_set("color", geometry.colors.ravel())
     set_custom_normals(mesh, normals)
+    # Every card moves as a whole with the skin under its root. The vertices of a
+    # card share the same root, so only look up every second root of every card.
+    root_verts = body.nearest_verts(geometry.root_points[::2])
+    hair_binding.set_attachment(mesh, np.repeat(root_verts, 2))
     mesh.update()
 
     obj = bpy.data.objects.new("Haircards", mesh)
     context.scene.collection.objects.link(obj)
-    body.add_skin(obj, geometry.skin_points, scalp_only=True)
+    body.add_skin(obj, geometry.skin_points, scalp_only=settings.scalp_only_skin)
 
     return obj
 
 
 @contextlib.contextmanager
-def _reuse_images() -> Iterator[None]:
+def reuse_images() -> Iterator[None]:
     """Replaces images that get loaded by images of the same file that already exist.
+
+    Only the images that are loaded within this context are replaced and removed.
+    Images that existed before can already be in use by the viewport, removing those
+    crashes Blender the next time the viewport is drawn.
 
     Yields:
         None
@@ -1101,16 +1341,132 @@ def _reuse_images() -> Iterator[None]:
         path = bpy.path.abspath(image.filepath, library=image.library)
         return path, image.colorspace_settings.name, image.alpha_mode
 
-    existing = {key(image): image for image in bpy.data.images if image.filepath}
+    images_before = list(bpy.data.images)
     yield
-    new_images = [img for img in bpy.data.images if img not in existing.values()]
-    for image in new_images:
-        original = existing.get(key(image)) if image.filepath else None
-        if original:
+    originals: dict[tuple[str, str, str], bpy.types.Image] = {}
+    for image in images_before:
+        if image.filepath:
+            originals.setdefault(key(image), image)
+
+    loaded_images = [img for img in bpy.data.images if img not in images_before]
+    for image in loaded_images:
+        if not image.filepath:
+            continue
+        original = originals.setdefault(key(image), image)
+        if original != image:
             image.user_remap(original)
             bpy.data.images.remove(image)
-        elif image.filepath:
-            existing[key(image)] = image
+
+
+def _keep_color_between_hairs(material: bpy.types.Material) -> None:
+    """Stops the cards from getting darker when they are small on screen.
+
+    The occlusion texture that darkens the hair color is black between the hairs.
+    When a card is small on screen the hairs and the black between them are
+    averaged, which made the hair a lot darker. Dividing by the alpha texture, which
+    is averaged the same way, gives the occlusion of only the hairs.
+    """
+    group_node = next(
+        node for node in material.node_tree.nodes if node.bl_idname == "ShaderNodeGroup"
+    )
+    tree = group_node.node_tree
+    if tree.get("hg_occlusion_divided"):
+        return
+
+    def image_node(name_part: str) -> Optional[bpy.types.Node]:
+        return next(
+            (
+                node
+                for node in tree.nodes
+                if node.bl_idname == "ShaderNodeTexImage"
+                and node.image
+                and name_part in node.image.name
+            ),
+            None,
+        )
+
+    occlusion_node, alpha_node = image_node("_AO"), image_node("_ALPHA")
+    occlusion_links = [
+        link for link in tree.links if link.from_node == occlusion_node
+    ]
+    if not occlusion_node or not alpha_node or len(occlusion_links) != 1:
+        return
+
+    target_socket = occlusion_links[0].to_socket
+    tree.links.remove(occlusion_links[0])
+    alpha = tree.nodes.new("ShaderNodeMath")
+    alpha.operation = "MAXIMUM"
+    alpha.inputs[1].default_value = 0.02
+    divide = tree.nodes.new("ShaderNodeMath")
+    divide.operation = "DIVIDE"
+    divide.use_clamp = True
+    tree.links.new(alpha_node.outputs["Color"], alpha.inputs[0])
+    tree.links.new(occlusion_node.outputs["Color"], divide.inputs[0])
+    tree.links.new(alpha.outputs[0], divide.inputs[1])
+    tree.links.new(divide.outputs[0], target_socket)
+    tree["hg_occlusion_divided"] = True
+
+
+def match_particle_color(
+    material: bpy.types.Material,
+    color_match: ColorMatch,
+    redness: float,
+    grey_hair: float,
+) -> None:
+    """Makes the color of a haircard or haircap material look like particle hair.
+
+    The materials calculate the hair color in another way than the material of the
+    particle hair, and have no input for grey hairs.
+
+    Args:
+        material (bpy.types.Material): Material of haircards or of a haircap.
+        color_match (ColorMatch): Corrections for this kind of material.
+        redness (float): Value of the Redness input of the particle hair.
+        grey_hair (float): Value of the Pepper & Salt input of the particle hair.
+    """
+    nodes = material.node_tree.nodes
+    links = material.node_tree.links
+    principled = next(
+        (node for node in nodes if node.bl_idname == "ShaderNodeBsdfPrincipled"), None
+    )
+    if not principled or not principled.inputs["Base Color"].links:
+        return
+
+    adjust = nodes.get(COLOR_MATCH_NODE_NAME)
+    whiten = nodes.get(GREY_HAIR_NODE_NAME)
+    if not adjust or not whiten:
+        color_socket = principled.inputs["Base Color"].links[0].from_socket
+        adjust = nodes.new("ShaderNodeHueSaturation")
+        adjust.name = COLOR_MATCH_NODE_NAME
+        is_legacy_mix = bpy.app.version < (3, 4, 0)
+        whiten = nodes.new("ShaderNodeMixRGB" if is_legacy_mix else "ShaderNodeMix")
+        whiten.name = GREY_HAIR_NODE_NAME
+        if not is_legacy_mix:
+            whiten.data_type = "RGBA"
+        whiten.inputs[COLOR2_INPUT_NAME].default_value = (1, 1, 1, 1)
+        links.new(color_socket, adjust.inputs["Color"])
+        links.new(adjust.outputs[0], whiten.inputs[COLOR1_INPUT_NAME])
+        links.new(
+            whiten.outputs[0 if is_legacy_mix else 2], principled.inputs["Base Color"]
+        )
+
+    adjust.inputs["Value"].default_value = color_match.value
+    adjust.inputs["Saturation"].default_value = color_match.saturation(redness)
+    whiten.inputs[0].default_value = float(np.clip(grey_hair, 0, 1)) * GREY_HAIR_SHARE
+    specular_input = principled.inputs[SPECULAR_INPUT_NAME]
+    if color_match.specular is not None and not specular_input.links:
+        specular_input.default_value = color_match.specular
+    elif color_match.specular is not None:
+        dim = nodes.get(SPECULAR_MATCH_NODE_NAME)
+        if not dim:
+            dim = nodes.new("ShaderNodeMath")
+            dim.name = SPECULAR_MATCH_NODE_NAME
+            dim.operation = "MULTIPLY"
+            links.new(specular_input.links[0].from_socket, dim.inputs[0])
+            links.new(dim.outputs[0], specular_input)
+        dim.inputs[1].default_value = color_match.specular
+    if color_match.roughness is not None:
+        principled.inputs["Roughness"].default_value = color_match.roughness
 
 
 def load_card_material() -> bpy.types.Material:
@@ -1121,99 +1477,16 @@ def load_card_material() -> bpy.types.Material:
     """
     mat = bpy.data.materials.get("HG_Haircards")
     if mat:
-        return mat.copy()
+        mat = mat.copy()
+        _keep_color_between_hairs(mat)
+        return mat
 
     blendpath = os.path.join(
         get_prefs().filepath, "hair", "haircards", "haircards_material.blend"
     )
-    with _reuse_images():
+    with reuse_images():
         with bpy.data.libraries.load(blendpath, link=False) as (_, data_to):
             data_to.materials = ["HG_Haircards"]
 
+    _keep_color_between_hairs(data_to.materials[0])
     return data_to.materials[0]
-
-
-def _boundary_verts(mesh: bpy.types.Mesh) -> np.ndarray:
-    """Gets the indices of the vertices on the open edges of the mesh."""
-    loop_edges = np.empty(len(mesh.loops), dtype=np.int32)
-    mesh.loops.foreach_get("edge_index", loop_edges)
-    face_counts = np.bincount(loop_edges, minlength=len(mesh.edges))
-    edge_verts = np.empty(len(mesh.edges) * 2, dtype=np.int32)
-    mesh.edges.foreach_get("vertices", edge_verts)
-    return np.unique(edge_verts.reshape((-1, 2))[face_counts == 1])
-
-
-def create_haircap(
-    human: "Human",
-    body: BodyReference,
-    haircap_type: HaircapType,
-    density_vertex_groups: list[tuple[bpy.types.VertexGroup, float]],
-    density_roots: np.ndarray,
-    context: bpy.types.Context,
-) -> bpy.types.Object:
-    """Creates a haircap object, fitted and skinned to the body of the human.
-
-    The haircap is a mesh that lies on the skin, with a texture of hair. The hair is
-    only visible where the human has hair, based on the density vertex groups of the
-    hair systems and the roots of the hairs of systems without such a vertex group.
-
-    Args:
-        human (Human): The human to add the haircap to.
-        body (BodyReference): Body data of the human.
-        haircap_type (HaircapType): Part of the body to add the haircap to.
-        density_vertex_groups (list[tuple[bpy.types.VertexGroup, float]]): The density
-            vertex groups of the hair systems, with the weight they count with.
-        density_roots (np.ndarray): (n, 3) world space coordinates of the roots of
-            the hairs of the systems without a density vertex group.
-        context (bpy.types.Context): Blender context.
-
-    Returns:
-        bpy.types.Object: The haircap object, in the space of the rig.
-    """
-    body_obj = human.objects.body
-    blendfile = os.path.join(get_prefs().filepath, "hair", "haircards", "haircap.blend")
-    with _reuse_images():
-        with bpy.data.libraries.load(blendfile, link=False) as (_, data_to):
-            data_to.objects = [f"HG_Haircap_{haircap_type}"]
-
-    haircap_obj = data_to.objects[0]
-    context.scene.collection.objects.link(haircap_obj)
-    mesh = haircap_obj.data
-
-    # The haircap was modelled on the base shape of the body, move every vertex
-    # along with the nearest vertex of the body
-    cap_coords = world_coords_from_obj(haircap_obj, local=True)
-    kd_base = create_kdtree(body.base_coords_local)
-    nearest = np.array([kd_base.find(co)[1] for co in cap_coords])
-    fitted = body.coords_local[nearest] + cap_coords - body.base_coords_local[nearest]
-    fitted_world = _transform(body_obj.matrix_world, fitted)
-    fitted_rig = _transform(human.objects.rig.matrix_world.inverted(), fitted_world)
-    mesh.vertices.foreach_set("co", fitted_rig.ravel())
-
-    if haircap_type in ("Scalp", "Beard"):
-        factors = {vg.index: factor for vg, factor in density_vertex_groups}
-        body_density = np.zeros(len(body_obj.data.vertices), dtype=np.float32)
-        for vert in body_obj.data.vertices:
-            for group in vert.groups:
-                if group.group in factors:
-                    body_density[vert.index] += group.weight * factors[group.group]
-        density = np.clip(np.round(body_density[nearest], 4), 0, 1)
-
-        if len(density_roots):
-            kd_roots = create_kdtree(density_roots)
-            root_distance = np.array([kd_roots.find(co)[2] for co in fitted_world])
-            density = np.maximum(density, 1 - _smoothstep(0.01, 0.022, root_distance))
-
-        if density.max() < 0.001:
-            density[:] = 1
-        # Fade out the hair towards the border of the haircap
-        density[_boundary_verts(mesh)] = 0
-
-        colors = np.ones((len(density), 4), dtype=np.float32)
-        colors[:, :3] = density[:, None]
-        mesh.color_attributes[0].data.foreach_set("color", colors.ravel())
-
-    mesh.update()
-    body.add_skin(haircap_obj, fitted_world, scalp_only=haircap_type == "Scalp")
-
-    return haircap_obj

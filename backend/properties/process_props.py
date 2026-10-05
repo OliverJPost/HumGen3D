@@ -41,16 +41,40 @@ class HaircardProps(bpy.types.PropertyGroup):
     quality: EnumProperty(
         name="Quality",
         items=[
-            ("ultra", "Ultra", "Up to 24,000 triangles", 0),
-            ("high", "High", "Up to 12,000 triangles", 1),
-            ("medium", "Medium", "Up to 7,000 triangles", 2),
-            ("low", "Low", "Up to 4,500 triangles", 3),
-            ("haircap_only", "Haircap only", "Only a hair texture on the scalp", 4),
+            (
+                "ultra",
+                "Ultra",
+                "Up to 24,000 triangles for the scalp hair, 10,000 for face hair",
+                0,
+            ),
+            (
+                "high",
+                "High",
+                "Up to 12,000 triangles for the scalp hair, 7,000 for face hair",
+                1,
+            ),
+            (
+                "medium",
+                "Medium",
+                "Up to 7,000 triangles for the scalp hair, 5,000 for face hair",
+                2,
+            ),
+            (
+                "low",
+                "Low",
+                "Up to 4,500 triangles for the scalp hair, 3,500 for face hair",
+                3,
+            ),
+            ("haircap_only", "Haircap only", "Only a hair texture on the skin", 4),
         ],
         default="high",
     )
 
-    face_hair: BoolProperty(default=False, name="Face hair")
+    face_hair: BoolProperty(
+        default=True,
+        name="Face hair",
+        description="Also convert the hair on the face to haircards",
+    )
 
 
 def get_preset_list(self, context):

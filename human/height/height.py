@@ -10,6 +10,7 @@ from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.type_aliases import C
+from HumGen3D.human.hair import hair_binding
 from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
@@ -103,6 +104,7 @@ class HeightSettings:
                 self._human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
             for shoe_obj in self._human.clothing.footwear.objects:
                 self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
+            hair_binding.refit_haircards(self._human)
 
     def as_dict(self) -> dict[str, float]:
         """Returns height of human as dictionary.
