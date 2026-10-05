@@ -339,6 +339,32 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         draw_paragraph(self.layout, text=message, enabled=False)
 
 
+class HG_PT_GAME_EYES(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_GAME_EYES"
+    bl_label = "Game Eyes"
+    icon_name = "HIDE_OFF"
+    enabled_propname = "game_eyes_enabled"
+    forbidden_propname = "has_game_eyes"
+
+    def draw(self, context):
+        self.check_enabled(context)
+        human = Human.from_existing(context.object)
+        if human.process.has_game_eyes:
+            self.layout.alert = True
+            self.layout.label(text="Eyes are already game eyes!")
+            return
+
+        col = self.layout.column()
+        col.scale_y = 1.5
+        col.prop(context.scene.HG3D.process.game_eyes, "detail")
+
+        message = (
+            "Replaces the layered eyes by lightweight eyes with a single opaque"
+            + " material, as game engines can't show the transparent outer layer."
+        )
+        draw_paragraph(self.layout, text=message, enabled=False)
+
+
 class HG_PT_REST_POSE(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_REST_POSE"
     bl_label = "T-Pose Rest Pose"
@@ -610,6 +636,13 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
                 col,
                 text="LOD is enabled. Many features won't work anymore."
                 "For example, you can't change the height, proportions, add hair, etc.",
+            )
+
+        if pr_sett.game_eyes_enabled and pr_sett.output == "replace":
+            draw_paragraph(
+                col,
+                text="Game eyes are enabled. You won't be able to change the"
+                " height or proportions of the human anymore.",
             )
 
         if pr_sett.rest_pose_enabled:

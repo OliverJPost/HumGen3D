@@ -837,8 +837,9 @@ class Human:
         if white_material:
             old_material = self.objects.body.data.materials[0]
             self.objects.body.data.materials[0] = None
-            old_eye_material = self.objects.eyes.data.materials[1]
-            self.objects.eyes.data.materials[1] = None
+            eye_slot = self.materials.eye_inner_slot
+            old_eye_material = self.objects.eyes.data.materials[eye_slot]
+            self.objects.eyes.data.materials[eye_slot] = None
 
         if not os.path.isdir(folder):
             os.makedirs(folder)
@@ -856,7 +857,7 @@ class Human:
 
         if white_material:
             self.objects.body.data.materials[0] = old_material
-            self.objects.eyes.data.materials[1] = old_eye_material
+            self.objects.eyes.data.materials[eye_slot] = old_eye_material
 
         context.window.scene = old_scene
 

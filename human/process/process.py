@@ -4,7 +4,7 @@
 import builtins
 import json
 import os
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
 
 import bpy
 from HumGen3D.backend.logging import hg_log
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from .bake import BakeSettings
+from .game_eyes import convert_to_game_eyes
 from .rest_pose import set_t_pose_as_rest
 
 
@@ -161,6 +162,30 @@ class ProcessSettings:
             context (C): The Blender context. Defaults to None.
         """
         set_t_pose_as_rest(self._human, context)
+
+    @property
+    def has_game_eyes(self) -> bool:
+        """Checks if the eyes were converted to single layer eyes.
+
+        Returns:
+            bool: True if the human has game eyes.
+        """
+        return "game_eyes" in self._human.objects.rig
+
+    def convert_to_game_eyes(
+        self, detail: Literal["high", "medium", "low"] = "medium"
+    ) -> None:
+        """Replaces the layered eyes by single layer eyes for game engines.
+
+        Only the front of the cornea is kept, with the eye color as opaque
+        material on it. Applies the shape keys of the eyes, so changing the height
+        or proportions won't work on this human anymore.
+
+        Args:
+            detail (Literal["high", "medium", "low"]): Resolution of the eye mesh.
+                Medium has a quarter of the triangles of high, low about a sixteenth.
+        """
+        convert_to_game_eyes(self._human, detail)
 
     def rename_bones_from_json(
         self, json_string: Optional[str] = None, json_path: Optional[str] = None
@@ -354,6 +379,11 @@ class ProcessSettings:
             )
             settings_dict["material_renaming"] = ProcessSettings._props_from_propgroup(
                 pr_sett.renaming.materials
+            )
+
+        if pr_sett.game_eyes_enabled:
+            settings_dict["game_eyes"] = ProcessSettings._props_from_propgroup(
+                pr_sett.game_eyes
             )
 
         if pr_sett.rest_pose_enabled:

@@ -88,6 +88,9 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     human.hair.face_hair.convert_to_haircards(quality, context)
                 human.objects.rig["haircards"] = True
 
+            if pr_sett.game_eyes_enabled and not human.process.has_game_eyes:
+                human.process.convert_to_game_eyes(pr_sett.game_eyes.detail)
+
             if pr_sett.baking_enabled and not human.process.was_baked:
                 human.process.baking.bake_all(
                     samples=int(context.scene.HG3D.process.baking.samples),

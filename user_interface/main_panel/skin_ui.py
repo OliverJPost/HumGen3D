@@ -96,9 +96,6 @@ class HG_PT_SKIN(MainPanelPart, bpy.types.Panel):
         if not is_open:
             return
 
-        mat = self.human.objects.eyes.data.materials[1]
-        nodes = mat.node_tree.nodes
-
         col = boxbox.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False

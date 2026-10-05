@@ -29,17 +29,21 @@ def exporter(exporter_func):
         context = kwargs.get("context", bpy.context)
         filepath = _check_extension(filepath)
         human = self._human
+        old_location = human.location.copy()
         human.location = (0, 0, 0)
 
         if _bake_argument_enabled(kwargs):
             _bake_textures(human, filepath, context)
 
         with context_override(context, human.objects.rig, human.objects):
-            _remove_eye_outer_material(human)
-            _apply_base_shape_keys(human)
-            # todo remove face bones if not face rig
-            result = exporter_func(self, filepath, *args, **kwargs)
-            # todo re-add outer material
+            old_eye_materials = _remove_eye_outer_material(human)
+            try:
+                _apply_base_shape_keys(human)
+                # todo remove face bones if not face rig
+                result = exporter_func(self, filepath, *args, **kwargs)
+            finally:
+                _restore_eye_materials(human, old_eye_materials)
+                human.location = old_location
 
         return result
 
@@ -61,9 +65,28 @@ def exporter(exporter_func):
         return filepath
 
     def _remove_eye_outer_material(human):
-        eyes = human.objects.eyes
+        # Game eyes only have a single opaque material
+        if human.process.has_game_eyes:
+            return None
+
+        mesh = human.objects.eyes.data
+        old_materials = list(mesh.materials)
+        old_material_indices = [polygon.material_index for polygon in mesh.polygons]
         # Remove transparent outer material, not supported by most formats
-        eyes.data.materials.pop(index=0)
+        mesh.materials.pop(index=0)
+
+        return old_materials, old_material_indices
+
+    def _restore_eye_materials(human, old_eye_materials):
+        if not old_eye_materials:
+            return
+
+        old_materials, old_material_indices = old_eye_materials
+        mesh = human.objects.eyes.data
+        mesh.materials.clear()
+        for material in old_materials:
+            mesh.materials.append(material)
+        mesh.polygons.foreach_set("material_index", old_material_indices)
 
     def _apply_base_shape_keys(human):
         # Apply "Male", "LIVE_KEY_PERMANENT" and "LIVE_KEY_TEMP_*" shape keys

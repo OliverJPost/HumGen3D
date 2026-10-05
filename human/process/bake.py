@@ -19,6 +19,7 @@ from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from HumGen3D.common.context import context_override
 
 from ..hair.compatibility import SPECULAR_INPUT_NAME
+from .game_eyes import ROUGHNESS as GAME_EYE_ROUGHNESS
 from HumGen3D.common.compatibility import EEVEE_RENDER_ENGINE
 if TYPE_CHECKING:
     from ..human import Human
@@ -383,6 +384,11 @@ class BakeSettings:
 
             obj.material_slots[slot].material = mat  # type:ignore[index]
 
+            # The roughness of game eyes is a single value, it needs no texture
+            if obj == self._human.objects.eyes and self._human.process.has_game_eyes:
+                principled = mat.node_tree.nodes["Principled BSDF"]
+                principled.inputs["Roughness"].default_value = GAME_EYE_ROUGHNESS
+
         for baketexture in baketextures:
             mat = baketexture.bake_object.material_slots[
                 baketexture.material_slot  # type:ignore[index]
@@ -408,7 +414,11 @@ class BakeSettings:
 
         bake_list.append(
             BakeTexture(
-                self._human.name, "eyes", self._human.objects.eyes, 1, "Base Color"
+                self._human.name,
+                "eyes",
+                self._human.objects.eyes,
+                self._human.materials.eye_inner_slot,
+                "Base Color",
             )
         )
 

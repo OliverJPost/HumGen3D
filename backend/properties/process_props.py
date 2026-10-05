@@ -77,6 +77,20 @@ class HaircardProps(bpy.types.PropertyGroup):
     )
 
 
+class GameEyeProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    detail: EnumProperty(
+        name="Detail",
+        items=[
+            ("high", "High", "About 3,600 triangles for both eyes together", 0),
+            ("medium", "Medium", "About 900 triangles for both eyes together", 1),
+            ("low", "Low", "About 200 triangles for both eyes together", 2),
+        ],
+        default="medium",
+    )
+
+
 def get_preset_list(self, context):
     """Gets all .json files from the preset folder and returns them as a list."""
     path = os.path.join(get_prefs().filepath, "process_templates")
@@ -258,6 +272,7 @@ class ProcessProps(bpy.types.PropertyGroup):
 
     lod: PointerProperty(type=LodProps)
     haircards: PointerProperty(type=HaircardProps)
+    game_eyes: PointerProperty(type=GameEyeProps)
     rig_renaming: PointerProperty(type=RigRenamingProps)
     renaming: PointerProperty(type=RenamingProps)
     modapply: PointerProperty(type=ModApplyProps)
@@ -269,6 +284,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     modapply_enabled: BoolProperty(default=False)
     rest_pose_enabled: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
+    game_eyes_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)
     scripting_enabled: BoolProperty(default=False)
