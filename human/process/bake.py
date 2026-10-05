@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Literal, Optional
 
 import bpy
+import numpy as np
 from bpy.types import Material, Object  # type:ignore
 from HumGen3D.backend import get_prefs
 from HumGen3D.backend.properties.bake_props import BakeProps
@@ -35,6 +36,46 @@ def follow_links(
         ),
         None,
     )
+
+
+def pack_alpha_into_image(image: bpy.types.Image, alpha_image: bpy.types.Image) -> None:
+    """Replaces the alpha channel of an image with a grayscale image and saves it.
+
+    Game engines expect the transparency of haircards in the alpha channel of the
+    color texture, instead of as a separate texture.
+
+    Args:
+        image (bpy.types.Image): Image to change the alpha channel of.
+        alpha_image (bpy.types.Image): Grayscale image with the alpha values.
+
+    Raises:
+        HumGenException: If the images don't have the same size.
+    """
+    if tuple(image.size) != tuple(alpha_image.size):
+        raise HumGenException(
+            f"Can't pack {alpha_image.name} into {image.name}, sizes don't match"
+        )
+
+    pixels = np.empty(len(image.pixels), dtype=np.float32)
+    image.pixels.foreach_get(pixels)
+    alpha_pixels = np.empty(len(alpha_image.pixels), dtype=np.float32)
+    alpha_image.pixels.foreach_get(alpha_pixels)
+
+    pixels[3::4] = alpha_pixels[::4]
+
+    # Images without transparency are saved without an alpha channel, so the file
+    # is written by a new image that does have one
+    width, height = image.size
+    packed_image = bpy.data.images.new("HG_packed_alpha", width, height, alpha=True)
+    packed_image.pixels.foreach_set(pixels)
+    packed_image.filepath_raw = image.filepath_raw
+    packed_image.file_format = image.file_format
+    packed_image.save()
+    bpy.data.images.remove(packed_image)
+
+    image.reload()
+    # Prevents Blender from multiplying the color with the alpha
+    image.alpha_mode = "CHANNEL_PACKED"
 
 
 @dataclass
@@ -294,7 +335,43 @@ class BakeSettings:
 
         return image
 
+    @staticmethod
+    def pack_haircard_alpha(baketextures: List[BakeTexture]) -> None:
+        """Stores the baked alpha of haircards in the alpha of their color texture.
+
+        The separate alpha textures are kept. Does nothing for file types without
+        an alpha channel.
+
+        Args:
+            baketextures (List[BakeTexture]): All textures that were baked.
+        """
+        haircard_textures = [
+            baketexture
+            for baketexture in baketextures
+            if "hg_haircard" in baketexture.bake_object
+        ]
+        images = {
+            (tex.bake_object, tex.material_slot, tex.texture_type): bpy.data.images.get(
+                tex.output_image_name
+            )
+            for tex in haircard_textures
+        }
+        for (obj, slot, texture_type), image in images.items():
+            alpha_image = images.get((obj, slot, "Alpha"))
+            if texture_type != "Base Color" or not image or not alpha_image:
+                continue
+            if image.file_format == "JPEG":
+                continue
+            # Baking one material slot also bakes to the last baked images of the
+            # other slots, only the saved files are sure to be correct
+            image.reload()
+            alpha_image.reload()
+            pack_alpha_into_image(image, alpha_image)
+
     def set_up_new_materials(self, baketextures: List[BakeTexture]) -> None:
+        if bpy.context.scene.HG3D.process.baking.pack_haircard_alpha:
+            self.pack_haircard_alpha(baketextures)
+
         object_slot_set = {
             (baketexture.bake_object, baketexture.material_slot)
             for baketexture in baketextures
