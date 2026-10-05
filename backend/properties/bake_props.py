@@ -53,7 +53,7 @@ class BakeProps(bpy.types.PropertyGroup):
     )
     res_eyes: EnumProperty(
         items=RESOLUTIONS_ENUM,
-        default="256",
+        default="512",
     )
     res_teeth: EnumProperty(
         items=RESOLUTIONS_ENUM,

@@ -4,7 +4,7 @@
 
 
 import random
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from bpy.types import Material, Object  # type:ignore
 from HumGen3D.common.shadernode import NodeInput  # type:ignore
@@ -72,16 +72,17 @@ class EyeSettings:
         Returns:
             Object: Blender object of the eyes of the human.
         """
-        self._human.objects.eyes
+        return self._human.objects.eyes
 
     @property
-    def outer_material(self) -> Material:
+    def outer_material(self) -> Optional[Material]:
         """The material used for the outer layer of the eyes (The transparent part).
 
         Returns:
-            Material: Material used for the outer layer of the eyes.
+            Optional[Material]: Material used for the outer layer of the eyes. None
+                if the human has game eyes, which don't have an outer layer.
         """
-        return cast(Material, self._human.objects.eyes.data.materials[0])
+        return self._human.materials.eye_outer
 
     @property
     def inner_material(self) -> Material:
@@ -90,7 +91,7 @@ class EyeSettings:
         Returns:
             Material: Material used for the inner part of the eyes.
         """
-        return cast(Material, self._human.objects.eyes.data.materials[1])
+        return cast(Material, self._human.materials.eye_inner)
 
     @property
     def nodes(self) -> PropCollection:
