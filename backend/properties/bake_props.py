@@ -9,7 +9,12 @@ For storing properties related to texture baking of the Human Generator characte
 import os
 
 import bpy
-from bpy.props import EnumProperty, IntProperty, StringProperty  # type: ignore
+from bpy.props import (  # type: ignore
+    BoolProperty,
+    EnumProperty,
+    IntProperty,
+    StringProperty,
+)
 
 
 def make_path_absolute(self: bpy.types.PropertyGroup, prop_name: str) -> None:
@@ -61,6 +66,14 @@ class BakeProps(bpy.types.PropertyGroup):
     res_haircards: EnumProperty(
         items=RESOLUTIONS_ENUM,
         default="512",
+    )
+    pack_haircard_alpha: BoolProperty(
+        name="Pack haircard alpha",
+        description=(
+            "Store the transparency of the haircards in the alpha channel of their"
+            + " color textures, as expected by game engines. Not possible for JPEG"
+        ),
+        default=True,
     )
     export_folder: StringProperty(
         name="Baking export",

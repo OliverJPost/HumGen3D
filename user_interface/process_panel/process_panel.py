@@ -191,8 +191,15 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
 
         row = col.row(align=True)
 
-        row.enabled = context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
+        has_haircards = (
+            context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
+        )
+        row.enabled = has_haircards
         row.prop(bake_sett, "res_haircards", text="Haircards")
+
+        row = col.row(align=True)
+        row.enabled = has_haircards and bake_sett.file_type != "jpeg"
+        row.prop(bake_sett, "pack_haircard_alpha")
 
     def _draw_baking_warning_labels(self, context, layout) -> bool:
         """Draws warning if no human is selected or textures are already baked.
