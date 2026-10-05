@@ -243,6 +243,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     baking_enabled: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=False)
+    rest_pose_enabled: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)

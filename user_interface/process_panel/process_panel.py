@@ -336,6 +336,33 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         draw_paragraph(self.layout, text=message, enabled=False)
 
 
+class HG_PT_REST_POSE(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_REST_POSE"
+    bl_label = "T-Pose Rest Pose"
+    icon_name = "ARMATURE_DATA"
+    enabled_propname = "rest_pose_enabled"
+    forbidden_propname = "has_t_pose_rest"
+
+    def draw(self, context):
+        self.check_enabled(context)
+        human = Human.from_existing(context.object)
+        if human.process.has_t_pose_rest:
+            self.layout.alert = True
+            self.layout.label(text="Rest pose is already a T-pose!")
+            return
+        if human.pose.rigify.is_rigify:
+            self.layout.alert = True
+            self.layout.label(text="Not available for Rigify humans.")
+            return
+
+        message = (
+            "Makes the T-pose the rest pose of the armature and meshes, as"
+            + " expected by most game engines and retargeting tools. The current"
+            + " pose is discarded."
+        )
+        draw_paragraph(self.layout, text=message, enabled=False)
+
+
 class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RIG"
     bl_label = "Bone Renaming"
@@ -581,6 +608,20 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
                 text="LOD is enabled. Many features won't work anymore."
                 "For example, you can't change the height, proportions, add hair, etc.",
             )
+
+        if pr_sett.rest_pose_enabled:
+            draw_paragraph(
+                col,
+                text="T-pose rest pose is enabled. This removes the shoulder side"
+                " raise corrective shape keys of the human.",
+            )
+            if pr_sett.output == "replace":
+                draw_paragraph(
+                    col,
+                    text="Many features won't work anymore on a human with a"
+                    " T-pose rest pose. For example, you can't change the pose,"
+                    " height, proportions or clothing.",
+                )
 
         if pr_sett.rig_renaming_enabled:
             draw_paragraph(
