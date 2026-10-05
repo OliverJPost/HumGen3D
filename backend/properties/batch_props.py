@@ -117,11 +117,31 @@ class BatchProps(bpy.types.PropertyGroup):
     hair_quality_haircards: EnumProperty(
         name="Haircard quality",
         items=[
-            ("ultra", "Ultra", "", 0),
-            ("high", "High", "", 1),
-            ("medium", "Medium", "", 2),
-            ("low", "Low", "", 3),
-            ("haircap_only", "Haircap only", "", 4),
+            (
+                "ultra",
+                "Ultra",
+                "Up to 24,000 triangles for the scalp hair, 10,000 for face hair",
+                0,
+            ),
+            (
+                "high",
+                "High",
+                "Up to 12,000 triangles for the scalp hair, 7,000 for face hair",
+                1,
+            ),
+            (
+                "medium",
+                "Medium",
+                "Up to 7,000 triangles for the scalp hair, 5,000 for face hair",
+                2,
+            ),
+            (
+                "low",
+                "Low",
+                "Up to 4,500 triangles for the scalp hair, 3,500 for face hair",
+                3,
+            ),
+            ("haircap_only", "Haircap only", "Only a hair texture on the skin", 4),
         ],
         default="medium",
     )

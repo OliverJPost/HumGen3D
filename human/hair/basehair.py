@@ -27,12 +27,11 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair.haircards import HairCollection
+from HumGen3D.human.hair import hair_binding, haircap, haircards
+from HumGen3D.human.hair.compatibility import set_children_percent
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
 from HumGen3D.human.keys.keys import apply_shapekeys
-from HumGen3D.human.hair.compatibility import set_children_percent
-from mathutils import Matrix
 
 HAIR_NODE_NAME = "HG_Hair"
 
@@ -122,113 +121,149 @@ class BaseHair:
 
     @injected_context
     def convert_to_haircards(
-        self, quality: Literal["high"] = "high", context: C = None
+        self,
+        quality: Literal["ultra", "high", "medium", "low", "haircap_only"] = "high",
+        context: C = None,
+        triangle_budget: Optional[int] = None,
     ) -> bpy.types.Object:
         """Convert the hair of this type to haircards.
 
-        Will generate a mesh object consisting of a haircap and haircards. For eye
-        systems only a haircap will be generated.
+        Will generate a mesh object consisting of a haircap and haircards, skinned to
+        the rig of the human. For eye systems only a haircap will be generated. The
+        object follows the expressions of the human.
 
         Args:
-            quality (Literal["high"]): Quality of the haircards. Defaults to
-                high.
+            quality (Literal["ultra", "high", "medium", "low", "haircap_only"]):
+                Quality of the haircards, which sets the number of triangles of the
+                generated object. Defaults to high.
             context (C): Blender context. bpy.context if not provided.
+            triangle_budget (Optional[int]): Maximum number of triangles of the
+                generated object, overrides the budget of the quality.
 
         Returns:
-            bpy.types.Object: Blender object of the haircap
-        """
-        hair_objs: list[bpy.types.Object] = []
+            bpy.types.Object: Blender object of the haircap and haircards
 
+        Raises:
+            HumGenException: If this human has no hair of this type to convert.
+        """
         if not self.modifiers:
             raise HumGenException("No hair to convert")
+        # Hair on the scalp and face gets cards, eyebrows and eyelashes only a haircap
+        has_cards = self._haircap_type in ("Scalp", "Beard")
+        visible_modifiers = [mod for mod in self.modifiers if mod.show_viewport]
+        if has_cards and not visible_modifiers:
+            raise HumGenException("No visible hair to convert")
 
-        old_loc = self._human.location.copy()
-        self._human.location = (0,0,0)
-
-        for mod in self.modifiers:
-            if not mod.show_viewport:
-                continue
-
-            ps = mod.particle_system
-
-            set_children_percent(ps.settings, ps.settings.rendered_child_count // 10)
-            body_obj = self._human.objects.body
-            with context_override(context, body_obj, [body_obj]):
-                bpy.ops.object.modifier_convert(modifier=mod.name)
-
-            hair_obj = context.object  # TODO this is bound to fail
-            if not hair_obj:
-                continue
-            hc = HairCollection(hair_obj, self._human)
-            if self._haircap_type == "Scalp" and not quality == "haircap_only":
-                objs = hc.create_mesh(quality)
-                hair_objs.extend(objs)
-                for obj in objs:
-                    obj.name += ps.name
-
-                hc.add_uvs()
-                hc.add_material()
-
+        rig = self._human.objects.rig
+        settings = (
+            haircards.SCALP_SETTINGS
+            if self._haircap_type == "Scalp"
+            else haircards.FACE_SETTINGS
+        )
         density_vertex_groups = [
-            (self._human.objects.body.vertex_groups[ps.vertex_group_density], ps.settings.child_length)
+            (
+                self._human.objects.body.vertex_groups[ps.vertex_group_density],
+                ps.settings.child_length,
+            )
             for ps in self.particle_systems
             if ps.vertex_group_density
         ]
-        cap_obj = None
-        if hc and (density_vertex_groups or self._haircap_type != "Scalp"):
-            cap_obj = hc.add_haircap(
-                self._human, self._haircap_type, density_vertex_groups, context
+
+        card_obj = None
+        strands = None
+        with haircards.rest_pose(rig, context):
+            body = haircards.BodyReference(self._human, context)
+            if has_cards:
+                strands = haircards.extract_strands(
+                    self._human, visible_modifiers, context, settings
+                )
+
+            cap_obj = haircap.create_haircap(
+                self._human,
+                body,
+                self._haircap_type,
+                density_vertex_groups,
+                strands,
+                context,
             )
-            hair_objs.append(cap_obj)
 
-        hc.set_node_values(self._human)
+            if has_cards and quality != "haircap_only":
+                if triangle_budget is None:
+                    triangle_budget = settings.triangle_budgets[quality]
+                cap_obj.data.calc_loop_triangles()
+                geometry = haircards.build_card_geometry(
+                    strands.card_strands(),
+                    haircards.outward_proxy(self._human, body, settings),
+                    body,
+                    triangle_budget - len(cap_obj.data.loop_triangles),
+                    settings,
+                )
+                if geometry:
+                    card_obj = haircards.create_card_object(
+                        geometry, self._human, body, context, settings
+                    )
 
-        if len(hair_objs) > 1:
-            join_obj_name = cap_obj.name if cap_obj else hair_objs[0].name
-            meshes = [obj.data for obj in hair_objs]
-            with context_override(
-                context, cap_obj if cap_obj else hair_objs[0], hair_objs
-            ):
+        # The haircap material is in the first slot, the cards in the second
+        materials = [cap_obj.data.materials[0]]
+        if card_obj:
+            card_material = haircards.load_card_material()
+            card_obj.data.materials.append(card_material)
+            materials.append(card_material)
+
+            card_mesh = card_obj.data
+            with context_override(context, cap_obj, [cap_obj, card_obj]):
                 bpy.ops.object.join()
+            bpy.data.meshes.remove(card_mesh)
 
-            joined_object = bpy.data.objects[join_obj_name]  # type:ignore[index]
-            joined_object.name = "Haircards"
-            for mesh in meshes:
-                if mesh.users == 0:
-                    bpy.data.meshes.remove(mesh)
-        else:
-            joined_object = cap_obj
+        hair_obj = cap_obj
+        if self._haircap_type == "Scalp":
+            hair_obj.name = "Haircards"
 
-        for face in joined_object.data.polygons:
-            if face.material_index != 0:
-                face.material_index = 1
+        old_hair_mat = self._human.objects.body.data.materials[self._mat_idx]
+        old_hair_node = next(
+            node
+            for node in old_hair_mat.node_tree.nodes
+            if node.bl_idname == "ShaderNodeGroup"
+        )
+        grey_hair_input = old_hair_node.inputs.get("Pepper & Salt")
+        grey_hair = grey_hair_input.default_value if grey_hair_input else 0
+        for mat in materials:
+            node = next(
+                node
+                for node in mat.node_tree.nodes
+                if node.bl_idname == "ShaderNodeGroup"
+            )
+            # Makes the color sliders of this hair type work on the haircards
+            node.name = HAIR_NODE_NAME
+            for input_name in ("Lightness", "Redness"):
+                node.inputs[input_name].default_value = old_hair_node.inputs[
+                    input_name
+                ].default_value
 
-        for i in range(2, len(joined_object.data.materials)):
-            joined_object.data.materials.pop(index=2)
+            haircards.match_particle_color(
+                mat,
+                (
+                    haircards.HAIRCAP_COLOR_MATCH
+                    if mat == materials[0]
+                    else settings.color_match
+                ),
+                old_hair_node.inputs["Redness"].default_value,
+                grey_hair,
+            )
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False
 
-        rig = self._human.objects.rig
+        haircards.parent_to_rig(hair_obj, rig)
+        # Makes the hair follow expressions and changes of the shape of the body
+        hair_binding.bind_to_body(self._human, hair_obj, body.dynamic_values)
+        hair_obj["hg_haircard"] = True
+        hair_obj[self._haircap_tag] = True
 
-        joined_object.parent = rig
-        joined_object.parent_type = "BONE"
-        joined_object.parent_bone = "head"
-        bone = self._human.pose.get_posebone_by_original_name("head")
-        T = Matrix.Translation((bone.tail - bone.head))
-        tmw = rig.matrix_world @ T @ bone.matrix
-        cmw = joined_object.matrix_world.copy()
-        cml = tmw.inverted() @ cmw
-        joined_object.matrix_parent_inverse = (
-            cml @ joined_object.matrix_basis.inverted()
-        )
-        joined_object["hg_haircard"] = True
+        add_to_collection(context, hair_obj, "HumGen")
+        rig["haircard"] = True
 
-        add_to_collection(context, joined_object, "HumGen")
-        self._human.objects.rig["haircard"] = True
-
-        self._human.location = old_loc
-        return joined_object
+        return hair_obj
 
     @injected_context
     def get_evaluated_particle_systems(self, context: C = None) -> PropCollection:

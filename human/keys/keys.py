@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 
 from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from HumGen3D.human.hair import hair_binding
 if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey
 
@@ -779,6 +780,7 @@ class KeySettings:
             human.clothing.outfit.deform_cloth_to_human(context, cloth_obj)
         for shoe_obj in human.clothing.footwear.objects:
             human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
+        hair_binding.refit_haircards(human)
 
         human.objects.body.data.update()
 

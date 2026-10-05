@@ -1,38 +1,16 @@
 """This will turn your haircards textures into png with transparancy.
 This is useful for game engines like Unity, which expect rgba textures.
 
+Baking with "Pack haircard alpha" enabled already does this for the color textures,
+this script does it for all textures of the haircards.
+
 ONLY USE ON HAIRCARDS THAT HAVE BEEN BAKED!
 """
 
 import bpy
 from HumGen3D import Human
-import subprocess
-import os
-import sys
+from HumGen3D.human.process.bake import pack_alpha_into_image
 
-def ensure_PIL():
-    try:
-        from PIL import Image
-    except ImportError:
-        python_exe = os.path.join(sys.prefix, "bin", "python.exe")
-        target = os.path.join(sys.prefix, "lib", "site-packages")
-        subprocess.call([python_exe, "-m", "ensurepip"])
-        subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
-        subprocess.call(
-            [
-                python_exe,
-                "-m",
-                "pip",
-                "install",
-                "--upgrade",
-                "Pillow",
-                "-t",
-                target,
-            ]
-        )
-        from PIL import Image
-
-    return Image
 
 def main(context: bpy.types.Context, human: Human):
     """This function is called when the script is executed.
@@ -45,12 +23,12 @@ def main(context: bpy.types.Context, human: Human):
         print("No haircards found for", human.name)
         return
 
-    Image = ensure_PIL()
     for haircards_obj in human.objects.haircards:
         for mat in haircards_obj.data.materials:
             alpha_node = mat.node_tree.nodes.get("Alpha")
-            alpha_path = alpha_node.image.filepath
-            alpha_img = Image.open(alpha_path)
+            if not alpha_node:
+                print("No baked alpha texture found for", mat.name)
+                continue
 
             for node in mat.node_tree.nodes:
                 if node.type != "TEX_IMAGE":
@@ -58,11 +36,4 @@ def main(context: bpy.types.Context, human: Human):
                 if node is alpha_node:
                     continue
 
-                img = Image.open(node.image.filepath)
-                img = img.convert("RGBA")
-                alpha = alpha_img.convert('L')
-                r, g, b, a = img.split()
-                new_img = Image.merge('RGBA', (r, g, b, alpha))
-                new_img.save(node.image.filepath)
-
-
+                pack_alpha_into_image(node.image, alpha_node.image)
