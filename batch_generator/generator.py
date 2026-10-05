@@ -88,14 +88,6 @@ class BatchHumanGenerator:
         if self.hair_type == "particle":
             human.hair.set_hair_quality(self.hair_quality)
             human.hair.children_set_hide(True)
-        else:
-            for hairtype in ("regular_hair", "face_hair", "eyebrows", "eyelashes"):
-                if hairtype == "face_hair" and human.gender == "female":
-                    continue
-                hair_attr = getattr(human.hair, hairtype)
-                if not hair_attr.particle_systems:
-                    continue
-                hair_attr.convert_to_haircards(self.hair_quality, context)
 
         human.height.set(
             height_from_bell_curve(
@@ -120,6 +112,16 @@ class BatchHumanGenerator:
 
         if self.add_expression:
             self._set_expression(context, human)
+
+        # Last, so the haircards are made for the final shape of the human
+        if self.hair_type == "haircards":
+            for hairtype in ("regular_hair", "face_hair", "eyebrows", "eyelashes"):
+                if hairtype == "face_hair" and human.gender == "female":
+                    continue
+                hair_attr = getattr(human.hair, hairtype)
+                if not hair_attr.particle_systems:
+                    continue
+                hair_attr.convert_to_haircards(self.hair_quality, context)
 
         return human
 

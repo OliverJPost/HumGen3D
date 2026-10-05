@@ -9,7 +9,7 @@ import pytest
 from mathutils import Euler
 
 from HumGen3D.common.math import create_kdtree
-from HumGen3D.human.hair import haircards
+from HumGen3D.human.hair import hair_binding, haircap, haircards
 from HumGen3D.human.human import Human
 from HumGen3D.tests.test_fixtures import *
 from HumGen3D.tests.test_fixtures import _create_human
@@ -17,6 +17,9 @@ from pytest_lazyfixture import lazy_fixture
 
 LONG_HAIRSTYLE = "Medium Side Part"
 SHORT_HAIRSTYLE = "Buzzcut Fade"
+BEARD = "Full_Beard_1"
+STUBBLE = "Stubble_Short"
+EXPRESSION = "big_surprise"
 CARD_QUALITIES = ["ultra", "high", "medium", "low"]
 
 
@@ -41,6 +44,66 @@ def short_haired_human(context) -> Human:
     human = _human_with_hair("female", SHORT_HAIRSTYLE, context)
     yield human
     human.delete()
+
+
+def _bearded_human(face_hairstyle, context) -> Human:
+    human = _create_human("male")
+    options = human.hair.face_hair.get_options(context)
+    human.hair.face_hair.set(
+        next(option for option in options if face_hairstyle in option), context
+    )
+    return human
+
+
+@pytest.fixture
+def bearded_human(context) -> Human:
+    human = _bearded_human(BEARD, context)
+    yield human
+    human.delete()
+
+
+@pytest.fixture
+def stubble_human(context) -> Human:
+    human = _bearded_human(STUBBLE, context)
+    yield human
+    human.delete()
+
+
+def _set_expression(human, context) -> None:
+    options = human.expression.get_options(context)
+    human.expression.set(next(option for option in options if EXPRESSION in option))
+    context.view_layer.update()
+
+
+def _max_distance_to_body(human, hair_obj, vert_mask, context) -> float:
+    body_coords = _evaluated_world_coords(human.objects.body, context)
+    kd = create_kdtree(body_coords)
+    hair_coords = _evaluated_world_coords(hair_obj, context)
+    return max(kd.find(hair_coords[idx])[2] for idx in np.flatnonzero(vert_mask))
+
+
+def _haircap_image(hair_obj):
+    group_node = next(
+        node
+        for node in hair_obj.data.materials[0].node_tree.nodes
+        if node.bl_idname == "ShaderNodeGroup"
+    )
+    return next(
+        node.image
+        for node in group_node.node_tree.nodes
+        if node.bl_idname == "ShaderNodeTexImage"
+    )
+
+
+def _driven_key_names(hair_obj) -> set[str]:
+    keys = hair_obj.data.shape_keys
+    if not keys or not keys.animation_data:
+        return set()
+    return {
+        fcurve.data_path.split('"')[1]
+        for fcurve in keys.animation_data.drivers
+        if fcurve.is_valid
+    }
 
 
 @pytest.fixture
@@ -116,10 +179,11 @@ def test_haircap_only(long_haired_human, context):
     hair_obj = human.hair.regular_hair.convert_to_haircards("haircap_only", context)
 
     assert len(hair_obj.data.materials) == 1
-    # This hairstyle has no density vertex groups, the density comes from the roots
+    # This hairstyle has no density vertex groups, the density comes from the hairs
     density = _colors(hair_obj)[:, 0]
     assert density.max() == pytest.approx(1)
-    assert 0.2 < density.mean() < 0.95
+    assert density.min() == pytest.approx(0)
+    assert density.mean() > 0.2
 
 
 def test_short_hair_only_gets_haircap(short_haired_human, context):
@@ -248,12 +312,12 @@ def test_eye_hair(long_haired_human, context, hair_type):
 
 def test_same_strands_give_same_cards(long_haired_human, context):
     human = long_haired_human
-    body = haircards.BodyReference(human)
     proxy = haircards.HeadProxy.from_human(human)
     with haircards.rest_pose(human.objects.rig, context):
+        body = haircards.BodyReference(human, context)
         strands = haircards.extract_strands(
             human, list(human.hair.regular_hair.modifiers), context
-        )
+        ).card_strands()
 
     geometry = haircards.build_card_geometry(strands, proxy, body, 4000)
     geometry_again = haircards.build_card_geometry(strands, proxy, body, 4000)
@@ -293,3 +357,174 @@ def test_bake_packs_alpha(long_haired_human, context, tmp_path):
         baked_alpha = np.array(alpha_image.pixels)[::4]
         assert packed_alpha.max() > packed_alpha.min() + 0.1
         assert np.allclose(packed_alpha, baked_alpha, atol=0.02)
+
+
+@pytest.mark.parametrize("quality", CARD_QUALITIES)
+def test_face_hair_cards(bearded_human, context, quality):
+    human = bearded_human
+    budget = haircards.FACE_SETTINGS.triangle_budgets[quality]
+
+    hair_obj = human.hair.face_hair.convert_to_haircards(quality, context)
+
+    assert _triangle_count(hair_obj) <= budget
+    assert human.hair.face_hair.haircard_obj == hair_obj
+    is_card = _card_vert_mask(hair_obj)
+    if quality in ("ultra", "high"):
+        assert len(hair_obj.data.materials) == 2
+        assert is_card.sum() > 100
+        # The cards of a beard are small
+        card_coords = _evaluated_world_coords(hair_obj, context)[is_card]
+        assert np.ptp(card_coords, axis=0).max() < 0.3
+        assert _max_distance_to_body(human, hair_obj, is_card, context) < 0.03
+
+
+@pytest.mark.parametrize(
+    "human", [lazy_fixture("bearded_human"), lazy_fixture("stubble_human")]
+)
+def test_face_hair_texture(human, context):
+    hair_obj = human.hair.face_hair.convert_to_haircards("haircap_only", context)
+
+    assert len(hair_obj.data.materials) == 1
+    image = _haircap_image(hair_obj)
+    assert tuple(image.size) == (haircap.TEXTURE_SIZE, haircap.TEXTURE_SIZE)
+    assert image.packed_file, "Drawn texture would be lost when saving the file"
+    # Black hairs on a white background
+    pixels = np.array(image.pixels)[::4]
+    assert pixels.max() == pytest.approx(1)
+    assert pixels.min() < 0.5
+    assert 0.01 < (pixels < 0.9).mean() < 0.9
+
+    uvs = np.empty(len(hair_obj.data.loops) * 2, dtype=np.float32)
+    hair_obj.data.uv_layers.active.data.foreach_get("uv", uvs)
+    # The haircap only has polygons where hair is, which fill the texture
+    assert uvs.min() >= 0 and uvs.max() <= 1
+    assert np.ptp(uvs.reshape((-1, 2)), axis=0).min() > 0.9
+
+
+@pytest.mark.parametrize("expression_first", [True, False])
+def test_follows_expression(bearded_human, context, expression_first):
+    human = bearded_human
+    if expression_first:
+        _set_expression(human, context)
+
+    hair_objs = [
+        human.hair.face_hair.convert_to_haircards("medium", context),
+        human.hair.eyebrows.convert_to_haircards("medium", context),
+    ]
+    if not expression_first:
+        _set_expression(human, context)
+
+    body = human.objects.body
+    expression_key = next(
+        key for key in body.data.shape_keys.key_blocks if EXPRESSION in key.name
+    )
+    coords = {}
+    for value in (0, 1):
+        expression_key.value = value
+        context.view_layer.update()
+        coords[value] = [
+            _evaluated_world_coords(obj, context) for obj in [body] + hair_objs
+        ]
+
+    body_movement = coords[1][0] - coords[0][0]
+    for hair_obj, neutral, expressive in zip(hair_objs, coords[0][1:], coords[1][1:]):
+        assert expression_key.name in _driven_key_names(hair_obj)
+        # Every vertex moves along with the skin it is attached to
+        body_vert_idxs = hair_binding.get_attachment(human, hair_obj.data)
+        skin_movement = body_movement[body_vert_idxs]
+        assert np.abs(skin_movement).max() > 0.003
+        assert np.abs(expressive - neutral - skin_movement).max() < 1e-4
+
+        # In both cases the hair has to be on the skin of the neutral face
+        on_skin = ~_card_vert_mask(hair_obj)
+        expression_key.value = 0
+        context.view_layer.update()
+        assert _max_distance_to_body(human, hair_obj, on_skin, context) < 0.008
+
+
+def test_face_rig_shape_keys(bearded_human, context):
+    human = bearded_human
+    beard_obj = human.hair.face_hair.convert_to_haircards("low", context)
+    eyelash_obj = human.hair.eyelashes.convert_to_haircards("low", context)
+    keys_before = _driven_key_names(eyelash_obj)
+
+    human.expression.load_facial_rig(context)
+
+    body_key_names = {key.name for key in human.objects.body.data.shape_keys.key_blocks}
+    assert "jawOpen" in _driven_key_names(beard_obj)
+    assert "eyeBlink_L" in _driven_key_names(eyelash_obj)
+    for hair_obj in (beard_obj, eyelash_obj):
+        key_names = {key.name for key in hair_obj.data.shape_keys.key_blocks[1:]}
+        assert key_names <= body_key_names
+        assert key_names == _driven_key_names(hair_obj)
+
+    human.expression.remove_facial_rig()
+
+    assert _driven_key_names(eyelash_obj) == keys_before
+    for hair_obj in (beard_obj, eyelash_obj):
+        keys = hair_obj.data.shape_keys
+        if keys and keys.animation_data:
+            assert all(fcurve.is_valid for fcurve in keys.animation_data.drivers)
+
+
+def test_eyelashes_move_rigidly(long_haired_human, context):
+    human = long_haired_human
+    eyelash_obj = human.hair.eyelashes.convert_to_haircards("high", context)
+    mesh = eyelash_obj.data
+
+    body_vert_idxs = hair_binding.get_attachment(human, mesh)
+    for polygon in mesh.polygons:
+        assert len(set(body_vert_idxs[list(polygon.vertices)])) == 1
+
+
+def test_height_change_moves_haircards(long_haired_human, context):
+    human = long_haired_human
+    hair_obj = human.hair.regular_hair.convert_to_haircards("low", context)
+    eyebrow_obj = human.hair.eyebrows.convert_to_haircards("low", context)
+    coords_before = _evaluated_world_coords(hair_obj, context)
+
+    human.height.set(human.height.centimeters + 12, context)
+    context.view_layer.update()
+
+    coords_after = _evaluated_world_coords(hair_obj, context)
+    assert np.abs(coords_after - coords_before).max() > 0.05
+    for obj in (hair_obj, eyebrow_obj):
+        on_skin = ~_card_vert_mask(obj)
+        assert _max_distance_to_body(human, obj, on_skin, context) < 0.006
+
+
+def test_duplicate_follows_own_body(bearded_human, context):
+    human = bearded_human
+    _set_expression(human, context)
+    human.hair.face_hair.convert_to_haircards("low", context)
+
+    duplicate = human.duplicate(context)
+
+    try:
+        duplicate_keys = duplicate.objects.body.data.shape_keys
+        hair_keys = duplicate.hair.face_hair.haircard_obj.data.shape_keys
+        targets = {
+            target.id
+            for fcurve in hair_keys.animation_data.drivers
+            for variable in fcurve.driver.variables
+            for target in variable.targets
+        }
+        assert targets == {duplicate_keys}
+    finally:
+        duplicate.delete()
+
+
+def test_keeps_images_of_other_humans(bearded_human, context):
+    # A second human has its own copies of the textures of the first human.
+    # Removing one of those copies while the viewport uses it crashes Blender.
+    other_human = _create_human("male")
+    try:
+        image_names = {image.name for image in bpy.data.images}
+
+        for hair_type in ("face_hair", "eyebrows", "eyelashes"):
+            getattr(bearded_human.hair, hair_type).convert_to_haircards("low", context)
+
+        assert image_names <= {image.name for image in bpy.data.images}
+    finally:
+        other_human.delete()
+
