@@ -11,11 +11,7 @@ def main():
         if not bpy.context.scene.objects.get(obj.name):
             bpy.data.objects.remove(obj)
 
-    override = bpy.context.copy()
-    override["area.type"] = ["OUTLINER"]
-    override["display_mode"] = ["ORPHAN_DATA"]
-    for _ in range(8):
-        bpy.ops.outliner.orphans_purge(override)
+    bpy.data.orphans_purge(do_recursive=True)
 
     bpy.ops.file.make_paths_relative()
 

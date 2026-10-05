@@ -6,7 +6,7 @@ import os
 from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 import bpy
-from HumGen3D.common.type_aliases import GenderStr
+from mathutils import Matrix
 from HumGen3D.human.hair.compatibility import get_children_percent
 
 if TYPE_CHECKING:
@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 from HumGen3D.backend.content.content_saving import save_objects_optimized, save_thumb
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common.memory_management import hg_delete
+
+HAIR_OBJ_NAME = "HG_Body"
 
 
 def save_hair(  # noqa CCR001
@@ -46,62 +48,86 @@ def save_hair(  # noqa CCR001
     """
     pref = get_prefs()
 
+    # The object in the saved file has to have this exact name, which is usually
+    # already taken by the body of the human
+    name_holder = next(
+        (
+            obj
+            for obj in bpy.data.objects
+            if obj.name == HAIR_OBJ_NAME and not obj.library
+        ),
+        None,
+    )
+    if name_holder:
+        name_holder.name = f"{HAIR_OBJ_NAME}_original"
+
     hair_obj = human.objects.body.copy()
     hair_obj.data = hair_obj.data.copy()
-    hair_obj.name = "HG_Body"
+    hair_obj.name = HAIR_OBJ_NAME
 
-    context.collection.objects.link(hair_obj)
+    try:
+        context.collection.objects.link(hair_obj)
+        _remove_references_to_human(hair_obj)
 
-    context.view_layer.objects.active = hair_obj
-    hair_obj.select_set(True)
-    _remove_other_systems(hair_obj, particle_systems)
+        context.view_layer.objects.active = hair_obj
+        hair_obj.select_set(True)
+        _remove_other_systems(hair_obj, particle_systems)
 
-    keep_vgs = _find_vgs_used_by_hair(hair_obj)
-    for vg in [vg for vg in hair_obj.vertex_groups if vg.name not in keep_vgs]:
-        hair_obj.vertex_groups.remove(vg)
-    hair_obj.show_instancer_for_viewport = False
-
-    def create_for_gender(gender: GenderStr) -> Optional[str]:
-        if hair_type == "face_hair" and gender == "female":
-            return None
+        keep_vgs = _find_vgs_used_by_hair(hair_obj)
+        for vg in [vg for vg in hair_obj.vertex_groups if vg.name not in keep_vgs]:
+            hair_obj.vertex_groups.remove(vg)
+        hair_obj.show_instancer_for_viewport = False
 
         if hair_type == "hair":
             blend_folder = os.path.join(pref.filepath, "hair", "head")
-            json_folder = os.path.join(blend_folder, gender, category)
+            json_folders = [
+                os.path.join(blend_folder, gender, category)
+                for gender, enabled in (("male", for_male), ("female", for_female))
+                if enabled
+            ]
         else:
+            # Face hair is not split by gender
             blend_folder = os.path.join(pref.filepath, "hair", "face_hair")
-            json_folder = os.path.join(blend_folder, category)
+            json_folders = [os.path.join(blend_folder, category)]
 
-        if not os.path.exists(json_folder):
-            os.makedirs(json_folder)
-        if thumb:
-            save_thumb(json_folder, thumb.name, name)
+        for json_folder in json_folders:
+            if not os.path.exists(json_folder):
+                os.makedirs(json_folder)
+            if thumb:
+                save_thumb(json_folder, thumb.name, name)
 
-        _make_hair_json(hair_obj, json_folder, name)
+            _make_hair_json(hair_obj, json_folder, name)
 
-        return blend_folder
-
-    if for_male:
-        blend_folder = create_for_gender("male")
-    if for_female:
-        blend_folder = create_for_gender("female")
-
-    save_objects_optimized(
-        context,
-        [
-            hair_obj,
-        ],
-        blend_folder,
-        name,
-        clear_ps=False,
-        clear_vg=False,
-    )
+        save_objects_optimized(
+            context,
+            [
+                hair_obj,
+            ],
+            blend_folder,
+            name,
+            clear_ps=False,
+            clear_vg=False,
+        )
+    finally:
+        hg_delete(hair_obj)
+        if name_holder:
+            name_holder.name = HAIR_OBJ_NAME
 
     human.hair.regular_hair.refresh_pcoll(context)
     with contextlib.suppress(NotImplementedError):
         human.hair.face_hair.refresh_pcoll(context)
 
-    hg_delete(hair_obj)
+
+def _remove_references_to_human(hair_obj: bpy.types.Object) -> None:
+    """Remove everything that would make Blender save the human with the hair.
+
+    Args:
+        hair_obj (bpy.types.Object): Copy of the body object the hair is saved on
+    """
+    hair_obj.parent = None
+    hair_obj.matrix_world = Matrix()
+    for mod in [mod for mod in hair_obj.modifiers if mod.type != "PARTICLE_SYSTEM"]:
+        hair_obj.modifiers.remove(mod)
 
 
 def _find_vgs_used_by_hair(hair_obj: bpy.types.Object) -> list[str]:
