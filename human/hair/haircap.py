@@ -48,6 +48,20 @@ DRAWN_BUMP_STRENGTH = 0.1
 # of the hair, cross a seam of the UV map
 MAX_STROKE_STRETCH = 4
 
+# The eyelashes are separate cards of a strip of quads each. The cards in the blend
+# file have the segments of the highest quality, lower qualities merge the segments.
+# With 0 segments the cards are replaced by a single strip along every eyelid.
+EYELASH_SEGMENTS = {"ultra": 4, "high": 2, "medium": 1, "low": 0, "haircap_only": 0}
+# Triangles of the eyelash strips, measured on the default human
+EYELASH_STRIP_TRIS = 80
+# Gaps between the roots of neighbouring eyelash cards larger than this are corners
+# of the eye, where the strip is split
+EYELID_GAP = 0.003
+# Cards that are averaged into every station of an eyelash strip. Every card shows
+# one of the lash clusters of the texture, the strip sweeps over all clusters of
+# the texture every two stations, so it has about as many lashes as the cards.
+LASHES_PER_STATION = 5
+
 
 def _smoothstep(edge0: float, edge1: float, values: np.ndarray) -> np.ndarray:
     x = np.clip((values - edge0) / (edge1 - edge0), 0, 1)
@@ -90,6 +104,217 @@ def _delete_polygons(mesh: bpy.types.Mesh, keep: np.ndarray) -> None:
     bmesh.ops.delete(bm, geom=unused_faces, context="FACES")
     bm.to_mesh(mesh)
     bm.free()
+
+
+def _strip_faces(start: bmesh.types.BMFace) -> Optional[list[bmesh.types.BMFace]]:
+    """Gets the faces of a strip of quads in order, from one end to the other.
+
+    Returns:
+        Optional[list[bmesh.types.BMFace]]: Faces of the strip the start face is
+            part of, None if those faces don't form a single chain.
+    """
+
+    def neighbours(face: bmesh.types.BMFace) -> list[bmesh.types.BMFace]:
+        return [
+            other
+            for edge in face.edges
+            if len(edge.link_faces) == 2
+            for other in edge.link_faces
+            if other != face
+        ]
+
+    def walk(
+        face: bmesh.types.BMFace, previous: Optional[bmesh.types.BMFace]
+    ) -> Optional[list[bmesh.types.BMFace]]:
+        ordered = [face]
+        while True:
+            next_faces = [other for other in neighbours(face) if other != previous]
+            if len(next_faces) > 1:
+                return None
+            if not next_faces:
+                return ordered
+            previous, face = face, next_faces[0]
+            if face in ordered:
+                # A ring of faces
+                return None
+            ordered.append(face)
+
+    # Walk to an end of the strip, then from there to the other end
+    first = neighbours(start)
+    if len(first) > 2:
+        return None
+    to_end = walk(start, first[0] if len(first) == 2 else None)
+    if to_end is None:
+        return None
+    return walk(to_end[-1], None)
+
+
+def _reduce_strip_segments(mesh: bpy.types.Mesh, segment_count: int) -> None:
+    """Lowers the number of quads of every strip of quads in the mesh.
+
+    Used for the eyelashes, which are separate cards of a few quads each. The quads
+    are merged by dissolving the edges between them, which keeps the UVs and colors
+    of the remaining vertices, so the texture still runs from the root to the tip.
+
+    Args:
+        mesh (bpy.types.Mesh): Mesh of separate strips of quads.
+        segment_count (int): Number of quads every strip should have at most.
+    """
+    bm = bmesh.new()  # type:ignore[call-arg]
+    bm.from_mesh(mesh)
+    bm.faces.ensure_lookup_table()
+
+    dissolve = []
+    visited = set()
+    for face in bm.faces:
+        if face in visited:
+            continue
+        strip = _strip_faces(face)
+        if strip is None:
+            visited.add(face)
+            continue
+        visited.update(strip)
+        if len(strip) <= segment_count:
+            continue
+
+        # Keep evenly spaced edges across the strip, from the root to the tip
+        kept = set(np.round(np.linspace(0, len(strip), segment_count + 1)).astype(int))
+        for station, (face_a, face_b) in enumerate(zip(strip, strip[1:]), start=1):
+            if station not in kept:
+                dissolve.append(next(e for e in face_a.edges if e in face_b.edges))
+
+    if dissolve:
+        bmesh.ops.dissolve_edges(bm, edges=dissolve, use_verts=True)
+        bm.to_mesh(mesh)
+    bm.free()
+
+
+def _vert_uvs(mesh: bpy.types.Mesh) -> np.ndarray:
+    """Gets the UV coordinates of the first loop of every vertex, (v, 2)."""
+    uvs = np.empty(len(mesh.loops) * 2, dtype=np.float64)
+    mesh.uv_layers.active.data.foreach_get("uv", uvs)
+    vert_uvs = np.zeros((len(mesh.vertices), 2))
+    vert_uvs[_loop_verts(mesh)] = uvs.reshape((-1, 2))
+    return vert_uvs
+
+
+def _is_root(vert_uvs: np.ndarray) -> np.ndarray:
+    """Mask of the vertices at the root of eyelash cards or strips.
+
+    The roots are at the top of the lash part of the texture.
+    """
+    v = vert_uvs[:, 1]
+    return v > (v.min() + v.max()) / 2
+
+
+def _eyelid_strips(roots: np.ndarray) -> list[np.ndarray]:
+    """Orders the eyelash cards along the eyelids.
+
+    Args:
+        roots (np.ndarray): (c, 3) roots of the cards, in the space of the rig.
+
+    Returns:
+        list[np.ndarray]: Indices of the cards of every strip, in order along the
+            eyelid. Strips end at the corners of the eye where the lashes stop.
+    """
+    strips = []
+    for side in (-1, 1):
+        cards = np.flatnonzero(np.sign(roots[:, 0]) == side)
+        if len(cards) < 2:
+            continue
+        # The roots form a loop around the eye, with the corners of the eye at the
+        # sides, so they are in order by their angle around the center of the eye
+        center = roots[cards].mean(axis=0)
+        angles = np.arctan2(roots[cards, 2] - center[2], roots[cards, 0] - center[0])
+        cards = cards[np.argsort(angles, kind="stable")]
+        gaps = np.linalg.norm(roots[np.roll(cards, -1)] - roots[cards], axis=1)
+        corners = np.flatnonzero(gaps > EYELID_GAP)
+        if not len(corners):
+            strips.append(cards)
+            continue
+        # Open the loop at a corner, and split it at the other corners
+        cards = np.roll(cards, -corners[-1] - 1)
+        gaps = np.roll(gaps, -corners[-1] - 1)
+        strips.extend(np.split(cards, np.flatnonzero(gaps[:-1] > EYELID_GAP) + 1))
+
+    return [strip for strip in strips if len(strip) >= 2]
+
+
+def _eyelash_strips(mesh: bpy.types.Mesh) -> None:
+    """Replaces the separate cards of the eyelashes by a strip along every eyelid.
+
+    Every station of a strip is the average root and tip of a few neighbouring
+    cards. The strip sweeps back and forth over the lash part of the texture, so
+    the hairs of the texture are as dense along the eyelid as the cards were.
+    """
+    _reduce_strip_segments(mesh, 1)
+    coords = hair_binding.get_coords(mesh.vertices)
+    vert_uvs = _vert_uvs(mesh)
+    (u_min, v_min), (u_max, v_max) = vert_uvs.min(axis=0), vert_uvs.max(axis=0)
+    colors = np.empty(len(mesh.vertices) * 4, dtype=np.float32)
+    mesh.color_attributes[0].data.foreach_get("color", colors)
+    colors = colors.reshape((-1, 4))
+    normals = np.empty(len(mesh.polygons) * 3, dtype=np.float64)
+    mesh.polygons.foreach_get("normal", normals)
+    normals = normals.reshape((-1, 3))
+    poly_verts = np.empty(len(mesh.polygons) * 4, dtype=np.int32)
+    mesh.polygons.foreach_get("vertices", poly_verts)
+    poly_verts = poly_verts.reshape((-1, 4))
+
+    root_mask = _is_root(vert_uvs)[poly_verts]
+
+    def card_ends(values: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        """Averages the values of the masked vertices of every card."""
+        summed = (values[poly_verts] * mask[..., None]).sum(axis=1)
+        return summed / np.maximum(mask.sum(axis=1), 1)[:, None]
+
+    roots, tips = card_ends(coords, root_mask), card_ends(coords, ~root_mask)
+    root_colors = card_ends(colors, root_mask)
+    tip_colors = card_ends(colors, ~root_mask)
+
+    verts: list[np.ndarray] = []
+    faces: list[tuple[int, int, int, int]] = []
+    uvs: list[tuple[float, float]] = []
+    vert_colors: list[np.ndarray] = []
+    for strip in _eyelid_strips(roots):
+        station_count = max(2, round((len(strip) - 1) / LASHES_PER_STATION) + 1)
+        first = len(verts)
+        facing = 0.0
+        positions = np.arange(len(strip))
+        for i, center in enumerate(np.linspace(0, len(strip) - 1, station_count)):
+            window = strip[np.abs(positions - center) <= LASHES_PER_STATION / 2]
+            root = roots[window].mean(axis=0)
+            # The lashes fan out, the average of their tips would be too short
+            lashes = tips[window] - roots[window]
+            lengths = np.linalg.norm(lashes, axis=1)
+            direction = (lashes / np.maximum(lengths, 1e-9)[:, None]).mean(axis=0)
+            direction /= max(np.linalg.norm(direction), 1e-9)
+            tip = root + direction * lengths.mean()
+            # Back and forth over the lash part of the texture
+            u = u_min + (u_max - u_min) * (1 - abs(i / 2 % 2 - 1))
+            verts.extend((root, tip))
+            uvs.extend(((u, v_max), (u, v_min)))
+            vert_colors.append(root_colors[window].mean(axis=0))
+            vert_colors.append(tip_colors[window].mean(axis=0))
+            if i:
+                along = root - verts[-4]
+                facing += np.cross(along, tip - root) @ normals[window].mean(axis=0)
+        for i in range(first, len(verts) - 2, 2):
+            face = (i, i + 2, i + 3, i + 1)
+            # Face the same way as the cards did
+            faces.append(face if facing >= 0 else face[::-1])
+
+    uv_name = mesh.uv_layers.active.name
+    color_name = mesh.color_attributes[0].name
+    mesh.clear_geometry()
+    mesh.from_pydata(np.array(verts).tolist(), [], faces)
+    mesh.polygons.foreach_set("use_smooth", np.ones(len(mesh.polygons), dtype=bool))
+    uv_layer = mesh.uv_layers.get(uv_name) or mesh.uv_layers.new(name=uv_name)
+    uv_layer.data.foreach_set("uv", np.array(uvs)[_loop_verts(mesh)].ravel())
+    color_attribute = mesh.color_attributes.get(
+        color_name
+    ) or mesh.color_attributes.new(color_name, "FLOAT_COLOR", "POINT")
+    color_attribute.data.foreach_set("color", np.array(vert_colors).ravel())
 
 
 def _boundary_verts(mesh: bpy.types.Mesh) -> np.ndarray:
@@ -360,8 +585,9 @@ def _attach_islands(
 ) -> None:
     """Attaches every separate part of the mesh as a whole to the body.
 
-    Used for eyelashes, which should not be deformed by the eyelid they are on. The
-    part is attached to the body vertex nearest to its vertex closest to the body.
+    Used for the eyelash cards, which should not be deformed by the eyelid they are
+    on. The part is attached to the body vertex nearest to its vertex closest to
+    the body.
     """
     labels = _islands(mesh)
     distances = body.distances(coords_world)
@@ -374,6 +600,26 @@ def _attach_islands(
     hair_binding.set_attachment(mesh, body_vert_idxs)
 
 
+def _attach_tips_to_roots(
+    mesh: bpy.types.Mesh, coords_world: np.ndarray, body: BodyReference
+) -> None:
+    """Attaches every tip of the eyelash strips to the body under its root.
+
+    Every station of a strip moves rigidly with the eyelid, like the cards do.
+    """
+    is_root = _is_root(_vert_uvs(mesh))
+    body_vert_idxs = body.nearest_verts(coords_world)
+    edges = np.empty(len(mesh.edges) * 2, dtype=np.int32)
+    mesh.edges.foreach_get("vertices", edges)
+    for vert_a, vert_b in edges.reshape((-1, 2)):
+        if is_root[vert_a] and not is_root[vert_b]:
+            body_vert_idxs[vert_b] = body_vert_idxs[vert_a]
+        elif is_root[vert_b] and not is_root[vert_a]:
+            body_vert_idxs[vert_a] = body_vert_idxs[vert_b]
+
+    hair_binding.set_attachment(mesh, body_vert_idxs)
+
+
 def create_haircap(
     human: "Human",
     body: BodyReference,
@@ -381,6 +627,7 @@ def create_haircap(
     density_vertex_groups: list[tuple[bpy.types.VertexGroup, float]],
     strands: Optional[HairStrands],
     context: bpy.types.Context,
+    quality: str = "high",
 ) -> bpy.types.Object:
     """Creates a haircap object, fitted, skinned and attached to the body.
 
@@ -398,6 +645,8 @@ def create_haircap(
         strands (Optional[HairStrands]): Hairs of the particle systems. Not needed
             for eyelashes and eyebrows.
         context (bpy.types.Context): Blender context.
+        quality (str): Quality of the haircards, see EYELASH_SEGMENTS. Only the
+            eyelashes have a different haircap for every quality.
 
     Returns:
         bpy.types.Object: The haircap object, in the space of the rig.
@@ -412,6 +661,11 @@ def create_haircap(
     haircap_obj = data_to.objects[0]
     context.scene.collection.objects.link(haircap_obj)
     mesh = haircap_obj.data
+    lash_segments = EYELASH_SEGMENTS[quality] if haircap_type == "Eyelashes" else None
+    if lash_segments:
+        _reduce_strip_segments(mesh, lash_segments)
+    elif lash_segments == 0:
+        _eyelash_strips(mesh)
 
     # The haircap was modelled on the base shape of the body, move every vertex
     # along with the nearest vertex of the body
@@ -447,8 +701,10 @@ def create_haircap(
     coords_world = hair_binding.transform_coords(
         mx_world, hair_binding.get_coords(mesh.vertices)
     )
-    if haircap_type == "Eyelashes":
+    if lash_segments:
         _attach_islands(mesh, coords_world, body)
+    elif lash_segments == 0:
+        _attach_tips_to_roots(mesh, coords_world, body)
     body.add_skin(haircap_obj, coords_world, scalp_only=haircap_type == "Scalp")
 
     return haircap_obj
