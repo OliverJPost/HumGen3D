@@ -5,17 +5,19 @@
 from __future__ import annotations
 
 import os
+import re
 from typing import TYPE_CHECKING, Any, Optional
 
 import bpy
-from HumGen3D.backend import get_prefs
+from HumGen3D.backend import get_prefs, hg_log
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from mathutils import Matrix
 
-from .clip import read_clip
+from .clip import read_clip, write_clip
+from .mixamo import fbx_to_clip
 from .retarget import apply_keys_as_action, retarget_clip
 
 if TYPE_CHECKING:
@@ -144,6 +146,75 @@ class AnimationSettings(PreviewCollectionContent):
         self._human.props.hashes["$pose"] = str(hash(self._human.pose))
 
     @injected_context
+    def import_mixamo(
+        self,
+        filepath: str,
+        name: Optional[str] = None,
+        category: str = "Mixamo",
+        loop: bool = False,
+        context: C = None,
+        render_thumbnail: bool = True,
+        finger_curl: float = DEFAULT_FINGER_CURL,
+    ) -> str:
+        """Converts a Mixamo FBX file to a clip in the library and applies it.
+
+        The clip is saved as json in the animations folder of the content folder,
+        so it shows up in the animation library and can be used on other humans
+        too. See mixamo.py for the conversion.
+
+        Args:
+            filepath (str): Path of the FBX file downloaded from Mixamo.
+            name (Optional[str]): Name of the animation in the library. Defaults
+                to the name of the file.
+            category (str): Folder of the animation library to save the clip in,
+                created if it does not exist. Defaults to "Mixamo".
+            loop (bool): Mark the animation as cyclic. Defaults to False.
+            context (C): Context to use. Defaults to None.
+            render_thumbnail (bool): Render a thumbnail of this human in the
+                animation next to the clip. Defaults to True.
+            finger_curl (float): See `set`. Defaults to 1.0.
+
+        Returns:
+            str: Preset path of the new animation, relative to the content folder.
+
+        Raises:
+            HumGenException: If the file is not a Mixamo animation or the human
+                has a Rigify rig.
+        """
+        if self._human.pose.rigify.is_rigify:
+            raise HumGenException("Animations are not supported on Rigify humans.")
+
+        clip = fbx_to_clip(filepath, context, loop)
+        if not name:
+            name = os.path.splitext(os.path.basename(filepath))[0]
+        name = _file_name(name)
+        folder = os.path.join(get_prefs().filepath, "animations", category)
+        os.makedirs(folder, exist_ok=True)
+        write_clip(os.path.join(folder, name + ".json"), clip)
+        preset = os.path.join("animations", category, name + ".json")
+
+        self.set(preset, context, finger_curl=finger_curl)
+        if render_thumbnail:
+            self._render_thumbnail(folder, name, context)
+        self.refresh_pcoll(context)
+        return preset
+
+    def _render_thumbnail(self, folder: str, name: str, context: C) -> None:
+        """Renders the human at a representative frame of the active animation."""
+        if not context.window:
+            hg_log("No window to render a thumbnail in, skipping", level="WARNING")
+            return
+        scene = context.scene
+        frame = scene.frame_current
+        scene.frame_set(
+            scene.frame_start + round(0.4 * (scene.frame_end - scene.frame_start))
+        )
+        try:
+            self._human.render_thumbnail(folder, name, context=context)
+        finally:
+            scene.frame_set(frame)
+
+    @injected_context
     def refresh(
         self, context: C = None, finger_curl: Optional[float] = None
     ) -> None:
@@ -210,6 +281,12 @@ class AnimationSettings(PreviewCollectionContent):
             dict[str, Any]: Animation settings as dict.
         """
         return {"set": self._active if self.is_active else None}
+
+
+def _file_name(name: str) -> str:
+    """Library file name for a user given name, like the other content savers."""
+    name = re.sub(r"[^\w\s-]", "", name.strip())
+    return re.sub(r"\s+", "_", name) or "Animation"
 
 
 def _action_groups(action: bpy.types.Action) -> list[bpy.types.ActionGroup]:

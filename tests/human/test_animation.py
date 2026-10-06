@@ -8,7 +8,7 @@ import bpy
 import pytest
 from HumGen3D.backend import get_prefs
 from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.animation import retarget
+from HumGen3D.human.animation import mixamo, retarget
 from HumGen3D.human.animation.clip import read_clip
 from HumGen3D.human.process import rest_pose
 from HumGen3D.tests.test_fixtures import *
@@ -213,3 +213,76 @@ def test_animation_t_pose_rest(male_human, context):
 def test_animation_rigify(male_rigify_human, context):
     with pytest.raises(HumGenException):
         male_rigify_human.animation.set(WALK, context)
+
+
+# A Mixamo fbx to test the import with, downloaded from mixamo.com. Not part of
+# the repository, the tests that need it are skipped if it is missing.
+MIXAMO_FBX = os.environ.get(
+    "HG_MIXAMO_FBX", os.path.expanduser("~/Downloads/Taunt.fbx")
+)
+needs_mixamo_fbx = pytest.mark.skipif(
+    not os.path.isfile(MIXAMO_FBX), reason="No Mixamo fbx to test with"
+)
+
+
+def test_mixamo_bone_map(male_human):
+    """Every mapped name has to be a bone of the Human Generator rig."""
+    rig = male_human.objects.rig
+    bone_names = {retarget.original_name(pb) for pb in rig.pose.bones}
+    for mixamo_name, hg_name in mixamo.BONE_NAME_MAP.items():
+        assert hg_name in bone_names, mixamo_name
+    assert mixamo.mixamo_bone_name("mixamorig:Hips") == "Hips"
+    assert mixamo.mixamo_bone_name("mixamorig1:LeftArm") == "LeftArm"
+    assert mixamo.mixamo_bone_name("Hips") == "Hips"
+
+
+@needs_mixamo_fbx
+def test_mixamo_fbx_to_clip(context):
+    """The import must not leave anything of the fbx behind in the file."""
+    objects, actions = set(bpy.data.objects), set(bpy.data.actions)
+    frame_range = (context.scene.frame_start, context.scene.frame_end)
+
+    clip = mixamo.fbx_to_clip(MIXAMO_FBX, context)
+
+    assert set(bpy.data.objects) == objects
+    assert set(bpy.data.actions) == actions
+    assert (context.scene.frame_start, context.scene.frame_end) == frame_range
+    assert clip["frame_count"] > 1
+    assert set(clip["rotations"]) == set(mixamo.BONE_NAME_MAP.values())
+    assert 0.6 < clip["reference_leg_length"] < 1.1
+    for quaternions in clip["rotations"].values():
+        assert len(quaternions) == clip["frame_count"]
+    # Mixamo rigs are in a T-pose, so the first frame is not far from identity
+    # for the root
+    assert Quaternion(clip["rotations"]["spine"][0]).angle < math.radians(90)
+
+
+@needs_mixamo_fbx
+@pytest.mark.parametrize("human", NON_RIGIFY_FIXTURES)
+def test_mixamo_import(human, context, tmp_path):
+    """Importing saves a clip to the library and applies it to the human."""
+    category = "Test_Mixamo"
+    folder = os.path.join(get_prefs().filepath, "animations", category)
+    try:
+        preset = human.animation.import_mixamo(
+            MIXAMO_FBX,
+            name="Test Clip",
+            category=category,
+            context=context,
+            render_thumbnail=False,
+        )
+        assert preset == os.path.join("animations", category, "Test_Clip.json")
+        assert os.path.isfile(os.path.join(get_prefs().filepath, preset))
+        assert human.animation.is_active
+        assert human.animation.as_dict()["set"] == preset
+        assert preset in human.animation.get_options(context, category)
+
+        lowest, highest = _lowest_foot_point(human, context)
+        assert lowest > -0.06
+        assert highest < 0.1
+    finally:
+        human.animation.remove()
+        if os.path.isdir(folder):
+            for file_name in os.listdir(folder):
+                os.remove(os.path.join(folder, file_name))
+            os.rmdir(folder)
