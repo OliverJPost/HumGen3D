@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 from .bake import BakeSettings
 from .game_eyes import convert_to_game_eyes
 from .rest_pose import set_t_pose_as_rest
+from .shape_keys import KeyAction, process_shape_keys
 
 
 def _fill_tokens(
@@ -192,6 +193,48 @@ class ProcessSettings:
                 Medium has a quarter of the triangles of high, low about a sixteenth.
         """
         convert_to_game_eyes(self._human, detail)
+
+    @injected_context
+    def set_shape_keys(
+        self,
+        face_rig: KeyAction = "keep",
+        expressions: KeyAction = "keep",
+        correctives: KeyAction = "keep",
+        body: KeyAction = "bake",
+        face: KeyAction = "bake",
+        age: KeyAction = "bake",
+        context: C = None,
+    ) -> None:
+        """Decides which shape keys stay on the human, per group of keys.
+
+        Each group is kept as shape keys, baked into the mesh at its current value
+        or removed. Keeping livekeys converts them to shape keys, so for example
+        the body sliders can be exported as blend shapes. The livekeys and the
+        gender key are always baked afterwards, as is the fit of the clothing.
+        Kept keys that bones drive, the face rig and the correctives, need their
+        drivers reconnected after exporting.
+
+        Args:
+            face_rig (KeyAction): "keep" loads the FACS face rig if the human has
+                none yet, "remove" removes it. Baking is not possible.
+            expressions (KeyAction): The 1-click expressions.
+            correctives (KeyAction): Keys driven by bones that fix the joints and
+                the eyelids, also on the clothing.
+            body (KeyAction): The body proportion sliders, including the muscles.
+            face (KeyAction): The face proportion sliders, face presets and eyes.
+            age (KeyAction): The age sliders.
+            context (C): Blender context. bpy.context if not provided.
+        """
+        process_shape_keys(
+            self._human,
+            face_rig=face_rig,
+            expressions=expressions,
+            correctives=correctives,
+            body=body,
+            face=face,
+            age=age,
+            context=context,
+        )
 
     @property
     def is_processed(self) -> bool:
@@ -429,6 +472,11 @@ class ProcessSettings:
 
         if pr_sett.lod_enabled:
             settings_dict["lod"] = ProcessSettings._props_from_propgroup(pr_sett.lod)
+
+        if pr_sett.shapekeys_enabled:
+            settings_dict["shapekeys"] = ProcessSettings._props_from_propgroup(
+                pr_sett.shapekeys
+            )
 
         if pr_sett.scripting_enabled:
             settings_dict["scripting"] = ProcessSettings._props_from_collection(

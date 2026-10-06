@@ -33,30 +33,16 @@ if TYPE_CHECKING:
 def _get_starting_coordinates(
     human: Human, path: str
 ) -> tuple[int, np.ndarray, np.ndarray, np.ndarray]:
-    import time
-
-    t0 = time.perf_counter()
-
     body = human.objects.body
     vert_count = len(body.data.vertices)
     obj_coords = np.empty(vert_count * 3, dtype=np.float64)
     body.data.vertices.foreach_get("co", obj_coords)
 
-    t1 = time.perf_counter()
-    print(f"[_get_starting_coordinates] foreach_get coords: {t1 - t0:.4f}s")
-
     # Load coordinates of livekey that is being changed
     filepath = os.path.join(get_prefs().filepath, path)
     new_key_relative_coords = import_npz_key(vert_count, filepath)
 
-    t2 = time.perf_counter()
-    print(f"[_get_starting_coordinates] import_npz_key: {t2 - t1:.4f}s")
-
     new_key_coords = obj_coords + new_key_relative_coords
-
-    t3 = time.perf_counter()
-    print(f"[_get_starting_coordinates] add coords: {t3 - t2:.4f}s")
-    print(f"[_get_starting_coordinates] total: {t3 - t0:.4f}s")
 
     return vert_count, obj_coords, new_key_relative_coords, new_key_coords
 
@@ -306,13 +292,19 @@ class LiveKeyItem(KeyItem):
 
         self._human.props.sk_values[self.name] = value
 
-    def to_shapekey(self) -> ShapeKeyItem:
+    def to_shapekey(self, transfer_value: bool = False) -> ShapeKeyItem:
         """Convert this livekey to a Blender shape key on the human.
+
+        Args:
+            transfer_value (bool): Move the current value of the livekey onto the
+                shape key. The livekey then no longer shapes the basis of the body,
+                the shape key does. Without this the livekey keeps working and the
+                shape key is added at a value of 0.
 
         Returns:
             ShapeKeyItem: shapekey item representing the converted livekey
         """
-        filepath = os.path.join(get_prefs().filepath, self.as_bpy().path)
+        filepath = os.path.join(get_prefs().filepath, self.path)
         body = self._human.objects.body
         vert_count = len(body.data.vertices)
         new_key_relative_coords = import_npz_key(vert_count, filepath)
@@ -328,14 +320,37 @@ class LiveKeyItem(KeyItem):
         obj_coords = np.empty(vert_count * 3, dtype=np.float64)
         body.data.vertices.foreach_get("co", obj_coords)
 
+        value = 0.0
+        if transfer_value:
+            value = self._take_value(new_key_relative_coords)
+
         new_key_coords = obj_coords + new_key_relative_coords
         key = self._human.objects.body.shape_key_add(name=name)
         key.slider_max = 2
         key.slider_min = -2
 
         key.data.foreach_set("co", new_key_coords)
+        key.value = value
 
         return ShapeKeyItem(name, self._human)
+
+    def _take_value(self, relative_coords: np.ndarray) -> float:
+        """Removes the effect of this livekey from the body and returns its value."""
+        keys = self._human.keys
+        keys.fold_temp_key()
+        sk_values = self._human.props.sk_values
+        value = sk_values[self.name] if self.name in sk_values else 0.0
+        if not value:
+            return 0.0
+
+        permanent_key = keys.permanent_key
+        permanent_coords = np.empty(len(relative_coords), dtype=np.float64)
+        permanent_key.data.foreach_get("co", permanent_coords)
+        permanent_key.data.foreach_set(
+            "co", permanent_coords - relative_coords * value
+        )
+        sk_values[self.name] = 0.0
+        return cast(float, value)
 
     def as_bpy(self) -> "BpyLiveKey":
         """Get a pointer to a CollectionProperty item representing this livekey.
@@ -646,6 +661,39 @@ class KeySettings:
             bpy.types.ShapeKey: The permanent shape key
         """
         return cast(bpy.types.ShapeKey, self["LIVE_KEY_PERMANENT"].as_bpy())
+
+    def fold_temp_key(self) -> None:
+        """Moves the shape of the temporary live key into the permanent live key.
+
+        The livekey that was changed last lives in the temporary key, all the others
+        are summed in the permanent key. After this call all livekey values are in
+        the permanent key, so the shape of the body does not depend on the
+        temporary key anymore.
+        """
+        body = self._human.objects.body
+        key_blocks = body.data.shape_keys.key_blocks if body.data.shape_keys else []
+        temp_key = next(
+            (sk for sk in key_blocks if sk.name.startswith("LIVE_KEY_TEMP_")), None
+        )
+        livekey_name = temp_key.name.replace("LIVE_KEY_TEMP_", "") if temp_key else ""
+        if not livekey_name or "LIVE_KEY_PERMANENT" not in key_blocks:
+            return
+
+        vert_count = len(body.data.vertices)
+        obj_coords = np.empty(vert_count * 3, dtype=np.float64)
+        body.data.vertices.foreach_get("co", obj_coords)
+        temp_coords = np.empty(vert_count * 3, dtype=np.float64)
+        temp_key.data.foreach_get("co", temp_coords)
+        permanent_coords = np.empty(vert_count * 3, dtype=np.float64)
+        self.permanent_key.data.foreach_get("co", permanent_coords)
+
+        permanent_coords += (temp_coords - obj_coords) * temp_key.value
+        self.permanent_key.data.foreach_set("co", permanent_coords)
+        self._human.props.sk_values[livekey_name] = temp_key.value
+
+        temp_key.data.foreach_set("co", obj_coords)
+        temp_key.value = 0
+        temp_key.name = "LIVE_KEY_TEMP_"
 
     def get(self, name: str) -> Optional[Union[ShapeKeyItem, LiveKeyItem]]:  # noqa
         try:

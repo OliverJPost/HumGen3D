@@ -79,6 +79,19 @@ class HG_OT_PROCESS(bpy.types.Operator):
             for obj in human.objects:
                 add_to_collection(context, obj, "Processing Results")
 
+            # First, so the other steps only carry the keys that stay
+            if pr_sett.shapekeys_enabled:
+                sk_sett = pr_sett.shapekeys
+                human.process.set_shape_keys(
+                    face_rig=sk_sett.face_rig,
+                    expressions=sk_sett.expressions,
+                    correctives=sk_sett.correctives,
+                    body=sk_sett.body,
+                    face=sk_sett.face,
+                    age=sk_sett.age,
+                    context=context,
+                )
+
             if pr_sett.haircards_enabled and not human.process.has_haircards:
                 quality = pr_sett.haircards.quality
                 if human.hair.regular_hair.modifiers:
@@ -112,6 +125,8 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     CLOTHING_DECIMATE_RATIOS[pr_sett.lod.clothing],
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
+                    # The shape key step already decided which keys stay
+                    keep_shape_keys=pr_sett.shapekeys_enabled,
                     context=context,
                 )
                 # Only set lod as enabled if it actually changes topology

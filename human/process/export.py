@@ -1,14 +1,13 @@
 from typing import TYPE_CHECKING, Literal
 
 import bpy
-import numpy as np
 
 from HumGen3D.backend import hg_log
 from HumGen3D.common import os
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
-from HumGen3D.common.objects import apply_sk_to_mesh
+from HumGen3D.human.process.shape_keys import bake_live_keys
 from HumGen3D.common.decorators import deprecated
 from HumGen3D.common.exceptions import HumGenException
 
@@ -38,7 +37,7 @@ def exporter(exporter_func):
         with context_override(context, human.objects.rig, human.objects):
             old_eye_materials = _remove_eye_outer_material(human)
             try:
-                _apply_base_shape_keys(human)
+                bake_live_keys(human)
                 # todo remove face bones if not face rig
                 result = exporter_func(self, filepath, *args, **kwargs)
             finally:
@@ -87,31 +86,6 @@ def exporter(exporter_func):
         for material in old_materials:
             mesh.materials.append(material)
         mesh.polygons.foreach_set("material_index", old_material_indices)
-
-    def _apply_base_shape_keys(human):
-        # Apply "Male", "LIVE_KEY_PERMANENT" and "LIVE_KEY_TEMP_*" shape keys
-        body = human.objects.body
-
-        for sk_name in ["male", "live_key_permanent", "live_key_temp"]:
-            sk = next((sk for sk in body.data.shape_keys.key_blocks if sk.name.lower().startswith(sk_name)), None)
-            if sk:
-                # Get the original body vertices
-                orig_obj_coords = np.empty(len(body.data.vertices) * 3, dtype=np.float64)
-                body.data.vertices.foreach_get("co", orig_obj_coords)
-                # Get the shapekey coords
-                sk_coords = np.empty(len(sk.data) * 3, dtype=np.float64)
-                sk.data.foreach_get("co", sk_coords)
-                # Apply shape key to mesh
-                apply_sk_to_mesh(sk, body)
-                # Fix up relative shape keys affected by modification
-                for rel_sk in body.data.shape_keys.key_blocks:
-                    if not rel_sk.name.lower().startswith(sk_name) and rel_sk.relative_key is not None:
-                        rel_sk_coords = np.empty(len(rel_sk.data) * 3, dtype=np.float64)
-                        rel_sk.data.foreach_get("co", rel_sk_coords)
-                        diff = (orig_obj_coords - sk_coords) * sk.value
-                        rel_sk.data.foreach_set("co", rel_sk_coords - diff)
-
-                body.shape_key_remove(sk)
 
     return wrapper
 

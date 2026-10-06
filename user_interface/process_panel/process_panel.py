@@ -6,6 +6,11 @@ from typing import Optional
 import bpy
 from HumGen3D.common import find_multiple_in_list
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.shape_keys import (
+    KEY_GROUPS,
+    driven_groups_kept,
+    key_groups,
+)
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.panel_functions import (
     draw_panel_switch_header,
@@ -217,7 +222,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
 class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BAKE"
     bl_label = "Bake Textures"
-    bl_order = 4
+    bl_order = 5
     icon_name = "RENDERLAYERS"
     enabled_propname = "baking_enabled"
     help_url = "baking"
@@ -290,7 +295,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
 class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MODAPPLY"
     bl_label = "Apply Modifiers"
-    bl_order = 5
+    bl_order = 6
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
     help_url = "modapply"
@@ -330,7 +335,6 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         layout.separator()
         col = layout.column(align=True)
         self.draw_subtitle("Options", col, "SETTINGS")
-        col.prop(sett.process.modapply, "keep_shapekeys", text="Keep shapekeys")
         col.prop(sett.process.modapply, "apply_hidden", text="Apply hidden modifiers")
 
 
@@ -460,10 +464,66 @@ class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
             )
 
 
+class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_SHAPEKEYS"
+    bl_label = "Shape Keys"
+    bl_order = 3
+    icon_name = "SHAPEKEY_DATA"
+    enabled_propname = "shapekeys_enabled"
+    help_url = "shapekeys"
+
+    def draw(self, context):
+        self.check_enabled(context)
+        self._draw_documentation_button()
+        human = Human.from_existing(context.object)
+        sk_sett = context.scene.HG3D.process.shapekeys
+        groups = key_groups(human)
+
+        col = self.layout.column()
+        draw_paragraph(
+            col,
+            "Keep a group as shape keys, bake it into the mesh or remove it. Kept"
+            " sliders become shape keys.",
+            enabled=False,
+        )
+        for group, label, _ in KEY_GROUPS:
+            col.separator(factor=0.5)
+            row = col.row()
+            row.label(text=label)
+            self._draw_key_count(row, group, len(groups[group]))
+            row = col.row(align=True)
+            row.prop(sk_sett, group, expand=True)
+
+        kept = driven_groups_kept(
+            (group, getattr(sk_sett, group)) for group, *_ in KEY_GROUPS
+        )
+        if kept:
+            col.separator()
+            row = col.row()
+            row.alert = True
+            row.label(text=f"{' and '.join(kept)}: driven by bones", icon="ERROR")
+            draw_paragraph(
+                col,
+                "Exported files don't contain the drivers, so reconnect these keys"
+                " to the bones in the other program.",
+                enabled=False,
+            )
+
+    @staticmethod
+    def _draw_key_count(row, group, count):
+        sub = row.row()
+        sub.alignment = "RIGHT"
+        sub.enabled = False
+        if group == "face_rig" and not count:
+            sub.label(text="not loaded")
+        else:
+            sub.label(text=f"{count} keys")
+
+
 class HG_PT_BONE_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BONE_RENAMING"
     bl_label = "Bone Renaming"
-    bl_order = 3
+    bl_order = 4
     icon_name = "MOD_ARMATURE"
     enabled_propname = "rig_renaming_enabled"
     help_url = "bonerename"
@@ -514,7 +574,7 @@ def create_disabled_row(layout, text):
 class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RENAMING"
     bl_label = "Other Renaming"
-    bl_order = 6
+    bl_order = 7
     icon_name = "OUTLINER_OB_FONT"
     enabled_propname = "renaming_enabled"
     help_url = "otherrename"
@@ -578,7 +638,7 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
 class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_SCRIPTS"
     bl_label = "Custom scripts"
-    bl_order = 7
+    bl_order = 8
     icon_name = "FILE_SCRIPT"
     enabled_propname = "scripting_enabled"
     help_url = "scripts"
@@ -639,7 +699,7 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
-    bl_order = 8
+    bl_order = 9
 
     def draw(self, context):
         box = self.layout.box()

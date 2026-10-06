@@ -17,6 +17,7 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root, get_pre
 from HumGen3D.backend.properties.bake_props import BakeProps
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.human.process.process import ProcessSettings
+from HumGen3D.human.process.shape_keys import GROUP_ACTIONS, KEY_ACTIONS, KEY_GROUPS
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -250,6 +251,29 @@ class ModApplyProps(bpy.types.PropertyGroup):
     apply_clothing: BoolProperty(name="Clothing", default=True, update=refresh_modapply)
 
 
+def _key_group_prop(group: str, default: str):
+    """The keep, bake or remove choice for a group of shape keys, see KEY_GROUPS."""
+    _, label, description = next(item for item in KEY_GROUPS if item[0] == group)
+    allowed = GROUP_ACTIONS.get(group)
+    items = [item for item in KEY_ACTIONS if allowed is None or item[0] in allowed]
+    return EnumProperty(
+        name=label, description=description, items=items, default=default
+    )
+
+
+class ShapeKeyProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    # Driven keys and expressions stay by default, as before this section existed
+    face_rig: _key_group_prop("face_rig", "keep")
+    expressions: _key_group_prop("expressions", "keep")
+    correctives: _key_group_prop("correctives", "keep")
+    # The sliders were always baked when exporting
+    body: _key_group_prop("body", "bake")
+    face: _key_group_prop("face", "bake")
+    age: _key_group_prop("age", "bake")
+
+
 def get_script_list(self, context):
     folder = os.path.join(get_prefs().filepath, "scripts")
     files = [
@@ -350,12 +374,14 @@ class ProcessProps(bpy.types.PropertyGroup):
     rig_renaming: PointerProperty(type=RigRenamingProps)
     renaming: PointerProperty(type=RenamingProps)
     modapply: PointerProperty(type=ModApplyProps)
+    shapekeys: PointerProperty(type=ShapeKeyProps)
     baking: PointerProperty(type=BakeProps)
     scripting: PointerProperty(type=ScriptingProps)
 
     baking_enabled: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=False)
+    shapekeys_enabled: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)
