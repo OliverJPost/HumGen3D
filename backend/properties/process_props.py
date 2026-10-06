@@ -17,6 +17,7 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root, get_pre
 from HumGen3D.backend.properties.bake_props import BakeProps
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
 from HumGen3D.human.process.process import ProcessSettings
+from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
 class LodProps(bpy.types.PropertyGroup):
@@ -97,40 +98,53 @@ class LodProps(bpy.types.PropertyGroup):
     )
 
 
+# Identifier, name, description and stored value of the haircard qualities. The
+# value of "high" is 0, which makes it the default of the dynamic enum.
+HAIRCARD_QUALITIES = [
+    (
+        "ultra",
+        "Ultra",
+        "Up to 24,000 triangles for the scalp hair, 10,000 for face hair",
+        1,
+    ),
+    (
+        "high",
+        "High",
+        "Up to 12,000 triangles for the scalp hair, 7,000 for face hair",
+        0,
+    ),
+    (
+        "medium",
+        "Medium",
+        "Up to 7,000 triangles for the scalp hair, 5,000 for face hair",
+        2,
+    ),
+    (
+        "low",
+        "Low",
+        "Up to 4,500 triangles for the scalp hair, 3,500 for face hair",
+        3,
+    ),
+    ("haircap_only", "Haircap", "Only a hair texture on the skin, no cards", 4),
+]
+# Blender keeps pointers to the strings of dynamic enum items, so keep them alive
+_haircard_quality_items: list[tuple[str, str, str, int, int]] = []
+
+
+def get_haircard_quality_items(self, context):
+    """Haircard qualities with their thumbnails, which are loaded after registration."""
+    _haircard_quality_items.clear()
+    _haircard_quality_items.extend(
+        (identifier, name, description, get_hg_icon(f"haircards_{identifier}"), value)
+        for identifier, name, description, value in HAIRCARD_QUALITIES
+    )
+    return _haircard_quality_items
+
+
 class HaircardProps(bpy.types.PropertyGroup):
     _register_priority = 3
 
-    quality: EnumProperty(
-        name="Quality",
-        items=[
-            (
-                "ultra",
-                "Ultra",
-                "Up to 24,000 triangles for the scalp hair, 10,000 for face hair",
-                0,
-            ),
-            (
-                "high",
-                "High",
-                "Up to 12,000 triangles for the scalp hair, 7,000 for face hair",
-                1,
-            ),
-            (
-                "medium",
-                "Medium",
-                "Up to 7,000 triangles for the scalp hair, 5,000 for face hair",
-                2,
-            ),
-            (
-                "low",
-                "Low",
-                "Up to 4,500 triangles for the scalp hair, 3,500 for face hair",
-                3,
-            ),
-            ("haircap_only", "Haircap", "Only a hair texture on the skin, no cards", 4),
-        ],
-        default="high",
-    )
+    quality: EnumProperty(name="Quality", items=get_haircard_quality_items)
 
 
 def get_preset_list(self, context):

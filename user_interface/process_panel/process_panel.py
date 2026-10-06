@@ -423,9 +423,11 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
 
         tris = human.hair.estimate_haircards_triangles(hairc_sett.quality)
         self._draw_category_title(col, "Hair", "hair", tris)
-        self._draw_thumbnail_picker(
-            context, col, hairc_sett, "quality", "haircards"
+        # A large thumbnail of the chosen quality, clicking it shows all of them
+        col.template_icon_view(
+            hairc_sett, "quality", show_labels=True, scale=8, scale_popup=6
         )
+        col.prop(hairc_sett, "quality", text="")
 
         message = (
             "The quality applies to the hair on the scalp and the face. If you are"
