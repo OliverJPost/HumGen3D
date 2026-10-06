@@ -9,7 +9,6 @@ from bpy.props import (  # type:ignore
     BoolProperty,
     CollectionProperty,
     EnumProperty,
-    FloatProperty,
     IntProperty,
     PointerProperty,
     StringProperty,
@@ -26,39 +25,63 @@ class LodProps(bpy.types.PropertyGroup):
     suffix: StringProperty(default="_LOD0")
     body_lod: EnumProperty(
         items=[
-            ("0", "Original resolution", "", 0),
-            ("1", "Lower face resolution", "", 1),
-            ("2", "1/4th original resolution", "", 2),
+            ("0", "Original", "Keep the body mesh as it is, about 50,500 triangles", 0),
+            (
+                "1",
+                "Lower face",
+                "Reduce the polycount of the face only, about 36,000 triangles",
+                1,
+            ),
+            (
+                "2",
+                "1/4th",
+                "Reduce the polycount of the whole body to a quarter, about 9,600"
+                " triangles",
+                2,
+            ),
         ],
         default="0",
     )
-    decimate_ratio: FloatProperty(min=0, max=1, default=0.15)
+    clothing: EnumProperty(
+        items=[
+            ("original", "Original", "Keep the clothing meshes as they are", 0),
+            ("high", "High", "Decimate the clothing to half of the triangles", 1),
+            (
+                "medium",
+                "Medium",
+                "Decimate the clothing to a quarter of the triangles",
+                2,
+            ),
+            ("low", "Low", "Decimate the clothing to a tenth of the triangles", 3),
+        ],
+        default="medium",
+    )
     remove_clothing_subdiv: BoolProperty(default=True)
     remove_clothing_solidify: BoolProperty(default=True)
     eyes: EnumProperty(
         items=[
             (
                 "original",
-                "Original eyes",
+                "Original",
                 "Layered eyes with a transparent cornea, about 10,600 triangles",
                 0,
             ),
             (
                 "high",
-                "Game eyes, high",
-                "Eyes with a single opaque layer, about 3,600 triangles",
+                "High",
+                "Game eyes with a single opaque layer, about 3,600 triangles",
                 1,
             ),
             (
                 "medium",
-                "Game eyes, medium",
-                "Eyes with a single opaque layer, about 900 triangles",
+                "Medium",
+                "Game eyes with a single opaque layer, about 900 triangles",
                 2,
             ),
             (
                 "low",
-                "Game eyes, low",
-                "Eyes with a single opaque layer, about 200 triangles",
+                "Low",
+                "Game eyes with a single opaque layer, about 200 triangles",
                 3,
             ),
         ],
@@ -66,9 +89,9 @@ class LodProps(bpy.types.PropertyGroup):
     )
     teeth: EnumProperty(
         items=[
-            ("0", "Original resolution", "About 12,400 triangles", 0),
-            ("1", "Medium resolution", "About 4,600 triangles", 1),
-            ("2", "Low resolution", "About 3,300 triangles", 2),
+            ("0", "Original", "About 12,400 triangles", 0),
+            ("1", "Medium", "About 4,600 triangles", 1),
+            ("2", "Low", "About 3,300 triangles", 2),
         ],
         default="1",
     )
@@ -104,15 +127,9 @@ class HaircardProps(bpy.types.PropertyGroup):
                 "Up to 4,500 triangles for the scalp hair, 3,500 for face hair",
                 3,
             ),
-            ("haircap_only", "Haircap only", "Only a hair texture on the skin", 4),
+            ("haircap_only", "Haircap", "Only a hair texture on the skin, no cards", 4),
         ],
         default="high",
-    )
-
-    face_hair: BoolProperty(
-        default=True,
-        name="Face hair",
-        description="Also convert the hair on the face to haircards",
     )
 
 

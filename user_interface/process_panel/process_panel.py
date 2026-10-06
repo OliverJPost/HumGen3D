@@ -56,6 +56,38 @@ class ProcessPanel(HGPanel):
     def check_enabled(self, context):
         self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
 
+    def _draw_category_title(self, layout, text, icon_name, tris_count):
+        """Subtitle of a category with its estimated triangle count on the right."""
+        row = layout.row()
+        row.label(text=text, icon_value=get_hg_icon(icon_name))
+        self._draw_tris_count(row, tris_count)
+
+    @staticmethod
+    def _draw_tris_count(row, tris_count):
+        # Rounded, as it's an estimate
+        rounded = round(tris_count, -3 if tris_count >= 10_000 else -2)
+        sub = row.row()
+        sub.alignment = "RIGHT"
+        sub.enabled = False
+        sub.label(text=f"~{rounded:,} tris")
+
+    def _draw_thumbnail_picker(self, context, layout, props, prop_name, icon_prefix):
+        """Draw an enum as a wireframe thumbnail per option, with a toggle button
+        below each so users see what every option does to the mesh. The icons are
+        named {icon_prefix}_{option}."""
+        items = props.bl_rna.properties[prop_name].enum_items
+        # Fit the thumbnails to the width of the sidebar, as they don't shrink
+        ui_scale = context.preferences.system.ui_scale
+        available_width = context.region.width / ui_scale - 30
+        scale = min(4.5, available_width / len(items) / 20)
+
+        row = layout.row(align=True)
+        for item in items:
+            col = row.column(align=True)
+            icon = get_hg_icon(f"{icon_prefix}_{item.identifier}")
+            col.template_icon(icon, scale=scale)
+            col.prop_enum(props, prop_name, item.identifier)
+
     def _draw_documentation_button(self):
         self.layout.operator(
             "wm.url_open",
@@ -327,25 +359,45 @@ class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
             return
 
         lod_sett = context.scene.HG3D.process.lod
+        tris = human.process.lod.estimate_triangles(
+            int(lod_sett.body_lod),
+            lod_sett.clothing,
+            lod_sett.eyes,
+            int(lod_sett.teeth),
+            lod_sett.remove_clothing_subdiv,
+            lod_sett.remove_clothing_solidify,
+        )
 
-        self.draw_subtitle("Body", col, icon=get_hg_icon("body"), alignment="LEFT")
-        col.prop(lod_sett, "body_lod", text="")
+        self._draw_category_title(col, "Body", "body", tris["body"])
+        self._draw_thumbnail_picker(context, col, lod_sett, "body_lod", "lod_body")
 
         col.separator()
-        self.draw_subtitle(
-            "Clothing", col, icon=get_hg_icon("outfit"), alignment="LEFT"
+        self._draw_category_title(col, "Clothing", "outfit", tris["clothing"])
+        self._draw_thumbnail_picker(
+            context, col, lod_sett, "clothing", "lod_clothing"
         )
-        col.prop(lod_sett, "decimate_ratio", text="Decimate ratio")
         col.prop(lod_sett, "remove_clothing_subdiv", text="Remove clothing subdiv")
         col.prop(lod_sett, "remove_clothing_solidify", text="Remove clothing solidify")
 
         col.separator()
-        self.draw_subtitle("Eyes", col, icon=get_hg_icon("eyes"), alignment="LEFT")
-        col.prop(lod_sett, "eyes", text="")
+        self._draw_category_title(col, "Eyes", "eyes", tris["eyes"])
+        self._draw_thumbnail_picker(context, col, lod_sett, "eyes", "lod_eyes")
+        if lod_sett.eyes == "original":
+            col.label(text="Not game ready", icon="ERROR")
+            draw_paragraph(
+                col,
+                "The layered eyes with a transparent cornea only render in Blender.",
+                enabled=False,
+            )
 
         col.separator()
-        self.draw_subtitle("Teeth", col, icon=get_hg_icon("face"), alignment="LEFT")
-        col.prop(lod_sett, "teeth", text="")
+        self._draw_category_title(col, "Teeth", "face", tris["teeth"])
+        self._draw_thumbnail_picker(context, col, lod_sett, "teeth", "lod_teeth")
+
+        col.separator()
+        row = col.row()
+        row.label(text="Total, without hair:")
+        self._draw_tris_count(row, sum(tris.values()))
 
 
 class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
@@ -367,16 +419,17 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
             return
 
         col = self.layout.column()
-        col.scale_y = 1.5
         hairc_sett = context.scene.HG3D.process.haircards
 
-        col.prop(hairc_sett, "quality")
-
-        self.layout.prop(hairc_sett, "face_hair")
+        tris = human.hair.estimate_haircards_triangles(hairc_sett.quality)
+        self._draw_category_title(col, "Hair", "hair", tris)
+        self._draw_thumbnail_picker(
+            context, col, hairc_sett, "quality", "haircards"
+        )
 
         message = (
-            "If you are baking textures, see Bake Textures menu for haircard"
-            + "baking resolution."
+            "The quality applies to the hair on the scalp and the face. If you are"
+            " baking textures, see Bake Textures menu for haircard baking resolution."
         )
 
         draw_paragraph(self.layout, text=message, enabled=False)

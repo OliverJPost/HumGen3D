@@ -25,6 +25,10 @@ from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
 from ..hair.eyebrows import EyebrowSettings
+from .haircards import FACE_SETTINGS, SCALP_SETTINGS
+
+# Triangles of the haircap of every hair type, measured on the default human
+HAIRCAP_TRIS = {"Scalp": 3400, "Brows": 100, "Eyelashes": 1500, "Beard": 2700}
 
 
 class HairSettings:
@@ -32,6 +36,35 @@ class HairSettings:
 
     def __init__(self, human: "Human") -> None:
         self._human = human
+
+    def estimate_haircards_triangles(self, quality: str = "high") -> int:
+        """Estimate the triangle count of the haircards of all hair of this human.
+
+        The cards are assumed to use the full triangle budget of the quality, which
+        they do unless the hair is very short.
+
+        Args:
+            quality (str): Quality of the haircards, "ultra", "high", "medium",
+                "low" or "haircap_only".
+
+        Returns:
+            int: Triangles of the haircaps and haircards for all hair this human has.
+        """
+        hair_types = [self.regular_hair, self.eyebrows, self.eyelashes]
+        if self._human.gender == "male":
+            hair_types.append(self.face_hair)
+
+        tris = 0
+        for hair in hair_types:
+            if not hair.modifiers:
+                continue
+            cap_type = hair._haircap_type  # noqa: SLF001
+            if cap_type in ("Scalp", "Beard") and quality != "haircap_only":
+                settings = SCALP_SETTINGS if cap_type == "Scalp" else FACE_SETTINGS
+                tris += settings.triangle_budgets[quality]
+            else:
+                tris += HAIRCAP_TRIS[cap_type]
+        return tris
 
     @property
     def eyebrows(self) -> EyebrowSettings:

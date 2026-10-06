@@ -16,6 +16,13 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 
+# Decimate ratio of the clothing meshes for every option of LodProps.clothing
+CLOTHING_DECIMATE_RATIOS = {"original": 1.0, "high": 0.5, "medium": 0.25, "low": 0.1}
+# Part of the triangles that is left for every option of the other meshes, as
+# measured on the default human
+BODY_TRIS_RATIOS = {0: 1.0, 1: 0.715, 2: 0.19}
+EYES_TRIS_RATIOS = {"original": 1.0, "high": 0.34, "medium": 0.085, "low": 0.02}
+TEETH_TRIS_RATIOS = {0: 1.0, 1: 0.37, 2: 0.27}
 # Decimate ratios for the gums and tongue, the front teeth and the molars. The molars
 # have the least geometry to start with, the gums are the least detailed.
 TEETH_DECIMATE_RATIOS = {1: (0.25, 0.3, 0.5), 2: (0.15, 0.2, 0.35)}
@@ -29,6 +36,62 @@ class LodSettings:
 
     def __init__(self, _human: "Human") -> None:
         self._human = _human
+
+    def estimate_triangles(
+        self,
+        body_lod: Literal[0, 1, 2] = 0,
+        clothing: str = "original",
+        eyes: str = "original",
+        teeth: Literal[0, 1, 2] = 0,
+        remove_clothing_subdiv: bool = True,
+        remove_clothing_solidify: bool = True,
+    ) -> dict[str, int]:
+        """Estimate the triangle count of the meshes after setting these LODs.
+
+        Cheap enough to call while drawing the UI. The estimate ignores the parts of
+        the body that are hidden under clothing.
+
+        Args:
+            body_lod (Literal[0, 1, 2]): See set_body_lod.
+            clothing (str): Option of the clothing LOD, "original", "high", "medium"
+                or "low".
+            eyes (str): Detail of the game eyes, "original", "high", "medium" or
+                "low".
+            teeth (Literal[0, 1, 2]): See set_teeth_lod.
+            remove_clothing_subdiv (bool): Whether subdivision modifiers are
+                removed from the clothing.
+            remove_clothing_solidify (bool): Whether solidify modifiers are removed
+                from the clothing.
+
+        Returns:
+            dict[str, int]: Triangle count for "body", "clothing", "eyes" and
+                "teeth".
+        """
+        objects = self._human.objects
+        clothing_tris = 0
+        for obj in self._human.clothing.outfit.objects + (
+            self._human.clothing.footwear.objects
+        ):
+            tris = _mesh_tris(obj.data) * CLOTHING_DECIMATE_RATIOS[clothing]
+            for mod in obj.modifiers:
+                if mod.type == "SUBSURF" and not remove_clothing_subdiv:
+                    tris *= 4**mod.levels
+                elif mod.type == "SOLIDIFY" and not remove_clothing_solidify:
+                    tris *= 2
+            clothing_tris += tris
+
+        return {
+            "body": round(_mesh_tris(objects.body.data) * BODY_TRIS_RATIOS[body_lod]),
+            "clothing": round(clothing_tris),
+            "eyes": round(_mesh_tris(objects.eyes.data) * EYES_TRIS_RATIOS[eyes]),
+            "teeth": round(
+                (
+                    _mesh_tris(objects.upper_teeth.data)
+                    + _mesh_tris(objects.lower_teeth.data)
+                )
+                * TEETH_TRIS_RATIOS[teeth]
+            ),
+        }
 
     @injected_context
     def set_body_lod(self, lod: Literal[0, 1, 2], context: C = None) -> None:
@@ -150,6 +213,11 @@ class LodSettings:
         for obj in old_selected:
             obj.select_set(True)
         context.view_layer.objects.active = old_active
+
+
+def _mesh_tris(mesh: bpy.types.Mesh) -> int:
+    # Every polygon with n corners has n - 2 triangles
+    return len(mesh.loops) - 2 * len(mesh.polygons)
 
 
 def _decimate_teeth(obj: bpy.types.Object, ratios: tuple[float, float, float]) -> None:
