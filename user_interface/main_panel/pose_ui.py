@@ -48,6 +48,9 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             return
 
         self.draw_content_selector(layout, pcoll_name="animation")
+        layout.operator(
+            "hg3d.import_mixamo", text="Import Mixamo Animation", icon="IMPORT"
+        )
 
         animation = self.human.animation
         if not animation.is_active:
