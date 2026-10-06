@@ -143,6 +143,7 @@ def draw_spoiler_box(self, layout, ui_name) -> "tuple[bool, bpy.types.UILayout]"
         "outfit": "MATCLOTH",
         "footwear": "MATCLOTH",
         "pose": "ARMATURE_DATA",
+        "animation": "ACTION",
         "expression": "GHOST_ENABLED",
         "simulation": "NETWORK_DRIVE",
         "compression": "FOLDER_REDIRECT",

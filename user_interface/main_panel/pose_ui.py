@@ -28,8 +28,42 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
 
         if sett.ui.pose_tab_switch == "library":
             self._draw_pose_library(sett, col)
+        elif sett.ui.pose_tab_switch == "animation":
+            self._draw_animation_library(col)
         elif sett.ui.pose_tab_switch == "rigify":
             self._draw_rigify_subsection(col)
+
+    def _draw_animation_library(self, layout):
+        """Draws template_icon_view for selecting animations from the library.
+
+        Args:
+            layout (UILayout): layout of pose section
+        """
+        if self.human.pose.rigify.is_rigify:
+            row = layout.row(align=True)
+            row.label(text="Rigify not supported", icon="ERROR")
+            row.operator(
+                "hg3d.showinfo", text="", icon="QUESTION"
+            ).info = "rigify_library"
+            return
+
+        self.draw_content_selector(layout, pcoll_name="animation")
+
+        animation = self.human.animation
+        if not animation.is_active:
+            return
+
+        box = layout.box()
+        col = box.column(align=True)
+        col.label(text=animation.action.name, icon="ACTION")
+        col.label(
+            text=f"{animation.frame_count} frames"
+            + (", looping" if animation.loop else "")
+        )
+        col.prop(self.sett, "animation_finger_curl", slider=True)
+        row = col.row(align=True)
+        row.operator("hg3d.animation_frame_range", icon="PREVIEW_RANGE")
+        row.operator("hg3d.remove_animation", text="Remove", icon="X")
 
     def _draw_rigify_subsection(self, box):
         """Draws ui for adding rigify, context info if added.

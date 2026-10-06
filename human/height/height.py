@@ -105,6 +105,7 @@ class HeightSettings:
             for shoe_obj in self._human.clothing.footwear.objects:
                 self._human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
             hair_binding.refit_haircards(self._human)
+            self._human.animation.refresh(context)
 
     def as_dict(self) -> dict[str, float]:
         """Returns height of human as dictionary.

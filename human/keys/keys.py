@@ -781,6 +781,7 @@ class KeySettings:
         for shoe_obj in human.clothing.footwear.objects:
             human.clothing.footwear.deform_cloth_to_human(context, shoe_obj)
         hair_binding.refit_haircards(human)
+        human.animation.refresh(context)
 
         human.objects.body.data.update()
 

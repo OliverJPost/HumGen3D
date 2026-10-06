@@ -22,6 +22,7 @@ PcollDict = dict[str, tuple[Union[tuple[str, ...], str], bool, Union[list[str], 
 PREVIEW_COLLECTION_DATA: PcollDict = {
     "humans": (".json", True, "models", "humans_category", None, None),
     "pose": (".blend", False, "poses", "pose_category", "search_term_pose", None),
+    "animation": (".json", False, "animations", "animation_category", "search_term_animation", None), # noqa
     "outfit": (".blend", True, "outfits", "outfit_category", "search_term_outfit", None), # noqa
     "footwear": (".blend", True, "footwear", "footwear_category", "search_term_footwear", None), # noqa
     "hair": (".json", True, ["hair", "head"], "hair_category", None, None),

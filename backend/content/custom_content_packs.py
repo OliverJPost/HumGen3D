@@ -285,6 +285,7 @@ class HG_OT_SAVE_CPACK(bpy.types.Operator):
             "shapekeys": "shapekeys" in categ_set,
             "hair": "hairstyles" in categ_set or "face_hair" in categ_set,
             "poses": "poses" in categ_set,
+            "animations": "animation" in categ_set,
             "clothes": "outfits" in categ_set,
             "footwear": "footwear" in categ_set,
             "expressions": pack_name == "Base Humans",

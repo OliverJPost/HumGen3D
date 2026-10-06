@@ -168,7 +168,8 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
         name="posing",
         items=[
             ("library", "Library", "", "ASSET_MANAGER", 0),
-            ("rigify", "Rigify", "", "CON_ARMATURE", 1),
+            ("animation", "Animation", "", "ACTION", 1),
+            ("rigify", "Rigify", "", "CON_ARMATURE", 2),
         ],
         default="library",
     )
