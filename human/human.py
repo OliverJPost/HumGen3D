@@ -34,6 +34,7 @@ from ..common.decorators import injected_context, verify_addon
 from ..common.exceptions import HumGenException
 from ..common.materials import verify_no_undefined_nodes_in_mat
 from ..common.render import set_eevee_ao_and_strip
+from .animation.animation import AnimationSettings
 from .body.body import BodySettings
 from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
@@ -322,6 +323,15 @@ class Human:
         return PoseSettings(self)
 
     @property
+    def animation(self) -> AnimationSettings:
+        """Points to the animation settings of the human.
+
+        Returns:
+            AnimationSettings: Class instance for animating the human
+        """
+        return AnimationSettings(self)
+
+    @property
     def clothing(self) -> ClothingSettings:
         """Points to the clothing settings of the human.
 
@@ -540,6 +550,7 @@ class Human:
         Will delete all meshes and objects that this human consists of, including
         the backup human.
         """
+        self.animation.remove()
         delete_list = [
             self.objects.rig,
         ]

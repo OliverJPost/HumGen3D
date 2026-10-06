@@ -104,6 +104,22 @@ class PreviewCollectionProps(bpy.types.PropertyGroup):
         update=refresh("pose", "pose_category"),
     )
 
+    # animations
+    animation: EnumProperty(
+        items=get_items("animation"),
+        update=update("animation"),
+    )
+    animation_category: EnumProperty(
+        name="Animation Library",
+        items=get_folders("animation"),
+        update=refresh("animation", "animation_category"),
+    )
+    search_term_animation: StringProperty(
+        name="Search:",
+        default="",
+        update=refresh("animation", "animation_category"),
+    )
+
     # outfits
     outfit: EnumProperty(
         items=get_items("clothing.outfit"), update=update("clothing.outfit")
