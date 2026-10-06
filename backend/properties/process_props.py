@@ -7,8 +7,10 @@ import os
 import bpy
 from bpy.props import (  # type:ignore
     BoolProperty,
+    CollectionProperty,
     EnumProperty,
     FloatProperty,
+    IntProperty,
     PointerProperty,
     StringProperty,
 )
@@ -33,6 +35,43 @@ class LodProps(bpy.types.PropertyGroup):
     decimate_ratio: FloatProperty(min=0, max=1, default=0.15)
     remove_clothing_subdiv: BoolProperty(default=True)
     remove_clothing_solidify: BoolProperty(default=True)
+    eyes: EnumProperty(
+        items=[
+            (
+                "original",
+                "Original eyes",
+                "Layered eyes with a transparent cornea, about 10,600 triangles",
+                0,
+            ),
+            (
+                "high",
+                "Game eyes, high",
+                "Eyes with a single opaque layer, about 3,600 triangles",
+                1,
+            ),
+            (
+                "medium",
+                "Game eyes, medium",
+                "Eyes with a single opaque layer, about 900 triangles",
+                2,
+            ),
+            (
+                "low",
+                "Game eyes, low",
+                "Eyes with a single opaque layer, about 200 triangles",
+                3,
+            ),
+        ],
+        default="medium",
+    )
+    teeth: EnumProperty(
+        items=[
+            ("0", "Original resolution", "About 12,400 triangles", 0),
+            ("1", "Medium resolution", "About 4,600 triangles", 1),
+            ("2", "Low resolution", "About 3,300 triangles", 2),
+        ],
+        default="1",
+    )
 
 
 class HaircardProps(bpy.types.PropertyGroup):
@@ -253,8 +292,27 @@ class ScriptingProps(bpy.types.PropertyGroup):
     )
 
 
+class MultiRecipeItem(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+
 class ProcessProps(bpy.types.PropertyGroup):
     _register_priority = 4
+
+    mode: EnumProperty(
+        items=[
+            ("recipe", "Recipe", "Process the humans with a single recipe", 0),
+            (
+                "multi_recipe",
+                "Multi-recipe",
+                "Process the humans with multiple recipes at once",
+                1,
+            ),
+        ],
+        default="recipe",
+    )
+    multi_recipes: CollectionProperty(type=MultiRecipeItem)
+    multi_recipes_index: IntProperty()
 
     lod: PointerProperty(type=LodProps)
     haircards: PointerProperty(type=HaircardProps)
@@ -267,7 +325,6 @@ class ProcessProps(bpy.types.PropertyGroup):
     baking_enabled: BoolProperty(default=False)
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=False)
-    rest_pose_enabled: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)
@@ -276,11 +333,28 @@ class ProcessProps(bpy.types.PropertyGroup):
     output_name: StringProperty(name="Output name", default="{name}")
 
     human_list_isopen: BoolProperty(default=False)
+    rest_pose: EnumProperty(
+        items=[
+            ("a_pose", "A-pose", "Keep the A-pose as rest pose", 0),
+            (
+                "t_pose",
+                "T-pose",
+                "Make the T-pose the rest pose of the armature and meshes, as"
+                " expected by most game engines and retargeting tools",
+                1,
+            ),
+        ],
+        default="a_pose",
+    )
     output: EnumProperty(
         items=[
-            ("replace", "Replace humans", "", 0),
-            ("duplicate", "Duplicate humans", "", 1),
-            ("export", "Export humans", "", 2),
+            (
+                "in_file",
+                "In this file",
+                "Add the processed humans to this file, next to the originals",
+                0,
+            ),
+            ("export", "Export", "Export the processed humans to files", 1),
         ]
     )
     file_type: EnumProperty(

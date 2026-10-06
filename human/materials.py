@@ -1,6 +1,6 @@
 """Contains class for accessing materials of human."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import bpy
 
@@ -50,22 +50,34 @@ class MaterialSettings:
         return self._human.objects.upper_teeth.data.materials[0]
 
     @property
-    def eye_outer(self) -> bpy.types.Material:
+    def eye_outer(self) -> Optional[bpy.types.Material]:
         """Outer eye material.
 
         Returns:
-            bpy.types.Material: Outer eye material.
+            Optional[bpy.types.Material]: Outer eye material. None if the human
+                has game eyes, which don't have an outer layer.
         """
+        if self._human.process.has_game_eyes:
+            return None
         return self._human.objects.eyes.data.materials[0]
 
     @property
     def eye_inner(self) -> bpy.types.Material:
-        """Inner eye material.
+        """Inner eye material. For game eyes this is their only material.
 
         Returns:
             bpy.types.Material: Inner eye material.
         """
-        return self._human.objects.eyes.data.materials[1]
+        return self._human.objects.eyes.data.materials[self.eye_inner_slot]
+
+    @property
+    def eye_inner_slot(self) -> int:
+        """Index of the material slot of the inner eye material.
+
+        Returns:
+            int: Index of the material slot.
+        """
+        return 0 if self._human.process.has_game_eyes else 1
 
     @property
     def haircards(self) -> list[bpy.types.Material]:

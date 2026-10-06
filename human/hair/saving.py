@@ -6,6 +6,7 @@ import os
 from typing import TYPE_CHECKING, Iterable, Literal, Optional
 
 import bpy
+import numpy as np
 from HumGen3D.common.type_aliases import GenderStr
 from HumGen3D.human.hair.compatibility import get_children_percent
 
@@ -61,6 +62,26 @@ def save_hair(  # noqa CCR001
         hair_obj.vertex_groups.remove(vg)
     hair_obj.show_instancer_for_viewport = False
 
+    # Bake the evaluated (deformed) mesh shape into vertex positions so that
+    # when shape keys are stripped, the mesh geometry matches particle positions.
+    # Without this, stripping shape keys reverts the mesh to basis while particle
+    # co_local values remain authored for the deformed shape, causing distortion.
+    depsgraph = context.evaluated_depsgraph_get()
+    eval_obj = hair_obj.evaluated_get(depsgraph)
+    n_verts = len(hair_obj.data.vertices)
+    eval_coords = np.empty(n_verts * 3, dtype=np.float32)
+    eval_obj.data.vertices.foreach_get("co", eval_coords)
+
+    if hair_obj.data.shape_keys:
+        for sk in [
+            sk for sk in hair_obj.data.shape_keys.key_blocks if sk.name != "Basis"
+        ]:
+            hair_obj.shape_key_remove(sk)
+        hair_obj.shape_key_remove(hair_obj.data.shape_keys.key_blocks["Basis"])
+
+    hair_obj.data.vertices.foreach_set("co", eval_coords)
+    hair_obj.data.update()
+
     def create_for_gender(gender: GenderStr) -> Optional[str]:
         if hair_type == "face_hair" and gender == "female":
             return None
@@ -93,6 +114,7 @@ def save_hair(  # noqa CCR001
         ],
         blend_folder,
         name,
+        clear_sk=False,
         clear_ps=False,
         clear_vg=False,
     )
