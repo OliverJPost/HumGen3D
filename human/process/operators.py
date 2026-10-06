@@ -15,7 +15,7 @@ from HumGen3D.backend import hg_log
 from HumGen3D.backend.content.content_saving import remove_number_suffix
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.process_props import get_preset_list
-from HumGen3D.common import find_multiple_in_list
+from HumGen3D.common import find_multiple_in_list, find_original_rig
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.apply_modifiers import apply_modifiers
@@ -70,13 +70,13 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 os.makedirs(export_folder)
 
         for rig_obj in human_rigs:
-            human = Human.from_existing(rig_obj)
-            if pr_sett.output != "replace":
-                human = human.duplicate(context)
-                if pr_sett.output == "duplicate":
-                    human.location += Vector((0, 2, 0))
-                for obj in human.objects:
-                    add_to_collection(context, obj, "Processing Results")
+            original_human = Human.from_existing(rig_obj)
+            # The original human is never changed, the result is a frozen copy
+            human = original_human.duplicate(context)
+            if pr_sett.output == "in_file":
+                human.location += Vector((0, 2, 0))
+            for obj in human.objects:
+                add_to_collection(context, obj, "Processing Results")
 
             if pr_sett.haircards_enabled and not human.process.has_haircards:
                 quality = pr_sett.haircards.quality
@@ -88,8 +88,13 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     human.hair.face_hair.convert_to_haircards(quality, context)
                 human.objects.rig["haircards"] = True
 
-            if pr_sett.game_eyes_enabled and not human.process.has_game_eyes:
-                human.process.convert_to_game_eyes(pr_sett.game_eyes.detail)
+            if pr_sett.lod_enabled:
+                lod_sett = pr_sett.lod
+                if lod_sett.eyes != "original" and not human.process.has_game_eyes:
+                    human.process.convert_to_game_eyes(lod_sett.eyes)
+                if not human.objects.upper_teeth.get("hg_lod"):
+                    teeth_lod = int(lod_sett.teeth)
+                    human.process.lod.set_teeth_lod(teeth_lod, context=context)
 
             if pr_sett.baking_enabled and not human.process.was_baked:
                 human.process.baking.bake_all(
@@ -99,11 +104,14 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 human.objects.rig["hg_baked"] = True
 
             if pr_sett.lod_enabled and not human.is_trial and not human.process.is_lod:
-                human.process.lod.set_body_lod(int(pr_sett.lod.body_lod))
+                human.process.lod.set_body_lod(
+                    int(pr_sett.lod.body_lod), context=context
+                )
                 human.process.lod.set_clothing_lod(
                     pr_sett.lod.decimate_ratio,
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
+                    context=context,
                 )
                 # Only set lod as enabled if it actually changes topology
                 if pr_sett.lod.body_lod != "0":
@@ -159,7 +167,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     module.main(context, human)
 
             if (
-                pr_sett.rest_pose_enabled
+                pr_sett.rest_pose == "t_pose"
                 and not human.process.has_t_pose_rest
                 and not human.pose.rigify.is_rigify
             ):
@@ -182,8 +190,10 @@ class HG_OT_PROCESS(bpy.types.Operator):
                         human.export, f"to_{pr_sett.file_type[1:].lower()}"
                     )
                 filepath = os.path.join(export_folder, fn)
-                export_method(filepath)
+                export_method(filepath, context=context)
                 human.delete()
+            else:
+                human.process.mark_as_processed(original_human)
 
         if not pr_sett.output == "export":
             ShowMessageBox("Processing completed", "Processing completed", "INFO")
@@ -194,6 +204,27 @@ class HG_OT_PROCESS(bpy.types.Operator):
 
         for callback in temp_depsgraph_callbacks:
             bpy.app.handlers.depsgraph_update_post.append(callback)
+
+        return {"FINISHED"}
+
+
+class HG_OT_SELECT_ORIGINAL_HUMAN(bpy.types.Operator):
+    bl_idname = "hg3d.select_original_human"
+    bl_label = "Select original human"
+    bl_description = "Select the editable human this processed human was made from."
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        original_rig = find_original_rig(context.object, context.view_layer.objects)
+        if not original_rig:
+            self.report({"WARNING"}, "The original human is not in this scene anymore.")
+            return {"CANCELLED"}
+
+        for obj in context.selected_objects:
+            obj.select_set(False)
+        original_rig.hide_set(False)
+        original_rig.select_set(True)
+        context.view_layer.objects.active = original_rig
 
         return {"FINISHED"}
 
@@ -353,10 +384,10 @@ def get_existing_groups(self, context):
 
 class HG_OT_SAVE_PROCESS_TEMPLATE(bpy.types.Operator):
     bl_idname = "hg3d.save_process_template"
-    bl_label = "Save template."
-    bl_description = "Save current settings as a template."
+    bl_label = "Save recipe."
+    bl_description = "Save current settings as a recipe."
 
-    name: bpy.props.StringProperty(name="Template name")
+    name: bpy.props.StringProperty(name="Recipe name")
     new_or_existing: bpy.props.EnumProperty(
         items=[
             ("existing", "Existing", "Add to an existing group.", 0),
@@ -371,7 +402,7 @@ class HG_OT_SAVE_PROCESS_TEMPLATE(bpy.types.Operator):
 
     def draw(self, context):
         col = self.layout.column()
-        col.label(text="Give a name to your template:")
+        col.label(text="Give a name to your recipe:")
 
         subcol = col.column()
         subcol.scale_y = 1.5
