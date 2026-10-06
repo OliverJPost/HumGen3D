@@ -17,7 +17,7 @@ from HumGen3D.common.object_finding import (
 )
 from HumGen3D.common.type_aliases import C
 
-from .lod import LodSettings
+from .lod import CLOTHING_DECIMATE_RATIOS, LodSettings
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -499,6 +499,17 @@ class ProcessSettings:
             if attr == "lod":
                 pr_sett.lod.eyes = "original"
                 pr_sett.lod.teeth = "0"
+                # Older recipes had a decimate ratio instead of clothing options
+                if "decimate_ratio" in prop_dict:
+                    ratio = prop_dict.pop("decimate_ratio")
+                    prop_dict["clothing"] = min(
+                        CLOTHING_DECIMATE_RATIOS,
+                        key=lambda opt: abs(CLOTHING_DECIMATE_RATIOS[opt] - ratio),
+                    )
+
+            # Older recipes could skip the face hair when making haircards
+            if attr == "haircards":
+                prop_dict.pop("face_hair", None)
 
             # Set enabled = True because attr being in the dict means it was enabled
             setattr(pr_sett, f"{attr}_enabled", True)
@@ -532,6 +543,7 @@ class ProcessSettings:
                     setattr(pr_sett, prop.identifier, False)
             pr_sett.lod.property_unset("eyes")
             pr_sett.lod.property_unset("teeth")
+            pr_sett.lod.property_unset("clothing")
 
     @staticmethod
     def add_props_from_dict(data, pr_sett, prop_dict, prop_group):

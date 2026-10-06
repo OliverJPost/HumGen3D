@@ -528,3 +528,19 @@ def test_keeps_images_of_other_humans(bearded_human, context):
     finally:
         other_human.delete()
 
+
+
+def test_estimate_haircards_triangles(long_haired_human, bearded_human, context):
+    human = long_haired_human
+    for quality in CARD_QUALITIES:
+        estimate = human.hair.estimate_haircards_triangles(quality)
+        # The budget of the cards, plus the haircaps of the eyebrows and eyelashes
+        assert estimate > haircards.QUALITY_TRIANGLE_BUDGETS[quality]
+        assert estimate < haircards.QUALITY_TRIANGLE_BUDGETS[quality] + 3000
+    cap_only = human.hair.estimate_haircards_triangles("haircap_only")
+    assert 0 < cap_only < human.hair.estimate_haircards_triangles("low")
+
+    # The hair on the face is included, with the budget for face hair
+    face_budget = haircards.FACE_SETTINGS.triangle_budgets["high"]
+    bearded_estimate = bearded_human.hair.estimate_haircards_triangles("high")
+    assert face_budget < bearded_estimate < face_budget + 3000

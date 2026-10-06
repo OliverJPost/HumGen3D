@@ -19,6 +19,7 @@ from HumGen3D.common import find_multiple_in_list, find_original_rig
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.apply_modifiers import apply_modifiers
+from HumGen3D.human.process.lod import CLOTHING_DECIMATE_RATIOS
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
@@ -84,7 +85,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     human.hair.regular_hair.convert_to_haircards(quality, context)
                 human.hair.eyebrows.convert_to_haircards(quality, context)
                 human.hair.eyelashes.convert_to_haircards(quality, context)
-                if pr_sett.haircards.face_hair and human.hair.face_hair.modifiers:
+                if human.hair.face_hair.modifiers:
                     human.hair.face_hair.convert_to_haircards(quality, context)
                 human.objects.rig["haircards"] = True
 
@@ -108,7 +109,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                     int(pr_sett.lod.body_lod), context=context
                 )
                 human.process.lod.set_clothing_lod(
-                    pr_sett.lod.decimate_ratio,
+                    CLOTHING_DECIMATE_RATIOS[pr_sett.lod.clothing],
                     pr_sett.lod.remove_clothing_subdiv,
                     pr_sett.lod.remove_clothing_solidify,
                     context=context,

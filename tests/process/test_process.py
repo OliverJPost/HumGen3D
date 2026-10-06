@@ -145,7 +145,7 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.lod_enabled = True
     pr_sett.lod.eyes = "low"
     pr_sett.lod.teeth = "2"
-    pr_sett.lod.decimate_ratio = 0.5
+    pr_sett.lod.clothing = "high"
     pr_sett.haircards_enabled = True
     pr_sett.rest_pose = "t_pose"
     pr_sett.output = "export"
@@ -157,7 +157,7 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.lod_enabled = False
     pr_sett.lod.eyes = "original"
     pr_sett.lod.teeth = "0"
-    pr_sett.lod.decimate_ratio = 1.0
+    pr_sett.lod.clothing = "original"
     pr_sett.haircards_enabled = False
     pr_sett.baking_enabled = True
     pr_sett.rest_pose = "a_pose"
@@ -168,7 +168,7 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     assert pr_sett.lod_enabled
     assert pr_sett.lod.eyes == "low"
     assert pr_sett.lod.teeth == "2"
-    assert pr_sett.lod.decimate_ratio == pytest.approx(0.5)
+    assert pr_sett.lod.clothing == "high"
     assert pr_sett.haircards_enabled
     assert not pr_sett.baking_enabled
     assert pr_sett.rest_pose == "t_pose"
@@ -201,7 +201,8 @@ def test_recipe_from_older_version(context, process_settings, tmp_path):
 
     assert pr_sett.lod_enabled
     assert pr_sett.lod.body_lod == "2"
-    assert pr_sett.lod.decimate_ratio == pytest.approx(0.25)
+    # The decimate ratio is mapped to the nearest clothing option
+    assert pr_sett.lod.clothing == "medium"
     assert not pr_sett.lod.remove_clothing_solidify
     # These didn't exist yet, so the recipe should not change them
     assert pr_sett.lod.eyes == "original"

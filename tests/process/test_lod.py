@@ -68,3 +68,29 @@ def test_teeth_lod_keeps_tongue_shape_keys(male_human, context):
         (tongue_out[i].co - basis[i].co).length for i in range(len(basis))
     )
     assert max_movement > 0.03
+
+
+def test_estimate_triangles(male_human, context):
+    human = male_human
+    options = human.clothing.outfit.get_options(context)
+    human.clothing.outfit.set(options[0], context)
+
+    estimate = human.process.lod.estimate_triangles()
+
+    # Without LODs the estimate is the exact count of the base meshes
+    assert estimate["body"] == _tris_count(human.objects.body)
+    assert estimate["eyes"] == _tris_count(human.objects.eyes)
+    assert estimate["teeth"] == _teeth_tris_count(human)
+    assert estimate["clothing"] == sum(
+        _tris_count(obj) for obj in human.clothing.outfit.objects
+    )
+
+    lower = human.process.lod.estimate_triangles(
+        body_lod=2, clothing="low", eyes="low", teeth=2
+    )
+    assert all(0 < lower[key] < estimate[key] for key in estimate)
+    # Keeping the subdivision modifiers multiplies the clothing count
+    kept_subdiv = human.process.lod.estimate_triangles(
+        remove_clothing_subdiv=False
+    )
+    assert kept_subdiv["clothing"] > estimate["clothing"]
