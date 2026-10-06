@@ -17,6 +17,7 @@ ENABLED_PROPS = (
     "baking_enabled",
     "lod_enabled",
     "modapply_enabled",
+    "shapekeys_enabled",
     "haircards_enabled",
     "rig_renaming_enabled",
     "renaming_enabled",
@@ -33,9 +34,10 @@ def process_settings(context):
     pr_sett = context.scene.HG3D.process
     for prop_name in ENABLED_PROPS:
         setattr(pr_sett, prop_name, False)
-    for prop in pr_sett.lod.bl_rna.properties:
-        if prop.identifier not in ("rna_type", "name"):
-            pr_sett.lod.property_unset(prop.identifier)
+    for prop_group in (pr_sett.lod, pr_sett.shapekeys):
+        for prop in prop_group.bl_rna.properties:
+            if prop.identifier not in ("rna_type", "name"):
+                prop_group.property_unset(prop.identifier)
     pr_sett.rest_pose = "a_pose"
     pr_sett.output = "in_file"
     pr_sett.baking.export_folder = ""
@@ -140,6 +142,52 @@ def test_process_export(male_human, context, process_settings, tmp_path):
     assert _tris_count(human.objects.eyes) == eyes_tris_count
 
 
+def _key_names(obj):
+    keys = obj.data.shape_keys
+    return [key.name for key in keys.key_blocks] if keys else []
+
+
+def test_process_shape_keys(male_human, context, process_settings):
+    human = male_human
+    human.clothing.outfit.set(
+        human.clothing.outfit.get_options(context=context)[0], context
+    )
+    pr_sett = process_settings
+    pr_sett.shapekeys_enabled = True
+    pr_sett.shapekeys.face_rig = "keep"
+    pr_sett.shapekeys.correctives = "remove"
+    pr_sett.shapekeys.body = "keep"
+    # The clothing is decimated with its kept keys
+    pr_sett.lod_enabled = True
+    pr_sett.lod.clothing = "high"
+    cloth_tris_count = _tris_count(human.clothing.outfit.objects[0])
+
+    new_objects = _process(human, context)
+    processed_rig = next(obj for obj in new_objects if obj.type == "ARMATURE")
+    processed_human = Human.from_existing(processed_rig)
+    body_keys = _key_names(processed_human.objects.body)
+
+    assert processed_human.expression.has_facial_rig
+    assert "jawOpen" in body_keys
+    assert not [name for name in body_keys if name.startswith(("cor_", "eyeLook"))]
+    assert not [name for name in body_keys if name.startswith(("LIVE_KEY", "Male"))]
+    # Body sliders are shape keys now, face sliders are baked
+    assert len([name for name in body_keys if name.startswith("b_")]) > 20
+    assert not [name for name in body_keys if name.startswith("f_")]
+
+    cloth_obj = processed_human.clothing.outfit.objects[0]
+    assert _tris_count(cloth_obj) < cloth_tris_count
+    assert not [name for name in _key_names(cloth_obj) if name.startswith("cor_")]
+    assert "Body Proportions" not in _key_names(cloth_obj)
+
+    # The original human is not changed
+    assert not human.expression.has_facial_rig
+    assert "LIVE_KEY_PERMANENT" in _key_names(human.objects.body)
+    assert "Body Proportions" in _key_names(human.clothing.outfit.objects[0])
+
+    processed_human.delete()
+
+
 def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett = process_settings
     pr_sett.lod_enabled = True
@@ -147,6 +195,9 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.lod.teeth = "2"
     pr_sett.lod.clothing = "high"
     pr_sett.haircards_enabled = True
+    pr_sett.shapekeys_enabled = True
+    pr_sett.shapekeys.face_rig = "remove"
+    pr_sett.shapekeys.age = "keep"
     pr_sett.rest_pose = "t_pose"
     pr_sett.output = "export"
 
@@ -159,6 +210,9 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.lod.teeth = "0"
     pr_sett.lod.clothing = "original"
     pr_sett.haircards_enabled = False
+    pr_sett.shapekeys_enabled = False
+    pr_sett.shapekeys.face_rig = "keep"
+    pr_sett.shapekeys.age = "bake"
     pr_sett.baking_enabled = True
     pr_sett.rest_pose = "a_pose"
     pr_sett.output = "in_file"
@@ -170,6 +224,10 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     assert pr_sett.lod.teeth == "2"
     assert pr_sett.lod.clothing == "high"
     assert pr_sett.haircards_enabled
+    assert pr_sett.shapekeys_enabled
+    assert pr_sett.shapekeys.face_rig == "remove"
+    assert pr_sett.shapekeys.age == "keep"
+    assert pr_sett.shapekeys.body == "bake"
     assert not pr_sett.baking_enabled
     assert pr_sett.rest_pose == "t_pose"
     assert pr_sett.output == "export"

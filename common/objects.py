@@ -101,3 +101,46 @@ def apply_sk_to_mesh(sk: bpy.types.ShapeKey, obj: bpy.types.Object) -> None:
     if obj.data.shape_keys:
         obj.data.shape_keys.key_blocks["Basis"].data.foreach_set("co", obj_coords - diff)
     obj.data.update()
+
+
+def bake_shape_key(sk: bpy.types.ShapeKey, obj: bpy.types.Object) -> None:
+    """Moves the current effect of a shape key into the basis and removes the key.
+
+    The other shape keys move along with the basis, so what they do to the mesh
+    does not change. Any driver on the key is removed with it.
+
+    Args:
+        sk (bpy.types.ShapeKey): Shape key on obj to bake, at its current value.
+        obj (bpy.types.Object): Object that has the shape key.
+    """
+    vert_count = len(obj.data.vertices)
+    basis_coords = np.empty(vert_count * 3, dtype=np.float64)
+    obj.data.vertices.foreach_get("co", basis_coords)
+    sk_coords = np.empty(vert_count * 3, dtype=np.float64)
+    sk.data.foreach_get("co", sk_coords)
+    offset = (sk_coords - basis_coords) * sk.value
+
+    apply_sk_to_mesh(sk, obj)
+
+    for other_sk in obj.data.shape_keys.key_blocks:
+        if other_sk in (sk, obj.data.shape_keys.reference_key):
+            continue
+        coords = np.empty(vert_count * 3, dtype=np.float64)
+        other_sk.data.foreach_get("co", coords)
+        other_sk.data.foreach_set("co", coords + offset)
+
+    remove_shape_key(sk, obj)
+
+
+def remove_shape_key(sk: bpy.types.ShapeKey, obj: bpy.types.Object) -> None:
+    """Removes a shape key together with its driver.
+
+    Removing the key first would leave a driver pointing at nothing, which can
+    crash Blender when the depsgraph evaluates it.
+
+    Args:
+        sk (bpy.types.ShapeKey): Shape key on obj to remove.
+        obj (bpy.types.Object): Object that has the shape key.
+    """
+    sk.driver_remove("value")
+    obj.shape_key_remove(sk)

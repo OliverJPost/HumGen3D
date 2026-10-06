@@ -141,11 +141,15 @@ class ExpressionSettings(PreviewCollectionContent):
         hair_binding.sync_haircards(self._human)
 
     @injected_context
-    def load_facial_rig(self, context: C = None) -> None:
+    def load_facial_rig(
+        self, context: C = None, reset_expressions: bool = True
+    ) -> None:
         """Imports all necessary shape keys and unhides the bones used to control face.
 
         Args:
             context (C): Blender context. bpy.context if not provided.
+            reset_expressions (bool): Set the 1-click expressions to 0, as they
+                would otherwise combine with the face rig.
         """
 #        with context_override(context, active_object=self._human.objects.rig, selected_objects=[self._human.objects.rig]):
         for b_name in FACE_RIG_BONE_NAMES:
@@ -156,8 +160,9 @@ class ExpressionSettings(PreviewCollectionContent):
             else:
                 posebone.hide = False
 
-        for key in self._human.expression.keys:
-            key.value = 0
+        if reset_expressions:
+            for key in self._human.expression.keys:
+                key.value = 0
 
         self._load_FACS_sks(context)  # type:ignore[arg-type]
 

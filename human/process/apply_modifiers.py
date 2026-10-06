@@ -12,7 +12,7 @@ from HumGen3D.common import find_multiple_in_list
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.objects import (
-    apply_sk_to_mesh,
+    bake_shape_key,
     delete_object,
     duplicate_object,
     remove_all_shapekeys,
@@ -64,6 +64,27 @@ NON_TOPOLOGY_CHANGING_MODIFIERS = {
     "SOFT_BODY",
 }
 
+# Modifiers that only move vertices. Applying them is writing the evaluated
+# coordinates, which is also possible for every shape key.
+DEFORM_ONLY_MODIFIERS = {
+    "ARMATURE",
+    "CAST",
+    "CURVE",
+    "DISPLACE",
+    "HOOK",
+    "LAPLACIANDEFORM",
+    "LATTICE",
+    "MESH_DEFORM",
+    "SHRINKWRAP",
+    "SIMPLE_DEFORM",
+    "SMOOTH",
+    "CORRECTIVE_SMOOTH",
+    "LAPLACIANSMOOTH",
+    "SURFACE_DEFORM",
+    "WARP",
+    "WAVE",
+}
+
 
 @injected_context
 def apply_modifiers(human, context: C = None) -> None:  # noqa CCR001
@@ -87,10 +108,14 @@ def apply_modifiers(human, context: C = None) -> None:  # noqa CCR001
             apply_selected_modifiers(modifiers_to_apply, obj, context)
             continue
 
-        # if not modifiers_to_apply.issubset(NON_TOPOLOGY_CHANGING_MODIFIERS):
-        apply_topology_changing_modifiers(context, modifiers_to_apply, obj, human)
-        # else:
-        #    quick_apply_modifiers(modifiers_to_apply, obj) todo
+        if modifiers_to_apply.issubset(DEFORM_ONLY_MODIFIERS) and _can_evaluate(
+            obj, context
+        ):
+            apply_deform_modifiers(context, modifiers_to_apply, obj, human)
+        else:
+            apply_topology_changing_modifiers(
+                context, modifiers_to_apply, obj, human
+            )
 
     human.hair.set_connected(True, context)
     refresh_modapply(None, context)
@@ -117,40 +142,109 @@ def apply_topology_changing_modifiers(context, modifier_types, obj, human):
             human.keys._add_driver(new_sk, driver_dict[sk.name])
         delete_object(temp_sk_object)
 
-    if obj.data.shape_keys:
-        for sk in obj.data.shape_keys.key_blocks:
-            if sk.name.startswith("LIVE_KEY"):
-                _apply_live_key_to_basis(sk, obj)
-
+    _bake_live_keys(obj)
     delete_object(sk_cache_object)
 
 
-def _apply_live_key_to_basis(sk, obj):
-    vert_count = len(obj.data.vertices)
-    basis_coords = np.empty(vert_count * 3, dtype=np.float64)
-    obj.data.vertices.foreach_get("co", basis_coords)
-    sk_coords = np.empty(vert_count * 3, dtype=np.float64)
-    sk.data.foreach_get("co", sk_coords)
-    offset = (sk_coords - basis_coords) * sk.value
+def apply_deform_modifiers(context, modifier_types, obj, human):
+    """Applies modifiers that keep the vertex order, carrying the shape keys over.
 
-    apply_sk_to_mesh(sk, obj)
+    Instead of applying the modifiers to a copy of the object per shape key, this
+    evaluates the object once per shape key with only the modifiers to apply
+    enabled. The deformed shape of every key is then written back to it.
+    """
+    keys = obj.data.shape_keys
+    key_blocks = [sk for sk in keys.key_blocks if sk != keys.reference_key]
+    modifiers = [
+        mod
+        for mod in obj.modifiers
+        if mod.type in modifier_types and _is_applied(mod, context)
+    ]
+    if not modifiers:
+        return
 
-    # The other shape keys are relative to the basis, so they have to move with it
-    for other_sk in obj.data.shape_keys.key_blocks:
-        if other_sk.name in (sk.name, "Basis"):
-            continue
-        coords = np.empty(vert_count * 3, dtype=np.float64)
-        other_sk.data.foreach_get("co", coords)
-        other_sk.data.foreach_set("co", coords + offset)
+    # Drivers would overwrite the values set below when the object is evaluated
+    driver_dict = build_driver_dict(obj)
+    values = [(sk, sk.value, sk.mute) for sk in key_blocks]
+    for sk in key_blocks:
+        sk.value = 0
+        sk.mute = False
+
+    visibilities = [(mod, mod.show_viewport) for mod in obj.modifiers]
+    for mod in obj.modifiers:
+        mod.show_viewport = mod in modifiers
+    hidden = obj.hide_get()
+    obj.hide_set(False)
+    try:
+        basis_coords = _evaluated_coords(obj, context)
+        deformed_coords = []
+        for sk in key_blocks:
+            sk.value = 1
+            deformed_coords.append(_evaluated_coords(obj, context))
+            sk.value = 0
+    finally:
+        obj.hide_set(hidden)
+        for mod, show_viewport in visibilities:
+            mod.show_viewport = show_viewport
+
+    obj.data.vertices.foreach_set("co", basis_coords)
+    keys.reference_key.data.foreach_set("co", basis_coords)
+    for sk, coords in zip(key_blocks, deformed_coords):
+        sk.data.foreach_set("co", coords)
+    for sk, value, mute in values:
+        sk.value = value
+        sk.mute = mute
+        if sk.name in driver_dict:
+            human.keys._add_driver(sk, driver_dict[sk.name])
+    for mod in modifiers:
+        obj.modifiers.remove(mod)
+    obj.data.update()
+
+    _bake_live_keys(obj)
+
+
+def _evaluated_coords(obj, context):
+    depsgraph = context.evaluated_depsgraph_get()
+    mesh_eval = obj.evaluated_get(depsgraph).data
+    coords = np.empty(len(mesh_eval.vertices) * 3, dtype=np.float64)
+    mesh_eval.vertices.foreach_get("co", coords)
+    return coords
+
+
+def _can_evaluate(obj, context):
+    """Whether the depsgraph evaluates this object, which it skips when the object
+    is hidden in the viewport or in an excluded collection."""
+    if obj.hide_viewport:
+        return False
+    hidden = obj.hide_get()
+    obj.hide_set(False)
+    try:
+        depsgraph = context.evaluated_depsgraph_get()
+        return obj.evaluated_get(depsgraph).is_evaluated
+    finally:
+        obj.hide_set(hidden)
+
+
+def _is_applied(mod, context):
+    if context.scene.HG3D.process.modapply.apply_hidden:
+        return True
+    return mod.show_render and mod.show_viewport
+
+
+def _bake_live_keys(obj):
+    """Bakes the live keys into the basis, they are not needed on a processed human."""
+    if not obj.data.shape_keys:
+        return
+    for sk in list(obj.data.shape_keys.key_blocks):
+        if sk.name.startswith("LIVE_KEY"):
+            bake_shape_key(sk, obj)
 
 
 def apply_selected_modifiers(modifier_types, obj, context):
     for mod in reversed(obj.modifiers):
         if not mod.type in modifier_types:
             continue
-        if (
-            not mod.show_render or not mod.show_viewport
-        ) and not context.scene.HG3D.process.modapply.apply_hidden:
+        if not _is_applied(mod, context):
             continue
         mod_name = mod.name
         with context_override(context, obj, [obj]):

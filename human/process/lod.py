@@ -149,6 +149,7 @@ class LodSettings:
         decimate_ratio: float = 0.15,
         remove_subdiv: bool = True,
         remove_solidify: bool = True,
+        keep_shape_keys: bool = False,
         context: C = None,
     ) -> None:
         """Set the LOD of the clothing meshes by decimating them.
@@ -157,18 +158,29 @@ class LodSettings:
             decimate_ratio (float): Ratio of decimation. Defaults to 0.15.
             remove_subdiv (bool): Whether to remove subdivision modifiers.
             remove_solidify (bool): Whether to remove solidify modifiers.
+            keep_shape_keys (bool): Decimate the shape keys of the clothing along
+                with the mesh, instead of applying them first. Slower.
         """
+        from HumGen3D.human.process.apply_modifiers import (
+            apply_topology_changing_modifiers,
+        )
+
         clothing_objs = (
             self._human.clothing.outfit.objects + self._human.clothing.footwear.objects
         )
 
         for obj in clothing_objs:
             if decimate_ratio < 1.0:
-                apply_shapekeys(obj)
                 dec_mod = obj.modifiers.new("Decimate", "DECIMATE")
                 dec_mod.ratio = decimate_ratio
-                with context_override(context, obj, [obj]):
-                    bpy.ops.object.modifier_apply(modifier=dec_mod.name)
+                if keep_shape_keys and obj.data.shape_keys:
+                    apply_topology_changing_modifiers(
+                        context, {"DECIMATE"}, obj, self._human
+                    )
+                else:
+                    apply_shapekeys(obj)
+                    with context_override(context, obj, [obj]):
+                        bpy.ops.object.modifier_apply(modifier=dec_mod.name)
 
             for mod in obj.modifiers[:]:
                 if (mod.type == "SUBSURF" and remove_subdiv) or (
