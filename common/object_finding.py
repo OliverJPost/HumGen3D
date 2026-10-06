@@ -4,6 +4,11 @@ from typing import Iterable, Optional, Set
 
 from bpy.types import Object  # type:ignore
 
+# Custom properties on the rig object of humans
+PROCESSED_KEY = "hg_processed"
+HUMAN_ID_KEY = "hg_id"
+ORIGINAL_ID_KEY = "hg_original_id"
+
 
 def is_legacy(obj: Object) -> bool:
     """Check if this object is part of a human created with HG V3 or earlier.
@@ -70,7 +75,9 @@ def find_hg_rig(  # noqa
 
 
 def find_multiple_in_list(objects: Iterable[Object]) -> Set[Object]:
-    """From a list of objects, find rig objects belonging to HG humans (not legacy).
+    """From a list of objects, find rig objects belonging to editable HG humans.
+
+    Legacy humans and processed humans are not included.
 
     Args:
         objects (Iterable[Object]): List of objects to check for if they're part of a
@@ -79,4 +86,49 @@ def find_multiple_in_list(objects: Iterable[Object]) -> Set[Object]:
     Returns:
         Set[Object]: Set of armatures of humans (hg_rig).
     """
-    return {r for r in [find_hg_rig(obj) for obj in objects] if r}
+    rigs = {r for r in [find_hg_rig(obj) for obj in objects] if r}
+    return {rig for rig in rigs if PROCESSED_KEY not in rig}
+
+
+def is_processed(obj: Object) -> bool:
+    """Check if this object is part of a processed human.
+
+    Processed humans are the frozen results of the process system, they can't be
+    edited with Human Generator anymore.
+
+    Args:
+        obj (Object): Blender object to check. Can be any object part of human
+
+    Returns:
+        bool: True if processed human, False if not Human or not processed
+    """
+    rig_obj = find_hg_rig(obj)
+    return bool(rig_obj and PROCESSED_KEY in rig_obj)
+
+
+def find_original_rig(obj: Object, objects: Iterable[Object]) -> Optional[Object]:
+    """Finds the human a processed human was made from.
+
+    Args:
+        obj (Object): Object that is part of the processed human.
+        objects (Iterable[Object]): Objects to search the original human in.
+
+    Returns:
+        Optional[Object]: Armature of the original human, None if this is not a
+            processed human or the original human is not among the objects.
+    """
+    rig_obj = find_hg_rig(obj)
+    original_id = rig_obj.get(ORIGINAL_ID_KEY) if rig_obj else None
+    if not original_id:
+        return None
+
+    return next(
+        (
+            other_obj
+            for other_obj in objects
+            if other_obj.HG.ishuman
+            and other_obj.get(HUMAN_ID_KEY) == original_id
+            and PROCESSED_KEY not in other_obj
+        ),
+        None,
+    )

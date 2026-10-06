@@ -172,3 +172,20 @@ class SAVEOUTFIT_ITEM(bpy.types.PropertyGroup):
     cor_sks_present: bpy.props.BoolProperty(default=False)
     weight_paint_present: bpy.props.BoolProperty(default=False)
     enabled: bpy.props.BoolProperty(default=False)
+
+
+class HG_UL_MULTI_RECIPE(bpy.types.UIList):
+    """UIList showing the recipes to process the humans with."""
+
+    def draw_item(
+        self,
+        context,
+        layout,
+        data,
+        item,
+        icon,
+        active_data,
+        active_propname,
+        index,
+    ):
+        layout.label(text=item.name)

@@ -6,6 +6,7 @@ from HumGen3D.batch_generator.batch_functions import (
     get_batch_marker_list,
     height_from_bell_curve,
 )
+from HumGen3D.common import is_processed
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
@@ -30,6 +31,8 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        if is_processed(context.object):
+            return False
         sett = context.scene.HG3D  # type:ignore[attr-defined]
         return sett.ui.active_tab == "BATCH" and not sett.ui.content_saving
 
