@@ -185,6 +185,7 @@ class BaseHair:
                 density_vertex_groups,
                 strands,
                 context,
+                quality,
             )
 
             if has_cards and quality != "haircap_only":

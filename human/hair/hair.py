@@ -25,10 +25,12 @@ from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
 
 from ..hair.eyebrows import EyebrowSettings
+from .haircap import EYELASH_SEGMENTS, EYELASH_STRIP_TRIS
 from .haircards import FACE_SETTINGS, SCALP_SETTINGS
 
-# Triangles of the haircap of every hair type, measured on the default human
-HAIRCAP_TRIS = {"Scalp": 3400, "Brows": 100, "Eyelashes": 1500, "Beard": 2700}
+# Triangles of the haircap of every hair type, measured on the default human. The
+# eyelashes are for the highest quality, see EYELASH_SEGMENTS.
+HAIRCAP_TRIS = {"Scalp": 3400, "Brows": 100, "Eyelashes": 1536, "Beard": 2700}
 
 
 class HairSettings:
@@ -62,6 +64,9 @@ class HairSettings:
             if cap_type in ("Scalp", "Beard") and quality != "haircap_only":
                 settings = SCALP_SETTINGS if cap_type == "Scalp" else FACE_SETTINGS
                 tris += settings.triangle_budgets[quality]
+            elif cap_type == "Eyelashes":
+                share = EYELASH_SEGMENTS[quality] / max(EYELASH_SEGMENTS.values())
+                tris += int(HAIRCAP_TRIS[cap_type] * share) or EYELASH_STRIP_TRIS
             else:
                 tris += HAIRCAP_TRIS[cap_type]
         return tris

@@ -10,6 +10,7 @@ from mathutils import Euler
 
 from HumGen3D.common.math import create_kdtree
 from HumGen3D.human.hair import hair_binding, haircap, haircards
+from HumGen3D.human.hair.hair import HAIRCAP_TRIS
 from HumGen3D.human.human import Human
 from HumGen3D.tests.test_fixtures import *
 from HumGen3D.tests.test_fixtures import _create_human
@@ -467,14 +468,46 @@ def test_face_rig_shape_keys(bearded_human, context):
             assert all(fcurve.is_valid for fcurve in keys.animation_data.drivers)
 
 
-def test_eyelashes_move_rigidly(long_haired_human, context):
+@pytest.mark.parametrize("quality", ["high", "medium", "low"])
+def test_eyelashes_move_rigidly(long_haired_human, context, quality):
     human = long_haired_human
-    eyelash_obj = human.hair.eyelashes.convert_to_haircards("high", context)
+    eyelash_obj = human.hair.eyelashes.convert_to_haircards(quality, context)
     mesh = eyelash_obj.data
 
     body_vert_idxs = hair_binding.get_attachment(human, mesh)
+    is_strip = haircap.EYELASH_SEGMENTS[quality] == 0
     for polygon in mesh.polygons:
-        assert len(set(body_vert_idxs[list(polygon.vertices)])) == 1
+        # Every card, or every station of a strip, follows one vertex of the body
+        attached_to = set(body_vert_idxs[list(polygon.vertices)])
+        assert len(attached_to) == (2 if is_strip else 1)
+
+
+@pytest.mark.parametrize("quality", CARD_QUALITIES + ["haircap_only"])
+def test_eyelash_quality(long_haired_human, context, quality):
+    human = long_haired_human
+    high_tris = HAIRCAP_TRIS["Eyelashes"]
+    segments = haircap.EYELASH_SEGMENTS[quality]
+
+    eyelash_obj = human.hair.eyelashes.convert_to_haircards(quality, context)
+
+    # Lower qualities merge the segments of the lashes or replace the lashes by a
+    # strip along the eyelids, the texture runs from the root to the tip either way
+    mesh = eyelash_obj.data
+    if segments:
+        assert _triangle_count(eyelash_obj) == high_tris * segments // 4
+    else:
+        assert 40 < _triangle_count(eyelash_obj) <= haircap.EYELASH_STRIP_TRIS
+    assert all(len(polygon.vertices) == 4 for polygon in mesh.polygons)
+    uvs = np.empty(len(mesh.loops) * 2, dtype=np.float32)
+    mesh.uv_layers.active.data.foreach_get("uv", uvs)
+    assert np.ptp(uvs.reshape((-1, 2)), axis=0).min() > 0.1
+    assert all(len(vert.groups) >= 1 for vert in mesh.vertices)
+    all_verts = np.ones(len(mesh.vertices), dtype=bool)
+    assert _max_distance_to_body(human, eyelash_obj, all_verts, context) < 0.01
+    # The lashes of both eyes are there
+    coords = _evaluated_world_coords(eyelash_obj, context)
+    assert (coords[:, 0] < -0.02).any() and (coords[:, 0] > 0.02).any()
+    assert np.ptp(coords[:, 2]) > 0.015
 
 
 def test_height_change_moves_haircards(long_haired_human, context):
