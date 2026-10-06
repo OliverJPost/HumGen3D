@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from typing import Optional
 
 import bpy
 from HumGen3D.common import find_multiple_in_list
@@ -20,26 +21,21 @@ class ProcessPanel(HGPanel):
     bl_parent_id = "HG_PT_PROCESS"
     bl_options = {"DEFAULT_CLOSED"}
     icon_name: str
-
-    @property
-    def enabled_propname(self):
-        raise NotImplementedError(
-            f"{self.__class__.__name__} must implement enabled propname"
-        )
-
-    @property
-    def help_url(self):
-        raise NotImplementedError(f"{self.__class__.__name__} must implement help_url")
+    # Sections without this are always applied when processing
+    enabled_propname: Optional[str] = None
+    help_url: Optional[str] = None
 
     @classmethod
     def poll(cls, context):
+        if context.scene.HG3D.process.mode != "recipe":
+            return False
         return find_multiple_in_list(context.selected_objects)
 
     def draw_header(self, context):
         is_trial = get_prefs().is_trial
         self.layout.enabled = not is_trial
 
-        if hasattr(self, "enabled_propname"):
+        if self.enabled_propname:
             self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
 
         icon_name = self.icon_name
@@ -109,6 +105,16 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
 
         col.separator()
 
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.prop(process_sett, "mode", expand=True)
+
+        col.separator()
+
+        if process_sett.mode == "multi_recipe":
+            self._draw_multi_recipe_list(col, process_sett)
+            return
+
         col = col.column(align=True)
         row = col.row(align=True)
         row.scale_y = 1.5
@@ -151,9 +157,35 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             )
 
 
+    @staticmethod
+    def _draw_multi_recipe_list(layout, process_sett):
+        row = layout.row()
+        row.template_list(
+            "HG_UL_MULTI_RECIPE",
+            "",
+            process_sett,
+            "multi_recipes",
+            process_sett,
+            "multi_recipes_index",
+            rows=4,
+        )
+        # Placeholder until recipes can be added to the list
+        button_col = row.column()
+        button_col.enabled = False
+        button_col.label(text="", icon="ADD")
+
+        draw_paragraph(
+            layout,
+            "Processing with multiple recipes at once is not available yet.",
+            alignment="CENTER",
+            enabled=False,
+        )
+
+
 class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BAKE"
     bl_label = "Bake Textures"
+    bl_order = 4
     icon_name = "RENDERLAYERS"
     enabled_propname = "baking_enabled"
     help_url = "baking"
@@ -226,6 +258,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
 class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MODAPPLY"
     bl_label = "Apply Modifiers"
+    bl_order = 5
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
     help_url = "modapply"
@@ -269,9 +302,10 @@ class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
         col.prop(sett.process.modapply, "apply_hidden", text="Apply hidden modifiers")
 
 
-class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_LOD"
-    bl_label = "Levels of Detail"
+class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_MESHES"
+    bl_label = "Optimize Meshes"
+    bl_order = 0
     icon_name = "NORMALS_VERTEX"
     enabled_propname = "lod_enabled"
     help_url = "lod"
@@ -294,7 +328,7 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
 
         lod_sett = context.scene.HG3D.process.lod
 
-        self.draw_subtitle("Body LOD", col, icon=get_hg_icon("body"), alignment="LEFT")
+        self.draw_subtitle("Body", col, icon=get_hg_icon("body"), alignment="LEFT")
         col.prop(lod_sett, "body_lod", text="")
 
         col.separator()
@@ -305,10 +339,19 @@ class HG_PT_LOD(ProcessPanel, bpy.types.Panel):
         col.prop(lod_sett, "remove_clothing_subdiv", text="Remove clothing subdiv")
         col.prop(lod_sett, "remove_clothing_solidify", text="Remove clothing solidify")
 
+        col.separator()
+        self.draw_subtitle("Eyes", col, icon=get_hg_icon("eyes"), alignment="LEFT")
+        col.prop(lod_sett, "eyes", text="")
+
+        col.separator()
+        self.draw_subtitle("Teeth", col, icon=get_hg_icon("face"), alignment="LEFT")
+        col.prop(lod_sett, "teeth", text="")
+
 
 class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_HAIRCARDS"
-    bl_label = "Haircards"
+    bl_label = "Generate Haircards"
+    bl_order = 1
     icon_name = "hair"
     enabled_propname = "haircards_enabled"
     help_url = "haircards"
@@ -339,62 +382,33 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         draw_paragraph(self.layout, text=message, enabled=False)
 
 
-class HG_PT_GAME_EYES(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_GAME_EYES"
-    bl_label = "Game Eyes"
-    icon_name = "HIDE_OFF"
-    enabled_propname = "game_eyes_enabled"
-    forbidden_propname = "has_game_eyes"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        human = Human.from_existing(context.object)
-        if human.process.has_game_eyes:
-            self.layout.alert = True
-            self.layout.label(text="Eyes are already game eyes!")
-            return
-
-        col = self.layout.column()
-        col.scale_y = 1.5
-        col.prop(context.scene.HG3D.process.game_eyes, "detail")
-
-        message = (
-            "Replaces the layered eyes by lightweight eyes with a single opaque"
-            + " material, as game engines can't show the transparent outer layer."
-        )
-        draw_paragraph(self.layout, text=message, enabled=False)
-
-
-class HG_PT_REST_POSE(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_REST_POSE"
-    bl_label = "T-Pose Rest Pose"
-    icon_name = "ARMATURE_DATA"
-    enabled_propname = "rest_pose_enabled"
-    forbidden_propname = "has_t_pose_rest"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        human = Human.from_existing(context.object)
-        if human.process.has_t_pose_rest:
-            self.layout.alert = True
-            self.layout.label(text="Rest pose is already a T-pose!")
-            return
-        if human.pose.rigify.is_rigify:
-            self.layout.alert = True
-            self.layout.label(text="Not available for Rigify humans.")
-            return
-
-        message = (
-            "Makes the T-pose the rest pose of the armature and meshes, as"
-            + " expected by most game engines and retargeting tools. The current"
-            + " pose is discarded."
-        )
-        draw_paragraph(self.layout, text=message, enabled=False)
-
-
 class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RIG"
+    bl_label = "Rig"
+    bl_order = 2
+    icon_name = "ARMATURE_DATA"
+
+    def draw(self, context):
+        human = Human.from_existing(context.object)
+        is_rigify = human.pose.rigify.is_rigify
+
+        col = self.layout.column()
+        self.draw_subtitle("Rest pose", col, alignment="LEFT")
+        row = col.row(align=True)
+        row.scale_y = 1.5
+        row.enabled = not is_rigify
+        row.prop(context.scene.HG3D.process, "rest_pose", expand=True)
+
+        if is_rigify:
+            draw_paragraph(
+                col, text="T-pose is not available for Rigify humans.", enabled=False
+            )
+
+
+class HG_PT_BONE_RENAMING(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_BONE_RENAMING"
     bl_label = "Bone Renaming"
+    bl_order = 3
     icon_name = "MOD_ARMATURE"
     enabled_propname = "rig_renaming_enabled"
     help_url = "bonerename"
@@ -445,6 +459,7 @@ def create_disabled_row(layout, text):
 class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RENAMING"
     bl_label = "Other Renaming"
+    bl_order = 6
     icon_name = "OUTLINER_OB_FONT"
     enabled_propname = "renaming_enabled"
     help_url = "otherrename"
@@ -508,6 +523,7 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
 class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_SCRIPTS"
     bl_label = "Custom scripts"
+    bl_order = 7
     icon_name = "FILE_SCRIPT"
     enabled_propname = "scripting_enabled"
     help_url = "scripts"
@@ -568,6 +584,7 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
+    bl_order = 8
 
     def draw(self, context):
         box = self.layout.box()
@@ -578,6 +595,10 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
         pr_sett = sett.process
 
         self.draw_subtitle("Output", box, icon="SETTINGS")
+
+        row = box.row(align=True)
+        row.scale_y = 1.5
+        row.prop(pr_sett, "output", expand=True)
 
         if pr_sett.baking_enabled or pr_sett.output == "export":
             col = box.column(align=True)
@@ -599,77 +620,17 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
             row.alignment = "RIGHT"
             row.label(text="HG folder when empty", icon="INFO")
 
-        col = box.column(align=True)
-        row = col.row(align=True)
-        row.scale_y = 1.5
-        row.prop(pr_sett, "output", text="")
-        row = col.row(align=True)
+        row = box.row(align=True)
         row.scale_y = 1.5
         row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
 
-        human = Human.from_existing(context.object)
+        draw_paragraph(
+            box,
+            text="The result is a processed copy that can't be edited with Human"
+            " Generator. The original human is not changed.",
+            enabled=False,
+        )
+
         self.layout.operator(
             "wm.url_open", text="Process Guide", icon="URL", emboss=False
         ).url = "https://help.humgen3d.com/process/overview"
-        self.draw_warning_labels(pr_sett, human)
-
-    def draw_warning_labels(self, pr_sett, human):
-        col = self.layout.column()
-        col.alert = True
-
-        if pr_sett.haircards_enabled:
-            draw_paragraph(
-                col,
-                text="After adding haircards, you can't change the hair style anymore.",
-            )
-
-        if pr_sett.baking_enabled:
-            draw_paragraph(
-                col,
-                text="Baking is enabled. This will take a long time."
-                "Also, you won't be able to change the material settings"
-                " anymore.",
-            )
-
-        if pr_sett.lod_enabled:
-            draw_paragraph(
-                col,
-                text="LOD is enabled. Many features won't work anymore."
-                "For example, you can't change the height, proportions, add hair, etc.",
-            )
-
-        if pr_sett.game_eyes_enabled and pr_sett.output == "replace":
-            draw_paragraph(
-                col,
-                text="Game eyes are enabled. You won't be able to change the"
-                " height or proportions of the human anymore.",
-            )
-
-        if pr_sett.rest_pose_enabled:
-            draw_paragraph(
-                col,
-                text="T-pose rest pose is enabled. This removes the shoulder side"
-                " raise corrective shape keys of the human.",
-            )
-            if pr_sett.output == "replace":
-                draw_paragraph(
-                    col,
-                    text="Many features won't work anymore on a human with a"
-                    " T-pose rest pose. For example, you can't change the pose,"
-                    " height, proportions or clothing.",
-                )
-
-        if pr_sett.rig_renaming_enabled:
-            draw_paragraph(
-                col,
-                text="Rig renaming is enabled. You won't be able to"
-                " change the height of the human anymore.",
-            )
-
-        if pr_sett.scripting_enabled:
-            draw_paragraph(
-                col,
-                text="Custom scripts are enabled. These may cause"
-                " certain Human Generator features to not work anymore"
-                " after processing this human.",
-            )

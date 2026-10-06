@@ -4,11 +4,17 @@
 import builtins
 import json
 import os
+import uuid
 from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
 
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.common.decorators import injected_context
+from HumGen3D.common.object_finding import (
+    HUMAN_ID_KEY,
+    ORIGINAL_ID_KEY,
+    PROCESSED_KEY,
+)
 from HumGen3D.common.type_aliases import C
 
 from .lod import LodSettings
@@ -187,6 +193,35 @@ class ProcessSettings:
         """
         convert_to_game_eyes(self._human, detail)
 
+    @property
+    def is_processed(self) -> bool:
+        """Checks if this human is a frozen result of the process system.
+
+        Returns:
+            bool: True if the human is a processed human.
+        """
+        return PROCESSED_KEY in self._human.objects.rig
+
+    def mark_as_processed(self, original_human: "Human") -> None:
+        """Marks this human as the frozen, processed result of another human.
+
+        The Human Generator interface doesn't allow editing processed humans, it
+        refers to the original human instead.
+
+        Args:
+            original_human (Human): The editable human this human was made from.
+        """
+        original_rig = original_human.objects.rig
+        if HUMAN_ID_KEY not in original_rig:
+            original_rig[HUMAN_ID_KEY] = uuid.uuid4().hex
+
+        rig = self._human.objects.rig
+        rig[ORIGINAL_ID_KEY] = original_rig[HUMAN_ID_KEY]
+        rig[PROCESSED_KEY] = True
+        # Copied along when this human was duplicated from the original
+        if HUMAN_ID_KEY in rig:
+            del rig[HUMAN_ID_KEY]
+
     def rename_bones_from_json(
         self, json_string: Optional[str] = None, json_path: Optional[str] = None
     ) -> None:
@@ -357,6 +392,7 @@ class ProcessSettings:
             "bake_file_type": pr_sett.baking.file_type,
             "export_file_type": pr_sett.file_type,
             "output_type": pr_sett.output,
+            "rest_pose": pr_sett.rest_pose,
         }
         if pr_sett.baking_enabled:
             settings_dict["baking"] = ProcessSettings._props_from_propgroup(
@@ -380,14 +416,6 @@ class ProcessSettings:
             settings_dict["material_renaming"] = ProcessSettings._props_from_propgroup(
                 pr_sett.renaming.materials
             )
-
-        if pr_sett.game_eyes_enabled:
-            settings_dict["game_eyes"] = ProcessSettings._props_from_propgroup(
-                pr_sett.game_eyes
-            )
-
-        if pr_sett.rest_pose_enabled:
-            settings_dict["rest_pose"] = {}
 
         if pr_sett.modapply_enabled:
             settings_dict["modapply"] = ProcessSettings._props_from_propgroup(
@@ -458,10 +486,19 @@ class ProcessSettings:
         for prop in pr_sett.bl_rna.properties:
             if "_enabled" in prop.identifier:
                 setattr(pr_sett, prop.identifier, False)
+        pr_sett.property_unset("rest_pose")
 
         for attr, prop_dict in data.items():
             if attr in ("material_renaming", "main"):
                 continue
+            # Older recipes enabled the T-pose with a category of its own
+            if attr == "rest_pose":
+                pr_sett.rest_pose = "t_pose"
+                continue
+            # Older recipes could not change the eyes and teeth
+            if attr == "lod":
+                pr_sett.lod.eyes = "original"
+                pr_sett.lod.teeth = "0"
 
             # Set enabled = True because attr being in the dict means it was enabled
             setattr(pr_sett, f"{attr}_enabled", True)
@@ -476,16 +513,25 @@ class ProcessSettings:
                     data, pr_sett, prop_dict, prop_group
                 )
 
-        main_data = data.get("main")
-        pr_sett.baking.file_type = main_data["bake_file_type"]
-        pr_sett.output = main_data["output_type"]
-        pr_sett.file_type = main_data["export_file_type"]
+        main_data = data.get("main", {})
+        if "bake_file_type" in main_data:
+            pr_sett.baking.file_type = main_data["bake_file_type"]
+        if "export_file_type" in main_data:
+            # Older recipes have the file type without the leading dot
+            pr_sett.file_type = "." + main_data["export_file_type"].lstrip(".")
+        if "rest_pose" in main_data:
+            pr_sett.rest_pose = main_data["rest_pose"]
+        # Older recipes could also replace or duplicate the human in the file
+        is_export = main_data.get("output_type") == "export"
+        pr_sett.output = "export" if is_export else "in_file"
 
         # Disable all categories for default settings template
         if "Default Settings" in template_path:
             for prop in pr_sett.bl_rna.properties:
                 if "_enabled" in prop.identifier:
                     setattr(pr_sett, prop.identifier, False)
+            pr_sett.lod.property_unset("eyes")
+            pr_sett.lod.property_unset("teeth")
 
     @staticmethod
     def add_props_from_dict(data, pr_sett, prop_dict, prop_group):

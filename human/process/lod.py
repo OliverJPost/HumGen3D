@@ -16,19 +16,29 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 
+# Decimate ratios for the gums and tongue, the front teeth and the molars. The molars
+# have the least geometry to start with, the gums are the least detailed.
+TEETH_DECIMATE_RATIOS = {1: (0.25, 0.3, 0.5), 2: (0.15, 0.2, 0.35)}
+# Triangle counts that tell the parts of the teeth meshes apart
+GUMS_MIN_TRIS = 1000
+FRONT_TEETH_MIN_TRIS = 300
+
+
 class LodSettings:
     """Has methods for setting LODs for the meshes of a human."""
 
     def __init__(self, _human: "Human") -> None:
         self._human = _human
 
-    def set_body_lod(self, lod: Literal[0, 1, 2]) -> None:
+    @injected_context
+    def set_body_lod(self, lod: Literal[0, 1, 2], context: C = None) -> None:
         """Set the LOD of the body mesh.
 
         Args:
             lod (Literal[0, 1, 2]): LOD to set the body mesh to. 0 means no difference,
                 1 means lower polycount in the face and 2 means lower polycount in the
                 whole body.
+            context (C): Blender context. bpy.context if not provided.
 
         Raises:
             ValueError: If you pass a LOD value higher than the one the human currently
@@ -43,7 +53,7 @@ class LodSettings:
                     + f"[{current_lod}] LOD level."
                 )
             )
-        self._human.hair.set_connected(False)
+        self._human.hair.set_connected(False, context)
         bm = bmesh.new()  # type:ignore[call-arg]
         bm.from_mesh(body_obj.data)
 
@@ -68,7 +78,7 @@ class LodSettings:
         bm.to_mesh(body_obj.data)
         bm.free()
         body_obj["hg_lod"] = lod
-        self._human.hair.set_connected(True)
+        self._human.hair.set_connected(True, context)
 
     @injected_context
     def set_clothing_lod(
@@ -102,3 +112,93 @@ class LodSettings:
                     mod.type == "SOLIDIFY" and remove_solidify
                 ):
                     obj.modifiers.remove(mod)
+
+    @injected_context
+    def set_teeth_lod(self, lod: Literal[0, 1, 2], context: C = None) -> None:
+        """Set the LOD of the teeth meshes by decimating them.
+
+        The gums, front teeth and molars are decimated separately, so every tooth
+        keeps its shape. The shape keys of the tongue are kept.
+
+        Args:
+            lod (Literal[0, 1, 2]): LOD to set the teeth to. 0 means no difference,
+                1 leaves about 4,600 triangles and 2 about 3,300.
+            context (C): Blender context. bpy.context if not provided.
+
+        Raises:
+            ValueError: If the teeth already have a lower level of detail, as they
+                can only be decimated from their original resolution.
+        """
+        teeth_objs = (self._human.objects.upper_teeth, self._human.objects.lower_teeth)
+        if any(obj.get("hg_lod") for obj in teeth_objs):
+            raise ValueError("The teeth already have a lower level of detail.")
+        if lod == 0:
+            return
+
+        old_active = context.view_layer.objects.active
+        old_selected = context.selected_objects
+        for obj in old_selected:
+            obj.select_set(False)
+
+        for obj in teeth_objs:
+            obj.select_set(True)
+            context.view_layer.objects.active = obj
+            _decimate_teeth(obj, TEETH_DECIMATE_RATIOS[lod])
+            obj.select_set(False)
+            obj["hg_lod"] = lod
+
+        for obj in old_selected:
+            obj.select_set(True)
+        context.view_layer.objects.active = old_active
+
+
+def _decimate_teeth(obj: bpy.types.Object, ratios: tuple[float, float, float]) -> None:
+    gums_ratio, front_teeth_ratio, molars_ratio = ratios
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_mode(type="FACE")
+
+    # Smallest parts first, so the other parts still have their original size
+    for min_tris, max_tris, ratio in (
+        (0, FRONT_TEETH_MIN_TRIS, molars_ratio),
+        (FRONT_TEETH_MIN_TRIS, GUMS_MIN_TRIS, front_teeth_ratio),
+        (GUMS_MIN_TRIS, float("inf"), gums_ratio),
+    ):
+        bpy.ops.mesh.select_all(action="DESELECT")
+        bm = bmesh.from_edit_mesh(obj.data)
+        for island in _get_face_islands(bm):
+            tris_count = sum(len(face.verts) - 2 for face in island)
+            if min_tris <= tris_count < max_tris:
+                for face in island:
+                    face.select_set(True)
+        bmesh.update_edit_mesh(obj.data)
+        # Works in edit mode because that keeps the shape keys, unlike the modifier
+        bpy.ops.mesh.decimate(ratio=ratio)
+
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    # The custom normals don't match the changed topology
+    custom_normals = obj.data.attributes.get("custom_normal")
+    if custom_normals:
+        obj.data.attributes.remove(custom_normals)
+
+
+def _get_face_islands(bm: bmesh.types.BMesh) -> list[list[bmesh.types.BMFace]]:
+    islands = []
+    visited = set()
+    for start_face in bm.faces:
+        if start_face in visited:
+            continue
+        visited.add(start_face)
+        island = []
+        stack = [start_face]
+        while stack:
+            face = stack.pop()
+            island.append(face)
+            for vert in face.verts:
+                for other_face in vert.link_faces:
+                    if other_face not in visited:
+                        visited.add(other_face)
+                        stack.append(other_face)
+        islands.append(island)
+
+    return islands

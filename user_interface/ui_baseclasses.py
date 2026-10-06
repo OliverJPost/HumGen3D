@@ -9,7 +9,7 @@ import bpy
 from HumGen3D import HumGenException, __version__
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import active_phase_enum
-from HumGen3D.common import is_legacy
+from HumGen3D.common import is_legacy, is_processed
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -101,8 +101,15 @@ class HGPanel:
     def poll(cls, context):
         filepath_error = False
         human_is_legacy = is_legacy(context.object)
+        # Processed humans have a panel of their own
+        human_is_processed = is_processed(context.object)
         content_saving_ui = context.scene.HG3D.custom_content.content_saving_ui
-        return not human_is_legacy and not filepath_error and not content_saving_ui
+        return (
+            not human_is_legacy
+            and not human_is_processed
+            and not filepath_error
+            and not content_saving_ui
+        )
 
     def draw(self, context):
         raise NotImplementedError
