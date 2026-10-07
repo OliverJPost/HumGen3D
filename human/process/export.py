@@ -126,6 +126,8 @@ class ExportBuilder:
             axis_up=axis_up,
             axis_forward=axis_forward,
             add_leaf_bones=use_leaf_bones,
+            # Only export the animation of this human, not of all humans in the file
+            bake_anim_use_all_actions=False,
         )
 
     @exporter

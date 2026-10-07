@@ -35,6 +35,7 @@ class HG_RANDOM_CHOICE(bpy.types.Operator):
 
         if pcoll_name in (
             "pose",
+            "animation",
             "expression",
         ):
             getattr(human, pcoll_name).set_random(update_ui=True)
