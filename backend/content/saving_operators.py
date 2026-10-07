@@ -4,16 +4,22 @@ import os
 import platform
 import re
 import subprocess
+import time
 
 import bpy
 import numpy as np
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
+from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.common import find_hg_rig
 from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import update_livekey_collection
-from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
+from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.user_interface.content_panel.operators import (
+    refresh_hair_ul,
+    refresh_outfit_ul,
+)
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
 from .possible_content import find_possible_content
@@ -36,10 +42,12 @@ class HG_OT_START_SAVING_PROCESS(bpy.types.Operator):
         cc_sett.content_saving_type = self.category
         if self.category == "key":
             cc_sett.key.key_to_save = self.key_name
-        elif self.category == "hair":
-            refresh_hair_ul(self, context)
         cc_sett.content_saving_tab_index = 0
         cc_sett.content_saving_active_human = find_hg_rig(context.object)
+        if self.category == "hair":
+            refresh_hair_ul(self, context)
+        elif self.category in ("outfit", "footwear"):
+            refresh_outfit_ul(context, self.category)
         return {"FINISHED"}
 
 
@@ -107,7 +115,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             as_livekey = key_category != "expressions"
             delete_original = as_livekey and cc_sett.key.delete_original
             pattern = re.compile(
-                "^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
+                r"^((?P<category>[^_])[_\{])?((?P<subcategory>.+)\}_)?(?P<name>.*)"  # noqa
             )
             match = pattern.match(key_to_save)
             hg_name = match.groupdict().get("name")
@@ -141,6 +149,15 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             getattr(human.hair, attr).refresh_pcoll(context)
         elif category in ("outfit", "footwear"):
             category_sett = getattr(cc_sett, category)
+            enabled = {i.obj_name for i in context.scene.saveoutfit_col if i.enabled}
+            objects = [
+                obj
+                for obj in getattr(human.clothing, category).objects
+                if obj.name in enabled
+            ]
+            if not objects:
+                ShowMessageBox("No objects selected to save.", title="HG Clothing")
+                return {"CANCELLED"}
             getattr(human.clothing, category).save_to_library(
                 category_sett.name,
                 for_male=category_sett.save_for_male,
@@ -148,6 +165,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
                 open_when_finished=cc_sett.open_when_finished,
                 category=subcategory,
                 thumbnail=thumbnail,
+                objects=objects,
                 context=context,
             )
             getattr(human.clothing, category).refresh_pcoll(context)
@@ -161,7 +179,7 @@ class HG_OT_SAVE_TO_LIBRARY(bpy.types.Operator):
             human.skin.texture.refresh_pcoll(context)
 
         cc_sett.content_saving_ui = False
-        ShowMessageBox("Succesfully saved!", title="HG Content Saving")
+        ShowMessageBox("Successfully saved!", title="HG Content Saving")
         return {"FINISHED"}
 
 
@@ -169,7 +187,6 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
     bl_idname = "hg3d.add_obj_to_outfit"
     bl_label = "Add object to outfit"
     bl_description = "Add object to outfit"
-    bl_options = {"UNDO"}
 
     cloth_type: EnumProperty(
         items=[
@@ -189,13 +206,20 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
 
     def invoke(self, context, event):
         cloth_object = context.object
-        self.human = get_human_from_distance(cloth_object)
-        if not self.human:
-            if cloth_object.parent:
-                self.human = Human.from_existing(cloth_object.parent)
-            else:
+        try:
+            self.human = get_human_from_distance(cloth_object)
+        except HumGenException as e:
+            # A parent human wins over the distance check
+            self.human = (
+                Human.from_existing(cloth_object.parent, strict_check=False)
+                if cloth_object.parent
+                else None
+            )
+            if not self.human:
                 ShowMessageBox(
-                    "Clothing object is too far from any human, make sure it's on a human. Is this message incorrect? Manually parent it to a human rig."
+                    f"{e} Make sure the object sits on a human. Is this message "
+                    "incorrect? Manually parent the object to a human rig.",
+                    title="HG Clothing",
                 )
                 return {"CANCELLED"}
 
@@ -220,6 +244,11 @@ class HG_OT_ADD_OBJ_TO_OUTFIT(bpy.types.Operator):
             col = self.layout.column()
             col.label(text="Valid weights found.")
             col.prop(self, "override_weights", text="Recalculate weights")
+
+        col = self.layout.column()
+        col.scale_y = 0.8
+        col.label(text="Converting takes a few seconds, up to about a minute for")
+        col.label(text="dense meshes. The status bar shows the progress.")
 
     def _draw_info_labels(self, context, obj):
         if "hg_body" in obj:
@@ -264,27 +293,116 @@ Press ESC to cancel.
                 )
 
     def execute(self, context):
-        cloth_obj = context.object
-
         recalculate_weights = not self.has_valid_vertex_groups or self.override_weights
+        # The conversion runs as a modal operator so the interface stays alive
+        # and shows progress. A dialog operator cannot become modal itself.
+        bpy.ops.hg3d.convert_to_clothing(
+            "INVOKE_DEFAULT",
+            rig_name=self.human.objects.rig.name,
+            cloth_type=self.cloth_type,
+            recalculate_weights=recalculate_weights,
+        )
+        return {"FINISHED"}
 
-        if self.cloth_type == "footwear":
-            solver = self.human.clothing.footwear.add_obj(
-                cloth_obj, recalculate_weights, context
-            )
-        else:
-            solver = self.human.clothing.outfit.add_obj(
-                cloth_obj, self.cloth_type, recalculate_weights, context
-            )
 
+class HG_OT_CONVERT_TO_CLOTHING(bpy.types.Operator):
+    """Convert the active object to clothing of a human, with a progress bar.
+
+    The conversion is done in short steps on a timer, in between Blender keeps
+    responding and redraws the progress bar in the status bar. Esc cancels, the
+    object is not changed until the conversion is complete.
+    """
+
+    bl_idname = "hg3d.convert_to_clothing"
+    bl_label = "Convert to clothing"
+    bl_description = "Weight paint the object and add corrective shape keys"
+    bl_options = {"UNDO", "INTERNAL"}
+
+    rig_name: StringProperty()
+    cloth_type: StringProperty(default="torso")
+    recalculate_weights: BoolProperty(default=True)
+
+    # Work per timer tick. Long enough to get work done, short enough to keep
+    # the interface fluid.
+    _budget = 0.05
+
+    def invoke(self, context, event):
+        self.cloth_obj = context.object
+        self.human = Human.from_existing(bpy.data.objects[self.rig_name])
+        settings = (
+            self.human.clothing.footwear
+            if self.cloth_type == "footwear"
+            else self.human.clothing.outfit
+        )
+        self._steps = settings.add_obj_steps(
+            self.cloth_obj, self.cloth_type, self.recalculate_weights, context
+        )
+        self._fraction = 0.0
+        self._started = time.monotonic()
+
+        # Blender installs this as the draw function of the status bar header,
+        # which has to be a plain function, not a method of this operator.
+        operator = self
+
+        def draw_status(header, context):
+            operator._draw_status(header.layout)
+
+        self._draw_fn = draw_status
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(0.02, window=context.window)
+        wm.modal_handler_add(self)
+        context.workspace.status_text_set(self._draw_fn)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context, event):
+        if event.type == "ESC":
+            self._finish(context)
+            self.report({"INFO"}, "Converting to clothing cancelled")
+            return {"CANCELLED"}
+        if event.type != "TIMER":
+            return {"PASS_THROUGH"}
+
+        deadline = time.monotonic() + self._budget
+        try:
+            while time.monotonic() < deadline:
+                self._fraction = max(self._fraction, next(self._steps))
+        except StopIteration as finished:
+            self._finish(context)
+            self._report_result(context, finished.value)
+            return {"FINISHED"}
+        except Exception as e:  # noqa: BLE001
+            self._finish(context)
+            self.report({"ERROR"}, f"Converting to clothing failed: {e}")
+            return {"CANCELLED"}
+        # Redraw, so the status bar shows the new value
+        context.workspace.status_text_set(self._draw_fn)
+        return {"RUNNING_MODAL"}
+
+    def _draw_status(self, layout):
+        layout.separator_spacer()
+        row = layout.row(align=True)
+        row.ui_units_x = 16
+        row.progress(
+            text=f"Converting {self.cloth_obj.name} to clothing: {self._fraction:.0%}",
+            factor=self._fraction,
+            type="BAR",
+        )
+        layout.label(text="Esc to cancel")
+        layout.separator_spacer()
+
+    def _finish(self, context):
+        self._steps.close()
+        context.window_manager.event_timer_remove(self._timer)
+        context.workspace.status_text_set(None)
+
+    def _report_result(self, context, solver):
+        seconds = time.monotonic() - self._started
+        hg_log(f"Converted {self.cloth_obj.name} in {seconds:.1f}s", level="DEBUG")
         find_possible_content(context)
-
-        message = "Succesfully added weight painting and corrective shape keys! This is now a valid clothing object. Save it to the library in the panel below."
+        message = "Successfully added weight painting and corrective shape keys! This is now a valid clothing object. Save it to the library in the panel below."
         if solver == "closest_point":
             message += " NOTE: Automatic weight painting could not be fully solved for this mesh, check the weights before saving."
         ShowMessageBox(message, title="HG Clothing")
-
-        return {"FINISHED"}
 
 
 class HG_OT_SAVE_SK(bpy.types.Operator):
@@ -327,6 +445,7 @@ class HG_OT_SAVE_SK(bpy.types.Operator):
         key.save_to_library(
             as_livekey=self.save_type == "livekey", delete_original=delete_original
         )
+        return {"FINISHED"}
 
 
 class HG_OT_OPEN_FOLDER(bpy.types.Operator):

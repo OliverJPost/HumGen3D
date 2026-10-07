@@ -2,7 +2,7 @@
 
 """Module containing ClothingSettings class for adding/modifying human's clothing."""
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Callable, Literal, Optional
 
 import bpy
 from HumGen3D.common.type_aliases import C
@@ -48,6 +48,7 @@ class OutfitSettings(BaseClothing):
         cloth_type: Literal["pants", "torso", "full"],
         recalculate_weights=True,
         context: C = None,
+        progress: Optional[Callable[[float], None]] = None,
     ) -> str:
         """Add an object you created yourself as footwear to this human.
 
@@ -60,9 +61,13 @@ class OutfitSettings(BaseClothing):
             recalculate_weights (bool): Whether to recalculate weights of the
                 vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
+            progress (Callable[[float], None]): Called with a fraction from 0 to 1
+                as the conversion advances, for a progress indicator.
 
         Returns:
             str: How the weights were computed. "closest_point" means the weight
                 solver failed and the weights will need manual cleanup.
         """
-        return super().add_obj(cloth_obj, cloth_type, recalculate_weights, context)
+        return super().add_obj(
+            cloth_obj, cloth_type, recalculate_weights, context, progress
+        )

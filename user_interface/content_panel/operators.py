@@ -4,6 +4,7 @@ import os
 import bpy
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.human.clothing.saving import has_deform_weights
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.documentation.feedback_func import show_message
 from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
@@ -78,6 +79,38 @@ def refresh_hair_ul(self, context):
 
         if ps.name in previously_enabled_items:
             item.enabled = True
+
+
+def refresh_outfit_ul(context, category=None):
+    """Fill the list of clothing objects the user can pick from when saving.
+
+    Args:
+        context (Context): Blender context.
+        category (str): "outfit" or "footwear". Defaults to the type of content
+            being saved.
+    """
+    cc_sett = context.scene.HG3D.custom_content
+    col = context.scene.saveoutfit_col
+    category = category or cc_sett.content_saving_type
+
+    previously_listed = {i.obj_name: i.enabled for i in col}
+    col.clear()
+
+    hg_rig = cc_sett.content_saving_active_human
+    if not hg_rig or category not in ("outfit", "footwear"):
+        return
+    human = Human.from_existing(hg_rig)
+
+    for obj in getattr(human.clothing, category).objects:
+        item = col.add()
+        item.obj_name = obj.name
+        # Everything is saved unless the user deselected it before
+        item.enabled = previously_listed.get(obj.name, True)
+        keys = obj.data.shape_keys
+        item.cor_sks_present = bool(keys) and any(
+            key.name.startswith("cor_") for key in keys.key_blocks
+        )
+        item.weight_paint_present = has_deform_weights(obj, hg_rig)
 
 
 class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):

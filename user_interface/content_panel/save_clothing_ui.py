@@ -28,16 +28,18 @@ def _draw_clothing_gender_ui(context, layout, content_type):
     _draw_next_button(layout, poll=poll)
 
 
-def _draw_clothing_uilist_ui(context, layout):
+def _draw_clothing_uilist_ui(context, layout, content_type):
     """Draws a UIList tab for selecting clothing items to be saved for this clothing.
 
     Args:
         context (context): bl context
         layout (UIlayout): layout to draw tab in
+        content_type (str): "outfit" or "footwear"
     """
+    what = "this outfit" if content_type == "outfit" else "this footwear"
     _draw_header_box(
         layout,
-        "Select which objects are \npart of this outfit.",
+        f"Select which objects are \npart of {what}.",
         "MOD_CLOTH",
     )
 

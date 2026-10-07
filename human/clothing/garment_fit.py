@@ -18,12 +18,13 @@ Clothing objects can steer the fit with:
 
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
 
 import bpy
 import numpy as np
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.geometry import world_coords_from_obj
+from HumGen3D.common.progress import Steps, phase, run
 from HumGen3D.common.surface import (
     edges_from_tris,
     make_bvh,
@@ -39,7 +40,7 @@ from HumGen3D.human.clothing.fitting import (
     vertex_covariance,
 )
 from HumGen3D.human.clothing.skinning import skin_matrices, unskin
-from HumGen3D.human.clothing.weights import transfer_weights
+from HumGen3D.human.clothing.weights import transfer_weights_steps
 from mathutils.bvhtree import BVHTree
 
 if TYPE_CHECKING:
@@ -250,12 +251,30 @@ def convert_worn(
     cloth_obj: bpy.types.Object,
     context: bpy.types.Context,
     recalculate_weights: bool = True,
+    progress: Optional[Callable[[float], None]] = None,
 ) -> Conversion:
+    """Turn a mesh that sits on a posed, shaped human into a clothing asset.
+
+    See `convert_worn_steps`. `progress` is called with a fraction from 0 to 1
+    as the conversion advances.
+    """
+    return run(
+        convert_worn_steps(human, cloth_obj, context, recalculate_weights), progress
+    )
+
+
+def convert_worn_steps(
+    human: "Human",
+    cloth_obj: bpy.types.Object,
+    context: bpy.types.Context,
+    recalculate_weights: bool = True,
+) -> Steps[Conversion]:
     """Turn a mesh that sits on a posed, shaped human into a clothing asset.
 
     Takes the object the way it currently looks, with its shape keys and
     armature modifier if it has any, and removes first the pose and then the
-    body shape of the human from it.
+    body shape of the human from it. Done in resumable steps that yield the
+    fraction of the work that is done, nothing is modified.
 
     Args:
         human: Human the object sits on.
@@ -290,25 +309,35 @@ def convert_worn(
     if recalculate_weights:
         # In the posed space limbs may touch, so the first weights are only
         # used to take the pose out. The final ones come from the rest pose.
-        weights, _ = transfer_weights(
-            worn, tris, body_posed, body.tris, body.weights, draft=True
+        weights, _ = yield from phase(
+            transfer_weights_steps(
+                worn, tris, body_posed, body.tris, body.weights, draft=True
+            ),
+            0.0,
+            0.1,
         )
-        for final in (False, True):
+        # The final solve with its many iterations takes most of the time
+        for final, (start, end) in ((False, (0.1, 0.2)), (True, (0.2, 0.9))):
             rest = unskin(worn, weights, matrices, dual_quaternion)
-            weights, info = transfer_weights(
-                rest,
-                tris,
-                body_rest,
-                body.tris,
-                body.weights,
-                bvh=rest_bvh,
-                draft=not final,
-                maxiter=FINAL_SOLVE_ITERATIONS,
+            weights, info = yield from phase(
+                transfer_weights_steps(
+                    rest,
+                    tris,
+                    body_rest,
+                    body.tris,
+                    body.weights,
+                    bvh=rest_bvh,
+                    draft=not final,
+                    maxiter=FINAL_SOLVE_ITERATIONS,
+                ),
+                start,
+                end,
             )
         solver = info["solver"]
     else:
         weights = weight_matrix(cloth_obj, body.bones)
     rest = unskin(worn, weights, matrices, dual_quaternion)
+    yield 0.9
 
     base = _shape(_gender_co(human, human.gender), body)
     binding = BodyBinding(rest, tris, body_rest, body.tris, bvh=rest_bvh)

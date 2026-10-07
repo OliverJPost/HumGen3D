@@ -11,11 +11,11 @@ def main():
         if not bpy.context.scene.objects.get(obj.name):
             bpy.data.objects.remove(obj)
 
-    override = bpy.context.copy()
-    override["area.type"] = ["OUTLINER"]
-    override["display_mode"] = ["ORPHAN_DATA"]
-    for _ in range(8):
-        bpy.ops.outliner.orphans_purge(override)
+    # Passing a context override dict to an operator was removed in Blender 4.0.
+    # The purge no longer needs an outliner, recursive covers nested orphans.
+    bpy.ops.outliner.orphans_purge(
+        do_local_ids=True, do_linked_ids=True, do_recursive=True
+    )
 
     bpy.ops.file.make_paths_relative()
 

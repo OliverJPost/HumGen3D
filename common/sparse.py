@@ -2,9 +2,10 @@
 
 """Minimal sparse linear algebra on top of numpy (Blender ships without scipy)."""
 
-from typing import Callable
+from typing import Callable, Optional
 
 import numpy as np
+from HumGen3D.common.progress import Steps, run
 
 
 class Sparse:
@@ -76,11 +77,29 @@ def block_cg(
     diag: np.ndarray,
     tol: float = 1e-5,
     maxiter: int = 1500,
+    progress: Optional[Callable[[float], None]] = None,
 ) -> tuple[np.ndarray, int, bool, float]:
     """Jacobi-preconditioned conjugate gradient for several right-hand sides.
 
     Returns the solution, the iteration count, whether every column reached
-    `tol` and the worst relative residual.
+    `tol` and the worst relative residual. `progress` is called now and then
+    with an estimate from 0 to 1 of how far the solve is.
+    """
+    return run(block_cg_steps(apply_a, b, diag, tol, maxiter), progress)
+
+
+def block_cg_steps(
+    apply_a: Callable[[np.ndarray], np.ndarray],
+    b: np.ndarray,
+    diag: np.ndarray,
+    tol: float = 1e-5,
+    maxiter: int = 1500,
+    every: int = 25,
+) -> Steps[tuple[np.ndarray, int, bool, float]]:
+    """The solve of `block_cg` as steps of `every` iterations.
+
+    The progress estimate is based on the iteration count and on how much the
+    residual has shrunk towards `tol` so far.
     """
     x = np.zeros_like(b)
     r = b.copy()
@@ -89,6 +108,7 @@ def block_cg(
     rz = np.einsum("ij,ij->j", r, z)
     b_norm = np.maximum(np.linalg.norm(b, axis=0), 1e-30)
     iteration, residual = 0, float("inf")
+    log_range = -np.log(tol)  # the relative residual starts out around 1
     for iteration in range(maxiter):
         a_p = apply_a(p)
         p_ap = np.einsum("ij,ij->j", p, a_p)
@@ -98,6 +118,9 @@ def block_cg(
         residual = float((np.linalg.norm(r, axis=0) / b_norm).max())
         if not np.isfinite(residual) or residual < tol:
             break
+        if iteration % every == every - 1:
+            shrunk = -np.log(max(residual, tol)) / log_range if residual > 0 else 1.0
+            yield float(max(iteration / maxiter, shrunk))
         z = r / diag[:, None]
         rz_new = np.einsum("ij,ij->j", r, z)
         beta = rz_new / np.where(np.abs(rz) > 1e-300, rz, 1.0)
