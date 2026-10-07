@@ -229,27 +229,32 @@ class _Tracker:
 
 
 def _weights(human: "Human", settings: ExportSettings) -> Dict[str, float]:
-    """Rough cost of each step, baking dominates."""
+    """Rough cost of each step, about seconds on a fast machine.
+
+    Baking dominates: every object is a Cycles session per pass, close to a
+    second each, see textures.py. The hair is one object per hair type.
+    """
     hair_types = sum(
         1
         for hair in (human.hair.regular_hair, human.hair.eyebrows, human.hair.eyelashes, human.hair.face_hair)
         if hair.modifiers
     )
     clothing = len(human.clothing.outfit.objects) + len(human.clothing.footwear.objects)
-    passes = sum(len(p) for p in settings.textures.passes.values())
+    passes_per_set = sum(len(p) for p in settings.textures.passes.values()) / 5
+    objects = 3 + clothing + hair_types
     return {
-        "duplicate": 1.0,
-        "shape_keys": 2.0,
-        "haircards": 4.0 * hair_types if settings.haircards.enabled else 0.0,
-        "eyes_teeth": 1.0,
-        "textures": 2.5 * (3 + clothing + hair_types) * max(passes / 5, 1),
-        "textures_level": 2.5 * (1 + hair_types),
-        "lod": 1.0 + clothing,
-        "masks": 1.0,
-        "skeleton": 3.0,
-        "naming": 0.3,
-        "animations": 2.0,
-        "write": 4.0,
+        "duplicate": 0.5,
+        "shape_keys": 4.0,
+        "haircards": 2.5 * hair_types if settings.haircards.enabled else 0.0,
+        "eyes_teeth": 0.3,
+        "textures": 1.0 * objects * passes_per_set,
+        "textures_level": 0.6 * (1 + hair_types) * passes_per_set,
+        "lod": 1.0 + 0.35 * clothing,
+        "masks": 0.3,
+        "skeleton": 2.5,
+        "naming": 0.1,
+        "animations": 0.5,
+        "write": 5.0,
     }
 
 

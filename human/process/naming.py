@@ -65,6 +65,11 @@ HAIR_PARTS = {
     "hg_eyebrows": "Eyebrows",
     "hg_eyelashes": "Eyelashes",
 }
+# The caps of these hair types are cut from one atlas and don't overlap in UV
+# space, so they are one material and one texture set. The beard cap has an
+# atlas of its own.
+SHARED_CAP_TAGS = ("hg_main_hair", "hg_eyebrows", "hg_eyelashes")
+HAIRCAP_PART = "Haircap"
 SKIN_PART = "Skin"
 TEMP_SUFFIX = ".hg_tmp"
 
@@ -149,8 +154,9 @@ def part_names(human: "Human") -> Dict[bpy.types.Object, str]:
 def material_part(human: "Human", obj: bpy.types.Object, slot: int, part: str) -> str:
     """Part name of the material in a slot.
 
-    Materials shared by parts get one name: the teeth share theirs. The skin,
-    the layers of the eyes and the hair cards get names of their own.
+    Materials shared by parts get one name: the teeth share theirs, the hair,
+    eyebrows and eyelashes share their cap. The skin, the layers of the eyes
+    and the hair cards get names of their own.
     """
     objects = human.objects
     if obj == objects.body and slot == 0:
@@ -159,9 +165,17 @@ def material_part(human: "Human", obj: bpy.types.Object, slot: int, part: str) -
         return "EyesOuter" if slot == 0 else "EyesInner"
     if "hg_teeth" in obj:
         return "Teeth"
-    if "hg_haircard" in obj and slot == 1:
-        return part + "Cards"
+    if "hg_haircard" in obj:
+        if slot == 1:
+            return part + "Cards"
+        if is_shared_cap(obj):
+            return HAIRCAP_PART
     return part
+
+
+def is_shared_cap(obj: bpy.types.Object) -> bool:
+    """Whether the cap of a haircard object is part of the shared cap atlas."""
+    return any(tag in obj for tag in SHARED_CAP_TAGS)
 
 
 def apply_names(human: "Human", namer: Namer) -> None:

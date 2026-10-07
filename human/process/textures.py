@@ -11,7 +11,16 @@ DirectX engines, and the alpha of the hair cards inside their color texture.
 
 The materials in Blender get the same packed images, through Separate Color
 nodes, so the processed copy renders in Blender and the glTF exporter finds the
-channels.
+channels. A map whose inputs are all plain values is not written, the values go
+on the Principled BSDF instead. The caps of the hair, eyebrows and eyelashes
+are cut from one atlas, so they are baked into one set of images and get one
+material, see naming.SHARED_CAP_TAGS.
+
+Every bake call starts a Cycles session, which costs more than the pixels do,
+so a pass is baked for all materials in one call: Blender writes every selected
+object into the active image node of each of its materials. The passes are
+emission bakes of the inputs (and a normal bake), which need no other geometry,
+so everything but the baked objects is hidden from the render meanwhile.
 """
 
 from __future__ import annotations
@@ -35,6 +44,8 @@ from .settings import TextureSettings
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
+# Order the passes are baked in, see planned_passes
+PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha")
 # Principled BSDF input of each pass
 PASS_INPUTS = {
     "base_color": "Base Color",
@@ -67,7 +78,12 @@ BAKED_KEY = "hg_baked"
 
 @dataclass
 class TextureSet:
-    """One material of the human that gets its own textures."""
+    """The materials of the human that get one set of textures.
+
+    Usually one material. The caps of the hair, eyebrows and eyelashes are
+    one set of several materials: they share an atlas without overlapping, so
+    they are baked into the same images and get one material.
+    """
 
     obj: bpy.types.Object
     slot: int
@@ -75,12 +91,28 @@ class TextureSet:
     part: str  # Part name for the file names, see naming.py
     passes: List[str]
     resolution: int
+    # Further (object, slot) pairs baked into the same images
+    others: List[Tuple[bpy.types.Object, int]] = field(default_factory=list)
     # Baked images per pass, a float for passes whose input is a plain value
     baked: Dict[str, object] = field(default_factory=dict)
 
     @property
     def material(self) -> bpy.types.Material:
         return self.obj.material_slots[self.slot].material  # type:ignore[index]
+
+    @property
+    def slots(self) -> List[Tuple[bpy.types.Object, int]]:
+        return [(self.obj, self.slot)] + self.others
+
+    @property
+    def objects(self) -> List[bpy.types.Object]:
+        return list(dict.fromkeys(obj for obj, _ in self.slots))
+
+    @property
+    def materials(self) -> List[bpy.types.Material]:
+        return list(
+            dict.fromkeys(obj.material_slots[slot].material for obj, slot in self.slots)
+        )
 
 
 def plan_texture_sets(human: "Human", settings: TextureSettings) -> List[TextureSet]:
@@ -109,6 +141,10 @@ def plan_texture_sets(human: "Human", settings: TextureSettings) -> List[Texture
             return
         planned.add(material)
         part = material_part(human, obj, slot, parts.get(obj, "Part"))
+        shared = next((s for s in sets if s.set_name == set_name and s.part == part), None)
+        if shared:
+            shared.others.append((obj, slot))
+            return
         sets.append(
             TextureSet(
                 obj,
@@ -132,9 +168,14 @@ def plan_texture_sets(human: "Human", settings: TextureSettings) -> List[Texture
     return sets
 
 
-def count_bakes(sets: List[TextureSet]) -> int:
-    """Number of bake passes, for progress estimates."""
-    return sum(len(texture_set.passes) for texture_set in sets)
+def planned_passes(sets: List[TextureSet]) -> List[str]:
+    """The passes any of the sets needs, in bake order.
+
+    The normal pass comes first: it bakes the materials as they are, the
+    emission passes rewire them.
+    """
+    wanted = {pass_id for texture_set in sets for pass_id in texture_set.passes}
+    return [pass_id for pass_id in PASS_ORDER if pass_id in wanted]
 
 
 def bake_steps(  # noqa: CCR001
@@ -148,7 +189,8 @@ def bake_steps(  # noqa: CCR001
 ) -> Steps[List[bpy.types.Image]]:
     """Bakes every material of the human and replaces it, in resumable steps.
 
-    See `HumGen3D.common.progress`. Yields after every baked pass.
+    See `HumGen3D.common.progress`. Yields after every baked pass, which is
+    one bake call for all materials.
 
     Args:
         human (Human): The processed copy, its materials must not be shared
@@ -172,17 +214,25 @@ def bake_steps(  # noqa: CCR001
     if folder:
         os.makedirs(folder, exist_ok=True)
 
-    with _render_settings(context, settings.samples):
-        for texture_set in sets:
-            was_solidified = _hide_solidify(texture_set.obj)
-            try:
-                for pass_id in texture_set.passes:
-                    texture_set.baked[pass_id] = _bake_pass(
-                        texture_set, pass_id, context
-                    )
-                    yield 0.0
-            finally:
-                _show_solidify(texture_set.obj, was_solidified)
+    objects = list(dict.fromkeys(obj for texture_set in sets for obj in texture_set.objects))
+    passes = planned_passes(sets)
+    with _render_settings(context, settings.samples), _bake_visibility(context, objects):
+        was_solidified = _hide_solidify(objects)
+        try:
+            for index, pass_id in enumerate(passes):
+                targets: Dict[bpy.types.Material, bpy.types.Image] = {}
+                for texture_set in sets:
+                    if pass_id not in texture_set.passes:
+                        continue
+                    baked = _prepare_pass(texture_set, pass_id)
+                    texture_set.baked[pass_id] = baked
+                    if isinstance(baked, bpy.types.Image):
+                        for material in texture_set.materials:
+                            targets[material] = baked
+                _bake(objects, targets, pass_id, context)
+                yield (index + 1) / len(passes)
+        finally:
+            _show_solidify(was_solidified)
 
     images = []
     for texture_set in sets:
@@ -196,7 +246,12 @@ def bake_steps(  # noqa: CCR001
 
 
 class _render_settings:
-    """Cycles with few samples for the bakes, the scene settings restored after."""
+    """Cycles on the CPU with few samples for the bakes, the scene settings
+    restored after.
+
+    The bakes are many short sessions, and a GPU session loads its kernels
+    every time: on the GPU the same bakes take two to three times as long.
+    """
 
     def __init__(self, context: bpy.types.Context, samples: int) -> None:
         self.context = context
@@ -204,22 +259,18 @@ class _render_settings:
 
     def __enter__(self) -> None:
         scene = self.context.scene
-        cycles_addon = self.context.preferences.addons["cycles"]  # type:ignore[index]
-        self.device = cycles_addon.preferences.compute_device_type
         self.engine = scene.render.engine
+        self.device = scene.cycles.device
         self.old_samples = scene.cycles.samples
         self.use_denoising = scene.cycles.use_denoising
-        # OptiX can't bake
-        if self.device == "OPTIX":
-            cycles_addon.preferences.compute_device_type = "CUDA"
         scene.render.engine = "CYCLES"
+        scene.cycles.device = "CPU"
         scene.cycles.samples = self.samples
         scene.cycles.use_denoising = False
 
     def __exit__(self, *_: object) -> None:
         scene = self.context.scene
-        cycles_addon = self.context.preferences.addons["cycles"]  # type:ignore[index]
-        cycles_addon.preferences.compute_device_type = self.device
+        scene.cycles.device = self.device
         scene.cycles.samples = self.old_samples
         scene.cycles.use_denoising = self.use_denoising
         try:
@@ -228,17 +279,51 @@ class _render_settings:
             hg_log(f"Could not restore render engine {self.engine}", level="WARNING")
 
 
-def _hide_solidify(obj: bpy.types.Object) -> List[bpy.types.Modifier]:
+class _bake_visibility:
+    """Only the baked objects render while the block runs.
+
+    Emission and normal bakes need no other geometry, and Cycles syncs the
+    whole scene for every bake call: the particle hair of the human the copy
+    was made from alone costs seconds per call.
+    """
+
+    def __init__(self, context: bpy.types.Context, objects: List[bpy.types.Object]) -> None:
+        self.context = context
+        self.objects = set(objects)
+        self.render_hidden: List[Tuple[bpy.types.Object, bool]] = []
+        self.particles: List[bpy.types.Modifier] = []
+
+    def __enter__(self) -> None:
+        for obj in self.context.scene.objects:
+            baked = obj in self.objects
+            if obj.hide_render == baked:
+                self.render_hidden.append((obj, obj.hide_render))
+                obj.hide_render = not baked
+        for obj in self.objects:
+            for mod in obj.modifiers:
+                if mod.type == "PARTICLE_SYSTEM" and mod.show_render:
+                    self.particles.append(mod)
+                    mod.show_render = False
+
+    def __exit__(self, *_: object) -> None:
+        for obj, hidden in self.render_hidden:
+            obj.hide_render = hidden
+        for mod in self.particles:
+            mod.show_render = True
+
+
+def _hide_solidify(objects: List[bpy.types.Object]) -> List[bpy.types.Modifier]:
     """Hides the solidify modifiers, which would bake the inside of the cloth."""
     hidden = []
-    for mod in obj.modifiers:
-        if mod.type == "SOLIDIFY" and (mod.show_viewport or mod.show_render):
-            hidden.append(mod)
-            mod.show_viewport = mod.show_render = False
+    for obj in objects:
+        for mod in obj.modifiers:
+            if mod.type == "SOLIDIFY" and (mod.show_viewport or mod.show_render):
+                hidden.append(mod)
+                mod.show_viewport = mod.show_render = False
     return hidden
 
 
-def _show_solidify(obj: bpy.types.Object, modifiers: List[bpy.types.Modifier]) -> None:
+def _show_solidify(modifiers: List[bpy.types.Modifier]) -> None:
     for mod in modifiers:
         mod.show_viewport = mod.show_render = True
 
@@ -267,32 +352,20 @@ def _input_source(
     return None, float(value if not hasattr(value, "__len__") else value[0])
 
 
-def _bake_pass(  # noqa: CCR001
-    texture_set: TextureSet, pass_id: str, context: bpy.types.Context
-) -> object:
-    """Bakes one pass of a material to a new image.
+def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
+    """Readies the materials of a set for the bake of one pass: a new target
+    image, active in every node tree, with the input of the pass wired to the
+    output.
 
-    A pass whose input is a plain value is not baked, the value is returned.
-    The material is changed for the bake and not restored: it is replaced by
-    the baked material afterwards.
+    A pass whose input is a plain value in every material gets no image, the
+    value is returned. The materials are changed for the bake and not
+    restored: they are replaced by the baked material afterwards.
     """
-    material = texture_set.material
-    nodes = material.node_tree.nodes
-    links = material.node_tree.links
-    principled = _principled(material)
-    output = next(n for n in nodes if n.bl_idname == "ShaderNodeOutputMaterial")
-
-    if pass_id == "normal":
-        links.new(principled.outputs[0], output.inputs[0])  # type:ignore[index]
-        bake_type = "NORMAL"
-    else:
-        source, value = _input_source(principled, pass_id)
-        if source is None:
-            return value
-        emission = nodes.new("ShaderNodeEmission")
-        links.new(source, emission.inputs[0])  # type:ignore[index]
-        links.new(emission.outputs[0], output.inputs[0])  # type:ignore[index]
-        bake_type = "EMIT"
+    materials = texture_set.materials
+    if pass_id != "normal":
+        sources = [_input_source(_principled(material), pass_id) for material in materials]
+        if all(source is None for source, _ in sources):
+            return sources[0][1]
 
     is_color = pass_id == "base_color"
     image = bpy.data.images.new(
@@ -304,22 +377,96 @@ def _bake_pass(  # noqa: CCR001
     )
     if not is_color:
         image.colorspace_settings.name = "Non-Color"
-    target = nodes.new("ShaderNodeTexImage")
-    target.image = image
-    for node in nodes:
-        node.select = False
-    target.select = True
-    nodes.active = target
 
-    obj = texture_set.obj
-    with context_override(context, obj, [obj]):
-        hidden = obj.hide_get()
-        obj.hide_set(False)
-        try:
-            bpy.ops.object.bake(type=bake_type)  # type:ignore[misc, arg-type]
-        finally:
-            obj.hide_set(hidden)
+    for index, material in enumerate(materials):
+        nodes = material.node_tree.nodes
+        links = material.node_tree.links
+        output = next(n for n in nodes if n.bl_idname == "ShaderNodeOutputMaterial")
+        if pass_id == "normal":
+            links.new(_principled(material).outputs[0], output.inputs[0])  # type:ignore[index]
+        else:
+            # A plain value in one material of a shared set is baked as well,
+            # so the shared image is complete
+            source, value = sources[index]
+            emission = nodes.new("ShaderNodeEmission")
+            if source is not None:
+                links.new(source, emission.inputs[0])  # type:ignore[index]
+            else:
+                emission.inputs[0].default_value = (value, value, value, 1.0)  # type:ignore[index]
+            links.new(emission.outputs[0], output.inputs[0])  # type:ignore[index]
+        target = nodes.new("ShaderNodeTexImage")
+        target.image = image
+        for node in nodes:
+            node.select = False
+        target.select = True
+        nodes.active = target
     return image
+
+
+def _bake(
+    objects: List[bpy.types.Object],
+    targets: Dict[bpy.types.Material, bpy.types.Image],
+    pass_id: str,
+    context: bpy.types.Context,
+) -> None:
+    """Bakes one pass of every target material.
+
+    Blender writes each material of a baked object into its active image node;
+    materials on the object without a target get no active node, which Blender
+    skips. Every object is a Cycles session of its own and a session uploads
+    the textures of every visible material, so an object is baked with only
+    itself visible: the skin textures are not loaded for the eyes. Objects
+    that share a target image are baked in one call, which clears the image
+    once and writes every object into it.
+    """
+    baked = [
+        obj
+        for obj in objects
+        if any(slot.material in targets for slot in obj.material_slots)
+    ]
+    if not baked:
+        return
+    for obj in baked:
+        for slot in obj.material_slots:
+            material = slot.material
+            if material and material not in targets and material.node_tree:
+                material.node_tree.nodes.active = None
+    bake_type = "NORMAL" if pass_id == "normal" else "EMIT"
+    hidden = [obj for obj in baked if obj.hide_get()]
+    for obj in hidden:
+        obj.hide_set(False)
+    try:
+        for group in _sharing_groups(baked, targets):
+            for other in objects:
+                other.hide_render = other not in group
+            with context_override(context, group[0], group):
+                bpy.ops.object.bake(type=bake_type)  # type:ignore[misc, arg-type]
+    finally:
+        for obj in objects:
+            obj.hide_render = False
+        for obj in hidden:
+            obj.hide_set(True)
+
+
+def _sharing_groups(
+    objects: List[bpy.types.Object], targets: Dict[bpy.types.Material, bpy.types.Image]
+) -> List[List[bpy.types.Object]]:
+    """The objects grouped by the target images they share, in their order."""
+    groups: List[List[bpy.types.Object]] = []
+    images_of: List[set] = []
+    for obj in objects:
+        images = {
+            targets[slot.material] for slot in obj.material_slots if slot.material in targets
+        }
+        for group, group_images in zip(groups, images_of):
+            if images & group_images:
+                group.append(obj)
+                group_images |= images
+                break
+        else:
+            groups.append([obj])
+            images_of.append(images)
+    return groups
 
 
 def _pixels(image: bpy.types.Image) -> np.ndarray:
@@ -413,7 +560,10 @@ def _build_material(  # noqa: CCR001
     roughness = baked.get("roughness")
     metallic = baked.get("metallic")
     workflow = settings.workflow
-    if workflow in PACKED_PASSES and (roughness is not None or metallic is not None):
+    # A packed map of plain values only is not worth a file, the values go on
+    # the material like in the separate workflow
+    has_map = any(isinstance(source, bpy.types.Image) for source in (roughness, metallic))
+    if workflow in PACKED_PASSES and has_map:
         pass_id, channels = PACKED_PASSES[workflow]
         pixels = np.ones((size * size, 4), dtype=np.float32)
         sources = {
@@ -484,16 +634,17 @@ def _build_material(  # noqa: CCR001
             material.surface_render_method = "BLENDED"
 
     # A material shared by parts, like the one of the teeth, was baked once for
-    # all of them
-    old = texture_set.material
+    # all of them; the materials of a shared set all become the one material
+    olds = texture_set.materials
     for obj in human.objects:
         if obj.type != "MESH":
             continue
         for slot in obj.material_slots:
-            if slot.material == old:
+            if slot.material in olds:
                 slot.material = material
-    if old.users == 0:
-        bpy.data.materials.remove(old)
+    for old in olds:
+        if old.users == 0:
+            bpy.data.materials.remove(old)
     return list(images.values())
 
 
