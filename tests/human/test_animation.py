@@ -75,19 +75,144 @@ def test_animation_set(human, context):
     animation = human.animation
     assert animation.is_active
     assert animation.loop
-    assert animation.frame_count == 41
+    # 41 clip frames at 30 fps, resampled to whole scene frames
+    scene_frames = round(40 * context.scene.render.fps / 30) + 1
+    assert animation.frame_count == scene_frames
     assert animation.as_dict()["set"] == WALK
     assert context.scene.frame_start == 1
-    # 41 frames at 30 fps, the last frame is the same as the first
-    assert context.scene.frame_end == round(40 * context.scene.render.fps / 30)
+    # The last frame is the same as the first
+    assert context.scene.frame_end == scene_frames - 1
     for bone_name in ("spine", "thigh.L", "f_index.01.R", "palm.01.L"):
         pose_bone = human.pose.get_posebone_by_original_name(bone_name)
         assert pose_bone.rotation_mode == "QUATERNION"
+    # All keys on whole frames
+    for fcurve in retarget._channels(animation.action)[0]:
+        frames = [point.co.x for point in fcurve.keyframe_points]
+        assert all(frame == round(frame) for frame in frames)
+        assert len(frames) == scene_frames
 
     human.animation.remove()
     assert not human.animation.is_active
     assert not human.objects.rig.animation_data.action
     assert human.pose.get_posebone_by_original_name("thigh.L").matrix_basis.is_identity
+
+
+def test_animation_resample_keys():
+    """Resampling keeps the first and last key and lands on whole frames."""
+    rotations = [Quaternion((1, 0, 0), math.radians(angle)) for angle in range(0, 50, 10)]
+    locations = [Vector((i, 0, 0)) for i in range(5)]
+    keys = {"spine": (rotations, locations), "thigh.L": (rotations, None)}
+
+    resampled = retarget.resample_keys(keys, 24 / 30)
+    new_rotations, new_locations = resampled["spine"]
+    assert len(new_rotations) == round(4 * 24 / 30) + 1 == 4
+    assert new_rotations[0].rotation_difference(rotations[0]).angle < 1e-6
+    assert new_rotations[-1].rotation_difference(rotations[-1]).angle < 1e-6
+    assert list(new_locations[0]) == pytest.approx(list(locations[0]))
+    assert list(new_locations[-1]) == pytest.approx(list(locations[-1]))
+    # Evenly spaced in between
+    assert new_locations[1].x == pytest.approx(4 / 3)
+    assert resampled["thigh.L"][1] is None
+
+    assert retarget.resample_keys(keys, 1) is keys
+
+
+def test_animation_fake_user_kept(male_human, context):
+    """An action the user protected with a fake user is not deleted."""
+    male_human.animation.set(WALK, context)
+    action = male_human.animation.action
+    action.use_fake_user = True
+    name = action.name
+
+    male_human.animation.set(IDLE, context)
+    assert name in bpy.data.actions
+    assert male_human.animation.action.name != name
+
+    bpy.data.actions.remove(bpy.data.actions[name])
+    male_human.animation.remove()
+
+
+def test_animation_refresh_in_place(male_human, context):
+    """Refreshing keeps the action, its start frame and channels of other bones."""
+    human = male_human
+    human.animation.set(IDLE, context)
+    action = human.animation.action
+    name = action.name
+    fcurves, _ = retarget._channels(action)
+
+    # A channel the user added, the animation only keys the location of the root
+    head = human.pose.get_posebone_by_original_name("head")
+    user_path = f'pose.bones["{head.name}"].location'
+    user_fcurve = fcurves.new(user_path, index=2)
+    user_fcurve.keyframe_points.insert(1, 0.1)
+    # Slide the animation to start later
+    for fcurve in fcurves:
+        if fcurve.data_path == user_path:
+            continue
+        for point in fcurve.keyframe_points:
+            point.co.x += 20
+        fcurve.update()
+    count_before = len(fcurves)
+
+    human.height.set(190, context)
+
+    assert human.animation.action == action
+    assert action.name == name
+    fcurves, _ = retarget._channels(action)
+    assert len(fcurves) == count_before
+    assert any(f.data_path == user_path for f in fcurves)
+    spine = human.pose.get_posebone_by_original_name("spine")
+    spine_fcurve = next(
+        f for f in fcurves if f.data_path == f'pose.bones["{spine.name}"].location'
+    )
+    assert spine_fcurve.keyframe_points[0].co.x == 21
+
+    human.height.set(170, context)
+    human.animation.remove()
+
+
+def test_animation_strips(male_human, context):
+    """Animations can be chained as NLA strips and are refreshed with the rig."""
+    human = male_human
+    rig = human.objects.rig
+    human.animation.set(WALK, context)
+    walk = human.animation.action
+
+    idle = human.animation.set(IDLE, context, as_strip=True)
+    # The active action is pushed down first
+    assert human.animation.action is None
+    assert human.animation.is_active
+    strips = human.animation.strips
+    assert [strip.action for strip in strips] == [walk, idle]
+    assert strips[1].frame_start == strips[0].frame_end
+    assert all(strip.action_slot for strip in strips)
+
+    human.animation.set_scene_frame_range(context)
+    assert context.scene.frame_start == round(strips[0].frame_start)
+    assert context.scene.frame_end == round(strips[1].frame_end)
+
+    # Strips are retargeted too, in place
+    human.height.set(200, context)
+    assert [strip.action for strip in human.animation.strips] == [walk, idle]
+    assert walk["hg_frame_count"] == human.animation.strips[0].action_frame_end
+    lowest, highest = _lowest_foot_point(human, context)
+    assert lowest > -0.04
+    assert highest < 0.04
+
+    # Setting an active animation leaves the strips alone
+    human.animation.set(KNEEL, context)
+    assert len(human.animation.strips) == 2
+    human.animation.remove()
+    assert len(human.animation.strips) == 2
+    walk_name, idle_name = walk.name, idle.name
+    assert idle_name in bpy.data.actions
+
+    human.animation.remove(strips=True)
+    assert not human.animation.is_active
+    assert not rig.animation_data.nla_tracks
+    assert walk_name not in bpy.data.actions
+    assert idle_name not in bpy.data.actions
+    human.height.set(170, context)
 
 
 def _world_rotation_error(human, clip, reference, frame, bone_name):

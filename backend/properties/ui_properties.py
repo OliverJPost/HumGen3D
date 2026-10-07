@@ -121,6 +121,7 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
                 "expression_sliders",
                 "age_hairmat_ui",
                 "age_slider_ui",
+                "animation_nla",
             ]
         )
     )

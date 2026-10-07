@@ -550,7 +550,7 @@ class Human:
         Will delete all meshes and objects that this human consists of, including
         the backup human.
         """
-        self.animation.remove()
+        self.animation.remove(strips=True)
         delete_list = [
             self.objects.rig,
         ]
