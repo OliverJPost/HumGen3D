@@ -9,10 +9,11 @@ the garment, following Abdrashitov et al. 2023, "Robust Skin Weights Transfer
 via Weight Inpainting".
 """
 
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
-from HumGen3D.common.sparse import Sparse, block_cg, cot_laplacian
+from HumGen3D.common.progress import Steps, phase, run
+from HumGen3D.common.sparse import Sparse, block_cg_steps, cot_laplacian
 from HumGen3D.common.surface import (
     closest_points,
     components,
@@ -149,8 +150,44 @@ def transfer_weights(
     smooth_iters: int = 2,
     maxiter: int = 1500,
     draft: bool = False,
+    progress: Optional[Callable[[float], None]] = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """Transfer skin weights from the body to a garment.
+    """Transfer skin weights from the body to a garment, see `transfer_weights_steps`.
+
+    `progress` is called with a fraction from 0 to 1 while solving.
+    """
+    return run(
+        transfer_weights_steps(
+            g_co,
+            g_tris,
+            b_co,
+            b_tris,
+            b_weights,
+            bvh,
+            dist_thresh,
+            angle_deg,
+            smooth_iters,
+            maxiter,
+            draft,
+        ),
+        progress,
+    )
+
+
+def transfer_weights_steps(
+    g_co: np.ndarray,
+    g_tris: np.ndarray,
+    b_co: np.ndarray,
+    b_tris: np.ndarray,
+    b_weights: np.ndarray,
+    bvh: Optional[BVHTree] = None,
+    dist_thresh: float = 0.04,
+    angle_deg: float = 35.0,
+    smooth_iters: int = 2,
+    maxiter: int = 1500,
+    draft: bool = False,
+) -> Steps[tuple[np.ndarray, dict[str, Any]]]:
+    """Transfer skin weights from the body to a garment, in resumable steps.
 
     Both meshes have to be in the same space: same body shape, same pose.
 
@@ -216,7 +253,7 @@ def transfer_weights(
         "matched": float(matched.mean()),
     }
     if not known.all():
-        weights = _inpaint(
+        weights = yield from _inpaint(
             weights,
             known,
             all_closest,
@@ -246,7 +283,7 @@ def _inpaint(
     maxiter: int,
     draft: bool,
     info: dict[str, Any],
-) -> np.ndarray:
+) -> Steps[np.ndarray]:
     count = len(co)
     laplacian, mass = cot_laplacian(co, tris)
     mass_inv = 1.0 / mass
@@ -272,20 +309,28 @@ def _inpaint(
     )
     solver, iterations, converged = "bilaplacian", 0, False
     if not draft:
-        solution, iterations, converged, residual = block_cg(
-            lambda x: energy(expand(x))[unknown],
-            -energy(fixed)[unknown],
-            diag[unknown],
-            maxiter=maxiter,
+        solution, iterations, converged, residual = yield from phase(
+            block_cg_steps(
+                lambda x: energy(expand(x))[unknown],
+                -energy(fixed)[unknown],
+                diag[unknown],
+                maxiter=maxiter,
+            ),
+            0.0,
+            0.8,
         )
         converged = converged and _sane(solution)
     if not converged:
         # First-order smoothness is far better conditioned
-        solution, extra, converged, residual = block_cg(
-            lambda x: -laplacian.dot(expand(x))[unknown],
-            laplacian.dot(fixed)[unknown],
-            -laplacian.diagonal()[unknown],
-            maxiter=maxiter,
+        solution, extra, converged, residual = yield from phase(
+            block_cg_steps(
+                lambda x: -laplacian.dot(expand(x))[unknown],
+                laplacian.dot(fixed)[unknown],
+                -laplacian.diagonal()[unknown],
+                maxiter=maxiter,
+            ),
+            0.0 if draft else 0.8,
+            1.0,
         )
         iterations += extra
         solver = "harmonic"

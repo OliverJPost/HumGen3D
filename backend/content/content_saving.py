@@ -4,7 +4,7 @@ import os
 import re
 import subprocess
 from shutil import copyfile
-from typing import Iterable
+from typing import Iterable, Optional
 
 import bpy
 from HumGen3D.backend import get_prefs, hg_log
@@ -51,7 +51,7 @@ def save_objects_optimized(
     clear_ps: bool = True,
     run_in_background: bool = True,
     clear_drivers: bool = True,
-) -> None:
+) -> Optional[subprocess.Popen]:
     """Saves the passed objects as a new blend file.
 
     Opens the file in the background to make it as small as possible
@@ -70,6 +70,11 @@ def save_objects_optimized(
         run_in_background (bool, optional): Open the new subprocess in the background.
             Defaults to True.
         clear_drivers (bool, optional): Remove all drivers from objs. Defaults to True.
+
+    Returns:
+        The Blender process that strips the file of everything but the objects
+        and makes its paths relative. Wait for it before using the file. None
+        if no Blender executable is available, as with bpy as a Python module.
     """
     for obj in objs:
         if obj.type != "MESH":
@@ -93,6 +98,9 @@ def save_objects_optimized(
     new_scene.collection.children.link(new_col)
     for obj in objs:
         new_col.objects.link(obj)
+    # Without an update the view layer of the new scene has no runtime data
+    # yet, which crashes Blender 5.2 when it copies the scene for writing.
+    context.view_layer.update()
 
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -100,23 +108,25 @@ def save_objects_optimized(
     blend_filepath = os.path.join(folder, f"{filename}.blend")
     bpy.data.libraries.write(blend_filepath, {new_scene})
 
+    bpy.data.scenes.remove(new_scene)
+    bpy.data.collections.remove(new_col)
+
     python_file = os.path.join(get_addon_root(), "scripts", "hg_purge.py")
+    # bpy as a Python module has no executable, HG_BLENDER_BINARY can point to one
+    binary = bpy.app.binary_path or os.environ.get("HG_BLENDER_BINARY", "")
+    if not binary or not os.path.isfile(binary):
+        hg_log(
+            f"No Blender executable to clean up {blend_filepath}, it will be larger",
+            level="WARNING",
+        )
+        return None
     if run_in_background:
         hg_log("STARTING HumGen background process", level="BACKGROUND")
-        subprocess.Popen(
-            [
-                bpy.app.binary_path,
-                blend_filepath,
-                "--background",
-                "--python",
-                python_file,
-            ],
+        return subprocess.Popen(
+            [binary, blend_filepath, "--background", "--python", python_file],
             stdout=subprocess.DEVNULL,
         )
-    else:
-        subprocess.Popen([bpy.app.binary_path, blend_filepath, "--python", python_file])
-
-    bpy.data.scenes.remove(new_scene)
+    return subprocess.Popen([binary, blend_filepath, "--python", python_file])
 
 
 def _clear_sk_drivers() -> None:
@@ -174,8 +184,5 @@ def remove_number_suffix(name: str) -> str:
     Returns:
         str: name without suffix
     """
-    re_suffix = re.search(r".\d\d\d", name)
-    if not re_suffix or not name.endswith(re_suffix.group(0)):
-        return name
-    else:
-        return name.replace(re_suffix.group(0), "")
+    re_suffix = re.search(r"\.\d\d\d$", name)
+    return name[: re_suffix.start()] if re_suffix else name

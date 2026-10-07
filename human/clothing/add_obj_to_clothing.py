@@ -3,7 +3,7 @@
 import contextlib
 import json
 import os
-from typing import TYPE_CHECKING, Iterable, cast
+from typing import TYPE_CHECKING, Callable, Iterable, Optional, cast
 
 import bpy
 import numpy as np
@@ -15,8 +15,9 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.exceptions import HumGenException  # type:ignore
 from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.math import centroid
+from HumGen3D.common.progress import Steps, phase, run
 from HumGen3D.human.clothing.garment_fit import (
-    convert_worn,
+    convert_worn_steps,
     corrective_deltas,
     triangles,
     write_weights,
@@ -30,14 +31,38 @@ def convert_obj_to_clothing(
     cloth_type: str,
     recalculate_weights: bool,
     context: bpy.types.Context,
+    progress: Optional[Callable[[float], None]] = None,
 ) -> str:
     """Turn a mesh that sits on this human into a clothing object.
+
+    See `convert_obj_to_clothing_steps`. `progress` is called with a fraction
+    from 0 to 1 as the conversion advances.
+    """
+    return run(
+        convert_obj_to_clothing_steps(
+            human, cloth_obj, cloth_type, recalculate_weights, context
+        ),
+        progress,
+    )
+
+
+def convert_obj_to_clothing_steps(
+    human: "Human",
+    cloth_obj: bpy.types.Object,
+    cloth_type: str,
+    recalculate_weights: bool,
+    context: bpy.types.Context,
+) -> Steps[str]:
+    """Turn a mesh that sits on this human into a clothing object, in steps.
 
     The object is taken the way it currently looks on the human, in any pose
     and with any body shape. Afterwards its base shape fits the unmodified body,
     a "Body Proportions" shape key holds the shape for this human, it has
     corrective shape keys and is weighted to the deform bones of the rig. On
     this human, in this pose, it looks the same as before.
+
+    The steps yield the fraction of the work that is done. The object is only
+    modified after the last step, so stopping early leaves it as it was.
 
     Args:
         human: Human the object sits on.
@@ -55,8 +80,18 @@ def convert_obj_to_clothing(
     """
     rig, body_obj = human.objects.rig, human.objects.body
     context.view_layer.update()
-    conversion = convert_worn(human, cloth_obj, context, recalculate_weights)
+    conversion = yield from phase(
+        convert_worn_steps(human, cloth_obj, context, recalculate_weights), 0.0, 0.8
+    )
     tris = triangles(cloth_obj)
+
+    json_path = os.path.join(
+        get_addon_root(), "human", "clothing", "corrective_sk_names_v2.json"
+    )
+    with open(json_path, "r") as f:
+        names = json.load(f)["torso" if cloth_type == "top" else cloth_type]
+    deltas = corrective_deltas(human, conversion.base, tris, names)
+    yield 0.95
 
     # From here on the local space of the object is that of the rig, which is
     # what clothing loaded from the library expects.
@@ -68,13 +103,6 @@ def convert_obj_to_clothing(
         cloth_obj.shape_key_clear()
     cloth_obj.data.vertices.foreach_set("co", conversion.base.ravel())
     _add_key(cloth_obj, "Basis", conversion.base)
-
-    json_path = os.path.join(
-        get_addon_root(), "human", "clothing", "corrective_sk_names_v2.json"
-    )
-    with open(json_path, "r") as f:
-        names = json.load(f)["torso" if cloth_type == "top" else cloth_type]
-    deltas = corrective_deltas(human, conversion.base, tris, names)
     for name, delta in deltas.items():
         _add_key(cloth_obj, name, conversion.base + delta)
     _set_cloth_corrective_drivers(
@@ -159,12 +187,15 @@ def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
         Human: The closest human to the object.
 
     Raises:
-        HumGenException: If the nearest human is more than 2 meters away.
+        HumGenException: If there is no human in the file or the nearest human is
+            more than 2 meters away.
     """
     world_coords_cloth_obj = world_coords_from_obj(cloth_obj)
     centroid_cloth = centroid(world_coords_cloth_obj)
 
-    human_rig_objs = (obj for obj in bpy.data.objects if obj.HG.ishuman)
+    human_rig_objs = (
+        obj for obj in bpy.data.objects if obj.HG.ishuman and obj.HG.body_obj
+    )
 
     human_distances = {}
     for rig_obj in human_rig_objs:
@@ -172,6 +203,8 @@ def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
         human_distances[rig_obj] = abs(
             (centroid(world_body_coords) - centroid_cloth).length
         )
+    if not human_distances:
+        raise HumGenException("There is no Human Generator human in this file.")
 
     closest_human_rig = min(human_distances, key=human_distances.get)  # type:ignore
 

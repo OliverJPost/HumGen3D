@@ -13,9 +13,10 @@ import contextlib
 import hashlib
 import json
 import os
+import subprocess
 from math import acos, pi
 from pathlib import Path
-from typing import Any, Iterable, Literal, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, Literal, Optional, Tuple, Union
 
 import bpy
 import numpy as np
@@ -26,7 +27,10 @@ from HumGen3D.common.collections import add_to_collection
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human import clothing
-from HumGen3D.human.clothing.add_obj_to_clothing import convert_obj_to_clothing
+from HumGen3D.common.progress import Steps, run
+from HumGen3D.human.clothing.add_obj_to_clothing import (
+    convert_obj_to_clothing_steps,
+)
 from HumGen3D.human.clothing.garment_fit import fit_to_human, missing_correctives
 from HumGen3D.human.clothing.pattern import PatternSettings
 from HumGen3D.human.clothing.saving import _save_clothing
@@ -127,6 +131,7 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         cloth_type: Literal["pants", "torso", "footwear", "full"],
         recalculate_weights: bool,
         context: bpy.types.Context,
+        progress: Optional[Callable[[float], None]] = None,
     ) -> str:
         """Base method for adding new object to the clothing of this human.
 
@@ -143,13 +148,35 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
             recalculate_weights (bool): Whether to recalculate weights of the
                 vertex groups. Only disable if you manually set the weights.
             context (C): Blender context. bpy.context if not provided.
+            progress (Callable[[float], None]): Called with a fraction from 0 to 1
+                as the conversion advances, for a progress indicator.
 
         Returns:
             str: How the weights were computed. "closest_point" means the weight
                 solver failed and the weights will need manual cleanup.
         """
+        return run(
+            self.add_obj_steps(cloth_obj, cloth_type, recalculate_weights, context),
+            progress,
+        )
+
+    def add_obj_steps(
+        self,
+        cloth_obj: bpy.types.Object,
+        cloth_type: Literal["pants", "torso", "footwear", "full"],
+        recalculate_weights: bool,
+        context: bpy.types.Context,
+    ) -> Steps[str]:
+        """The work of `add_obj` as resumable steps, see `HumGen3D.common.progress`.
+
+        Yields the fraction of the work that is done. The object is only changed
+        in the last step, so a generator that is closed early leaves it as it is.
+
+        Returns:
+            str: How the weights were computed, see `add_obj`.
+        """
         old_active = context.view_layer.objects.active
-        solver = convert_obj_to_clothing(
+        solver = yield from convert_obj_to_clothing_steps(
             self._human, cloth_obj, cloth_type, recalculate_weights, context
         )
         self._set_armature(context, cloth_obj, self._human.objects.rig)
@@ -236,8 +263,9 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         open_when_finished: bool = False,
         category: str = "Custom",
         thumbnail: Optional[bpy.types.Image] = None,
+        objects: Optional[list[bpy.types.Object]] = None,
         context: C = None,
-    ) -> None:
+    ) -> list[subprocess.Popen]:
         """Save the currently active footwear/clothing to the HumGen library.
 
         This will make this item accessible in future projects.
@@ -254,8 +282,17 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
                 is the folder the item will be saved in.
             thumbnail (bpy.types.Image): Image to use as thumbnail for the item. Has to
                 be loaded in Blender. If None, NO thumbnail will be saved.
+            objects (list[bpy.types.Object]): Which of the objects in `self.objects`
+                to save. Defaults to all of them.
             context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            The background Blender processes that shrink the saved files. The
+            files are complete once these have finished, wait() for them if you
+            use the files right away.
         """
+        if objects is None:
+            objects = self.objects
         genders = []
         if for_male:
             genders.append("male")
@@ -265,13 +302,13 @@ class BaseClothing(PreviewCollectionContent, SavableContent):
         pcoll_subfolder = PREVIEW_COLLECTION_DATA[self._pcoll_name][2]
         folder = os.path.join(get_prefs().filepath, pcoll_subfolder)
 
-        _save_clothing(
+        return _save_clothing(
             self._human,
             folder,
             category,
             name,
             context,
-            self.objects,
+            objects,
             genders,
             open_when_finished,
             thumbnail=thumbnail,

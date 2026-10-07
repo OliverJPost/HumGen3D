@@ -28,6 +28,7 @@ from HumGen3D.backend import hg_log
 from HumGen3D.common.drivers import build_driver_dict
 from HumGen3D.user_interface.content_panel.operators import (
     refresh_hair_ul,
+    refresh_outfit_ul,
     refresh_shapekeys_ul,
 )
 
@@ -280,6 +281,8 @@ class HG_OT_REFRESH_UL(bpy.types.Operator):
             refresh_shapekeys_ul(self, context)
         elif self.uilist_type == "hair":
             refresh_hair_ul(self, context)
+        elif self.uilist_type == "outfit":
+            refresh_outfit_ul(context)
         return {"FINISHED"}
 
 
