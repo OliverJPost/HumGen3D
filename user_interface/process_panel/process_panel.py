@@ -1,89 +1,215 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
-from abc import ABC, abstractmethod
-from collections import defaultdict
+
+"""The Process tab: one recipe, one output, and the sections that refine it.
+
+Nothing here is needed for a correct file, the recipe holds the knowledge
+about the engine. The sections show and change what it decided.
+"""
+
+import os
 from typing import Optional
 
 import bpy
+from HumGen3D.backend import get_prefs
+from HumGen3D.backend.properties.process_props import (
+    _resolution_from_props,
+    is_modified,
+    props_to_settings,
+    quality_from_props,
+)
 from HumGen3D.common import find_multiple_in_list
 from HumGen3D.human.human import Human
-from HumGen3D.backend.properties.process_props import game_rig_preset_changed
-from HumGen3D.human.process.game_rig import get_preset
-from HumGen3D.human.process.shape_keys import (
-    KEY_GROUPS,
-    driven_groups_kept,
-    key_groups,
+from HumGen3D.human.process.pipeline import output_folder, preflight
+from HumGen3D.human.process.quality import (
+    CUSTOM_TIER,
+    TEXTURE_TIERS,
+    estimate_triangles,
+    quality_of_tier,
+    texture_tier_of,
 )
+from HumGen3D.human.process.settings import (
+    OUTPUT_FORMATS,
+    TEXTURE_PASSES,
+    TEXTURE_SETS,
+)
+from HumGen3D.human.process.shape_keys import KEY_GROUPS, driven_groups_kept
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.panel_functions import (
     draw_panel_switch_header,
     draw_paragraph,
-    get_flow,
 )
 
-from HumGen3D.backend import get_prefs
 from ..ui_baseclasses import HGPanel, draw_icon_title
+
+LABELS = {ident: label for ident, label, *_ in OUTPUT_FORMATS}
+PASS_LABELS = {
+    "base_color": "Color",
+    "normal": "Normal",
+    "roughness": "Rough",
+    "metallic": "Metal",
+    "alpha": "Alpha",
+}
+SKELETON_LABELS = {
+    "humanoid": "Humanoid",
+    "unreal": "Unreal",
+    "mixamo": "Mixamo",
+    "humgen": "HG names",
+    "custom": "Custom",
+}
+TIER_LABELS = {ident: label for ident, label, _ in TEXTURE_TIERS}
+TIER_LABELS[CUSTOM_TIER[0]] = CUSTOM_TIER[1]
+
+
+def _props(context):
+    return context.scene.HG3D.process
+
+
+def _human(context) -> Optional[Human]:
+    return Human.from_existing(context.object, strict_check=False)
+
+
+def _rounded(tris: int) -> str:
+    rounded = round(tris, -3 if tris >= 10_000 else -2)
+    return f"~{rounded:,} tris"
+
+
+def _short(tris: int) -> str:
+    """Triangles as a short figure for a narrow column, "4.1k", "70k" or "320"."""
+    if tris < 1000:
+        return str(tris)
+    return f"{tris / 1000:g}k" if tris % 1000 == 0 else f"{tris / 1000:.1f}k"
+
+
+def _flow(layout):
+    col = layout.column(align=True)
+    col.use_property_split = True
+    col.use_property_decorate = False
+    return col
 
 
 class ProcessPanel(HGPanel):
     bl_parent_id = "HG_PT_PROCESS"
     bl_options = {"DEFAULT_CLOSED"}
-    icon_name: str
-    # Sections without this are always applied when processing
-    enabled_propname: Optional[str] = None
+    icon_name: str = "NONE"
+    # Property group with an "enabled" toggle, drawn in the header
+    toggle_group: Optional[str] = None
     help_url: Optional[str] = None
 
     @classmethod
     def poll(cls, context):
-        if context.scene.HG3D.process.mode != "recipe":
+        if not _props(context).lods:
             return False
-        return find_multiple_in_list(context.selected_objects)
+        return bool(find_multiple_in_list(context.selected_objects))
 
     def draw_header(self, context):
-        is_trial = get_prefs().is_trial
-        self.layout.enabled = not is_trial
-
-        if self.enabled_propname:
-            self.layout.prop(context.scene.HG3D.process, self.enabled_propname, text="")
-
-        icon_name = self.icon_name
-        if hasattr(self, "forbidden_propname"):
-            is_forbidden = getattr(Human.from_existing(context.object).process, self.forbidden_propname)
-            is_enabled = getattr(context.scene.HG3D.process, self.enabled_propname, False)
-            if is_forbidden and is_enabled:
-                self.layout.alert = True
-                icon_name = "ERROR"
-            if is_forbidden and not is_enabled:
-                icon_name = "CHECKMARK"
-
+        layout = self.layout
+        layout.enabled = not get_prefs().is_trial
+        if self.toggle_group:
+            group = getattr(_props(context), self.toggle_group)
+            row = layout.row()
+            row.enabled = self.toggle_enabled(context)
+            row.prop(group, "enabled", text="")
         try:
-            self.layout.label(text="", icon_value=get_hg_icon(icon_name))
+            layout.label(text="", icon_value=get_hg_icon(self.icon_name))
         except KeyError:
-            self.layout.label(text="", icon=icon_name)
+            layout.label(text="", icon=self.icon_name)
+
+    def draw_header_preset(self, context):
+        """A word on what the section does, at the right end of the header."""
+        summary = self.summary(context)
+        if summary:
+            row = self.layout.row()
+            row.enabled = False
+            row.label(text=summary)
+
+    def toggle_enabled(self, context) -> bool:
+        """Whether the toggle can be changed, some formats force it."""
+        return True
+
+    def summary(self, context) -> str:
+        return ""
 
     def check_enabled(self, context):
-        self.layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
+        if self.toggle_group:
+            self.layout.enabled = getattr(_props(context), self.toggle_group).enabled
 
-    def _draw_category_title(self, layout, text, icon_name, tris_count):
-        """Subtitle of a category with its estimated triangle count on the right."""
-        row = layout.row()
-        row.label(text=text, icon_value=get_hg_icon(icon_name))
-        self._draw_tris_count(row, tris_count)
+    def _draw_documentation_button(self):
+        if not self.help_url:
+            return
+        self.layout.operator("wm.url_open", text="Documentation", icon="HELP").url = (
+            "https://help.humgen3d.com/" + self.help_url
+        )
+
+    def _draw_advanced(self, layout, group):
+        """The collapsible advanced drawer of a section, returns its box or None.
+
+        The title sits inside the box, so the box is the drawer.
+        """
+        box = layout.box()
+        row = box.row(align=True)
+        row.alignment = "LEFT"
+        row.prop(
+            group,
+            "show_advanced",
+            text="Advanced",
+            icon="TRIA_DOWN" if group.show_advanced else "TRIA_RIGHT",
+            emboss=False,
+        )
+        return box.column() if group.show_advanced else None
 
     @staticmethod
-    def _draw_tris_count(row, tris_count):
-        # Rounded, as it's an estimate
-        rounded = round(tris_count, -3 if tris_count >= 10_000 else -2)
+    def _draw_selection_box(layout, group, open_prop, items, list_id, noun):
+        """A collapsible list with a checkbox per entry and All / None buttons.
+
+        Args:
+            layout: Where the box goes.
+            group: Property group holding `open_prop`.
+            open_prop (str): Name of the bool that opens the list.
+            items: Collection with `enabled` and `name` per entry.
+            list_id (str): Identifier for `hg3d.select_process_list`.
+            noun (str): What the entries are, "keys" or "clips".
+
+        Returns:
+            The box, with the list drawn when it is open.
+        """
+        is_open = getattr(group, open_prop)
+        selected = sum(1 for item in items if item.enabled)
+        box = layout.box()
+        row = box.row(align=True)
+        row.prop(
+            group,
+            open_prop,
+            text=f"{selected} of {len(items)} {noun}",
+            icon="TRIA_DOWN" if is_open else "TRIA_RIGHT",
+            emboss=False,
+        )
+        if not is_open:
+            return None
+        buttons = row.row(align=True)
+        buttons.alignment = "RIGHT"
+        for text, select in (("All", True), ("None", False)):
+            op = buttons.operator("hg3d.select_process_list", text=text)
+            op.list, op.select = list_id, select
+        return box
+
+    @staticmethod
+    def _draw_tris_count(row, tris: int):
         sub = row.row()
         sub.alignment = "RIGHT"
         sub.enabled = False
-        sub.label(text=f"~{rounded:,} tris")
+        sub.label(text=_rounded(tris))
 
-    def _draw_thumbnail_picker(self, context, layout, props, prop_name, icon_prefix):
-        """Draw an enum as a wireframe thumbnail per option, with a toggle button
-        below each so users see what every option does to the mesh. The icons are
-        named {icon_prefix}_{option}."""
-        items = props.bl_rna.properties[prop_name].enum_items
-        # Fit the thumbnails to the width of the sidebar, as they don't shrink
+    def _draw_thumbnail_picker(
+        self, context, layout, levels, prop_name, icon_prefix, tris=None
+    ):
+        """An enum as a wireframe thumbnail per option.
+
+        With one LOD level the toggle of each option sits below its thumbnail.
+        With more levels the thumbnails are followed by one segmented row per
+        level, numbered like the exported meshes (LOD0, LOD1, ...), with the
+        triangles of that level at the end when `tris` gives them per level.
+        """
+        items = levels[0].bl_rna.properties[prop_name].enum_items
         ui_scale = context.preferences.system.ui_scale
         available_width = context.region.width / ui_scale - 30
         scale = min(4.5, available_width / len(items) / 20)
@@ -93,16 +219,40 @@ class ProcessPanel(HGPanel):
             col = row.column(align=True)
             icon = get_hg_icon(f"{icon_prefix}_{item.identifier}")
             col.template_icon(icon, scale=scale)
-            col.prop_enum(props, prop_name, item.identifier)
+            if len(levels) == 1:
+                col.prop_enum(levels[0], prop_name, item.identifier)
+        if len(levels) == 1:
+            return
+        col = layout.column(align=True)
+        for index, level in enumerate(levels):
+            row = col.row(align=True)
+            sub = row.row(align=True)
+            sub.scale_x = 0.5
+            sub.label(text=str(index))
+            row.prop(level, prop_name, expand=True)
+            if tris is not None:
+                self._draw_short_tris(row, tris[index])
 
-    def _draw_documentation_button(self):
-        self.layout.operator(
-            "wm.url_open",
-            text="Documentation",
-            icon="HELP",
-        ).url = (
-            "https://help.humgen3d.com/" + self.help_url
-        )
+    @staticmethod
+    def _draw_short_tris(row, tris: int):
+        # A fixed width, so the figure is readable without squeezing the control
+        sub = row.row(align=True)
+        sub.ui_units_x = 2.3
+        sub.alignment = "RIGHT"
+        sub.enabled = False
+        sub.label(text=_short(tris))
+
+    def _draw_level_rows(self, layout, levels, prop_name, tris=None):
+        """One dropdown per LOD level, numbered, with the triangles of the level."""
+        col = layout.column(align=True)
+        for index, level in enumerate(levels):
+            row = col.row(align=True)
+            sub = row.row(align=True)
+            sub.scale_x = 0.5
+            sub.label(text=str(index))
+            row.prop(level, prop_name, text="")
+            if tris is not None:
+                self._draw_short_tris(row, tris[index])
 
 
 class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
@@ -117,12 +267,10 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         return context.scene.HG3D.ui.active_tab == "PROCESS"
 
     def draw_header(self, context) -> None:
-        draw_panel_switch_header(
-            self.layout, context.scene.HG3D
-        )  # type:ignore[attr-defined]
+        draw_panel_switch_header(self.layout, context.scene.HG3D)
 
     def draw(self, context):
-        process_sett = context.scene.HG3D.process
+        props = _props(context)
         is_trial = get_prefs().is_trial
 
         col = self.layout.column()
@@ -132,56 +280,36 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         row.scale_x = 0.7
         row.alignment = "CENTER"
         draw_icon_title("Processing", row, True)
-
         col.separator(factor=0.3)
-
         draw_paragraph(
             col,
-            "Process for other programs, workflows, or results.",
+            "Export for a game engine or make a frozen copy in this file.",
             alignment="CENTER",
             enabled=False,
         )
-
         col.separator()
 
-        row = col.row(align=True)
-        row.scale_y = 1.5
-        row.prop(process_sett, "mode", expand=True)
-
-        col.separator()
-
-        if process_sett.mode == "multi_recipe":
-            self._draw_multi_recipe_list(col, process_sett)
+        if not props.lods:
+            col.operator("hg3d.init_process", text="Load recipes", icon="IMPORT")
             return
 
-        col = col.column(align=True)
-        row = col.row(align=True)
-        row.scale_y = 1.5
-        row.prop(process_sett, "presets", text="")
-        row.operator("hg3d.save_process_template", text="", icon="ADD")
+        flow = _flow(col)
+        row = flow.row(align=True)
+        row.prop(props, "recipe", text="Recipe")
+        if is_modified(props):
+            row.operator("hg3d.reset_recipe", text="", icon="LOOP_BACK")
+            row.operator("hg3d.save_process_template", text="", icon="FILE_TICK")
+        flow.prop(props.output, "format", text="Output")
+        flow.prop(props, "lod_count", text="LOD levels")
 
-        box = col.box()
-        human_rigs = find_multiple_in_list(context.selected_objects)
-        row = box.row()
-        row.alignment = "CENTER"
-        amount = len(human_rigs)
-        if amount == 0:
+        if not find_multiple_in_list(context.selected_objects):
+            col.separator()
+            box = col.box()
+            row = box.row()
+            row.alignment = "CENTER"
             row.alert = True
             row.label(text="No humans selected!")
             return
-
-        human_plural_tag = "human" if amount == 1 else "humans"
-        row.prop(
-            process_sett,
-            "human_list_isopen",
-            text=f"{amount} {human_plural_tag} selected",
-            icon="TRIA_DOWN" if process_sett.human_list_isopen else "TRIA_RIGHT",
-            emboss=False,
-        )
-
-        if process_sett.human_list_isopen:
-            for human_rig in human_rigs:
-                box.label(text=human_rig.name, icon="DOT")
 
         if is_trial:
             box = self.layout.box()
@@ -196,284 +324,180 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             )
 
 
-    @staticmethod
-    def _draw_multi_recipe_list(layout, process_sett):
-        row = layout.row()
-        row.template_list(
-            "HG_UL_MULTI_RECIPE",
-            "",
-            process_sett,
-            "multi_recipes",
-            process_sett,
-            "multi_recipes_index",
-            rows=4,
-        )
-        # Placeholder until recipes can be added to the list
-        button_col = row.column()
-        button_col.enabled = False
-        button_col.label(text="", icon="ADD")
-
-        draw_paragraph(
-            layout,
-            "Processing with multiple recipes at once is not available yet.",
-            alignment="CENTER",
-            enabled=False,
-        )
-
-
-class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_BAKE"
-    bl_label = "Bake Textures"
-    bl_order = 6
-    icon_name = "RENDERLAYERS"
-    enabled_propname = "baking_enabled"
-    help_url = "baking"
-    forbidden_propname = "was_baked"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        self._draw_documentation_button()
-        human = Human.from_existing(context.object)
-        layout = self.layout
-        layout.enabled = getattr(context.scene.HG3D.process, self.enabled_propname)
-        if human.process.was_baked:
-            layout.alert = True
-            layout.label(text="Already baked!")
-            return
-
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        bake_sett = sett.process.baking
-
-        if self._draw_baking_warning_labels(context, layout):
-            return
-
-        col = get_flow(sett, layout)
-        self.draw_subtitle("Quality", col, "SETTINGS")
-        col.prop(bake_sett, "samples", text="Samples")
-
-        layout.separator()
-
-        col = get_flow(sett, layout)
-
-        self.draw_subtitle("Resolution", col, "IMAGE_PLANE")
-
-        for res_type in ["body", "eyes", "teeth", "clothes"]:
-            col.prop(bake_sett, f"res_{res_type}", text=res_type.capitalize())
-
-        row = col.row(align=True)
-
-        has_haircards = (
-            context.scene.HG3D.process.haircards_enabled or human.process.has_haircards
-        )
-        row.enabled = has_haircards
-        row.prop(bake_sett, "res_haircards", text="Haircards")
-
-        row = col.row(align=True)
-        row.enabled = has_haircards and bake_sett.file_type != "jpeg"
-        row.prop(bake_sett, "pack_haircard_alpha")
-
-    def _draw_baking_warning_labels(self, context, layout) -> bool:
-        """Draws warning if no human is selected or textures are already baked.
-
-        Args:
-            context (bpy.context): Blender context
-            layout (UILayout): layout to draw warning labels in
-
-        Returns:
-            bool: True if problem found, causing rest of ui to cancel
-        """
-        human = Human.from_existing(context.object)
-        if not human:
-            layout.label(text="No human selected")
-            return True
-
-        if "hg_baked" in human.objects.rig:
-            layout.label(text="Already baked")
-            return True
-
-        return False
-
-
-class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_MODAPPLY"
-    bl_label = "Apply Modifiers"
-    bl_order = 7
-    icon_name = "MOD_SUBSURF"
-    enabled_propname = "modapply_enabled"
-    help_url = "modapply"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        self._draw_documentation_button()
-        layout = self.layout
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        col = layout.column(align=True)
-        col.label(text="Select modifiers to be applied:")
-        col.template_list(
-            "HG_UL_MODAPPLY",
-            "",
-            context.scene,
-            "modapply_col",
-            context.scene,
-            "modapply_col_index",
-        )
-
-        row = col.row(align=True)
-        row.operator("hg3d.ulrefresh", text="Refresh").uilist_type = "modapply"
-        row.operator("hg3d.selectmodapply", text="All").select_all = True
-        row.operator("hg3d.selectmodapply", text="None").select_all = False
-
-        layout.separator(factor=0.5)
-
-        col = layout.column(align=True)
-        col.label(text="Objects to apply:")
-        row = col.row(align=True)
-        row.prop(sett.process.modapply, "apply_body", toggle=True)
-        row.prop(sett.process.modapply, "apply_eyes", toggle=True)
-        row = col.row(align=True)
-        row.prop(sett.process.modapply, "apply_teeth", toggle=True)
-        row.prop(sett.process.modapply, "apply_clothing", toggle=True)
-
-        layout.separator()
-        col = layout.column(align=True)
-        self.draw_subtitle("Options", col, "SETTINGS")
-        col.prop(sett.process.modapply, "apply_hidden", text="Apply hidden modifiers")
-
-
 class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MESHES"
     bl_label = "Optimize Meshes"
-    bl_order = 0
-    icon_name = "NORMALS_VERTEX"
-    enabled_propname = "lod_enabled"
+    bl_order = 1
+    icon_name = "MOD_DECIM"
+    toggle_group = "meshes"
     help_url = "lod"
-    forbidden_propname = "is_lod"
+
+    def summary(self, context) -> str:
+        """The triangles of the first level, hair not included."""
+        human = _human(context)
+        if not human:
+            return ""
+        estimates = self._estimates(context, human)
+        tris = sum(count for part, count in estimates[0].items() if part != "hair")
+        return f"{_short(round(tris, -3))} tris" if tris >= 10_000 else f"{tris} tris"
+
+    @staticmethod
+    def _estimates(context, human):
+        """Triangles per part and level, every mesh original when turned off."""
+        props = _props(context)
+        meshes = props.meshes
+        if meshes.enabled:
+            return [
+                estimate_triangles(
+                    human,
+                    quality_from_props(level),
+                    props.haircards.enabled,
+                    meshes.remove_clothing_subdiv,
+                    meshes.remove_clothing_solidify,
+                )
+                for level in props.lods
+            ]
+        original = quality_of_tier("original")
+        return [
+            estimate_triangles(human, original, props.haircards.enabled, False, False)
+            for _ in props.lods
+        ]
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
+        props = _props(context)
+        human = _human(context)
+        levels = list(props.lods)
         col = self.layout.column()
-        human = Human.from_existing(context.object)
-        if human.is_trial:
-            col.label(text="Not available in trial version.")
-            col.label(text="Reason: LOD won't work properly")
-            col.label(text="on mesh with holes.")
-            return
-        if human.process.is_lod:
-            col.alert = True
-            col.label(text="LOD already generated!")
-            return
+        if human and human.is_trial:
+            col.label(text="Body reduction is not available in the trial version.")
 
-        lod_sett = context.scene.HG3D.process.lod
-        tris = human.process.lod.estimate_triangles(
-            int(lod_sett.body_lod),
-            lod_sett.clothing,
-            lod_sett.eyes,
-            int(lod_sett.teeth),
-            lod_sett.remove_clothing_subdiv,
-            lod_sett.remove_clothing_solidify,
+        estimates = self._estimates(context, human) if human else []
+
+        parts = (
+            ("body", "Body", "body", "lod_body"),
+            ("clothing", "Clothing", "outfit", "lod_clothing"),
+            ("eyes", "Eyes", "eyes", "lod_eyes"),
+            ("teeth", "Teeth", "face", "lod_teeth"),
         )
-
-        self._draw_category_title(col, "Body", "body", tris["body"])
-        self._draw_thumbnail_picker(context, col, lod_sett, "body_lod", "lod_body")
-
-        col.separator()
-        self._draw_category_title(col, "Clothing", "outfit", tris["clothing"])
-        self._draw_thumbnail_picker(
-            context, col, lod_sett, "clothing", "lod_clothing"
-        )
-        col.prop(lod_sett, "remove_clothing_subdiv", text="Remove clothing subdiv")
-        col.prop(lod_sett, "remove_clothing_solidify", text="Remove clothing solidify")
-
-        col.separator()
-        self._draw_category_title(col, "Eyes", "eyes", tris["eyes"])
-        self._draw_thumbnail_picker(context, col, lod_sett, "eyes", "lod_eyes")
-        if lod_sett.eyes == "original":
-            col.label(text="Not game ready", icon="ERROR")
-            draw_paragraph(
+        for prop_name, label, icon, icon_prefix in parts:
+            row = col.row()
+            row.label(text=label, icon_value=get_hg_icon(icon))
+            if estimates and len(levels) == 1:
+                self._draw_tris_count(row, estimates[0][prop_name])
+            self._draw_thumbnail_picker(
+                context,
                 col,
-                "The layered eyes with a transparent cornea only render in Blender.",
-                enabled=False,
+                levels,
+                prop_name,
+                icon_prefix,
+                [tris[prop_name] for tris in estimates] if estimates else None,
             )
+            if prop_name == "eyes" and any(level.eyes == "original" for level in levels):
+                col.label(text="Not game ready", icon="ERROR")
+                draw_paragraph(
+                    col,
+                    "The layered eyes with a transparent cornea only render in Blender.",
+                    enabled=False,
+                )
+            col.separator()
 
-        col.separator()
-        self._draw_category_title(col, "Teeth", "face", tris["teeth"])
-        self._draw_thumbnail_picker(context, col, lod_sett, "teeth", "lod_teeth")
+        col.prop(props.meshes, "remove_hidden_skin")
+        box = self._draw_advanced(col, props.meshes)
+        if box:
+            box.prop(props.meshes, "remove_clothing_subdiv")
+            box.prop(props.meshes, "remove_clothing_solidify")
 
-        col.separator()
-        row = col.row()
-        row.label(text="Total, without hair:")
-        self._draw_tris_count(row, sum(tris.values()))
+        if estimates:
+            col.separator()
+            sub = col.column(align=True)
+            for index, tris in enumerate(estimates):
+                row = sub.row()
+                row.label(text=f"LOD{index}" if len(levels) > 1 else "Total")
+                self._draw_tris_count(
+                    row, sum(count for part, count in tris.items() if part != "hair")
+                )
 
 
 class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_HAIRCARDS"
-    bl_label = "Generate Haircards"
-    bl_order = 1
-    icon_name = "hair"
-    enabled_propname = "haircards_enabled"
-    help_url = "haircards"
-    forbidden_propname = "has_haircards"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        self._draw_documentation_button()
-        human = Human.from_existing(context.object)
-        if human.process.has_haircards:
-            self.layout.alert = True
-            self.layout.label(text="Haircards already generated!")
-            return
-
-        col = self.layout.column()
-        hairc_sett = context.scene.HG3D.process.haircards
-
-        tris = human.hair.estimate_haircards_triangles(hairc_sett.quality)
-        self._draw_category_title(col, "Hair", "hair", tris)
-        # A large thumbnail of the chosen quality, clicking it shows all of them
-        col.template_icon_view(
-            hairc_sett, "quality", show_labels=True, scale=8, scale_popup=6
-        )
-        col.prop(hairc_sett, "quality", text="")
-
-        message = (
-            "The quality applies to the hair on the scalp and the face. If you are"
-            " baking textures, see Bake Textures menu for haircard baking resolution."
-        )
-
-        draw_paragraph(self.layout, text=message, enabled=False)
-
-
-class HG_PT_GAME_RIG(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_GAME_RIG"
-    bl_label = "Game Rig"
+    bl_label = "Haircards"
     bl_order = 2
-    icon_name = "ARMATURE_DATA"
-    enabled_propname = "game_rig_enabled"
-    help_url = "gamerig"
-    forbidden_propname = "has_game_rig"
+    icon_name = "hair"
+    toggle_group = "haircards"
+    help_url = "haircards"
+
+    def summary(self, context) -> str:
+        props = _props(context)
+        if not props.haircards.enabled:
+            return ""
+        return props.lods[0].haircards.replace("_only", "").capitalize()
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
-        human = Human.from_existing(context.object)
-        rig_sett = context.scene.HG3D.process.game_rig
+        props = _props(context)
+        human = _human(context)
+        levels = list(props.lods)
+        col = self.layout.column()
+        if len(levels) == 1:
+            level = levels[0]
+            if human:
+                row = col.row()
+                row.label(text="Hair", icon_value=get_hg_icon("hair"))
+                self._draw_tris_count(row, human.hair.estimate_haircards_triangles(level.haircards))
+            # A large thumbnail of the chosen quality, clicking it shows all of them
+            col.template_icon_view(level, "haircards", show_labels=True, scale=8, scale_popup=6)
+            col.prop(level, "haircards", text="")
+        else:
+            tris = (
+                [human.hair.estimate_haircards_triangles(level.haircards) for level in levels]
+                if human
+                else None
+            )
+            self._draw_level_rows(col, levels, "haircards", tris)
+        draw_paragraph(
+            self.layout,
+            "The particle hair is not carried by any file format. The cards"
+            " replace it, with their own baked textures.",
+            enabled=False,
+        )
 
-        if human.process.has_game_rig:
-            self.layout.alert = True
-            self.layout.label(text="Already a game rig!")
-            return
-        if human.pose.rigify.is_rigify:
-            self.layout.alert = True
-            self.layout.label(text="Not available for Rigify humans", icon="ERROR")
+
+class HG_PT_SKELETON(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_SKELETON"
+    bl_label = "Skeleton"
+    bl_order = 3
+    icon_name = "ARMATURE_DATA"
+    toggle_group = "skeleton"
+    help_url = "gamerig"
+
+    def summary(self, context) -> str:
+        skeleton = _props(context).skeleton
+        return SKELETON_LABELS[skeleton.names] if skeleton.enabled else ""
+
+    def draw(self, context):
+        self.check_enabled(context)
+        self._draw_documentation_button()
+        props = _props(context)
+        skeleton = props.skeleton
+        human = _human(context)
+        levels = list(props.lods)
+        col = self.layout.column()
+
+        if human and human.pose.rigify.is_rigify:
+            col.alert = True
+            col.label(text="Not available for Rigify humans", icon="ERROR")
+            col.alert = False
             draw_paragraph(
-                self.layout,
-                "The game rig is made from the Human Generator rig, which Rigify"
-                " replaced. Process the human before generating Rigify.",
+                col,
+                "The skeleton is made from the Human Generator rig, which Rigify"
+                " replaced. The Rigify rig is exported as it is.",
                 enabled=False,
             )
             return
 
-        col = self.layout.column()
         draw_paragraph(
             col,
             "Removes the control bones, constraints and drivers, adds a root bone"
@@ -481,86 +505,47 @@ class HG_PT_GAME_RIG(ProcessPanel, bpy.types.Panel):
             " stay as blend shapes.",
             enabled=False,
         )
-
         col.separator()
-        row = col.row()
-        row.scale_y = 1.5
-        row.prop(rig_sett, "preset", text="")
-        preset = get_preset(rig_sett.preset)
-        draw_paragraph(col, preset["description"], enabled=False)
+        flow = _flow(col)
+        flow.prop(skeleton, "names")
+        if skeleton.names == "custom":
+            flow.prop(skeleton, "names_file", text="File")
+        flow.prop(skeleton, "rest_pose")
 
-        col.separator()
-        changed = game_rig_preset_changed(rig_sett)
-        row = col.row(align=True)
-        row.alignment = "LEFT"
-        row.prop(
-            rig_sett,
-            "show_advanced",
-            text="Advanced" + (" (changed)" if changed else ""),
-            icon="TRIA_DOWN" if rig_sett.show_advanced else "TRIA_RIGHT",
-            emboss=False,
-        )
-        if changed:
-            row.operator("hg3d.game_rig_reset", text="", icon="LOOP_BACK")
-
-        if rig_sett.show_advanced:
-            self._draw_advanced(col.box(), rig_sett)
-        else:
-            self._draw_summary(col, rig_sett)
-
-        if context.scene.HG3D.process.rig_renaming_enabled:
-            col.separator()
-            draw_paragraph(
-                col,
-                "The preset names the bones, Bone Renaming is skipped.",
-                enabled=False,
-            )
-
-    def _draw_summary(self, layout, rig_sett):
-        """One line with the settings of the preset, when advanced is collapsed."""
-        rest_pose = "T-pose" if rig_sett.rest_pose == "t_pose" else "A-pose"
-        root = f"root '{rig_sett.root_bone_name}'" if rig_sett.add_root_bone else "no root"
-        bones = (
-            "unlimited bones/vertex"
-            if rig_sett.max_influences == "0"
-            else f"{rig_sett.max_influences} bones/vertex"
-        )
-        units = "cm" if rig_sett.units == "centimeters" else "m"
-        draw_paragraph(
-            layout, f"{rest_pose}, {root}, {bones}, {units}", enabled=False
-        )
-
-    def _draw_advanced(self, box, rig_sett):
-        col = box.column()
-
-        self.draw_subtitle("Rest pose", col, alignment="LEFT")
-        row = col.row(align=True)
-        row.prop(rig_sett, "rest_pose", expand=True)
-
-        col.separator()
-        self.draw_subtitle("Root bone", col, alignment="LEFT")
-        row = col.row(align=True)
-        row.prop(rig_sett, "add_root_bone", text="Add", toggle=True)
+        box = self._draw_advanced(col, skeleton)
+        if not box:
+            return
+        row = box.row(align=True)
+        row.prop(skeleton, "root_bone", text="Root bone", toggle=True)
         sub = row.row(align=True)
-        sub.enabled = rig_sett.add_root_bone
-        sub.prop(rig_sett, "root_bone_name", text="")
+        sub.enabled = skeleton.root_bone
+        sub.prop(skeleton, "root_bone_name", text="")
 
-        col.separator()
-        self.draw_subtitle("Keep bones", col, alignment="LEFT")
-        flow = col.grid_flow(columns=2, align=True)
+        box.separator()
+        self.draw_subtitle("Keep bones", box, alignment="LEFT")
+        grid = box.grid_flow(columns=2, align=True)
         for prop_name in ("keep_eyes", "keep_jaw", "keep_breasts", "keep_metacarpals"):
-            flow.prop(rig_sett, prop_name, toggle=True)
+            grid.prop(skeleton, prop_name, toggle=True)
 
-        col.separator()
-        self.draw_subtitle("Bones per vertex", col, alignment="LEFT")
-        row = col.row(align=True)
-        row.prop(rig_sett, "max_influences", expand=True)
+        box.separator()
+        self.draw_subtitle("Bones per vertex", box, alignment="LEFT")
+        if len(levels) == 1:
+            row = box.row(align=True)
+            row.prop(levels[0], "bones_per_vertex", expand=True)
+        else:
+            sub = box.column(align=True)
+            for index, level in enumerate(levels):
+                row = sub.row(align=True)
+                label = row.row(align=True)
+                label.scale_x = 0.5
+                label.label(text=str(index))
+                row.prop(level, "bones_per_vertex", expand=True)
 
-        col.separator()
-        self.draw_subtitle("Units", col, alignment="LEFT")
-        row = col.row(align=True)
-        row.prop(rig_sett, "units", expand=True)
-        draw_paragraph(col, "Only applies to FBX files.", enabled=False)
+        if props.output.format == "fbx":
+            box.separator()
+            self.draw_subtitle("Units", box, alignment="LEFT")
+            row = box.row(align=True)
+            row.prop(skeleton, "units", expand=True)
 
 
 class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
@@ -568,34 +553,56 @@ class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
     bl_label = "Shape Keys"
     bl_order = 4
     icon_name = "SHAPEKEY_DATA"
-    enabled_propname = "shapekeys_enabled"
+    toggle_group = "shape_keys"
     help_url = "shapekeys"
+
+    def summary(self, context) -> str:
+        props = _props(context)
+        keys = props.shape_keys
+        if not keys.enabled:
+            return ""
+        total = 0
+        for group, *_ in KEY_GROUPS:
+            if getattr(keys, group) == "keep":
+                total += sum(1 for item in getattr(keys, f"items_{group}") if item.enabled)
+        return f"{total} keys" if total else ""
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
-        human = Human.from_existing(context.object)
-        sk_sett = context.scene.HG3D.process.shapekeys
-        groups = key_groups(human)
+        props = _props(context)
+        keys = props.shape_keys
 
         col = self.layout.column()
         draw_paragraph(
             col,
             "Keep a group as shape keys, bake it into the mesh or remove it. Kept"
-            " sliders become shape keys.",
+            " sliders become shape keys. The face rig and the 1-click expressions"
+            " are loaded from the library. Turned off, no shape keys are kept.",
             enabled=False,
         )
+        row = col.row()
+        row.alignment = "RIGHT"
+        row.operator("hg3d.refresh_key_lists", text="", icon="FILE_REFRESH", emboss=False)
         for group, label, _ in KEY_GROUPS:
+            items = getattr(keys, f"items_{group}")
             col.separator(factor=0.5)
             row = col.row()
             row.label(text=label)
-            self._draw_key_count(row, group, len(groups[group]))
+            sub = row.row()
+            sub.alignment = "RIGHT"
+            sub.enabled = False
+            sub.label(text=f"{len(items)} keys")
             row = col.row(align=True)
-            row.prop(sk_sett, group, expand=True)
+            row.prop(keys, group, expand=True)
+            if getattr(keys, group) == "keep":
+                self._draw_keep_selection(col, keys, group, items)
 
-        kept = driven_groups_kept(
-            (group, getattr(sk_sett, group)) for group, *_ in KEY_GROUPS
-        )
+        if len(props.lods) > 1:
+            col.separator()
+            col.prop(keys, "lod0_only")
+
+        kept = driven_groups_kept((group, getattr(keys, group)) for group, *_ in KEY_GROUPS)
         if kept:
             col.separator()
             row = col.row()
@@ -608,161 +615,180 @@ class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
                 enabled=False,
             )
 
-    @staticmethod
-    def _draw_key_count(row, group, count):
-        sub = row.row()
-        sub.alignment = "RIGHT"
-        sub.enabled = False
-        if group == "face_rig" and not count:
-            sub.label(text="not loaded")
-        else:
-            sub.label(text=f"{count} keys")
+    def _draw_keep_selection(self, layout, keys, group, items):
+        """The keys of a kept group to tick, in a collapsible list."""
+        box = self._draw_selection_box(layout, keys, f"open_{group}", items, group, "keys")
+        if not box:
+            return
+        if not items:
+            draw_paragraph(box, "Nothing to select, refresh the lists.", enabled=False)
+        grid = box.grid_flow(columns=2, align=True, row_major=True)
+        for item in items:
+            grid.prop(item, "enabled", text=item.name)
 
 
-class HG_PT_BONE_RENAMING(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_BONE_RENAMING"
-    bl_label = "Bone Renaming"
+class HG_PT_TEXTURES(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_TEXTURES"
+    bl_label = "Bake textures"
     bl_order = 5
-    icon_name = "MOD_ARMATURE"
-    enabled_propname = "rig_renaming_enabled"
-    help_url = "bonerename"
+    icon_name = "TEXTURE"
+    toggle_group = "textures"
+    help_url = "baking"
+
+    def toggle_enabled(self, context) -> bool:
+        # Files always need the baked textures
+        return _props(context).output.format == "in_file"
+
+    def summary(self, context) -> str:
+        """The resolution tier, files bake whatever the toggle says."""
+        props = _props(context)
+        if not props.textures.enabled and props.output.format == "in_file":
+            return ""
+        return TIER_LABELS[texture_tier_of(_resolution_from_props(props.textures))]
 
     def draw(self, context):
-        self.check_enabled(context)
+        props = _props(context)
+        textures = props.textures
+        self.layout.enabled = textures.enabled or props.output.format != "in_file"
         self._draw_documentation_button()
-        naming_sett = context.scene.HG3D.process.rig_renaming
-        if context.scene.HG3D.process.game_rig_enabled:
-            row = self.layout.row()
-            row.alert = True
-            row.label(text="Skipped, the game rig names the bones", icon="ERROR")
-        col = self.layout.column(align=True)
-        col.use_property_split = True
-        col.use_property_decorate = False
-
-        self.draw_subtitle("Suffix naming", col, "MOD_MIRROR")
-        col.prop(naming_sett, "suffix_L", text="Left")
-        col.prop(naming_sett, "suffix_R", text="Right")
-
-        prop_dict = defaultdict()
-        for prop in naming_sett.bl_rna.properties:
-            description = prop.description
-            if not description.startswith("Category"):
-                continue
-            category = description.split(" ")[1].replace(",", "").capitalize()
-            prop_dict.setdefault(category, []).append(prop)
-
-        for category, props in prop_dict.items():
-            col.separator()
-            self.draw_subtitle(category, col, icon="OPTIONS", alignment="CENTER")
-            for prop in props:
-                mirrored_icon = (
-                    {"icon": "MOD_MIRROR"} if "True" in prop.description else {}
-                )
-                col.prop(naming_sett, prop.identifier, **mirrored_icon)
-
-
-def create_token_row(layout, token_name):
-    row = layout.row()
-    row.scale_y = 0.8
-    row.label(text=token_name)
-
-
-def create_disabled_row(layout, text):
-    row = layout.row()
-    row.scale_y = 0.8
-    row.enabled = False
-    row.label(text=text)
-
-
-class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_RENAMING"
-    bl_label = "Other Renaming"
-    bl_order = 8
-    icon_name = "OUTLINER_OB_FONT"
-    enabled_propname = "renaming_enabled"
-    help_url = "otherrename"
-
-    def draw(self, context):
-        self.check_enabled(context)
-        self._draw_documentation_button()
-        rename_sett = context.scene.HG3D.process.renaming
-
-        box = self.layout.box()
-        self.draw_subtitle("Tokens", box, "HELP")
-
-        col = box.column(align=True)
-        create_token_row(col, ". (period at start of name)")
-        create_disabled_row(col, "Hides material in Blender")
-        create_token_row(col, "Suffix")
-        create_disabled_row(col, "Custom suffix: e.g. _LOD1")
-        create_token_row(col, "{name}")
-        create_disabled_row(col, "Human name: e.g. Jake")
-        create_token_row(col, "{original_name}")
-        create_disabled_row(col, "Original name: e.g. HG_Eyes")
-        create_token_row(col, "{custom}")
-        create_disabled_row(col, "Custom token defined below.")
-
         col = self.layout.column()
-        col.use_property_decorate = False
-        col.use_property_split = True
-        col.prop(rename_sett, "custom_token", text="{custom}")
-        col.prop(rename_sett, "suffix", text="Suffix")
-        self.layout.separator()
+        if props.output.format != "in_file":
+            draw_paragraph(col, "Files need baked textures, so this is always on.", enabled=False)
 
-        self.draw_subtitle("Objects", self.layout, "MESH_CUBE")
-        row = self.layout.row()
-        row.alignment = "CENTER"
-        row.scale_y = 0.8
-        row.prop(rename_sett, "use_suffix")
-        for prop_name in (
-            "rig_obj",
-            "body_obj",
-            "eye_obj",
-            "haircards_obj",
-            "upper_teeth_obj",
-            "lower_teeth_obj",
-            "clothing",
-        ):
-            self.layout.prop(rename_sett, prop_name)
+        flow = _flow(col)
+        flow.prop(textures, "tier", text="Resolution")
+        flow.prop(textures, "file_format", text="Format")
+        if textures.file_format == "jpeg" and props.haircards.enabled:
+            row = flow.row()
+            row.alert = True
+            row.label(text="JPEG drops the hair alpha", icon="ERROR")
 
-        self.layout.separator()
-        self.draw_subtitle("Materials", self.layout, "MATERIAL")
+        col.separator()
+        self.draw_subtitle("Material setup", col, alignment="LEFT")
+        flow = _flow(col)
+        flow.prop(textures, "workflow")
+        flow.prop(textures, "normal_map")
 
-        row = self.layout.row()
-        row.alignment = "CENTER"
-        row.scale_y = 0.8
-        row.prop(rename_sett.materials, "use_suffix")
-        for prop in rename_sett.materials.bl_rna.properties:
-            if prop.identifier in ("bl_rna", "rna_type", "name", "use_suffix"):
-                continue
-            self.layout.prop(rename_sett.materials, prop.identifier)
+        box = self._draw_advanced(col, textures)
+        if not box:
+            return
+        self.draw_subtitle("Resolution per set", box, alignment="LEFT")
+        flow = _flow(box)
+        for set_name in TEXTURE_SETS:
+            flow.prop(textures, f"res_{set_name}", text=set_name.capitalize())
+
+        box.separator()
+        self.draw_subtitle("Passes", box, alignment="LEFT")
+        grid = box.grid_flow(columns=len(TEXTURE_PASSES) + 1, align=True, row_major=True)
+        grid.label(text="")
+        for pass_id, *_ in TEXTURE_PASSES:
+            grid.label(text=PASS_LABELS[pass_id])
+        for set_name in TEXTURE_SETS:
+            grid.label(text=set_name.capitalize())
+            for pass_id, *_ in TEXTURE_PASSES:
+                grid.prop(textures, f"pass_{set_name}_{pass_id}", text="")
+
+        box.separator()
+        row = box.row()
+        row.enabled = textures.file_format != "jpeg" and props.haircards.enabled
+        row.prop(textures, "pack_hair_alpha")
+        row = box.row(align=True)
+        row.label(text="Samples")
+        row.prop(textures, "samples", expand=True)
+
+
+class HG_PT_ANIMATIONS(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_ANIMATIONS"
+    bl_label = "Animations"
+    bl_order = 6
+    icon_name = "ACTION"
+    toggle_group = "animations"
+
+    @classmethod
+    def poll(cls, context):
+        if not super().poll(context):
+            return False
+        return _props(context).output.format in ("in_file", "fbx", "glb", "gltf")
+
+    def summary(self, context) -> str:
+        animations = _props(context).animations
+        if not animations.enabled:
+            return ""
+        return f"{sum(1 for clip in animations.clips if clip.enabled)} clips"
+
+    def draw(self, context):
+        self.check_enabled(context)
+        props = _props(context)
+        animations = props.animations
+        col = self.layout.column()
+
+        row = col.row(align=True)
+        row.prop(animations, "source", expand=True)
+        row.operator("hg3d.refresh_clips", text="", icon="FILE_REFRESH")
+
+        box = self._draw_selection_box(
+            col, animations, "clips_open", animations.clips, "clips", "clips"
+        )
+        if box:
+            if not animations.clips:
+                text = (
+                    "No animations on this human, see the Pose section."
+                    if animations.source == "human"
+                    else "No animations in the library."
+                )
+                draw_paragraph(box, text, enabled=False)
+            sub = box.column(align=True)
+            for clip in animations.clips:
+                row = sub.row(align=True)
+                row.prop(clip, "enabled", text="")
+                row.label(text=clip.name, icon="ACTION" if clip.is_hg else "ANIM_DATA")
+        if animations.source == "human" and any(not clip.is_hg for clip in animations.clips):
+            draw_paragraph(
+                col,
+                "Clips that are not from the animation library are exported as"
+                " they are, in the A-pose rest pose.",
+                enabled=False,
+            )
+
+        col.separator()
+        if props.output.format != "in_file":
+            _flow(col).prop(animations, "layout", text="Files")
+
+        box = self._draw_advanced(col, animations)
+        if not box:
+            return
+        flow = _flow(box)
+        flow.prop(animations, "root_motion")
+        flow.prop(animations, "sample_rate")
 
 
 class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_SCRIPTS"
-    bl_label = "Custom scripts"
-    bl_order = 9
+    bl_label = "Scripts"
+    bl_order = 7
     icon_name = "FILE_SCRIPT"
-    enabled_propname = "scripting_enabled"
+    toggle_group = "scripts"
     help_url = "scripts"
+
+    def summary(self, context) -> str:
+        scripts = _props(context).scripts
+        count = len(scripts.items)
+        return f"{count} script{'s' if count != 1 else ''}" if scripts.enabled and count else ""
 
     def draw(self, context):
         self.check_enabled(context)
         self._draw_documentation_button()
+        props = _props(context)
+        scripts = props.scripts
         col = self.layout.column()
-        self.draw_subtitle("Available Scripts", col)
-        row = col.row(align=True)
-        row.scale_y = 1.5
-        row.prop(context.scene.HG3D.process.scripting, "available_scripts", text="")
-        row.operator("hg3d.add_script", text="", icon="ADD")
+        draw_paragraph(
+            col,
+            "Python scripts that run on the processed copy, before or after the"
+            " file is written. Scripts of a stage run top to bottom.",
+            enabled=False,
+        )
 
-        coll = context.scene.hg_scripts_col
-        if coll:
-            self.draw_subtitle("Selected Scripts", col)
-            draw_paragraph(
-                col, text="Executed top to bottom.", alignment="CENTER", enabled=False
-            )
-        for item in coll:
+        for index, item in enumerate(scripts.items):
             box = col.box()
             row = box.row(align=True)
             row.prop(
@@ -776,71 +802,109 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
             subrow = row.row(align=True)
             subrow.scale_x = 0.8
             op = subrow.operator("hg3d.move_script", text="", icon="TRIA_UP")
-            op.name = item.name
-            op.move_up = False
+            op.index, op.direction = index, -1
             op = subrow.operator("hg3d.move_script", text="", icon="TRIA_DOWN")
-            op.name = item.name
-            op.move_up = True
-
+            op.index, op.direction = index, 1
             row.separator()
-
-            row.operator("hg3d.remove_script", text="", icon="X").name = item.name
+            row.operator("hg3d.remove_script", text="", icon="X").index = index
 
             if not item.menu_open:
                 continue
-
-            row = box.row()
-            row.enabled = False
-            draw_paragraph(row, text=item.description, alignment="LEFT")
-            if not item.args:
-                continue
-            col = box.column()
-            col.label(text="Arguments:")
+            if item.description:
+                sub = box.row()
+                sub.enabled = False
+                draw_paragraph(sub, text=item.description, alignment="LEFT")
+            flow = _flow(box)
+            flow.prop(item, "stage")
+            flow.prop(item, "on_error")
             for arg in item.args:
-                arg.draw_prop(col)
+                arg.draw_prop(flow)
+
+        row = col.row(align=True)
+        row.scale_y = 1.2
+        row.operator_menu_enum("hg3d.add_script", "script", text="Add script", icon="ADD")
+        row.operator("hg3d.new_script", text="New", icon="FILE_NEW")
 
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
-    bl_order = 10
+    bl_order = 8
 
     def draw(self, context):
         box = self.layout.box()
         is_trial = get_prefs().is_trial
         box.enabled = not is_trial
-
-        sett = context.scene.HG3D  # type:ignore[attr-defined]
-        pr_sett = sett.process
+        props = _props(context)
+        output = props.output
+        is_file = output.format != "in_file"
 
         self.draw_subtitle("Output", box, icon="SETTINGS")
-
-        row = box.row(align=True)
-        row.scale_y = 1.5
-        row.prop(pr_sett, "output", expand=True)
-
-        if pr_sett.baking_enabled or pr_sett.output == "export":
-            col = box.column(align=True)
-            col.use_property_split = True
-            col.use_property_decorate = False
-
-            bake_sett = sett.process.baking
-            if pr_sett.baking_enabled:
-                col.prop(bake_sett, "file_type", text="Format:", icon="TEXTURE")
-
-            if pr_sett.output == "export":
-                col.prop(pr_sett, "file_type", text=" ", icon="MESH_CUBE")
-                col.prop(pr_sett, "output_name", text="Filename")
-
-            label = "Tex. Folder" if pr_sett.output != "export" else "Folder"
-            col.prop(bake_sett, "export_folder", text=label)
-
-            row = col.row()
+        flow = _flow(box)
+        flow.prop(output, "name", text="Name")
+        if is_file:
+            flow.prop(output, "folder", text="Folder")
+            row = flow.row()
             row.alignment = "RIGHT"
-            row.label(text="HG folder when empty", icon="INFO")
+            row.enabled = False
+            folder = output_folder(props_to_settings(props))
+            row.label(text=self._shorten(folder), icon="INFO")
+
+        advanced = self._draw_advanced(box, output)
+        if advanced:
+            flow = _flow(advanced)
+            flow.prop(output, "naming")
+            if output.naming == "custom":
+                for name in ("rig", "mesh", "material", "texture"):
+                    flow.prop(output, f"template_{name}")
+            if is_file:
+                flow.prop(output, "textures")
+                flow.prop(output, "keep_copy")
+            if output.format == "fbx":
+                advanced.separator()
+                self.draw_subtitle("FBX", advanced, alignment="LEFT")
+                flow = _flow(advanced)
+                fbx = output.fbx
+                flow.prop(fbx, "axis_forward")
+                flow.prop(fbx, "axis_up")
+                flow.prop(fbx, "primary_bone_axis")
+                flow.prop(fbx, "secondary_bone_axis")
+                flow.prop(fbx, "smoothing")
+                flow.prop(fbx, "triangulate")
+                flow.prop(fbx, "leaf_bones")
+                flow.prop(fbx, "custom_properties")
+            elif output.format in ("glb", "gltf"):
+                advanced.separator()
+                self.draw_subtitle("glTF", advanced, alignment="LEFT")
+                flow = _flow(advanced)
+                flow.prop(output.gltf, "image_format")
+                flow.prop(output.gltf, "tangents")
+                flow.prop(output.gltf, "draco")
+
+        human_rigs = find_multiple_in_list(context.selected_objects)
+        count = len(human_rigs)
+        box.separator(factor=0.5)
+        humans_box = box.box()
+        row = humans_box.row()
+        row.alignment = "CENTER"
+        row.prop(
+            props,
+            "human_list_isopen",
+            text=f"{count} {'human' if count == 1 else 'humans'} selected",
+            icon="TRIA_DOWN" if props.human_list_isopen else "TRIA_RIGHT",
+            emboss=False,
+        )
+        if props.human_list_isopen:
+            for human_rig in sorted(human_rigs, key=lambda rig: rig.name):
+                humans_box.label(text=human_rig.name, icon="DOT")
 
         row = box.row(align=True)
         row.scale_y = 1.5
-        row.operator("hg3d.process", text="Process", depress=True, icon="COMMUNITY")
+        label = LABELS.get(output.format, output.format)
+        if is_file:
+            text = f"Export to {label}" if count == 1 else f"Export {count} humans to {label}"
+        else:
+            text = "Make processed copy" if count == 1 else f"Make {count} processed copies"
+        row.operator("hg3d.process", text=text, depress=True, icon="EXPORT" if is_file else "DUPLICATE")
 
         draw_paragraph(
             box,
@@ -849,6 +913,27 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
             enabled=False,
         )
 
+        human = _human(context)
+        if human:
+            check = preflight(human, props_to_settings(props), context)
+            if check.errors or check.warnings:
+                box.separator(factor=0.5)
+            for error in check.errors:
+                row = box.row()
+                row.alert = True
+                draw_paragraph(row, error, alignment="LEFT")
+            for warning in check.warnings:
+                row = box.row()
+                row.label(text="", icon="ERROR")
+                draw_paragraph(row, warning, alignment="LEFT", enabled=False)
+
         self.layout.operator(
             "wm.url_open", text="Process Guide", icon="URL", emboss=False
         ).url = "https://help.humgen3d.com/process/overview"
+
+    @staticmethod
+    def _shorten(path: str, length: int = 38) -> str:
+        home = os.path.expanduser("~")
+        if path.startswith(home):
+            path = "~" + path[len(home) :]
+        return path if len(path) <= length else "…" + path[-length:]

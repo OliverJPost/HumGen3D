@@ -1,0 +1,39 @@
+{
+    "version": 2,
+    "label": "Godot",
+    "output": {
+        "format": "glb",
+        "naming": "plain",
+        "textures": "embedded"
+    },
+    "lods": [
+        {"body": 0, "clothing": "high", "eyes": "high", "teeth": 1, "haircards": "high", "bones_per_vertex": 4}
+    ],
+    "skeleton": {
+        "enabled": true,
+        "names": "humanoid",
+        "rest_pose": "t_pose",
+        "root_bone": true,
+        "root_bone_name": "Root",
+        "units": "meters"
+    },
+    "shape_keys": {
+        "face_rig": "keep",
+        "expressions": "keep",
+        "correctives": "keep",
+        "body": "bake",
+        "face": "bake",
+        "age": "bake"
+    },
+    "textures": {
+        "enabled": true,
+        "workflow": "metallic_roughness",
+        "normal_map": "opengl",
+        "file_format": "png"
+    },
+    "animations": {
+        "enabled": false,
+        "layout": "with_mesh",
+        "root_motion": "root"
+    }
+}

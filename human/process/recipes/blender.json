@@ -1,0 +1,45 @@
+{
+    "version": 2,
+    "label": "Blender render copy",
+    "output": {
+        "format": "in_file",
+        "naming": "plain",
+        "textures": "folder"
+    },
+    "lods": [
+        {"body": 0, "clothing": "original", "eyes": "original", "teeth": 0, "haircards": "ultra", "bones_per_vertex": 0}
+    ],
+    "meshes": {
+        "remove_hidden_skin": false,
+        "remove_clothing_subdiv": false,
+        "remove_clothing_solidify": false
+    },
+    "haircards": {
+        "enabled": false
+    },
+    "skeleton": {
+        "enabled": false,
+        "names": "humgen",
+        "rest_pose": "a_pose",
+        "root_bone": true,
+        "root_bone_name": "root",
+        "units": "meters"
+    },
+    "shape_keys": {
+        "face_rig": "keep",
+        "expressions": "keep",
+        "correctives": "keep",
+        "body": "bake",
+        "face": "bake",
+        "age": "bake"
+    },
+    "textures": {
+        "enabled": false,
+        "workflow": "separate",
+        "normal_map": "opengl",
+        "file_format": "png"
+    },
+    "animations": {
+        "enabled": false
+    }
+}
