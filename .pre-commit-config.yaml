@@ -48,6 +48,15 @@ repos:
           darglint
           ]
 
+      - id: api-docs
+        name: API docs up to date
+        stages: [commit]
+        language: python
+        entry: python scripts/api_docs.py --check
+        pass_filenames: false
+        files: \.py$
+        additional_dependencies: [griffe]
+
       - id: mypy
         name: mypy
         stages: [commit]
