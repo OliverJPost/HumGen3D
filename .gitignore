@@ -15,3 +15,6 @@ debug.log
 backend/updates/humgen3d.backend.updates_updater/
 backend/updates/humgen3d.backend.updates_updater/HumGen3D.backend.updates_updater_status.json
 backend/updates/humgen3d.backend.updates_updater/HumGen3D.backend.updates_updater_status.json
+
+# Obsidian vault settings when docs/ is opened as a vault
+docs/.obsidian/
