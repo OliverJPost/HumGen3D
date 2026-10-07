@@ -7,7 +7,7 @@ import bpy
 from HumGen3D import Human
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 
-FOLDER = "/Users/ole/Library/Mobile Documents/iCloud~md~obsidian/Documents/Human Generator 2/API"  # noqa
+FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "API")
 
 generated_files = []
 superclass_write_dict = {}
