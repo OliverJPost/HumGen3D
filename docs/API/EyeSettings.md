@@ -1,3 +1,6 @@
+---
+accessor: human.eyes
+---
 > Class for manipulating the eyes of the human.
 
     Also contains properties for changing the material values.

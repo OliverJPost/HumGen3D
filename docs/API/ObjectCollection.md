@@ -1,3 +1,6 @@
+---
+accessor: human.objects
+---
 > Access to objects human exists of with properties for specific ones.
 
 Accessible from: `human.objects`

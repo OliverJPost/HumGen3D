@@ -1,3 +1,6 @@
+---
+accessor: human.clothing
+---
 > Interface class for accessing OutfitSettings and FootwearSettings.
 
 Accessible from: `human.clothing`

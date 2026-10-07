@@ -1,3 +1,6 @@
+---
+accessor: human.skin.texture
+---
 > Class for changing the skin texture of the human.
 
 Accessible from: `human.skin.texture`

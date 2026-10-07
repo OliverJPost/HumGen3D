@@ -1,3 +1,6 @@
+---
+accessor: human.age
+---
 > Class to edit age of the human.
 
 Accessible from: `human.age`

@@ -1,3 +1,6 @@
+---
+accessor: human.props
+---
 > Properties added to every Blender object as object.HG.
 
     Used for storing information about the human itself.

@@ -1,3 +1,6 @@
+---
+accessor: human.process
+---
 > Class for accessing methods and subclasses for processing the human.
 
 Accessible from: `human.process`

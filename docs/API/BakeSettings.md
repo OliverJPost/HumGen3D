@@ -1,3 +1,6 @@
+---
+accessor: human.process.baking
+---
 > No docstring available.
 
 Accessible from: `human.process.baking`

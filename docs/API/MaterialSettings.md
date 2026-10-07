@@ -1,3 +1,6 @@
+---
+accessor: human.materials
+---
 > Interface for accessing materials of human.
 
 Accessible from: `human.materials`

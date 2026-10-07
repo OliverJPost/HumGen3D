@@ -1,3 +1,6 @@
+---
+accessor: human.expression
+---
 > Class for manipulating human expression.
 
     Either using 1-click expressions or with the facial rig.

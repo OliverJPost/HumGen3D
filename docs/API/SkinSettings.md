@@ -1,3 +1,6 @@
+---
+accessor: human.skin
+---
 > Class for manipulating skin material of human.
 
 Accessible from: `human.skin`

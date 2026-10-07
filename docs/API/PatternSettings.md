@@ -1,3 +1,6 @@
+---
+accessor: human.clothing.footwear.pattern
+---
 > Class for changing patterns on individual clothing items.
 
 Accessible from: `human.clothing.footwear.pattern`

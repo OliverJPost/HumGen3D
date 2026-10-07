@@ -1,3 +1,6 @@
+---
+accessor: human.body
+---
 > Class to edit body proportions of the human.
 
     The body proportions are changed by changing the values of the LiveKeys stored

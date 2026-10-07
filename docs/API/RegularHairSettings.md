@@ -1,3 +1,6 @@
+---
+accessor: human.hair.regular_hair
+---
 > Class for manipulating regular (head) hair of human.
 
 Accessible from: `human.hair.regular_hair`

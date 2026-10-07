@@ -1,3 +1,6 @@
+---
+accessor: human.clothing.outfit
+---
 > Class for adding/changing the outfit of a human.
 
     Most of the functionality of this class comes from the [[BaseClothing]] class,

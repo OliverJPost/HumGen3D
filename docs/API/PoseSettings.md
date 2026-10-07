@@ -1,3 +1,6 @@
+---
+accessor: human.pose
+---
 > Class for manipulating pose of human.
 
 Accessible from: `human.pose`

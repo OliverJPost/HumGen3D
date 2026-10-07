@@ -1,3 +1,6 @@
+---
+accessor: human.hair.face_hair
+---
 > Class for manipulating facial hair of human.
 
 Accessible from: `human.hair.face_hair`
