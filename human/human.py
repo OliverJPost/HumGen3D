@@ -749,6 +749,16 @@ class Human:
             add_to_collection(context, obj_copy)
 
         new_human = Human.from_existing(obj_copy)
+        # The copied shape keys still read the bones of the original rig
+        for obj in new_human.children:
+            key = obj.data.shape_keys if obj.type == "MESH" else None
+            if not key or not key.animation_data:
+                continue
+            for fcurve in key.animation_data.drivers:
+                for variable in fcurve.driver.variables:
+                    for target in variable.targets:
+                        if target.id == self.objects.rig:
+                            target.id = rig_copy
         # The shape keys of haircards follow the shape keys of the body
         for hair_obj in new_human.objects.haircards:
             hair_binding.retarget_drivers(

@@ -6,6 +6,8 @@ from typing import Optional
 import bpy
 from HumGen3D.common import find_multiple_in_list
 from HumGen3D.human.human import Human
+from HumGen3D.backend.properties.process_props import game_rig_preset_changed
+from HumGen3D.human.process.game_rig import get_preset
 from HumGen3D.human.process.shape_keys import (
     KEY_GROUPS,
     driven_groups_kept,
@@ -222,7 +224,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
 class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BAKE"
     bl_label = "Bake Textures"
-    bl_order = 5
+    bl_order = 6
     icon_name = "RENDERLAYERS"
     enabled_propname = "baking_enabled"
     help_url = "baking"
@@ -295,7 +297,7 @@ class HG_PT_BAKE(ProcessPanel, bpy.types.Panel):
 class HG_PT_MODAPPLY(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MODAPPLY"
     bl_label = "Apply Modifiers"
-    bl_order = 6
+    bl_order = 7
     icon_name = "MOD_SUBSURF"
     enabled_propname = "modapply_enabled"
     help_url = "modapply"
@@ -441,33 +443,130 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
         draw_paragraph(self.layout, text=message, enabled=False)
 
 
-class HG_PT_RIG(ProcessPanel, bpy.types.Panel):
-    bl_idname = "HG_PT_RIG"
-    bl_label = "Rig"
+class HG_PT_GAME_RIG(ProcessPanel, bpy.types.Panel):
+    bl_idname = "HG_PT_GAME_RIG"
+    bl_label = "Game Rig"
     bl_order = 2
     icon_name = "ARMATURE_DATA"
+    enabled_propname = "game_rig_enabled"
+    help_url = "gamerig"
+    forbidden_propname = "has_game_rig"
 
     def draw(self, context):
+        self.check_enabled(context)
+        self._draw_documentation_button()
         human = Human.from_existing(context.object)
-        is_rigify = human.pose.rigify.is_rigify
+        rig_sett = context.scene.HG3D.process.game_rig
+
+        if human.process.has_game_rig:
+            self.layout.alert = True
+            self.layout.label(text="Already a game rig!")
+            return
+        if human.pose.rigify.is_rigify:
+            self.layout.alert = True
+            self.layout.label(text="Not available for Rigify humans", icon="ERROR")
+            draw_paragraph(
+                self.layout,
+                "The game rig is made from the Human Generator rig, which Rigify"
+                " replaced. Process the human before generating Rigify.",
+                enabled=False,
+            )
+            return
 
         col = self.layout.column()
+        draw_paragraph(
+            col,
+            "Removes the control bones, constraints and drivers, adds a root bone"
+            " and names the bones for the engine. Face and corrective shape keys"
+            " stay as blend shapes.",
+            enabled=False,
+        )
+
+        col.separator()
+        row = col.row()
+        row.scale_y = 1.5
+        row.prop(rig_sett, "preset", text="")
+        preset = get_preset(rig_sett.preset)
+        draw_paragraph(col, preset["description"], enabled=False)
+
+        col.separator()
+        changed = game_rig_preset_changed(rig_sett)
+        row = col.row(align=True)
+        row.alignment = "LEFT"
+        row.prop(
+            rig_sett,
+            "show_advanced",
+            text="Advanced" + (" (changed)" if changed else ""),
+            icon="TRIA_DOWN" if rig_sett.show_advanced else "TRIA_RIGHT",
+            emboss=False,
+        )
+        if changed:
+            row.operator("hg3d.game_rig_reset", text="", icon="LOOP_BACK")
+
+        if rig_sett.show_advanced:
+            self._draw_advanced(col.box(), rig_sett)
+        else:
+            self._draw_summary(col, rig_sett)
+
+        if context.scene.HG3D.process.rig_renaming_enabled:
+            col.separator()
+            draw_paragraph(
+                col,
+                "The preset names the bones, Bone Renaming is skipped.",
+                enabled=False,
+            )
+
+    def _draw_summary(self, layout, rig_sett):
+        """One line with the settings of the preset, when advanced is collapsed."""
+        rest_pose = "T-pose" if rig_sett.rest_pose == "t_pose" else "A-pose"
+        root = f"root '{rig_sett.root_bone_name}'" if rig_sett.add_root_bone else "no root"
+        bones = (
+            "unlimited bones/vertex"
+            if rig_sett.max_influences == "0"
+            else f"{rig_sett.max_influences} bones/vertex"
+        )
+        units = "cm" if rig_sett.units == "centimeters" else "m"
+        draw_paragraph(
+            layout, f"{rest_pose}, {root}, {bones}, {units}", enabled=False
+        )
+
+    def _draw_advanced(self, box, rig_sett):
+        col = box.column()
+
         self.draw_subtitle("Rest pose", col, alignment="LEFT")
         row = col.row(align=True)
-        row.scale_y = 1.5
-        row.enabled = not is_rigify
-        row.prop(context.scene.HG3D.process, "rest_pose", expand=True)
+        row.prop(rig_sett, "rest_pose", expand=True)
 
-        if is_rigify:
-            draw_paragraph(
-                col, text="T-pose is not available for Rigify humans.", enabled=False
-            )
+        col.separator()
+        self.draw_subtitle("Root bone", col, alignment="LEFT")
+        row = col.row(align=True)
+        row.prop(rig_sett, "add_root_bone", text="Add", toggle=True)
+        sub = row.row(align=True)
+        sub.enabled = rig_sett.add_root_bone
+        sub.prop(rig_sett, "root_bone_name", text="")
+
+        col.separator()
+        self.draw_subtitle("Keep bones", col, alignment="LEFT")
+        flow = col.grid_flow(columns=2, align=True)
+        for prop_name in ("keep_eyes", "keep_jaw", "keep_breasts", "keep_metacarpals"):
+            flow.prop(rig_sett, prop_name, toggle=True)
+
+        col.separator()
+        self.draw_subtitle("Bones per vertex", col, alignment="LEFT")
+        row = col.row(align=True)
+        row.prop(rig_sett, "max_influences", expand=True)
+
+        col.separator()
+        self.draw_subtitle("Units", col, alignment="LEFT")
+        row = col.row(align=True)
+        row.prop(rig_sett, "units", expand=True)
+        draw_paragraph(col, "Only applies to FBX files.", enabled=False)
 
 
 class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_SHAPEKEYS"
     bl_label = "Shape Keys"
-    bl_order = 3
+    bl_order = 4
     icon_name = "SHAPEKEY_DATA"
     enabled_propname = "shapekeys_enabled"
     help_url = "shapekeys"
@@ -523,7 +622,7 @@ class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
 class HG_PT_BONE_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_BONE_RENAMING"
     bl_label = "Bone Renaming"
-    bl_order = 4
+    bl_order = 5
     icon_name = "MOD_ARMATURE"
     enabled_propname = "rig_renaming_enabled"
     help_url = "bonerename"
@@ -532,6 +631,10 @@ class HG_PT_BONE_RENAMING(ProcessPanel, bpy.types.Panel):
         self.check_enabled(context)
         self._draw_documentation_button()
         naming_sett = context.scene.HG3D.process.rig_renaming
+        if context.scene.HG3D.process.game_rig_enabled:
+            row = self.layout.row()
+            row.alert = True
+            row.label(text="Skipped, the game rig names the bones", icon="ERROR")
         col = self.layout.column(align=True)
         col.use_property_split = True
         col.use_property_decorate = False
@@ -574,7 +677,7 @@ def create_disabled_row(layout, text):
 class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_RENAMING"
     bl_label = "Other Renaming"
-    bl_order = 7
+    bl_order = 8
     icon_name = "OUTLINER_OB_FONT"
     enabled_propname = "renaming_enabled"
     help_url = "otherrename"
@@ -638,7 +741,7 @@ class HG_PT_RENAMING(ProcessPanel, bpy.types.Panel):
 class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_SCRIPTS"
     bl_label = "Custom scripts"
-    bl_order = 8
+    bl_order = 9
     icon_name = "FILE_SCRIPT"
     enabled_propname = "scripting_enabled"
     help_url = "scripts"
@@ -699,7 +802,7 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
 
 class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
     bl_options = {"HIDE_HEADER"}
-    bl_order = 9
+    bl_order = 10
 
     def draw(self, context):
         box = self.layout.box()
