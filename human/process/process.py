@@ -341,7 +341,12 @@ class ProcessSettings:
         planned = textures.plan_texture_sets(self._human, settings)
         textures.copy_materials(
             self._human,
-            [texture_set.obj for texture_set in planned if only is None or texture_set.set_name in only],
+            [
+                obj
+                for texture_set in planned
+                if only is None or texture_set.set_name in only
+                for obj in texture_set.objects
+            ],
         )
         namer = self._namer(output, level, levels)
         return run_steps(
