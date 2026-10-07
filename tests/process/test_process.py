@@ -22,6 +22,7 @@ ENABLED_PROPS = (
     "rig_renaming_enabled",
     "renaming_enabled",
     "scripting_enabled",
+    "game_rig_enabled",
 )
 
 
@@ -34,11 +35,10 @@ def process_settings(context):
     pr_sett = context.scene.HG3D.process
     for prop_name in ENABLED_PROPS:
         setattr(pr_sett, prop_name, False)
-    for prop_group in (pr_sett.lod, pr_sett.shapekeys):
+    for prop_group in (pr_sett.lod, pr_sett.shapekeys, pr_sett.game_rig):
         for prop in prop_group.bl_rna.properties:
             if prop.identifier not in ("rna_type", "name"):
                 prop_group.property_unset(prop.identifier)
-    pr_sett.rest_pose = "a_pose"
     pr_sett.output = "in_file"
     pr_sett.baking.export_folder = ""
     yield pr_sett
@@ -61,7 +61,8 @@ def test_process_in_file(male_human, context, process_settings):
     eyes_tris_count = _tris_count(human.objects.eyes)
     teeth_tris_count = _tris_count(human.objects.upper_teeth)
     process_settings.lod_enabled = True
-    process_settings.rest_pose = "t_pose"
+    process_settings.game_rig_enabled = True
+    process_settings.game_rig.preset = "generic_t"
 
     new_objects = _process(human, context)
     new_rigs = [obj for obj in new_objects if obj.type == "ARMATURE"]
@@ -142,6 +143,36 @@ def test_process_export(male_human, context, process_settings, tmp_path):
     assert _tris_count(human.objects.eyes) == eyes_tris_count
 
 
+def test_process_game_rig(male_human, context, process_settings):
+    human = male_human
+    process_settings.game_rig_enabled = True
+    process_settings.game_rig.preset = "humanoid"
+    process_settings.game_rig.keep_breasts = False
+    # Bone Renaming is skipped, the preset names the bones
+    process_settings.rig_renaming_enabled = True
+    process_settings.rig_renaming.head = "Noggin"
+    # The humanoid preset sets the T-pose
+    assert process_settings.game_rig.rest_pose == "t_pose"
+
+    new_objects = _process(human, context)
+    new_rigs = [obj for obj in new_objects if obj.type == "ARMATURE"]
+    processed_human = Human.from_existing(new_rigs[0])
+    bone_names = {bone.name for bone in processed_human.objects.rig.data.bones}
+
+    assert processed_human.process.has_game_rig
+    assert processed_human.process.has_t_pose_rest
+    assert "Head" in bone_names
+    assert "Noggin" not in bone_names
+    assert "LeftBreast" not in bone_names
+    assert not any(pose_bone.constraints for pose_bone in processed_human.pose_bones)
+
+    assert not human.process.has_game_rig
+    assert not human.process.has_t_pose_rest
+    assert "head" in {bone.name for bone in human.objects.rig.data.bones}
+
+    processed_human.delete()
+
+
 def _key_names(obj):
     keys = obj.data.shape_keys
     return [key.name for key in keys.key_blocks] if keys else []
@@ -198,8 +229,12 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.shapekeys_enabled = True
     pr_sett.shapekeys.face_rig = "remove"
     pr_sett.shapekeys.age = "keep"
-    pr_sett.rest_pose = "t_pose"
     pr_sett.output = "export"
+    pr_sett.game_rig_enabled = True
+    pr_sett.game_rig.preset = "unreal"
+    # Advanced settings that differ from the preset
+    pr_sett.game_rig.rest_pose = "t_pose"
+    pr_sett.game_rig.max_influences = "8"
 
     path = ProcessSettings.save_settings_to_template(
         str(tmp_path), "test_recipe", context=context
@@ -214,8 +249,10 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     pr_sett.shapekeys.face_rig = "keep"
     pr_sett.shapekeys.age = "bake"
     pr_sett.baking_enabled = True
-    pr_sett.rest_pose = "a_pose"
     pr_sett.output = "in_file"
+    pr_sett.game_rig_enabled = False
+    pr_sett.game_rig.preset = "generic_a"
+    pr_sett.game_rig.max_influences = "4"
 
     ProcessSettings.set_settings_from_template(path, context=context)
 
@@ -229,8 +266,13 @@ def test_recipe_roundtrip(context, process_settings, tmp_path):
     assert pr_sett.shapekeys.age == "keep"
     assert pr_sett.shapekeys.body == "bake"
     assert not pr_sett.baking_enabled
-    assert pr_sett.rest_pose == "t_pose"
     assert pr_sett.output == "export"
+    assert pr_sett.game_rig_enabled
+    assert pr_sett.game_rig.preset == "unreal"
+    # Loading the preset does not overwrite the advanced settings of the recipe
+    assert pr_sett.game_rig.rest_pose == "t_pose"
+    assert pr_sett.game_rig.max_influences == "8"
+    assert pr_sett.game_rig.units == "centimeters"
 
 
 def test_recipe_from_older_version(context, process_settings, tmp_path):
@@ -265,7 +307,10 @@ def test_recipe_from_older_version(context, process_settings, tmp_path):
     # These didn't exist yet, so the recipe should not change them
     assert pr_sett.lod.eyes == "original"
     assert pr_sett.lod.teeth == "0"
-    assert pr_sett.rest_pose == "t_pose"
+    # The T-pose category became the generic T-pose game rig preset
+    assert pr_sett.game_rig_enabled
+    assert pr_sett.game_rig.preset == "generic_t"
+    assert pr_sett.game_rig.rest_pose == "t_pose"
     assert pr_sett.output == "in_file"
     assert pr_sett.file_type == ".obj"
     assert not pr_sett.baking_enabled
@@ -278,4 +323,4 @@ def test_recipe_from_older_version(context, process_settings, tmp_path):
     assert pr_sett.baking_enabled
     assert pr_sett.baking.res_body == "512"
     assert not pr_sett.lod_enabled
-    assert pr_sett.rest_pose == "a_pose"
+    assert not pr_sett.game_rig_enabled

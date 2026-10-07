@@ -49,3 +49,31 @@ def test_rigify_position(male_human, context):
 def test_rigify_on_face_rig(male_human, context):
     male_human.expression.load_facial_rig(context=context)
     male_human.pose.rigify.generate(context=context)
+    _assert_driver_targets_exist(male_human)
+
+
+def test_rigify_driver_targets(male_human, context):
+    """Every bone a shape key driver reads exists in the Rigify rig, including the
+    knee correctives (shin) and the eye look keys (eye targets)."""
+    male_human.pose.rigify.generate(context=context)
+    _assert_driver_targets_exist(male_human)
+    targets = _driver_bone_targets(male_human.objects.body)
+    assert "DEF-shin.L" in targets
+    # The eye targets have no Rigify type, so only their ORG copies exist
+    assert "ORG-eyeball_lookat.L" in targets
+
+
+def _driver_bone_targets(obj):
+    return {
+        target.bone_target
+        for fcurve in obj.data.shape_keys.animation_data.drivers
+        for variable in fcurve.driver.variables
+        if variable.type == "TRANSFORMS"
+        for target in variable.targets
+    }
+
+
+def _assert_driver_targets_exist(human):
+    bones = human.objects.rig.data.bones
+    for name in _driver_bone_targets(human.objects.body):
+        assert name in bones, name

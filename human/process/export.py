@@ -105,7 +105,12 @@ class ExportBuilder:
         axis_up: Axis = "Y",
         primary_bone_axis: Axis = "Y",
         secondary_bone_axis: Axis = "X",
-        use_leaf_bones=True,
+        # Leaf bones only exist to show the length of the last bones of a chain,
+        # game engines see them as extra bones
+        use_leaf_bones=False,
+        # "FBX_SCALE_ALL" writes centimeters without a scale on the armature, as
+        # Unreal expects
+        apply_scale_options: str = "FBX_SCALE_NONE",
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
@@ -126,6 +131,7 @@ class ExportBuilder:
             axis_up=axis_up,
             axis_forward=axis_forward,
             add_leaf_bones=use_leaf_bones,
+            apply_scale_options=apply_scale_options,
             # Only export the animation of this human, not of all humans in the file
             bake_anim_use_all_actions=False,
         )
@@ -208,21 +214,24 @@ class ExportBuilder:
     def _export_common_gltf(
         self, filepath, format: str, img_format: Literal["AUTO", "JPEG"] = "AUTO"
     ):
+        skin_materials = None
         if not self._human.process.baking.is_baked():
             hg_log(
                 "Exporting GLTF without baking textures. This will result in empty textures.",
                 level="WARNING",
             )
-            self._human.skin._unlink_all_textures()
+            skin_materials = self._detach_skin_shader()
 
         # Create an export collection, since use_selection does not work.
         collection = bpy.data.collections.new("Export")
         bpy.context.scene.collection.children.link(collection)
         for obj in self._human.objects:
             collection.objects.link(obj)
-        bpy.context.view_layer.active_layer_collection = (
-            bpy.context.view_layer.layer_collection.children[collection.name]
-        )
+        view_layer = bpy.context.view_layer
+        old_active_layer_collection = view_layer.active_layer_collection
+        view_layer.active_layer_collection = view_layer.layer_collection.children[
+            collection.name
+        ]
 
         try:
             bpy.ops.export_scene.gltf(
@@ -237,9 +246,39 @@ class ExportBuilder:
                 raise HumGenException("You need to enable glTF Embedded in the 'glTF 2.0 Format' add-on preferences.") from None
             else:
                 raise
+        finally:
+            # Removing the active collection would leave the context without one
+            view_layer.active_layer_collection = old_active_layer_collection
+            bpy.context.scene.collection.children.unlink(collection)
+            bpy.data.collections.remove(collection)
+            if skin_materials:
+                self._restore_skin_shader(*skin_materials)
 
-        bpy.context.scene.collection.children.unlink(collection)
-        bpy.data.collections.remove(collection)
+    def _detach_skin_shader(self) -> tuple[bpy.types.Material, bpy.types.Material]:
+        """Gives the body a copy of its skin material without the shader node.
+
+        The glTF exporter reads the textures from the Principled BSDF, which the
+        unbaked skin material feeds from a node tree it can't export. The original
+        material is shared with the human this one was duplicated from, so it is
+        left untouched and put back after the export.
+
+        Returns:
+            tuple[Material, Material]: The original material and the copy.
+        """
+        body = self._human.objects.body
+        material = body.data.materials[0]
+        export_material = material.copy()
+        body.data.materials[0] = export_material
+        shader_node = export_material.node_tree.nodes.get("Principled BSDF")
+        if shader_node:
+            export_material.node_tree.nodes.remove(shader_node)
+        return material, export_material
+
+    def _restore_skin_shader(
+        self, material: bpy.types.Material, export_material: bpy.types.Material
+    ) -> None:
+        self._human.objects.body.data.materials[0] = material
+        bpy.data.materials.remove(export_material)
 
     @exporter
     def to_glb(

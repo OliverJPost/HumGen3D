@@ -19,6 +19,8 @@ from HumGen3D.common import find_multiple_in_list, find_original_rig
 from HumGen3D.common.collections import add_to_collection
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.apply_modifiers import apply_modifiers
+from HumGen3D.backend.properties.process_props import apply_game_rig_preset
+from HumGen3D.human.process.game_rig import fbx_export_settings
 from HumGen3D.human.process.lod import CLOTHING_DECIMATE_RATIOS
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
@@ -133,7 +135,8 @@ class HG_OT_PROCESS(bpy.types.Operator):
                 if pr_sett.lod.body_lod != "0":
                     human.objects.rig["lod"] = True
 
-            if pr_sett.rig_renaming_enabled:
+            # The game rig preset names the bones itself
+            if pr_sett.rig_renaming_enabled and not pr_sett.game_rig_enabled:
                 naming_sett = context.scene.HG3D.process.rig_renaming
                 props = naming_sett.bl_rna.properties
                 prop_dict = {
@@ -182,12 +185,29 @@ class HG_OT_PROCESS(bpy.types.Operator):
                         sys.path.remove(item.path)
                     module.main(context, human)
 
-            if (
-                pr_sett.rest_pose == "t_pose"
-                and not human.process.has_t_pose_rest
-                and not human.pose.rigify.is_rigify
-            ):
-                human.process.set_t_pose_as_rest(context)
+            export_kwargs = {}
+            if pr_sett.game_rig_enabled and not human.pose.rigify.is_rigify:
+                rig_sett = pr_sett.game_rig
+                # The T-pose needs the complete rig, so it goes before the game rig
+                if (
+                    rig_sett.rest_pose == "t_pose"
+                    and not human.process.has_t_pose_rest
+                ):
+                    human.process.set_t_pose_as_rest(context)
+                if not human.process.has_game_rig:
+                    human.process.convert_to_game_rig(
+                        preset=rig_sett.preset,
+                        keep_eyes=rig_sett.keep_eyes,
+                        keep_jaw=rig_sett.keep_jaw,
+                        keep_breasts=rig_sett.keep_breasts,
+                        keep_metacarpals=rig_sett.keep_metacarpals,
+                        max_influences=int(rig_sett.max_influences),
+                        root_bone=rig_sett.add_root_bone,
+                        root_bone_name=rig_sett.root_bone_name,
+                        context=context,
+                    )
+                if pr_sett.file_type == ".fbx":
+                    export_kwargs = fbx_export_settings(rig_sett.units)
 
             if pr_sett.modapply_enabled:
                 apply_modifiers(human, context=context)
@@ -206,7 +226,7 @@ class HG_OT_PROCESS(bpy.types.Operator):
                         human.export, f"to_{pr_sett.file_type[1:].lower()}"
                     )
                 filepath = os.path.join(export_folder, fn)
-                export_method(filepath, context=context)
+                export_method(filepath, context=context, **export_kwargs)
                 human.delete()
             else:
                 human.process.mark_as_processed(original_human)
@@ -221,6 +241,17 @@ class HG_OT_PROCESS(bpy.types.Operator):
         for callback in temp_depsgraph_callbacks:
             bpy.app.handlers.depsgraph_update_post.append(callback)
 
+        return {"FINISHED"}
+
+
+class HG_OT_GAME_RIG_RESET(bpy.types.Operator):
+    bl_idname = "hg3d.game_rig_reset"
+    bl_label = "Reset to preset"
+    bl_description = "Set the advanced game rig settings back to those of the preset"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        apply_game_rig_preset(context.scene.HG3D.process.game_rig)
         return {"FINISHED"}
 
 

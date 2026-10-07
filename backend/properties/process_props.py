@@ -16,6 +16,13 @@ from bpy.props import (  # type:ignore
 from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
 from HumGen3D.backend.properties.bake_props import BakeProps
 from HumGen3D.human.process.apply_modifiers import refresh_modapply
+from HumGen3D.human.process.game_rig import (
+    INFLUENCE_LIMITS,
+    PRESET_ITEMS,
+    REST_POSE_ITEMS,
+    UNIT_ITEMS,
+    get_preset,
+)
 from HumGen3D.human.process.process import ProcessSettings
 from HumGen3D.human.process.shape_keys import GROUP_ACTIONS, KEY_ACTIONS, KEY_GROUPS
 from HumGen3D.user_interface.icons.icons import get_hg_icon
@@ -274,6 +281,86 @@ class ShapeKeyProps(bpy.types.PropertyGroup):
     age: _key_group_prop("age", "bake")
 
 
+def apply_game_rig_preset(props, context=None):
+    """Copies the settings of the chosen preset, the advanced section changes them."""
+    preset = get_preset(props.preset)
+    props.rest_pose = preset["rest_pose"]
+    props.add_root_bone = bool(preset["root_bone"])
+    props.root_bone_name = preset["root_bone"] or "root"
+    props.units = preset["units"]
+
+
+def game_rig_preset_changed(props) -> bool:
+    """True if the advanced settings differ from the chosen preset."""
+    preset = get_preset(props.preset)
+    return (
+        props.rest_pose != preset["rest_pose"]
+        or props.add_root_bone != bool(preset["root_bone"])
+        or (props.add_root_bone and props.root_bone_name != preset["root_bone"])
+        or props.units != preset["units"]
+    )
+
+
+class GameRigProps(bpy.types.PropertyGroup):
+    _register_priority = 3
+
+    preset: EnumProperty(
+        name="Preset",
+        description="Engine or tool to name the bones for, sets the settings below",
+        items=PRESET_ITEMS,
+        default="generic_a",
+        update=apply_game_rig_preset,
+    )
+    show_advanced: BoolProperty(
+        name="Advanced", description="Show the settings of the preset", default=False
+    )
+    # The defaults are those of the generic A-pose preset
+    rest_pose: EnumProperty(
+        name="Rest pose",
+        description="Pose the armature and meshes are in when no pose is applied",
+        items=REST_POSE_ITEMS,
+        default="a_pose",
+    )
+    add_root_bone: BoolProperty(
+        name="Root bone",
+        description="Add a bone at the origin above the hips, which carries the"
+        " movement of the character",
+        default=True,
+    )
+    root_bone_name: StringProperty(name="Name", default="root")
+    units: EnumProperty(
+        name="Units",
+        description="Units of the exported FBX file",
+        items=UNIT_ITEMS,
+        default="meters",
+    )
+    max_influences: EnumProperty(
+        name="Bones per vertex",
+        description="Maximum number of bones that deform a single vertex",
+        items=INFLUENCE_LIMITS,
+        default="4",
+    )
+    keep_eyes: BoolProperty(
+        name="Eyes",
+        description="Keep the eye bones, otherwise the eyes follow the head",
+        default=True,
+    )
+    keep_jaw: BoolProperty(
+        name="Jaw",
+        description="Keep the jaw bones that move the teeth",
+        default=True,
+    )
+    keep_breasts: BoolProperty(
+        name="Breasts", description="Keep the breast bones", default=True
+    )
+    keep_metacarpals: BoolProperty(
+        name="Metacarpals",
+        description="Keep the palm bones between the hand and the fingers, otherwise"
+        " their weights go to the hand",
+        default=False,
+    )
+
+
 def get_script_list(self, context):
     folder = os.path.join(get_prefs().filepath, "scripts")
     files = [
@@ -375,6 +462,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     renaming: PointerProperty(type=RenamingProps)
     modapply: PointerProperty(type=ModApplyProps)
     shapekeys: PointerProperty(type=ShapeKeyProps)
+    game_rig: PointerProperty(type=GameRigProps)
     baking: PointerProperty(type=BakeProps)
     scripting: PointerProperty(type=ScriptingProps)
 
@@ -382,6 +470,7 @@ class ProcessProps(bpy.types.PropertyGroup):
     lod_enabled: BoolProperty(default=False)
     modapply_enabled: BoolProperty(default=False)
     shapekeys_enabled: BoolProperty(default=False)
+    game_rig_enabled: BoolProperty(default=False)
     haircards_enabled: BoolProperty(default=False)
     rig_renaming_enabled: BoolProperty(default=False)
     renaming_enabled: BoolProperty(default=False)
@@ -390,19 +479,6 @@ class ProcessProps(bpy.types.PropertyGroup):
     output_name: StringProperty(name="Output name", default="{name}")
 
     human_list_isopen: BoolProperty(default=False)
-    rest_pose: EnumProperty(
-        items=[
-            ("a_pose", "A-pose", "Keep the A-pose as rest pose", 0),
-            (
-                "t_pose",
-                "T-pose",
-                "Make the T-pose the rest pose of the armature and meshes, as"
-                " expected by most game engines and retargeting tools",
-                1,
-            ),
-        ],
-        default="a_pose",
-    )
     output: EnumProperty(
         items=[
             (

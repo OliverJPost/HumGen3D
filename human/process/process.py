@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 from .bake import BakeSettings
 from .game_eyes import convert_to_game_eyes
+from .game_rig import GAME_RIG_KEY, convert_to_game_rig
 from .rest_pose import set_t_pose_as_rest
 from .shape_keys import KeyAction, process_shape_keys
 
@@ -193,6 +194,79 @@ class ProcessSettings:
                 Medium has a quarter of the triangles of high, low about a sixteenth.
         """
         convert_to_game_eyes(self._human, detail)
+
+    @property
+    def has_game_rig(self) -> bool:
+        """Checks if the rig was converted to a game engine skeleton.
+
+        Returns:
+            bool: True if the human has a game rig.
+        """
+        return GAME_RIG_KEY in self._human.objects.rig
+
+    @property
+    def game_rig_preset(self) -> Optional[str]:
+        """The preset the rig was converted with, None if it has no game rig.
+
+        Returns:
+            Optional[str]: Identifier of the preset, see game_rig.PRESETS.
+        """
+        return self._human.objects.rig.get(GAME_RIG_KEY)
+
+    @injected_context
+    def convert_to_game_rig(
+        self,
+        preset: str = "generic_a",
+        keep_eyes: bool = True,
+        keep_jaw: bool = True,
+        keep_breasts: bool = True,
+        keep_metacarpals: bool = False,
+        max_influences: int = 4,
+        root_bone: Optional[bool] = None,
+        root_bone_name: Optional[str] = None,
+        context: C = None,
+    ) -> None:
+        """Converts the rig to a skeleton for game engines.
+
+        Removes the bones that deform nothing, like the face rig controls and the
+        eye targets, and bakes the shape keys they drove at their current value.
+        Merges the weights of the bones that are not kept into their parents, adds
+        a root bone at the origin, bakes the constraints into the pose, removes the
+        vertex groups that are neither bones nor used by a modifier, limits the
+        number of bones per vertex and renames the bones for the preset. The face
+        rig, poses and animations of Human Generator won't work on this human
+        anymore. Combine with set_t_pose_as_rest for the presets that expect a
+        T-pose, the process operator does this automatically.
+
+        Args:
+            preset (str): Engine to name the bones for: "generic_a" and
+                "generic_t" keep the Human Generator names, "humanoid" uses the
+                names of Unity, Godot and VRM, "unreal" the Mannequin names and
+                "mixamo" the Mixamo names. The rest pose of the preset is not
+                applied here, see set_t_pose_as_rest.
+            keep_eyes (bool): Keep the eye bones, otherwise the eyes follow the head.
+            keep_jaw (bool): Keep the jaw bones that move the teeth.
+            keep_breasts (bool): Keep the breast bones.
+            keep_metacarpals (bool): Keep the palm bones between hand and fingers.
+            max_influences (int): Maximum number of bones per vertex, 0 for no limit.
+            root_bone (Optional[bool]): Add a root bone at the origin, None uses the
+                choice of the preset. Mixamo has none, the others do.
+            root_bone_name (Optional[str]): Name of the root bone, None uses the
+                name of the preset.
+            context (C): Blender context. bpy.context if not provided.
+        """
+        convert_to_game_rig(
+            self._human,
+            context,
+            preset=preset,
+            keep_eyes=keep_eyes,
+            keep_jaw=keep_jaw,
+            keep_breasts=keep_breasts,
+            keep_metacarpals=keep_metacarpals,
+            max_influences=max_influences,
+            root_bone=root_bone,
+            root_bone_name=root_bone_name,
+        )
 
     @injected_context
     def set_shape_keys(
@@ -435,7 +509,6 @@ class ProcessSettings:
             "bake_file_type": pr_sett.baking.file_type,
             "export_file_type": pr_sett.file_type,
             "output_type": pr_sett.output,
-            "rest_pose": pr_sett.rest_pose,
         }
         if pr_sett.baking_enabled:
             settings_dict["baking"] = ProcessSettings._props_from_propgroup(
@@ -476,6 +549,11 @@ class ProcessSettings:
         if pr_sett.shapekeys_enabled:
             settings_dict["shapekeys"] = ProcessSettings._props_from_propgroup(
                 pr_sett.shapekeys
+            )
+
+        if pr_sett.game_rig_enabled:
+            settings_dict["game_rig"] = ProcessSettings._props_from_propgroup(
+                pr_sett.game_rig
             )
 
         if pr_sett.scripting_enabled:
@@ -534,14 +612,15 @@ class ProcessSettings:
         for prop in pr_sett.bl_rna.properties:
             if "_enabled" in prop.identifier:
                 setattr(pr_sett, prop.identifier, False)
-        pr_sett.property_unset("rest_pose")
+
+        # Older recipes had the T-pose as a category of its own or as a main
+        # setting, the rest pose is a game rig setting now
+        if "rest_pose" in data or data.get("main", {}).get("rest_pose") == "t_pose":
+            pr_sett.game_rig_enabled = True
+            pr_sett.game_rig.preset = "generic_t"
 
         for attr, prop_dict in data.items():
-            if attr in ("material_renaming", "main"):
-                continue
-            # Older recipes enabled the T-pose with a category of its own
-            if attr == "rest_pose":
-                pr_sett.rest_pose = "t_pose"
+            if attr in ("material_renaming", "main", "rest_pose"):
                 continue
             # Older recipes could not change the eyes and teeth
             if attr == "lod":
@@ -578,8 +657,6 @@ class ProcessSettings:
         if "export_file_type" in main_data:
             # Older recipes have the file type without the leading dot
             pr_sett.file_type = "." + main_data["export_file_type"].lstrip(".")
-        if "rest_pose" in main_data:
-            pr_sett.rest_pose = main_data["rest_pose"]
         # Older recipes could also replace or duplicate the human in the file
         is_export = main_data.get("output_type") == "export"
         pr_sett.output = "export" if is_export else "in_file"
@@ -595,6 +672,9 @@ class ProcessSettings:
 
     @staticmethod
     def add_props_from_dict(data, pr_sett, prop_dict, prop_group):
+        # Choosing a game rig preset resets its other settings, so it goes first
+        if "preset" in prop_dict:
+            prop_group.preset = prop_dict["preset"]
         for prop_name, prop_value in prop_dict.items():
             # Set the nested material properties if encountered
             if prop_name == "materials":
