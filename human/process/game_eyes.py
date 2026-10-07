@@ -29,6 +29,8 @@ ROUGHNESS = 0.1
 CORNEA_SLOT = 0
 EYEBALL_SLOT = 1
 LOOKAT_BONE_PREFIX = "eyeball_lookat"
+# Set on the rig once the eyes are converted
+GAME_EYES_KEY = "game_eyes"
 
 
 def convert_to_game_eyes(human: "Human", detail: str = "medium") -> None:
@@ -63,7 +65,7 @@ def convert_to_game_eyes(human: "Human", detail: str = "medium") -> None:
         if original_name.startswith(LOOKAT_BONE_PREFIX):
             pose_bone.bone.use_deform = False
 
-    human.objects.rig["game_eyes"] = True
+    human.objects.rig[GAME_EYES_KEY] = True
 
 
 def _apply_shape_keys(eyes: bpy.types.Object) -> None:

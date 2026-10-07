@@ -308,12 +308,11 @@ def clip_file_name(name: str, clip: bpy.types.Action) -> str:
     return f"{name}@{clip_name}"
 
 
-def remove_clips(human: "Human") -> None:
-    """Removes the actions and strips of a processed human that is deleted."""
-    rig = human.objects.rig
-    animation_data = rig.animation_data
+def rig_actions(human: "Human") -> List[bpy.types.Action]:
+    """The active action and the actions of the NLA strips of the rig."""
+    animation_data = human.objects.rig.animation_data
     if not animation_data:
-        return
+        return []
     actions = []
     if animation_data.action:
         actions.append(animation_data.action)
@@ -321,6 +320,16 @@ def remove_clips(human: "Human") -> None:
         for strip in track.strips:
             if strip.action and strip.action not in actions:
                 actions.append(strip.action)
+    return actions
+
+
+def remove_clips(human: "Human") -> None:
+    """Removes the actions and strips of a processed human that is deleted."""
+    rig = human.objects.rig
+    animation_data = rig.animation_data
+    if not animation_data:
+        return
+    actions = rig_actions(human)
     animation_data.action = None
     for track in list(animation_data.nla_tracks):
         animation_data.nla_tracks.remove(track)

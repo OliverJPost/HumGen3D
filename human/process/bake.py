@@ -2,8 +2,9 @@
 
 """Baking the materials of a human to textures, see textures.py for the work.
 
-Kept as the `human.process.baking` API: `bake_all` bakes with the default
-texture settings, `pack_alpha_into_image` is used by scripts.
+Kept as the `human.process.baking` API of earlier versions, the process system
+itself uses `ProcessSettings.bake_textures`. `pack_alpha_into_image` is used
+by scripts.
 """
 
 from __future__ import annotations
@@ -14,11 +15,9 @@ import bpy
 import numpy as np
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.progress import run
 from HumGen3D.common.type_aliases import C
 
-from .naming import Namer
-from .settings import OutputSettings, TextureSettings
+from .settings import TextureSettings
 
 if TYPE_CHECKING:
     from ..human import Human
@@ -65,7 +64,10 @@ def pack_alpha_into_image(image: bpy.types.Image, alpha_image: bpy.types.Image) 
 
 
 class BakeSettings:
-    """Bakes the materials of a human, see `HumGen3D.human.process.textures`."""
+    """The `human.process.baking` API of earlier versions.
+
+    Use `human.process.bake_textures` and `human.process.was_baked` instead.
+    """
 
     def __init__(self, human: "Human") -> None:
         self._human = human
@@ -78,10 +80,7 @@ class BakeSettings:
         settings: Optional[TextureSettings] = None,
         context: C = None,
     ) -> list[bpy.types.Image]:
-        """Bakes every material of this human and replaces it by the result.
-
-        Changes this human, so call it on a copy. Use the process system for
-        packed maps, naming schemes and LOD levels.
+        """Bakes every material of this human, see `ProcessSettings.bake_textures`.
 
         Args:
             folder_path (Optional[str]): Folder to write the images to, None
@@ -93,20 +92,13 @@ class BakeSettings:
 
         Returns:
             list[bpy.types.Image]: The baked images.
-
-        Raises:
-            HumGenException: If the human was already baked.
         """
-        from .textures import bake_steps, copy_materials
-
-        if self.is_baked():
-            raise HumGenException("Human was already baked")
         settings = settings.copy() if settings else TextureSettings()
         settings.samples = samples
-        copy_materials(self._human)
-        namer = Namer(OutputSettings(), self._human.name)
-        return run(bake_steps(self._human, settings, namer, folder_path, context))
+        return self._human.process.bake_textures(
+            settings, folder=folder_path, context=context
+        )
 
     def is_baked(self) -> bool:
-        """Whether the materials of this human were baked."""
-        return "hg_baked" in self._human.objects.rig
+        """Whether the materials of this human were baked, see `ProcessSettings.was_baked`."""
+        return self._human.process.was_baked

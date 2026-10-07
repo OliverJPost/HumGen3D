@@ -192,6 +192,20 @@ class QualitySettings(Settings):
     haircards: str = "high"  # ultra, high, medium, low, haircap_only
     bones_per_vertex: int = 4  # 0 for no limit
 
+    @classmethod
+    def from_tier(cls, tier: str) -> "QualitySettings":
+        """The settings of a quality tier, see `quality.QUALITY_TIERS`.
+
+        Args:
+            tier (str): "original", "ultra", "high", "medium", "low" or "mobile".
+
+        Raises:
+            ValueError: If the tier does not exist.
+        """
+        from .quality import quality_of_tier
+
+        return quality_of_tier(tier)
+
 
 @dataclass
 class MeshSettings(Settings):
@@ -286,6 +300,16 @@ class TextureSettings(Settings):
     pack_hair_alpha: bool = True
     samples: int = 4
 
+    def set_resolution_tier(self, tier: str) -> None:
+        """Sets the resolution of every texture set to a tier, "4k", "2k", "1k" or "512".
+
+        Raises:
+            ValueError: If the tier does not exist.
+        """
+        from .quality import resolution_of_tier
+
+        self.resolution = resolution_of_tier(tier)
+
 
 @dataclass
 class AnimationSettings(Settings):
@@ -379,6 +403,15 @@ class OutputSettings(Settings):
         """Whether the format carries a skeleton."""
         return self.format in RIGGED_FORMATS
 
+    def resolved_name(self, human_name: str) -> str:
+        """The output name with the tokens filled in.
+
+        Args:
+            human_name (str): Name of the source human.
+        """
+        name = self.name.replace("{name}", human_name).strip()
+        return name or human_name
+
 
 @dataclass
 class ExportSettings(Settings):
@@ -471,13 +504,8 @@ class ExportSettings(Settings):
         return mine != theirs
 
     def resolved_name(self, human_name: str) -> str:
-        """The output name with the tokens filled in.
-
-        Args:
-            human_name (str): Name of the source human.
-        """
-        name = self.output.name.replace("{name}", human_name).strip()
-        return name or human_name
+        """The output name with the tokens filled in, see `OutputSettings.resolved_name`."""
+        return self.output.resolved_name(human_name)
 
 
 def recipe_path(recipe: str) -> str:

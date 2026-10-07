@@ -27,10 +27,15 @@ from HumGen3D.common import is_legacy
 from HumGen3D.common.exceptions import HumGenException
 from mathutils import Matrix
 
+from .rest_pose import T_POSE_KEY
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 GAME_RIG_KEY = "game_rig"
+# The names profile of the settings that keeps the Human Generator bone names,
+# which is one of two presets depending on the rest pose
+HUMGEN_NAMES = "humgen"
 # Names of the bone groups a user can merge into their parents, with the
 # original names of the bones they hold, without side suffix
 MERGEABLE_BONES = {
@@ -133,24 +138,9 @@ def preset_for_names(names: str, rest_pose: str = "a_pose") -> str:
         names (str): "humanoid", "unreal", "mixamo", "humgen" or "custom".
         rest_pose (str): Picks the generic preset for the HumGen names.
     """
-    if names == "humgen":
+    if names == HUMGEN_NAMES:
         return "generic_t" if rest_pose == "t_pose" else "generic_a"
     return names
-
-
-def fbx_export_settings(units: str) -> dict[str, Any]:
-    """Keyword arguments for ExportBuilder.to_fbx that write the file in these units.
-
-    Args:
-        units (str): "meters" or "centimeters", see UNIT_ITEMS.
-
-    Returns:
-        dict[str, Any]: Empty for meters. Centimeters apply the FBX unit scale to
-            the objects, so Unreal imports the armature at scale 1.
-    """
-    if units == "centimeters":
-        return {"apply_scale_options": "FBX_SCALE_ALL"}
-    return {}
 
 
 def convert_to_game_rig(
@@ -179,7 +169,8 @@ def convert_to_game_rig(
     Args:
         human (Human): Human to convert the rig of.
         context (bpy.types.Context): Blender context.
-        preset (str): Engine to name the bones for, see PRESETS.
+        preset (str): Engine to name the bones for, see PRESETS. "humgen" keeps
+            the Human Generator names, for the rest pose the human has.
         keep_eyes (bool): Keep the eye bones, otherwise the eyes follow the head.
         keep_jaw (bool): Keep the jaw bones that move the teeth.
         keep_breasts (bool): Keep the breast bones.
@@ -197,8 +188,10 @@ def convert_to_game_rig(
             a game rig.
         ValueError: If the preset does not exist.
     """
-    preset_data = get_preset(preset, names_file)
     rig = human.objects.rig
+    if preset == HUMGEN_NAMES:
+        preset = preset_for_names(preset, "t_pose" if T_POSE_KEY in rig else "a_pose")
+    preset_data = get_preset(preset, names_file)
     if human.pose.rigify.is_rigify:
         raise HumGenException("Can't make a game rig of a Rigify human.")
     if is_legacy(rig):

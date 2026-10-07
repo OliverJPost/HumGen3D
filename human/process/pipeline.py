@@ -31,12 +31,10 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.object_finding import PROCESSED_KEY
 from HumGen3D.common.progress import ProgressCallback, Steps
 from HumGen3D.common.progress import run as run_steps
-from HumGen3D.human.process.lod import CLOTHING_DECIMATE_RATIOS
 from mathutils import Vector
 
-from . import animations, masks, naming, scripts, textures
-from .game_rig import CUSTOM_PRESET, preset_for_names
-from .settings import EXPORT_STAGES, ExportSettings, QualitySettings, ShapeKeySettings
+from . import animations, naming, scripts, textures
+from .settings import EXPORT_STAGES, ExportSettings, QualitySettings
 from .shape_keys import driven_groups_kept
 
 if TYPE_CHECKING:
@@ -324,7 +322,7 @@ def process_steps(  # noqa: CCR001
         if output.is_file:
             assert folder is not None
             if len(copies) > 1:
-                _merge_levels(copies)
+                copies[0].process.merge_levels(copies[1:])
                 copies = copies[:1]
             result.files = yield from tracker.phase(
                 _write_steps(copies[0], clips, settings, name, folder, context, result),
@@ -414,8 +412,14 @@ def _level_steps(  # noqa: CCR001
     weights: Dict[str, float],
     result: ExportResult,
 ) -> Steps["Human"]:
-    """Makes one LOD level: a processed duplicate of the source human."""
+    """Makes one LOD level: a processed duplicate of the source human.
+
+    The steps are the public methods of `ProcessSettings`, in the order its
+    docstring gives; this adds the scripts, the progress and the sharing of
+    textures between levels.
+    """
     copy = human.duplicate(context)
+    # Renaming and baking must not reach the materials of the source human
     textures.copy_materials(copy)
     for obj in copy.objects:
         add_to_collection(context, obj, RESULTS_COLLECTION)
@@ -423,33 +427,15 @@ def _level_steps(  # noqa: CCR001
     _run_scripts(settings, "start", context, copy, result)
     yield 0.02
 
-    # First, so the other steps only carry the keys that stay
-    keys = _level_shape_keys(settings.shape_keys, level)
-    copy.process.set_shape_keys(
-        face_rig=keys.face_rig,
-        expressions=keys.expressions,
-        correctives=keys.correctives,
-        body=keys.body,
-        face=keys.face,
-        age=keys.age,
-        keep=keys.keep,
-        context=context,
-    )
+    copy.process.set_shape_keys(settings.shape_keys, level, context=context)
     _run_scripts(settings, "before_haircards", context, copy, result)
     yield 0.08
 
     if settings.haircards.enabled and not copy.process.has_haircards:
-        for hair in (copy.hair.regular_hair, copy.hair.eyebrows, copy.hair.eyelashes, copy.hair.face_hair):
-            if hair.modifiers:
-                hair.convert_to_haircards(quality.haircards, context)
-                yield 0.1 + 0.05 * len(copy.objects.haircards)
-        copy.objects.rig["haircards"] = True
-        # The particle hair is not exported and the cards replaced it
-        body = copy.objects.body
-        for mod in list(copy.hair.modifiers):
-            body.modifiers.remove(mod)
+        copy.process.convert_to_haircards(quality.haircards, context)
     yield 0.3
 
+    # The eyes and teeth before baking, they change the materials
     if quality.eyes != "original" and not copy.process.has_game_eyes:
         copy.process.convert_to_game_eyes(quality.eyes)
     if quality.teeth:
@@ -465,7 +451,7 @@ def _level_steps(  # noqa: CCR001
                 0.75,
             )
         else:
-            textures.share_textures(copies[0], copy)
+            copy.process.share_textures(copies[0])
             baked = yield from _subphase(
                 textures.bake_steps(
                     copy, settings.textures, namer, texture_folder, context, PER_LEVEL_SETS, per_level=True
@@ -477,41 +463,17 @@ def _level_steps(  # noqa: CCR001
     _run_scripts(settings, "before_meshes", context, copy, result)
     yield 0.75
 
-    if quality.body and not human.is_trial:
-        copy.process.lod.set_body_lod(quality.body, context=context)
-    copy.process.lod.set_clothing_lod(
-        CLOTHING_DECIMATE_RATIOS[quality.clothing],
-        settings.meshes.remove_clothing_subdiv,
-        settings.meshes.remove_clothing_solidify,
-        keep_shape_keys=True,
-        context=context,
-    )
-    if quality.body:
-        copy.objects.rig["lod"] = True
-    yield 0.82
-
-    if settings.meshes.remove_hidden_skin:
-        masks.remove_hidden_skin(copy, context)
+    # The eyes and teeth are done already, this reduces the body and clothing
+    copy.process.set_quality(quality, settings.meshes, context=context)
     _run_scripts(settings, "before_skeleton", context, copy, result)
     yield 0.85
 
-    skeleton = settings.skeleton
-    if skeleton.enabled and not copy.pose.rigify.is_rigify:
-        if skeleton.rest_pose == "t_pose" and not copy.process.has_t_pose_rest:
-            copy.process.set_t_pose_as_rest(context)
-        if not copy.process.has_game_rig:
-            copy.process.convert_to_game_rig(
-                preset=preset_for_names(skeleton.names, skeleton.rest_pose),
-                keep_eyes=skeleton.keep_eyes,
-                keep_jaw=skeleton.keep_jaw,
-                keep_breasts=skeleton.keep_breasts,
-                keep_metacarpals=skeleton.keep_metacarpals,
-                max_influences=quality.bones_per_vertex,
-                root_bone=skeleton.root_bone,
-                root_bone_name=skeleton.root_bone_name,
-                names_file=skeleton.names_file if skeleton.names == CUSTOM_PRESET else None,
-                context=context,
-            )
+    if settings.skeleton.enabled and not copy.pose.rigify.is_rigify and not copy.process.has_game_rig:
+        copy.process.convert_to_game_rig(
+            settings=settings.skeleton,
+            max_influences=quality.bones_per_vertex,
+            context=context,
+        )
     yield 0.95
 
     naming.apply_names(copy, namer)
@@ -530,20 +492,6 @@ def _subphase(steps: Steps, start: float, end: float) -> Iterator[float]:  # typ
         except StopIteration as finished:
             return finished.value
         yield start + span * min(max(fraction, 0.0), 1.0)
-
-
-def _level_shape_keys(keys: ShapeKeySettings, level: int) -> ShapeKeySettings:
-    """The key actions of a level, lower levels bake everything when asked."""
-    if level == 0 or not keys.lod0_only:
-        return keys
-    baked = keys.copy()
-    for group in ("face_rig", "expressions", "correctives"):
-        baked_group = "remove"
-        setattr(baked, group, baked_group)
-    for group in ("body", "face", "age"):
-        if getattr(baked, group) == "keep":
-            setattr(baked, group, "bake")
-    return baked
 
 
 def _triangles(human: "Human") -> int:
@@ -585,94 +533,31 @@ def _write_steps(  # noqa: CCR001
     yield 0.1
 
     files: List[str] = []
-    embedded = output.textures == "embedded"
-    fbx = output.fbx
-    fbx_kwargs = {
-        "axis_forward": fbx.axis_forward,
-        "axis_up": fbx.axis_up,
-        "primary_bone_axis": fbx.primary_bone_axis,
-        "secondary_bone_axis": fbx.secondary_bone_axis,
-        "use_leaf_bones": fbx.leaf_bones,
-        "export_custom_props": fbx.custom_properties,
-        "triangulate": fbx.triangulate,
-        "mesh_smooth_type": fbx.smoothing,
-        "apply_scale_options": "FBX_SCALE_ALL" if settings.skeleton.units == "centimeters" else "FBX_SCALE_NONE",
-        "path_mode": "COPY" if embedded else "RELATIVE",
-        "embed_textures": embedded,
-        "context": context,
-    }
-    gltf_kwargs = {
-        "image_format": output.gltf.image_format,
-        "tangents": output.gltf.tangents,
-        "draco": output.gltf.draco,
-        "context": context,
-    }
+    units = settings.skeleton.units
     clips_with_mesh = bool(clips) and settings.animations.layout == "with_mesh"
     animation = "strips" if clips_with_mesh else "none"
 
-    with naming.exact_names(naming.datablocks(human) + list(clips)):
-        path = os.path.join(folder, name)
-        if output.format == "fbx":
-            files.append(human.export.to_fbx(path, animation=animation, **fbx_kwargs))
-        elif output.format == "glb":
-            files.append(human.export.to_glb(path, animation=animation, **gltf_kwargs))
-        elif output.format == "gltf":
-            files.append(human.export.to_gltf_separate(path, animation=animation, **gltf_kwargs))
-        elif output.format == "obj":
-            files.append(human.export.to_obj(path, context=context))
-        elif output.format == "abc":
-            files.append(human.export.to_abc(path, context=context))
-        yield 0.6
+    path = os.path.join(folder, name)
+    files.append(human.export.write(path, output, units, animation, context=context))
+    yield 0.6
 
-        if clips and not clips_with_mesh:
-            if settings.animations.layout == "single_file":
-                clip_path = os.path.join(folder, f"{name}_Animations")
-                files.append(_write_clips(human, output.format, clip_path, "strips", fbx_kwargs, gltf_kwargs))
-            else:
-                for clip in clips:
-                    clip_path = os.path.join(folder, animations.clip_file_name(name, clip))
-                    with animations.active_clip(human, clip):
-                        files.append(_write_clips(human, output.format, clip_path, "active", fbx_kwargs, gltf_kwargs))
-        yield 0.9
+    if clips and not clips_with_mesh:
+        if settings.animations.layout == "single_file":
+            clip_path = os.path.join(folder, f"{name}_Animations")
+            files.append(
+                human.export.write(clip_path, output, units, "strips", armature_only=True, context=context)
+            )
+        else:
+            for clip in clips:
+                clip_path = os.path.join(folder, animations.clip_file_name(name, clip))
+                with animations.active_clip(human, clip):
+                    files.append(
+                        human.export.write(clip_path, output, units, "active", armature_only=True, context=context)
+                    )
+    yield 0.9
 
     _run_scripts(settings, "after_export", context, human, result, files)
     return [path for path in files if path]
-
-
-def _write_clips(human: "Human", file_format: str, path: str, animation: str, fbx_kwargs: dict, gltf_kwargs: dict) -> str:  # type:ignore[type-arg]
-    if file_format == "fbx":
-        return human.export.to_fbx(path, animation=animation, armature_only=True, **fbx_kwargs)
-    if file_format == "glb":
-        return human.export.to_glb(path, animation=animation, armature_only=True, **gltf_kwargs)
-    return human.export.to_gltf_separate(path, animation=animation, armature_only=True, **gltf_kwargs)
-
-
-def _merge_levels(copies: List["Human"]) -> None:
-    """Puts the meshes of every level under the skeleton of the first level.
-
-    The skeletons are identical, they were converted from the same source with
-    the same settings, so the meshes of the other levels can use the first one.
-    The other rigs are removed.
-    """
-    rig = copies[0].objects.rig
-    for copy in copies[1:]:
-        old_rig = copy.objects.rig
-        for obj in list(old_rig.children):
-            matrix = obj.matrix_world.copy()
-            obj.parent = rig
-            obj.matrix_world = matrix
-            for mod in obj.modifiers:
-                if mod.type == "ARMATURE" and mod.object == old_rig:
-                    mod.object = rig
-            key = obj.data.shape_keys if obj.type == "MESH" else None
-            if key and key.animation_data:
-                for fcurve in key.animation_data.drivers:
-                    for variable in fcurve.driver.variables:
-                        for target in variable.targets:
-                            if target.id == old_rig:
-                                target.id = rig
-        animations.remove_clips(copy)
-        bpy.data.objects.remove(old_rig)
 
 
 def _keep_in_file(

@@ -18,6 +18,8 @@ from mathutils import Matrix, Quaternion, Vector
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
+# Set on the rig when the T-pose is its rest pose
+T_POSE_KEY = "t_pose_rest"
 # Forward bend of the elbows, so IK solvers know which way the arm bends
 ELBOW_BEND = math.radians(2)
 ARM_BONES = ("upper_arm", "forearm", "hand")
@@ -37,13 +39,16 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
         context (bpy.types.Context): Blender context.
 
     Raises:
-        HumGenException: If the human is a Rigify or legacy human.
+        HumGenException: If the human is a Rigify or legacy human, or its rest
+            pose is the T-pose already.
     """
     rig = human.objects.rig
     if human.pose.rigify.is_rigify:
         raise HumGenException("Can't change the rest pose of a Rigify human.")
     if is_legacy(rig):
         raise HumGenException("Can't change the rest pose of a legacy human.")
+    if T_POSE_KEY in rig:
+        raise HumGenException("The rest pose of this human is the T-pose already.")
 
     old_active = context.view_layer.objects.active
     old_selected = context.selected_objects
@@ -89,7 +94,7 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
     for bone_name, matrix_basis in face_rig_pose.items():
         rig.pose.bones[bone_name].matrix_basis = matrix_basis
 
-    rig["t_pose_rest"] = True
+    rig[T_POSE_KEY] = True
 
     human.animation._attach(animation_state)
     human.animation.refresh(context)
