@@ -75,6 +75,8 @@ The codebase follows a modular architecture organized by functionality:
 
 **Content Packs (`backend/content/`)**: Manages external content packs that users can install. Handles JSON manifests and file operations for custom content.
 
+**Process System (`human/process/`)**: Exports humans for game engines or freezes copies in the file. `settings.py` holds the `ExportSettings` schema, which is at once the recipe file (`recipes/*.json` shipped, `<content>/process_templates/` user), the Blender properties (`backend/properties/process_props.py`, `props_to_settings`/`settings_to_props`), the argument of `human.process.run(settings)` and the `hg_export` metadata on results. `pipeline.py` runs the steps as a progress generator (`common/progress.py`); every LOD level is a fresh duplicate of the source. Engine knowledge (bone names, packing, normal map direction, clip layout) belongs in recipe JSON, not code.
+
 **Batch Generator (`batch_generator/generator.py`)**: `BatchHumanGenerator` class for generating multiple humans with randomized features. Used both programmatically and by the GUI batch panel.
 
 **Auto Class Registration (`backend/auto_classes.py`)**: Automatically discovers and registers all Blender operator, panel, and property classes by walking the directory tree. Classes can set `_register_priority` attribute to control registration order.

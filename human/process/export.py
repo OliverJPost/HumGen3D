@@ -1,9 +1,11 @@
+# Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
+
+import os
 from typing import TYPE_CHECKING, Literal
 
 import bpy
 
 from HumGen3D.backend import hg_log
-from HumGen3D.common import os
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
@@ -15,6 +17,9 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 Axis = Literal["X", "Y", "Z", "-X", "-Y", "-Z"]
+# What of the animation of the rig goes into the file: nothing, the active
+# action or the active action and the NLA strips as separate takes
+Animation = Literal["none", "active", "strips"]
 LICENSE_TEXT = """Made with Human Generator for Blender3D.
 Licensed under the Human Generator Asset License.
 Does not permit redistribution except embedded in software or in other formats that do not allow easy extraction.
@@ -34,17 +39,19 @@ def exporter(exporter_func):
         if _bake_argument_enabled(kwargs):
             _bake_textures(human, filepath, context)
 
-        with context_override(context, human.objects.rig, human.objects):
+        objects = (
+            [human.objects.rig] if kwargs.get("armature_only") else list(human.objects)
+        )
+        with context_override(context, human.objects.rig, objects):
             old_eye_materials = _remove_eye_outer_material(human)
             try:
                 bake_live_keys(human)
-                # todo remove face bones if not face rig
-                result = exporter_func(self, filepath, *args, **kwargs)
+                exporter_func(self, filepath, *args, **kwargs)
             finally:
                 _restore_eye_materials(human, old_eye_materials)
                 human.location = old_location
 
-        return result
+        return filepath
 
     def _bake_argument_enabled(kwargs):
         return "bake_textures" in kwargs and kwargs["bake_textures"]
@@ -55,12 +62,8 @@ def exporter(exporter_func):
 
     def _check_extension(filepath):
         extension = exporter_func.__name__.replace("_separate", "").replace("_embedded", "").split("_")[-1]
-        if not "." in filepath:
+        if not filepath.lower().endswith("." + extension):
             filepath += "." + extension
-        elif not filepath.endswith(extension):
-            raise Exception(
-                f"Filepath '{filepath}' does not end with extension '{extension}'. Either remove the extension or use the correct one."
-            )
         return filepath
 
     def _remove_eye_outer_material(human):
@@ -69,6 +72,8 @@ def exporter(exporter_func):
             return None
 
         mesh = human.objects.eyes.data
+        if len(mesh.materials) < 2:
+            return None
         old_materials = list(mesh.materials)
         old_material_indices = [polygon.material_index for polygon in mesh.polygons]
         # Remove transparent outer material, not supported by most formats
@@ -92,6 +97,8 @@ def exporter(exporter_func):
 
 # NOTE: Do not remove the context arguments, they are used by the decorator
 class ExportBuilder:
+    """Writes a human to a file. Every method returns the path that was written."""
+
     def __init__(self, _human: "Human"):
         self._human = _human
 
@@ -111,6 +118,13 @@ class ExportBuilder:
         # "FBX_SCALE_ALL" writes centimeters without a scale on the armature, as
         # Unreal expects
         apply_scale_options: str = "FBX_SCALE_NONE",
+        mesh_smooth_type: str = "FACE",
+        # "COPY" with embed_textures puts the images inside the file
+        path_mode: str = "AUTO",
+        embed_textures: bool = False,
+        animation: Animation = "active",
+        # Only the skeleton and its animation, for files with clips
+        armature_only: bool = False,
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
@@ -118,12 +132,9 @@ class ExportBuilder:
         bpy.ops.export_scene.fbx(
             filepath=filepath,
             use_selection=True,
-            object_types={
-                "ARMATURE",
-                "MESH",
-            },
+            object_types={"ARMATURE"} if armature_only else {"ARMATURE", "MESH"},
             use_mesh_modifiers=False,  # To make sure shape keys are exported
-            mesh_smooth_type="FACE",
+            mesh_smooth_type=mesh_smooth_type,
             use_custom_props=export_custom_props,
             use_triangles=triangulate,
             primary_bone_axis=primary_bone_axis,
@@ -132,8 +143,12 @@ class ExportBuilder:
             axis_forward=axis_forward,
             add_leaf_bones=use_leaf_bones,
             apply_scale_options=apply_scale_options,
+            path_mode=path_mode,
+            embed_textures=embed_textures,
+            bake_anim=animation != "none",
             # Only export the animation of this human, not of all humans in the file
             bake_anim_use_all_actions=False,
+            bake_anim_use_nla_strips=animation == "strips",
         )
 
     @exporter
@@ -205,14 +220,45 @@ class ExportBuilder:
     def to_gltf_separate(
         self,
         filepath: str,
+        image_format: Literal["AUTO", "JPEG"] = "AUTO",
+        tangents: bool = False,
+        draco: bool = False,
+        animation: Animation = "none",
+        armature_only: bool = False,
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
     ):
-        self._export_common_gltf(filepath, "GLTF_SEPARATE")
+        self._export_common_gltf(
+            filepath, "GLTF_SEPARATE", image_format, tangents, draco, animation, armature_only
+        )
 
-    def _export_common_gltf(
-        self, filepath, format: str, img_format: Literal["AUTO", "JPEG"] = "AUTO"
+    @exporter
+    def to_glb(
+        self,
+        filepath: str,
+        image_format: Literal["AUTO", "JPEG"] = "AUTO",
+        tangents: bool = False,
+        draco: bool = False,
+        animation: Animation = "none",
+        armature_only: bool = False,
+        # DON'T REMOVE, used by decorator
+        bake_textures: bool = False,
+        context: C = None,
+    ):
+        self._export_common_gltf(
+            filepath, "GLB", image_format, tangents, draco, animation, armature_only
+        )
+
+    def _export_common_gltf(  # noqa: CCR001
+        self,
+        filepath,
+        format: str,
+        img_format: Literal["AUTO", "JPEG"] = "AUTO",
+        tangents: bool = False,
+        draco: bool = False,
+        animation: Animation = "none",
+        armature_only: bool = False,
     ):
         skin_materials = None
         if not self._human.process.baking.is_baked():
@@ -225,13 +271,29 @@ class ExportBuilder:
         # Create an export collection, since use_selection does not work.
         collection = bpy.data.collections.new("Export")
         bpy.context.scene.collection.children.link(collection)
-        for obj in self._human.objects:
+        objects = (
+            [self._human.objects.rig] if armature_only else list(self._human.objects)
+        )
+        for obj in objects:
             collection.objects.link(obj)
         view_layer = bpy.context.view_layer
         old_active_layer_collection = view_layer.active_layer_collection
         view_layer.active_layer_collection = view_layer.layer_collection.children[
             collection.name
         ]
+
+        kwargs = {}
+        if animation == "none":
+            kwargs["export_animations"] = False
+        else:
+            kwargs["export_animations"] = True
+            kwargs["export_animation_mode"] = (
+                "NLA_TRACKS" if animation == "strips" else "ACTIVE_ACTIONS"
+            )
+        if tangents:
+            kwargs["export_tangents"] = True
+        if draco:
+            kwargs["export_draco_mesh_compression_enable"] = True
 
         try:
             bpy.ops.export_scene.gltf(
@@ -240,6 +302,7 @@ class ExportBuilder:
                 export_copyright=LICENSE_TEXT,
                 export_image_format=img_format,
                 use_active_collection=True,
+                **kwargs,
             )
         except TypeError as e:
             if str(e) == "Converting py args to operator properties: enum \"GLTF_EMBEDDED\" not found in ('GLB', 'GLTF_SEPARATE')":
@@ -279,16 +342,6 @@ class ExportBuilder:
     ) -> None:
         self._human.objects.body.data.materials[0] = material
         bpy.data.materials.remove(export_material)
-
-    @exporter
-    def to_glb(
-        self,
-        filepath: str,
-        # DON'T REMOVE, used by decorator
-        bake_textures: bool = False,
-        context: C = None,
-    ):
-        self._export_common_gltf(filepath, "GLB")
 
     @exporter
     def to_abc(

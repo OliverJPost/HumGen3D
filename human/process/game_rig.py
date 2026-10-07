@@ -20,6 +20,7 @@ import os
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Iterator, Optional
 
+import bmesh
 import bpy
 from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common import is_legacy
@@ -79,6 +80,7 @@ def _load_presets() -> dict[str, dict[str, Any]]:
 
 
 PRESETS = _load_presets()
+CUSTOM_PRESET = "custom"
 # Identifier, name, description and value, in the order of the file
 PRESET_ITEMS = [
     (identifier, preset["label"], preset["description"], i)
@@ -86,11 +88,14 @@ PRESET_ITEMS = [
 ]
 
 
-def get_preset(preset: str) -> dict[str, Any]:
+def get_preset(preset: str, names_file: Optional[str] = None) -> dict[str, Any]:
     """Settings of a game rig preset.
 
     Args:
-        preset (str): Identifier of the preset, see PRESETS.
+        preset (str): Identifier of the preset, see PRESETS, or "custom" for a
+            names profile file.
+        names_file (Optional[str]): Path of a JSON file with "names" and
+            "sides" like the presets, for the "custom" preset.
 
     Returns:
         dict[str, Any]: Rest pose, root bone name, side tokens, bone names and
@@ -98,10 +103,39 @@ def get_preset(preset: str) -> dict[str, Any]:
 
     Raises:
         ValueError: If the preset does not exist.
+        HumGenException: If the names file can't be read.
     """
+    if preset == CUSTOM_PRESET:
+        return _load_names_file(names_file)
     if preset not in PRESETS:
         raise ValueError(f"Preset has to be one of {tuple(PRESETS)}")
     return PRESETS[preset]
+
+
+def _load_names_file(path: Optional[str]) -> dict[str, Any]:
+    """A custom names profile: the names and sides of a preset, in a user file."""
+    if not path or not os.path.isfile(path):
+        raise HumGenException(f"Bone names file not found: {path}")
+    with open(path, "r") as f:
+        data = json.load(f)
+    if "names" not in data:
+        raise HumGenException(f"Bone names file {path} has no 'names'")
+    profile = dict(PRESETS["generic_a"])
+    profile["names"] = data["names"]
+    profile["sides"] = data.get("sides", PRESETS["generic_a"]["sides"])
+    return profile
+
+
+def preset_for_names(names: str, rest_pose: str = "a_pose") -> str:
+    """The preset identifier for a names profile of the settings.
+
+    Args:
+        names (str): "humanoid", "unreal", "mixamo", "humgen" or "custom".
+        rest_pose (str): Picks the generic preset for the HumGen names.
+    """
+    if names == "humgen":
+        return "generic_t" if rest_pose == "t_pose" else "generic_a"
+    return names
 
 
 def fbx_export_settings(units: str) -> dict[str, Any]:
@@ -130,6 +164,7 @@ def convert_to_game_rig(
     max_influences: int = 4,
     root_bone: Optional[bool] = None,
     root_bone_name: Optional[str] = None,
+    names_file: Optional[str] = None,
 ) -> None:
     """Converts the rig of this human to a skeleton for game engines.
 
@@ -154,13 +189,15 @@ def convert_to_game_rig(
             choice of the preset.
         root_bone_name (Optional[str]): Name of the root bone, None uses the name
             of the preset.
+        names_file (Optional[str]): Names profile file for the "custom" preset,
+            see get_preset.
 
     Raises:
         HumGenException: If the human is a Rigify or legacy human, or already has
             a game rig.
         ValueError: If the preset does not exist.
     """
-    preset_data = get_preset(preset)
+    preset_data = get_preset(preset, names_file)
     rig = human.objects.rig
     if human.pose.rigify.is_rigify:
         raise HumGenException("Can't make a game rig of a Rigify human.")
@@ -201,16 +238,20 @@ def convert_to_game_rig(
         if add_root:
             _add_root_bone(rig, root_bone_name or preset_data["root_bone"] or "root")
 
+        # Before the bones are renamed, so the groups of the bones are known by
+        # their current names, and no leftover group can take a new bone name
+        for obj in meshes:
+            _remove_unused_vertex_groups(obj, rig)
+            _free_vertex_group_names(obj, rig, preset_data)
         _rename_bones(rig, preset_data)
 
     for obj in meshes:
-        _remove_unused_vertex_groups(obj, rig)
         if max_influences:
-            _limit_influences(obj, max_influences, context)
+            _limit_influences(obj, rig, max_influences)
 
     _remove_rigify_properties(rig)
     _remove_empty_bone_collections(rig)
-    rig[GAME_RIG_KEY] = preset
+    rig[GAME_RIG_KEY] = names_file if preset == CUSTOM_PRESET else preset
 
 
 def _skinned_meshes(human: "Human", rig: bpy.types.Object) -> list[bpy.types.Object]:
@@ -401,14 +442,11 @@ def _add_root_bone(rig: bpy.types.Object, name: str) -> None:
     rig.pose.bones[name]["original_name"] = name
 
 
-def _rename_bones(rig: bpy.types.Object, preset_data: dict[str, Any]) -> None:
-    """Renames the bones for the preset, by their original name.
-
-    Blender renames the vertex groups and driver targets along with the bones.
-    Bones the preset has no name for keep their name.
-    """
+def _new_bone_names(rig: bpy.types.Object, preset_data: dict[str, Any]) -> dict[str, str]:
+    """The name every bone gets from the preset, by its current name."""
     names = preset_data["names"]
     sides = preset_data["sides"]
+    new_names = {}
     for pose_bone in rig.pose.bones:
         base, side = _split_side(_original_name(pose_bone.bone))
         template = names.get(base)
@@ -416,7 +454,33 @@ def _rename_bones(rig: bpy.types.Object, preset_data: dict[str, Any]) -> None:
             continue
         new_name = template.format(**sides[side]) if side else template
         if new_name != pose_bone.name:
-            pose_bone.name = new_name
+            new_names[pose_bone.name] = new_name
+    return new_names
+
+
+def _free_vertex_group_names(
+    obj: bpy.types.Object, rig: bpy.types.Object, preset_data: dict[str, Any]
+) -> None:
+    """Renames vertex groups that are not bones but hold a new bone name.
+
+    Blender refuses to rename the group of a bone when another group has the
+    new name already, which would leave the bone without weights.
+    """
+    bone_names = {bone.name for bone in rig.data.bones}
+    for new_name in _new_bone_names(rig, preset_data).values():
+        group = obj.vertex_groups.get(new_name)
+        if group and group.name not in bone_names:
+            group.name = new_name + ".group"
+
+
+def _rename_bones(rig: bpy.types.Object, preset_data: dict[str, Any]) -> None:
+    """Renames the bones for the preset, by their original name.
+
+    Blender renames the vertex groups and driver targets along with the bones.
+    Bones the preset has no name for keep their name.
+    """
+    for old_name, new_name in _new_bone_names(rig, preset_data).items():
+        rig.pose.bones[old_name].name = new_name
 
 
 def _referenced_vertex_groups(obj: bpy.types.Object) -> set[str]:
@@ -449,30 +513,48 @@ def _remove_unused_vertex_groups(obj: bpy.types.Object, rig: bpy.types.Object) -
             obj.vertex_groups.remove(group)
 
 
-def _limit_influences(
-    obj: bpy.types.Object, limit: int, context: bpy.types.Context
-) -> None:
+def _limit_influences(obj: bpy.types.Object, rig: bpy.types.Object, limit: int) -> None:
     """Keeps the strongest bone weights of each vertex and normalizes them.
 
     Only the groups of deforming bones are changed, the masks and other groups
-    of the body are left alone.
+    of the body are left alone. Done per vertex here instead of with the
+    vertex group operators, which silently do nothing on a human whose shape
+    keys were processed.
     """
-    override = {
-        "object": obj,
-        "active_object": obj,
-        "selected_objects": [obj],
-        "selected_editable_objects": [obj],
+    bone_names = {bone.name for bone in rig.data.bones if bone.use_deform}
+    bone_groups = {
+        group.index for group in obj.vertex_groups if group.name in bone_names
     }
-    with context.temp_override(**override):
-        bpy.ops.object.vertex_group_clean(
-            group_select_mode="BONE_DEFORM", limit=0, keep_single=False
+    # The deform layer of bmesh holds one weight per group, so vertices with
+    # the same group listed twice, which the base mesh has, come out clean
+    bm = bmesh.new()  # type:ignore[call-arg]
+    bm.from_mesh(obj.data)
+    layer = bm.verts.layers.deform.verify()
+    for vertex in bm.verts:
+        weights = vertex[layer]
+        # The base mesh lists some groups twice on a vertex, their weights add up
+        bone_weights: dict[int, float] = {}
+        other_weights: dict[int, float] = {}
+        for group_index, weight in weights.items():
+            target = bone_weights if group_index in bone_groups else other_weights
+            target[group_index] = target.get(group_index, 0.0) + weight
+        if not bone_weights:
+            continue
+        entries = sorted(
+            ((g, w) for g, w in bone_weights.items() if w > 0),
+            key=lambda entry: entry[1],
+            reverse=True,
         )
-        bpy.ops.object.vertex_group_limit_total(
-            group_select_mode="BONE_DEFORM", limit=limit
-        )
-        bpy.ops.object.vertex_group_normalize_all(
-            group_select_mode="BONE_DEFORM", lock_active=False
-        )
+        kept = entries[:limit] if limit else entries
+        total = sum(weight for _, weight in kept) or 1.0
+        weights.clear()
+        for group_index, weight in other_weights.items():
+            weights[group_index] = weight
+        for group_index, weight in kept:
+            weights[group_index] = weight / total
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
 
 
 def _remove_rigify_properties(rig: bpy.types.Object) -> None:

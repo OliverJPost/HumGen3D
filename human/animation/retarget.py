@@ -232,8 +232,10 @@ def retarget_clip(clip: dict, rig: Object, finger_curl: float = 1.0) -> BoneKeys
         matrices: Dict[str, Matrix] = {}
         for pose_bone in ordered:
             name = pose_bone.name
-            if pose_bone.parent:
-                parent_name = pose_bone.parent.name
+            # A game rig has a root bone above the hips, which is not animated
+            # and holds its rest pose, so the hips are the top of the animation
+            parent_name = pose_bone.parent.name if pose_bone.parent else None
+            if parent_name in matrices:
                 local_rest = rest[parent_name].inverted() @ rest[name]
                 parent_matrix = matrices[parent_name] @ local_rest
                 # Children stay attached to their parent, only the root moves

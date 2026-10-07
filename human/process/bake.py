@@ -1,42 +1,27 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Baking the materials of a human to textures, see textures.py for the work.
+
+Kept as the `human.process.baking` API: `bake_all` bakes with the default
+texture settings, `pack_alpha_into_image` is used by scripts.
+"""
+
 from __future__ import annotations
 
-import os
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Literal, Optional
+from typing import TYPE_CHECKING, Optional
 
 import bpy
 import numpy as np
-from bpy.types import Material, Object  # type:ignore
-from HumGen3D.backend import get_prefs
-from HumGen3D.backend.properties.bake_props import BakeProps
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.common.progress import run
 from HumGen3D.common.type_aliases import C
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
 
-from HumGen3D.common.context import context_override
+from .naming import Namer
+from .settings import OutputSettings, TextureSettings
 
-from ..hair.compatibility import SPECULAR_INPUT_NAME
-from .game_eyes import ROUGHNESS as GAME_EYE_ROUGHNESS
-from HumGen3D.common.compatibility import EEVEE_RENDER_ENGINE
 if TYPE_CHECKING:
     from ..human import Human
-
-
-def follow_links(
-    target_node: bpy.types.ShaderNode, target_socket: bpy.types.NodeSocket
-) -> Optional[bpy.types.NodeSocket]:
-    """Finds out what node is connected to a certain socket."""
-
-    return next(
-        (
-            node_links.from_socket
-            for node_links in target_node.inputs[target_socket].links  # type:ignore
-        ),
-        None,
-    )
 
 
 def pack_alpha_into_image(image: bpy.types.Image, alpha_image: bpy.types.Image) -> None:
@@ -79,405 +64,49 @@ def pack_alpha_into_image(image: bpy.types.Image, alpha_image: bpy.types.Image) 
     image.alpha_mode = "CHANNEL_PACKED"
 
 
-@dataclass
-class BakeTexture:
-    human_name: str
-    texture_name: str
-    bake_object: Object
-    material_slot: int
-    texture_type: str
-
-    @property
-    def output_image_name(self) -> str:
-        return f"{self.human_name}_{self.texture_name}_{self.texture_type.lower()}"  # noqa
-
-    @property
-    def material(self) -> Material:
-        return self.bake_object.material_slots[
-            self.material_slot  # type:ignore[index]
-        ].material
-
-    def get_resolution(self, bake_sett: BakeProps) -> int:
-        if self.texture_name == "body":
-            return int(bake_sett.res_body)
-        elif self.texture_name == "eyes":
-            return int(bake_sett.res_eyes)
-        elif "hair" in self.texture_name:
-            return int(bake_sett.res_haircards)
-        else:
-            return int(bake_sett.res_clothes)
-
-
 class BakeSettings:
+    """Bakes the materials of a human, see `HumGen3D.human.process.textures`."""
+
     def __init__(self, human: "Human") -> None:
         self._human = human
 
-    @property
-    def resolution_body(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_body
-
-    @resolution_body.setter
-    def resolution_body(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_body = str(value)
-
-    @property
-    def resolution_clothes(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_clothes
-
-    @resolution_clothes.setter
-    def resolution_clothes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_clothes = str(value)
-
-    @property
-    def resolution_eyes(self) -> int:
-        return bpy.context.scene.HG3D.process.baking.res_eyes
-
-    @resolution_eyes.setter
-    def resolution_eyes(self, value: int) -> None:  # noqa
-        bpy.context.scene.HG3D.process.baking.res_eyes = str(value)
-
-    @staticmethod
-    def _add_image_node(
-        image: bpy.types.Image,
-        input_type: Literal[
-            "Base Color", "Normal", "Roughness", "Metallic", "Specular",
-        ],
-        mat: bpy.types.Material,
-    ) -> None:
-        nodes = mat.node_tree.nodes
-        links = mat.node_tree.links
-        principled = nodes["Principled BSDF"]  # type:ignore[index, call-overload]
-
-        img_node = nodes.new("ShaderNodeTexImage")
-        img_node.image = image
-        img_node.name = input_type
-
-        node_locs = {
-            "Base Color": (-600, 400),
-            "Normal": (-600, -200),
-            "Roughness": (-600, 100),
-            "Metallic": (-1000, 300),
-            "Specular": (-1000, -100),
-            "Alpha": (-1000, -400),
-        }
-        img_node.location = node_locs[input_type]
-
-        if input_type in ["Normal"]:
-            image.colorspace_settings.name = "Non-Color"
-            normal_node = nodes.new("ShaderNodeNormalMap")
-            normal_node.location = (-300, -200)
-            links.new(img_node.outputs[0], normal_node.inputs[1])  # type:ignore[index]
-            links.new(
-                normal_node.outputs[0],  # type:ignore[index]
-
-                principled.inputs[input_type],  # type:ignore
-            )
-        else:
-            if input_type == "Specular":
-                input_name = SPECULAR_INPUT_NAME
-            else:
-                input_name = input_type
-            links.new(
-                img_node.outputs[0], principled.inputs[input_name]  # type:ignore
-            )
-
-        image.reload()
-
-    @staticmethod
-    def _disable_solidify_if_enabled(obj: bpy.types.Object) -> bool:
-        return_value = False
-        for mod in [m for m in obj.modifiers if m.type == "SOLIDIFY"]:
-            if any((mod.show_viewport, mod.show_render)):
-                return_value = True
-
-            mod.show_viewport = mod.show_render = False
-
-        return return_value
-
-    @staticmethod
-    def _get_bake_export_path(bake_sett: BakeProps, folder_name: str) -> str:
-        if bake_sett.export_folder:
-            export_path = os.path.join(
-                bake_sett.export_folder, "bake_results", folder_name
-            )
-        else:
-            export_path = os.path.join(
-                get_prefs().filepath, "bake_results", folder_name
-            )
-
-        if not os.path.exists(export_path):
-            os.makedirs(export_path)
-
-        return export_path
-
-    @staticmethod
-    def _set_up_material_for_baking(
-        baketexture: BakeTexture, image: bpy.types.Image
-    ) -> None:
-        nodes = baketexture.material.node_tree.nodes
-        links = baketexture.material.node_tree.links
-
-        principled = next(
-            node for node in nodes if node.bl_idname == "ShaderNodeBsdfPrincipled"
-        )
-        mat_output = next(
-            node for node in nodes if node.bl_idname == "ShaderNodeOutputMaterial"
-        )
-        emit_node = nodes.new("ShaderNodeEmission")
-        if baketexture.texture_type == "Normal":
-            links.new(principled.outputs[0], mat_output.inputs[0])  # type:ignore
-        else:
-            if baketexture.texture_type == "Specular":
-                input_name = SPECULAR_INPUT_NAME
-            else:
-                input_name = baketexture.texture_type
-
-            source_socket = follow_links(
-                principled, input_name  # type:ignore
-            )
-            if not source_socket:
-                raise HumGenException("Can't find node", baketexture.texture_type)
-            links.new(source_socket, emit_node.inputs[0])  # type:ignore
-            links.new(emit_node.outputs[0], mat_output.inputs[0])  # type:ignore
-
-        node = nodes.new("ShaderNodeTexImage")
-        node.image = image
-        for node2 in nodes:
-            node2.select = False
-        node.select = True
-        nodes.active = node
-
-    @staticmethod
-    def _check_bake_render_settings(
-        context: bpy.types.Context, samples: int = 4, force_cycles: bool = False
-    ) -> tuple[bool, bool, bool, bool]:
-        switched_to_cuda = False
-        switched_from_eevee = False
-        cycles_addon = context.preferences.addons["cycles"]  # type:ignore
-        if cycles_addon.preferences.compute_device_type == "OPTIX":
-            switched_to_cuda = True
-            cycles_addon.preferences.compute_device_type = "CUDA"
-        if context.scene.render.engine != "CYCLES":
-            if force_cycles:
-                switched_from_eevee = True
-                context.scene.render.engine = "CYCLES"
-            else:
-                ShowMessageBox(message="You can only bake while in Cycles")
-                return True, False, False, False
-
-        old_samples = context.scene.cycles.samples
-        context.scene.cycles.samples = samples
-
-        return False, switched_to_cuda, old_samples, switched_from_eevee
-
     @injected_context
-    def bake_all(self, folder_path=None, samples: int = 4, context: C = None) -> None:
-        (
-            _,
-            was_optix,
-            old_samples,
-            was_eevee,
-        ) = self._check_bake_render_settings(context, samples, force_cycles=True)
-        if self._human.process.was_baked:
-            raise HumGenException("Human was already baked")
+    def bake_all(
+        self,
+        folder_path: Optional[str] = None,
+        samples: int = 4,
+        settings: Optional[TextureSettings] = None,
+        context: C = None,
+    ) -> list[bpy.types.Image]:
+        """Bakes every material of this human and replaces it by the result.
 
-        baketextures = self.get_baking_list()
-        if not folder_path:
-            bake_sett = context.scene.HG3D.process.baking
-            folder_path = self._get_bake_export_path(bake_sett, bake_sett.export_folder)
-
-        for baketexture in baketextures:
-            self.bake_single_texture(baketexture, folder_path, context=context)
-
-        self.set_up_new_materials(baketextures)
-
-        self._human.objects.rig["hg_baked"] = True
-
-        if was_optix:
-            context.preferences.addons[  # type:ignore[index, call-overload]
-                "cycles"
-            ].preferences.compute_device_type = "OPTIX"
-        context.scene.cycles.samples = old_samples
-        if was_eevee:
-            try:
-                context.scene.render.engine = "EEVEE"
-            except TypeError:
-                context.scene.render.engine = EEVEE_RENDER_ENGINE
-
-
-    @injected_context
-    def bake_single_texture(
-        self, baketexture: BakeTexture, export_path: str, context: C = None
-    ) -> bpy.types.Image:
-        bake_sett = context.scene.HG3D.process.baking
-        bake_obj = baketexture.bake_object
-        was_solidified = self._disable_solidify_if_enabled(bake_obj)
-
-        # TODO nonsquare textures?
-        image = bpy.data.images.new(
-            baketexture.output_image_name,
-            width=baketexture.get_resolution(bake_sett),
-            height=baketexture.get_resolution(bake_sett),
-        )
-        with context_override(context, bake_obj, [bake_obj]):
-            self._set_up_material_for_baking(baketexture, image)
-
-            bake_type = "NORMAL" if baketexture.texture_type == "Normal" else "EMIT"
-            bpy.ops.object.bake(type=bake_type)  # type:ignore[misc, arg-type]
-
-            image_filename = f"{image.name}.{bake_sett.file_type}"
-            image.filepath_raw = os.path.join(export_path, image_filename)
-            image.file_format = bake_sett.file_type.upper()
-            image.save()
-
-            if was_solidified:
-                for mod in [m for m in bake_obj.modifiers if m.type == "SOLIDIFY"]:
-                    mod.show_viewport = mod.show_render = False
-
-        return image
-
-    @staticmethod
-    def pack_haircard_alpha(baketextures: List[BakeTexture]) -> None:
-        """Stores the baked alpha of haircards in the alpha of their color texture.
-
-        The separate alpha textures are kept. Does nothing for file types without
-        an alpha channel.
+        Changes this human, so call it on a copy. Use the process system for
+        packed maps, naming schemes and LOD levels.
 
         Args:
-            baketextures (List[BakeTexture]): All textures that were baked.
+            folder_path (Optional[str]): Folder to write the images to, None
+                packs them in the blend file.
+            samples (int): Cycles samples of the bakes.
+            settings (Optional[TextureSettings]): Passes, resolution and
+                packing. Defaults to separate maps at 2k.
+            context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            list[bpy.types.Image]: The baked images.
+
+        Raises:
+            HumGenException: If the human was already baked.
         """
-        haircard_textures = [
-            baketexture
-            for baketexture in baketextures
-            if "hg_haircard" in baketexture.bake_object
-        ]
-        images = {
-            (tex.bake_object, tex.material_slot, tex.texture_type): bpy.data.images.get(
-                tex.output_image_name
-            )
-            for tex in haircard_textures
-        }
-        for (obj, slot, texture_type), image in images.items():
-            alpha_image = images.get((obj, slot, "Alpha"))
-            if texture_type != "Base Color" or not image or not alpha_image:
-                continue
-            if image.file_format == "JPEG":
-                continue
-            # Baking one material slot also bakes to the last baked images of the
-            # other slots, only the saved files are sure to be correct
-            image.reload()
-            alpha_image.reload()
-            pack_alpha_into_image(image, alpha_image)
+        from .textures import bake_steps, copy_materials
 
-    def set_up_new_materials(self, baketextures: List[BakeTexture]) -> None:
-        if bpy.context.scene.HG3D.process.baking.pack_haircard_alpha:
-            self.pack_haircard_alpha(baketextures)
-
-        object_slot_set = {
-            (baketexture.bake_object, baketexture.material_slot)
-            for baketexture in baketextures
-        }
-        for obj, slot in object_slot_set:
-            org_name = obj.material_slots[slot].material.name  # type:ignore[index]
-            mat = bpy.data.materials.new(f"{obj.name}_{org_name}_BAKED")
-            mat.use_nodes = True
-
-            obj.material_slots[slot].material = mat  # type:ignore[index]
-
-            # The roughness of game eyes is a single value, it needs no texture
-            if obj == self._human.objects.eyes and self._human.process.has_game_eyes:
-                principled = mat.node_tree.nodes["Principled BSDF"]
-                principled.inputs["Roughness"].default_value = GAME_EYE_ROUGHNESS
-
-        for baketexture in baketextures:
-            mat = baketexture.bake_object.material_slots[
-                baketexture.material_slot  # type:ignore[index]
-            ].material
-            if "alpha" in baketexture.texture_type.lower():
-                if bpy.app.version < (4, 3, 0):
-                    mat.blend_method = "BLEND"
-                    mat.shadow_method = "CLIP"
-                else:
-                    mat.surface_render_method = "BLENDED"
-
-            image = bpy.data.images.get(baketexture.output_image_name)
-            self._add_image_node(image, baketexture.texture_type, mat)  # type:ignore
-
-    def get_baking_list(self) -> List[BakeTexture]:
-        bake_list = []
-        for tex_type in ["Base Color", "Specular", "Roughness", "Normal"]:
-            bake_list.append(
-                BakeTexture(
-                    self._human.name, "body", self._human.objects.body, 0, tex_type
-                )
-            )
-
-        bake_list.append(
-            BakeTexture(
-                self._human.name,
-                "eyes",
-                self._human.objects.eyes,
-                self._human.materials.eye_inner_slot,
-                "Base Color",
-            )
-        )
-
-        cloth_objs = [
-            child
-            for child in self._human.children
-            if "cloth" in child or "shoe" in child  # type:ignore[operator]
-        ]
-
-        for cloth in cloth_objs:
-            for tex_type in ["Base Color", "Roughness", "Normal"]:
-                bake_list.append(
-                    BakeTexture(self._human.name, cloth.name, cloth, 0, tex_type)
-                )
-
-        for tex_type in ["Base Color", "Roughness", "Normal"]:
-            bake_list.append(
-                BakeTexture(
-                    self._human.name,
-                    "lower_teeth",
-                    self._human.objects.lower_teeth,
-                    0,
-                    tex_type,
-                )
-            )
-            bake_list.append(
-                BakeTexture(
-                    self._human.name,
-                    "upper_teeth",
-                    self._human.objects.upper_teeth,
-                    0,
-                    tex_type,
-                )
-            )
-
-        for obj in self._human.objects.haircards:
-            for tex_type in ["Base Color", "Normal", "Alpha"]:
-                bake_list.append(
-                    BakeTexture(
-                        self._human.name,
-                        "hair" + obj.name,
-                        obj,  # type:ignore[arg-type]
-                        0,
-                        tex_type,
-                    )
-                )
-                if len(obj.data.materials) > 1:
-                    bake_list.append(
-                        BakeTexture(
-                            self._human.name,
-                            "hair2" + obj.name,
-                            obj,  # type:ignore[arg-type]
-                            1,
-                            tex_type,
-                        )
-                    )
-
-        return bake_list
+        if self.is_baked():
+            raise HumGenException("Human was already baked")
+        settings = settings.copy() if settings else TextureSettings()
+        settings.samples = samples
+        copy_materials(self._human)
+        namer = Namer(OutputSettings(), self._human.name)
+        return run(bake_steps(self._human, settings, namer, folder_path, context))
 
     def is_baked(self) -> bool:
-        mat = self._human.objects.body.material_slots[0].material  # type:ignore[index]
-        return not bool(mat.node_tree.nodes.get("skin_rough_spec"))  # todo more robust
+        """Whether the materials of this human were baked."""
+        return "hg_baked" in self._human.objects.rig
