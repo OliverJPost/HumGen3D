@@ -8,11 +8,12 @@
 Blender refuses to apply a modifier to a mesh with shape keys. Deform-only
 modifiers are applied here by evaluating the mesh once per key and writing the
 result back, modifiers that change the topology by applying them to a copy per
-key and transferring the keys. The process system uses this for the decimation
-of the clothing, scripts can use `apply_modifiers` for anything else.
+key and transferring the keys. Exposed as `human.process.apply_modifiers`, for
+scripts and API users; the steps of the process system apply the modifiers
+they are about with bmesh or in edit mode.
 """
 
-from typing import Any, Iterable, no_type_check
+from typing import Iterable
 
 import bpy
 import numpy as np
@@ -28,11 +29,6 @@ from HumGen3D.common.objects import (
 )
 from HumGen3D.common.type_aliases import C  # type: ignore
 from HumGen3D.common.drivers import build_driver_dict
-from HumGen3D.user_interface.content_panel.operators import (
-    refresh_hair_ul,
-    refresh_outfit_ul,
-    refresh_shapekeys_ul,
-)
 
 # Modifiers that only move vertices. Applying them is writing the evaluated
 # coordinates, which is also possible for every shape key.
@@ -241,21 +237,3 @@ def apply_selected_modifiers(modifier_types, obj, context, apply_hidden: bool = 
         with context_override(context, obj, [obj]):
             bpy.ops.object.modifier_apply(modifier=mod_name)
         assert mod_name not in obj.modifiers
-
-
-class HG_OT_REFRESH_UL(bpy.types.Operator):
-    bl_idname = "hg3d.ulrefresh"
-    bl_label = "Refresh list"
-    bl_description = "Refresh list"
-
-    uilist_type: bpy.props.StringProperty()
-
-    @no_type_check
-    def execute(self, context):
-        if self.uilist_type == "shapekeys":
-            refresh_shapekeys_ul(self, context)
-        elif self.uilist_type == "hair":
-            refresh_hair_ul(self, context)
-        elif self.uilist_type == "outfit":
-            refresh_outfit_ul(context)
-        return {"FINISHED"}

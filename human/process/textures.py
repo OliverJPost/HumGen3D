@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 import bpy
 import numpy as np
@@ -61,6 +61,8 @@ NODE_LOCATIONS = {
     "packed": (-1100, 100),
 }
 HAIRCARD_KEY = "hg_haircard"
+# Set on the rig once the materials are baked
+BAKED_KEY = "hg_baked"
 
 
 @dataclass
@@ -189,7 +191,7 @@ def bake_steps(  # noqa: CCR001
         for image in texture_set.baked.values():
             if isinstance(image, bpy.types.Image) and image.users == 0:
                 bpy.data.images.remove(image)
-    human.objects.rig["hg_baked"] = True
+    human.objects.rig[BAKED_KEY] = True
     return images
 
 
@@ -481,8 +483,15 @@ def _build_material(  # noqa: CCR001
         else:
             material.surface_render_method = "BLENDED"
 
+    # A material shared by parts, like the one of the teeth, was baked once for
+    # all of them
     old = texture_set.material
-    texture_set.obj.material_slots[texture_set.slot].material = material  # type:ignore[index]
+    for obj in human.objects:
+        if obj.type != "MESH":
+            continue
+        for slot in obj.material_slots:
+            if slot.material == old:
+                slot.material = material
     if old.users == 0:
         bpy.data.materials.remove(old)
     return list(images.values())
@@ -523,25 +532,34 @@ def _link_packed(nodes, links, image_node, principled, workflow: str) -> None:  
         links.new(separate.outputs["Blue"], principled.inputs["Metallic"])  # type:ignore[index]
 
 
-def copy_materials(human: "Human") -> None:
+def copy_materials(
+    human: "Human", objects: Optional[Iterable[bpy.types.Object]] = None
+) -> None:
     """Gives the human its own copy of every material, so baking and renaming
-    can't reach the human it was duplicated from."""
-    copies: Dict[bpy.types.Material, bpy.types.Material] = {}
-    for obj in human.objects:
+    can't reach the human it was duplicated from.
+
+    Materials that nothing outside this human uses are kept, so this can run
+    more than once without leaving orphan copies behind.
+
+    Args:
+        human (Human): The human to give its own materials.
+        objects (Optional[Iterable[Object]]): Only the materials of these
+            objects of the human, all of them when None.
+    """
+    slots: Dict[bpy.types.Material, List[bpy.types.MaterialSlot]] = {}
+    for obj in objects if objects is not None else human.objects:
         if obj.type != "MESH":
             continue
         for slot in obj.material_slots:
-            material = slot.material
-            if not material:
-                continue
-            if material not in copies:
-                copies[material] = material.copy()
-            slot.material = copies[material]
-
-
-def is_baked(human: "Human") -> bool:
-    """Whether the materials of the human were baked by the process system."""
-    return "hg_baked" in human.objects.rig
+            if slot.material:
+                slots.setdefault(slot.material, []).append(slot)
+    for material, own_slots in slots.items():
+        outside_users = material.users - int(material.use_fake_user) - len(own_slots)
+        if outside_users <= 0:
+            continue
+        copy = material.copy()
+        for slot in own_slots:
+            slot.material = copy
 
 
 def share_textures(source: "Human", target: "Human") -> None:

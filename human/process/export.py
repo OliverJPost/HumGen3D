@@ -1,7 +1,14 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
+"""Writes a human to a file, see `ExportBuilder`.
+
+The `to_*` methods take the options of the Blender exporters. `write` takes
+the `OutputSettings` of the process system instead and picks the format and
+its options from them, so a recipe and a call of the API mean the same thing.
+"""
+
 import os
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Dict, Literal
 
 import bpy
 
@@ -12,6 +19,10 @@ from HumGen3D.common.type_aliases import C
 from HumGen3D.human.process.shape_keys import bake_live_keys
 from HumGen3D.common.decorators import deprecated
 from HumGen3D.common.exceptions import HumGenException
+
+from . import naming
+from .animations import rig_actions
+from .settings import FILE_FORMATS, OutputSettings
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -27,6 +38,41 @@ See https://humgen3d.com for more information.
 """
 
 
+def fbx_kwargs(output: OutputSettings, units: str = "meters") -> Dict[str, Any]:
+    """The arguments of `ExportBuilder.to_fbx` for these output settings.
+
+    Args:
+        output (OutputSettings): The FBX options and the texture placement.
+        units (str): "meters" or "centimeters", see `SkeletonSettings.units`.
+            Centimeters apply the FBX unit scale to the objects, so Unreal
+            imports the armature at scale 1.
+    """
+    fbx = output.fbx
+    embedded = output.textures == "embedded"
+    return {
+        "axis_forward": fbx.axis_forward,
+        "axis_up": fbx.axis_up,
+        "primary_bone_axis": fbx.primary_bone_axis,
+        "secondary_bone_axis": fbx.secondary_bone_axis,
+        "use_leaf_bones": fbx.leaf_bones,
+        "export_custom_props": fbx.custom_properties,
+        "triangulate": fbx.triangulate,
+        "mesh_smooth_type": fbx.smoothing,
+        "apply_scale_options": "FBX_SCALE_ALL" if units == "centimeters" else "FBX_SCALE_NONE",
+        "path_mode": "COPY" if embedded else "RELATIVE",
+        "embed_textures": embedded,
+    }
+
+
+def gltf_kwargs(output: OutputSettings) -> Dict[str, Any]:
+    """The arguments of `ExportBuilder.to_glb` and `to_gltf_separate` for these settings."""
+    return {
+        "image_format": output.gltf.image_format,
+        "tangents": output.gltf.tangents,
+        "draco": output.gltf.draco,
+    }
+
+
 def exporter(exporter_func):
     @injected_context
     def wrapper(self, filepath, *args, **kwargs):
@@ -36,13 +82,16 @@ def exporter(exporter_func):
         old_location = human.location.copy()
         human.location = (0, 0, 0)
 
-        if _bake_argument_enabled(kwargs):
+        if _bake_argument_enabled(kwargs) and not human.process.was_baked:
             _bake_textures(human, filepath, context)
 
         objects = (
             [human.objects.rig] if kwargs.get("armature_only") else list(human.objects)
         )
-        with context_override(context, human.objects.rig, objects):
+        # A copy of a human has names like "Jake_Body.001" while the original is
+        # in the file, the exported file gets the names without the suffix
+        datablocks = naming.datablocks(human) + rig_actions(human)
+        with context_override(context, human.objects.rig, objects), naming.exact_names(datablocks):
             old_eye_materials = _remove_eye_outer_material(human)
             try:
                 bake_live_keys(human)
@@ -58,7 +107,7 @@ def exporter(exporter_func):
 
     def _bake_textures(human, filepath, context):
         folder = os.path.dirname(filepath)
-        human.process.baking.bake_all(folder, 4, context=context)
+        human.process.bake_textures(folder=folder, context=context)
 
     def _check_extension(filepath):
         extension = exporter_func.__name__.replace("_separate", "").replace("_embedded", "").split("_")[-1]
@@ -97,10 +146,77 @@ def exporter(exporter_func):
 
 # NOTE: Do not remove the context arguments, they are used by the decorator
 class ExportBuilder:
-    """Writes a human to a file. Every method returns the path that was written."""
+    """Writes a human to a file. Every method returns the path that was written.
+
+    The datablocks are written under their names without the number suffix of
+    Blender, the livekeys are baked and the transparent outer layer of the eyes
+    is left out, as most formats can't carry it.
+    """
 
     def __init__(self, _human: "Human"):
         self._human = _human
+
+    @injected_context
+    def write(
+        self,
+        filepath: str,
+        output: OutputSettings,
+        units: str = "meters",
+        animation: Animation = "none",
+        armature_only: bool = False,
+        context: C = None,
+    ) -> str:
+        """Writes the human in the format of the output settings.
+
+        Args:
+            filepath (str): Path of the file, the extension of the format is
+                added when missing.
+            output (OutputSettings): Format, exporter options and texture
+                placement, as in a recipe.
+            units (str): "meters" or "centimeters", see `SkeletonSettings.units`.
+                FBX only.
+            animation (Animation): "none", "active" or "strips", what of the
+                animation of the rig goes into the file. Formats with a rig only.
+            armature_only (bool): Only the skeleton and its animation, for a
+                file with clips.
+            context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            str: The path that was written.
+
+        Raises:
+            ValueError: If the output is not a file format.
+        """
+        file_format = output.format
+        if file_format not in FILE_FORMATS:
+            raise ValueError(f"Output format has to be one of {FILE_FORMATS}")
+        if file_format == "fbx":
+            return self.to_fbx(
+                filepath,
+                animation=animation,
+                armature_only=armature_only,
+                context=context,
+                **fbx_kwargs(output, units),
+            )
+        if file_format == "glb":
+            return self.to_glb(
+                filepath,
+                animation=animation,
+                armature_only=armature_only,
+                context=context,
+                **gltf_kwargs(output),
+            )
+        if file_format == "gltf":
+            return self.to_gltf_separate(
+                filepath,
+                animation=animation,
+                armature_only=armature_only,
+                context=context,
+                **gltf_kwargs(output),
+            )
+        if file_format == "obj":
+            return self.to_obj(filepath, context=context)
+        return self.to_abc(filepath, context=context)
 
     @exporter
     def to_fbx(
@@ -261,7 +377,7 @@ class ExportBuilder:
         armature_only: bool = False,
     ):
         skin_materials = None
-        if not self._human.process.baking.is_baked():
+        if not self._human.process.was_baked:
             hg_log(
                 "Exporting GLTF without baking textures. This will result in empty textures.",
                 level="WARNING",

@@ -113,6 +113,25 @@ def refresh_outfit_ul(context, category=None):
         item.weight_paint_present = has_deform_weights(obj, hg_rig)
 
 
+class HG_OT_REFRESH_UL(bpy.types.Operator):
+    """Refills one of the lists of the content saving UI."""
+
+    bl_idname = "hg3d.ulrefresh"
+    bl_label = "Refresh list"
+    bl_description = "Refresh list"
+
+    uilist_type: bpy.props.StringProperty()
+
+    def execute(self, context):
+        if self.uilist_type == "shapekeys":
+            refresh_shapekeys_ul(self, context)
+        elif self.uilist_type == "hair":
+            refresh_hair_ul(self, context)
+        elif self.uilist_type == "outfit":
+            refresh_outfit_ul(context)
+        return {"FINISHED"}
+
+
 class HG_OT_OPEN_CONTENT_SAVING_TAB(bpy.types.Operator):
     """Opens the Content Saving UI, hiding the regular UI.
 

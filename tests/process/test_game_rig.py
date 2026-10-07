@@ -8,7 +8,9 @@ import pytest
 
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.process import game_rig
-from HumGen3D.human.process.game_rig import PRESETS, fbx_export_settings
+from HumGen3D.human.process.export import fbx_kwargs
+from HumGen3D.human.process.game_rig import PRESETS
+from HumGen3D.human.process.settings import OutputSettings
 from HumGen3D.tests.test_fixtures import *
 
 # Bones Unity, Godot and VRM need to recognize a humanoid
@@ -277,9 +279,9 @@ def test_removed_bone_drivers_are_baked(human, context):
 def test_game_rig_export(human, context, tmp_path):
     human.process.convert_to_game_rig(preset="unreal", context=context)
     path = os.path.join(tmp_path, "unreal.fbx")
-    fbx_kwargs = fbx_export_settings(PRESETS["unreal"]["units"])
-    assert fbx_kwargs["apply_scale_options"] == "FBX_SCALE_ALL"
-    human.export.to_fbx(path, context=context, **fbx_kwargs)
+    kwargs = fbx_kwargs(OutputSettings(), PRESETS["unreal"]["units"])
+    assert kwargs["apply_scale_options"] == "FBX_SCALE_ALL"
+    human.export.to_fbx(path, context=context, **kwargs)
     assert os.path.getsize(path) > 0
 
 

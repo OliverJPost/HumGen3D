@@ -23,6 +23,8 @@ from HumGen3D.common.type_aliases import C
 from HumGen3D.human.hair import hair_binding
 from HumGen3D.human.hair.hair_binding import EXPRESSION_KEY_PREFIXES
 
+from .settings import ShapeKeySettings
+
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
     from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
@@ -216,6 +218,28 @@ def keep_options(human: "Human", context: C = None) -> Dict[str, List[str]]:
 
 def _key_name(key: "KeyItem") -> str:
     return key.as_bpy().name if hasattr(key, "as_bpy") else key.name
+
+
+def actions_for_level(settings: ShapeKeySettings, level: int) -> ShapeKeySettings:
+    """The key actions of a LOD level.
+
+    With `lod0_only` the lower levels carry no shape keys: the driven groups and
+    the expressions are removed and the slider groups are baked, as engines want
+    the blend shapes on the first level only.
+
+    Args:
+        settings (ShapeKeySettings): The actions of the first level.
+        level (int): The LOD level, 0 for the first.
+    """
+    if level == 0 or not settings.lod0_only:
+        return settings
+    baked = settings.copy()
+    for group in LIBRARY_GROUPS + ("correctives",):
+        setattr(baked, group, "remove")
+    for group in ("body", "face", "age"):
+        if getattr(baked, group) == "keep":
+            setattr(baked, group, "bake")
+    return baked
 
 
 @injected_context
