@@ -54,11 +54,10 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
     rig.select_set(True)
     context.view_layer.objects.active = rig
 
-    # The keys of an animation are relative to the rest pose, so it is retargeted
-    # again after the rest pose changed
-    animation = human.animation.as_dict()
-    animation_loop = human.animation.loop
-    human.animation.remove()
+    # The animation would write over the T-pose while it is applied, so it is
+    # stopped here. Its keys are relative to the rest pose, so it is retargeted
+    # again after the rest pose changed.
+    animation_state = human.animation._detach()
 
     _remove_side_raise_shapekeys(human)
     face_rig_pose = _reset_pose(rig)
@@ -92,10 +91,8 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
 
     rig["t_pose_rest"] = True
 
-    if animation["set"]:
-        human.animation.set(
-            animation["set"], context, loop=animation_loop, set_frame_range=False
-        )
+    human.animation._attach(animation_state)
+    human.animation.refresh(context)
 
     rig.select_set(False)
     for obj in old_selected:

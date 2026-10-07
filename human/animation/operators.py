@@ -23,9 +23,83 @@ class HG_OT_REMOVE_ANIMATION(bpy.types.Operator):
     bl_description = "Removes the animation, the human returns to its rest pose"
     bl_options = {"REGISTER", "UNDO"}
 
+    active: bpy.props.BoolProperty(
+        name="Active Animation",
+        description="Remove the active animation",
+        default=True,
+    )
+    strips: bpy.props.BoolProperty(
+        name="Strips",
+        description="Remove the Human Generator animations in NLA strips",
+        default=False,
+    )
+
     def execute(self, context):
         human = Human.from_existing(context.active_object)
-        human.animation.remove()
+        human.animation.remove(active=self.active, strips=self.strips)
+        return {"FINISHED"}
+
+
+class HG_OT_ADD_ANIMATION_STRIP(bpy.types.Operator):
+    """Adds the selected animation of the library as NLA strip.
+
+    Operator type:
+        Animation
+
+    Prereq:
+        Active object is part of HumGen human, an animation is selected in the
+        preview collection
+    """
+
+    bl_idname = "hg3d.add_animation_strip"
+    bl_label = "Add as NLA Strip"
+    bl_description = (
+        "Adds the selected animation as strip in the NLA editor, after the last "
+        "one, to chain or layer animations. The active animation is pushed down "
+        "to a strip first"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        preset = context.scene.HG3D.pcoll.animation
+        if not preset or preset == "none":
+            self.report({"ERROR"}, "Select an animation in the library first")
+            return {"CANCELLED"}
+        human = Human.from_existing(context.active_object)
+        try:
+            human.animation.set(
+                preset,
+                context,
+                finger_curl=context.scene.HG3D.animation_finger_curl,
+                as_strip=True,
+            )
+        except HumGenException as e:
+            self.report({"ERROR"}, str(e))
+            return {"CANCELLED"}
+        return {"FINISHED"}
+
+
+class HG_OT_ANIMATION_PUSH_DOWN(bpy.types.Operator):
+    """Moves the active animation to an NLA strip.
+
+    Operator type:
+        Animation
+
+    Prereq:
+        Active object is part of HumGen human with an active animation
+    """
+
+    bl_idname = "hg3d.animation_push_down"
+    bl_label = "Push Down"
+    bl_description = (
+        "Moves the animation to a strip in the NLA editor, so another animation "
+        "can be set on top of it"
+    )
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        human = Human.from_existing(context.active_object)
+        human.animation.push_down()
         return {"FINISHED"}
 
 

@@ -21,7 +21,7 @@ because tight fists fold the fingers of the human into each other.
 """
 
 import math
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import bpy
 from bpy.types import Bone, Object, PoseBone  # type:ignore
@@ -317,46 +317,133 @@ def _make_continuous(quaternions: List[Quaternion]) -> None:
             current.negate()
 
 
-def apply_keys_as_action(
-    rig: Object,
-    keys: BoneKeys,
-    name: str,
-    frame_scale: float,
-    frame_start: int,
-    loop: bool,
-) -> bpy.types.Action:
-    """Creates an action from bone keys and assigns it to the rig.
+def resample_keys(keys: BoneKeys, frame_scale: float) -> BoneKeys:
+    """Resamples keys from one per clip frame to one per whole scene frame.
+
+    The clip is stretched to the nearest whole number of scene frames, so all keys
+    land on whole frames, which are easier to edit than subframe keys. The last
+    key, which is the same as the first one for cyclic animations, stays on the
+    last frame so loops stay seamless.
 
     Args:
-        rig (Object): Armature object to animate.
         keys (BoneKeys): Output of retarget_clip.
-        name (str): Name of the new action.
         frame_scale (float): Scene frames per clip frame, to convert frame rates.
-        frame_start (int): Scene frame of the first clip frame.
-        loop (bool): Make the animation repeat before and after its frame range.
+
+    Returns:
+        BoneKeys: Keys with one value per scene frame.
+    """
+    if frame_scale == 1 or not keys:
+        return keys
+    clip_count = len(next(iter(keys.values()))[0])
+    if clip_count < 2:
+        return keys
+    scene_count = max(1, round((clip_count - 1) * frame_scale)) + 1
+    step = (clip_count - 1) / (scene_count - 1)
+
+    resampled: BoneKeys = {}
+    for name, (rotations, locations) in keys.items():
+        new_rotations = []
+        new_locations: Optional[List[Vector]] = [] if locations is not None else None
+        for i in range(scene_count):
+            position = i * step
+            index = min(int(position), clip_count - 2)
+            factor = min(max(position - index, 0.0), 1.0)
+            new_rotations.append(rotations[index].slerp(rotations[index + 1], factor))
+            if locations is not None and new_locations is not None:
+                new_locations.append(
+                    locations[index].lerp(locations[index + 1], factor)
+                )
+        resampled[name] = (new_rotations, new_locations)
+
+    return resampled
+
+
+def new_action(rig: Object, name: str) -> bpy.types.Action:
+    """Creates an empty action with a slot for the rig, not assigned to anything.
+
+    Args:
+        rig (Object): Armature object the action is for.
+        name (str): Name of the new action.
 
     Returns:
         bpy.types.Action: The created action.
     """
     action = bpy.data.actions.new(name)
-    if not rig.animation_data:
-        rig.animation_data_create()
-    rig.animation_data.action = action
-
     if hasattr(action, "slots"):
         slot = action.slots.new("OBJECT", rig.name)
         strip = action.layers.new("Layer").strips.new(type="KEYFRAME")
-        channelbag = strip.channelbag(slot, ensure=True)
-        rig.animation_data.action_slot = slot
-        fcurves, groups = channelbag.fcurves, channelbag.groups
-    else:
-        fcurves, groups = action.fcurves, action.groups
+        strip.channelbag(slot, ensure=True)
+    return action
+
+
+def _channels(action: bpy.types.Action) -> Tuple[Any, Any]:
+    """The fcurve and group collections of an action, for slotted and legacy actions."""
+    if hasattr(action, "slots"):
+        channelbag = action.layers[0].strips[0].channelbag(action.slots[0], ensure=True)
+        return channelbag.fcurves, channelbag.groups
+    return action.fcurves, action.groups
+
+
+def _data_paths(keys: BoneKeys) -> List[str]:
+    """Data paths of the fcurves the keys are written to."""
+    paths = []
+    for bone_name, (_, locations) in keys.items():
+        paths.append(f'pose.bones["{bone_name}"].rotation_quaternion')
+        if locations is not None:
+            paths.append(f'pose.bones["{bone_name}"].location')
+    return paths
+
+
+def keyed_frame_start(action: bpy.types.Action, keys: BoneKeys) -> Optional[int]:
+    """First frame of the channels in the action that the keys would replace.
+
+    Args:
+        action (bpy.types.Action): Action to look in.
+        keys (BoneKeys): Output of retarget_clip.
+
+    Returns:
+        Optional[int]: The frame, None if the action has none of these channels.
+    """
+    paths = set(_data_paths(keys))
+    fcurves, _ = _channels(action)
+    firsts = [
+        fcurve.keyframe_points[0].co.x
+        for fcurve in fcurves
+        if fcurve.data_path in paths and fcurve.keyframe_points
+    ]
+    return round(min(firsts)) if firsts else None
+
+
+def write_keys(
+    action: bpy.types.Action,
+    rig: Object,
+    keys: BoneKeys,
+    frame_start: int,
+    loop: bool,
+) -> None:
+    """Writes bone keys to an action, replacing the channels of these bones.
+
+    Channels of other bones and properties, like ones added by the user, stay as
+    they are. So does everything else of the action: its name, fake user and the
+    NLA strips that use it.
+
+    Args:
+        action (bpy.types.Action): Action to write to, see new_action.
+        rig (Object): Armature object the action animates.
+        keys (BoneKeys): Output of retarget_clip, one key per scene frame.
+        frame_start (int): Scene frame of the first key.
+        loop (bool): Make the animation repeat before and after its frame range.
+    """
+    fcurves, groups = _channels(action)
+    paths = set(_data_paths(keys))
+    for fcurve in [f for f in fcurves if f.data_path in paths]:
+        fcurves.remove(fcurve)
 
     for bone_name, (rotations, locations) in keys.items():
         pose_bone: PoseBone = rig.pose.bones[bone_name]
         pose_bone.rotation_mode = "QUATERNION"
-        group = groups.new(bone_name)
-        frames = [frame_start + i * frame_scale for i in range(len(rotations))]
+        group = groups.get(bone_name) or groups.new(bone_name)
+        frames = [frame_start + i for i in range(len(rotations))]
         channels = [(f'pose.bones["{bone_name}"].rotation_quaternion', rotations)]
         if locations is not None:
             channels.append((f'pose.bones["{bone_name}"].location', locations))
@@ -375,5 +462,3 @@ def apply_keys_as_action(
                 if loop:
                     fcurve.modifiers.new("CYCLES")
                 fcurve.update()
-
-    return action

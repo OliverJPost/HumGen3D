@@ -134,6 +134,26 @@ def rigify_library(layout):
         layout.label(text=line)
 
 
+animation_nla_txt = """
+Clicking an animation in the library makes it the active action of the human,
+replacing the one before. For a single animation this is all you need.
+
+To play several animations after each other, or to tweak an animation with your
+own keyframes on top of it, use NLA strips instead:
+
+- Push Down moves the active animation to a strip in the NLA editor
+- Add as Strip adds the selected animation as a strip after the last one
+
+Strips are kept when you set or remove the active animation and when the human
+changes shape. Move, blend and repeat them in the NLA editor like any other strip.
+"""
+
+
+def animation_nla(layout):
+    for line in animation_nla_txt.splitlines():
+        layout.label(text=line)
+
+
 autohide_hair_txt = """
 Hair children were hidden to improve performance.
 You can turn them back on at the top of the Human Generator interface.
