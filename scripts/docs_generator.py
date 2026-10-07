@@ -310,7 +310,9 @@ class DocumentationInstance:
                 )
 
     def get_file_header(self, parent_namespace):
-        text = "> {}\n\n".format(
+        # The website builds the API sidebar tree from `accessor`
+        text = f"---\naccessor: {parent_namespace}\n---\n" if parent_namespace else ""
+        text += "> {}\n\n".format(
             self.docstring if self.docstring else "No docstring available."
         )
         if parent_namespace:

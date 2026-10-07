@@ -1,3 +1,6 @@
+---
+accessor: human.hair
+---
 > Class for accessing hair types of human and common functionality.
 
 Accessible from: `human.hair`

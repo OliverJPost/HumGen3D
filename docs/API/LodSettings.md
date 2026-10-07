@@ -1,3 +1,6 @@
+---
+accessor: human.process.lod
+---
 > Has methods for setting LODs for the meshes of a human.
 
 Accessible from: `human.process.lod`

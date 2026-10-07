@@ -1,3 +1,6 @@
+---
+accessor: human.skin.gender_specific
+---
 > Subclass of human.skin for exposing controls for male specific skin settings.
 
 Accessible from: `human.skin.gender_specific`

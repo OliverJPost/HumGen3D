@@ -1,3 +1,6 @@
+---
+accessor: human.keys
+---
 > Class for changing the shape keys and  LiveKeys of this human.
 
 Accessible from: `human.keys`

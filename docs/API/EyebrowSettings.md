@@ -1,3 +1,6 @@
+---
+accessor: human.hair.eyebrows
+---
 > Class for manipulating human eyebrows.
 
 Accessible from: `human.hair.eyebrows`

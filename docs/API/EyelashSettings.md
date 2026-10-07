@@ -1,3 +1,6 @@
+---
+accessor: human.hair.eyelashes
+---
 > Class for manipulating eyelashes of human.
 
 Accessible from: `human.hair.eyelashes`

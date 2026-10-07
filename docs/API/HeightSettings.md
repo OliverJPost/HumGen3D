@@ -1,3 +1,6 @@
+---
+accessor: human.height
+---
 > Class for changing height of human.
 
 Accessible from: `human.height`

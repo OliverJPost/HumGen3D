@@ -1,3 +1,6 @@
+---
+accessor: human
+---
 > Python representation of a Human Generator human.
 
     This class with its subclasses can be used to modify the

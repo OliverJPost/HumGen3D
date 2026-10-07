@@ -1,3 +1,6 @@
+---
+accessor: human.skin.nodes
+---
 > Inherits from bpy_prop_collection to add custom methods to the collection.
 
 Accessible from: `human.skin.nodes`

@@ -1,3 +1,6 @@
+---
+accessor: human.clothing.footwear
+---
 > Interface class for adding/modifying footwear of human.
 
     Most of the functionality of this class comes from the [[BaseClothing]] class,
