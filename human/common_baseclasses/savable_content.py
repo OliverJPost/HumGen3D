@@ -40,9 +40,9 @@ class SavableContent:
 
         Args:
             context (Context): Blender context.
-            objs (list) : List of objects to save
-            folder (str) : Folder to save the file in
-            filename (str) : Name to save the file as
+            objs (list): List of objects to save
+            folder (str): Folder to save the file in
+            filename (str): Name to save the file as
             clear_sk (bool): Remove all shapekeys from objs. Defaults to True.
             clear_materials (bool): Remove all materials from objs. Defaults
                 to True.
