@@ -1,5 +1,6 @@
 import bpy
 from HumGen3D.common import find_original_rig, is_legacy, is_processed
+from HumGen3D.human.human import Human
 from HumGen3D.user_interface.panel_functions import draw_paragraph
 
 
@@ -62,7 +63,8 @@ class HG_PT_PROCESSED(bpy.types.Panel):
 
         col.separator()
 
-        if find_original_rig(context.object, context.view_layer.objects):
+        has_original = bool(find_original_rig(context.object, context.view_layer.objects))
+        if has_original:
             row = col.row()
             row.scale_y = 1.5
             row.operator(
@@ -75,4 +77,15 @@ class HG_PT_PROCESSED(bpy.types.Panel):
                 col,
                 "The original human is not in this scene anymore.",
                 enabled=False,
+            )
+
+        human = Human.from_existing(context.object)
+        if human and human.process.settings:
+            col.separator()
+            sub = col.column(align=True)
+            row = sub.row(align=True)
+            row.enabled = has_original
+            row.operator("hg3d.process_again", text="Process again", icon="FILE_REFRESH")
+            sub.operator(
+                "hg3d.load_result_settings", text="Load these settings", icon="IMPORT"
             )

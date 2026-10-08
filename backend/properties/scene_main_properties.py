@@ -84,6 +84,18 @@ class HG_SETTINGS(bpy.types.PropertyGroup):
         get=lambda s: Human.from_existing(bpy.context.object).height.centimeters,
     )
 
+    animation_finger_curl: FloatProperty(
+        name="Finger Curl",
+        description="Blend fingers between the relaxed hand (0) and the animation (1)",
+        default=1.0,
+        min=0,
+        max=1,
+        set=lambda s, value: Human.from_existing(bpy.context.object).animation.refresh(
+            bpy.context, finger_curl=value
+        ),
+        get=lambda s: Human.from_existing(bpy.context.object).animation.finger_curl,
+    )
+
     age: IntProperty(
         default=30,
         min=20,

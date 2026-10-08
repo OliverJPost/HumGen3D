@@ -125,6 +125,22 @@ def test_glb_export(human: Human, context, tmp_path):
     path = os.path.join(tmp_path, "test.glb")
     human.export.to_glb(path, context=context)
 
+
+def test_unbaked_gltf_export_keeps_skin_material(male_human: Human, context, tmp_path):
+    """The skin material is shared with other humans, so exporting without baked
+    textures must not take its shader node away, also not on a second export."""
+    body = male_human.objects.body
+    material = body.data.materials[0]
+    material_count = len(bpy.data.materials)
+    assert "Principled BSDF" in material.node_tree.nodes
+
+    for name in ("first.glb", "second.glb"):
+        male_human.export.to_glb(os.path.join(tmp_path, name), context=context)
+
+    assert body.data.materials[0] == material
+    assert "Principled BSDF" in material.node_tree.nodes
+    assert len(bpy.data.materials) == material_count
+
 @pytest.mark.parametrize("human", ALL_HUMAN_FIXTURES)
 def test_alembic_export(human: Human, context, tmp_path):
     """Test that a gltf file can be exported from a human."""

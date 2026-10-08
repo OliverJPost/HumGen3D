@@ -18,6 +18,8 @@ from mathutils import Matrix, Quaternion, Vector
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
+# Set on the rig when the T-pose is its rest pose
+T_POSE_KEY = "t_pose_rest"
 # Forward bend of the elbows, so IK solvers know which way the arm bends
 ELBOW_BEND = math.radians(2)
 ARM_BONES = ("upper_arm", "forearm", "hand")
@@ -37,13 +39,16 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
         context (bpy.types.Context): Blender context.
 
     Raises:
-        HumGenException: If the human is a Rigify or legacy human.
+        HumGenException: If the human is a Rigify or legacy human, or its rest
+            pose is the T-pose already.
     """
     rig = human.objects.rig
     if human.pose.rigify.is_rigify:
         raise HumGenException("Can't change the rest pose of a Rigify human.")
     if is_legacy(rig):
         raise HumGenException("Can't change the rest pose of a legacy human.")
+    if T_POSE_KEY in rig:
+        raise HumGenException("The rest pose of this human is the T-pose already.")
 
     old_active = context.view_layer.objects.active
     old_selected = context.selected_objects
@@ -53,6 +58,11 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
     rig.hide_set(False)
     rig.select_set(True)
     context.view_layer.objects.active = rig
+
+    # The animation would write over the T-pose while it is applied, so it is
+    # stopped here. Its keys are relative to the rest pose, so it is retargeted
+    # again after the rest pose changed.
+    animation_state = human.animation._detach()
 
     _remove_side_raise_shapekeys(human)
     face_rig_pose = _reset_pose(rig)
@@ -84,7 +94,10 @@ def set_t_pose_as_rest(human: "Human", context: bpy.types.Context) -> None:
     for bone_name, matrix_basis in face_rig_pose.items():
         rig.pose.bones[bone_name].matrix_basis = matrix_basis
 
-    rig["t_pose_rest"] = True
+    rig[T_POSE_KEY] = True
+
+    human.animation._attach(animation_state)
+    human.animation.refresh(context)
 
     rig.select_set(False)
     for obj in old_selected:
@@ -170,10 +183,21 @@ def _mute_constraints(rig: bpy.types.Object) -> list[tuple[str, str]]:
     return muted_constraints
 
 
-def _set_t_pose(rig: bpy.types.Object, context: bpy.types.Context) -> None:
+def load_t_pose() -> dict[str, dict[str, Any]]:
+    """Loads the T-pose definition, per original bone name.
+
+    Returns:
+        dict[str, dict[str, Any]]: Per bone the edit bone roll the rotation is
+            relative to, the rotation as quaternion and optionally a location
+            relative to the length of the bone.
+    """
     path = os.path.join(get_addon_root(), "human", "process", "t_pose.json")
     with open(path, "r") as f:
-        t_pose: dict[str, dict[str, Any]] = json.load(f)
+        return json.load(f)  # type:ignore[no-any-return]
+
+
+def _set_t_pose(rig: bpy.types.Object, context: bpy.types.Context) -> None:
+    t_pose = load_t_pose()
 
     bone_names = {
         pose_bone.get("original_name", pose_bone.name): pose_bone.name

@@ -60,6 +60,9 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
 
         self._active = preset
 
+        # An animation would override the pose on every frame change
+        self._human.animation.remove()
+
         hg_rig = self._human.objects.rig
         hg_pose = self._import_pose(preset, context)
 
@@ -149,6 +152,7 @@ class PoseSettings(PreviewCollectionContent, SavableContent):
         return {"set": self._active}
 
     def reset(self) -> None:
+        self._human.animation.remove()
         for bone in self._human.objects.rig.pose.bones:
             bone.location = (0, 0, 0)
             bone.rotation_quaternion = (1, 0, 0, 0)

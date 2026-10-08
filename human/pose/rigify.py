@@ -163,6 +163,7 @@ class RigifySettings:
         if not obj.data.shape_keys or not obj.data.shape_keys.animation_data:
             return
 
+        bones = rigify_rig.data.bones
         for driver in obj.data.shape_keys.animation_data.drivers:
             var = driver.driver.variables[0]
             # The shape keys of haircards are driven by the shape keys of the body
@@ -170,8 +171,16 @@ class RigifySettings:
                 continue
             target = var.targets[0]
             target.id = rigify_rig
-            if target.bone_target.startswith(("forearm", "upper_arm", "thigh", "foot")):
-                target.bone_target = "DEF-" + target.bone_target
+            # Control bones like the face rig sliders keep their name in the Rigify
+            # rig. Limb bones only exist as deform bones, which follow both the IK
+            # and FK controls. Bones without a Rigify type, like the eye targets,
+            # only exist as hidden ORG bones.
+            if target.bone_target in bones:
+                continue
+            for prefix in ("DEF-", "ORG-"):
+                if prefix + target.bone_target in bones:
+                    target.bone_target = prefix + target.bone_target
+                    break
 
     def _relink_constraints(
         self, bone: bpy.types.Object, rigify_rig: bpy.types.Object

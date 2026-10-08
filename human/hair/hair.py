@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
+from HumGen3D.human.hair.basehair import BaseHair
 from HumGen3D.human.hair.eyelashes import EyelashSettings
 from HumGen3D.human.hair.face_hair import FacialHairSettings
 from HumGen3D.human.hair.regular_hair import RegularHairSettings
@@ -52,12 +53,8 @@ class HairSettings:
         Returns:
             int: Triangles of the haircaps and haircards for all hair this human has.
         """
-        hair_types = [self.regular_hair, self.eyebrows, self.eyelashes]
-        if self._human.gender == "male":
-            hair_types.append(self.face_hair)
-
         tris = 0
-        for hair in hair_types:
+        for hair in self.hair_types:
             if not hair.modifiers:
                 continue
             cap_type = hair._haircap_type  # noqa: SLF001
@@ -106,6 +103,19 @@ class HairSettings:
             RegularHairSettings: Instance of RegularHairSettings.
         """
         return RegularHairSettings(self._human)
+
+    @property
+    def hair_types(self) -> list[BaseHair]:
+        """The hair types this human can have: regular hair, eyebrows, eyelashes
+        and, for male humans, facial hair.
+
+        Returns:
+            list[BaseHair]: The settings of each hair type.
+        """
+        hair_types: list[BaseHair] = [self.regular_hair, self.eyebrows, self.eyelashes]
+        if self._human.gender == "male":
+            hair_types.append(self.face_hair)
+        return hair_types
 
     @property
     def children_ishidden(self) -> bool:
