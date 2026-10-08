@@ -292,6 +292,8 @@ def process_shape_keys(  # noqa: CCR001
         if action not in GROUP_ACTIONS.get(group, ("keep", "bake", "remove")):
             raise ValueError(f"Cannot {action} the {group} keys")
     keep = keep or {}
+    # Haircaps made afterwards are fitted from the shape they were modelled on
+    hair_binding.store_base_shape(human.objects.body)
 
     if actions["face_rig"] == "keep" and not human.expression.has_facial_rig:
         human.expression.load_facial_rig(context, reset_expressions=False)

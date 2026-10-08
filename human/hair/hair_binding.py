@@ -21,6 +21,9 @@ if TYPE_CHECKING:
 BODY_VERTEX_ATTRIBUTE = "hg_body_vertex"
 # Position of every vertex relative to the body vertex it is attached to
 BODY_OFFSET_ATTRIBUTE = "hg_body_offset"
+# Shape of the body before its shape keys were baked into the mesh, the shape the
+# haircaps were modelled on. The dot hides it in Blender and from the exporters
+BASE_SHAPE_ATTRIBUTE = ".hg_base_co"
 # Shape keys that move the hair less than this are not added to the hair
 MIN_KEY_DISPLACEMENT = 0.0005
 EXPRESSION_KEY_PREFIXES = ("e_", "e{", "expr_")
@@ -51,6 +54,42 @@ def get_coords(data: bpy.types.bpy_prop_collection) -> np.ndarray:
     """
     coords = np.empty(len(data) * 3, dtype=np.float64)
     data.foreach_get("co", coords)
+    return coords.reshape((-1, 3))
+
+
+def store_base_shape(body: bpy.types.Object) -> None:
+    """Remembers the base shape of the body before shape keys are baked into it.
+
+    Only the first call stores the shape, later bakes leave it as it was.
+
+    Args:
+        body (bpy.types.Object): Body object of the human.
+    """
+    mesh = body.data
+    if BASE_SHAPE_ATTRIBUTE in mesh.attributes:
+        return
+    source = mesh.shape_keys.reference_key.data if mesh.shape_keys else mesh.vertices
+    attribute = mesh.attributes.new(BASE_SHAPE_ATTRIBUTE, "FLOAT_VECTOR", "POINT")
+    attribute.data.foreach_set("vector", get_coords(source).ravel())
+
+
+def base_body_coords(body: bpy.types.Object) -> np.ndarray:
+    """Gets the base shape of the body, without any shape keys.
+
+    This is the shape stored by store_base_shape if shape keys were baked into the
+    mesh, otherwise the shape of the mesh.
+
+    Args:
+        body (bpy.types.Object): Body object of the human.
+
+    Returns:
+        np.ndarray: (n, 3) coordinates in the space of the body object.
+    """
+    attribute = body.data.attributes.get(BASE_SHAPE_ATTRIBUTE)
+    if attribute is None:
+        return get_coords(body.data.vertices)
+    coords = np.empty(len(attribute.data) * 3, dtype=np.float64)
+    attribute.data.foreach_get("vector", coords)
     return coords.reshape((-1, 3))
 
 

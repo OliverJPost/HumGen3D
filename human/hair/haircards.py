@@ -393,7 +393,7 @@ class BodyReference:
         """
         self._human = human
         body = human.objects.body
-        self.base_coords_local = hair_binding.get_coords(body.data.vertices)
+        self.base_coords_local = hair_binding.base_body_coords(body)
         #: Values of the animated shape keys, like expressions, the body has now
         self.dynamic_values = hair_binding.dynamic_key_values(human, context)
         self.coords_local = hair_binding.static_body_coords(
