@@ -59,7 +59,6 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.bpy_livekey import BpyLiveKey
 from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
-from HumGen3D.human.process.process import SCRIPT_ITEM
 from HumGen3D.user_interface.batch_panel import batch_ui_lists
 from HumGen3D.user_interface.content_panel import utility_ui_lists
 from HumGen3D.user_interface.icons.icons import hg_icons
@@ -121,7 +120,6 @@ def _initiate_ui_lists() -> None:
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "contentpacks_col": content_packs.HG_CONTENT_PACK,
         "installpacks_col": content_packs.HG_INSTALLPACK,
-        "modapply_col": utility_ui_lists.MODAPPLY_ITEM,
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
         "saveoutfit_col": utility_ui_lists.SAVEOUTFIT_ITEM,
@@ -129,7 +127,6 @@ def _initiate_ui_lists() -> None:
         "hg_update_col": update.UPDATE_INFO_ITEM,
         "hg_tips_and_suggestions": tips_suggestions_ui.TIPS_ITEM,
         "possible_content_col": POSSIBLE_CONTENT_ITEM,
-        "hg_scripts_col": SCRIPT_ITEM,
     }
 
     scene = bpy.types.Scene

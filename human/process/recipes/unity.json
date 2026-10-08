@@ -1,0 +1,39 @@
+{
+    "version": 2,
+    "label": "Unity",
+    "output": {
+        "format": "fbx",
+        "naming": "plain",
+        "textures": "folder"
+    },
+    "lods": [
+        {"body": 0, "clothing": "high", "eyes": "high", "teeth": 1, "haircards": "high", "bones_per_vertex": 4}
+    ],
+    "skeleton": {
+        "enabled": true,
+        "names": "humanoid",
+        "rest_pose": "t_pose",
+        "root_bone": true,
+        "root_bone_name": "Root",
+        "units": "meters"
+    },
+    "shape_keys": {
+        "face_rig": "keep",
+        "expressions": "keep",
+        "correctives": "keep",
+        "body": "bake",
+        "face": "bake",
+        "age": "bake"
+    },
+    "textures": {
+        "enabled": true,
+        "workflow": "metallic_smoothness",
+        "normal_map": "directx",
+        "file_format": "png"
+    },
+    "animations": {
+        "enabled": false,
+        "layout": "per_clip",
+        "root_motion": "root"
+    }
+}

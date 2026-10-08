@@ -33,7 +33,7 @@ class HG_PT_CLOTHMAT(HGPanel, bpy.types.Panel):
         layout = self.layout
         self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         self.human = Human.from_existing(context.object, strict_check=False)
-        if "hg_baked" in self.human.objects.rig:
+        if self.human.process.was_baked:
             layout.label(text="Textures are baked", icon="INFO")
             return
 

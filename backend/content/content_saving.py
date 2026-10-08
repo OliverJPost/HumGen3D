@@ -89,9 +89,7 @@ def save_objects_optimized(
             _remove_particle_systems(context, obj)
         if clear_drivers:
             _remove_obj_drivers(obj)
-
-    if clear_drivers:
-        _clear_sk_drivers()
+            _remove_sk_drivers(obj)
 
     new_scene = bpy.data.scenes.new(name="test_scene")
     new_col = bpy.data.collections.new(name="HG")
@@ -129,14 +127,14 @@ def save_objects_optimized(
     return subprocess.Popen([binary, blend_filepath, "--python", python_file])
 
 
-def _clear_sk_drivers() -> None:
-    for key in bpy.data.shape_keys:
-        try:
-            fcurves = key.animation_data.drivers
-            for _ in fcurves:
-                fcurves.remove(fcurves[0])  # type:ignore[union-attr, index]
-        except AttributeError:
-            pass
+def _remove_sk_drivers(obj: bpy.types.Object) -> None:
+    try:
+        drivers = obj.data.shape_keys.animation_data.drivers
+    except AttributeError:
+        return
+
+    for driver in drivers[:]:  # type:ignore[index]
+        drivers.remove(driver)
 
 
 def _remove_obj_drivers(obj: bpy.types.Object) -> None:

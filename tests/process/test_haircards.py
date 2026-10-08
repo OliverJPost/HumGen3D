@@ -331,33 +331,37 @@ def test_same_strands_give_same_cards(long_haired_human, context):
     assert smaller_geometry.card_count < geometry.card_count
 
 
-def test_bake_packs_alpha(long_haired_human, context, tmp_path):
-    human = long_haired_human
-    bake_sett = context.scene.HG3D.process.baking
-    bake_sett.res_haircards = "128"
-    bake_sett.pack_haircard_alpha = True
-    hair_obj = human.hair.regular_hair.convert_to_haircards("low", context)
+@pytest.mark.parametrize("pack", [True, False])
+def test_bake_packs_alpha(long_haired_human, context, tmp_path, pack):
+    """The alpha of the cards goes into the color texture, or a texture of its own."""
+    from HumGen3D.human.process.settings import TextureSettings
 
-    baking = human.process.baking
-    baking._check_bake_render_settings(context, 4, force_cycles=True)
-    baketextures = [
-        baketexture
-        for baketexture in baking.get_baking_list()
-        if baketexture.bake_object == hair_obj
-    ]
-    for baketexture in baketextures:
-        baking.bake_single_texture(baketexture, str(tmp_path), context=context)
-    baking.set_up_new_materials(baketextures)
+    human = long_haired_human.duplicate(context)
+    try:
+        hair_obj = human.hair.regular_hair.convert_to_haircards("low", context)
+        textures = TextureSettings(
+            resolution={key: 128 for key in TextureSettings().resolution},
+            pack_hair_alpha=pack,
+        )
+        human.process.bake_textures(textures, str(tmp_path), only_sets=("hair",), context=context)
 
-    for material in hair_obj.data.materials:
-        color_image = material.node_tree.nodes["Base Color"].image
-        alpha_image = material.node_tree.nodes["Alpha"].image
-        assert color_image.alpha_mode == "CHANNEL_PACKED"
+        cards = hair_obj.data.materials[1]
+        nodes = cards.node_tree.nodes
+        color_image = nodes["base_color"].image
         # The images are reloaded from disk, so this checks the saved files
-        packed_alpha = np.array(color_image.pixels)[3::4]
-        baked_alpha = np.array(alpha_image.pixels)[::4]
-        assert packed_alpha.max() > packed_alpha.min() + 0.1
-        assert np.allclose(packed_alpha, baked_alpha, atol=0.02)
+        if pack:
+            assert color_image.alpha_mode == "CHANNEL_PACKED"
+            assert "alpha" not in nodes
+            alpha = np.array(color_image.pixels)[3::4]
+            assert nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node == nodes["base_color"]
+        else:
+            assert color_image.alpha_mode != "CHANNEL_PACKED"
+            alpha = np.array(nodes["alpha"].image.pixels)[::4]
+            assert nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node == nodes["alpha"]
+        assert alpha.max() > alpha.min() + 0.1
+        assert (alpha < 0.5).mean() > 0.2, "Most of a card is transparent"
+    finally:
+        human.delete()
 
 
 @pytest.mark.parametrize("quality", CARD_QUALITIES)

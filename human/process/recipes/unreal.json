@@ -1,0 +1,46 @@
+{
+    "version": 2,
+    "label": "Unreal",
+    "output": {
+        "format": "fbx",
+        "naming": "unreal",
+        "textures": "folder"
+    },
+    "lods": [
+        {
+            "body": 0,
+            "clothing": "high",
+            "eyes": "high",
+            "teeth": 1,
+            "haircards": "high",
+            "bones_per_vertex": 4
+        }
+    ],
+    "skeleton": {
+        "enabled": true,
+        "names": "unreal",
+        "rest_pose": "a_pose",
+        "root_bone": true,
+        "root_bone_name": "root",
+        "units": "centimeters"
+    },
+    "shape_keys": {
+        "face_rig": "keep",
+        "expressions": "keep",
+        "correctives": "remove",
+        "body": "bake",
+        "face": "bake",
+        "age": "bake"
+    },
+    "textures": {
+        "enabled": true,
+        "workflow": "orm",
+        "normal_map": "directx",
+        "file_format": "png"
+    },
+    "animations": {
+        "enabled": false,
+        "layout": "single_file",
+        "root_motion": "root"
+    }
+}

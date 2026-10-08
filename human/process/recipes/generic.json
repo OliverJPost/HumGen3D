@@ -1,0 +1,39 @@
+{
+    "version": 2,
+    "label": "Generic game",
+    "output": {
+        "format": "fbx",
+        "naming": "plain",
+        "textures": "folder"
+    },
+    "lods": [
+        {"body": 0, "clothing": "high", "eyes": "high", "teeth": 1, "haircards": "high", "bones_per_vertex": 4}
+    ],
+    "skeleton": {
+        "enabled": true,
+        "names": "humgen",
+        "rest_pose": "a_pose",
+        "root_bone": true,
+        "root_bone_name": "root",
+        "units": "meters"
+    },
+    "shape_keys": {
+        "face_rig": "keep",
+        "expressions": "keep",
+        "correctives": "keep",
+        "body": "bake",
+        "face": "bake",
+        "age": "bake"
+    },
+    "textures": {
+        "enabled": true,
+        "workflow": "separate",
+        "normal_map": "opengl",
+        "file_format": "png"
+    },
+    "animations": {
+        "enabled": false,
+        "layout": "single_file",
+        "root_motion": "hips"
+    }
+}

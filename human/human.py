@@ -34,6 +34,7 @@ from ..common.decorators import injected_context, verify_addon
 from ..common.exceptions import HumGenException
 from ..common.materials import verify_no_undefined_nodes_in_mat
 from ..common.render import set_eevee_ao_and_strip
+from .animation.animation import AnimationSettings
 from .body.body import BodySettings
 from .clothing.clothing import ClothingSettings
 from .expression.expression import ExpressionSettings
@@ -322,6 +323,15 @@ class Human:
         return PoseSettings(self)
 
     @property
+    def animation(self) -> AnimationSettings:
+        """Points to the animation settings of the human.
+
+        Returns:
+            AnimationSettings: Class instance for animating the human
+        """
+        return AnimationSettings(self)
+
+    @property
     def clothing(self) -> ClothingSettings:
         """Points to the clothing settings of the human.
 
@@ -540,6 +550,7 @@ class Human:
         Will delete all meshes and objects that this human consists of, including
         the backup human.
         """
+        self.animation.remove(strips=True)
         delete_list = [
             self.objects.rig,
         ]
@@ -738,6 +749,16 @@ class Human:
             add_to_collection(context, obj_copy)
 
         new_human = Human.from_existing(obj_copy)
+        # The copied shape keys still read the bones of the original rig
+        for obj in new_human.children:
+            key = obj.data.shape_keys if obj.type == "MESH" else None
+            if not key or not key.animation_data:
+                continue
+            for fcurve in key.animation_data.drivers:
+                for variable in fcurve.driver.variables:
+                    for target in variable.targets:
+                        if target.id == self.objects.rig:
+                            target.id = rig_copy
         # The shape keys of haircards follow the shape keys of the body
         for hair_obj in new_human.objects.haircards:
             hair_binding.retarget_drivers(
