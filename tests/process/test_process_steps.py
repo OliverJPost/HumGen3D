@@ -112,6 +112,28 @@ def test_shape_keys_bake_refused_for_driven_groups(copy):
         copy.process.set_shape_keys(face_rig="bake", context=bpy.context)
 
 
+def test_haircards_after_baked_shape_keys(copy, source):
+    """The haircaps sit on the body when the gender key and the livekeys were
+    baked into the mesh first, as run does, not on the base shape."""
+    unbaked = source.duplicate(bpy.context)
+    try:
+        made = unbaked.process.convert_to_haircards("haircap_only", bpy.context)
+        expected = [_cap_center(obj) for obj in made]
+    finally:
+        unbaked.delete()
+
+    copy.process.set_shape_keys(ShapeKeySettings(), context=bpy.context)
+    made = copy.process.convert_to_haircards("haircap_only", bpy.context)
+    assert len(made) == len(expected) == 4
+    for obj, center, center_expected in zip(made, map(_cap_center, made), expected):
+        assert (center - center_expected).length < 0.001, obj.name
+
+
+def _cap_center(obj):
+    coords = [obj.matrix_world @ vert.co for vert in obj.data.vertices]
+    return sum(coords, coords[0] * 0) / len(coords)
+
+
 # The whole level, step by step, in the order of run
 
 
