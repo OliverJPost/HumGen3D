@@ -50,6 +50,8 @@ from .shape_keys import (
 
 # Set on the rig once the particle hair was converted to hair cards
 HAIRCARDS_KEY = "haircards"
+# The name of the human before apply_names, so the names don't stack up
+EXPORT_NAME_KEY = "hg_export_name"
 
 
 class ProcessSettings:
@@ -273,7 +275,7 @@ class ProcessSettings:
             raise HumGenException("Human already has hair cards.")
         hair = self._human.hair
         made = []
-        for hair_type in (hair.regular_hair, hair.eyebrows, hair.eyelashes, hair.face_hair):
+        for hair_type in hair.hair_types:
             if hair_type.modifiers:
                 made.append(hair_type.convert_to_haircards(quality, context))
         body = self._human.objects.body
@@ -633,13 +635,19 @@ class ProcessSettings:
                 the meshes when there is more than one level.
             levels (int): Number of LOD levels.
         """
+        namer = self._namer(output, level, levels)
+        rig = self._human.objects.rig
+        if EXPORT_NAME_KEY not in rig:
+            rig[EXPORT_NAME_KEY] = naming.clean(self._human.name)
         textures.copy_materials(self._human)
-        naming.apply_names(self._human, self._namer(output, level, levels))
+        naming.apply_names(self._human, namer)
 
     def _namer(self, output: Optional[OutputSettings], level: int, levels: int) -> naming.Namer:
         output = output or OutputSettings()
-        # A duplicate is called "Jake.001", the tokens go around the clean name
-        name = output.resolved_name(naming.clean(self._human.name))
+        # A duplicate is called "Jake.001", the tokens go around the clean name.
+        # Once named, the rig is "SK_Jake", so the name from before is used.
+        base = self._human.objects.rig.get(EXPORT_NAME_KEY) or naming.clean(self._human.name)
+        name = output.resolved_name(str(base))
         return naming.Namer(output, name, level, levels)
 
     @injected_context

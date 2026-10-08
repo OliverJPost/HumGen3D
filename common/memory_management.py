@@ -17,6 +17,7 @@ def hg_delete(obj: bpy.types.Object) -> None:
         obj (bpy.types.Object): Object to remove
     """
     me = obj.data if (obj and obj.type == "MESH") else None
+    armature = obj.data if (obj and obj.type == "ARMATURE") else None
 
     images, materials = _get_mats_and_images(obj)
 
@@ -24,6 +25,8 @@ def hg_delete(obj: bpy.types.Object) -> None:
 
     if me and not me.users:
         bpy.data.meshes.remove(me)
+    if armature and not armature.users:
+        bpy.data.armatures.remove(armature)
 
     for material in [m for m in materials if m and not m.users]:
         try:

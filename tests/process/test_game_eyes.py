@@ -8,6 +8,8 @@ import pytest
 
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.process import game_eyes
+from HumGen3D.human.process.settings import TextureSettings
+from HumGen3D.human.process.textures import plan_texture_sets
 from HumGen3D.tests.test_fixtures import *
 
 ORIGINAL_TRIS_COUNT = 10_560
@@ -93,8 +95,7 @@ def test_game_eyes_material(human):
     assert human.eyes.iris_color.value == iris_color
     human.eyes.randomize()
 
-    baketextures = human.process.baking.get_baking_list()
-    eye_slots = [tex.material_slot for tex in baketextures if tex.bake_object == eyes]
+    eye_slots = [s.slot for s in plan_texture_sets(human, TextureSettings()) if s.obj == eyes]
     assert eye_slots == [0]
 
 
@@ -121,7 +122,8 @@ def test_game_eyes_fails(male_human):
 
 def test_game_eyes_baked(male_human, context, tmp_path):
     male_human.process.convert_to_game_eyes()
-    male_human.process.baking.bake_all(folder_path=str(tmp_path), context=context)
+    textures = TextureSettings(resolution={key: 128 for key in TextureSettings().resolution})
+    male_human.process.bake_textures(textures, str(tmp_path), only_sets=("eyes",), context=context)
 
     eyes = male_human.objects.eyes
     assert len(eyes.data.materials) == 1
@@ -129,7 +131,7 @@ def test_game_eyes_baked(male_human, context, tmp_path):
     assert nodes["Principled BSDF"].inputs["Roughness"].default_value == pytest.approx(
         game_eyes.ROUGHNESS
     )
-    assert nodes["Base Color"].image.size[0] > 0
+    assert nodes["base_color"].image.size[0] == 128
 
 
 @pytest.mark.parametrize("game_eyes_enabled", [False, True])
