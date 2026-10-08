@@ -180,9 +180,12 @@ def prepare_clips(
         for track in list(animation_data.nla_tracks):
             animation_data.nla_tracks.remove(track)
         for clip in clips:
+            # glTF names its animations after the tracks, which are no
+            # datablocks that naming.exact_names gives their names back
+            name = re.sub(r"\.\d{3}$", "", clip.name)
             track = animation_data.nla_tracks.new()
-            track.name = clip.name
-            strip = track.strips.new(clip.name, int(clip.frame_range[0]), clip)
+            track.name = name
+            strip = track.strips.new(name, int(clip.frame_range[0]), clip)
             if hasattr(strip, "action_slot") and clip.slots:
                 strip.action_slot = clip.slots[0]
     return clips, warnings

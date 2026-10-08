@@ -274,7 +274,10 @@ def merge_levels(levels: List["Human"]) -> None:
                             if target.id == old_rig:
                                 target.id = rig
         remove_clips(level)
+        armature = old_rig.data
         bpy.data.objects.remove(old_rig)
+        if not armature.users:
+            bpy.data.armatures.remove(armature)
 
 
 def _mesh_tris(mesh: bpy.types.Mesh) -> int:

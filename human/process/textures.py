@@ -26,6 +26,7 @@ so everything but the baked objects is hidden from the render meanwhile.
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
@@ -72,7 +73,9 @@ NODE_LOCATIONS = {
     "packed": (-1100, 100),
 }
 HAIRCARD_KEY = "hg_haircard"
-# Set on the rig once the materials are baked
+# The number Blender adds to a name that is taken
+SUFFIX = re.compile(r"\.\d{3}$")
+# Set on the rig once the materials are baked, and on the baked materials
 BAKED_KEY = "hg_baked"
 
 
@@ -500,7 +503,10 @@ def _new_image(
 def _save(image: bpy.types.Image, folder: Optional[str], file_format: str) -> None:
     if folder:
         extension = "jpg" if file_format == "jpeg" else "png"
-        image.filepath_raw = os.path.join(folder, f"{image.name}.{extension}")
+        # The file gets the name of the scheme, also when an image of that name
+        # is in the file already, like the textures of an earlier result
+        file_name = SUFFIX.sub("", image.name)
+        image.filepath_raw = os.path.join(folder, f"{file_name}.{extension}")
         image.file_format = file_format.upper()
         image.save()
         image.reload()
@@ -594,6 +600,8 @@ def _build_material(  # noqa: CCR001
         _save(image, folder, settings.file_format)
 
     material = bpy.data.materials.new(namer.material(part, per_level))
+    # LOD levels share it on purpose, see share_textures and copy_materials
+    material[BAKED_KEY] = True
     material.use_nodes = True
     nodes = material.node_tree.nodes
     links = material.node_tree.links
@@ -690,7 +698,8 @@ def copy_materials(
     can't reach the human it was duplicated from.
 
     Materials that nothing outside this human uses are kept, so this can run
-    more than once without leaving orphan copies behind.
+    more than once without leaving orphan copies behind. Baked materials are
+    kept too, the LOD levels share those, see `share_textures`.
 
     Args:
         human (Human): The human to give its own materials.
@@ -706,7 +715,7 @@ def copy_materials(
                 slots.setdefault(slot.material, []).append(slot)
     for material, own_slots in slots.items():
         outside_users = material.users - int(material.use_fake_user) - len(own_slots)
-        if outside_users <= 0:
+        if outside_users <= 0 or BAKED_KEY in material:
             continue
         copy = material.copy()
         for slot in own_slots:

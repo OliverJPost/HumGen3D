@@ -234,11 +234,7 @@ def _weights(human: "Human", settings: ExportSettings) -> Dict[str, float]:
     Baking dominates: every object is a Cycles session per pass, close to a
     second each, see textures.py. The hair is one object per hair type.
     """
-    hair_types = sum(
-        1
-        for hair in (human.hair.regular_hair, human.hair.eyebrows, human.hair.eyelashes, human.hair.face_hair)
-        if hair.modifiers
-    )
+    hair_types = sum(1 for hair in human.hair.hair_types if hair.modifiers)
     clothing = len(human.clothing.outfit.objects) + len(human.clothing.footwear.objects)
     passes_per_set = sum(len(p) for p in settings.textures.passes.values()) / 5
     objects = 3 + clothing + hair_types
@@ -306,6 +302,7 @@ def process_steps(  # noqa: CCR001
 
     copies: List["Human"] = []
     images: List[bpy.types.Image] = []
+    existing = _datablocks()
     try:
         for level, quality in enumerate(settings.lods):
             namer = naming.Namer(output, name, level, levels)
@@ -353,6 +350,7 @@ def process_steps(  # noqa: CCR001
                     bpy.data.images.remove(image)
             except ReferenceError:
                 pass
+        _remove_orphans(existing)
 
     result.seconds = time.monotonic() - started
     hg_log(f"Processed {name} in {result.seconds:.1f}s", level="DEBUG")
@@ -421,9 +419,34 @@ def _level_steps(  # noqa: CCR001
 
     The steps are the public methods of `ProcessSettings`, in the order its
     docstring gives; this adds the scripts, the progress and the sharing of
-    textures between levels.
+    textures between levels. The copy is removed when a step fails or the
+    steps are closed before the level is done.
     """
     copy = human.duplicate(context)
+    try:
+        return (
+            yield from _process_level(
+                copy, human, settings, quality, level, namer, texture_folder, copies, images, context, result
+            )
+        )
+    except BaseException:
+        _delete_copy(copy)
+        raise
+
+
+def _process_level(  # noqa: CCR001
+    copy: "Human",
+    human: "Human",
+    settings: ExportSettings,
+    quality: QualitySettings,
+    level: int,
+    namer: naming.Namer,
+    texture_folder: Optional[str],
+    copies: List["Human"],
+    images: List[bpy.types.Image],
+    context: bpy.types.Context,
+    result: ExportResult,
+) -> Steps["Human"]:
     # Renaming and baking must not reach the materials of the source human
     textures.copy_materials(copy)
     for obj in copy.objects:
@@ -483,6 +506,11 @@ def _level_steps(  # noqa: CCR001
 
     naming.apply_names(copy, namer)
     copy.objects.rig[EXPORT_KEY] = settings.to_json()
+    # The hair cards are made after the copy moved to the results collection
+    results = bpy.data.collections.get(RESULTS_COLLECTION)
+    for obj in copy.objects:
+        if not results or obj.name not in results.objects:
+            add_to_collection(context, obj, RESULTS_COLLECTION)
     _run_scripts(settings, "after_processing", context, copy, result)
     result.triangles.append(_triangles(copy))
     yield 1.0
@@ -574,6 +602,37 @@ def _keep_in_file(
         if not settings.output.is_file:
             copy.location = source.location + Vector((0, RESULT_SPACING * (index + 1), 0))
         result.humans.append(copy)
+
+
+# Datablocks a run makes that can end up without users, see _remove_orphans
+ORPHAN_COLLECTIONS = ("materials", "node_groups", "images", "armatures", "meshes", "actions")
+
+
+def _datablocks() -> Dict[str, set]:
+    """Pointers of the datablocks in the file, removed ones can't be compared."""
+    return {
+        name: {block.as_pointer() for block in getattr(bpy.data, name)}
+        for name in ORPHAN_COLLECTIONS
+    }
+
+
+def _remove_orphans(existing: Dict[str, set]) -> None:
+    """Removes what the run made that nothing uses anymore.
+
+    The copies of the particle hair materials lose their slots, the levels
+    after the first replace their materials by those of the first and removed
+    copies leave their data. Removing a node group can free an image, so this
+    repeats until nothing is left. What was in the file before is not touched.
+    """
+    removed = True
+    while removed:
+        removed = False
+        for name in ORPHAN_COLLECTIONS:
+            data = getattr(bpy.data, name)
+            for block in list(data):
+                if block.users == 0 and block.as_pointer() not in existing[name]:
+                    data.remove(block)
+                    removed = True
 
 
 def _delete_copy(copy: "Human") -> None:

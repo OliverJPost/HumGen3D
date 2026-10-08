@@ -267,11 +267,13 @@ class KeyItemProps(bpy.types.PropertyGroup):
 
 
 def _keep_props() -> Dict[str, Any]:
-    """Per group the list of keys to tick and whether the list is open."""
+    """Per group the list of keys to tick, whether the list is open and whether
+    it holds a selection of a recipe rather than every key, see `_tick`."""
     props: Dict[str, Any] = {}
     for group, *_ in KEY_GROUPS:
         props[f"items_{group}"] = CollectionProperty(type=KeyItemProps)
         props[f"open_{group}"] = BoolProperty(default=False)
+        props[f"explicit_{group}"] = BoolProperty(default=False)
     return props
 
 
@@ -387,6 +389,8 @@ class AnimationProps(bpy.types.PropertyGroup):
     )
     clips: CollectionProperty(type=ClipProps)
     clips_open: BoolProperty(default=False)
+    # The list holds the selection of a recipe rather than every clip, see _tick
+    clips_explicit: BoolProperty(default=False)
     layout: EnumProperty(name="File layout", items=_enum(CLIP_LAYOUTS), default="single_file")
     sample_rate: EnumProperty(
         name="Sample rate",
@@ -692,7 +696,13 @@ def props_to_settings(props: ProcessProps) -> ExportSettings:  # noqa: CCR001
         keep={
             group: selection
             for group, *_ in KEY_GROUPS
-            if (selection := _ticked(getattr(keys_props, f"items_{group}"))) is not None
+            if (
+                selection := _ticked(
+                    getattr(keys_props, f"items_{group}"),
+                    explicit=getattr(keys_props, f"explicit_{group}"),
+                )
+            )
+            is not None
         },
         lod0_only=keys_props.lod0_only,
     )
@@ -718,7 +728,7 @@ def props_to_settings(props: ProcessProps) -> ExportSettings:  # noqa: CCR001
     animations = AnimationSettings(
         enabled=anim_props.enabled,
         source=anim_props.source,
-        clips=_ticked(anim_props.clips, "identifier"),
+        clips=_ticked(anim_props.clips, "identifier", anim_props.clips_explicit),
         layout=anim_props.layout,
         sample_rate=int(anim_props.sample_rate),
         root_motion=anim_props.root_motion,
@@ -794,7 +804,9 @@ def _settings_to_props(props: ProcessProps, settings: ExportSettings) -> None:  
     for name in ("enabled", "face_rig", "expressions", "correctives", "body", "face", "age", "lod0_only"):
         setattr(props.shape_keys, name, getattr(settings.shape_keys, name))
     for group, *_ in KEY_GROUPS:
-        _tick(getattr(props.shape_keys, f"items_{group}"), settings.shape_keys.keep.get(group))
+        selection = settings.shape_keys.keep.get(group)
+        _tick(getattr(props.shape_keys, f"items_{group}"), selection)
+        setattr(props.shape_keys, f"explicit_{group}", selection is not None)
 
     textures, tex_props = settings.textures, props.textures
     tex_props.enabled = textures.enabled
@@ -814,6 +826,7 @@ def _settings_to_props(props: ProcessProps, settings: ExportSettings) -> None:  
     anim_props.enabled = animations.enabled
     anim_props.source = animations.source
     _tick(anim_props.clips, animations.clips, "identifier")
+    anim_props.clips_explicit = animations.clips is not None
     anim_props.layout = animations.layout
     anim_props.sample_rate = str(animations.sample_rate) if str(animations.sample_rate) in ("0", "24", "30", "60") else "0"
     anim_props.root_motion = animations.root_motion
@@ -850,9 +863,13 @@ def _settings_to_props(props: ProcessProps, settings: ExportSettings) -> None:  
             pass
 
 
-def _ticked(items, attribute: str = "name") -> Optional[List[str]]:  # noqa: ANN001
-    """The ticked entries of a list, None when every entry is ticked."""
-    if all(item.enabled for item in items):
+def _ticked(items, attribute: str = "name", explicit: bool = False) -> Optional[List[str]]:  # noqa: ANN001
+    """The ticked entries of a list, None when every entry is ticked.
+
+    An explicit list holds the selection of a recipe and not every entry, so
+    it is a selection even when all of it is ticked, or when it is empty.
+    """
+    if not explicit and all(item.enabled for item in items):
         return None
     return [getattr(item, attribute) for item in items if item.enabled]
 
@@ -861,7 +878,8 @@ def _tick(items, selection: Optional[List[str]], attribute: str = "name") -> Non
     """Ticks the entries of a selection, every entry for None.
 
     Selected entries that are not listed yet are added, so a recipe loaded
-    before the lists are filled keeps its selection.
+    before the lists are filled keeps its selection. The list is then explicit
+    until it is refreshed, see `_ticked`.
     """
     if selection is None:
         for item in items:
@@ -909,7 +927,8 @@ def refresh_clips(props: ProcessProps, human, context) -> None:  # noqa: ANN001
     from HumGen3D.human.process.animations import clip_names, library_clips
 
     anim_props = props.animations
-    enabled = {clip.identifier: clip.enabled for clip in anim_props.clips}
+    enabled = _refreshed_ticks(anim_props.clips, "identifier", anim_props.clips_explicit)
+    anim_props.clips_explicit = False
     anim_props.clips.clear()
     if anim_props.source == "library":
         entries = [(name, preset, True) for preset, name in library_clips(human, context)]
@@ -920,7 +939,7 @@ def refresh_clips(props: ProcessProps, human, context) -> None:  # noqa: ANN001
         clip.name = name
         clip.identifier = identifier
         clip.is_hg = is_hg
-        clip.enabled = enabled.get(identifier, True)
+        clip.enabled = enabled(identifier)
 
 
 def refresh_key_lists(props: ProcessProps, human, context) -> None:  # noqa: ANN001
@@ -928,9 +947,20 @@ def refresh_key_lists(props: ProcessProps, human, context) -> None:  # noqa: ANN
     keys_props = props.shape_keys
     for group, names in keep_options(human, context).items():
         items = getattr(keys_props, f"items_{group}")
-        enabled = {item.name: item.enabled for item in items}
+        enabled = _refreshed_ticks(items, "name", getattr(keys_props, f"explicit_{group}"))
+        setattr(keys_props, f"explicit_{group}", False)
         items.clear()
         for name in names:
             item = items.add()
             item.name = name
-            item.enabled = enabled.get(name, True)
+            item.enabled = enabled(name)
+
+
+def _refreshed_ticks(items, attribute: str, explicit: bool):  # noqa: ANN001, ANN202
+    """Whether an entry of a refreshed list is ticked, by its identifier.
+
+    Entries keep their tick. New entries are ticked, unless the list held the
+    selection of a recipe, which they are not part of.
+    """
+    ticks = {getattr(item, attribute): item.enabled for item in items}
+    return lambda identifier: ticks.get(identifier, not explicit)

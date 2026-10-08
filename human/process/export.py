@@ -8,7 +8,8 @@ its options from them, so a recipe and a call of the API mean the same thing.
 """
 
 import os
-from typing import TYPE_CHECKING, Any, Dict, Literal
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Literal
 
 import bpy
 
@@ -71,6 +72,32 @@ def gltf_kwargs(output: OutputSettings) -> Dict[str, Any]:
         "tangents": output.gltf.tangents,
         "draco": output.gltf.draco,
     }
+
+
+@contextmanager
+def selected_for_export(
+    context: bpy.types.Context, objects: List[bpy.types.Object]
+) -> Iterator[None]:
+    """Selects exactly these objects in the view layer, the selection restored after.
+
+    The OBJ and Alembic exporters read the selection of the view layer and
+    ignore a context override.
+    """
+    view_layer = context.view_layer
+    old_selected = [obj for obj in view_layer.objects if obj.select_get()]
+    old_active = view_layer.objects.active
+    for obj in old_selected:
+        obj.select_set(False)
+    for obj in objects:
+        obj.select_set(True)
+    try:
+        yield
+    finally:
+        for obj in objects:
+            obj.select_set(False)
+        for obj in old_selected:
+            obj.select_set(True)
+        view_layer.objects.active = old_active
 
 
 def exporter(exporter_func):
@@ -170,7 +197,7 @@ class ExportBuilder:
 
         Args:
             filepath (str): Path of the file, the extension of the format is
-                added when missing.
+                added when missing. Its folder is made when needed.
             output (OutputSettings): Format, exporter options and texture
                 placement, as in a recipe.
             units (str): "meters" or "centimeters", see `SkeletonSettings.units`.
@@ -190,6 +217,8 @@ class ExportBuilder:
         file_format = output.format
         if file_format not in FILE_FORMATS:
             raise ValueError(f"Output format has to be one of {FILE_FORMATS}")
+        folder = os.path.dirname(os.path.abspath(filepath))
+        os.makedirs(folder, exist_ok=True)
         if file_format == "fbx":
             return self.to_fbx(
                 filepath,
@@ -298,18 +327,20 @@ class ExportBuilder:
                 axis_up=axis_up,
             )
         else:
-            bpy.ops.wm.obj_export(
-                filepath=filepath,
-                export_selected_objects=True,
-                apply_modifiers=apply_modifiers,
-                export_normals=True,
-                export_uv=True,
-                export_materials=True,
-                export_triangulated_mesh=triangulate,
-                path_mode=path_mode,
-                forward_axis=axis_forward.replace("-", "NEGATIVE_"),
-                up_axis=axis_up.replace("-", "NEGATIVE_"),
-            )
+            objects = [obj for obj in self._human.objects if obj.type == "MESH"]
+            with selected_for_export(context, objects):
+                bpy.ops.wm.obj_export(
+                    filepath=filepath,
+                    export_selected_objects=True,
+                    apply_modifiers=apply_modifiers,
+                    export_normals=True,
+                    export_uv=True,
+                    export_materials=True,
+                    export_triangulated_mesh=triangulate,
+                    path_mode=path_mode,
+                    forward_axis=axis_forward.replace("-", "NEGATIVE_"),
+                    up_axis=axis_up.replace("-", "NEGATIVE_"),
+                )
 
     @exporter
     @deprecated("Use .to_gltf_embedded or .to_gltf_separate instead.")
@@ -468,14 +499,6 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None
     ):
-        # Context override doesn't seem to work for this operator
-        for obj in context.selected_objects:
-            obj.select_set(False)
-
-        for obj in self._human.objects:
-            obj.select_set(True)
-
-        bpy.ops.wm.alembic_export(
-            filepath=filepath,
-            selected=True
-        )
+        # The operator ignores the context override, it reads the view layer
+        with selected_for_export(context, list(self._human.objects)):
+            bpy.ops.wm.alembic_export(filepath=filepath, selected=True)
