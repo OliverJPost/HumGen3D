@@ -125,199 +125,701 @@
    "role": "attribute"
   },
   {
+   "name": "AnimationSettings",
+   "path": "human.animation.animation.AnimationSettings",
+   "summary": "Class for applying animations from the Human Generator library.",
+   "description": "Animations are stored as rig independent clips and retargeted to the rig of this\nhuman when set, see retarget.py. The result is a normal Blender action on the\nrig, which can be edited like any other animation. Animations can also be added\nas strips in the NLA editor, to chain or layer them.\n\nWhen the human changes shape the actions are retargeted again, in place: only\nthe channels of the animated bones are written again, other channels, the name\nand fake user of the action and the NLA strips using it are kept.",
+   "examples": [],
+   "bases": [
+    "PreviewCollectionContent"
+   ],
+   "file": "human/animation/animation.py",
+   "line": 43,
+   "members": [
+    {
+     "name": "action",
+     "summary": "The active action created by Human Generator on the rig, if any.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 62,
+     "kind": "property",
+     "type": "Optional[bpy.types.Action]",
+     "readonly": true
+    },
+    {
+     "name": "strips",
+     "summary": "NLA strips on the rig with an animation created by Human Generator.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 77,
+     "kind": "property",
+     "type": "list[bpy.types.NlaStrip]",
+     "readonly": true
+    },
+    {
+     "name": "actions",
+     "summary": "All actions created by Human Generator on the rig, active and in strips.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 90,
+     "kind": "property",
+     "type": "list[bpy.types.Action]",
+     "readonly": true
+    },
+    {
+     "name": "is_active",
+     "summary": "True if a Human Generator animation is on this human, active or in NLA.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 99,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "loop",
+     "summary": "True if the active animation repeats outside its frame range.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 104,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "finger_curl",
+     "summary": "Blend of the fingers between the rest pose (0) and the animation (1).",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 110,
+     "kind": "property",
+     "type": "float",
+     "readonly": true
+    },
+    {
+     "name": "frame_count",
+     "summary": "Number of keyed frames of the active animation, 0 if there is none.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 118,
+     "kind": "property",
+     "type": "int",
+     "readonly": true
+    },
+    {
+     "name": "set",
+     "summary": "Applies an animation from the Human Generator library to this human.",
+     "description": "By default the animation becomes the active action of the rig, replacing\nthe active Human Generator animation set before, and the pose of the body.\nThe pose of the face rig is kept. Keys are placed on whole scene frames,\nresampled if the frame rate of the clip differs from the scene.\n\nWith `as_strip` the animation is added as a strip in the NLA editor instead,\nafter the last strip added this way. An active Human Generator animation\nis pushed down to a strip first, so the new one is visible.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 123,
+     "kind": "method",
+     "params": [
+      {
+       "name": "preset",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Name of the animation to set, you can get options from the `get_options` method."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Context to use. Defaults to None."
+      },
+      {
+       "name": "loop",
+       "type": "Optional[bool]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Repeat the animation outside its frame range. Defaults to the setting of the clip, True for cyclic animations."
+      },
+      {
+       "name": "set_frame_range",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Set the frame range of the scene to the animation. Defaults to True. Ignored for strips."
+      },
+      {
+       "name": "finger_curl",
+       "type": "float",
+       "default": "DEFAULT_FINGER_CURL",
+       "kind": "positional or keyword",
+       "description": "Blend of the fingers between the relaxed hand of the rest pose (0) and the hand of the animation (1). Defaults to 1.0."
+      },
+      {
+       "name": "as_strip",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Add as NLA strip instead of as active action. Defaults to False."
+      },
+      {
+       "name": "frame_start",
+       "type": "Optional[int]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Scene frame of the first key. Defaults to the start frame of the scene, for strips to the end of the last Human Generator strip."
+      }
+     ],
+     "returns": {
+      "type": "Optional[bpy.types.Action]",
+      "description": "Optional[bpy.types.Action]: The created action, None if preset is \"none\"."
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the human has a Rigify rig."
+      }
+     ]
+    },
+    {
+     "name": "import_mixamo",
+     "summary": "Converts a Mixamo FBX file to a clip in the library and applies it.",
+     "description": "The clip is saved as json in the animations folder of the content folder,\nso it shows up in the animation library and can be used on other humans\ntoo. See mixamo.py for the conversion.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 209,
+     "kind": "method",
+     "params": [
+      {
+       "name": "filepath",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Path of the FBX file downloaded from Mixamo."
+      },
+      {
+       "name": "name",
+       "type": "Optional[str]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Name of the animation in the library. Defaults to the name of the file."
+      },
+      {
+       "name": "category",
+       "type": "str",
+       "default": "'Mixamo'",
+       "kind": "positional or keyword",
+       "description": "Folder of the animation library to save the clip in, created if it does not exist. Defaults to \"Mixamo\"."
+      },
+      {
+       "name": "loop",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Mark the animation as cyclic. Defaults to False."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Context to use. Defaults to None."
+      },
+      {
+       "name": "render_thumbnail",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Render a thumbnail of this human in the animation next to the clip. Defaults to True."
+      },
+      {
+       "name": "finger_curl",
+       "type": "float",
+       "default": "DEFAULT_FINGER_CURL",
+       "kind": "positional or keyword",
+       "description": "See `set`. Defaults to 1.0."
+      }
+     ],
+     "returns": {
+      "type": "str",
+      "description": "Preset path of the new animation, relative to the content folder."
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the file is not a Mixamo animation or the human has a Rigify rig."
+      }
+     ]
+    },
+    {
+     "name": "refresh",
+     "summary": "Retargets the Human Generator animations again, after the rig changed.",
+     "description": "Needed after changes to the height, proportions or rest pose of the human.\nThe actions are updated in place, see the class docstring, and keep their\ntiming: the frame they start on and their length.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 278,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Context to use. Defaults to None."
+      },
+      {
+       "name": "finger_curl",
+       "type": "Optional[float]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "New finger curl factor for the active animation, see `set`. Defaults to the factor it has. Animations in NLA strips keep their own factor."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "push_down",
+     "summary": "Moves the active Human Generator animation to a strip in the NLA editor.",
+     "description": "Like the push down button of Blender. The action keeps its frame range and\nis no longer the active action, so another animation can be set or added on\ntop of it.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 344,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Optional[bpy.types.NlaStrip]",
+      "description": "Optional[bpy.types.NlaStrip]: The new strip, None if the human has no active Human Generator animation."
+     },
+     "raises": []
+    },
+    {
+     "name": "remove",
+     "summary": "Removes Human Generator animations from this human.",
+     "description": "The animated bones return to their rest position. Actions are deleted\nunless they are still used, by an NLA strip or a fake user.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 399,
+     "kind": "method",
+     "params": [
+      {
+       "name": "active",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Remove the active animation. Defaults to True."
+      },
+      {
+       "name": "strips",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Remove the Human Generator animations in NLA strips and the tracks that become empty. Defaults to False."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "set_scene_frame_range",
+     "summary": "Sets the frame range of the scene to the Human Generator animation.",
+     "description": "One cycle of the active animation, or the range of all Human Generator\nstrips if there is no active animation.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 472,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Context to use. Defaults to None."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "as_dict",
+     "summary": "Animation settings as dict.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/animation/animation.py",
+     "line": 497,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "dict[str, Any]",
+      "description": "dict[str, Any]: Animation settings as dict."
+     },
+     "raises": []
+    },
+    {
+     "name": "set_random",
+     "summary": "Set this content type to a random content item.",
+     "description": "This will use random.choice to select a random item from the output of\nget_options().",
+     "examples": [],
+     "inheritedFrom": "PreviewCollectionContent",
+     "file": "human/common_baseclasses/pcoll_content.py",
+     "line": 68,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      },
+      {
+       "name": "update_ui",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Will also show the chosen item as the active thumbnail in the template_icon_view. Defaults to False."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "get_options",
+     "summary": "Get a list of options you can use for the set() method of this content.",
+     "description": "These represent the choises the user sees in the UI. The output is a list of\nrelative paths to the content files, starting from the Human Generator folder.",
+     "examples": [],
+     "inheritedFrom": "PreviewCollectionContent",
+     "file": "human/common_baseclasses/pcoll_content.py",
+     "line": 98,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      },
+      {
+       "name": "category",
+       "type": "str",
+       "default": "'All'",
+       "kind": "positional or keyword",
+       "description": "Category to filter the content by. Defaults to \"All\". You can get a list of categories from the get_categories() method."
+      }
+     ],
+     "returns": {
+      "type": "List[str]",
+      "description": "List[str]: List of relative paths to content files. You can pick one of these and pass it to the set() method."
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the passed category is not present in the list of categories."
+      },
+      {
+       "type": "HumGenException",
+       "description": "If no options can be found, this can be caused by the content pack for this type of content not being installed."
+      }
+     ]
+    },
+    {
+     "name": "get_categories",
+     "summary": "Get a list of categoris this content type is organized in.",
+     "description": "You can choose one of these categories to filter the content retreived from\nget_options().",
+     "examples": [],
+     "inheritedFrom": "PreviewCollectionContent",
+     "file": "human/common_baseclasses/pcoll_content.py",
+     "line": 148,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "list[str]",
+      "description": "list[str]: List of categories. These are the names of the folders the content is saved in."
+     },
+     "raises": []
+    },
+    {
+     "name": "refresh_pcoll",
+     "summary": "Refresh the items of this preview collection.",
+     "description": "This is low level functionality, you should not need to use this. It is used\nto refresh the list of possible content for this human. If you use get_options()\nthis is automatically done for you.",
+     "examples": [],
+     "inheritedFrom": "PreviewCollectionContent",
+     "file": "human/common_baseclasses/pcoll_content.py",
+     "line": 180,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      },
+      {
+       "name": "override_category",
+       "type": "Optional[str]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Override the category to use, if not provided all items regardless of category will be shown."
+      },
+      {
+       "name": "ignore_searchterm",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "If True, the searchterm set by the user will be ignored. Defaults to False."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.animation"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "AnimationSettings",
+   "path": "human.process.settings.AnimationSettings",
+   "summary": "Export of the animations on the human, see animations.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 314,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 318,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "source",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 320,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "clips",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 322,
+     "kind": "attribute",
+     "type": "Optional[List[str]]",
+     "readonly": false
+    },
+    {
+     "name": "layout",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 323,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "sample_rate",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 324,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "root_motion",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 325,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.animations"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "BakeSettings",
    "path": "human.process.bake.BakeSettings",
-   "summary": "",
-   "description": "",
+   "summary": "The `human.process.baking` API of earlier versions.",
+   "description": "Use `human.process.bake_textures` and `human.process.was_baked` instead.",
    "examples": [],
    "bases": [],
    "file": "human/process/bake.py",
-   "line": 111,
+   "line": 66,
    "members": [
     {
-     "name": "resolution_body",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 116,
-     "kind": "property",
-     "type": "int",
-     "readonly": false
-    },
-    {
-     "name": "resolution_clothes",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 124,
-     "kind": "property",
-     "type": "int",
-     "readonly": false
-    },
-    {
-     "name": "resolution_eyes",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 132,
-     "kind": "property",
-     "type": "int",
-     "readonly": false
-    },
-    {
      "name": "bake_all",
-     "summary": "",
+     "summary": "Bakes every material of this human, see `ProcessSettings.bake_textures`.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/bake.py",
-     "line": 273,
+     "line": 75,
      "kind": "method",
      "params": [
       {
        "name": "folder_path",
-       "type": null,
+       "type": "Optional[str]",
        "default": "None",
        "kind": "positional or keyword",
-       "description": ""
+       "description": "Folder to write the images to, None packs them in the blend file."
       },
       {
        "name": "samples",
        "type": "int",
        "default": "4",
        "kind": "positional or keyword",
-       "description": ""
+       "description": "Cycles samples of the bakes."
+      },
+      {
+       "name": "settings",
+       "type": "Optional[TextureSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Passes, resolution and packing. Defaults to separate maps at 2k."
       },
       {
        "name": "context",
        "type": "C",
        "default": "None",
        "kind": "positional or keyword",
-       "description": ""
+       "description": "Blender context. bpy.context if not provided."
       }
      ],
      "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "bake_single_texture",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 308,
-     "kind": "method",
-     "params": [
-      {
-       "name": "baketexture",
-       "type": "BakeTexture",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      },
-      {
-       "name": "export_path",
-       "type": "str",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      },
-      {
-       "name": "context",
-       "type": "C",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "bpy.types.Image",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "pack_haircard_alpha",
-     "summary": "Stores the baked alpha of haircards in the alpha of their color texture.",
-     "description": "The separate alpha textures are kept. Does nothing for file types without\nan alpha channel.",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 339,
-     "kind": "staticmethod",
-     "params": [
-      {
-       "name": "baketextures",
-       "type": "List[BakeTexture]",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": "All textures that were baked."
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "set_up_new_materials",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 372,
-     "kind": "method",
-     "params": [
-      {
-       "name": "baketextures",
-       "type": "List[BakeTexture]",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "get_baking_list",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 406,
-     "kind": "method",
-     "params": [],
-     "returns": {
-      "type": "List[BakeTexture]",
-      "description": null
+      "type": "list[bpy.types.Image]",
+      "description": "list[bpy.types.Image]: The baked images."
      },
      "raises": []
     },
     {
      "name": "is_baked",
-     "summary": "",
+     "summary": "Whether the materials of this human were baked, see `ProcessSettings.was_baked`.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/bake.py",
-     "line": 481,
+     "line": 102,
      "kind": "method",
      "params": [],
      "returns": {
@@ -331,128 +833,6 @@
     "human.process.baking"
    ],
    "role": "attribute"
-  },
-  {
-   "name": "BakeTexture",
-   "path": "human.process.bake.BakeTexture",
-   "summary": "",
-   "description": "",
-   "examples": [],
-   "bases": [],
-   "file": "human/process/bake.py",
-   "line": 82,
-   "members": [
-    {
-     "name": "human_name",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 84,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "texture_name",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 85,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "bake_object",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 86,
-     "kind": "attribute",
-     "type": "Object",
-     "readonly": false
-    },
-    {
-     "name": "material_slot",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 87,
-     "kind": "attribute",
-     "type": "int",
-     "readonly": false
-    },
-    {
-     "name": "texture_type",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 88,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "output_image_name",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 91,
-     "kind": "property",
-     "type": "str",
-     "readonly": true
-    },
-    {
-     "name": "material",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 95,
-     "kind": "property",
-     "type": "Material",
-     "readonly": true
-    },
-    {
-     "name": "get_resolution",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/bake.py",
-     "line": 100,
-     "kind": "method",
-     "params": [
-      {
-       "name": "bake_sett",
-       "type": "BakeProps",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "int",
-      "description": null
-     },
-     "raises": []
-    }
-   ],
-   "accessors": [],
-   "role": "referenced"
   },
   {
    "name": "BaseClothing",
@@ -1748,13 +2128,77 @@
   {
    "name": "ExportBuilder",
    "path": "human.process.export.ExportBuilder",
-   "summary": "",
-   "description": "",
+   "summary": "Writes a human to a file. Every method returns the path that was written.",
+   "description": "The datablocks are written under their names without the number suffix of\nBlender, the livekeys are baked and the transparent outer layer of the eyes\nis left out, as most formats can't carry it.",
    "examples": [],
    "bases": [],
    "file": "human/process/export.py",
-   "line": 94,
+   "line": 175,
    "members": [
+    {
+     "name": "write",
+     "summary": "Writes the human in the format of the output settings.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/export.py",
+     "line": 186,
+     "kind": "method",
+     "params": [
+      {
+       "name": "filepath",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Path of the file, the extension of the format is added when missing. Its folder is made when needed."
+      },
+      {
+       "name": "output",
+       "type": "OutputSettings",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Format, exporter options and texture placement, as in a recipe."
+      },
+      {
+       "name": "units",
+       "type": "str",
+       "default": "'meters'",
+       "kind": "positional or keyword",
+       "description": "\"meters\" or \"centimeters\", see `SkeletonSettings.units`. FBX only."
+      },
+      {
+       "name": "animation",
+       "type": "Animation",
+       "default": "'none'",
+       "kind": "positional or keyword",
+       "description": "\"none\", \"active\" or \"strips\", what of the animation of the rig goes into the file. Formats with a rig only."
+      },
+      {
+       "name": "armature_only",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Only the skeleton and its animation, for a file with clips."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "str",
+      "description": "The path that was written."
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the output is not a file format."
+      }
+     ]
+    },
     {
      "name": "to_fbx",
      "summary": "",
@@ -1762,7 +2206,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 98,
+     "line": 250,
      "kind": "method",
      "params": [
       {
@@ -1817,7 +2261,49 @@
       {
        "name": "use_leaf_bones",
        "type": null,
-       "default": "True",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "apply_scale_options",
+       "type": "str",
+       "default": "'FBX_SCALE_NONE'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "mesh_smooth_type",
+       "type": "str",
+       "default": "'FACE'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "path_mode",
+       "type": "str",
+       "default": "'AUTO'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "embed_textures",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "animation",
+       "type": "Animation",
+       "default": "'active'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "armature_only",
+       "type": "bool",
+       "default": "False",
        "kind": "positional or keyword",
        "description": ""
       },
@@ -1849,7 +2335,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 131,
+     "line": 299,
      "kind": "method",
      "params": [
       {
@@ -1929,7 +2415,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 175,
+     "line": 345,
      "kind": "method",
      "params": [
       {
@@ -1967,7 +2453,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 186,
+     "line": 356,
      "kind": "method",
      "params": [
       {
@@ -2005,13 +2491,48 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 196,
+     "line": 366,
      "kind": "method",
      "params": [
       {
        "name": "filepath",
        "type": "str",
        "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "image_format",
+       "type": "Literal['AUTO', 'JPEG']",
+       "default": "'AUTO'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "tangents",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "draco",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "animation",
+       "type": "Animation",
+       "default": "'none'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "armature_only",
+       "type": "bool",
+       "default": "False",
        "kind": "positional or keyword",
        "description": ""
       },
@@ -2043,13 +2564,48 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 242,
+     "line": 383,
      "kind": "method",
      "params": [
       {
        "name": "filepath",
        "type": "str",
        "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "image_format",
+       "type": "Literal['AUTO', 'JPEG']",
+       "default": "'AUTO'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "tangents",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "draco",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "animation",
+       "type": "Animation",
+       "default": "'none'",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
+       "name": "armature_only",
+       "type": "bool",
+       "default": "False",
        "kind": "positional or keyword",
        "description": ""
       },
@@ -2081,7 +2637,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 252,
+     "line": 493,
      "kind": "method",
      "params": [
       {
@@ -2115,6 +2671,474 @@
    ],
    "accessors": [
     "human.export"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "ExportResult",
+   "path": "human.process.pipeline.ExportResult",
+   "summary": "What the process system made.",
+   "description": "",
+   "examples": [],
+   "bases": [],
+   "file": "human/process/pipeline.py",
+   "line": 66,
+   "members": [
+    {
+     "name": "settings",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 70,
+     "kind": "attribute",
+     "type": "ExportSettings",
+     "readonly": false
+    },
+    {
+     "name": "name",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 71,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "humans",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 72,
+     "kind": "attribute",
+     "type": "List['Human']",
+     "readonly": false
+    },
+    {
+     "name": "files",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 73,
+     "kind": "attribute",
+     "type": "List[str]",
+     "readonly": false
+    },
+    {
+     "name": "warnings",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 74,
+     "kind": "attribute",
+     "type": "List[str]",
+     "readonly": false
+    },
+    {
+     "name": "triangles",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 76,
+     "kind": "attribute",
+     "type": "List[int]",
+     "readonly": false
+    },
+    {
+     "name": "seconds",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 77,
+     "kind": "attribute",
+     "type": "float",
+     "readonly": false
+    },
+    {
+     "name": "summary",
+     "summary": "A few lines for the report after processing.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 79,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "str",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [],
+   "role": "referenced"
+  },
+  {
+   "name": "ExportSettings",
+   "path": "human.process.settings.ExportSettings",
+   "summary": "Everything the process system needs to process a human.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 416,
+   "members": [
+    {
+     "name": "version",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 420,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "recipe",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 422,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "output",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 423,
+     "kind": "attribute",
+     "type": "OutputSettings",
+     "readonly": false
+    },
+    {
+     "name": "lods",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 425,
+     "kind": "attribute",
+     "type": "List[QualitySettings]",
+     "readonly": false
+    },
+    {
+     "name": "meshes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 426,
+     "kind": "attribute",
+     "type": "MeshSettings",
+     "readonly": false
+    },
+    {
+     "name": "haircards",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 427,
+     "kind": "attribute",
+     "type": "HaircardSettings",
+     "readonly": false
+    },
+    {
+     "name": "skeleton",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 428,
+     "kind": "attribute",
+     "type": "SkeletonSettings",
+     "readonly": false
+    },
+    {
+     "name": "shape_keys",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 429,
+     "kind": "attribute",
+     "type": "ShapeKeySettings",
+     "readonly": false
+    },
+    {
+     "name": "textures",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 430,
+     "kind": "attribute",
+     "type": "TextureSettings",
+     "readonly": false
+    },
+    {
+     "name": "animations",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 431,
+     "kind": "attribute",
+     "type": "AnimationSettings",
+     "readonly": false
+    },
+    {
+     "name": "scripts",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 432,
+     "kind": "attribute",
+     "type": "ScriptsSettings",
+     "readonly": false
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, see `Settings.from_dict`.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 434,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "ExportSettings",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_recipe",
+     "summary": "Settings of a recipe, shipped or from the content folder.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 443,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "recipe",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Identifier from `recipe_items`, or a path of a recipe file."
+      }
+     ],
+     "returns": {
+      "type": "ExportSettings",
+      "description": "The settings of the recipe."
+     },
+     "raises": [
+      {
+       "type": "FileNotFoundError",
+       "description": "If there is no such recipe."
+      }
+     ]
+    },
+    {
+     "name": "save_recipe",
+     "summary": "Writes the settings as recipe file for the user, in a group folder.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 470,
+     "kind": "method",
+     "params": [
+      {
+       "name": "folder",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Group folder inside the recipe folder of the content folder, created if needed."
+      },
+      {
+       "name": "name",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Name of the recipe, becomes the file name."
+      }
+     ],
+     "returns": {
+      "type": "str",
+      "description": "Path of the written file."
+     },
+     "raises": []
+    },
+    {
+     "name": "to_json",
+     "summary": "The settings as JSON string, for storing on the result.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 490,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "str",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_json",
+     "summary": "Settings from a JSON string made by `to_json`.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 494,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "text",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "ExportSettings",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "differs_from",
+     "summary": "Whether any setting other than the recipe name differs.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 499,
+     "kind": "method",
+     "params": [
+      {
+       "name": "other",
+       "type": "ExportSettings",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "bool",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "resolved_name",
+     "summary": "The output name with the tokens filled in, see `OutputSettings.resolved_name`.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 506,
+     "kind": "method",
+     "params": [
+      {
+       "name": "human_name",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "str",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings"
    ],
    "role": "attribute"
   },
@@ -4181,6 +5205,176 @@
    "role": "attribute"
   },
   {
+   "name": "FbxSettings",
+   "path": "human.process.settings.FbxSettings",
+   "summary": "Settings of the FBX exporter, see export.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 350,
+   "members": [
+    {
+     "name": "axis_forward",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 354,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "axis_up",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 355,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "primary_bone_axis",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 356,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "secondary_bone_axis",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 357,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "leaf_bones",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 358,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "custom_properties",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 359,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "triangulate",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 360,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "smoothing",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 361,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.output.fbx"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "FemaleSkin",
    "path": "human.skin.skin.FemaleSkin",
    "summary": "Subclass of human.skin exposing controls for female specific skin settings.",
@@ -4934,6 +6128,116 @@
    "role": "attribute"
   },
   {
+   "name": "GltfSettings",
+   "path": "human.process.settings.GltfSettings",
+   "summary": "Settings of the glTF exporter, see export.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 364,
+   "members": [
+    {
+     "name": "tangents",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 368,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "image_format",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 369,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "draco",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 370,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.output.gltf"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "HG_HASHES",
    "path": "backend.properties.object_props.HG_HASHES",
    "summary": "",
@@ -5133,7 +6437,7 @@
    "examples": [],
    "bases": [],
    "file": "human/hair/hair.py",
-   "line": 36,
+   "line": 37,
    "members": [
     {
      "name": "estimate_haircards_triangles",
@@ -5142,7 +6446,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 42,
+     "line": 43,
      "kind": "method",
      "params": [
       {
@@ -5166,7 +6470,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 75,
+     "line": 72,
      "kind": "property",
      "type": "EyebrowSettings",
      "readonly": true
@@ -5178,7 +6482,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 84,
+     "line": 81,
      "kind": "property",
      "type": "EyelashSettings",
      "readonly": true
@@ -5190,7 +6494,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 93,
+     "line": 90,
      "kind": "property",
      "type": "FacialHairSettings",
      "readonly": true
@@ -5202,9 +6506,21 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 102,
+     "line": 99,
      "kind": "property",
      "type": "RegularHairSettings",
+     "readonly": true
+    },
+    {
+     "name": "hair_types",
+     "summary": "The hair types this human can have: regular hair, eyebrows, eyelashes and, for male humans, facial hair.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/hair/hair.py",
+     "line": 108,
+     "kind": "property",
+     "type": "list[BaseHair]",
      "readonly": true
     },
     {
@@ -5214,7 +6530,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 111,
+     "line": 121,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -5226,7 +6542,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 125,
+     "line": 135,
      "kind": "property",
      "type": "bpy_prop_collection",
      "readonly": true
@@ -5238,7 +6554,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 134,
+     "line": 144,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -5250,7 +6566,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 148,
+     "line": 158,
      "kind": "method",
      "params": [
       {
@@ -5281,7 +6597,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 166,
+     "line": 176,
      "kind": "method",
      "params": [
       {
@@ -5305,7 +6621,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 182,
+     "line": 192,
      "kind": "method",
      "params": [
       {
@@ -5329,7 +6645,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 191,
+     "line": 201,
      "kind": "method",
      "params": [
       {
@@ -5353,7 +6669,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 210,
+     "line": 220,
      "kind": "method",
      "params": [
       {
@@ -5377,7 +6693,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 238,
+     "line": 248,
      "kind": "method",
      "params": [],
      "returns": {
@@ -5393,7 +6709,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/hair.py",
-     "line": 252,
+     "line": 262,
      "kind": "method",
      "params": [
       {
@@ -5413,6 +6729,92 @@
    ],
    "accessors": [
     "human.hair"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "HaircardSettings",
+   "path": "human.process.settings.HaircardSettings",
+   "summary": "Whether the particle hair becomes hair cards. The quality is per level.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 226,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 230,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.haircards"
    ],
    "role": "attribute"
   },
@@ -5495,7 +6897,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/height/height.py",
-     "line": 109,
+     "line": 110,
      "kind": "method",
      "params": [],
      "returns": {
@@ -5511,7 +6913,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/height/height.py",
-     "line": 117,
+     "line": 118,
      "kind": "method",
      "params": [
       {
@@ -5542,7 +6944,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/height/height.py",
-     "line": 195,
+     "line": 196,
      "kind": "method",
      "params": [
       {
@@ -5573,7 +6975,7 @@
    "examples": [],
    "bases": [],
    "file": "human/human.py",
-   "line": 53,
+   "line": 54,
    "members": [
     {
      "name": "get_preset_options",
@@ -5582,7 +6984,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 77,
+     "line": 78,
      "kind": "staticmethod",
      "params": [
       {
@@ -5620,7 +7022,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 122,
+     "line": 123,
      "kind": "classmethod",
      "params": [
       {
@@ -5660,7 +7062,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 167,
+     "line": 168,
      "kind": "classmethod",
      "params": [
       {
@@ -5705,7 +7107,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 258,
+     "line": 259,
      "kind": "staticmethod",
      "params": [
       {
@@ -5729,7 +7131,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 280,
+     "line": 281,
      "kind": "property",
      "type": "BodySettings",
      "readonly": true
@@ -5741,7 +7143,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 289,
+     "line": 290,
      "kind": "property",
      "type": "HeightSettings",
      "readonly": true
@@ -5753,7 +7155,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 298,
+     "line": 299,
      "kind": "property",
      "type": "FaceSettings",
      "readonly": true
@@ -5765,7 +7167,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 307,
+     "line": 308,
      "kind": "property",
      "type": "AgeSettings",
      "readonly": true
@@ -5777,9 +7179,21 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 316,
+     "line": 317,
      "kind": "property",
      "type": "PoseSettings",
+     "readonly": true
+    },
+    {
+     "name": "animation",
+     "summary": "Points to the animation settings of the human.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/human.py",
+     "line": 326,
+     "kind": "property",
+     "type": "AnimationSettings",
      "readonly": true
     },
     {
@@ -5789,7 +7203,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 325,
+     "line": 335,
      "kind": "property",
      "type": "ClothingSettings",
      "readonly": true
@@ -5801,7 +7215,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 334,
+     "line": 344,
      "kind": "property",
      "type": "ExpressionSettings",
      "readonly": true
@@ -5813,7 +7227,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 343,
+     "line": 353,
      "kind": "property",
      "type": "ProcessSettings",
      "readonly": true
@@ -5825,7 +7239,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 352,
+     "line": 362,
      "kind": "property",
      "type": "MaterialSettings",
      "readonly": true
@@ -5837,7 +7251,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 361,
+     "line": 371,
      "kind": "property",
      "type": "ObjectCollection",
      "readonly": true
@@ -5849,7 +7263,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 371,
+     "line": 381,
      "kind": "property",
      "type": "Iterable[Object]",
      "readonly": true
@@ -5861,7 +7275,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 382,
+     "line": 392,
      "kind": "property",
      "type": "GenderStr",
      "readonly": true
@@ -5873,7 +7287,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 391,
+     "line": 401,
      "kind": "property",
      "type": "bpy_prop_collection",
      "readonly": true
@@ -5885,7 +7299,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 400,
+     "line": 410,
      "kind": "property",
      "type": "HG_OBJECT_PROPS",
      "readonly": true
@@ -5897,7 +7311,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 413,
+     "line": 423,
      "kind": "property",
      "type": "SkinSettings",
      "readonly": true
@@ -5909,7 +7323,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 422,
+     "line": 432,
      "kind": "property",
      "type": "KeySettings",
      "readonly": true
@@ -5921,7 +7335,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 434,
+     "line": 444,
      "kind": "property",
      "type": "EyeSettings",
      "readonly": true
@@ -5933,7 +7347,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 444,
+     "line": 454,
      "kind": "property",
      "type": "HairSettings",
      "readonly": true
@@ -5945,7 +7359,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 454,
+     "line": 464,
      "kind": "property",
      "type": "ExportBuilder",
      "readonly": true
@@ -5957,7 +7371,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 463,
+     "line": 473,
      "kind": "property",
      "type": "FloatVectorProperty",
      "readonly": false
@@ -5969,7 +7383,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 483,
+     "line": 493,
      "kind": "property",
      "type": "FloatVectorProperty",
      "readonly": false
@@ -5981,7 +7395,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 503,
+     "line": 513,
      "kind": "property",
      "type": "str",
      "readonly": false
@@ -5993,7 +7407,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 521,
+     "line": 531,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -6005,7 +7419,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 537,
+     "line": 547,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6021,7 +7435,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 621,
+     "line": 632,
      "kind": "method",
      "params": [
       {
@@ -6045,7 +7459,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 631,
+     "line": 642,
      "kind": "method",
      "params": [
       {
@@ -6076,7 +7490,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 655,
+     "line": 666,
      "kind": "method",
      "params": [
       {
@@ -6121,7 +7535,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 692,
+     "line": 703,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6137,7 +7551,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 707,
+     "line": 718,
      "kind": "method",
      "params": [
       {
@@ -6161,7 +7575,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 753,
+     "line": 774,
      "kind": "method",
      "params": [
       {
@@ -7466,7 +8880,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/lod.py",
-   "line": 34,
+   "line": 38,
    "members": [
     {
      "name": "estimate_triangles",
@@ -7475,7 +8889,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 40,
+     "line": 44,
      "kind": "method",
      "params": [
       {
@@ -7534,7 +8948,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 96,
+     "line": 100,
      "kind": "method",
      "params": [
       {
@@ -7570,15 +8984,15 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 146,
+     "line": 152,
      "kind": "method",
      "params": [
       {
-       "name": "decimate_ratio",
-       "type": "float",
-       "default": "0.15",
+       "name": "quality",
+       "type": "Union[str, float]",
+       "default": "'medium'",
        "kind": "positional or keyword",
-       "description": "Ratio of decimation. Defaults to 0.15."
+       "description": "\"original\", \"high\", \"medium\" or \"low\" as in `QualitySettings.clothing`, or the decimate ratio itself."
       },
       {
        "name": "remove_subdiv",
@@ -7597,7 +9011,7 @@
       {
        "name": "keep_shape_keys",
        "type": "bool",
-       "default": "False",
+       "default": "True",
        "kind": "positional or keyword",
        "description": "Decimate the shape keys of the clothing along with the mesh, instead of applying them first. Slower."
       },
@@ -7606,14 +9020,19 @@
        "type": "C",
        "default": "None",
        "kind": "positional or keyword",
-       "description": ""
+       "description": "Blender context. bpy.context if not provided."
       }
      ],
      "returns": {
       "type": "None",
       "description": null
      },
-     "raises": []
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the quality is not an option."
+      }
+     ]
     },
     {
      "name": "set_teeth_lod",
@@ -7622,7 +9041,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 191,
+     "line": 206,
      "kind": "method",
      "params": [
       {
@@ -7854,6 +9273,128 @@
    ],
    "accessors": [
     "human.materials"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "MeshSettings",
+   "path": "human.process.settings.MeshSettings",
+   "summary": "Changes to the meshes that apply to every level.",
+   "description": "When disabled every mesh stays as it is: the body, clothing, eyes and teeth\nquality of the levels is ignored and nothing below applies. The hair cards\nand the bones per vertex are their own sections.",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 210,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 219,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "remove_hidden_skin",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 221,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "remove_clothing_subdiv",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 222,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "remove_clothing_solidify",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 223,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.meshes"
    ],
    "role": "attribute"
   },
@@ -8763,6 +10304,236 @@
    "role": "attribute"
   },
   {
+   "name": "OutputSettings",
+   "path": "human.process.settings.OutputSettings",
+   "summary": "Where the result goes and how it is named.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 373,
+   "members": [
+    {
+     "name": "format",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 377,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "folder",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 378,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "name",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 380,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "naming",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 381,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "naming_templates",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 382,
+     "kind": "attribute",
+     "type": "Dict[str, str]",
+     "readonly": false
+    },
+    {
+     "name": "textures",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 390,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "keep_copy",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 392,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "fbx",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 393,
+     "kind": "attribute",
+     "type": "FbxSettings",
+     "readonly": false
+    },
+    {
+     "name": "gltf",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 394,
+     "kind": "attribute",
+     "type": "GltfSettings",
+     "readonly": false
+    },
+    {
+     "name": "is_file",
+     "summary": "Whether the result is written to a file.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 397,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "has_rig",
+     "summary": "Whether the format carries a skeleton.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 402,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "resolved_name",
+     "summary": "The output name with the tokens filled in.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 406,
+     "kind": "method",
+     "params": [
+      {
+       "name": "human_name",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Name of the source human."
+      }
+     ],
+     "returns": {
+      "type": "str",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.output"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "PatternSettings",
    "path": "human.clothing.pattern.PatternSettings",
    "summary": "Class for changing patterns on individual clothing items.",
@@ -9024,7 +10795,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/pose/pose.py",
-     "line": 89,
+     "line": 92,
      "kind": "method",
      "params": [
       {
@@ -9048,7 +10819,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/pose/pose.py",
-     "line": 103,
+     "line": 106,
      "kind": "method",
      "params": [
       {
@@ -9093,7 +10864,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/pose/pose.py",
-     "line": 143,
+     "line": 146,
      "kind": "method",
      "params": [],
      "returns": {
@@ -9109,7 +10880,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/pose/pose.py",
-     "line": 151,
+     "line": 154,
      "kind": "method",
      "params": [],
      "returns": {
@@ -9361,6 +11132,56 @@
    "role": "attribute"
   },
   {
+   "name": "Preflight",
+   "path": "human.process.pipeline.Preflight",
+   "summary": "What would go wrong before anything is changed.",
+   "description": "",
+   "examples": [],
+   "bases": [],
+   "file": "human/process/pipeline.py",
+   "line": 54,
+   "members": [
+    {
+     "name": "errors",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 58,
+     "kind": "attribute",
+     "type": "List[str]",
+     "readonly": false
+    },
+    {
+     "name": "warnings",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 59,
+     "kind": "attribute",
+     "type": "List[str]",
+     "readonly": false
+    },
+    {
+     "name": "ok",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 62,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    }
+   ],
+   "accessors": [],
+   "role": "referenced"
+  },
+  {
    "name": "PreviewCollectionContent",
    "path": "human.common_baseclasses.pcoll_content.PreviewCollectionContent",
    "summary": "Baseclass for classes that set and modify content stored in preview collections.",
@@ -9534,20 +11355,20 @@
    "name": "ProcessSettings",
    "path": "human.process.process.ProcessSettings",
    "summary": "Class for accessing methods and subclasses for processing the human.",
-   "description": "",
+   "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.",
    "examples": [],
    "bases": [],
    "file": "human/process/process.py",
-   "line": 82,
+   "line": 57,
    "members": [
     {
      "name": "baking",
-     "summary": "Gives access to the baking settings.",
+     "summary": "The baking API of earlier versions, see `bake_textures`.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 89,
+     "line": 92,
      "kind": "property",
      "type": "BakeSettings",
      "readonly": true
@@ -9559,142 +11380,127 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 98,
+     "line": 97,
      "kind": "property",
      "type": "LodSettings",
      "readonly": true
     },
     {
-     "name": "has_haircards",
-     "summary": "Checks if haircards are present.",
+     "name": "preflight",
+     "summary": "Checks what `run` with these settings would complain about.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
      "line": 107,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "was_baked",
-     "summary": "Checks if materials were baked.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 116,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "is_lod",
-     "summary": "Checks if the human is an LOD.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 125,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "rig_renamed",
-     "summary": "Checks if the rig was renamed.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 134,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "parts_were_renamed",
-     "summary": "Checks if the parts were renamed.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 143,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "has_t_pose_rest",
-     "summary": "Checks if the T-pose was baked into the rest pose.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 152,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "set_t_pose_as_rest",
-     "summary": "Bakes the T-pose into the rest pose of the meshes and armature.",
-     "description": "Discards the current pose and removes the shoulder side raise corrective\nshape keys. Features that rely on the A-pose rest pose, like changing the\npose, height, proportions or clothing, won't work on this human anymore.",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 160,
      "kind": "method",
      "params": [
+      {
+       "name": "settings",
+       "type": "ExportSettings",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "The settings to check."
+      },
       {
        "name": "context",
        "type": "C",
        "default": "None",
        "kind": "positional or keyword",
-       "description": "The Blender context. Defaults to None."
+       "description": "Blender context. bpy.context if not provided."
       }
      ],
      "returns": {
-      "type": "None",
-      "description": null
+      "type": "Preflight",
+      "description": "Errors that stop the run and warnings that don't."
      },
      "raises": []
     },
     {
-     "name": "has_game_eyes",
-     "summary": "Checks if the eyes were converted to single layer eyes.",
+     "name": "run",
+     "summary": "Processes this human by the settings, as the Process tab does.",
+     "description": "This human is not changed. Every LOD level of the settings becomes a\nprocessed duplicate, which is added to the file or written to the files\nof the output format and removed again.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 122,
+     "kind": "method",
+     "params": [
+      {
+       "name": "settings",
+       "type": "ExportSettings",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "What to make, see `ExportSettings.from_recipe`."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      },
+      {
+       "name": "progress",
+       "type": "Optional[ProgressCallback]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Called with the fraction done."
+      }
+     ],
+     "returns": {
+      "type": "ExportResult",
+      "description": "The humans added to the file or the files written, with warnings and triangle counts."
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the preflight finds an error or a step fails."
+      }
+     ]
+    },
+    {
+     "name": "run_steps",
+     "summary": "The work of `run` as resumable steps, see `HumGen3D.common.progress`.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 174,
-     "kind": "property",
-     "type": "bool",
-     "readonly": true
-    },
-    {
-     "name": "convert_to_game_eyes",
-     "summary": "Replaces the layered eyes by single layer eyes for game engines.",
-     "description": "Only the front of the cornea is kept, with the eye color as opaque\nmaterial on it. Applies the shape keys of the eyes, so changing the height\nor proportions won't work on this human anymore.",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 182,
+     "line": 151,
      "kind": "method",
      "params": [
       {
-       "name": "detail",
-       "type": "Literal['high', 'medium', 'low']",
-       "default": "'medium'",
+       "name": "settings",
+       "type": "ExportSettings",
+       "default": null,
        "kind": "positional or keyword",
-       "description": "Resolution of the eye mesh. Medium has a quarter of the triangles of high, low about a sixteenth."
+       "description": ""
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": ""
       }
      ],
      "returns": {
-      "type": "None",
+      "type": "Steps[ExportResult]",
       "description": null
      },
      "raises": []
+    },
+    {
+     "name": "settings",
+     "summary": "The settings a processed human was made with, None for other humans.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 159,
+     "kind": "property",
+     "type": "Optional[ExportSettings]",
+     "readonly": true
     },
     {
      "name": "set_shape_keys",
@@ -9703,9 +11509,23 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 197,
+     "line": 167,
      "kind": "method",
      "params": [
+      {
+       "name": "settings",
+       "type": "Optional[ShapeKeySettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "The actions as a recipe holds them. The other arguments are ignored when given."
+      },
+      {
+       "name": "level",
+       "type": "int",
+       "default": "0",
+       "kind": "positional or keyword",
+       "description": "The LOD level this human is, with `settings` only. With `ShapeKeySettings.lod0_only` the lower levels keep no keys."
+      },
       {
        "name": "face_rig",
        "type": "KeyAction",
@@ -9749,11 +11569,625 @@
        "description": "The age sliders."
       },
       {
+       "name": "keep",
+       "type": "Optional[KeepSelection]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Per group the names of the keys to keep, see `shape_key_options`. Missing groups keep all."
+      },
+      {
        "name": "context",
        "type": "C",
        "default": "None",
        "kind": "positional or keyword",
        "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If an action is not possible for a group."
+      }
+     ]
+    },
+    {
+     "name": "shape_key_options",
+     "summary": "The keys `set_shape_keys` can keep, per group, by display name.",
+     "description": "The face rig and the expressions list everything in the library, the\nother groups what this human has. Use a subset as the `keep` argument\nor `ShapeKeySettings.keep`.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 226,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "Dict[str, List[str]]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "has_haircards",
+     "summary": "Checks if haircards are present.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 242,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "convert_to_haircards",
+     "summary": "Replaces every particle hair system of this human by hair cards.",
+     "description": "The hair, eyebrows, eyelashes and facial hair each become a mesh object\nwith a haircap and cards, skinned to the rig, see\n`human.hair.regular_hair.convert_to_haircards` for one of them. The\nparticle systems are removed afterwards, as no file format carries them.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 250,
+     "kind": "method",
+     "params": [
+      {
+       "name": "quality",
+       "type": "Literal['ultra', 'high', 'medium', 'low', 'haircap_only']",
+       "default": "'high'",
+       "kind": "positional or keyword",
+       "description": "Triangle budget of the cards, see `QualitySettings.haircards`."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "List[bpy.types.Object]",
+      "description": "List[bpy.types.Object]: The hair card objects that were made."
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the human has hair cards already."
+      }
+     ]
+    },
+    {
+     "name": "was_baked",
+     "summary": "Checks if materials were baked.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 290,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "bake_textures",
+     "summary": "Bakes every material of this human to textures and replaces it.",
+     "description": "The skin, hair and eye materials are node trees exporters can't read,\nso every material becomes a Principled BSDF with image nodes, with the\nmaps packed and flipped as the settings ask. The materials are copied\nfirst, so a human this one was duplicated from keeps its own.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 298,
+     "kind": "method",
+     "params": [
+      {
+       "name": "settings",
+       "type": "Optional[TextureSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Passes, resolution, packing, normal map direction and samples. Separate maps at 2k by default."
+      },
+      {
+       "name": "folder",
+       "type": "Optional[str]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Folder to write the images to, None packs them in the blend file."
+      },
+      {
+       "name": "output",
+       "type": "Optional[OutputSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Naming scheme and name of the images and materials, see `apply_names`. The plain scheme with the name of the human by default."
+      },
+      {
+       "name": "level",
+       "type": "int",
+       "default": "0",
+       "kind": "positional or keyword",
+       "description": "LOD level of this human, for the names."
+      },
+      {
+       "name": "levels",
+       "type": "int",
+       "default": "1",
+       "kind": "positional or keyword",
+       "description": "Number of LOD levels, for the names."
+      },
+      {
+       "name": "only_sets",
+       "type": "Optional[Iterable[str]]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Bake only these texture sets of `TEXTURE_SETS`, for a level that shares the others, see `share_textures`."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "List[bpy.types.Image]",
+      "description": "List[bpy.types.Image]: The images of the new materials."
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the materials were baked already."
+      }
+     ]
+    },
+    {
+     "name": "share_textures",
+     "summary": "Gives this human the baked materials of another, per part.",
+     "description": "LOD levels share their textures: the meshes keep their UV layout when\nthey are reduced, so the images baked for the first level fit every\nlevel. The hair cards and the eyes are left alone, their UVs differ per\nquality, bake those with `bake_textures(only_sets=(\"eyes\", \"hair\"))`.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 360,
+     "kind": "method",
+     "params": [
+      {
+       "name": "source",
+       "type": "Human",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Human with baked materials."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "is_lod",
+     "summary": "Checks if the body of the human has a lower level of detail.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 376,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "has_game_eyes",
+     "summary": "Checks if the eyes were converted to single layer eyes.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 385,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "convert_to_game_eyes",
+     "summary": "Replaces the layered eyes by single layer eyes for game engines.",
+     "description": "Only the front of the cornea is kept, with the eye color as opaque\nmaterial on it. Applies the shape keys of the eyes, so changing the height\nor proportions won't work on this human anymore.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 393,
+     "kind": "method",
+     "params": [
+      {
+       "name": "detail",
+       "type": "Literal['high', 'medium', 'low']",
+       "default": "'medium'",
+       "kind": "positional or keyword",
+       "description": "Resolution of the eye mesh. Medium has a quarter of the triangles of high, low about a sixteenth."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "set_quality",
+     "summary": "Reduces the meshes of this human to the detail of a LOD level.",
+     "description": "Converts the eyes, decimates the teeth and the clothing and dissolves\nedges of the body, as `QualitySettings` asks. Hair cards and bones per\nvertex are not part of it, see `convert_to_haircards` and\n`convert_to_game_rig`. Meshes that have their detail already are skipped.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 408,
+     "kind": "method",
+     "params": [
+      {
+       "name": "quality",
+       "type": "QualitySettings",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Detail per mesh, see `QualitySettings.from_tier`."
+      },
+      {
+       "name": "meshes",
+       "type": "Optional[MeshSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Which modifiers of the clothing to remove and whether to remove the skin under it. Defaults apply."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "remove_hidden_skin",
+     "summary": "Deletes the vertices of the body that the clothing hides.",
+     "description": "Applies the mask modifiers of the clothing to the body mesh itself,\nwith the shape keys carried along. Exporters skip modifiers, so\nwithout this the body is complete under every garment.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 447,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "int",
+      "description": "Number of vertices removed."
+     },
+     "raises": []
+    },
+    {
+     "name": "apply_modifiers",
+     "summary": "Applies modifiers to the meshes of this human, keeping the shape keys.",
+     "description": "Blender refuses to apply a modifier to a mesh with shape keys, this\napplies it to every key. For scripts and anything the other steps don't\ncover; particle systems and decimate modifiers are never applied.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 463,
+     "kind": "method",
+     "params": [
+      {
+       "name": "modifier_types",
+       "type": "Iterable[str]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "Types to apply, like \"SUBSURF\" or \"SOLIDIFY\"."
+      },
+      {
+       "name": "objects",
+       "type": "Optional[Iterable[bpy.types.Object]]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Meshes to apply to, every mesh of the human when None."
+      },
+      {
+       "name": "apply_hidden",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Also apply modifiers hidden in the viewport."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "has_t_pose_rest",
+     "summary": "Checks if the T-pose was baked into the rest pose.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 490,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "set_t_pose_as_rest",
+     "summary": "Bakes the T-pose into the rest pose of the meshes and armature.",
+     "description": "Discards the current pose and removes the shoulder side raise corrective\nshape keys. Features that rely on the A-pose rest pose, like changing the\npose, height, proportions or clothing, won't work on this human anymore.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 498,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "The Blender context. Defaults to None."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the rest pose is the T-pose already, or the human is a Rigify or legacy human."
+      }
+     ]
+    },
+    {
+     "name": "has_game_rig",
+     "summary": "Checks if the rig was converted to a game engine skeleton.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 516,
+     "kind": "property",
+     "type": "bool",
+     "readonly": true
+    },
+    {
+     "name": "game_rig_preset",
+     "summary": "The preset the rig was converted with, None if it has no game rig.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 525,
+     "kind": "property",
+     "type": "Optional[str]",
+     "readonly": true
+    },
+    {
+     "name": "convert_to_game_rig",
+     "summary": "Converts the rig to a skeleton for game engines.",
+     "description": "Removes the bones that deform nothing, like the face rig controls and the\neye targets, and bakes the shape keys they drove at their current value.\nMerges the weights of the bones that are not kept into their parents, adds\na root bone at the origin, bakes the constraints into the pose, removes the\nvertex groups that are neither bones nor used by a modifier, limits the\nnumber of bones per vertex and renames the bones for the preset. The face\nrig, poses and animations of Human Generator won't work on this human\nanymore. Combine with set_t_pose_as_rest for the presets that expect a\nT-pose, which happens by itself when `settings` ask for it.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 534,
+     "kind": "method",
+     "params": [
+      {
+       "name": "preset",
+       "type": "str",
+       "default": "'generic_a'",
+       "kind": "positional or keyword",
+       "description": "Engine to name the bones for: \"generic_a\" and \"generic_t\" keep the Human Generator names (\"humgen\" picks one by the rest pose), \"humanoid\" uses the names of Unity, Godot and VRM, \"unreal\" the Mannequin names, \"mixamo\" the Mixamo names and \"custom\" the names of names_file. The rest pose of the preset is not applied here, see set_t_pose_as_rest."
+      },
+      {
+       "name": "keep_eyes",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Keep the eye bones, otherwise the eyes follow the head."
+      },
+      {
+       "name": "keep_jaw",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Keep the jaw bones that move the teeth."
+      },
+      {
+       "name": "keep_breasts",
+       "type": "bool",
+       "default": "True",
+       "kind": "positional or keyword",
+       "description": "Keep the breast bones."
+      },
+      {
+       "name": "keep_metacarpals",
+       "type": "bool",
+       "default": "False",
+       "kind": "positional or keyword",
+       "description": "Keep the palm bones between hand and fingers."
+      },
+      {
+       "name": "max_influences",
+       "type": "int",
+       "default": "4",
+       "kind": "positional or keyword",
+       "description": "Maximum number of bones per vertex, 0 for no limit. Also with `settings`, as `QualitySettings.bones_per_vertex` holds it per LOD level."
+      },
+      {
+       "name": "root_bone",
+       "type": "Optional[bool]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Add a root bone at the origin, None uses the choice of the preset. Mixamo has none, the others do."
+      },
+      {
+       "name": "root_bone_name",
+       "type": "Optional[str]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Name of the root bone, None uses the name of the preset."
+      },
+      {
+       "name": "names_file",
+       "type": "Optional[str]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "JSON file with \"names\" and \"sides\" like game_rig_presets.json, for the \"custom\" preset."
+      },
+      {
+       "name": "settings",
+       "type": "Optional[SkeletonSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "The skeleton as a recipe holds it, replaces the arguments above except max_influences. Its rest pose is applied first when it is the T-pose."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "HumGenException",
+       "description": "If the human has a game rig already, or is a Rigify or legacy human."
+      },
+      {
+       "type": "ValueError",
+       "description": "If the preset does not exist."
+      }
+     ]
+    },
+    {
+     "name": "apply_names",
+     "summary": "Names the objects, meshes, materials and images by a naming scheme.",
+     "description": "A copy of a human has names like \"HG_Body.001\", which engines show.\nThis names every datablock after the human and its part instead:\n\"Jake_Body\", \"Jake_Skin\" and \"Jake_Body_BaseColor\", or with the Unreal\nscheme \"SK_Jake_Body\", \"M_Jake_Skin\" and \"T_Jake_Body_BC\". Unused\nmaterial slots are removed. Materials shared with another human, like\nthe one this is a duplicate of, are copied first.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 615,
+     "kind": "method",
+     "params": [
+      {
+       "name": "output",
+       "type": "Optional[OutputSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Scheme, templates and the name, `OutputSettings.name` with \"{name}\" for the name of the human. The plain scheme with the name of the human by default."
+      },
+      {
+       "name": "level",
+       "type": "int",
+       "default": "0",
+       "kind": "positional or keyword",
+       "description": "LOD level of this human, added as \"_LOD1\" suffix to the meshes when there is more than one level."
+      },
+      {
+       "name": "levels",
+       "type": "int",
+       "default": "1",
+       "kind": "positional or keyword",
+       "description": "Number of LOD levels."
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "prepare_clips",
+     "summary": "Gives this human its own animation clips, fitted to its skeleton.",
+     "description": "After `convert_to_game_rig` the actions of the source human no longer\nfit: bones are gone or renamed and the rest pose may be the T-pose. The\nHuman Generator animations are retargeted onto the converted skeleton,\nother actions are copied as they are with a warning in the log. The\nclips end up as one NLA strip each, so `human.export.write(...,\nanimation=\"strips\")` writes every clip as a take. Afterwards the clips\nare the only animation on this human.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 653,
+     "kind": "method",
+     "params": [
+      {
+       "name": "settings",
+       "type": "Optional[AnimationSettings]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Which clips, from the human or the library, and the root motion. Every clip on the source human by default."
+      },
+      {
+       "name": "source",
+       "type": "Optional[Human]",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "The human the clips come from, this human by default. Pass the original when this is its duplicate."
+      },
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "List[bpy.types.Action]",
+      "description": "List[bpy.types.Action]: The clips of this human."
+     },
+     "raises": []
+    },
+    {
+     "name": "merge_levels",
+     "summary": "Puts the meshes of other LOD levels under the skeleton of this human.",
+     "description": "For one file with every level. The skeletons have to be identical,\nwhich they are when the levels were made from the same source with the\nsame skeleton settings. The rigs of the other levels are removed, so\nthey are no humans afterwards.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 689,
+     "kind": "method",
+     "params": [
+      {
+       "name": "levels",
+       "type": "List[Human]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "The other levels, in order of detail."
       }
      ],
      "returns": {
@@ -9769,7 +12203,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 240,
+     "line": 703,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -9781,7 +12215,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 248,
+     "line": 711,
      "kind": "method",
      "params": [
       {
@@ -9794,256 +12228,6 @@
      ],
      "returns": {
       "type": "None",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "rename_bones_from_json",
-     "summary": "Renames the bones of the human according to the provided json str or file.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 268,
-     "kind": "method",
-     "params": [
-      {
-       "name": "json_string",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The json string. Defaults to None. ONLY ONE OF json_string and json_path may be provided."
-      },
-      {
-       "name": "json_path",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The path to the json file. Defaults to None."
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": [
-      {
-       "type": "ValueError",
-       "description": "If both json_string and json_path are provided."
-      }
-     ]
-    },
-    {
-     "name": "rename_objects_from_json",
-     "summary": "Renames the objects of the human according to the provided json str or file.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 315,
-     "kind": "method",
-     "params": [
-      {
-       "name": "json_string",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The json string. Defaults to None."
-      },
-      {
-       "name": "json_path",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The path to the json file. Defaults to None."
-      },
-      {
-       "name": "custom_token",
-       "type": "str",
-       "default": "''",
-       "kind": "positional or keyword",
-       "description": "A custom token that can be inserted into name templates."
-      },
-      {
-       "name": "suffix",
-       "type": "str",
-       "default": "''",
-       "kind": "positional or keyword",
-       "description": "A suffix that will be appended to the new names."
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": [
-      {
-       "type": "ValueError",
-       "description": "If both json_string and json_path are provided."
-      }
-     ]
-    },
-    {
-     "name": "rename_materials_from_json",
-     "summary": "Renames materials of the human according to the provided json str or file.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 367,
-     "kind": "method",
-     "params": [
-      {
-       "name": "json_string",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The json string. Defaults to None."
-      },
-      {
-       "name": "json_path",
-       "type": "Optional[str]",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The path to the json file. Defaults to None."
-      },
-      {
-       "name": "custom_token",
-       "type": "str",
-       "default": "''",
-       "kind": "positional or keyword",
-       "description": "A custom token that can be inserted into name templates."
-      },
-      {
-       "name": "suffix",
-       "type": "str",
-       "default": "''",
-       "kind": "positional or keyword",
-       "description": "A suffix that will be appended to the new names."
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": [
-      {
-       "type": "ValueError",
-       "description": "If both json_string and json_path are provided."
-      }
-     ]
-    },
-    {
-     "name": "save_settings_to_template",
-     "summary": "Saves the current settings to a template file.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 414,
-     "kind": "staticmethod",
-     "params": [
-      {
-       "name": "folder",
-       "type": "str",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": "The folder to save the template to."
-      },
-      {
-       "name": "template_name",
-       "type": "str",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": "The name of the template."
-      },
-      {
-       "name": "context",
-       "type": "C",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The Blender context. Defaults to None."
-      }
-     ],
-     "returns": {
-      "type": "str",
-      "description": "The path to the template file."
-     },
-     "raises": []
-    },
-    {
-     "name": "set_settings_from_template",
-     "summary": "Sets the process settings from a template file.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 519,
-     "kind": "staticmethod",
-     "params": [
-      {
-       "name": "template_path",
-       "type": "str",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": "The path to the template file."
-      },
-      {
-       "name": "context",
-       "type": "C",
-       "default": "None",
-       "kind": "positional or keyword",
-       "description": "The Blender context. Defaults to None."
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "add_props_from_dict",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/process.py",
-     "line": 596,
-     "kind": "staticmethod",
-     "params": [
-      {
-       "name": "data",
-       "type": null,
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      },
-      {
-       "name": "pr_sett",
-       "type": null,
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      },
-      {
-       "name": "prop_dict",
-       "type": null,
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      },
-      {
-       "name": "prop_group",
-       "type": null,
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": null,
       "description": null
      },
      "raises": []
@@ -10307,6 +12491,179 @@
     "human.hair.regular_hair.particle_systems"
    ],
    "role": "type"
+  },
+  {
+   "name": "QualitySettings",
+   "path": "human.process.settings.QualitySettings",
+   "summary": "Detail of the meshes of one LOD level, see quality.py for the tiers.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 184,
+   "members": [
+    {
+     "name": "body",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 188,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "clothing",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 189,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "eyes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 190,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "teeth",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 191,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "haircards",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 192,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "bones_per_vertex",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 193,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "from_tier",
+     "summary": "The settings of a quality tier, see `quality.QUALITY_TIERS`.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 195,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "tier",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": "\"original\", \"ultra\", \"high\", \"medium\", \"low\" or \"mobile\"."
+      }
+     ],
+     "returns": {
+      "type": "QualitySettings",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the tier does not exist."
+      }
+     ]
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [],
+   "role": "referenced"
   },
   {
    "name": "RegularHairSettings",
@@ -11188,6 +13545,310 @@
    "role": "base"
   },
   {
+   "name": "ScriptSettings",
+   "path": "human.process.settings.ScriptSettings",
+   "summary": "A script to run at a stage of the process, see scripts.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 328,
+   "members": [
+    {
+     "name": "path",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 332,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "stage",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 333,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "args",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 334,
+     "kind": "attribute",
+     "type": "Dict[str, Any]",
+     "readonly": false
+    },
+    {
+     "name": "on_error",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 335,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [],
+   "role": "referenced"
+  },
+  {
+   "name": "ScriptsSettings",
+   "path": "human.process.settings.ScriptsSettings",
+   "summary": "The scripts to run, in order, and whether they run at all.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 338,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 342,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "items",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 343,
+     "kind": "attribute",
+     "type": "List[ScriptSettings]",
+     "readonly": false
+    },
+    {
+     "name": "active",
+     "summary": "The scripts that run, none when disabled.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 345,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "List[ScriptSettings]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.scripts"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "Settings",
+   "path": "human.process.settings.Settings",
+   "summary": "Base of the settings dataclasses, JSON in and out.",
+   "description": "",
+   "examples": [],
+   "bases": [],
+   "file": "human/process/settings.py",
+   "line": 162,
+   "members": [
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [],
+   "role": "base"
+  },
+  {
    "name": "ShapeKeyItem",
    "path": "human.keys.keys.ShapeKeyItem",
    "summary": "Item representing a Blender shape key on the human.",
@@ -11487,6 +14148,394 @@
    "role": "referenced"
   },
   {
+   "name": "ShapeKeySettings",
+   "path": "human.process.settings.ShapeKeySettings",
+   "summary": "Keep, bake or remove per group of keys, see shape_keys.py.",
+   "description": "When disabled no shape keys are kept: the driven groups are removed and the\nsliders are baked at their current value.",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 250,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 258,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "face_rig",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 259,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "expressions",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 260,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "correctives",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 261,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "body",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 262,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "face",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 263,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "age",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 264,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "keep",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 268,
+     "kind": "attribute",
+     "type": "Dict[str, Optional[List[str]]]",
+     "readonly": false
+    },
+    {
+     "name": "lod0_only",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 270,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.shape_keys"
+   ],
+   "role": "attribute"
+  },
+  {
+   "name": "SkeletonSettings",
+   "path": "human.process.settings.SkeletonSettings",
+   "summary": "Conversion of the rig to a skeleton for game engines, see game_rig.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 233,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 237,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "names",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 238,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "names_file",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 239,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "rest_pose",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 240,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "root_bone",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 241,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "root_bone_name",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 242,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "keep_eyes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 243,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "keep_jaw",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 244,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "keep_breasts",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 245,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "keep_metacarpals",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 246,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "units",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 247,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.skeleton"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "SkinLinks",
    "path": "human.skin.skin.SkinLinks",
    "summary": "Inherits from bpy_prop_collection to add custom methods to the collection.",
@@ -11496,7 +14545,7 @@
     "bpy_prop_collection"
    ],
    "file": "human/skin/skin.py",
-   "line": 553,
+   "line": 550,
    "members": [
     {
      "name": "from_human",
@@ -11505,7 +14554,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 556,
+     "line": 553,
      "kind": "staticmethod",
      "params": [
       {
@@ -11538,7 +14587,7 @@
     "bpy_prop_collection"
    ],
    "file": "human/skin/skin.py",
-   "line": 534,
+   "line": 531,
    "members": [
     {
      "name": "from_human",
@@ -11547,7 +14596,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 537,
+     "line": 534,
      "kind": "staticmethod",
      "params": [
       {
@@ -11571,7 +14620,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 544,
+     "line": 541,
      "kind": "method",
      "params": [],
      "returns": {
@@ -11893,7 +14942,7 @@
     "PreviewCollectionContent"
    ],
    "file": "human/skin/skin.py",
-   "line": 287,
+   "line": 284,
    "members": [
     {
      "name": "set",
@@ -11902,7 +14951,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 295,
+     "line": 292,
      "kind": "method",
      "params": [
       {
@@ -11926,7 +14975,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 331,
+     "line": 328,
      "kind": "method",
      "params": [
       {
@@ -11950,7 +14999,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 348,
+     "line": 345,
      "kind": "method",
      "params": [
       {
@@ -11988,7 +15037,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 406,
+     "line": 403,
      "kind": "method",
      "params": [
       {
@@ -12156,30 +15205,234 @@
     "human.skin.texture"
    ],
    "role": "attribute"
+  },
+  {
+   "name": "TextureSettings",
+   "path": "human.process.settings.TextureSettings",
+   "summary": "Baking of the materials to textures, see textures.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 273,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 278,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "resolution",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 279,
+     "kind": "attribute",
+     "type": "Dict[str, int]",
+     "readonly": false
+    },
+    {
+     "name": "passes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 288,
+     "kind": "attribute",
+     "type": "Dict[str, List[str]]",
+     "readonly": false
+    },
+    {
+     "name": "file_format",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 297,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "workflow",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 298,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "normal_map",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 299,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "pack_hair_alpha",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 300,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "samples",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 301,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "set_resolution_tier",
+     "summary": "Sets the resolution of every texture set to a tier, \"4k\", \"2k\", \"1k\" or \"512\".",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 303,
+     "kind": "method",
+     "params": [
+      {
+       "name": "tier",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the tier does not exist."
+      }
+     ]
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.textures"
+   ],
+   "role": "attribute"
   }
  ],
  "documentedNames": [
   "AgeSettings",
+  "AnimationSettings",
   "BakeSettings",
-  "BakeTexture",
   "BaseClothing",
   "BaseHair",
   "BatchHumanGenerator",
   "BodySettings",
   "ClothingSettings",
   "ExportBuilder",
+  "ExportResult",
+  "ExportSettings",
   "ExpressionSettings",
   "EyeSettings",
   "EyebrowSettings",
   "EyelashSettings",
   "FaceSettings",
   "FacialHairSettings",
+  "FbxSettings",
   "FemaleSkin",
   "FootwearSettings",
+  "GltfSettings",
   "HG_HASHES",
   "HG_OBJECT_PROPS",
   "HG_SK_VALUES",
   "HairSettings",
+  "HaircardSettings",
   "HeightSettings",
   "Human",
   "ImportableHair",
@@ -12189,18 +15442,27 @@
   "LodSettings",
   "MaleSkin",
   "MaterialSettings",
+  "MeshSettings",
   "NodeInput",
   "ObjectCollection",
   "OutfitSettings",
+  "OutputSettings",
   "PatternSettings",
   "PoseSettings",
+  "Preflight",
   "PreviewCollectionContent",
   "ProcessSettings",
   "PropCollection",
+  "QualitySettings",
   "RegularHairSettings",
   "RigifySettings",
   "SavableContent",
+  "ScriptSettings",
+  "ScriptsSettings",
+  "Settings",
   "ShapeKeyItem",
+  "ShapeKeySettings",
+  "SkeletonSettings",
   "SkinLinks",
   "SkinNodes",
   "SkinSettings",
