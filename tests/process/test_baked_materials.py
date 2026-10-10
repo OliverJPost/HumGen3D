@@ -18,6 +18,7 @@ from HumGen3D.human.process.textures import (
     _link_alpha,
     _link_directx_normal,
 )
+
 from HumGen3D.tests.test_fixtures import *  # noqa: F401, F403
 
 
@@ -104,3 +105,44 @@ def test_materials_without_flip_are_left_alone():
         bpy.data.objects.remove(obj)
         bpy.data.meshes.remove(mesh)
         bpy.data.materials.remove(material)
+
+
+def _uv_box_alpha(obj, image):
+    """The alpha of an image inside the UV bounding box of an object."""
+    import numpy as np
+
+    width, height = image.size
+    pixels = np.empty(len(image.pixels), dtype=np.float32)
+    image.pixels.foreach_get(pixels)
+    pixels = pixels.reshape(height, width, 4)
+    uvs = np.array([d.uv[:] for d in obj.data.uv_layers.active.data])
+    x0, y0 = (uvs.min(axis=0) * (width, height)).astype(int)
+    x1, y1 = (uvs.max(axis=0) * (width, height)).astype(int) + 1
+    return pixels[y0:y1, x0:x1, 3]
+
+
+def test_shared_cap_texture_holds_eyebrows_and_eyelashes(male_human):
+    """The eyebrows and eyelashes are baked into the cap image they share with
+    the scalp cap, and survive the later passes."""
+    from HumGen3D.human.process.settings import TextureBakeSettings
+
+    copy = male_human.duplicate(bpy.context)
+    try:
+        copy.process.convert_to_haircards("low", context=bpy.context)
+        settings = TextureBakeSettings()
+        settings.resolution = {key: 64 for key in settings.resolution}
+        settings.resolution["hair"] = 256
+        copy.process.bake_textures(settings, folder=None, context=bpy.context)
+        caps = {
+            obj.name: obj for obj in copy.objects.haircards if "Brows" in obj.name or "Eyelashes" in obj.name
+        }
+        assert len(caps) == 2, caps
+        for name, obj in caps.items():
+            material = obj.material_slots[0].material
+            image = next(
+                n.image for n in material.node_tree.nodes if n.type == "TEX_IMAGE" and "BaseColor" in n.image.name
+            )
+            alpha = _uv_box_alpha(obj, image)
+            assert alpha.max() > 0.5, f"{name}: no alpha in its part of {image.name}"
+    finally:
+        copy.delete()
