@@ -17,7 +17,7 @@ from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.type_aliases import C
 
-from .settings import TextureSettings
+from .settings import TextureBakeSettings
 
 if TYPE_CHECKING:
     from ..human import Human
@@ -77,7 +77,7 @@ class BakeSettings:
         self,
         folder_path: Optional[str] = None,
         samples: int = 4,
-        settings: Optional[TextureSettings] = None,
+        settings: Optional[TextureBakeSettings] = None,
         context: C = None,
     ) -> list[bpy.types.Image]:
         """Bakes every material of this human, see `ProcessSettings.bake_textures`.
@@ -86,14 +86,14 @@ class BakeSettings:
             folder_path (Optional[str]): Folder to write the images to, None
                 packs them in the blend file.
             samples (int): Cycles samples of the bakes.
-            settings (Optional[TextureSettings]): Passes, resolution and
+            settings (Optional[TextureBakeSettings]): Passes, resolution and
                 packing. Defaults to separate maps at 2k.
             context (C): Blender context. bpy.context if not provided.
 
         Returns:
             list[bpy.types.Image]: The baked images.
         """
-        settings = settings.copy() if settings else TextureSettings()
+        settings = settings.copy() if settings else TextureBakeSettings()
         settings.samples = samples
         return self._human.process.bake_textures(
             settings, folder=folder_path, context=context

@@ -32,13 +32,13 @@ from HumGen3D.human.process.settings import (
     TEXTURE_PLACEMENTS,
     TEXTURE_SETS,
     TEXTURE_WORKFLOWS,
-    AnimationSettings,
+    AnimationClipSettings,
     ExportSettings,
     OutputSettings,
     QualitySettings,
     ScriptSettings,
     ShapeKeySettings,
-    TextureSettings,
+    TextureBakeSettings,
     recipe_items,
 )
 from HumGen3D.human.process.shape_keys import GROUP_ACTIONS, KEY_GROUPS, actions_for_level
@@ -161,13 +161,13 @@ def test_missing_fields_get_defaults():
     assert settings.output.naming == "plain"
     assert settings.lods[0].body == 2
     assert settings.lods[0].clothing == QualitySettings().clothing
-    assert settings.textures == TextureSettings()
+    assert settings.textures == TextureBakeSettings()
 
 
 def test_optional_clip_list():
     """None means every clip, an empty list means none, both survive JSON."""
     for clips in (None, [], ["Walk"]):
-        settings = ExportSettings(animations=AnimationSettings(clips=clips))
+        settings = ExportSettings(animations=AnimationClipSettings(clips=clips))
         assert ExportSettings.from_json(settings.to_json()).animations.clips == clips
 
 
@@ -212,7 +212,7 @@ def test_output_format_flags(output_format):
 
 
 def test_texture_resolution_tier():
-    textures = TextureSettings()
+    textures = TextureBakeSettings()
     textures.set_resolution_tier("512")
     assert textures.resolution == quality.resolution_of_tier("512")
     with pytest.raises(ValueError):
@@ -547,7 +547,7 @@ def test_effective_settings_file_needs_textures():
 
 
 def test_effective_settings_no_rig_no_animations():
-    settings = ExportSettings(output=OutputSettings(format="obj"), animations=AnimationSettings(enabled=True))
+    settings = ExportSettings(output=OutputSettings(format="obj"), animations=AnimationClipSettings(enabled=True))
     assert not pipeline._effective_settings(settings).animations.enabled
 
 

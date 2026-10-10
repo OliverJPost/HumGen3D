@@ -31,14 +31,14 @@ from .masks import remove_hidden_skin
 from .pipeline import ExportResult, Preflight
 from .rest_pose import T_POSE_KEY, set_t_pose_as_rest
 from .settings import (
-    AnimationSettings,
+    AnimationClipSettings,
     ExportSettings,
     MeshSettings,
     OutputSettings,
     QualitySettings,
     ShapeKeySettings,
     SkeletonSettings,
-    TextureSettings,
+    TextureBakeSettings,
 )
 from .shape_keys import (
     KeepSelection,
@@ -55,7 +55,7 @@ EXPORT_NAME_KEY = "hg_export_name"
 
 
 class ProcessSettings:
-    """Class for accessing methods and subclasses for processing the human.
+    """Processes the human for export, as the Process tab does, or step by step.
 
     `run` does everything the Process tab does, from an `ExportSettings`:
 
@@ -298,7 +298,7 @@ class ProcessSettings:
     @injected_context
     def bake_textures(
         self,
-        settings: Optional[TextureSettings] = None,
+        settings: Optional[TextureBakeSettings] = None,
         folder: Optional[str] = None,
         output: Optional[OutputSettings] = None,
         level: int = 0,
@@ -314,7 +314,7 @@ class ProcessSettings:
         first, so a human this one was duplicated from keeps its own.
 
         Args:
-            settings (Optional[TextureSettings]): Passes, resolution, packing,
+            settings (Optional[TextureBakeSettings]): Passes, resolution, packing,
                 normal map direction and samples. Separate maps at 2k by default.
             folder (Optional[str]): Folder to write the images to, None packs
                 them in the blend file.
@@ -336,7 +336,7 @@ class ProcessSettings:
         """
         if self.was_baked:
             raise HumGenException("Human was already baked.")
-        settings = settings or TextureSettings()
+        settings = settings or TextureBakeSettings()
         only = tuple(only_sets) if only_sets is not None else None
         # Only the materials that get baked, the others may be shared with
         # another level on purpose, see share_textures
@@ -653,7 +653,7 @@ class ProcessSettings:
     @injected_context
     def prepare_clips(
         self,
-        settings: Optional[AnimationSettings] = None,
+        settings: Optional[AnimationClipSettings] = None,
         source: Optional["Human"] = None,
         context: C = None,
     ) -> List[bpy.types.Action]:
@@ -668,7 +668,7 @@ class ProcessSettings:
         are the only animation on this human.
 
         Args:
-            settings (Optional[AnimationSettings]): Which clips, from the human
+            settings (Optional[AnimationClipSettings]): Which clips, from the human
                 or the library, and the root motion. Every clip on the source
                 human by default.
             source (Optional[Human]): The human the clips come from, this human
@@ -678,7 +678,7 @@ class ProcessSettings:
         Returns:
             List[bpy.types.Action]: The clips of this human.
         """
-        settings = settings or AnimationSettings(enabled=True)
+        settings = settings or AnimationClipSettings(enabled=True)
         clips, warnings = animations.prepare_clips(
             self._human, source or self._human, settings, context
         )

@@ -186,6 +186,9 @@ def set_human_categ_props() -> None:
 
 @no_type_check
 def _hair_shader_type_update(sett, hg_body):
+    # A processed copy has its hair baked away, its body has one material
+    if len(hg_body.data.materials) < 2 or hg_body.data.materials[1] is None:
+        return
     mat = hg_body.data.materials[1]
     hair_node = mat.node_tree.nodes.get("HG_Hair_V3")
 

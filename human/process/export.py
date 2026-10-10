@@ -191,6 +191,7 @@ class ExportBuilder:
         units: str = "meters",
         animation: Animation = "none",
         armature_only: bool = False,
+        sample_rate: int = 0,
         context: C = None,
     ) -> str:
         """Writes the human in the format of the output settings.
@@ -206,6 +207,9 @@ class ExportBuilder:
                 animation of the rig goes into the file. Formats with a rig only.
             armature_only (bool): Only the skeleton and its animation, for a
                 file with clips.
+            sample_rate (int): Frames per second the animation is sampled at,
+                0 for the frame rate of the scene, see
+                `AnimationClipSettings.sample_rate`. FBX only.
             context (C): Blender context. bpy.context if not provided.
 
         Returns:
@@ -220,10 +224,13 @@ class ExportBuilder:
         folder = os.path.dirname(os.path.abspath(filepath))
         os.makedirs(folder, exist_ok=True)
         if file_format == "fbx":
+            # The exporter samples every `bake_anim_step` frames of the scene
+            fps = context.scene.render.fps / context.scene.render.fps_base
             return self.to_fbx(
                 filepath,
                 animation=animation,
                 armature_only=armature_only,
+                bake_anim_step=max(fps / sample_rate, 0.01) if sample_rate > 0 else 1.0,
                 context=context,
                 **fbx_kwargs(output, units),
             )
@@ -270,6 +277,8 @@ class ExportBuilder:
         animation: Animation = "active",
         # Only the skeleton and its animation, for files with clips
         armature_only: bool = False,
+        # Frames of the scene between two samples of the animation
+        bake_anim_step: float = 1.0,
         # DON'T REMOVE, used by decorator
         bake_textures: bool = False,
         context: C = None,
@@ -294,6 +303,7 @@ class ExportBuilder:
             # Only export the animation of this human, not of all humans in the file
             bake_anim_use_all_actions=False,
             bake_anim_use_nla_strips=animation == "strips",
+            bake_anim_step=bake_anim_step,
         )
 
     @exporter

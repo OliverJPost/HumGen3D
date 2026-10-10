@@ -8,7 +8,7 @@ import pytest
 
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.process import game_eyes
-from HumGen3D.human.process.settings import TextureSettings
+from HumGen3D.human.process.settings import TextureBakeSettings
 from HumGen3D.human.process.textures import plan_texture_sets
 from HumGen3D.tests.test_fixtures import *
 
@@ -95,7 +95,7 @@ def test_game_eyes_material(human):
     assert human.eyes.iris_color.value == iris_color
     human.eyes.randomize()
 
-    eye_slots = [s.slot for s in plan_texture_sets(human, TextureSettings()) if s.obj == eyes]
+    eye_slots = [s.slot for s in plan_texture_sets(human, TextureBakeSettings()) if s.obj == eyes]
     assert eye_slots == [0]
 
 
@@ -122,7 +122,7 @@ def test_game_eyes_fails(male_human):
 
 def test_game_eyes_baked(male_human, context, tmp_path):
     male_human.process.convert_to_game_eyes()
-    textures = TextureSettings(resolution={key: 128 for key in TextureSettings().resolution})
+    textures = TextureBakeSettings(resolution={key: 128 for key in TextureBakeSettings().resolution})
     male_human.process.bake_textures(textures, str(tmp_path), only_sets=("eyes",), context=context)
 
     eyes = male_human.objects.eyes

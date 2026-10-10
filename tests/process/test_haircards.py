@@ -334,13 +334,13 @@ def test_same_strands_give_same_cards(long_haired_human, context):
 @pytest.mark.parametrize("pack", [True, False])
 def test_bake_packs_alpha(long_haired_human, context, tmp_path, pack):
     """The alpha of the cards goes into the color texture, or a texture of its own."""
-    from HumGen3D.human.process.settings import TextureSettings
+    from HumGen3D.human.process.settings import TextureBakeSettings
 
     human = long_haired_human.duplicate(context)
     try:
         hair_obj = human.hair.regular_hair.convert_to_haircards("low", context)
-        textures = TextureSettings(
-            resolution={key: 128 for key in TextureSettings().resolution},
+        textures = TextureBakeSettings(
+            resolution={key: 128 for key in TextureBakeSettings().resolution},
             pack_hair_alpha=pack,
         )
         human.process.bake_textures(textures, str(tmp_path), only_sets=("hair",), context=context)
