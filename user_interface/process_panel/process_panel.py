@@ -18,6 +18,7 @@ from HumGen3D.backend.properties.process_props import (
     quality_from_props,
 )
 from HumGen3D.common import find_multiple_in_list
+from HumGen3D.common.documentation import draw_docs_button
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.pipeline import output_folder, preflight
 from HumGen3D.human.process.quality import (
@@ -93,6 +94,7 @@ class ProcessPanel(HGPanel):
     icon_name: str = "NONE"
     # Property group with an "enabled" toggle, drawn in the header
     toggle_group: Optional[str] = None
+    # Page of the documentation about the section, see common.documentation
     help_url: Optional[str] = None
 
     @classmethod
@@ -136,9 +138,7 @@ class ProcessPanel(HGPanel):
     def _draw_documentation_button(self):
         if not self.help_url:
             return
-        self.layout.operator("wm.url_open", text="Documentation", icon="HELP").url = (
-            "https://help.humgen3d.com/" + self.help_url
-        )
+        draw_docs_button(self.layout, self.help_url)
 
     def _draw_advanced(self, layout, group):
         """The collapsible advanced drawer of a section, returns its box or None.
@@ -330,7 +330,7 @@ class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
     bl_order = 1
     icon_name = "MOD_DECIM"
     toggle_group = "meshes"
-    help_url = "lod"
+    help_url = "process/optimize-meshes"
 
     def summary(self, context) -> str:
         """The triangles of the first level, hair not included."""
@@ -426,7 +426,7 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
     bl_order = 2
     icon_name = "hair"
     toggle_group = "haircards"
-    help_url = "haircards"
+    help_url = "process/haircards"
 
     def summary(self, context) -> str:
         props = _props(context)
@@ -471,7 +471,7 @@ class HG_PT_SKELETON(ProcessPanel, bpy.types.Panel):
     bl_order = 3
     icon_name = "ARMATURE_DATA"
     toggle_group = "skeleton"
-    help_url = "gamerig"
+    help_url = "process/skeleton"
 
     def summary(self, context) -> str:
         skeleton = _props(context).skeleton
@@ -554,7 +554,7 @@ class HG_PT_SHAPEKEYS(ProcessPanel, bpy.types.Panel):
     bl_order = 4
     icon_name = "SHAPEKEY_DATA"
     toggle_group = "shape_keys"
-    help_url = "shapekeys"
+    help_url = "process/shape-keys"
 
     def summary(self, context) -> str:
         props = _props(context)
@@ -633,7 +633,7 @@ class HG_PT_TEXTURES(ProcessPanel, bpy.types.Panel):
     bl_order = 5
     icon_name = "TEXTURE"
     toggle_group = "textures"
-    help_url = "baking"
+    help_url = "process/bake-textures"
 
     def toggle_enabled(self, context) -> bool:
         # Files always need the baked textures
@@ -703,6 +703,7 @@ class HG_PT_ANIMATIONS(ProcessPanel, bpy.types.Panel):
     bl_order = 6
     icon_name = "ACTION"
     toggle_group = "animations"
+    help_url = "process/animations"
 
     @classmethod
     def poll(cls, context):
@@ -718,6 +719,7 @@ class HG_PT_ANIMATIONS(ProcessPanel, bpy.types.Panel):
 
     def draw(self, context):
         self.check_enabled(context)
+        self._draw_documentation_button()
         props = _props(context)
         animations = props.animations
         col = self.layout.column()
@@ -759,7 +761,8 @@ class HG_PT_ANIMATIONS(ProcessPanel, bpy.types.Panel):
             return
         flow = _flow(box)
         flow.prop(animations, "root_motion")
-        flow.prop(animations, "sample_rate")
+        if props.output.format == "fbx":
+            flow.prop(animations, "sample_rate")
 
 
 class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
@@ -768,7 +771,7 @@ class HG_PT_SCRIPTS(ProcessPanel, bpy.types.Panel):
     bl_order = 7
     icon_name = "FILE_SCRIPT"
     toggle_group = "scripts"
-    help_url = "scripts"
+    help_url = "process/scripts"
 
     def summary(self, context) -> str:
         scripts = _props(context).scripts
@@ -851,6 +854,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
 
         advanced = self._draw_advanced(box, output)
         if advanced:
+            draw_docs_button(advanced, "process/output")
             flow = _flow(advanced)
             flow.prop(output, "naming")
             if output.naming == "custom":
@@ -927,9 +931,7 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
                 row.label(text="", icon="ERROR")
                 draw_paragraph(row, warning, alignment="LEFT", enabled=False)
 
-        self.layout.operator(
-            "wm.url_open", text="Process Guide", icon="URL", emboss=False
-        ).url = "https://help.humgen3d.com/process/overview"
+        draw_docs_button(self.layout, "process", text="Process Guide", icon="URL", emboss=False)
 
     @staticmethod
     def _shorten(path: str, length: int = 38) -> str:

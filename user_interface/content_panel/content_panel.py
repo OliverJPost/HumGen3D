@@ -2,6 +2,7 @@
 
 import bpy
 from HumGen3D.backend import get_prefs
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.common.object_finding import find_hg_rig
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
@@ -97,7 +98,7 @@ class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):
         )
         row.operator(
             "wm.url_open", text="", icon="HELP"
-        ).url = f"https://help.humgen3d.com/customclothing"
+        ).url = docs_url("custom-content/custom-clothing")
 
 
 class HG_PT_SAVE_TO_LIBRARY(HGPanel, bpy.types.Panel):
@@ -167,7 +168,7 @@ class HG_PT_MANAGE_CONTENT(HGPanel, bpy.types.Panel):
 
         col.operator(
             "wm.url_open", text="Content Pack Guide", icon="HELP", emboss=False
-        ).url = f"https://help.humgen3d.com/custompack"
+        ).url = docs_url("custom-content/exporting-your-content-as-a-pack")
 
 
 class HG_PT_EXTRAS_TIPS(HGPanel, bpy.types.Panel):

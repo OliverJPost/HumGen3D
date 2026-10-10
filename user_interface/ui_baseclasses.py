@@ -10,6 +10,7 @@ from HumGen3D import HumGenException, __version__
 from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.backend.properties.ui_properties import active_phase_enum
 from HumGen3D.common import is_legacy, is_processed
+from HumGen3D.common.documentation import draw_docs_button
 from HumGen3D.human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
@@ -25,7 +26,7 @@ def forbidden_for_lod(draw_method):
             self.layout.alert = True
             self.layout.label(text="LOD was generated.")
             self.layout.label(text="Section has been disabled.")
-            self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/lod")
+            draw_docs_button(self.layout, "process/optimize-meshes", text="Learn more")
             self.layout.alert = False
             return
         return draw_method(self, context)
@@ -41,7 +42,7 @@ def forbidden_for_baked(draw_method):
             self.layout.alert = True
             self.layout.label(text="Materials were baked.")
             self.layout.label(text="Section has been disabled.")
-            self.layout.operator("wm.url_open", text="Learn more", icon="HELP").url = ("https://help.humgen3d.com/bake")
+            draw_docs_button(self.layout, "process/bake-textures", text="Learn more")
             self.layout.alert = False
             return
         return draw_method(self, context)
@@ -67,7 +68,7 @@ def subpanel_draw(draw_method):
 
         if get_prefs().show_tips:
             draw_tips_suggestions_ui(
-                self.layout, context, docs_name="guide/" + self.phase_name.capitalize()
+                self.layout, context, docs_name="guide/" + self.phase_name.lower()
             )
 
     return wrapper

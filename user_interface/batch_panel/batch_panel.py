@@ -7,6 +7,7 @@ from HumGen3D.batch_generator.batch_functions import (
     height_from_bell_curve,
 )
 from HumGen3D.common import is_processed
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
@@ -382,5 +383,5 @@ class HG_PT_BATCH_TIPS(Batch_PT_Base, bpy.types.Panel):
         layout = self.layout
         self.layout.operator(
             "wm.url_open", text="Batch Guide", icon="URL", emboss=False
-        ).url = "https://help.humgen3d.com/batch/overview"
+        ).url = docs_url("batch")
         draw_tips_suggestions_ui(layout, context)

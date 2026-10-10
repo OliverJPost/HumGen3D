@@ -9,6 +9,7 @@ from typing import Optional
 
 import bpy  # type: ignore
 import HumGen3D.backend.updates.addon_updater_ops as addon_updater_ops
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from .content_pack_saving_ui import CpackEditingSystem
@@ -376,11 +377,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             else "Installation tutorial [Opens browser]",
             icon="HELP",
             depress=True,
-        ).url = (
-            "https://help.humgen3d.com/update"
-            if is_legacy
-            else "https://help.humgen3d.com/install"
-        )
+        ).url = docs_url("faq/how-to-update-hg" if is_legacy else "faq/how-to-install-hg")
 
         # select path section
         box = layout.box()

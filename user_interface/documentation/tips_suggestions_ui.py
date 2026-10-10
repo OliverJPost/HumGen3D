@@ -5,6 +5,7 @@ import os
 
 import bpy
 from HumGen3D.backend import get_prefs
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 from .tips_and_suggestions.batch_tips_and_suggestions import get_batch_tips_from_context
@@ -53,7 +54,7 @@ def draw_tips_suggestions_ui(layout, context, docs_name=""):
             text=f"🌐 {label} Guide",
             # icon="HELP",
             emboss=False,
-        ).url = f"https://help.humgen3d.com/{docs_name}"
+        ).url = docs_url(docs_name)
 
     tips_col = context.scene.hg_tips_and_suggestions
     if not tips_col:
