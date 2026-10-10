@@ -4,7 +4,7 @@ description: How to export a Human Generator character from Blender to Unity as 
 > [!info] Part of the [[Process/Overview|Process guide]]
 
 > [!warning] Early access
-> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? [Let us know](https://humgen3d.com/feedback/process), on Discord or privately by mail.
+> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Export to Unity
 
