@@ -271,7 +271,7 @@ class ShapeKeySettings(Settings):
 
 
 @dataclass
-class TextureSettings(Settings):
+class TextureBakeSettings(Settings):
     """Baking of the materials to textures, see textures.py."""
 
     # Only a choice for the in-file output, every file format needs the textures
@@ -312,7 +312,7 @@ class TextureSettings(Settings):
 
 
 @dataclass
-class AnimationSettings(Settings):
+class AnimationClipSettings(Settings):
     """Export of the animations on the human, see animations.py."""
 
     enabled: bool = False
@@ -321,7 +321,7 @@ class AnimationSettings(Settings):
     # Action names (human) or preset paths (library) to export, None for all
     clips: Optional[List[str]] = None
     layout: str = "single_file"  # see CLIP_LAYOUTS
-    sample_rate: int = 0  # Frames per second, 0 for the scene frame rate
+    sample_rate: int = 0  # Frames per second, 0 for the scene frame rate. FBX only.
     root_motion: str = "hips"  # hips, root
 
 
@@ -427,8 +427,8 @@ class ExportSettings(Settings):
     haircards: HaircardSettings = field(default_factory=HaircardSettings)
     skeleton: SkeletonSettings = field(default_factory=SkeletonSettings)
     shape_keys: ShapeKeySettings = field(default_factory=ShapeKeySettings)
-    textures: TextureSettings = field(default_factory=TextureSettings)
-    animations: AnimationSettings = field(default_factory=AnimationSettings)
+    textures: TextureBakeSettings = field(default_factory=TextureBakeSettings)
+    animations: AnimationClipSettings = field(default_factory=AnimationClipSettings)
     scripts: ScriptsSettings = field(default_factory=ScriptsSettings)
 
     @classmethod

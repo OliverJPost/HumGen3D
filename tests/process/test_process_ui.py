@@ -37,7 +37,7 @@ from HumGen3D.human.process.quality import quality_of_tier, resolution_of_tier, 
 from HumGen3D.human.process.settings import (
     OUTPUT_FORMATS,
     TEXTURE_SETS,
-    AnimationSettings,
+    AnimationClipSettings,
     ExportSettings,
     QualitySettings,
 )
@@ -132,7 +132,7 @@ def test_clip_selection_survives_unrefreshed_list(props):
     """A recipe with chosen clips, loaded before the list was filled, must not
     turn into every clip."""
     settings = ExportSettings.from_recipe("unity")
-    settings.animations = AnimationSettings(enabled=True, source="library", clips=["animations/a.json"])
+    settings.animations = AnimationClipSettings(enabled=True, source="library", clips=["animations/a.json"])
     settings_to_props(props, settings)
     assert props_to_settings(props).animations.clips == ["animations/a.json"]
 
@@ -143,7 +143,7 @@ def test_recipe_selection_after_refresh(props, source, context):
     clip = source.animation.actions[0].name
     settings = ExportSettings.from_recipe("unity")
     settings.shape_keys.keep = {"expressions": ["Happy"], "face_rig": []}
-    settings.animations = AnimationSettings(enabled=True, clips=[clip])
+    settings.animations = AnimationClipSettings(enabled=True, clips=[clip])
     settings_to_props(props, settings)
     process_props.refresh_key_lists(props, source, context)
     refresh_clips(props, source, context)

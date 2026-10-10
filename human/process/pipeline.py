@@ -567,25 +567,32 @@ def _write_steps(  # noqa: CCR001
 
     files: List[str] = []
     units = settings.skeleton.units
+    sample_rate = settings.animations.sample_rate
     clips_with_mesh = bool(clips) and settings.animations.layout == "with_mesh"
     animation = "strips" if clips_with_mesh else "none"
 
     path = os.path.join(folder, name)
-    files.append(human.export.write(path, output, units, animation, context=context))
+    files.append(
+        human.export.write(path, output, units, animation, sample_rate=sample_rate, context=context)
+    )
     yield 0.6
 
     if clips and not clips_with_mesh:
         if settings.animations.layout == "single_file":
             clip_path = os.path.join(folder, f"{name}_Animations")
             files.append(
-                human.export.write(clip_path, output, units, "strips", armature_only=True, context=context)
+                human.export.write(
+                    clip_path, output, units, "strips", armature_only=True, sample_rate=sample_rate, context=context
+                )
             )
         else:
             for clip in clips:
                 clip_path = os.path.join(folder, animations.clip_file_name(name, clip))
                 with animations.active_clip(human, clip):
                     files.append(
-                        human.export.write(clip_path, output, units, "active", armature_only=True, context=context)
+                        human.export.write(
+                            clip_path, output, units, "active", armature_only=True, sample_rate=sample_rate, context=context
+                        )
                     )
     yield 0.9
 

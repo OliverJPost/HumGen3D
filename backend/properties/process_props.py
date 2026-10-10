@@ -48,7 +48,7 @@ from HumGen3D.human.process.settings import (
     TEXTURE_PLACEMENTS,
     TEXTURE_SETS,
     TEXTURE_WORKFLOWS,
-    AnimationSettings,
+    AnimationClipSettings,
     ExportSettings,
     FbxSettings,
     GltfSettings,
@@ -60,7 +60,7 @@ from HumGen3D.human.process.settings import (
     ScriptsSettings,
     ShapeKeySettings,
     SkeletonSettings,
-    TextureSettings,
+    TextureBakeSettings,
     recipe_items,
 )
 from HumGen3D.human.process.shape_keys import (
@@ -394,6 +394,7 @@ class AnimationProps(bpy.types.PropertyGroup):
     layout: EnumProperty(name="File layout", items=_enum(CLIP_LAYOUTS), default="single_file")
     sample_rate: EnumProperty(
         name="Sample rate",
+        description="Frames per second the clips are sampled at in the FBX file, Scene for the frame rate of the scene",
         items=[("0", "Scene", "", 0), ("24", "24", "", 1), ("30", "30", "", 2), ("60", "60", "", 3)],
         default="0",
     )
@@ -707,7 +708,7 @@ def props_to_settings(props: ProcessProps) -> ExportSettings:  # noqa: CCR001
         lod0_only=keys_props.lod0_only,
     )
     tex_props = props.textures
-    textures = TextureSettings(
+    textures = TextureBakeSettings(
         enabled=tex_props.enabled,
         resolution=_resolution_from_props(tex_props),
         passes={
@@ -725,7 +726,7 @@ def props_to_settings(props: ProcessProps) -> ExportSettings:  # noqa: CCR001
         samples=int(tex_props.samples),
     )
     anim_props = props.animations
-    animations = AnimationSettings(
+    animations = AnimationClipSettings(
         enabled=anim_props.enabled,
         source=anim_props.source,
         clips=_ticked(anim_props.clips, "identifier", anim_props.clips_explicit),

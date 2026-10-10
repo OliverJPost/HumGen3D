@@ -18,14 +18,14 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.object_finding import HUMAN_ID_KEY, ORIGINAL_ID_KEY
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.settings import (
-    AnimationSettings,
+    AnimationClipSettings,
     ExportSettings,
     MeshSettings,
     OutputSettings,
     QualitySettings,
     ShapeKeySettings,
     SkeletonSettings,
-    TextureSettings,
+    TextureBakeSettings,
 )
 from HumGen3D.human.process.shape_keys import facs_key_names
 from HumGen3D.tests.process.process_helpers import *
@@ -59,7 +59,7 @@ def _key_names(obj):
     return [key.name for key in obj.data.shape_keys.key_blocks] if obj.data.shape_keys else []
 
 
-def _textures(settings: ExportSettings) -> TextureSettings:
+def _textures(settings: ExportSettings) -> TextureBakeSettings:
     textures = settings.textures
     textures.resolution = {key: TEST_RESOLUTION for key in textures.resolution}
     return textures
@@ -190,7 +190,7 @@ def test_level_by_steps(copy, source, tmp_path):
     assert copy.objects.body.name == f"{name}_Body"
     assert copy.objects.body.material_slots[0].material.name == f"{name}_Skin"
 
-    clips = p.prepare_clips(AnimationSettings(enabled=True), source=source, context=bpy.context)
+    clips = p.prepare_clips(AnimationClipSettings(enabled=True), source=source, context=bpy.context)
     assert len(clips) == len(source.animation.actions)
     strips = [strip.action for track in rig.animation_data.nla_tracks for strip in track.strips]
     assert set(strips) == set(clips)

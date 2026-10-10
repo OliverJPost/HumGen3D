@@ -21,7 +21,7 @@ from HumGen3D.human.animation.animation import ACTION_PRESET_PROP, NLA_TRACK_NAM
 from HumGen3D.human.animation.retarget import _channels, original_name
 from mathutils import Vector
 
-from .settings import AnimationSettings
+from .settings import AnimationClipSettings
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -43,7 +43,7 @@ def library_clips(human: "Human", context: bpy.types.Context) -> List[Tuple[str,
 
 
 def library_presets(
-    human: "Human", settings: AnimationSettings, context: bpy.types.Context
+    human: "Human", settings: AnimationClipSettings, context: bpy.types.Context
 ) -> List[str]:
     """The library clips the settings select, all of them for None."""
     presets = [preset for preset, _ in library_clips(human, context)]
@@ -53,14 +53,14 @@ def library_presets(
 
 
 def source_clips(
-    human: "Human", settings: AnimationSettings, context: Optional[bpy.types.Context] = None
+    human: "Human", settings: AnimationClipSettings, context: Optional[bpy.types.Context] = None
 ) -> list:
     """What the settings select to export: actions of the human, or for the
     library source the preset paths.
 
     Args:
         human (Human): Human with the animations, the source or its copy.
-        settings (AnimationSettings): None for `clips` selects every Human
+        settings (AnimationClipSettings): None for `clips` selects every Human
             Generator animation, otherwise the actions with those names.
         context (Optional[bpy.types.Context]): Needed for the library source.
     """
@@ -104,7 +104,7 @@ def clip_names(human: "Human") -> List[Tuple[str, bool]]:
 def prepare_clips(
     copy: "Human",
     source: "Human",
-    settings: AnimationSettings,
+    settings: AnimationClipSettings,
     context: bpy.types.Context,
 ) -> Tuple[List[bpy.types.Action], List[str]]:
     """Gives the processed copy its own actions, fitted to its skeleton.
@@ -117,7 +117,7 @@ def prepare_clips(
     Args:
         copy (Human): The processed copy, skeleton already converted.
         source (Human): The human it was made from.
-        settings (AnimationSettings): Which clips and the root motion.
+        settings (AnimationClipSettings): Which clips and the root motion.
         context (bpy.types.Context): Blender context.
 
     Returns:

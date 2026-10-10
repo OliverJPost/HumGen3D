@@ -64,12 +64,17 @@ def _import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleT
     return module  # noqa
 
 
+# Folders of the add-on that hold no Blender classes: tests, the user docs, the
+# development scripts (which import tools Blender doesn't have) and local
+# virtual environments
+SKIP_DIRS = {".vscode", ".mypy_cache", ".git", "tests", "docs", "scripts", "venv", ".venv", "wheels", "__pycache__"}
+
+
 def get_python_files_from_dir(dir_path: str) -> list[tuple[str, str]]:
-    skip_dirs = (".vscode", ".mypy", ".git", "tests")
     py_files = []
-    for root, _, files in os.walk(dir_path):
-        if any(d in root for d in skip_dirs):
-            continue
+    for root, dirs, files in os.walk(dir_path):
+        # Prune in place so os.walk doesn't descend into the skipped folders
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for f in [f for f in files if f.endswith(".py")]:
             if f != "__init__.py" and f != "setup.py":
                 py_files.append((root, f))
