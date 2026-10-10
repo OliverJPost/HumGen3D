@@ -11,6 +11,7 @@ Human Generator V4 introduces an API first design, where almost every functional
 ##### What can you do with the API?
 - Create new HG humans via Python, using [[Human]]
 - Edit existing HG humans via Python, using [[Human]]
+- Export and process humans via Python, using [[ProcessSettings]] (`human.process`), see [[Process/Python API|Processing humans from Python]]
 - Control the batch generator via Python, using [[BatchHumanGenerator]]
 
 ---

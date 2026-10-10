@@ -68,6 +68,7 @@ Editing the human is divided into these sections. Click on these links to see th
 
 
 ## Finalising your human
-Once you're finished editing, you might want to have a look at these tutorials:
-- [[How do I export to another software|Exporting the human]]
-- etc.
+Once you're finished editing, you might want to have a look at these guides:
+- [[Process/Overview|Exporting the human]] to Unity, Unreal Engine, Godot or any other program, or making a lightweight baked copy for rendering
+- [[Batch/Overview|Generating many humans at once]] with the batch generator
+- [[Custom content/Overview|Saving your human]] as a starting human, or saving its clothing, hairstyle or pose to the library

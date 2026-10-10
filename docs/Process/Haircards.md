@@ -1,15 +1,59 @@
+---
+permalink: haircards
+description: Convert the particle hair of Human Generator characters to textured hair cards for export to Unity, Unreal, Godot and other programs, and choose how many triangles they get.
+---
+> [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!info] Part of the [[Process/Overview|Processing System]]
+# Haircards
 
-Want to export the hair or want something lightweight to use inside Blender? Haircards are regular textured meshes instead of hair particle systems. Human Generator can automatically generate haircards.
+```compare
+before: compare_hair_particles.webp | Particle hair
+after: compare_hair_cards.webp | Hair cards
+```
 
->[!note] Quality of haircards
->The haircards are automatically generated. Consistently high quality haircards are only possible with manual modelling, the automatic haircards of Human Generator are of varying level of quality. Some hairstyles, for example the afro hairstyles, are very challenging for the haircards system and have low quality results. 
+The hair, eyebrows, eyelashes and beards of Human Generator are particle hair: thousands of strands that only Blender can render. No file format carries them. **Haircards** replaces every hair system by a mesh of textured, transparent cards that follows the strands, the way hair is made for games. The cards are skinned to the head, so they move with the character.
 
+![[process_haircards.webp|520]]
 
-![[Screenshot_Blender_000198.webp]]
-1. **Quality selector**: The choice you make here determines how many individual haircards are generated and how smooth their curves are. For the best performance choose a lower quality, but the closer you get the higher quality you need.
-2. **Face hair**: As of writing this guide the haircards for facial hair are of very low quality, and are therefore disabled by default.
+You get one mesh per hair type (*Hair*, *Eyebrows*, *Eyelashes*, *FaceHair*), each with two parts: a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
 
->[!note] Baking 
->Want to bake the textures of the haircards? See [[Texture baking]]
+## Quality
+
+The quality sets the triangle budget of the cards. The thumbnails show what you get; the triangle count next to *Hair* is for the hairstyle of the selected human.
+
+| Quality | Scalp hair | Face hair (eyebrows, lashes, beard) | Use it for |
+| --- | --- | --- | --- |
+| ![[haircards_ultra.webp\|64]] **Ultra** | up to 24,000 triangles | up to 10,000 | Hero characters seen up close |
+| ![[haircards_high.webp\|64]] **High** | up to 12,000 | up to 7,000 | The default, most characters |
+| ![[haircards_medium.webp\|64]] **Medium** | up to 7,000 | up to 5,000 | Secondary characters |
+| ![[haircards_low.webp\|64]] **Low** | up to 4,500 | up to 3,500 | Crowds, distant LOD levels |
+| ![[haircards_haircap_only.webp\|64]] **Haircap** | only the haircap texture on the skin, no cards | | Mobile, the last LOD level |
+
+With more than one [[Optimize Meshes|LOD level]] every level has its own quality, and its own hair card textures, as the layout of the cards changes with the quality.
+
+> [!note] Automatic hair cards
+> The cards are generated from the strands. Hand-made hair cards will always look better, and some hairstyles, like afros and very curly styles, are hard for the generator and come out rough. Check the result in Blender with *Keep copy in this file* before you commit to a hairstyle for a hero character.
+
+## In the engine
+
+The alpha of the cards is the transparency between the strands. Two things to set on the hair materials in the other program, if its importer doesn't do it:
+
+- Use an **alpha clip / cutout** material (alpha scissor in Godot, masked in Unreal, Alpha Clipping in Unity), not blended transparency, so the cards sort correctly.
+- Make the material **two-sided**, as the cards are single planes.
+
+Keep the texture format at **PNG**: JPEG has no alpha channel, and the tab warns you when both are chosen. By default the alpha is packed into the alpha channel of the color texture, as engines expect; see [[Bake Textures]].
+
+## When the section is off
+
+The particle hair is not converted. For a file export that means a bald character, and the tab warns you about it. Turn it off for a render copy that stays in Blender, where the particle hair renders fine and looks better.
+
+> [!tip]- Python API - Hair cards
+> ```python
+> settings.haircards.enabled = True
+> settings.lods[0].haircards = "medium"   # "ultra", "high", "medium", "low", "haircap_only"
+> ```
+> To convert the hair of a human in place (on a `human.duplicate()`, the particle hair is removed):
+> ```python
+> cards = human.process.convert_to_haircards("high")
+> ```
+> See [[ProcessSettings#convert_to_haircards]] and, for one hair type at a time, [[RegularHairSettings#convert_to_haircards]].
