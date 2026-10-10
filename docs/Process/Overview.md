@@ -53,7 +53,7 @@ That is all most people need. The rest of this guide explains what the sections 
     - [[Skeleton]]: turn the rig into a clean game skeleton with the bone names and rest pose the engine expects.
     - [[Shape Keys]]: choose which shape keys stay as blend shapes, and which are baked in or removed.
     - [[Bake Textures]]: bake the skin, eye, hair and clothing materials to texture maps, packed the way the engine expects.
-    - [[Animations]]: export the animations of the human or clips from the library, fitted to the new skeleton. Experimental, hidden until you turn it on in the preferences.
+    <!-- - [[Animations]]: export the animations of the human or clips from the library, fitted to the new skeleton. -->
     - [[Scripts]]: run your own Python scripts at any point of the process.
 5. **Name and Folder**. The name of the files and the prefix of every object, material and texture (`{name}` is the name of the human), and where the files go. See [[Output]].
 6. **Process button**. Processes every selected human. Above it you see how many humans are selected, below it the checks that found something.
@@ -63,7 +63,7 @@ That is all most people need. The rest of this guide explains what the sections 
 
 ## What happens when you press the button
 
-Each selected human is processed one after the other, with the same settings. For every LOD level the add-on makes a fresh copy of the human and runs the sections on it, in this order: shape keys, hair cards, eyes and teeth, texture baking, mesh reduction, skeleton, naming. Then the levels are joined under one skeleton, the animation clips are prepared, and the file is written. The copy is removed again afterwards, unless the output is *In this file* or you asked to keep it.
+Each selected human is processed one after the other, with the same settings. For every LOD level the add-on makes a fresh copy of the human and runs the sections on it, in this order: shape keys, hair cards, eyes and teeth, texture baking, mesh reduction, skeleton, naming. Then the levels are joined under one skeleton<!--, the animation clips are prepared--> and the file is written. The copy is removed again afterwards, unless the output is *In this file* or you asked to keep it.
 
 > [!note]- How long does it take?
 > Texture baking is the slow part: every material is baked pass by pass. With the default 2k textures a human with an outfit takes around a minute on a fast computer, more with hair cards and more LOD levels. Lower the resolution in [[Bake Textures]] for quick test exports, and raise it again for the final one.

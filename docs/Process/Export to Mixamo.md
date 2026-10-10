@@ -23,7 +23,10 @@ What the recipe sets, and why:
 | [[Output]] | FBX, textures in a `Textures` folder | Mixamo and most tools read FBX |
 | [[Skeleton]] | **Mixamo** names, **T-pose**, no root bone | The Mixamo skeleton, as its animations are made for it |
 | [[Bake Textures]] | Separate maps, **OpenGL** normal map, PNG | Plain maps that every program reads |
+
+<!-- hidden while the Animations section is experimental:
 | [[Animations]] | One file per clip | The Mixamo clips you download come one per file too |
+-->
 
 ## On mixamo.com
 

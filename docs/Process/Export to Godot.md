@@ -1,5 +1,5 @@
 ---
-description: How to export a Human Generator character from Blender to Godot 4 as a glTF (.glb) with a humanoid skeleton, baked textures, blend shapes and animations, and how to set it up in Godot.
+description: How to export a Human Generator character from Blender to Godot 4 as a glTF (.glb) with a humanoid skeleton, baked textures and blend shapes, and how to set it up in Godot.
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
@@ -8,13 +8,13 @@ description: How to export a Human Generator character from Blender to Godot 4 a
 
 # Export to Godot
 
-The **Godot** recipe of the Process tab makes one `.glb` file with everything inside: the humanoid skeleton, the meshes, the blend shapes, the textures and the animation clips.
+The **Godot** recipe of the Process tab makes one `.glb` file with everything inside: the humanoid skeleton, the meshes, the blend shapes and the textures<!-- and the animation clips-->.
 
 ## In Blender
 
 1. Select the human, open the **Process** tab and choose the **Godot** recipe.
 2. Set the **Folder** to a folder inside your Godot project, so Godot imports the file straight away.
-3. Turn on [[Animations]] for clips, and press **Export to glTF Binary**.
+3. Press **Export to glTF Binary**.<!-- Turn on [[Animations]] for clips first. -->
 
 What the recipe sets, and why:
 
@@ -24,14 +24,17 @@ What the recipe sets, and why:
 | [[Skeleton]] | **Humanoid** names, **T-pose**, root bone `Root` | Godot's humanoid skeleton profile maps the bones by name |
 | [[Bake Textures]] | **Metallic-Roughness** packing, **OpenGL** normal map, PNG | What glTF materials define and Godot expects |
 | [[Shape Keys]] | Face rig, expressions and correctives kept, sliders baked | Blend shapes for the face |
+
+<!-- hidden while the Animations section is experimental:
 | [[Animations]] | Clips in the mesh file, root motion on the root bone | The clips become an AnimationPlayer in the imported scene |
+-->
 
 ## In Godot
 
 1. **Import**: with the file inside the project, Godot imports `Jake.glb` as a scene. Drag it into your scene, or open it with *Advanced Import Settings* to change how it is imported.
 2. **Skeleton**: to use the character with animations made for other humanoid characters, open the import settings, select the *Skeleton3D* and under *Retarget* set *Bone Map* to a new `BoneMap` with the `SkeletonProfileHumanoid` profile. The bones are matched automatically, as they carry the profile's names.
 3. **Materials**: the materials come in with the metallic-roughness textures assigned. The hair materials should import with *Alpha Scissor* transparency; if not, set *Transparency* to *Alpha Scissor* and *Cull Mode* to *Disabled* so both sides of the cards show.
-4. **Animation**: the clips are in the *AnimationPlayer* of the imported scene. For root motion, set the *Root Motion Track* of the AnimationPlayer or AnimationTree to the `Root` bone of the skeleton.
+   <!-- 4. **Animation**: the clips are in the *AnimationPlayer* of the imported scene. For root motion, set the *Root Motion Track* of the AnimationPlayer or AnimationTree to the `Root` bone of the skeleton. -->
 5. **Blend shapes**: the face blend shapes are on the body's *MeshInstance3D* and can be animated or driven from a script.
 
 #### Troubleshooting

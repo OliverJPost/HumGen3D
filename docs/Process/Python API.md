@@ -47,11 +47,14 @@ settings.skeleton.rest_pose = "t_pose"
 settings.shape_keys.body = "keep"
 settings.textures.set_resolution_tier("1k")
 settings.textures.workflow = "metallic_roughness"
-settings.animations.enabled = True
-settings.animations.source = "library"
 ```
 
-Or start from the defaults with `ExportSettings()` and set what you need. The classes per section: [[OutputSettings]], [[QualitySettings]], [[MeshSettings]], [[HaircardSettings]], [[SkeletonSettings]], [[ShapeKeySettings]], [[TextureBakeSettings]], [[AnimationClipSettings]] and [[ScriptsSettings]]. `settings.to_dict()` and `ExportSettings.from_dict()` turn them into plain data, `settings.save_recipe("MyGame", "Hero")` saves them as a recipe for the interface.
+<!-- hidden while the Animations section is experimental; the example also had:
+settings.animations.enabled = True
+settings.animations.source = "library"
+-->
+
+Or start from the defaults with `ExportSettings()` and set what you need. The classes per section: [[OutputSettings]], [[QualitySettings]], [[MeshSettings]], [[HaircardSettings]], [[SkeletonSettings]], [[ShapeKeySettings]], [[TextureBakeSettings]]<!--, [[AnimationClipSettings]]--> and [[ScriptsSettings]]. `settings.to_dict()` and `ExportSettings.from_dict()` turn them into plain data, `settings.save_recipe("MyGame", "Hero")` saves them as a recipe for the interface.
 
 ## Check before running
 
@@ -131,11 +134,15 @@ copy.process.bake_textures(settings.textures, folder="/path/to/textures")
 copy.process.set_quality(QualitySettings.from_tier("medium"))
 copy.process.convert_to_game_rig(settings=SkeletonSettings(names="humanoid", rest_pose="t_pose"))
 copy.process.apply_names()
-clips = copy.process.prepare_clips(source=human)
-copy.export.write("/path/to/Jake", settings.output, animation="strips")
+copy.export.write("/path/to/Jake", settings.output)
 # or, to keep it in the file as a frozen result:
 copy.process.mark_as_processed(human)
 ```
+
+<!-- hidden while the Animations section is experimental; before the export the example also had:
+clips = copy.process.prepare_clips(source=human)
+copy.export.write("/path/to/Jake", settings.output, animation="strips")
+-->
 
 The order matters and is the one `run` uses: shape keys first, so the later steps carry only the keys that stay; hair cards, game eyes and teeth before baking, as they change the materials; baking before the meshes are reduced; the skeleton after the meshes; names last. Each step that changes the human for good refuses to run twice (`copy.process.has_haircards`, `was_baked`, `has_game_rig`, …). For one file with several LOD levels, make one copy per level and join them with [[ProcessSettings#merge_levels]].
 
