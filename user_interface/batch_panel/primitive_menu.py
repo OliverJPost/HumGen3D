@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy  # type:ignore
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -14,9 +15,7 @@ class VIEW3D_MT_HG_Marker_Add(bpy.types.Menu):
         layout = self.layout
         layout.operator_context = "INVOKE_REGION_WIN"
 
-        layout.operator(
-            "wm.url_open", text="Tutorial", icon="HELP"
-        ).url = "https://publish.obsidian.md/human-generator/Using+the+batch+mode/Using+the+batch+generator"  # noqa: E501
+        layout.operator("wm.url_open", text="Tutorial", icon="HELP").url = docs_url("batch")
 
         layout.separator()
 

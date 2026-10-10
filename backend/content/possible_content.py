@@ -9,8 +9,20 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from bpy.types import Object  # type:ignore
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.icons.icons import get_hg_icon
+
+# Page of the documentation about saving each category of custom content
+CONTENT_DOCS = {
+    "starting_human": "custom-content/custom-starting-humans",
+    "outfit": "custom-content/custom-clothing",
+    "footwear": "custom-content/custom-clothing",
+    "hair": "custom-content/custom-hairstyle",
+    "pose": "custom-content/custom-pose",
+    "key": "custom-content/custom-shape-keys",
+    "texture": "custom-content/custom-texture-sets",
+}
 
 
 class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
@@ -49,16 +61,9 @@ class HG_UL_POSSIBLE_CONTENT(bpy.types.UIList):
         operator.category = item.category
         rr = right_row.row(align=True)
         rr.alert = False
-        categ_tag = (
-            "human"
-            if item.category == "starting_human"
-            else "clothing"
-            if item.category in ("outfit", "footwear")
-            else item.category
+        rr.operator("wm.url_open", text="", icon="HELP").url = docs_url(
+            CONTENT_DOCS.get(item.category, "custom-content")
         )
-        rr.operator(
-            "wm.url_open", text="", icon="HELP"
-        ).url = f"https://help.humgen3d.com/custom{categ_tag}"
         if item.category == "key":
             operator.key_name = item.name
 

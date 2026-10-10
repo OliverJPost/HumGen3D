@@ -4,6 +4,7 @@
 
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
 from HumGen3D.backend.preferences.preference_func import get_prefs
+from HumGen3D.common.documentation import docs_url
 from HumGen3D.user_interface.icons.icons import get_hg_icon
 
 
@@ -78,7 +79,7 @@ class CpackEditingSystem:
 
         sidebar.operator(
             "wm.url_open", text="Tutorial", icon="URL"
-        ).url = "https://help.humgen3d.com/editor"
+        ).url = docs_url("custom-content/exporting-your-content-as-a-pack")
 
         # Metadata header
         titlebar = sidebar.box().row()

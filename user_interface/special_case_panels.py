@@ -1,5 +1,6 @@
 import bpy
 from HumGen3D.common import find_original_rig, is_legacy, is_processed
+from HumGen3D.common.documentation import draw_docs_button
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.panel_functions import draw_paragraph
 
@@ -60,6 +61,7 @@ class HG_PT_PROCESSED(bpy.types.Panel):
             + "process it again."
         )
         draw_paragraph(col, message)
+        draw_docs_button(col, "process/output#processed-copies", text="Learn more", emboss=False)
 
         col.separator()
 

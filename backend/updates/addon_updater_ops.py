@@ -26,6 +26,7 @@ import traceback
 
 import bpy
 from HumGen3D import get_prefs
+from HumGen3D.common.documentation import docs_url
 from bpy.app.handlers import persistent
 
 from .. import hg_log
@@ -980,7 +981,7 @@ def update_settings_ui(self, context, element=None):
     row.scale_y = 1.5
     row.operator(
         "wm.url_open", text="Updater tutorial", icon="HELP"
-    ).url = "https://help.humgen3d.com/update"
+    ).url = docs_url("faq/how-to-update-hg")
     row.operator(
         "wm.url_open", text="Open GitHub repository", icon="URL"
     ).url = "https://github.com/oliverjpost/humgen3d"
