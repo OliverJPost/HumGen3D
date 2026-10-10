@@ -27,5 +27,5 @@ Human Generator allows you to extent the default content with new contant you or
 
 >[!note] More types of custom content
 >Besides these types, there are also:
->- Custom scripts (Python), see [[Custom scripts]]
->- Custom process recipes, see [[Process/Overview|The Process Guide]]
+>- Custom scripts (Python) that run when a human is processed, see [[Scripts]]
+>- Custom process recipes, see [[Recipes]]

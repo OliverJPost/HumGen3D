@@ -125,6 +125,152 @@
    "role": "attribute"
   },
   {
+   "name": "AnimationClipSettings",
+   "path": "human.process.settings.AnimationClipSettings",
+   "summary": "Export of the animations on the human, see animations.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 314,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 318,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "source",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 320,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "clips",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 322,
+     "kind": "attribute",
+     "type": "Optional[List[str]]",
+     "readonly": false
+    },
+    {
+     "name": "layout",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 323,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "sample_rate",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 324,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "root_motion",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 325,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.animations"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "AnimationSettings",
    "path": "human.animation.animation.AnimationSettings",
    "summary": "Class for applying animations from the Human Generator library.",
@@ -612,152 +758,6 @@
    "role": "attribute"
   },
   {
-   "name": "AnimationSettings",
-   "path": "human.process.settings.AnimationSettings",
-   "summary": "Export of the animations on the human, see animations.py.",
-   "description": "",
-   "examples": [],
-   "bases": [
-    "Settings"
-   ],
-   "file": "human/process/settings.py",
-   "line": 314,
-   "members": [
-    {
-     "name": "enabled",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 318,
-     "kind": "attribute",
-     "type": "bool",
-     "readonly": false
-    },
-    {
-     "name": "source",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 320,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "clips",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 322,
-     "kind": "attribute",
-     "type": "Optional[List[str]]",
-     "readonly": false
-    },
-    {
-     "name": "layout",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 323,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "sample_rate",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 324,
-     "kind": "attribute",
-     "type": "int",
-     "readonly": false
-    },
-    {
-     "name": "root_motion",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 325,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "to_dict",
-     "summary": "The settings as plain dict, nested settings included.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 166,
-     "kind": "method",
-     "params": [],
-     "returns": {
-      "type": "Dict[str, Any]",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "from_dict",
-     "summary": "Settings from a dict, missing fields get their default.",
-     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 170,
-     "kind": "classmethod",
-     "params": [
-      {
-       "name": "data",
-       "type": "Dict[str, Any]",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "T",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "copy",
-     "summary": "A deep copy.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 179,
-     "kind": "method",
-     "params": [],
-     "returns": {
-      "type": "T",
-      "description": null
-     },
-     "raises": []
-    }
-   ],
-   "accessors": [
-    "human.process.settings.animations"
-   ],
-   "role": "attribute"
-  },
-  {
    "name": "BakeSettings",
    "path": "human.process.bake.BakeSettings",
    "summary": "The `human.process.baking` API of earlier versions.",
@@ -793,7 +793,7 @@
       },
       {
        "name": "settings",
-       "type": "Optional[TextureSettings]",
+       "type": "Optional[TextureBakeSettings]",
        "default": "None",
        "kind": "positional or keyword",
        "description": "Passes, resolution and packing. Defaults to separate maps at 2k."
@@ -2181,6 +2181,13 @@
        "description": "Only the skeleton and its animation, for a file with clips."
       },
       {
+       "name": "sample_rate",
+       "type": "int",
+       "default": "0",
+       "kind": "positional or keyword",
+       "description": "Frames per second the animation is sampled at, 0 for the frame rate of the scene, see `AnimationClipSettings.sample_rate`. FBX only."
+      },
+      {
        "name": "context",
        "type": "C",
        "default": "None",
@@ -2206,7 +2213,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 250,
+     "line": 257,
      "kind": "method",
      "params": [
       {
@@ -2308,6 +2315,13 @@
        "description": ""
       },
       {
+       "name": "bake_anim_step",
+       "type": "float",
+       "default": "1.0",
+       "kind": "positional or keyword",
+       "description": ""
+      },
+      {
        "name": "bake_textures",
        "type": "bool",
        "default": "False",
@@ -2335,7 +2349,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 299,
+     "line": 309,
      "kind": "method",
      "params": [
       {
@@ -2415,7 +2429,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 345,
+     "line": 355,
      "kind": "method",
      "params": [
       {
@@ -2453,7 +2467,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 356,
+     "line": 366,
      "kind": "method",
      "params": [
       {
@@ -2491,7 +2505,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 366,
+     "line": 376,
      "kind": "method",
      "params": [
       {
@@ -2564,7 +2578,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 383,
+     "line": 393,
      "kind": "method",
      "params": [
       {
@@ -2637,7 +2651,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 493,
+     "line": 503,
      "kind": "method",
      "params": [
       {
@@ -2905,7 +2919,7 @@
      "file": "human/process/settings.py",
      "line": 430,
      "kind": "attribute",
-     "type": "TextureSettings",
+     "type": "TextureBakeSettings",
      "readonly": false
     },
     {
@@ -2917,7 +2931,7 @@
      "file": "human/process/settings.py",
      "line": 431,
      "kind": "attribute",
-     "type": "AnimationSettings",
+     "type": "AnimationClipSettings",
      "readonly": false
     },
     {
@@ -11354,7 +11368,7 @@
   {
    "name": "ProcessSettings",
    "path": "human.process.process.ProcessSettings",
-   "summary": "Class for accessing methods and subclasses for processing the human.",
+   "summary": "Processes the human for export, as the Process tab does, or step by step.",
    "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.",
    "examples": [],
    "bases": [],
@@ -11690,7 +11704,7 @@
      "params": [
       {
        "name": "settings",
-       "type": "Optional[TextureSettings]",
+       "type": "Optional[TextureBakeSettings]",
        "default": "None",
        "kind": "positional or keyword",
        "description": "Passes, resolution, packing, normal map direction and samples. Separate maps at 2k by default."
@@ -12146,7 +12160,7 @@
      "params": [
       {
        "name": "settings",
-       "type": "Optional[AnimationSettings]",
+       "type": "Optional[AnimationClipSettings]",
        "default": "None",
        "kind": "positional or keyword",
        "description": "Which clips, from the human or the library, and the root motion. Every clip on the source human by default."
@@ -14933,6 +14947,205 @@
    "role": "attribute"
   },
   {
+   "name": "TextureBakeSettings",
+   "path": "human.process.settings.TextureBakeSettings",
+   "summary": "Baking of the materials to textures, see textures.py.",
+   "description": "",
+   "examples": [],
+   "bases": [
+    "Settings"
+   ],
+   "file": "human/process/settings.py",
+   "line": 273,
+   "members": [
+    {
+     "name": "enabled",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 278,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "resolution",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 279,
+     "kind": "attribute",
+     "type": "Dict[str, int]",
+     "readonly": false
+    },
+    {
+     "name": "passes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 288,
+     "kind": "attribute",
+     "type": "Dict[str, List[str]]",
+     "readonly": false
+    },
+    {
+     "name": "file_format",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 297,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "workflow",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 298,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "normal_map",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 299,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "pack_hair_alpha",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 300,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "samples",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 301,
+     "kind": "attribute",
+     "type": "int",
+     "readonly": false
+    },
+    {
+     "name": "set_resolution_tier",
+     "summary": "Sets the resolution of every texture set to a tier, \"4k\", \"2k\", \"1k\" or \"512\".",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 303,
+     "kind": "method",
+     "params": [
+      {
+       "name": "tier",
+       "type": "str",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "None",
+      "description": null
+     },
+     "raises": [
+      {
+       "type": "ValueError",
+       "description": "If the tier does not exist."
+      }
+     ]
+    },
+    {
+     "name": "to_dict",
+     "summary": "The settings as plain dict, nested settings included.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 166,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "Dict[str, Any]",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "from_dict",
+     "summary": "Settings from a dict, missing fields get their default.",
+     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 170,
+     "kind": "classmethod",
+     "params": [
+      {
+       "name": "data",
+       "type": "Dict[str, Any]",
+       "default": null,
+       "kind": "positional or keyword",
+       "description": ""
+      }
+     ],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    },
+    {
+     "name": "copy",
+     "summary": "A deep copy.",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": "Settings",
+     "file": "human/process/settings.py",
+     "line": 179,
+     "kind": "method",
+     "params": [],
+     "returns": {
+      "type": "T",
+      "description": null
+     },
+     "raises": []
+    }
+   ],
+   "accessors": [
+    "human.process.settings.textures"
+   ],
+   "role": "attribute"
+  },
+  {
    "name": "TextureSettings",
    "path": "human.skin.skin.TextureSettings",
    "summary": "Class for changing the skin texture of the human.",
@@ -15205,209 +15418,11 @@
     "human.skin.texture"
    ],
    "role": "attribute"
-  },
-  {
-   "name": "TextureSettings",
-   "path": "human.process.settings.TextureSettings",
-   "summary": "Baking of the materials to textures, see textures.py.",
-   "description": "",
-   "examples": [],
-   "bases": [
-    "Settings"
-   ],
-   "file": "human/process/settings.py",
-   "line": 273,
-   "members": [
-    {
-     "name": "enabled",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 278,
-     "kind": "attribute",
-     "type": "bool",
-     "readonly": false
-    },
-    {
-     "name": "resolution",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 279,
-     "kind": "attribute",
-     "type": "Dict[str, int]",
-     "readonly": false
-    },
-    {
-     "name": "passes",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 288,
-     "kind": "attribute",
-     "type": "Dict[str, List[str]]",
-     "readonly": false
-    },
-    {
-     "name": "file_format",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 297,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "workflow",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 298,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "normal_map",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 299,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "pack_hair_alpha",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 300,
-     "kind": "attribute",
-     "type": "bool",
-     "readonly": false
-    },
-    {
-     "name": "samples",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 301,
-     "kind": "attribute",
-     "type": "int",
-     "readonly": false
-    },
-    {
-     "name": "set_resolution_tier",
-     "summary": "Sets the resolution of every texture set to a tier, \"4k\", \"2k\", \"1k\" or \"512\".",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 303,
-     "kind": "method",
-     "params": [
-      {
-       "name": "tier",
-       "type": "str",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "None",
-      "description": null
-     },
-     "raises": [
-      {
-       "type": "ValueError",
-       "description": "If the tier does not exist."
-      }
-     ]
-    },
-    {
-     "name": "to_dict",
-     "summary": "The settings as plain dict, nested settings included.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 166,
-     "kind": "method",
-     "params": [],
-     "returns": {
-      "type": "Dict[str, Any]",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "from_dict",
-     "summary": "Settings from a dict, missing fields get their default.",
-     "description": "Unknown keys are logged and ignored, so recipes of a newer version still\nload as far as possible.",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 170,
-     "kind": "classmethod",
-     "params": [
-      {
-       "name": "data",
-       "type": "Dict[str, Any]",
-       "default": null,
-       "kind": "positional or keyword",
-       "description": ""
-      }
-     ],
-     "returns": {
-      "type": "T",
-      "description": null
-     },
-     "raises": []
-    },
-    {
-     "name": "copy",
-     "summary": "A deep copy.",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": "Settings",
-     "file": "human/process/settings.py",
-     "line": 179,
-     "kind": "method",
-     "params": [],
-     "returns": {
-      "type": "T",
-      "description": null
-     },
-     "raises": []
-    }
-   ],
-   "accessors": [
-    "human.process.settings.textures"
-   ],
-   "role": "attribute"
   }
  ],
  "documentedNames": [
   "AgeSettings",
+  "AnimationClipSettings",
   "AnimationSettings",
   "BakeSettings",
   "BaseClothing",
@@ -15466,6 +15481,7 @@
   "SkinLinks",
   "SkinNodes",
   "SkinSettings",
+  "TextureBakeSettings",
   "TextureSettings"
  ]
 }
