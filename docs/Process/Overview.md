@@ -6,13 +6,13 @@ description: Export Human Generator characters from Blender to Unity, Unreal Eng
 ---
 # Export and process humans
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
-The **Process** tab turns a Human Generator human into a game-ready character file (FBX or glTF), a plain mesh file (OBJ, Alembic), or a frozen, lightweight copy inside your Blender file. You pick a *recipe* for the program you are going to use, check the folder, and press one button. Everything else, like baking textures, converting the hair to hair cards and building a clean skeleton with the right bone names, happens automatically.
+The **Process** tab turns a Human Generator human into a game-ready character file (FBX or glTF), a plain mesh file (OBJ, Alembic), or a frozen, lightweight copy inside your Blender file. You pick a *recipe* for the program you are going to use, check the folder, and press one button. The rest, like baking textures, converting the hair to hair cards and building a clean skeleton with the right bone names, happens in Blender; each engine page lists the few things to set on the other side.
 
 > [!info] Your human stays as it is
-> Processing never changes the human you select. The result is always a **processed copy**: a file on disk, or a copy in your scene that you can delete at any time. Keep editing the original, and process it again whenever you like.
+> Processing works on a copy; the human you select is not changed. The result is always a **processed copy**: a file on disk, or a copy in your scene that you can delete at any time. Keep editing the original, and process it again whenever you like.
 
 ## Quickstart
 
@@ -21,7 +21,7 @@ The **Process** tab turns a Human Generator human into a game-ready character fi
 3. Optionally change the **Folder** at the bottom. When left empty, the files go to the `export_results` folder inside your Human Generator content folder.
 4. Press **Export to FBX** (the button is named after the output you chose). A progress bar appears in the status bar at the bottom of Blender; press `Esc` to cancel.
    ![[process_progress.webp|500]]
-5. When it's done, a popup lists the files that were written and the triangle count. **Open folder** takes you there.
+5. When it's done, a popup tells how many files were written, where, and the triangle count. **Open folder** takes you there.
    ![[process_result_popup.webp|300]]
 
 That is all most people need. The rest of this guide explains what the sections do when you want to change something.
@@ -66,7 +66,7 @@ That is all most people need. The rest of this guide explains what the sections 
 Each selected human is processed one after the other, with the same settings. For every LOD level the add-on makes a fresh copy of the human and runs the sections on it, in this order: shape keys, hair cards, eyes and teeth, texture baking, mesh reduction, skeleton, naming. Then the levels are joined under one skeleton<!--, the animation clips are prepared--> and the file is written. The copy is removed again afterwards, unless the output is *In this file* or you asked to keep it.
 
 > [!note]- How long does it take?
-> Texture baking is the slow part: every material is baked pass by pass. With the default 2k textures a human with an outfit takes around a minute on a fast computer, more with hair cards and more LOD levels. Lower the resolution in [[Bake Textures]] for quick test exports, and raise it again for the final one.
+> Texture baking is the slow part: every material is baked pass by pass. A human with an outfit, a hairstyle and a beard takes about one and a half minutes at the default 2k textures on an Apple M1 Max, one minute at 1k and three minutes at 4k; more LOD levels add less, as the levels share most textures. Lower the resolution in [[Bake Textures]] for quick test exports, and raise it again for the final one.
 
 ## Several humans at once
 
@@ -80,9 +80,9 @@ With the *In this file* output (the *Blender render copy* recipe) the result sta
 
 > [!warning] Things to know
 > - The Process tab is not available in the **trial version**.
-> - **Rigify** humans can't get a game skeleton. Their Rigify rig is exported as it is, everything else works.
+> - **Rigify** humans can't get a game skeleton. The skeleton section is skipped and their Rigify rig is exported as it is; the other sections run.
 > - **Humans made before version 4** can't be processed.
-> - The original human is never changed, so there is nothing to undo. If you still want the original gone after exporting, delete it yourself.
+> - The original human is not changed, so there is nothing to undo. If you still want the original gone after exporting, delete it yourself.
 
 ## Guides per program
 

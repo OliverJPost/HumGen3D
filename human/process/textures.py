@@ -639,6 +639,9 @@ def _build_material(  # noqa: CCR001
         _save(image, folder, settings.file_format)
 
     material = bpy.data.materials.new(namer.material(part, per_level))
+    # Hair cards are cut out at half alpha, the haircap fades: the glTF exporter
+    # writes the cards as alphaMode MASK, which engines import as alpha clip
+    clip_alpha = part.endswith("Cards")
     # LOD levels share it on purpose, see share_textures and copy_materials
     material[BAKED_KEY] = True
     material.use_nodes = True
@@ -658,7 +661,9 @@ def _build_material(  # noqa: CCR001
         if pass_id == "base_color":
             links.new(node.outputs["Color"], principled.inputs["Base Color"])  # type:ignore[index]
             if image.alpha_mode == "CHANNEL_PACKED":
-                links.new(node.outputs["Alpha"], principled.inputs["Alpha"])  # type:ignore[index]
+                _link_alpha(nodes, links, node.outputs["Alpha"], principled, clip_alpha)  # type:ignore[index]
+        elif pass_id == "alpha":
+            _link_alpha(nodes, links, node.outputs["Color"], principled, clip_alpha)  # type:ignore[index]
         elif pass_id == "normal":
             normal_node = nodes.new("ShaderNodeNormalMap")
             normal_node.location = (-350, -300)
@@ -668,17 +673,18 @@ def _build_material(  # noqa: CCR001
             else:
                 links.new(node.outputs["Color"], normal_node.inputs["Color"])  # type:ignore[index]
             links.new(normal_node.outputs["Normal"], principled.inputs["Normal"])  # type:ignore[index]
-        elif pass_id in ("roughness", "metallic", "alpha"):
+        elif pass_id in ("roughness", "metallic"):
             links.new(node.outputs["Color"], principled.inputs[PASS_INPUTS[pass_id]])  # type:ignore[index]
         else:
             _link_packed(nodes, links, node, principled, workflow)
 
     if any(image.alpha_mode == "CHANNEL_PACKED" for image in images.values()) or "alpha" in images:
         if bpy.app.version < (4, 3, 0):
-            material.blend_method = "BLEND"
+            material.blend_method = "CLIP" if clip_alpha else "BLEND"
+            material.alpha_threshold = 0.5
             material.shadow_method = "CLIP"
         else:
-            material.surface_render_method = "BLENDED"
+            material.surface_render_method = "DITHERED" if clip_alpha else "BLENDED"
 
     # A material shared by parts, like the one of the teeth, was baked once for
     # all of them; the materials of a shared set all become the one material
@@ -695,14 +701,22 @@ def _build_material(  # noqa: CCR001
     return list(images.values())
 
 
+# Name of the node that flips the green channel of a DirectX normal map for
+# Blender's display. Exporters only find an image linked straight to the Normal
+# Map node, so export.py links around it while the file is written.
+DIRECTX_FLIP_NODE = "directx_flip"
+
+
 def _link_directx_normal(nodes, links, image_node, normal_node) -> None:  # noqa: ANN001
     separate = nodes.new("ShaderNodeSeparateColor")
+    separate.name = separate.label = DIRECTX_FLIP_NODE + "_separate"
     separate.location = (-550, -300)
     invert = nodes.new("ShaderNodeMath")
     invert.operation = "SUBTRACT"
     invert.inputs[0].default_value = 1.0  # type:ignore[index]
     invert.location = (-450, -400)
     combine = nodes.new("ShaderNodeCombineColor")
+    combine.name = combine.label = DIRECTX_FLIP_NODE
     combine.location = (-350, -450)
     links.new(image_node.outputs["Color"], separate.inputs["Color"])  # type:ignore[index]
     links.new(separate.outputs["Red"], combine.inputs["Red"])  # type:ignore[index]
@@ -710,6 +724,23 @@ def _link_directx_normal(nodes, links, image_node, normal_node) -> None:  # noqa
     links.new(invert.outputs[0], combine.inputs["Green"])  # type:ignore[index]
     links.new(separate.outputs["Blue"], combine.inputs["Blue"])  # type:ignore[index]
     links.new(combine.outputs["Color"], normal_node.inputs["Color"])  # type:ignore[index]
+
+
+def _link_alpha(nodes, links, socket, principled, clip: bool) -> None:  # noqa: ANN001
+    """Links an alpha output to the Principled alpha, through a round for cards.
+
+    The Math Round is what Blender's glTF exporter reads as alpha clipping at
+    0.5 (alphaMode MASK); without it the material is exported as BLEND.
+    """
+    if not clip:
+        links.new(socket, principled.inputs["Alpha"])  # type:ignore[index]
+        return
+    clip_node = nodes.new("ShaderNodeMath")
+    clip_node.operation = "ROUND"
+    clip_node.name = clip_node.label = "alpha_clip"
+    clip_node.location = (-200, -450)
+    links.new(socket, clip_node.inputs[0])  # type:ignore[index]
+    links.new(clip_node.outputs[0], principled.inputs["Alpha"])  # type:ignore[index]
 
 
 def _link_packed(nodes, links, image_node, principled, workflow: str) -> None:  # noqa: ANN001

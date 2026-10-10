@@ -3,7 +3,7 @@ description: How to export a Human Generator character from Blender to Unreal En
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Export to Unreal Engine
@@ -30,15 +30,23 @@ What the recipe sets, and why:
 
 ## In Unreal Engine
 
-1. **Import**: drag `SK_Jake.fbx` into the Content Browser. In the FBX Import Options keep *Skeletal Mesh* on, leave *Skeleton* empty to create one, and turn on **Import Morph Targets** for the blend shapes (it is off by default). The textures are imported along with the mesh.
-2. **Materials**: a material per part is created with the base color and normal map connected. The ORM texture needs wiring once: open the material, add `T_Jake_Body_ORM` with *sRGB* off, and connect **R to Ambient Occlusion, G to Roughness, B to Metallic**.
+Tested with Unreal Engine 5.8 and Blender 5.1: the skeletal mesh imports at 176 cm with the Mannequin bone names, 81 morph targets, and a material per part with the base color and normal map connected.
+
+1. **Import**: drag `SK_Jake.fbx` into the Content Browser. Unreal 5.4 and later import it through Interchange: keep *Skeletal Mesh* on, leave *Skeleton* empty to create one, and the morph targets come along. In the legacy FBX importer, turn on **Import Morph Targets** (it is off there). The textures in the `Textures` folder next to the file are imported along with the mesh.
+2. **Materials**: a material instance per part is created with the base color and normal map connected. The ORM texture needs wiring once: open the material, add `T_Jake_Body_ORM` with *sRGB* off, and connect **R to Ambient Occlusion, G to Roughness, B to Metallic**.
 3. **Hair**: set the hair materials to *Masked* blend mode, connect the alpha channel of the color texture to *Opacity Mask*, and make them *Two Sided*.
    <!-- 4. **Animation**: import `SK_Jake_Animations.fbx` onto the skeleton that was created; every take becomes an Animation Sequence. Animations made for the Mannequin retarget with the IK Retargeter, the bone names and A-pose make the chains line up. -->
+
+> [!feedback] Did Unreal import it like this?
+> These steps are what we see in Unreal Engine 5. If your import differs, or a step is missing, we want to know which one, and your engine version. [Tell us](https://humgen3d.com/feedback/process?page=unreal&step=import).
 
 #### Troubleshooting
 
 - **The character is tiny or huge**: the units. The recipe exports centimeters; check that *Units* in the [[Skeleton]] section is still *Centimeters* and the import scale is 1.
-- **No morph targets**: *Import Morph Targets* was off in the import dialog. Reimport with it on.
+- **No morph targets**: the legacy FBX importer has *Import Morph Targets* off by default. Reimport with it on.
 - **Roughness and metallic look wrong**: the ORM texture is not wired, or has sRGB on. See step 2.
 - **The skin looks pressed in**: the normal map direction, Unreal expects DirectX (Y−).
 - **The hair is solid**: the hair material needs the Masked blend mode, see step 3, and PNG textures.
+
+> [!feedback] A problem that is not listed?
+> Tell us what you saw and what you expected. [Tell us](https://humgen3d.com/feedback/process?page=unreal&step=troubleshooting).

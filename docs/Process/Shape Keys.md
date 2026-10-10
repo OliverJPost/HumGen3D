@@ -4,7 +4,7 @@ description: Choose which shape keys of a Human Generator character are exported
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Shape Keys
@@ -38,7 +38,7 @@ A kept group shows a list of its keys, *12 of 54 keys*. Open it and untick the k
 
 #### Only on LOD0
 
-With more than one [[Optimize Meshes|LOD level]], the kept keys are only on the first level. The lower levels get their values baked in, as engines generally only blend the closest level.
+With more than one [[Optimize Meshes|LOD level]], the kept keys are only on the first level. The lower levels get the sliders baked in and the face rig, expressions and correctives removed, as engines generally only blend the closest level.
 
 ## Keys driven by bones
 
@@ -46,7 +46,10 @@ The face rig and the correctives are driven by bones in Blender: bend the arm an
 
 - Drive them in the engine, with a script or a blueprint that sets the blend shape weight from the bone rotation.
 - Animate them directly: face capture tools (ARKit and others) set the FACS blend shapes themselves, which is the normal way to use the face rig in a game.
-- *Remove* the correctives, as the Unreal recipe does. The joints deform a bit less nicely, which is rarely visible on a game character.
+- *Remove* the correctives, as the Unreal recipe does. The joints deform a bit less nicely, which shows most at the shoulders and elbows up close.
+
+> [!feedback] Which face capture tool did you use?
+> Whether its blend shape names matched the face rig, and what you had to rename. [Tell us](https://humgen3d.com/feedback/process?page=shape-keys&step=driven-keys).
 
 ## When the section is off
 

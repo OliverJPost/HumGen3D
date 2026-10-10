@@ -95,7 +95,7 @@ HAIRCARD_QUALITIES = [
     ("high", "High", "Up to 12,000 triangles for the scalp hair, 7,000 for face hair", 0),
     ("medium", "Medium", "Up to 7,000 triangles for the scalp hair, 5,000 for face hair", 2),
     ("low", "Low", "Up to 4,500 triangles for the scalp hair, 3,500 for face hair", 3),
-    ("haircap_only", "Haircap", "Only a hair texture on the skin, no cards", 4),
+    ("haircap_only", "Haircap only", "Only a hair texture on the skin, no cards", 4),
 ]
 
 
@@ -471,21 +471,16 @@ class GltfProps(bpy.types.PropertyGroup):
     draco: BoolProperty(name="Draco compression", default=False)
 
 
-def _make_path_absolute(self, prop_name: str) -> None:  # noqa: ANN001
-    current_path = self[prop_name]
-    if current_path.startswith("//"):
-        self[prop_name] = os.path.abspath(bpy.path.abspath(current_path))
-
-
 class OutputProps(bpy.types.PropertyGroup):
     _register_priority = 3
 
     format: EnumProperty(name="Output", items=_enum(OUTPUT_FORMATS), default="fbx")  # noqa: A003
+    # A "//" path stays relative to the blend file, so a recipe can keep it;
+    # the pipeline resolves it when it runs, see pipeline.output_folder
     folder: StringProperty(
         name="Folder",
         subtype="DIR_PATH",
-        description="Where the files go, the export folder of the content folder when empty",
-        update=lambda self, _: _make_path_absolute(self, "folder"),
+        description="Where the files go, the export folder of the content folder when empty. // is the folder of the blend file",
     )
     name: StringProperty(
         name="Name",

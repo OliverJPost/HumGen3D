@@ -3,7 +3,7 @@ description: Export and process Human Generator characters from Python - run a r
 ---
 > [!info] Part of the [[Process/Overview|Process guide]] and the [[API/Overview|Python API]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Processing humans from Python
@@ -36,6 +36,8 @@ Recipes of your own are loaded by their path inside the `process_templates` fold
 The settings mirror the sections of the tab. Every field has the same name and values as the [[Recipes|recipe file]]:
 
 ```python
+from HumGen3D.human.process.settings import ExportSettings, QualitySettings
+
 settings = ExportSettings.from_recipe("unreal")
 settings.output.format = "glb"                 # see Output
 settings.output.name = "Hero_{name}"
@@ -68,7 +70,7 @@ for warning in check.warnings:
     print("warning:", warning)
 ```
 
-`run` raises a `HumGenException` when the preflight finds an error, or when a step fails; the copies made so far are removed.
+`run` raises a `HumGenException` when the preflight finds an error. When a step fails, its own exception comes through unchanged. In both cases the copies made so far are removed.
 
 ## Several humans
 
@@ -95,7 +97,7 @@ For a modal operator that must keep Blender responsive, `human.process.run_steps
 
 ## From the command line
 
-Blender in background mode, for a build step or a render farm. The add-on must be enabled in the Blender preferences of the machine:
+Blender in background mode, for a build step or a render farm. The add-on must be enabled in the Blender preferences of the machine. Tested with Blender 5.1: the script below exports a dressed human with hair cards to glb in about a minute, textures baked included:
 
 ```bash
 blender -b characters.blend --python export_characters.py
@@ -120,6 +122,9 @@ for rig in find_multiple_in_list(bpy.context.scene.objects):
 > [!info] Passing context
 > As everywhere in the API, `context` is optional and `bpy.context` is used when you leave it out. Inside an operator or an add-on of your own, pass the context you were given. See [[API/Overview#Passing context]].
 
+> [!feedback] Did it run in background mode?
+> The command, the Blender version and the console output, when it did not. [Tell us](https://humgen3d.com/feedback/process?page=python-api&step=command-line).
+
 ## The single steps
 
 `run` is a sequence of steps, each a method of [[ProcessSettings]] that takes the matching section of the settings, or plain arguments. You can call them yourself, for example to make a game-ready copy without exporting it, or to insert something between two steps. The steps change the human they are called on and can't be undone, so call them on a duplicate:
@@ -134,7 +139,7 @@ copy.process.bake_textures(settings.textures, folder="/path/to/textures")
 copy.process.set_quality(QualitySettings.from_tier("medium"))
 copy.process.convert_to_game_rig(settings=SkeletonSettings(names="humanoid", rest_pose="t_pose"))
 copy.process.apply_names()
-copy.export.write("/path/to/Jake", settings.output)
+copy.export.write("/path/to/Jake", settings.output)  # a file format; "in_file" raises
 # or, to keep it in the file as a frozen result:
 copy.process.mark_as_processed(human)
 ```
@@ -144,7 +149,7 @@ clips = copy.process.prepare_clips(source=human)
 copy.export.write("/path/to/Jake", settings.output, animation="strips")
 -->
 
-The order matters and is the one `run` uses: shape keys first, so the later steps carry only the keys that stay; hair cards, game eyes and teeth before baking, as they change the materials; baking before the meshes are reduced; the skeleton after the meshes; names last. Each step that changes the human for good refuses to run twice (`copy.process.has_haircards`, `was_baked`, `has_game_rig`, …). For one file with several LOD levels, make one copy per level and join them with [[ProcessSettings#merge_levels]].
+The order matters and is the one `run` uses: shape keys first, so the later steps carry only the keys that stay; hair cards, game eyes and teeth before baking, as they change the materials; baking before the meshes are reduced; the skeleton after the meshes; names last. The steps with a `has_*` or `was_*` property (hair cards, baking, the game rig, the T-pose) refuse to run twice; the other steps run again. For one file with several LOD levels, make one copy per level and join them with [[ProcessSettings#merge_levels]].
 
 Two more steps exist for scripts: [[ProcessSettings#apply_modifiers]] applies modifiers while keeping the shape keys, which Blender itself refuses, and [[ProcessSettings#remove_hidden_skin]] deletes the body under the clothing. To write a human to a file without any processing, use [[ExportBuilder]] (`human.export.to_fbx`, `to_glb`, `to_gltf_separate`, `to_obj`, `to_abc`).
 
@@ -158,3 +163,6 @@ copy.process.settings            # the ExportSettings it was made with, None oth
 
 > [!example] Scripts in the interface
 > If you want your code to run as part of a recipe that others use from the Process tab, write it as a [[Scripts|script]]: a file with a `main(context, human)` function that runs at a stage of the process.
+
+> [!feedback] Something missing from the API?
+> A step you had to work around, or a setting the recipe cannot hold. [Tell us](https://humgen3d.com/feedback/process?page=python-api&step=api).

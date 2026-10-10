@@ -27,6 +27,7 @@ from HumGen3D.backend.properties.process_props import (
     refresh_clips,
     settings_to_props,
 )
+from HumGen3D.common import documentation
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
 from HumGen3D.human.process import operators as process_operators
@@ -254,10 +255,17 @@ def test_init_operator():
     assert props.lods
 
 
-def test_absolute_folder(props):
-    props.output.folder = "//exports"
+def test_relative_folder_survives(props):
+    """A folder relative to the blend file stays as typed, so a recipe keeps it."""
+    props.output.folder = "//export"
+    assert props.output.folder == "//export"
+    settings = props_to_settings(props)
+    assert settings.output.folder == "//export"
+    settings_to_props(props, settings)
+    assert props.output.folder == "//export"
+    assert os.path.isabs(pipeline.output_folder(settings)), "Resolved when it runs"
+    settings_to_props(props, ExportSettings.from_recipe("unity"))
     assert not props.output.folder.startswith("//")
-    assert os.path.isabs(props.output.folder)
 
 
 # Operators of the tab
@@ -283,6 +291,12 @@ def test_save_recipe_operator(props, content_folder):
     result = bpy.ops.hg3d.save_process_template(name="Villain", new_or_existing="existing", existing_groups="Team")
     assert result == {"FINISHED"}
     assert (content_folder / "process_templates" / "Team" / "Villain.json").is_file()
+    # The overwrite warning of the dialog: only a user recipe in the chosen group
+    assert process_operators.recipe_exists("Team", "Hero")
+    assert process_operators.recipe_exists("Team", " Villain ")
+    assert not process_operators.recipe_exists("Other", "Hero")
+    assert not process_operators.recipe_exists("Team", "Unity"), "A built-in recipe is not overwritten"
+    assert not process_operators.recipe_exists("Team", "")
 
 
 def test_save_recipe_needs_a_name(props, content_folder):
@@ -504,12 +518,16 @@ def _operator_type(idname):
 
 
 class OperatorRecorder:
-    def __init__(self, idname):
+    """Checks the properties set on a drawn operator, records them in its log entry."""
+
+    def __init__(self, idname, values):
         object.__setattr__(self, "_rna", _operator_type(idname))
         object.__setattr__(self, "_idname", idname)
+        object.__setattr__(self, "_values", values)
 
     def __setattr__(self, name, value):
         assert name in self._rna.properties, f"{self._idname} has no property {name}"
+        self._values[name] = value
 
 
 class LayoutRecorder:
@@ -531,7 +549,7 @@ class LayoutRecorder:
             self._log.append((name, args, kwargs))
             self._check(name, args, kwargs)
             if name in ("operator",):
-                return OperatorRecorder(args[0] if args else kwargs["operator"])
+                return OperatorRecorder(args[0] if args else kwargs["operator"], kwargs.setdefault("_props", {}))
             return LayoutRecorder(self._log)
 
         return method
@@ -759,6 +777,49 @@ def test_processed_panel(props, source, context):
         log = []
         PanelStandIn(special_case_panels.HG_PT_PROCESSED, LayoutRecorder(log)).draw(proxy)
         operators = [args[0] for name, args, _ in log if name == "operator"]
-        assert operators == ["hg3d.select_original_human", "hg3d.process_again", "hg3d.load_result_settings"]
+        # The "Learn more" link first, then the buttons
+        expected = ["wm.url_open", "hg3d.select_original_human", "hg3d.process_again", "hg3d.load_result_settings"]
+        if documentation.EARLY_ACCESS:
+            expected.append("wm.url_open")
+            urls = [kwargs["_props"]["url"] for name, args, kwargs in log if args[:1] == ("wm.url_open",)]
+            assert urls[-1] == documentation.feedback_url({"from": "processed_copy"})
+        assert operators == expected
     finally:
         result.delete()
+
+
+def _feedback_links(log):
+    return [
+        kwargs
+        for name, args, kwargs in log
+        if name == "operator" and args[:1] == ("wm.url_open",) and kwargs.get("text") == "Give feedback"
+    ]
+
+
+def test_preflight_feedback_link(props, source, context, monkeypatch):
+    """A feedback link under the preflight lines, only while there are any."""
+    context.scene.HG3D.ui.active_tab = "PROCESS"
+    props.recipe = "unity"
+    rig = source.objects.rig
+    proxy = ContextProxy(rig, [rig])
+    monkeypatch.setattr(process_panel, "EARLY_ACCESS", True)
+
+    props.skeleton.names = "custom"  # No names file: a preflight error
+    log = []
+    PanelStandIn(process_panel.HG_PT_Z_PROCESS_LOWER, LayoutRecorder(log)).draw(proxy)
+    links = _feedback_links(log)
+    assert len(links) == 1
+    assert links[0]["emboss"] is False
+    assert links[0]["_props"]["url"] == documentation.feedback_url({"from": "warnings"})
+
+    monkeypatch.setattr(process_panel, "EARLY_ACCESS", False)
+    log.clear()
+    PanelStandIn(process_panel.HG_PT_Z_PROCESS_LOWER, LayoutRecorder(log)).draw(proxy)
+    assert not _feedback_links(log)
+
+    monkeypatch.setattr(process_panel, "EARLY_ACCESS", True)
+    props.skeleton.names = "humanoid"
+    check = pipeline.preflight(source, props_to_settings(props), context)
+    log.clear()
+    PanelStandIn(process_panel.HG_PT_Z_PROCESS_LOWER, LayoutRecorder(log)).draw(proxy)
+    assert bool(_feedback_links(log)) == bool(check.errors or check.warnings)

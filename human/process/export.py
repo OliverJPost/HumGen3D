@@ -23,6 +23,7 @@ from HumGen3D.common.exceptions import HumGenException
 
 from . import naming
 from .animations import rig_actions
+from .textures import DIRECTX_FLIP_NODE
 from .settings import FILE_FORMATS, OutputSettings
 
 if TYPE_CHECKING:
@@ -172,6 +173,38 @@ def exporter(exporter_func):
 
 
 # NOTE: Do not remove the context arguments, they are used by the decorator
+@contextmanager
+def direct_normal_maps(human: "Human") -> Iterator[None]:
+    """Links DirectX normal maps straight to their Normal Map node while a file is written.
+
+    The baked material flips the green channel through a few nodes so Blender
+    shows a DirectX map right, but the FBX and glTF exporters only pick up an
+    image that is linked directly to the Normal Map node. The chain is put back
+    afterwards, so a kept copy still looks right in Blender.
+    """
+    restore = []
+    for obj in human.objects:
+        if obj.type != "MESH":
+            continue
+        for slot in obj.material_slots:
+            material = slot.material
+            if not material or not material.use_nodes:
+                continue
+            combine = material.node_tree.nodes.get(DIRECTX_FLIP_NODE)
+            separate = material.node_tree.nodes.get(DIRECTX_FLIP_NODE + "_separate")
+            if not combine or not separate or not combine.outputs[0].links or not separate.inputs[0].links:
+                continue
+            image_socket = separate.inputs[0].links[0].from_socket
+            normal_socket = combine.outputs[0].links[0].to_socket
+            material.node_tree.links.new(image_socket, normal_socket)
+            restore.append((material, combine.outputs[0], normal_socket))
+    try:
+        yield
+    finally:
+        for material, flip_socket, normal_socket in restore:
+            material.node_tree.links.new(flip_socket, normal_socket)
+
+
 class ExportBuilder:
     """Writes a human to a file. Every method returns the path that was written.
 
@@ -283,6 +316,19 @@ class ExportBuilder:
         bake_textures: bool = False,
         context: C = None,
     ):
+        with direct_normal_maps(self._human):
+            self._write_fbx(
+                filepath, armature_only, mesh_smooth_type, export_custom_props, triangulate,
+                primary_bone_axis, secondary_bone_axis, axis_up, axis_forward, use_leaf_bones,
+                apply_scale_options, path_mode, embed_textures, animation, bake_anim_step,
+            )
+
+    @staticmethod
+    def _write_fbx(  # noqa: ANN001
+        filepath, armature_only, mesh_smooth_type, export_custom_props, triangulate,
+        primary_bone_axis, secondary_bone_axis, axis_up, axis_forward, use_leaf_bones,
+        apply_scale_options, path_mode, embed_textures, animation, bake_anim_step,
+    ) -> None:
         bpy.ops.export_scene.fbx(
             filepath=filepath,
             use_selection=True,
@@ -453,14 +499,15 @@ class ExportBuilder:
             kwargs["export_draco_mesh_compression_enable"] = True
 
         try:
-            bpy.ops.export_scene.gltf(
-                filepath=filepath,
-                export_format=format,
-                export_copyright=LICENSE_TEXT,
-                export_image_format=img_format,
-                use_active_collection=True,
-                **kwargs,
-            )
+            with direct_normal_maps(self._human):
+                bpy.ops.export_scene.gltf(
+                    filepath=filepath,
+                    export_format=format,
+                    export_copyright=LICENSE_TEXT,
+                    export_image_format=img_format,
+                    use_active_collection=True,
+                    **kwargs,
+                )
         except TypeError as e:
             if str(e) == "Converting py args to operator properties: enum \"GLTF_EMBEDDED\" not found in ('GLB', 'GLTF_SEPARATE')":
                 raise HumGenException("You need to enable glTF Embedded in the 'glTF 2.0 Format' add-on preferences.") from None

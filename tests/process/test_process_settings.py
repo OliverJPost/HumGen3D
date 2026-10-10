@@ -12,6 +12,8 @@ from types import SimpleNamespace
 
 import bpy
 import pytest
+from HumGen3D.common import documentation
+from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.progress import phase, run
 from HumGen3D.human.process import migrate, naming, pipeline, quality
 from HumGen3D.human.process import settings as settings_module
@@ -639,3 +641,80 @@ def test_tracker_weights():
         assert finished.value == 1
     assert fractions == [0.75]
     assert tracker.done == 10
+
+
+# Early access and feedback
+
+
+def test_feedback_url():
+    assert documentation.feedback_url() == documentation.FEEDBACK_URL
+    url = documentation.feedback_url({"from": "result"}, recipe="unity", output="fbx", nothing=None)
+    assert url == documentation.FEEDBACK_URL + "?from=result&recipe=unity&output=fbx"
+    assert documentation.feedback_url(recipe="Team/Hero.json") == documentation.FEEDBACK_URL + "?recipe=Team%2FHero.json"
+
+
+def test_early_access_switch(monkeypatch):
+    log = []
+
+    class Layout:
+        def row(self, **kwargs):
+            log.append("row")
+            return self
+
+        def label(self, **kwargs):
+            log.append("label")
+
+        def operator(self, *args, **kwargs):
+            log.append("operator")
+            return SimpleNamespace()
+
+    monkeypatch.setattr(documentation, "EARLY_ACCESS", False)
+    documentation.draw_early_access(Layout())
+    assert not log, "Nothing is drawn once the system left early access"
+    monkeypatch.setattr(documentation, "EARLY_ACCESS", True)
+    documentation.draw_early_access(Layout(), url=documentation.feedback_url(x=1))
+    assert log == ["row", "label", "operator"]
+
+
+# The name of the result
+
+
+@pytest.mark.parametrize(
+    "human_name, template, expected",
+    [
+        ("Jake Smith.001", "{name}", "Jake_Smith"),
+        ("Jake Smith.001", "{name} Game", "Jake_Smith_Game"),
+        ("Jake", "SK {name}", "SK_Jake"),
+        ("Jake.001", "Hero v2", "Hero_v2"),
+    ],
+)
+def test_result_name(human_name, template, expected):
+    """The file name is cleaned like the datablock names, see naming.clean."""
+    settings = ExportSettings(output=OutputSettings(name=template))
+    assert pipeline.result_name(settings, human_name) == expected
+    assert naming.Namer(settings.output, pipeline.result_name(settings, human_name), 0, 1).rig() == expected
+
+
+# Custom bone names files
+
+
+def test_check_names_file(tmp_path):
+    from HumGen3D.human.process.game_rig import check_names_file
+
+    path = tmp_path / "names.json"
+    path.write_text(json.dumps({"names": {"spine": "Hips", "upper_arm": "{Side}Arm{foo}"}}))
+    with pytest.raises(HumGenException, match=r"'upper_arm'.*\{foo\}"):
+        check_names_file(str(path))
+    path.write_text("{not json")
+    with pytest.raises(HumGenException, match="not valid JSON"):
+        check_names_file(str(path))
+    path.write_text(json.dumps({"sides": {}}))
+    with pytest.raises(HumGenException, match="no 'names'"):
+        check_names_file(str(path))
+    with pytest.raises(HumGenException, match="not found"):
+        check_names_file(str(tmp_path / "none.json"))
+    path.write_text(json.dumps({"names": {"upper_arm": "{Side}Arm_{side}{suffix}"}, "sides": {"L": {"suffix": "_l"}}}))
+    profile = check_names_file(str(path))
+    assert profile["names"]["upper_arm"] == "{Side}Arm_{side}{suffix}"
+    assert profile["sides"]["L"] == {"side": "l", "Side": "Left", "suffix": "_l"}, "The file fills in the generic sides"
+    assert profile["sides"]["R"]["suffix"] == ".R"

@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 # flake8:noqa: F811
 
+import json
 import os
 
 import numpy as np
@@ -289,6 +290,24 @@ def test_game_rig_twice_raises(human, context):
     human.process.convert_to_game_rig(context=context)
     with pytest.raises(HumGenException):
         human.process.convert_to_game_rig(context=context)
+
+
+def test_custom_names_file(human, context, tmp_path):
+    path = tmp_path / "names.json"
+    path.write_text(json.dumps({"names": {"spine": "Root_Hips", "upper_arm": "Arm{suffix}_{Side}_{side}"}}))
+    human.process.convert_to_game_rig(preset="custom", names_file=str(path), context=context)
+    bones = human.objects.rig.data.bones
+    assert "Root_Hips" in bones
+    assert "Arm.L_Left_l" in bones and "Arm.R_Right_r" in bones
+
+
+def test_custom_names_file_unknown_token(human, context, tmp_path):
+    """An unknown token names the bone and the token instead of a bare KeyError."""
+    path = tmp_path / "names.json"
+    path.write_text(json.dumps({"names": {"upper_arm": "{Side}Arm{foo}"}}))
+    with pytest.raises(HumGenException, match=r"'upper_arm'.*\{foo\}"):
+        human.process.convert_to_game_rig(preset="custom", names_file=str(path), context=context)
+    assert not human.process.has_game_rig
 
 
 def test_unknown_preset_raises(human, context):

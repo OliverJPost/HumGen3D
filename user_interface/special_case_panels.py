@@ -1,6 +1,6 @@
 import bpy
 from HumGen3D.common import find_original_rig, is_legacy, is_processed
-from HumGen3D.common.documentation import draw_docs_button
+from HumGen3D.common.documentation import EARLY_ACCESS, draw_docs_button, feedback_url
 from HumGen3D.human.human import Human
 from HumGen3D.user_interface.panel_functions import draw_paragraph
 
@@ -90,4 +90,9 @@ class HG_PT_PROCESSED(bpy.types.Panel):
             row.operator("hg3d.process_again", text="Process again", icon="FILE_REFRESH")
             sub.operator(
                 "hg3d.load_result_settings", text="Load these settings", icon="IMPORT"
+            )
+        if EARLY_ACCESS:
+            col.separator()
+            col.operator("wm.url_open", text="Give feedback", icon="COMMUNITY").url = feedback_url(
+                {"from": "processed_copy"}
             )

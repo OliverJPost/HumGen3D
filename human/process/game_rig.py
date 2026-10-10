@@ -17,6 +17,7 @@ the duplicate the process system makes.
 
 import json
 import os
+import string
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Iterator, Optional
 
@@ -117,18 +118,65 @@ def get_preset(preset: str, names_file: Optional[str] = None) -> dict[str, Any]:
     return PRESETS[preset]
 
 
+# The tokens a bone name template of a names file can use, filled from "sides"
+NAME_TOKENS = ("side", "Side", "suffix")
+
+
 def _load_names_file(path: Optional[str]) -> dict[str, Any]:
     """A custom names profile: the names and sides of a preset, in a user file."""
     if not path or not os.path.isfile(path):
         raise HumGenException(f"Bone names file not found: {path}")
     with open(path, "r") as f:
-        data = json.load(f)
-    if "names" not in data:
-        raise HumGenException(f"Bone names file {path} has no 'names'")
+        try:
+            data = json.load(f)
+        except ValueError as e:
+            raise HumGenException(f"Bone names file {os.path.basename(path)} is not valid JSON: {e}") from e
+    if not isinstance(data, dict) or not isinstance(data.get("names"), dict):
+        raise HumGenException(f"Bone names file {os.path.basename(path)} has no 'names'")
     profile = dict(PRESETS["generic_a"])
     profile["names"] = data["names"]
-    profile["sides"] = data.get("sides", PRESETS["generic_a"]["sides"])
+    # Sides of the file fill in those of the generic preset, so every token has a value
+    generic_sides = PRESETS["generic_a"]["sides"]
+    file_sides = data.get("sides") if isinstance(data.get("sides"), dict) else {}
+    profile["sides"] = {
+        side: {**tokens, **(file_sides.get(side) or {})} for side, tokens in generic_sides.items()
+    }
+    for bone, template in profile["names"].items():
+        _check_name_template(bone, template)
     return profile
+
+
+def check_names_file(path: Optional[str]) -> dict[str, Any]:
+    """Reads and validates a bone names file, see `_load_names_file`.
+
+    Args:
+        path (Optional[str]): Path of the JSON file.
+
+    Returns:
+        dict[str, Any]: The names profile, like a preset.
+
+    Raises:
+        HumGenException: If the file is missing, not valid JSON, has no names
+            or a name uses an unknown token. The message names the bone and
+            the token.
+    """
+    return _load_names_file(path)
+
+
+def _check_name_template(bone: str, template: Any) -> None:
+    """Raises if the name template of a bone uses a token not in `NAME_TOKENS`."""
+    if not isinstance(template, str):
+        raise HumGenException(f"Bone names file: the name of '{bone}' is not a string")
+    try:
+        fields = [field for _, field, _, _ in string.Formatter().parse(template) if field is not None]
+    except ValueError as e:
+        raise HumGenException(f"Bone names file: the name of '{bone}' is not a valid template: {e}") from e
+    allowed = ", ".join("{" + token + "}" for token in NAME_TOKENS)
+    for field in fields:
+        if field not in NAME_TOKENS:
+            raise HumGenException(
+                f"Bone names file: the name of '{bone}' uses unknown token {{{field}}}, allowed are {allowed}"
+            )
 
 
 def preset_for_names(names: str, rest_pose: str = "a_pose") -> str:
@@ -445,10 +493,19 @@ def _new_bone_names(rig: bpy.types.Object, preset_data: dict[str, Any]) -> dict[
         template = names.get(base)
         if not template:
             continue
-        new_name = template.format(**sides[side]) if side else template
+        new_name = _format_name(base, template, sides[side]) if side else template
         if new_name != pose_bone.name:
             new_names[pose_bone.name] = new_name
     return new_names
+
+
+def _format_name(bone: str, template: str, tokens: dict[str, str]) -> str:
+    """The template filled in with the tokens of a side."""
+    try:
+        return template.format(**tokens)
+    except (KeyError, IndexError, ValueError):
+        _check_name_template(bone, template)
+        raise
 
 
 def _free_vertex_group_names(

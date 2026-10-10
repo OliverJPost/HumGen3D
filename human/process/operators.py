@@ -20,15 +20,16 @@ from HumGen3D.backend.properties.process_props import (
     settings_to_props,
 )
 from HumGen3D.common import find_multiple_in_list, find_original_rig
+from HumGen3D.common.documentation import EARLY_ACCESS, feedback_url
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.progress import Steps, phase, run
 from HumGen3D.human.human import Human
 from HumGen3D.human.process import scripts as script_tools
 from HumGen3D.human.process.pipeline import ExportResult, output_folder
 from HumGen3D.human.process.settings import (
+    RECIPE_EXTENSION,
     USER_RECIPE_FOLDER,
     ExportSettings,
-    recipe_items,
 )
 
 
@@ -190,11 +191,21 @@ class HG_OT_PROCESS(bpy.types.Operator):
             lines.extend(result.summary().splitlines())
         folder = os.path.dirname(files[0]) if files else None
         title = "Export completed" if files else "Processing completed"
-        _show_report(title, lines, folder)
+        settings = results[0].settings if results else None
+        feedback = None
+        if EARLY_ACCESS and settings:
+            feedback = feedback_url(
+                {"from": "result"}, recipe=settings.recipe or None, output=settings.output.format
+            )
+        _show_report(title, lines, folder, feedback)
         self.report({"INFO"}, title)
 
 
-def _show_report(title: str, lines: List[str], folder: Optional[str]) -> None:
+def _show_report(
+    title: str, lines: List[str], folder: Optional[str], feedback: Optional[str] = None
+) -> None:
+    """A popup with the result lines, a button to the folder of the files and,
+    in early access, one to give feedback."""
     if bpy.app.background:
         hg_log(title + "\n" + "\n".join(lines))
         return
@@ -205,6 +216,11 @@ def _show_report(title: str, lines: List[str], folder: Optional[str]) -> None:
         if folder:
             self.layout.separator()
             self.layout.operator("wm.path_open", text="Open folder", icon="FILE_FOLDER").filepath = folder
+        if feedback:
+            self.layout.separator()
+            row = self.layout.row()
+            row.label(text="Early access: is this what you expected?")
+            row.operator("wm.url_open", text="Give feedback", icon="COMMUNITY").url = feedback
 
     bpy.context.window_manager.popup_menu(draw, title=title, icon="INFO")
 
@@ -219,6 +235,17 @@ def _existing_groups(self, context):
         if f.is_dir() and not f.name.startswith(".")
     ]
     return groups or [("Saved", "Saved", "")]
+
+
+def recipe_exists(group: str, name: str) -> bool:
+    """Whether the user has a recipe of this name in this group.
+
+    Built-in recipes don't count, they can't be overwritten.
+    """
+    name = name.strip()
+    if not name:
+        return False
+    return os.path.isfile(os.path.join(get_prefs().filepath, USER_RECIPE_FOLDER, group, name + RECIPE_EXTENSION))
 
 
 class HG_OT_SAVE_RECIPE(bpy.types.Operator):
@@ -248,7 +275,7 @@ class HG_OT_SAVE_RECIPE(bpy.types.Operator):
 
         subcol = col.column()
         subcol.scale_y = 1.5
-        subcol.alert = self.name in [label for _, label, _ in recipe_items()]
+        subcol.alert = self._exists()
         subcol.prop(self, "name", text="")
         if subcol.alert:
             subcol.label(text="Will override existing.", icon="ERROR")
@@ -263,15 +290,21 @@ class HG_OT_SAVE_RECIPE(bpy.types.Operator):
         else:
             col.prop(self, "new_group_name", text="Name")
 
+    def _group(self) -> str:
+        """The group folder the recipe goes to."""
+        if self.new_or_existing == "existing":
+            return str(self.existing_groups)
+        return self.new_group_name.strip() or "Saved"
+
+    def _exists(self) -> bool:
+        """Whether saving would overwrite a recipe of the user in the chosen group."""
+        return recipe_exists(self._group(), self.name)
+
     def execute(self, context):
         if not self.name.strip():
             self.report({"ERROR"}, "Give the recipe a name")
             return {"CANCELLED"}
-        group = (
-            self.existing_groups
-            if self.new_or_existing == "existing"
-            else (self.new_group_name.strip() or "Saved")
-        )
+        group = self._group()
         props = context.scene.HG3D.process
         settings = props_to_settings(props)
         path = settings.save_recipe(group, self.name.strip())

@@ -1,14 +1,14 @@
 ---
-description: How to export a Human Generator character from Blender with a Mixamo skeleton, so animations from the Mixamo library play on it without retargeting.
+description: How to export a Human Generator character from Blender with a Mixamo skeleton, the skeleton the animations of the Mixamo library are made for.
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Export to Mixamo
 
-The **Mixamo** recipe of the Process tab makes an FBX with the Mixamo skeleton: the Mixamo bone names, a T-pose and no root bone. Animations from the Mixamo library are made for that skeleton, so they play on the character as they are, and tools that expect a Mixamo rig work with it.
+The **Mixamo** recipe of the Process tab makes an FBX with the Mixamo skeleton: the Mixamo bone names, a T-pose and no root bone. Animations from the Mixamo library are made for that skeleton.
 
 ## In Blender
 
@@ -31,14 +31,20 @@ What the recipe sets, and why:
 ## On mixamo.com
 
 1. **Upload character** and choose the FBX (with embedded textures, or a `.zip` with the FBX and its `Textures` folder).
-2. The skeleton has the Mixamo names and the T-pose, so the library animations play on it directly. Preview any animation on your character and download it, with or without the skin.
-3. Back in Blender, or in your engine, the downloaded clips match the exported skeleton bone for bone.
+2. The skeleton has the Mixamo names and the T-pose that the library animations are made for. Preview any animation on your character and download it, with or without the skin.
+3. Back in Blender, or in your engine, the downloaded clips use the same bone names as the export.
+
+> [!feedback] Did Mixamo accept the character like this?
+> Mixamo changes without notice. If the upload went differently, we want to know what it did. [Tell us](https://humgen3d.com/feedback/process?page=mixamo&step=upload).
 
 > [!tip] Mixamo animations in your engine
 > You don't need Mixamo for the character itself. Export the character with the Mixamo recipe to your engine, download the animations from Mixamo *without skin*, and they play on the character as they share the skeleton.
 
 #### Troubleshooting
 
-- **Mixamo wants to auto-rig the character**: upload the FBX with the skeleton included; if it still offers the auto-rigger, you can let it, the mesh, blend shapes and textures are kept.
+- **Mixamo wants to auto-rig the character**: upload the FBX with the skeleton included; if it still offers the auto-rigger, check afterwards that the blend shapes and textures survived.
 - **The textures are missing after upload**: they were next to the file instead of inside it. Export with *Textures: Embedded*, or zip the FBX with the `Textures` folder.
 - **The hair is solid** in your engine: the hair material needs alpha clipping and PNG textures, see [[Haircards]].
+
+> [!feedback] A problem that is not listed?
+> Tell us what you saw and what you expected. [Tell us](https://humgen3d.com/feedback/process?page=mixamo&step=troubleshooting).
