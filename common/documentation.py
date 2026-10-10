@@ -12,8 +12,8 @@ anchor can follow it: "process/output#processed-copies".
 from typing import Any
 
 DOCS_URL = "https://humgen3d.com/docs/"
-# Where the "Give feedback" buttons of early-access features go
-FEEDBACK_URL = DOCS_URL + "contact-us"
+# Where the "Give feedback" button of the Process tab goes
+FEEDBACK_URL = "https://humgen3d.com/feedback/process"
 
 
 def docs_url(page: str = "") -> str:

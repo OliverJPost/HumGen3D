@@ -4,7 +4,7 @@ description: How to export a Human Generator character from Blender to Unreal En
 > [!info] Part of the [[Process/Overview|Process guide]]
 
 > [!warning] Early access
-> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? [Let us know](https://humgen3d.com/feedback/process), on Discord or privately by mail.
 
 # Export to Unreal Engine
 
