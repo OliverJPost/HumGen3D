@@ -100,6 +100,9 @@ class Namer:
         # Materials and textures of the first level are shared by the other
         # levels, those the other levels have of their own get the suffix too
         self.level_suffix = self.lod_suffix if level > 0 else ""
+        # Particle hair that stays in the file keeps its materials; a file
+        # never carries the hair and would only get its unused materials
+        self.keep_particles = not output.is_file or output.keep_copy
 
     def rig(self) -> str:
         """Name of the armature object and its data."""
@@ -191,7 +194,7 @@ def apply_names(human: "Human", namer: Namer) -> None:
     for obj, part in part_names(human).items():
         _set_name(obj, namer.mesh(part))
         _set_name(obj.data, namer.mesh(part))
-        _remove_unused_slots(obj)
+        _remove_unused_slots(obj, namer.keep_particles)
         # The eyes and hair cards of a level have materials of their own, see
         # textures.share_textures
         per_level = obj == human.objects.eyes or "hg_haircard" in obj
@@ -210,14 +213,25 @@ def _set_name(datablock: bpy.types.ID, name: str) -> None:
         datablock.name = name
 
 
-def _remove_unused_slots(obj: bpy.types.Object) -> None:
+def _remove_unused_slots(obj: bpy.types.Object, keep_particles: bool = True) -> None:
+    """Removes the material slots no face uses.
+
+    With `keep_particles` the slots of the particle systems on the object stay
+    too, and their indices follow the slots that are removed below them.
+    """
     mesh = obj.data
     if not mesh.materials or len(mesh.materials) == 1:
         return
     used = {polygon.material_index for polygon in mesh.polygons}
+    particles = list(dict.fromkeys(psys.settings for psys in obj.particle_systems))
+    if keep_particles:
+        used.update(settings.material - 1 for settings in particles)
     for index in reversed(range(len(mesh.materials))):
         if index not in used and len(mesh.materials) > 1:
             mesh.materials.pop(index=index)
+            for settings in particles:
+                if settings.material - 1 > index:
+                    settings.material -= 1
 
 
 def datablocks(human: "Human") -> List[bpy.types.ID]:
