@@ -3,7 +3,7 @@ description: How to export a Human Generator character from Blender to Godot 4 a
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Export to Godot
@@ -31,11 +31,16 @@ What the recipe sets, and why:
 
 ## In Godot
 
+Tested with Godot 4.7 and Blender 5.1: all 56 bones of the humanoid profile match by name, the hair cards import as Alpha Scissor with both sides shown, and the blend shapes come through.
+
 1. **Import**: with the file inside the project, Godot imports `Jake.glb` as a scene. Drag it into your scene, or open it with *Advanced Import Settings* to change how it is imported.
-2. **Skeleton**: to use the character with animations made for other humanoid characters, open the import settings, select the *Skeleton3D* and under *Retarget* set *Bone Map* to a new `BoneMap` with the `SkeletonProfileHumanoid` profile. The bones are matched automatically, as they carry the profile's names.
-3. **Materials**: the materials come in with the metallic-roughness textures assigned. The hair materials should import with *Alpha Scissor* transparency; if not, set *Transparency* to *Alpha Scissor* and *Cull Mode* to *Disabled* so both sides of the cards show.
+2. **Skeleton**: to use the character with animations made for other humanoid characters, open the import settings, select the *Skeleton3D* and under *Retarget* set *Bone Map* to a new `BoneMap` with the `SkeletonProfileHumanoid` profile. The bones should match without manual mapping, as they carry the profile's names.
+3. **Materials**: the materials come in with the metallic-roughness textures assigned. The hair cards import with *Alpha Scissor* transparency and *Cull Mode* disabled, so both sides of the cards show; the haircap imports as alpha blend with a depth pre-pass.
    <!-- 4. **Animation**: the clips are in the *AnimationPlayer* of the imported scene. For root motion, set the *Root Motion Track* of the AnimationPlayer or AnimationTree to the `Root` bone of the skeleton. -->
 5. **Blend shapes**: the face blend shapes are on the body's *MeshInstance3D* and can be animated or driven from a script.
+
+> [!feedback] Did Godot import it like this?
+> These steps are what we see in Godot 4. If your import differs, or a step is missing, we want to know which one, and your Godot version. [Tell us](https://humgen3d.com/feedback/process?page=godot&step=import).
 
 #### Troubleshooting
 
@@ -43,3 +48,6 @@ What the recipe sets, and why:
 - **The hair is solid**: the hair material needs *Alpha Scissor*, see step 3, and PNG textures.
 - **The eyes look wrong**: the character was exported with the original eyes. Set the eyes to *High* or lower in [[Optimize Meshes]].
 - **Need the textures as files**: choose *glTF + textures* as output; the textures are then written next to the `.gltf` file.
+
+> [!feedback] A problem that is not listed?
+> Tell us what you saw and what you expected. [Tell us](https://humgen3d.com/feedback/process?page=godot&step=troubleshooting).

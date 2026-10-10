@@ -4,7 +4,7 @@ description: Run your own Python scripts while Human Generator processes a chara
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Scripts

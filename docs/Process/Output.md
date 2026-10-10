@@ -3,7 +3,7 @@ description: The output options of the Human Generator Process tab - FBX, glTF, 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Output: file formats, names and folders
@@ -16,7 +16,7 @@ The **Output** dropdown at the top of the Process tab decides what you get. The 
 | --- | --- | --- |
 | **In this file** | A frozen, processed copy of the human in your scene, see [[#Processed copies]] | A lightweight copy to render, a crowd of baked humans, or checking a result before exporting |
 | **FBX** | One `.fbx` file with the skeleton, meshes and blend shapes<!-- and animations--> | Unity, Unreal Engine, Mixamo and most other 3D programs |
-| **glTF Binary (.glb)** | One `.glb` file with the textures inside | Godot, three.js and the web, Blender |
+| **glTF Binary (.glb)** | One `.glb` file with the textures inside | Godot, glTF viewers and the web, Blender |
 | **glTF + textures** | A `.gltf` file with the textures as separate files next to it | The same, when you want to edit the textures |
 | **OBJ (no rig)** | Meshes only. No skeleton, animation or blend shapes | Static props, 3D printing, programs that only read OBJ |
 | **Alembic (no rig)** | A mesh cache. No skeleton | VFX pipelines |
@@ -25,7 +25,7 @@ The sections adjust to the format: a file always needs [[Bake Textures|baked tex
 
 ## Name
 
-The name of the file, and the prefix of every object, material and texture inside it. `{name}` stands for the name of the human, so the default `{name}` exports *Jake* as `Jake.fbx` with meshes like `Jake_Body` and textures like `Jake_Body_BaseColor`. Change it to `Hero_{name}` and you get `Hero_Jake.fbx` and `Hero_Jake_Body`. Spaces and odd characters become underscores.
+The name of the file, and the prefix of every object, material and texture inside it. `{name}` stands for the name of the human, so the default `{name}` exports *Jake* as `Jake.fbx` with meshes like `Jake_Body` and textures like `Jake_Skin_BaseColor`. Change it to `Hero_{name}` and you get `Hero_Jake.fbx` and `Hero_Jake_Body`. Spaces and odd characters become underscores.
 
 ## Folder
 
@@ -41,8 +41,8 @@ How every object, mesh, material and texture in the file is named. Engines show 
 
 | Scheme | Rig | Meshes | Materials | Textures |
 | --- | --- | --- | --- | --- |
-| **Plain** | `Jake` | `Jake_Body`, `Jake_Eyes`, `Jake_Hair`, `Jake_Jeans` | `Jake_Skin`, `Jake_Teeth`, `Jake_Haircap` | `Jake_Body_BaseColor`, `Jake_Body_Normal`, `Jake_Body_ORM` |
-| **Unreal prefixes** | `SK_Jake` | `SK_Jake_Body` | `M_Jake_Skin` | `T_Jake_Body_BC`, `T_Jake_Body_N`, `T_Jake_Body_ORM` |
+| **Plain** | `Jake` | `Jake_Body`, `Jake_Eyes`, `Jake_Hair`, `Jake_Jeans` | `Jake_Skin`, `Jake_Teeth`, `Jake_Haircap` | `Jake_Skin_BaseColor`, `Jake_Skin_Normal`, `Jake_Skin_ORM` |
+| **Unreal prefixes** | `SK_Jake` | `SK_Jake_Body` | `M_Jake_Skin` | `T_Jake_Skin_BC`, `T_Jake_Skin_N`, `T_Jake_Skin_ORM` |
 | **Custom** | Your own templates with the `{name}`, `{part}` and `{pass}` tokens | | | |
 
 With more than one [[Optimize Meshes|LOD level]] the meshes get a `_LOD0`, `_LOD1`, … suffix, as the engines expect.
@@ -65,11 +65,11 @@ The recipes set these for the engine, you rarely need to touch them. **Forward**
 
 #### glTF options
 
-**Images** writes PNG, or JPEG where no alpha channel is needed (*Auto*), or always JPEG for smaller files. **Tangents** writes the tangents into the file instead of letting the engine compute them. **Draco compression** makes the file much smaller; the program that reads it needs to support Draco.
+**Images** writes PNG, or JPEG where no alpha channel is needed (*Auto*), or always JPEG for smaller files. **Tangents** writes the tangents into the file instead of letting the engine compute them. **Draco compression** makes the geometry much smaller; the textures stay as they are; the program that reads it needs to support Draco.
 
 ## What is in the file
 
-The skeleton, the body, the eyes, the teeth, the clothing and footwear, and the hair cards when [[Haircards]] is on. Particle hair is never exported, no file format can carry it. The processed copy is placed at the world origin before it is written, so the character stands at `0, 0, 0` in the engine regardless of where it is in your scene.
+The skeleton, the body, the eyes, the teeth, the clothing and footwear, and the hair cards when [[Haircards]] is on. Particle hair is never exported, no file format can carry it. The processed copy is placed at the world origin before it is written, so the character stands at `0, 0, 0` and without rotation in the engine regardless of where it is in your scene.
 
 ## Processed copies
 
@@ -83,6 +83,9 @@ Select it and the Human Generator panel shows:
 
 You can rename, move, animate, render and delete a processed copy like any other object. The settings it was made with are stored on its rig, so they travel with it when you append it into another file.
 
+> [!feedback] Is a frozen copy what you wanted?
+> Or did you expect to keep editing it with the Human Generator panel? Either answer helps. [Tell us](https://humgen3d.com/feedback/process?page=output&step=processed-copies).
+
 > [!tip]- Python API - Output and processed copies
 > ```python
 > settings.output.format = "glb"        # "in_file", "fbx", "glb", "gltf", "obj", "abc"
@@ -90,6 +93,7 @@ You can rename, move, animate, render and delete a processed copy like any other
 > settings.output.folder = "//export"   # relative to the blend file
 > settings.output.naming = "unreal"
 > settings.output.textures = "embedded"
+> settings.output.keep_copy = True   # otherwise the copy is removed after the export
 > result = human.process.run(settings)
 > result.files      # the written files
 > result.humans     # the processed copies left in the file

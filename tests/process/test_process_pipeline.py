@@ -558,13 +558,37 @@ def test_obj(obj_run):
         assert os.path.isfile(os.path.join(folder, texture)), texture
 
 
-def test_obj_keep_copy(obj_run):
-    """With keep_copy the processed human stays in the file next to the file."""
+def test_obj_keep_copy(obj_run, source):
+    """With keep_copy the processed human stays in the file next to the file,
+    placed like an in-file result."""
     run = obj_run
     assert len(run.result.humans) == 1
     copy = run.result.humans[0]
     assert copy.process.is_processed
     assert copy.name == run.name
+    assert find_original_rig(copy.objects.rig, bpy.context.view_layer.objects) == source.objects.rig
+    assert copy.location[1] == pytest.approx(source.location[1] + RESULT_SPACING)
+    assert all(obj.name in bpy.data.collections[RESULTS_COLLECTION].objects for obj in copy.objects)
+
+
+def test_file_name_is_cleaned(tmp_path):
+    """A human called "Jake Smith.001" exports Jake_Smith.obj, like its datablocks."""
+    human = make_source_human("female", outfit=False, clips=0, hair=False)
+    human.objects.rig.name = "HG_Jake Smith.001"
+    folder = tmp_path / "named"
+    settings = cheap_settings(
+        "generic",
+        folder,
+        **{"output.format": "obj", "haircards.enabled": False, "textures.enabled": False, "skeleton.enabled": False},
+    )
+    try:
+        assert human.name == "Jake Smith.001"
+        run = _run(human, settings)
+        assert run.name == "Jake_Smith"
+        assert [os.path.basename(path) for path in run.result.files] == ["Jake_Smith.obj"]
+        assert "Jake_Smith.obj" in files_in(str(folder))
+    finally:
+        human.delete()
 
 
 def test_abc(abc_run):
@@ -827,6 +851,28 @@ def test_preflight_errors(source, tmp_path):
         source.process.run(settings, bpy.context)
     assert set(bpy.data.objects) == before
     assert not (tmp_path / "out").exists(), "Nothing is written before the checks pass"
+
+
+def test_preflight_names_file_token(source, tmp_path):
+    """An unknown token in a custom names file is a preflight error naming the bone."""
+    names_file = tmp_path / "names.json"
+    names_file.write_text(json.dumps({"names": {"spine": "Hips", "upper_arm": "{Side}Arm{foo}"}}))
+    settings = cheap_settings("unity", tmp_path / "out", **{"skeleton.names": "custom", "skeleton.names_file": str(names_file)})
+    check = source.process.preflight(settings, bpy.context)
+    assert not check.ok
+    assert any("'upper_arm'" in error and "{foo}" in error for error in check.errors), check.errors
+    with pytest.raises(HumGenException, match=r"'upper_arm'.*\{foo\}"):
+        source.process.run(settings, bpy.context)
+    names_file.write_text("{not json")
+    check = source.process.preflight(settings, bpy.context)
+    assert any("not valid JSON" in error for error in check.errors), check.errors
+
+
+def test_preflight_relative_folder_needs_saved_file(source, monkeypatch):
+    settings = cheap_settings("unity", "//export")
+    assert bpy.data.filepath == ""
+    check = source.process.preflight(settings, bpy.context)
+    assert any("Save the blend file" in error for error in check.errors), check.errors
 
 
 def test_preflight_unwritable_folder(source):

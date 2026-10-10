@@ -2133,7 +2133,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/export.py",
-   "line": 175,
+   "line": 208,
    "members": [
     {
      "name": "write",
@@ -2142,7 +2142,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 186,
+     "line": 219,
      "kind": "method",
      "params": [
       {
@@ -2213,7 +2213,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 257,
+     "line": 290,
      "kind": "method",
      "params": [
       {
@@ -2349,7 +2349,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 309,
+     "line": 355,
      "kind": "method",
      "params": [
       {
@@ -2429,7 +2429,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 355,
+     "line": 401,
      "kind": "method",
      "params": [
       {
@@ -2467,7 +2467,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 366,
+     "line": 412,
      "kind": "method",
      "params": [
       {
@@ -2505,7 +2505,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 376,
+     "line": 422,
      "kind": "method",
      "params": [
       {
@@ -2578,7 +2578,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 393,
+     "line": 439,
      "kind": "method",
      "params": [
       {
@@ -2651,7 +2651,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 503,
+     "line": 550,
      "kind": "method",
      "params": [
       {
@@ -2696,7 +2696,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/pipeline.py",
-   "line": 66,
+   "line": 67,
    "members": [
     {
      "name": "settings",
@@ -2705,7 +2705,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 70,
+     "line": 71,
      "kind": "attribute",
      "type": "ExportSettings",
      "readonly": false
@@ -2717,7 +2717,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 71,
+     "line": 72,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -2729,7 +2729,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 72,
+     "line": 73,
      "kind": "attribute",
      "type": "List['Human']",
      "readonly": false
@@ -2741,7 +2741,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 73,
+     "line": 74,
      "kind": "attribute",
      "type": "List[str]",
      "readonly": false
@@ -2753,7 +2753,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 74,
+     "line": 75,
      "kind": "attribute",
      "type": "List[str]",
      "readonly": false
@@ -2765,7 +2765,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 76,
+     "line": 77,
      "kind": "attribute",
      "type": "List[int]",
      "readonly": false
@@ -2777,7 +2777,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 77,
+     "line": 78,
      "kind": "attribute",
      "type": "float",
      "readonly": false
@@ -2789,7 +2789,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 79,
+     "line": 80,
      "kind": "method",
      "params": [],
      "returns": {
@@ -11153,22 +11153,10 @@
    "examples": [],
    "bases": [],
    "file": "human/process/pipeline.py",
-   "line": 54,
+   "line": 55,
    "members": [
     {
      "name": "errors",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/pipeline.py",
-     "line": 58,
-     "kind": "attribute",
-     "type": "List[str]",
-     "readonly": false
-    },
-    {
-     "name": "warnings",
      "summary": "",
      "description": "",
      "examples": [],
@@ -11180,13 +11168,25 @@
      "readonly": false
     },
     {
+     "name": "warnings",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/pipeline.py",
+     "line": 60,
+     "kind": "attribute",
+     "type": "List[str]",
+     "readonly": false
+    },
+    {
      "name": "ok",
      "summary": "",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/pipeline.py",
-     "line": 62,
+     "line": 63,
      "kind": "property",
      "type": "bool",
      "readonly": true

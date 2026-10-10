@@ -3,7 +3,7 @@ description: How to export a Human Generator character from Blender to Unity as 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
-> [!warning] Early access
+> [!earlyaccess] Early access
 > The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
 
 # Export to Unity
@@ -32,11 +32,16 @@ What the recipe sets, and why:
 
 ## In Unity
 
+Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones, every material gets its base color and normal map, and the blend shapes come through.
+
 1. **Import**: with the folder inside `Assets`, Unity imports `Jake.fbx` and the `Textures` folder<!-- and any `Jake@Clip.fbx` files--> by itself.
-2. **Rig**: select `Jake.fbx`, open the *Rig* tab of the Inspector, set *Animation Type* to **Humanoid** with *Avatar Definition: Create From This Model*, and press *Apply*. The avatar is configured without errors, as the bone names are the ones Unity looks for.
-3. **Materials**: Unity creates a material per part and finds the textures next to the model. When it asks to mark the normal maps as *Normal map*, press *Fix now*. If a material has an empty *Metallic* slot, drop its `_MetallicSmoothness` texture in; the smoothness is read from the alpha channel.
-4. **Hair**: set the hair materials to *Cutout* (Built-in) or *Alpha Clipping* (URP, HDRP) and make them two-sided, so the cards show their transparency.
+2. **Rig**: select `Jake.fbx`, open the *Rig* tab of the Inspector, set *Animation Type* to **Humanoid** with *Avatar Definition: Create From This Model*, and press *Apply*. Unity maps the bones by name.
+3. **Materials**: Unity creates a material per part and finds the textures next to the model. When it asks to mark the normal maps as *Normal map*, press *Fix now*. If a material has an empty *Metallic* slot, drop its `_MetallicSmoothness` texture in; the smoothness is read from the alpha channel. The materials inside the model are read-only; use *Extract Materials* on the Materials tab of the importer to edit them.
+4. **Hair**: set the hair materials to *Cutout* (Built-in) or *Alpha Clipping* (URP, HDRP) and make them two-sided (*Render Face: Both* in URP and HDRP; the Built-in Standard shader has no two-sided option, so use a double-sided shader there), so the cards show their transparency.
    <!-- 5. **Animation**: the `Jake@Run.fbx` clips appear under the model and can be dropped into an Animator Controller. For root motion, enable *Apply Root Motion* on the Animator; the clips carry the movement on the root bone. -->
+
+> [!feedback] Did Unity import it like this?
+> These steps are what we see in Unity. If your import differs, or a step is missing, we want to know which one, and your Unity version. [Tell us](https://humgen3d.com/feedback/process?page=unity&step=import).
 
 > [!note] Blend shapes
 > The face rig and the expressions are blend shapes of the body's Skinned Mesh Renderer. Face capture tools for Unity drive the FACS names directly. The corrective keys are driven by bones in Blender and are static in Unity unless you drive them yourself; remove them in [[Shape Keys]] if you don't.
@@ -50,3 +55,6 @@ What the recipe sets, and why:
 - **The hair is solid**: the hair material needs alpha clipping, see above. Make sure the textures were exported as PNG, not JPEG.
 - **The eyes look like glass balls**: the character was exported with the original eyes. Set the eyes to *High* or lower in [[Optimize Meshes]].
 - **Arms are raised or lowered in every animation**: the rest pose of the character and the animation differ. Animations made in the A-pose need the A-pose rest pose.<!-- Humanoid retargeting handles the Human Generator clips. -->
+
+> [!feedback] A problem that is not listed?
+> Tell us what you saw and what you expected. [Tell us](https://humgen3d.com/feedback/process?page=unity&step=troubleshooting).

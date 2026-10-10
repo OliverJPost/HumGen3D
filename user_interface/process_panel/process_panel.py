@@ -18,7 +18,12 @@ from HumGen3D.backend.properties.process_props import (
     quality_from_props,
 )
 from HumGen3D.common import find_multiple_in_list
-from HumGen3D.common.documentation import draw_docs_button, draw_early_access
+from HumGen3D.common.documentation import (
+    EARLY_ACCESS,
+    draw_docs_button,
+    draw_early_access,
+    feedback_url,
+)
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.pipeline import output_folder, preflight
 from HumGen3D.human.process.quality import (
@@ -935,6 +940,10 @@ class HG_PT_Z_PROCESS_LOWER(ProcessPanel, bpy.types.Panel):
                 row = box.row()
                 row.label(text="", icon="ERROR")
                 draw_paragraph(row, warning, alignment="LEFT", enabled=False)
+            if EARLY_ACCESS and (check.errors or check.warnings):
+                box.operator("wm.url_open", text="Give feedback", icon="COMMUNITY", emboss=False).url = feedback_url(
+                    {"from": "warnings"}
+                )
 
         draw_docs_button(self.layout, "process", text="Process Guide", icon="URL", emboss=False)
 

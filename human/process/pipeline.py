@@ -34,6 +34,7 @@ from HumGen3D.common.progress import run as run_steps
 from mathutils import Vector
 
 from . import animations, naming, scripts, textures
+from .game_rig import check_names_file
 from .settings import EXPORT_STAGES, ExportSettings, QualitySettings
 from .shape_keys import driven_groups_kept
 
@@ -92,13 +93,27 @@ class ExportResult:
 
 def output_folder(settings: ExportSettings) -> str:
     """The folder the files go to, the export folder of the content folder when
-    the settings leave it empty."""
+    the settings leave it empty.
+
+    A folder starting with "//" is relative to the blend file, the settings keep
+    it that way and it is resolved here.
+    """
     folder = settings.output.folder
     if folder.startswith("//"):
         folder = bpy.path.abspath(folder)
     if not folder:
         folder = os.path.join(get_prefs().filepath, DEFAULT_EXPORT_FOLDER)
     return os.path.abspath(folder)
+
+
+def result_name(settings: ExportSettings, human_name: str) -> str:
+    """The name of the result: the files and the {name} of every datablock.
+
+    The name of the human is cleaned like the datablock names, without the
+    number suffix of Blender, spaces or odd characters, before the tokens of
+    the output name go around it: "Jake Smith.001" becomes "Jake_Smith".
+    """
+    return naming.clean(settings.resolved_name(naming.clean(human_name)))
 
 
 def preflight(  # noqa: CCR001
@@ -120,6 +135,8 @@ def preflight(  # noqa: CCR001
         result.errors.append("The settings have no LOD level")
     if output.is_file:
         folder = output_folder(settings)
+        if output.folder.startswith("//") and not bpy.data.filepath:
+            result.errors.append("Save the blend file first, the folder is relative to it")
         # The folder is made when the files are written, here only its closest
         # existing parent is checked, so drawing the interface changes nothing
         parent = folder
@@ -130,6 +147,11 @@ def preflight(  # noqa: CCR001
     if settings.skeleton.enabled and settings.skeleton.names == "custom":
         if not os.path.isfile(settings.skeleton.names_file):
             result.errors.append("The bone names file of the skeleton does not exist")
+        else:
+            try:
+                check_names_file(settings.skeleton.names_file)
+            except HumGenException as e:
+                result.errors.append(str(e))
     for script in settings.scripts.active():
         if not os.path.isfile(script.path):
             result.errors.append(f"Script not found: {script.path}")
@@ -277,7 +299,7 @@ def process_steps(  # noqa: CCR001
     if not check.ok:
         raise HumGenException("\n".join(check.errors))
 
-    name = settings.resolved_name(human.name)
+    name = result_name(settings, human.name)
     levels = len(settings.lods)
     output = settings.output
     folder = output_folder(settings) if output.is_file else None
@@ -331,12 +353,12 @@ def process_steps(  # noqa: CCR001
                 weights["write"],
             )
             if output.keep_copy:
-                _keep_in_file(copies, human, settings, result)
+                _keep_in_file(copies, human, result)
             else:
                 _delete_copy(copies[0])
                 copies = []
         else:
-            _keep_in_file(copies, human, settings, result)
+            _keep_in_file(copies, human, result)
     except BaseException:
         for copy in copies:
             _delete_copy(copy)
@@ -600,14 +622,12 @@ def _write_steps(  # noqa: CCR001
     return [path for path in files if path]
 
 
-def _keep_in_file(
-    copies: List["Human"], source: "Human", settings: ExportSettings, result: ExportResult
-) -> None:
-    """Marks the copies as frozen results next to the source human."""
+def _keep_in_file(copies: List["Human"], source: "Human", result: ExportResult) -> None:
+    """Marks the copies as frozen results and places them next to the source
+    human, a copy kept after a file export as well."""
     for index, copy in enumerate(copies):
         copy.process.mark_as_processed(source)
-        if not settings.output.is_file:
-            copy.location = source.location + Vector((0, RESULT_SPACING * (index + 1), 0))
+        copy.location = source.location + Vector((0, RESULT_SPACING * (index + 1), 0))
         result.humans.append(copy)
 
 
