@@ -12,6 +12,8 @@ anchor can follow it: "process/output#processed-copies".
 from typing import Any
 
 DOCS_URL = "https://humgen3d.com/docs/"
+# Where the "Give feedback" buttons of early-access features go
+FEEDBACK_URL = DOCS_URL + "contact-us"
 
 
 def docs_url(page: str = "") -> str:
@@ -40,3 +42,15 @@ def draw_docs_button(
         emboss (bool): False draws it as a plain link.
     """
     layout.operator("wm.url_open", text=text, icon=icon, emboss=emboss).url = docs_url(page)
+
+
+def draw_early_access(layout: Any, text: str = "Early access") -> None:
+    """Draws an early-access label with a button to give feedback.
+
+    Args:
+        layout (bpy.types.UILayout): Where the row goes.
+        text (str): Label next to the button.
+    """
+    row = layout.row(align=True)
+    row.label(text=text, icon="EXPERIMENTAL")
+    row.operator("wm.url_open", text="Give feedback", icon="COMMUNITY").url = FEEDBACK_URL

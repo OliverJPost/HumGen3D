@@ -18,7 +18,7 @@ from HumGen3D.backend.properties.process_props import (
     quality_from_props,
 )
 from HumGen3D.common import find_multiple_in_list
-from HumGen3D.common.documentation import draw_docs_button
+from HumGen3D.common.documentation import draw_docs_button, draw_early_access
 from HumGen3D.human.human import Human
 from HumGen3D.human.process.pipeline import output_folder, preflight
 from HumGen3D.human.process.quality import (
@@ -287,6 +287,8 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             alignment="CENTER",
             enabled=False,
         )
+        col.separator(factor=0.3)
+        draw_early_access(col)
         col.separator()
 
         if not props.lods:

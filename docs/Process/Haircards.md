@@ -4,6 +4,9 @@ description: Convert the particle hair of Human Generator characters to textured
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Haircards
 
 ```compare

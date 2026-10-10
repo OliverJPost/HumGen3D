@@ -3,6 +3,9 @@ description: What the built-in Unity, Unreal, Godot, Mixamo and Blender recipes 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Recipes
 
 A recipe is the complete state of the Process tab, saved under a name. Picking one from the **Recipe** dropdown fills in every option: the output format, the skeleton, how the textures are packed, which shape keys stay. You normally pick the recipe of the program you export to and never touch the rest.

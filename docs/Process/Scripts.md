@@ -4,6 +4,9 @@ description: Run your own Python scripts while Human Generator processes a chara
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Scripts
 
 **Scripts** runs Python scripts of your own on the processed copy, at the point of the process you choose: right at the start, before the textures are baked, after the skeleton is made, or after the files are written. Anything the other sections don't cover, like adding a prop, setting custom properties your pipeline reads, or writing a sidecar file, becomes a script that runs with every export.

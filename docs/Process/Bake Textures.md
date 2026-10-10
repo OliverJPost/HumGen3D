@@ -4,6 +4,9 @@ description: Bake the skin, eye, hair and clothing materials of Human Generator 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Bake textures
 
 ```compare

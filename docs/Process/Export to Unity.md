@@ -3,6 +3,9 @@ description: How to export a Human Generator character from Blender to Unity as 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Export to Unity
 
 The **Unity** recipe of the Process tab makes an FBX that Unity imports as a Humanoid character, with the textures packed for the Standard and URP Lit shaders.

@@ -3,6 +3,9 @@ description: How to export a Human Generator character from Blender to Godot 4 a
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Export to Godot
 
 The **Godot** recipe of the Process tab makes one `.glb` file with everything inside: the humanoid skeleton, the meshes, the blend shapes, the textures and the animation clips.
