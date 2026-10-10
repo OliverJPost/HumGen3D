@@ -244,6 +244,10 @@ def bake_steps(  # noqa: CCR001
                         for material in texture_set.materials:
                             targets[material] = baked
                 _bake(objects, targets, pass_id, context)
+                for texture_set in sets:
+                    baked = texture_set.baked.get(pass_id)
+                    if isinstance(baked, bpy.types.Image):
+                        _snapshot(baked)
                 yield (index + 1) / len(passes)
         finally:
             _show_solidify(was_solidified)
@@ -256,6 +260,7 @@ def bake_steps(  # noqa: CCR001
             if isinstance(image, bpy.types.Image) and image.users == 0:
                 bpy.data.images.remove(image)
     human.objects.rig[BAKED_KEY] = True
+    _SNAPSHOTS.clear()
     return images
 
 
@@ -457,8 +462,14 @@ def _bake(
         for group in _sharing_groups(baked, targets):
             for other in objects:
                 other.hide_render = other not in group
-            with context_override(context, group[0], group):
-                bpy.ops.object.bake(type=bake_type)  # type:ignore[misc, arg-type]
+            # One call per object: a bake call only writes the active object,
+            # so the caps of the eyebrows and eyelashes were missing from the
+            # image they share with the scalp cap. The image is cleared once.
+            for index, obj in enumerate(group):
+                with context_override(context, obj, [obj]):
+                    bpy.ops.object.bake(  # type:ignore[misc, arg-type]
+                        type=bake_type, use_clear=index == 0
+                    )
     finally:
         for obj in objects:
             obj.hide_render = False
@@ -487,10 +498,27 @@ def _sharing_groups(
     return groups
 
 
-def _pixels(image: bpy.types.Image) -> np.ndarray:
+# The pixels of every baked image right after its pass, by image name. A
+# later bake session resets the buffer of an image that one of its materials
+# still references to the state after its first bake call, which lost the
+# eyebrows and eyelashes from the cap image they share with the scalp cap.
+_SNAPSHOTS: Dict[str, np.ndarray] = {}
+
+
+def _snapshot(image: bpy.types.Image) -> None:
+    _SNAPSHOTS[image.name] = _read_pixels(image)
+
+
+def _read_pixels(image: bpy.types.Image) -> np.ndarray:
     pixels = np.empty(len(image.pixels), dtype=np.float32)
     image.pixels.foreach_get(pixels)
     return pixels.reshape(-1, 4)
+
+
+def _pixels(image: bpy.types.Image) -> np.ndarray:
+    """The pixels of a baked image as they were right after its pass."""
+    snapshot = _SNAPSHOTS.get(image.name)
+    return snapshot.copy() if snapshot is not None else _read_pixels(image)
 
 
 def _channel(source: object, size: int, invert: bool = False) -> np.ndarray:
