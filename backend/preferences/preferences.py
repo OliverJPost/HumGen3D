@@ -263,6 +263,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             text="Silence all console messages",
         )
         col.prop(self, "dev_tools")
+        col.prop(self, "experimental_features")
         col.prop(self, "skip_url_request", text="Skip URL request")
         col.prop(self, "tab_name", text="N-panel tab name")
 

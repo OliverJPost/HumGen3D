@@ -158,6 +158,15 @@ class HGPreferenceBackend:
     dev_tools: BoolProperty(
         name="Show Dev Tools", description="", default=False
     )  # RELEASE set to False
+    experimental_features: BoolProperty(
+        name="Show experimental features",
+        description=(
+            "Show features that are still being tested: the animation library"
+            " in the Pose section and the Animations section of the Process tab."
+            " They can change or break between versions"
+        ),
+        default=False,
+    )
 
     auto_hide_hair_switch: BoolProperty(default=True)
     auto_hide_popup: BoolProperty(default=True)

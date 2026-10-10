@@ -50,7 +50,7 @@ That is all most people need. The rest of this guide explains what the sections 
     - [[Skeleton]]: turn the rig into a clean game skeleton with the bone names and rest pose the engine expects.
     - [[Shape Keys]]: choose which shape keys stay as blend shapes, and which are baked in or removed.
     - [[Bake Textures]]: bake the skin, eye, hair and clothing materials to texture maps, packed the way the engine expects.
-    - [[Animations]]: export the animations of the human or clips from the library, fitted to the new skeleton.
+    - [[Animations]]: export the animations of the human or clips from the library, fitted to the new skeleton. Experimental, hidden until you turn it on in the preferences.
     - [[Scripts]]: run your own Python scripts at any point of the process.
 5. **Name and Folder**. The name of the files and the prefix of every object, material and texture (`{name}` is the name of the human), and where the files go. See [[Output]].
 6. **Process button**. Processes every selected human. Above it you see how many humans are selected, below it the checks that found something.
