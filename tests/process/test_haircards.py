@@ -331,6 +331,13 @@ def test_same_strands_give_same_cards(long_haired_human, context):
     assert smaller_geometry.card_count < geometry.card_count
 
 
+def _alpha_source(nodes):
+    """The node feeding the alpha of a card material, behind its cut-out node."""
+    node = nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node
+    assert node.name == "alpha_clip" and node.operation == "GREATER_THAN", "Cards are cut out"
+    return node.inputs[0].links[0].from_node
+
+
 @pytest.mark.parametrize("pack", [True, False])
 def test_bake_packs_alpha(long_haired_human, context, tmp_path, pack):
     """The alpha of the cards goes into the color texture, or a texture of its own."""
@@ -353,11 +360,11 @@ def test_bake_packs_alpha(long_haired_human, context, tmp_path, pack):
             assert color_image.alpha_mode == "CHANNEL_PACKED"
             assert "alpha" not in nodes
             alpha = np.array(color_image.pixels)[3::4]
-            assert nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node == nodes["base_color"]
+            assert _alpha_source(nodes) == nodes["base_color"]
         else:
             assert color_image.alpha_mode != "CHANNEL_PACKED"
             alpha = np.array(nodes["alpha"].image.pixels)[::4]
-            assert nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node == nodes["alpha"]
+            assert _alpha_source(nodes) == nodes["alpha"]
         assert alpha.max() > alpha.min() + 0.1
         assert (alpha < 0.5).mean() > 0.2, "Most of a card is transparent"
     finally:
