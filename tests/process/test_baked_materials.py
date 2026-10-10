@@ -14,6 +14,7 @@ import pytest
 from HumGen3D.human.process.export import direct_normal_maps
 from HumGen3D.human.process.textures import (
     DIRECTX_FLIP_NODE,
+    HAIR_ALPHA_CUTOFF,
     _link_alpha,
     _link_directx_normal,
 )
@@ -28,11 +29,12 @@ def _material(name: str):
     return material, nodes, material.node_tree.links, image, nodes["Principled BSDF"]
 
 
-def test_alpha_of_cards_is_rounded():
+def test_alpha_of_cards_is_cut_out():
     material, nodes, links, image, principled = _material("cards")
     _link_alpha(nodes, links, image.outputs["Alpha"], principled, clip=True)
     link = principled.inputs["Alpha"].links[0]
-    assert link.from_node.type == "MATH" and link.from_node.operation == "ROUND"
+    assert link.from_node.type == "MATH" and link.from_node.operation == "GREATER_THAN"
+    assert abs(link.from_node.inputs[1].default_value - HAIR_ALPHA_CUTOFF) < 1e-6
     assert link.from_node.inputs[0].links[0].from_node == image
     bpy.data.materials.remove(material)
 

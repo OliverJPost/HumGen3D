@@ -681,7 +681,7 @@ def _build_material(  # noqa: CCR001
     if any(image.alpha_mode == "CHANNEL_PACKED" for image in images.values()) or "alpha" in images:
         if bpy.app.version < (4, 3, 0):
             material.blend_method = "CLIP" if clip_alpha else "BLEND"
-            material.alpha_threshold = 0.5
+            material.alpha_threshold = HAIR_ALPHA_CUTOFF
             material.shadow_method = "CLIP"
         else:
             material.surface_render_method = "DITHERED" if clip_alpha else "BLENDED"
@@ -700,6 +700,13 @@ def _build_material(  # noqa: CCR001
             bpy.data.materials.remove(old)
     return list(images.values())
 
+
+# Alpha below which a hair card texel is cut out in engines and in Blender's
+# display of the baked copy. The card textures of the library are soft, their
+# strands never reach full alpha, and engines average the alpha with the empty
+# space around a strand in their mipmaps, so half alpha lost most of the hair
+# at a distance. The glTF exporter writes it as alphaCutoff.
+HAIR_ALPHA_CUTOFF = 0.3
 
 # Name of the node that flips the green channel of a DirectX normal map for
 # Blender's display. Exporters only find an image linked straight to the Normal
@@ -727,16 +734,18 @@ def _link_directx_normal(nodes, links, image_node, normal_node) -> None:  # noqa
 
 
 def _link_alpha(nodes, links, socket, principled, clip: bool) -> None:  # noqa: ANN001
-    """Links an alpha output to the Principled alpha, through a round for cards.
+    """Links an alpha output to the Principled alpha, through a cut-out for cards.
 
-    The Math Round is what Blender's glTF exporter reads as alpha clipping at
-    0.5 (alphaMode MASK); without it the material is exported as BLEND.
+    A Math "greater than" node with a constant is what Blender's glTF exporter
+    reads as alpha clipping at that value (alphaMode MASK with alphaCutoff);
+    without it the material is exported as BLEND.
     """
     if not clip:
         links.new(socket, principled.inputs["Alpha"])  # type:ignore[index]
         return
     clip_node = nodes.new("ShaderNodeMath")
-    clip_node.operation = "ROUND"
+    clip_node.operation = "GREATER_THAN"
+    clip_node.inputs[1].default_value = HAIR_ALPHA_CUTOFF  # type:ignore[index]
     clip_node.name = clip_node.label = "alpha_clip"
     clip_node.location = (-200, -450)
     links.new(socket, clip_node.inputs[0])  # type:ignore[index]
