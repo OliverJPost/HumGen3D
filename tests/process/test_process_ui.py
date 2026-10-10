@@ -9,6 +9,7 @@ recording layout that checks every property, operator and icon they name, as
 a typo there only shows up as a broken panel in Blender.
 """
 
+import functools
 import inspect
 import json
 import os
@@ -16,6 +17,7 @@ from types import SimpleNamespace
 
 import bpy
 import pytest
+from HumGen3D.backend import get_prefs
 from HumGen3D.backend.properties import process_props
 from HumGen3D.backend.properties.process_props import (
     NEXT_TIERS,
@@ -601,6 +603,28 @@ PROCESS_PANELS = [
 ]
 
 
+class experimental:
+    """Sets the experimental features preference, as a decorator or a with block."""
+
+    def __init__(self, value):
+        self.value = value
+
+    def __enter__(self):
+        self.before = get_prefs().experimental_features
+        get_prefs().experimental_features = self.value
+
+    def __exit__(self, *_):
+        get_prefs().experimental_features = self.before
+
+    def __call__(self, func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+
+        return wrapper
+
+
 def _draw_all(context, panels=PROCESS_PANELS):
     """Polls and draws the panels as Blender would, returns the labels drawn."""
     log = []
@@ -654,6 +678,7 @@ def _open_everything(props):
 
 @pytest.mark.parametrize("recipe", SHIPPED_RECIPES)
 @pytest.mark.parametrize("lods", [1, 3])
+@experimental(True)
 def test_panels_draw_for_every_recipe(props, source, context, recipe, lods):
     context.scene.HG3D.ui.active_tab = "PROCESS"
     props.recipe = recipe
@@ -668,11 +693,15 @@ def test_panels_draw_for_every_recipe(props, source, context, recipe, lods):
     if props.output.format not in ("in_file", "fbx", "glb", "gltf"):
         expected.discard("HG_PT_ANIMATIONS")
     assert set(drawn) == expected
+    with experimental(False):
+        drawn, _ = _draw_all(ContextProxy(rig, [rig]))
+    assert "HG_PT_ANIMATIONS" not in drawn, "Animations are experimental"
     if lods > 1:
         assert {"0", "1", "2"} <= set(labels), "A numbered row per level"
 
 
 @pytest.mark.parametrize("output_format", [ident for ident, *_ in OUTPUT_FORMATS])
+@experimental(True)
 def test_panels_draw_for_every_format(props, source, context, output_format):
     context.scene.HG3D.ui.active_tab = "PROCESS"
     props.recipe = "unity"

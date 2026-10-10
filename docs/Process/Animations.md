@@ -9,6 +9,9 @@ description: Export the animations of a Human Generator character, or clips from
 
 The section is off in every recipe. Turn it on when you want the clips in the export; it is only shown for outputs with a skeleton (FBX, glTF and *In this file*).
 
+> [!warning] Experimental
+> The animation library and this section are still being tested, so they are hidden by default. Turn on **Show experimental features** under *Advanced options* in the add-on preferences (Edit > Preferences > Add-ons > Human Generator 3D) to show them. The [[Python API]] and recipes with `"animations": {"enabled": true}` work without the preference.
+
 ![[process_animations.webp|520]]
 
 ## Clips

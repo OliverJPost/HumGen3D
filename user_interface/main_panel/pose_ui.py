@@ -22,13 +22,21 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5
-        row_h.prop(sett.ui, "pose_tab_switch", expand=True)
+        tab = sett.ui.pose_tab_switch
+        if get_prefs().experimental_features:
+            row_h.prop(sett.ui, "pose_tab_switch", expand=True)
+        else:
+            # The animation library is experimental, see the preferences
+            row_h.prop_enum(sett.ui, "pose_tab_switch", "library")
+            row_h.prop_enum(sett.ui, "pose_tab_switch", "rigify")
+            if tab == "animation":
+                tab = "library"
 
-        if sett.ui.pose_tab_switch == "library":
+        if tab == "library":
             self._draw_pose_library(sett, col)
-        elif sett.ui.pose_tab_switch == "animation":
+        elif tab == "animation":
             self._draw_animation_library(col)
-        elif sett.ui.pose_tab_switch == "rigify":
+        elif tab == "rigify":
             self._draw_rigify_subsection(col)
 
     def _draw_animation_library(self, layout):

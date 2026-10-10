@@ -709,6 +709,9 @@ class HG_PT_ANIMATIONS(ProcessPanel, bpy.types.Panel):
     def poll(cls, context):
         if not super().poll(context):
             return False
+        # Experimental, see the preferences. The API and recipes still run it.
+        if not get_prefs().experimental_features:
+            return False
         return _props(context).output.format in ("in_file", "fbx", "glb", "gltf")
 
     def summary(self, context) -> str:
