@@ -3,6 +3,9 @@ description: Export the animations of a Human Generator character, or clips from
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Animations
 
 **Animations** exports animation clips along with the character: the animations you put on the human in the [[Pose|Pose section]], or clips straight from the Human Generator animation library. The clips are fitted to the exported skeleton, so they play on it in the engine even though the bones were renamed, removed or put in a T-pose by the [[Skeleton]] section.

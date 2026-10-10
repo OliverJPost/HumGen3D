@@ -3,6 +3,9 @@ description: Export and process Human Generator characters from Python - run a r
 ---
 > [!info] Part of the [[Process/Overview|Process guide]] and the [[API/Overview|Python API]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Processing humans from Python
 
 Everything the Process tab does is available from Python, through `human.process`. The settings of the tab are one object, [[ExportSettings]], and one call processes a human with them. This page walks through the common cases; the reference is on [[ProcessSettings]] and [[ExportSettings]].

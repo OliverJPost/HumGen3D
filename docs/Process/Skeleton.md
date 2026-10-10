@@ -4,6 +4,9 @@ description: Turn the Human Generator rig into a clean game skeleton with Unity 
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Skeleton
 
 The rig of a Human Generator human is made for animating in Blender: it has control bones, constraints, drivers and a face rig. A game engine wants the opposite, a plain hierarchy of deforming bones with names it recognizes. The **Skeleton** section makes that skeleton from the rig:

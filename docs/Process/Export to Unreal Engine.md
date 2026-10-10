@@ -3,6 +3,9 @@ description: How to export a Human Generator character from Blender to Unreal En
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Export to Unreal Engine
 
 The **Unreal** recipe of the Process tab makes an FBX skeletal mesh in centimeters, with the bone names of the Unreal Mannequin, textures packed as ORM and the `SK_`, `M_` and `T_` prefixes of the Unreal style guide.

@@ -6,6 +6,9 @@ description: Export Human Generator characters from Blender to Unity, Unreal Eng
 ---
 # Export and process humans
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 The **Process** tab turns a Human Generator human into a game-ready character file (FBX or glTF), a plain mesh file (OBJ, Alembic), or a frozen, lightweight copy inside your Blender file. You pick a *recipe* for the program you are going to use, check the folder, and press one button. Everything else, like baking textures, converting the hair to hair cards and building a clean skeleton with the right bone names, happens automatically.
 
 > [!info] Your human stays as it is

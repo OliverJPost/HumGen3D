@@ -651,6 +651,7 @@ def test_panels_without_selection(props, context):
     drawn, labels = _draw_all(ContextProxy(None, []))
     assert drawn == ["HG_PT_PROCESS"]
     assert "No humans selected!" in labels
+    assert "Early access" in labels
 
 
 def test_panels_before_initialized(source, context):

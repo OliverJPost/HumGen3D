@@ -4,6 +4,9 @@ description: Choose which shape keys of a Human Generator character are exported
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Shape Keys
 
 A Human Generator human carries hundreds of shape keys: the FACS keys of the face rig, the expressions, the body, face and age sliders, and corrective keys that fix the joints when the bones bend. Exporting all of them makes big, slow files, and a game normally only needs the face. **Shape Keys** decides per group what happens to them.

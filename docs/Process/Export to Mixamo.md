@@ -3,6 +3,9 @@ description: How to export a Human Generator character from Blender with a Mixam
 ---
 > [!info] Part of the [[Process/Overview|Process guide]]
 
+> [!warning] Early access
+> The process system is new and in early access: it works, but details can still change, and your experience with it shapes what comes next. Found a problem, or something you miss? Let us know on [[Contact Us|Discord or by mail]].
+
 # Export to Mixamo
 
 The **Mixamo** recipe of the Process tab makes an FBX with the Mixamo skeleton: the Mixamo bone names, a T-pose and no root bone. Animations from the Mixamo library are made for that skeleton, so they play on the character as they are, and tools that expect a Mixamo rig work with it.
