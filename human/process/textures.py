@@ -40,20 +40,29 @@ from HumGen3D.human.hair.compatibility import SPECULAR_INPUT_NAME
 
 from .game_eyes import ROUGHNESS as GAME_EYE_ROUGHNESS
 from .naming import Namer, material_part, part_names
-from .settings import TextureSettings
+from .settings import TextureBakeSettings
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 # Order the passes are baked in, see planned_passes
-PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha")
+PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha", "specular")
 # Principled BSDF input of each pass
 PASS_INPUTS = {
     "base_color": "Base Color",
     "roughness": "Roughness",
     "metallic": "Metallic",
     "alpha": "Alpha",
+    "specular": SPECULAR_INPUT_NAME,
 }
+# Passes every set gets besides the ones of the settings. The specular has
+# no map in the engines, so it becomes one value on the baked material: the
+# plain value of the materials, or the average of a small bake of it. Without
+# it the baked material falls back to 0.5, and flat hair cards with that
+# reflect the lights as grey.
+IMPLICIT_PASSES = ("specular",)
+# Resolution of the bake that is only averaged
+SAMPLE_SIZE = 128
 # Passes that are packed into one image per workflow, with the channel of each
 PACKED_PASSES = {
     "orm": ("orm", {"occlusion": 0, "roughness": 1, "metallic": 2}),
@@ -118,12 +127,12 @@ class TextureSet:
         )
 
 
-def plan_texture_sets(human: "Human", settings: TextureSettings) -> List[TextureSet]:
+def plan_texture_sets(human: "Human", settings: TextureBakeSettings) -> List[TextureSet]:
     """Which materials get baked, with their passes and resolution.
 
     Args:
         human (Human): The processed copy.
-        settings (TextureSettings): Passes and resolution per texture set.
+        settings (TextureBakeSettings): Passes and resolution per texture set.
 
     Returns:
         List[TextureSet]: The body, the eyes, the teeth, every clothing object
@@ -148,13 +157,15 @@ def plan_texture_sets(human: "Human", settings: TextureSettings) -> List[Texture
         if shared:
             shared.others.append((obj, slot))
             return
+        passes = list(settings.passes.get(set_name, ["base_color"]))
+        passes.extend(p for p in IMPLICIT_PASSES if p not in passes)
         sets.append(
             TextureSet(
                 obj,
                 slot,
                 set_name,
                 part,
-                list(settings.passes.get(set_name, ["base_color"])),
+                passes,
                 int(settings.resolution.get(set_name, 1024)),
             )
         )
@@ -183,7 +194,7 @@ def planned_passes(sets: List[TextureSet]) -> List[str]:
 
 def bake_steps(  # noqa: CCR001
     human: "Human",
-    settings: TextureSettings,
+    settings: TextureBakeSettings,
     namer: Namer,
     folder: Optional[str],
     context: bpy.types.Context,
@@ -198,7 +209,7 @@ def bake_steps(  # noqa: CCR001
     Args:
         human (Human): The processed copy, its materials must not be shared
             with the original human.
-        settings (TextureSettings): What to bake and how to pack it.
+        settings (TextureBakeSettings): What to bake and how to pack it.
         namer (Namer): Names of the images and materials.
         folder (Optional[str]): Folder to write the images to, None keeps them
             packed in the blend file.
@@ -266,16 +277,20 @@ class _render_settings:
         self.device = scene.cycles.device
         self.old_samples = scene.cycles.samples
         self.use_denoising = scene.cycles.use_denoising
+        self.use_clear = scene.render.bake.use_clear
         scene.render.engine = "CYCLES"
         scene.cycles.device = "CPU"
         scene.cycles.samples = self.samples
         scene.cycles.use_denoising = False
+        # Texels outside the UV islands stay clear, see _average
+        scene.render.bake.use_clear = True
 
     def __exit__(self, *_: object) -> None:
         scene = self.context.scene
         scene.cycles.device = self.device
         scene.cycles.samples = self.old_samples
         scene.cycles.use_denoising = self.use_denoising
+        scene.render.bake.use_clear = self.use_clear
         try:
             scene.render.engine = self.engine
         except TypeError:
@@ -345,10 +360,7 @@ def _input_source(
     principled: bpy.types.ShaderNode, pass_id: str
 ) -> Tuple[Optional[bpy.types.NodeSocket], float]:
     """The socket linked to the input of a pass, or its plain value."""
-    name = PASS_INPUTS[pass_id]
-    if pass_id == "specular":
-        name = SPECULAR_INPUT_NAME
-    socket = principled.inputs[name]  # type:ignore[index]
+    socket = principled.inputs[PASS_INPUTS[pass_id]]  # type:ignore[index]
     if socket.links:
         return socket.links[0].from_socket, 0.0
     value = socket.default_value
@@ -371,11 +383,14 @@ def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
             return sources[0][1]
 
     is_color = pass_id == "base_color"
+    sampled = pass_id in IMPLICIT_PASSES
+    size = SAMPLE_SIZE if sampled else texture_set.resolution
     image = bpy.data.images.new(
         f"hg_bake_{texture_set.part}_{pass_id}",
-        width=texture_set.resolution,
-        height=texture_set.resolution,
-        alpha=False,
+        width=size,
+        height=size,
+        # The alpha of a sampled pass tells which texels the bake reached
+        alpha=sampled,
         float_buffer=not is_color,
     )
     if not is_color:
@@ -487,6 +502,22 @@ def _channel(source: object, size: int, invert: bool = False) -> np.ndarray:
     return 1.0 - values if invert else values
 
 
+def _average(image: bpy.types.Image, weights: object) -> Optional[float]:
+    """The mean of a sampled pass over the texels the bake reached, weighted
+    by the alpha pass of the set when it has one: the specular of hair cards
+    counts where the strands are, not in the gaps between them."""
+    pixels = _pixels(image)
+    covered = pixels[:, 3] > 0.5
+    weight = covered.astype(np.float32)
+    if isinstance(weights, bpy.types.Image) and weights.size[0] % image.size[0] == 0:
+        factor = weights.size[0] // image.size[0]
+        alpha = _pixels(weights)[:, 0].reshape(image.size[1], factor, image.size[0], factor)
+        weight *= alpha.mean(axis=(1, 3)).ravel()
+    if weight.sum() <= 0:
+        return None
+    return float((pixels[:, 0] * weight).sum() / weight.sum())
+
+
 def _new_image(
     name: str, size: int, pixels: np.ndarray, color: bool, alpha: bool
 ) -> bpy.types.Image:
@@ -517,7 +548,7 @@ def _save(image: bpy.types.Image, folder: Optional[str], file_format: str) -> No
 def _build_material(  # noqa: CCR001
     human: "Human",
     texture_set: TextureSet,
-    settings: TextureSettings,
+    settings: TextureBakeSettings,
     namer: Namer,
     folder: Optional[str],
     per_level: bool = False,
@@ -595,6 +626,14 @@ def _build_material(  # noqa: CCR001
                 )
             elif source is not None:
                 constants[pass_id] = float(source)  # type:ignore[arg-type]
+
+    specular = baked.get("specular")
+    if isinstance(specular, bpy.types.Image):
+        average = _average(specular, alpha)
+        if average is not None:
+            constants["specular"] = average
+    elif specular is not None:
+        constants["specular"] = float(specular)  # type:ignore[arg-type]
 
     for image in images.values():
         _save(image, folder, settings.file_format)
