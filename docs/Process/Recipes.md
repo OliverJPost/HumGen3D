@@ -12,16 +12,25 @@ A recipe is the complete state of the Process tab, saved under a name. Picking o
 
 ## Built-in recipes
 
-| Recipe | Output | Skeleton | Textures | Animations |
-| --- | --- | --- | --- | --- |
-| **Unity** | FBX, textures in a folder next to it | Humanoid names, T-pose, root bone, meters | Metallic-Smoothness, DirectX normal map | One file per clip (`Jake@Run.fbx`), root motion on the root bone |
-| **Unreal** | FBX with the `SK_`/`M_`/`T_` prefixes of the Unreal style guide | Mannequin names, A-pose, root bone, centimeters | ORM, DirectX normal map | One file with all clips, root motion on the root bone |
-| **Godot** | glTF Binary (.glb) with the textures inside | Humanoid names, T-pose, root bone | Metallic-Roughness, OpenGL normal map | Clips inside the character file, root motion on the root bone |
-| **Mixamo** | FBX, textures in a folder | Mixamo names, T-pose, no root bone | Separate maps, OpenGL normal map | One file per clip |
-| **Generic game** | FBX, textures in a folder | Human Generator names, A-pose, root bone | Separate maps, OpenGL normal map | One file with all clips |
-| **Blender render copy** | In this file | Off, the full rig stays | Off, the materials stay as they are | Off |
+| Recipe | Output | Skeleton | Textures |
+| --- | --- | --- | --- |
+| **Unity** | FBX, textures in a folder next to it | Humanoid names, T-pose, root bone, meters | Metallic-Smoothness, DirectX normal map |
+| **Unreal** | FBX with the `SK_`/`M_`/`T_` prefixes of the Unreal style guide | Mannequin names, A-pose, root bone, centimeters | ORM, DirectX normal map |
+| **Godot** | glTF Binary (.glb) with the textures inside | Humanoid names, T-pose, root bone | Metallic-Roughness, OpenGL normal map |
+| **Mixamo** | FBX, textures in a folder | Mixamo names, T-pose, no root bone | Separate maps, OpenGL normal map |
+| **Generic game** | FBX, textures in a folder | Human Generator names, A-pose, root bone | Separate maps, OpenGL normal map |
+| **Blender render copy** | In this file | Off, the full rig stays | Off, the materials stay as they are |
 
-Every built-in recipe makes **one LOD level** at the *High* quality, converts the hair to **high** hair cards, keeps the face rig, the 1-click expressions and the corrective shape keys, and bakes the body, face and age sliders into the mesh. Unreal removes the correctives, as its retargeting tools don't use them. Animations are off everywhere until you turn them on.
+<!-- hidden while the Animations section is experimental, the column it drops from the table:
+**Unity**: One file per clip (`Jake@Run.fbx`), root motion on the root bone
+**Unreal**: One file with all clips, root motion on the root bone
+**Godot**: Clips inside the character file, root motion on the root bone
+**Mixamo**: One file per clip
+**Generic game**: One file with all clips
+**Blender render copy**: Off
+-->
+
+Every built-in recipe makes **one LOD level** at the *High* quality, converts the hair to **high** hair cards, keeps the face rig, the 1-click expressions and the corrective shape keys, and bakes the body, face and age sliders into the mesh. Unreal removes the correctives, as its retargeting tools don't use them.<!-- Animations are off everywhere until you turn them on. -->
 
 Each program has its own page with what the recipe does and what to do on the other side: [[Export to Unity]], [[Export to Unreal Engine]], [[Export to Godot]], [[Export to Mixamo]].
 
@@ -65,10 +74,11 @@ A recipe is readable JSON with the same structure as the Python [[ExportSettings
         {"body": 2, "clothing": "low", "eyes": "low", "teeth": 2, "haircards": "low", "bones_per_vertex": 4}
     ],
     "skeleton": {"enabled": true, "names": "humanoid", "rest_pose": "t_pose"},
-    "textures": {"workflow": "metallic_smoothness", "normal_map": "directx"},
-    "animations": {"enabled": false}
+    "textures": {"workflow": "metallic_smoothness", "normal_map": "directx"}
 }
 ```
+
+<!-- hidden while the Animations section is experimental; the example also had: "animations": {"enabled": false} -->
 
 Recipes saved with the process system of earlier versions are converted when they are loaded.
 

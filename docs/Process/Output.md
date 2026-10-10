@@ -15,13 +15,13 @@ The **Output** dropdown at the top of the Process tab decides what you get. The 
 | Output | What you get | Use it for |
 | --- | --- | --- |
 | **In this file** | A frozen, processed copy of the human in your scene, see [[#Processed copies]] | A lightweight copy to render, a crowd of baked humans, or checking a result before exporting |
-| **FBX** | One `.fbx` file with the skeleton, meshes, blend shapes and animations | Unity, Unreal Engine, Mixamo and most other 3D programs |
+| **FBX** | One `.fbx` file with the skeleton, meshes and blend shapes<!-- and animations--> | Unity, Unreal Engine, Mixamo and most other 3D programs |
 | **glTF Binary (.glb)** | One `.glb` file with the textures inside | Godot, three.js and the web, Blender |
 | **glTF + textures** | A `.gltf` file with the textures as separate files next to it | The same, when you want to edit the textures |
 | **OBJ (no rig)** | Meshes only. No skeleton, animation or blend shapes | Static props, 3D printing, programs that only read OBJ |
 | **Alembic (no rig)** | A mesh cache. No skeleton | VFX pipelines |
 
-The sections adjust to the format: a file always needs [[Bake Textures|baked textures]], and the [[Animations]] section is only shown for formats with a skeleton.
+The sections adjust to the format: a file always needs [[Bake Textures|baked textures]].<!-- , and the [[Animations]] section is only shown for formats with a skeleton. -->
 
 ## Name
 
