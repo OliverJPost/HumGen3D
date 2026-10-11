@@ -76,6 +76,9 @@ class SavableContent:
         new_scene.collection.children.link(new_col)
         for obj in objs:
             new_col.objects.link(obj)
+        # Without an update the view layer of the new scene has no runtime data
+        # yet, which crashes Blender 5.2 when it copies the scene for writing.
+        context.view_layer.update()
 
         if not os.path.exists(folder):
             os.makedirs(folder)
