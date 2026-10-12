@@ -25,6 +25,7 @@ so everything but the baked objects is hidden from the render meanwhile.
 
 from __future__ import annotations
 
+import math
 import os
 import re
 from dataclasses import dataclass, field
@@ -107,6 +108,19 @@ class TextureSet:
     others: List[Tuple[bpy.types.Object, int]] = field(default_factory=list)
     # Baked images per pass, a float for passes whose input is a plain value
     baked: Dict[str, object] = field(default_factory=dict)
+    # The alpha pass is the strand coverage of the hair card atlas, see
+    # _atlas_image, and needs the atlas's own encoding back
+    atlas_alpha: bool = False
+
+    @property
+    def is_hair(self) -> bool:
+        """Hair cards or the caps under them, textured by a strand atlas."""
+        return HAIRCARD_KEY in self.obj
+
+    @property
+    def is_cards(self) -> bool:
+        """Hair cards, which engines cut out; the caps are blended."""
+        return self.is_hair and self.part.endswith("Cards")
 
     @property
     def material(self) -> bpy.types.Material:
@@ -247,7 +261,7 @@ def bake_steps(  # noqa: CCR001
                 for texture_set in sets:
                     baked = texture_set.baked.get(pass_id)
                     if isinstance(baked, bpy.types.Image):
-                        _snapshot(baked)
+                        _snapshot(baked, channels=SNAPSHOT_CHANNELS.get(pass_id, 4))
                 yield (index + 1) / len(passes)
         finally:
             _show_solidify(was_solidified)
@@ -372,6 +386,118 @@ def _input_source(
     return None, float(value if not hasattr(value, "__len__") else value[0])
 
 
+# Passes of the hair cards that are baked from the atlas textures of their
+# material rather than from the Principled inputs, see _card_source
+CARD_ATLAS_PASSES = ("alpha", "roughness")
+# Roughness of a hair card texel between the strands, and how much the
+# strand specular map of the atlas lowers it on a strand: the Principled
+# roughness of the cards is one value, and cut-out cards lit with one
+# roughness reflect like plastic. More than 0.15 gave dark hair white
+# streaks in engines, a flat card has none of the strand's curvature to
+# spread a sharp highlight
+CARD_ROUGHNESS = 0.55
+CARD_STRAND_GLOSS = 0.15
+# Name part of the atlas image that feeds each pass
+CARD_ATLAS_IMAGES = {"alpha": "_ALPHA", "roughness": "_SPECULAR"}
+# Passes of the hair that are baked at the size of the strand texture of the
+# material and scaled down after, see _prepare_pass. Cycles samples a texture
+# once per baked texel, so a 4096 strand texture baked into 1024 texels
+# aliased: a strand's normal landed on a random side of the strand, which
+# lit half of the texels of the caps from the back, and a strand thinner
+# than a texel was lost from the alpha
+NATIVE_PASSES = ("alpha", "normal")
+# Largest native bake, the atlas of the library is 4096
+MAX_NATIVE_SIZE = 4096
+# Baked (sRGB encoded) alpha at and above which a hair card texel is solid,
+# so that every strand the hair material draws at a fifth of full opacity or
+# more is in at the half alpha engines cut out at. Below it the alpha fades to
+# zero as drawn. The parts of the atlas the cards use are drawn sparse on
+# purpose (a tenth of the texels of the short and fine parts is strand), so
+# the cut-out needs every strand; 0.6 lost half of them and the hair looked
+# thin next to Blender's translucent cards.
+ALPHA_SOLID = 0.2
+# Share of the width of a card over which its alpha fades out at each side.
+# The parts of the atlas a card uses are cut through strands at their sides,
+# which showed as straight edges along every card in a cut-out
+CARD_EDGE_FADE = 0.15
+
+
+def _material_images(material: bpy.types.Material) -> List[bpy.types.Image]:
+    """The images of a material's nodes and of the groups in it."""
+    images = []
+    trees = [material.node_tree]
+    for node in material.node_tree.nodes:
+        if node.bl_idname == "ShaderNodeGroup" and node.node_tree:
+            trees.append(node.node_tree)
+    for tree in trees:
+        for node in tree.nodes:
+            image = getattr(node, "image", None)
+            if image is not None and image not in images:
+                images.append(image)
+    return images
+
+
+def _atlas_image(
+    material: bpy.types.Material, name_part: str
+) -> Optional[bpy.types.Image]:
+    """An atlas texture of a hair card material, found by name inside its group."""
+    for node in material.node_tree.nodes:
+        if node.bl_idname != "ShaderNodeGroup" or not node.node_tree:
+            continue
+        for inner in node.node_tree.nodes:
+            image = getattr(inner, "image", None)
+            if image is not None and name_part in image.name:
+                return image
+    return None
+
+
+def _native_size(texture_set: TextureSet, size: int) -> Optional[int]:
+    """The size to bake a native pass of a hair set at, see NATIVE_PASSES:
+    that of the largest strand texture of its materials, when it is a whole
+    multiple of the texture size and larger."""
+    largest = 0
+    for material in texture_set.materials:
+        for image in _material_images(material):
+            largest = max(largest, int(image.size[0]))
+    native = min(largest, MAX_NATIVE_SIZE)
+    if native > size and native % size == 0:
+        return native
+    return None
+
+
+def _card_source(
+    material: bpy.types.Material,
+    pass_id: str,
+    fallback: Tuple[Optional[bpy.types.NodeSocket], float],
+) -> Tuple[Optional[bpy.types.NodeSocket], float]:
+    """The socket to bake a pass of hair cards from.
+
+    The strands of the card atlas are drawn to full alpha, and the card
+    material scales that down to a fraction, so stacked cards read as
+    translucent in Cycles. Engines cut cards out, and a cut-out of
+    translucent strands is blobby up close and gone at a distance, so the
+    alpha is baked from the atlas itself: full strands with anti-aliased
+    edges, cut out at the half alpha every engine defaults to. The roughness
+    comes from the strand specular map of the atlas, so every strand
+    reflects on its own. A material without the atlas keeps its inputs.
+    """
+    image = _atlas_image(material, CARD_ATLAS_IMAGES[pass_id])
+    if image is None:
+        return fallback
+    nodes = material.node_tree.nodes
+    atlas = nodes.new("ShaderNodeTexImage")
+    atlas.image = image
+    atlas.label = f"atlas_{pass_id}"
+    if pass_id == "alpha":
+        return atlas.outputs["Color"], 0.0  # type:ignore[return-value]
+    gloss = nodes.new("ShaderNodeMath")
+    gloss.operation = "MULTIPLY_ADD"
+    gloss.inputs[1].default_value = -CARD_STRAND_GLOSS  # type:ignore[index]
+    gloss.inputs[2].default_value = CARD_ROUGHNESS  # type:ignore[index]
+    material.node_tree.links.new(atlas.outputs["Color"], gloss.inputs[0])  # type:ignore[index]
+    return gloss.outputs[0], 0.0  # type:ignore[return-value]
+
+
 def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
     """Readies the materials of a set for the bake of one pass: a new target
     image, active in every node tree, with the input of the pass wired to the
@@ -384,19 +510,33 @@ def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
     materials = texture_set.materials
     if pass_id != "normal":
         sources = [_input_source(_principled(material), pass_id) for material in materials]
+        if texture_set.is_cards and pass_id in CARD_ATLAS_PASSES:
+            sources = [
+                _card_source(material, pass_id, source)
+                for material, source in zip(materials, sources)
+            ]
+            if pass_id == "alpha":
+                texture_set.atlas_alpha = (
+                    _atlas_image(texture_set.material, CARD_ATLAS_IMAGES["alpha"]) is not None
+                )
         if all(source is None for source, _ in sources):
             return sources[0][1]
 
     is_color = pass_id == "base_color"
     sampled = pass_id in IMPLICIT_PASSES
     size = SAMPLE_SIZE if sampled else texture_set.resolution
+    # Scaled down after the bake, see _alpha_channel and _normal_pixels
+    native = _native_size(texture_set, size) if pass_id in NATIVE_PASSES and texture_set.is_hair else None
+    if native:
+        size = native
     image = bpy.data.images.new(
         f"hg_bake_{texture_set.part}_{pass_id}",
         width=size,
         height=size,
         # The alpha of a sampled pass tells which texels the bake reached
         alpha=sampled,
-        float_buffer=not is_color,
+        # Eight bits are enough for a native bake, which is scaled down
+        float_buffer=not is_color and not native,
     )
     if not is_color:
         image.colorspace_settings.name = "Non-Color"
@@ -503,10 +643,15 @@ def _sharing_groups(
 # still references to the state after its first bake call, which lost the
 # eyebrows and eyelashes from the cap image they share with the scalp cap.
 _SNAPSHOTS: Dict[str, np.ndarray] = {}
+# Channels a snapshot keeps per pass: the native passes of the hair are
+# baked at up to 4096 px, see NATIVE_PASSES
+SNAPSHOT_CHANNELS = {"alpha": 1, "normal": 3}
 
 
-def _snapshot(image: bpy.types.Image) -> None:
-    _SNAPSHOTS[image.name] = _read_pixels(image)
+def _snapshot(image: bpy.types.Image, channels: int = 4) -> None:
+    """Keeps the first channels of the pixels of a baked image."""
+    pixels = _read_pixels(image)
+    _SNAPSHOTS[image.name] = pixels[:, :channels].copy() if channels < 4 else pixels
 
 
 def _read_pixels(image: bpy.types.Image) -> np.ndarray:
@@ -528,6 +673,203 @@ def _channel(source: object, size: int, invert: bool = False) -> np.ndarray:
     else:
         values = np.full(size * size, float(source), dtype=np.float32)  # type:ignore[arg-type]
     return 1.0 - values if invert else values
+
+
+def _box_down(values: np.ndarray, factor: int) -> np.ndarray:
+    """Scales a (rows, cols, ...) array down by a whole factor, averaging."""
+    rows, cols = values.shape[:2]
+    shape = (rows // factor, factor, cols // factor, factor) + values.shape[2:]
+    return values.reshape(shape).mean(axis=(1, 3)).astype(np.float32)
+
+
+def _alpha_channel(texture_set: TextureSet, size: int) -> np.ndarray:
+    """The baked alpha of a set at the texture size.
+
+    A native bake (see NATIVE_PASSES) is scaled down: the alpha of a cap by
+    averaging, the atlas coverage of cards with the strand coverage kept, see
+    _downsample_coverage. The atlas alpha is a color image, so Cycles bakes
+    its values decoded to linear, which thins every anti-aliased strand edge;
+    the mask was drawn in the stored values, those are what the cut-out should
+    see, with the strands made solid from ALPHA_SOLID up.
+    """
+    alpha = _channel(texture_set.baked["alpha"], size)
+    native = int(round(math.sqrt(alpha.size)))
+    alpha = alpha.reshape(native, native)
+    if not texture_set.atlas_alpha:
+        if native > size:
+            alpha = _box_down(alpha, native // size)
+        return alpha.ravel()
+    atlas = _atlas_image(texture_set.material, CARD_ATLAS_IMAGES["alpha"])
+    if atlas is not None and atlas.colorspace_settings.name != "Non-Color":
+        linear = np.clip(alpha, 0.0, 1.0)
+        alpha = np.where(
+            linear <= 0.0031308,
+            linear * 12.92,
+            1.055 * np.power(linear, 1.0 / 2.4) - 0.055,
+        ).astype(np.float32)
+    alpha = np.minimum(alpha / ALPHA_SOLID, 1.0).astype(np.float32)
+    alpha *= _card_edge_fade(texture_set, native)
+    if native > size:
+        rects = _card_rects(texture_set.obj, texture_set.slot)
+        alpha = _downsample_coverage(alpha, native // size, rects)
+    return alpha.ravel()
+
+
+def _normal_pixels(texture_set: TextureSet, size: int) -> np.ndarray:
+    """The baked normal of a set as (size * size, 4) pixels.
+
+    A native bake is scaled down by averaging the normals, weighted by the
+    alpha baked at the same size when the set has one: the normal of a strand
+    edge is that of the strand, not of the gap next to it, and a texel
+    between strands is flat. Without that the gaps, which the bake fills with
+    whatever the atlas has there, pulled every edge normal over.
+    """
+    pixels = _pixels(texture_set.baked["normal"])  # type:ignore[arg-type]
+    native = int(round(math.sqrt(len(pixels))))
+    rgb = pixels[:, :3]
+    if native > size:
+        factor = native // size
+        vectors = rgb.reshape(native, native, 3) * 2.0 - 1.0
+        alpha = texture_set.baked.get("alpha")
+        if isinstance(alpha, bpy.types.Image) and alpha.size[0] == native:
+            weight = np.clip(_pixels(alpha)[:, 0].reshape(native, native, 1), 0.0, 1.0)
+            vectors = _box_down(vectors * weight, factor)
+            total = _box_down(weight, factor)
+            flat = total < 1e-4
+            vectors[flat[..., 0]] = (0.0, 0.0, 1.0)
+        else:
+            vectors = _box_down(vectors, factor)
+        length = np.linalg.norm(vectors, axis=2, keepdims=True)
+        rgb = (vectors / np.maximum(length, 1e-6) * 0.5 + 0.5).reshape(-1, 3)
+    out = np.ones((size * size, 4), dtype=np.float32)
+    out[:, :3] = rgb
+    return out
+
+
+Rect = Tuple[float, float, float, float]
+
+
+def _card_rects(obj: bpy.types.Object, slot: int) -> List[Rect]:
+    """The parts of the atlas the cards of an object use, as (u0, u1, v0, v1).
+
+    A card is a strip of quads between two columns of the atlas, so the two u
+    values of its polygons are the sides of its part, and its v values span it.
+    """
+    mesh = obj.data
+    uv_layer = mesh.uv_layers.active
+    if uv_layer is None or not len(mesh.polygons):
+        return []
+    uvs = np.empty(len(mesh.loops) * 2, dtype=np.float32)
+    uv_layer.data.foreach_get("uv", uvs)
+    uvs = uvs.reshape(-1, 2)
+    material_index = np.empty(len(mesh.polygons), dtype=np.int32)
+    mesh.polygons.foreach_get("material_index", material_index)
+    loop_total = np.empty(len(mesh.polygons), dtype=np.int32)
+    mesh.polygons.foreach_get("loop_total", loop_total)
+    of_slot = np.repeat(material_index == slot, loop_total)
+    polygon = np.repeat(np.arange(len(mesh.polygons)), loop_total)[of_slot]
+    u, v = uvs[of_slot, 0], uvs[of_slot, 1]
+    count = len(mesh.polygons)
+    u_min = np.full(count, np.inf)
+    u_max = np.full(count, -np.inf)
+    np.minimum.at(u_min, polygon, u)
+    np.maximum.at(u_max, polygon, u)
+    sides = np.round(np.stack((u_min[polygon], u_max[polygon]), axis=1), 4)
+    rects: List[Rect] = []
+    for u0, u1 in np.unique(sides, axis=0):
+        if u1 - u0 < 1e-4:
+            continue
+        of_rect = (sides[:, 0] == u0) & (sides[:, 1] == u1)
+        rects.append(
+            (float(u0), float(u1), float(v[of_rect].min()), float(v[of_rect].max()))
+        )
+    return rects
+
+
+def _card_edge_fade(texture_set: TextureSet, size: int) -> np.ndarray:
+    """A (size, size) factor that fades the alpha out at the sides of every
+    part of the atlas the cards use, see CARD_EDGE_FADE."""
+    fade = np.ones((size, size), dtype=np.float32)
+    for u0, u1, v0, v1 in _card_rects(texture_set.obj, texture_set.slot):
+        x0, x1 = int(u0 * size), int(math.ceil(u1 * size))
+        y0, y1 = int(v0 * size), int(math.ceil(v1 * size))
+        centers = (np.arange(x0, x1) + 0.5) / size
+        distance = np.minimum(centers - u0, u1 - centers) / (u1 - u0)
+        t = np.clip(distance / CARD_EDGE_FADE, 0.0, 1.0)
+        fade[y0:y1, x0:x1] = np.minimum(fade[y0:y1, x0:x1], t * t * (3 - 2 * t))
+    return fade
+
+
+def _downsample_coverage(
+    alpha: np.ndarray, factor: int, rects: Optional[List[Rect]] = None
+) -> np.ndarray:
+    """Scales an alpha image down by a whole factor, keeping the share of texels
+    above the cut-out the same in every part of the atlas the cards use.
+
+    Averaging alone turns a strand thinner than a texel into a texel below the
+    cut-out, so the hair thinned out with every step down from the atlas.
+    The averaged alpha is multiplied by the factor that brings the covered
+    share back, as Unity's coverage-preserving mipmaps do. The factor is found
+    per part: one factor for the whole atlas was set by its dense parts, and
+    the parts of fine strands lost whole cards.
+    """
+    rows, cols = alpha.shape
+    small = _box_down(alpha, factor)
+    out = small.copy()
+    regions = [(0.0, 1.0, 0.0, 1.0)] if not rects else rects
+    for u0, u1, v0, v1 in regions:
+        x0, x1 = int(u0 * cols) // factor, -(-int(math.ceil(u1 * cols)) // factor)
+        y0, y1 = int(v0 * rows) // factor, -(-int(math.ceil(v1 * rows)) // factor)
+        part = alpha[y0 * factor : y1 * factor, x0 * factor : x1 * factor]
+        averaged = small[y0:y1, x0:x1]
+        coverage = (part > HAIR_ALPHA_CUTOFF).mean() if part.size else 0.0
+        if coverage <= 0:
+            continue
+        low, high = 1.0, 8.0
+        for _ in range(20):
+            scale = (low + high) / 2
+            if (np.minimum(averaged * scale, 1.0) > HAIR_ALPHA_CUTOFF).mean() < coverage:
+                low = scale
+            else:
+                high = scale
+        out[y0:y1, x0:x1] = np.minimum(averaged * (low + high) / 2, 1.0)
+    return out.astype(np.float32)
+
+
+# Alpha above which a texel of a hair texture counts as covered, see _fill_uncovered
+COVERED_ALPHA = 0.3
+# How far, in texels, the color of the strands is spread into the gaps
+FILL_RADIUS = 8
+
+
+def _fill_uncovered(pixels: np.ndarray, size: int) -> None:
+    """Spreads the color of the covered texels into the transparent ones.
+
+    The gaps between the strands of the hair cards are black in the baked
+    color, and texture filtering and mipmaps mix that black into the edges
+    of every strand, which gave the hair a dark fringe and made it darker at
+    a distance. The gaps get the color of the nearest strand, and whatever
+    stays empty beyond the fill radius gets the average color of the strands.
+    """
+    rgb = pixels[:, :3].reshape(size, size, 3)
+    covered = pixels[:, 3].reshape(size, size) > COVERED_ALPHA
+    if not covered.any():
+        return
+    average = rgb[covered].mean(axis=0)
+    color = np.where(covered[..., None], rgb, 0.0).astype(np.float32)
+    weight = covered.astype(np.float32)
+    for _ in range(FILL_RADIUS):
+        total = np.zeros_like(color)
+        count = np.zeros_like(weight)
+        for axis in (0, 1):
+            for shift in (-1, 1):
+                total += np.roll(color, shift, axis=axis)
+                count += np.roll(weight, shift, axis=axis)
+        grow = (weight == 0) & (count > 0)
+        color[grow] = total[grow] / count[grow][:, None]
+        weight[grow] = 1.0
+    color[weight == 0] = average
+    rgb[~covered] = color[~covered]
 
 
 def _average(image: bpy.types.Image, weights: object) -> Optional[float]:
@@ -600,22 +942,23 @@ def _build_material(  # noqa: CCR001
             and alpha is not None
         )
         if pack_alpha:
-            pixels[:, 3] = _channel(alpha, size)
+            pixels[:, 3] = _alpha_channel(texture_set, size)
+            _fill_uncovered(pixels, size)
         images["base_color"] = _new_image(
             namer.texture(part, "base_color", per_level), size, pixels, True, pack_alpha
         )
-    if isinstance(alpha, bpy.types.Image) and "base_color" not in images:
+    if isinstance(alpha, bpy.types.Image) and (
+        "base_color" not in images or images["base_color"].alpha_mode != "CHANNEL_PACKED"
+    ):
+        pixels = np.ones((size * size, 4), dtype=np.float32)
+        pixels[:, :3] = _alpha_channel(texture_set, size)[:, None]
         images["alpha"] = _new_image(
-            namer.texture(part, "alpha", per_level), size, _pixels(alpha), False, False
-        )
-    elif isinstance(alpha, bpy.types.Image) and not images["base_color"].alpha_mode == "CHANNEL_PACKED":
-        images["alpha"] = _new_image(
-            namer.texture(part, "alpha", per_level), size, _pixels(alpha), False, False
+            namer.texture(part, "alpha", per_level), size, pixels, False, False
         )
 
     normal = baked.get("normal")
     if isinstance(normal, bpy.types.Image):
-        pixels = _pixels(normal)
+        pixels = _normal_pixels(texture_set, size)
         if settings.normal_map == "directx":
             pixels[:, 1] = 1.0 - pixels[:, 1]
         images["normal"] = _new_image(
@@ -669,7 +1012,7 @@ def _build_material(  # noqa: CCR001
     material = bpy.data.materials.new(namer.material(part, per_level))
     # Hair cards are cut out at half alpha, the haircap fades: the glTF exporter
     # writes the cards as alphaMode MASK, which engines import as alpha clip
-    clip_alpha = part.endswith("Cards")
+    clip_alpha = texture_set.is_cards
     # LOD levels share it on purpose, see share_textures and copy_materials
     material[BAKED_KEY] = True
     material.use_nodes = True
@@ -730,11 +1073,12 @@ def _build_material(  # noqa: CCR001
 
 
 # Alpha below which a hair card texel is cut out in engines and in Blender's
-# display of the baked copy. The card textures of the library are soft, their
-# strands never reach full alpha, and engines average the alpha with the empty
-# space around a strand in their mipmaps, so half alpha lost most of the hair
-# at a distance. The glTF exporter writes it as alphaCutoff.
-HAIR_ALPHA_CUTOFF = 0.3
+# display of the baked copy. The baked alpha is the strand coverage of the
+# atlas (see _card_source and ALPHA_SOLID), full strands with anti-aliased
+# edges, so the half alpha that every engine and glTF default to cuts them
+# out at their drawn width. The glTF exporter writes it as alphaCutoff, the
+# Companions set it.
+HAIR_ALPHA_CUTOFF = 0.5
 
 # Name of the node that flips the green channel of a DirectX normal map for
 # Blender's display. Exporters only find an image linked straight to the Normal

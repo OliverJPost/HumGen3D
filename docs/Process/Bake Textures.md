@@ -22,6 +22,8 @@ You get one set of textures per part: the **body** (skin), each piece of **cloth
 
 Inputs that don't get a map of their own, like the specular of the skin and the hair cards, are kept as one value on the baked material, so the baked material carries the same values; how it looks depends on the shader of the other program.
 
+The hair cards are baked for a cutout: their alpha is the strand coverage of the hair atlas rather than the translucent alpha the cards have in Blender (see [[Haircards#In the engine]]), the color is spread into the gaps between the strands so filtering doesn't darken their edges, and their roughness map comes from the strand highlights of the atlas, so every strand reflects on its own instead of the whole card.
+
 ## Resolution
 
 One choice sets the resolution of every part, with the body and clothing largest and the small parts smaller:
@@ -55,13 +57,16 @@ How the maps are packed, so the materials in the engine work without rewiring. T
 
 #### Normal map
 
-The two conventions differ in the direction of the green channel. Choose the wrong one and the bumps of the skin look pressed in. **OpenGL (Y+)** is used by Blender, Godot, glTF and three.js. **DirectX (Y−)** is used by Unity and Unreal Engine by default.
+The two conventions differ in the direction of the green channel. Choose the wrong one and the bumps of the skin look pressed in. **OpenGL (Y+)** is used by Blender, Unity, Godot, glTF and three.js. **DirectX (Y−)** is used by Unreal Engine by default.
 
 ## Advanced
 
 **Resolution per set** sets each part on its own; the tier at the top then reads *Custom*. **Passes** chooses which maps are baked per part. Base color and normal are what every material needs; roughness and metallic can be left out for parts where they are constant (the add-on already skips maps whose inputs are plain values and puts the value on the material instead). Alpha is only needed for the hair.
 
 **Pack hair alpha into color** puts the transparency of the hair cards in the alpha channel of their color texture, which is how engines expect it. Off, the alpha is a separate grayscale map. **Samples** is the number of render samples per pixel. 4 is enough as the maps are baked from the material inputs rather than lit; raise it if you see noise in a normal map.
+
+> [!note]- Why the skin looks different in a game engine
+> The skin of a Human Generator human is rendered with subsurface scattering in Blender, which softens the pores and lets light through the ears and nose. A plain lit material in a game engine has none of that, so the baked skin looks flatter and harsher than in Cycles or Eevee until the engine's own scattering is turned on: the *Subsurface Profile* shading model in Unreal, the *Subsurface Scattering* material type in Unity HDRP, *Subsurface Scattering* in skin mode in Godot. The Companions for [[Export to Unreal Engine|Unreal]], [[Export to Unity|Unity]] and [[Export to Godot|Godot]] set this up on import; URP and the Built-in pipeline of Unity have no subsurface scattering in their standard shaders.
 
 ## Baking a copy for Blender
 

@@ -73,8 +73,8 @@ TEXTURE_WORKFLOWS = [
     ),
 ]
 NORMAL_MAP_DIRECTIONS = [
-    ("opengl", "OpenGL (Y+)", "Blender, Godot, glTF and Unreal materials made for it"),
-    ("directx", "DirectX (Y−)", "Unity and Unreal by default"),
+    ("opengl", "OpenGL (Y+)", "Blender, Unity, Godot, glTF and Unreal materials made for it"),
+    ("directx", "DirectX (Y−)", "Unreal by default"),
 ]
 TEXTURE_FORMATS = [
     ("png", "PNG", "Lossless, keeps the alpha of the haircards"),

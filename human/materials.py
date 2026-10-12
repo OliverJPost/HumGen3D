@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING, Optional
 
 import bpy
+from HumGen3D.human.hair.haircards import CARDS_KEY
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -88,7 +89,9 @@ class MaterialSettings:
         """
         mats = []
         for obj in self._human.objects.haircards:
-            if len(obj.data.materials) > 1:
+            if CARDS_KEY in obj:
+                mats.append(obj.data.materials[0])
+            elif len(obj.data.materials) > 1:
                 mats.append(obj.data.materials[1])
 
         return mats

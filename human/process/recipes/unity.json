@@ -28,7 +28,7 @@
     "textures": {
         "enabled": true,
         "workflow": "metallic_smoothness",
-        "normal_map": "directx",
+        "normal_map": "opengl",
         "file_format": "png"
     },
     "animations": {

@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 
 import bpy
+from HumGen3D.human.hair.haircards import CARDS_KEY
 
 from .settings import OutputSettings
 
@@ -69,6 +70,9 @@ HAIR_PARTS = {
 # space, so they are one material and one texture set. The beard cap has an
 # atlas of its own.
 SHARED_CAP_TAGS = ("hg_main_hair", "hg_eyebrows", "hg_eyelashes")
+# The hair types that get cards over their cap; a file holds the cap and the
+# cards of these as objects of their own, see haircards.separate_caps
+CARD_TAGS = ("hg_main_hair", "hg_face_hair")
 HAIRCAP_PART = "Haircap"
 SKIN_PART = "Skin"
 TEMP_SUFFIX = ".hg_tmp"
@@ -148,7 +152,13 @@ def part_names(human: "Human") -> Dict[bpy.types.Object, str]:
     }
     for hair_obj in objects.haircards:
         tag = next((tag for tag in HAIR_PARTS if tag in hair_obj), None)
-        parts[hair_obj] = HAIR_PARTS.get(tag, "Hair")  # type:ignore[arg-type]
+        part = HAIR_PARTS.get(tag, "Hair")  # type:ignore[arg-type]
+        if CARDS_KEY in hair_obj:
+            part += "Cards"
+        elif tag in CARD_TAGS and len(hair_obj.data.materials) < 2:
+            # The cap of a hair type on its own, split off or without cards
+            part = HAIRCAP_PART if is_shared_cap(hair_obj) else part
+        parts[hair_obj] = part
     for cloth_obj in human.clothing.outfit.objects + human.clothing.footwear.objects:
         parts[cloth_obj] = clean(cloth_obj.name.replace("HG_", "", 1))
     return parts
@@ -159,7 +169,8 @@ def material_part(human: "Human", obj: bpy.types.Object, slot: int, part: str) -
 
     Materials shared by parts get one name: the teeth share theirs, the hair,
     eyebrows and eyelashes share their cap. The skin, the layers of the eyes
-    and the hair cards get names of their own.
+    and the hair cards get names of their own. The cards in an object of their
+    own are named after the object, which already says "Cards".
     """
     objects = human.objects
     if obj == objects.body and slot == 0:
@@ -169,6 +180,8 @@ def material_part(human: "Human", obj: bpy.types.Object, slot: int, part: str) -
     if "hg_teeth" in obj:
         return "Teeth"
     if "hg_haircard" in obj:
+        if CARDS_KEY in obj:
+            return part
         if slot == 1:
             return part + "Cards"
         if is_shared_cap(obj):

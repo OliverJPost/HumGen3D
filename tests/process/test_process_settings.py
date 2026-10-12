@@ -291,7 +291,7 @@ def test_shipped_recipe_is_valid(recipe):
 @pytest.mark.parametrize(
     "recipe, expected",
     [
-        ("unity", {"output.format": "fbx", "skeleton.names": "humanoid", "skeleton.rest_pose": "t_pose", "textures.workflow": "metallic_smoothness", "textures.normal_map": "directx", "animations.layout": "per_clip"}),
+        ("unity", {"output.format": "fbx", "skeleton.names": "humanoid", "skeleton.rest_pose": "t_pose", "textures.workflow": "metallic_smoothness", "textures.normal_map": "opengl", "animations.layout": "per_clip"}),
         ("unreal", {"output.naming": "unreal", "skeleton.names": "unreal", "skeleton.rest_pose": "a_pose", "skeleton.units": "centimeters", "textures.workflow": "orm", "textures.normal_map": "directx"}),
         ("godot", {"output.format": "glb", "output.textures": "embedded", "skeleton.names": "humanoid", "textures.workflow": "metallic_roughness", "textures.normal_map": "opengl", "animations.layout": "with_mesh"}),
         ("mixamo", {"skeleton.names": "mixamo", "skeleton.root_bone": False, "skeleton.rest_pose": "t_pose"}),

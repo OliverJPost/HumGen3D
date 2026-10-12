@@ -19,8 +19,9 @@ import contextlib
 import json
 import os
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, List, Optional, Union
 
+import bmesh
 import bpy
 import numpy as np
 from HumGen3D import get_prefs
@@ -1260,6 +1261,86 @@ def set_custom_normals(mesh: bpy.types.Mesh, normals: np.ndarray) -> None:
     if hasattr(mesh, "use_auto_smooth"):
         mesh.use_auto_smooth = True
     mesh.normals_split_custom_set_from_vertices(normals.tolist())
+
+
+# On an object that holds only the cards of a hair type, see separate_caps
+CARDS_KEY = "hg_haircard_cards"
+
+
+def separate_caps(human: "Human", context: bpy.types.Context) -> List[bpy.types.Object]:
+    """Puts the cap and the cards of every hair card object in objects of their own.
+
+    A hair type is made as one mesh, the cap in its first material slot and the
+    cards in the second. A game engine sorts, culls and lights the blended cap
+    and the cut-out cards of one mesh as one renderer; as meshes of their own
+    each gets the treatment of its kind, and a scene can hide or swap one
+    without the other. The cards object is a copy of the original, with its
+    custom properties, shape keys and their drivers, vertex groups and
+    attachment to the body; the original keeps the cap. Objects whose faces use
+    one material are left alone, so this can run again.
+
+    Args:
+        human (Human): Human whose hair card objects are split.
+        context (bpy.types.Context): Blender context, for the collections.
+
+    Returns:
+        List[bpy.types.Object]: The new objects, with the cards.
+    """
+    made = []
+    for obj in list(human.objects.haircards):
+        mesh = obj.data
+        if CARDS_KEY in obj or len(mesh.materials) < 2:
+            continue
+        if len(_used_slots(mesh)) < 2:
+            _remove_unused_slots(mesh)
+            continue
+        cards_obj = obj.copy()
+        cards_obj.data = mesh.copy()
+        for collection in obj.users_collection or [context.scene.collection]:
+            collection.objects.link(cards_obj)
+        _keep_slot(mesh, 0)
+        _keep_slot(cards_obj.data, 1)
+        cards_obj[CARDS_KEY] = True
+        cards_name = obj.name.replace("Haircap", "Haircards") if "Haircap" in obj.name else obj.name
+        obj.name = mesh.name = obj.name.replace("Haircards", "Haircap")
+        cards_obj.name = cards_obj.data.name = cards_name
+        made.append(cards_obj)
+    return made
+
+
+def _used_slots(mesh: bpy.types.Mesh) -> set[int]:
+    """The material slot indices the faces of a mesh use."""
+    indices = np.empty(len(mesh.polygons), dtype=np.int32)
+    mesh.polygons.foreach_get("material_index", indices)
+    return set(np.unique(indices).tolist())
+
+
+def _keep_slot(mesh: bpy.types.Mesh, slot: int) -> None:
+    """Deletes the faces of every other material slot and the slots themselves.
+
+    Through bmesh, which keeps the shape keys and attributes of the mesh, where
+    the separate operator needs an edit mode the export can't always enter.
+    """
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.delete(
+        bm, geom=[face for face in bm.faces if face.material_index != slot], context="FACES"
+    )
+    bm.to_mesh(mesh)
+    bm.free()
+    _remove_unused_slots(mesh)
+    mesh.update()
+
+
+def _remove_unused_slots(mesh: bpy.types.Mesh) -> None:
+    """Removes the material slots no face of the mesh uses, keeping one.
+
+    The indices of the faces follow the slots that are removed below them.
+    """
+    used = _used_slots(mesh)
+    for index in reversed(range(len(mesh.materials))):
+        if index not in used and len(mesh.materials) > 1:
+            mesh.materials.pop(index=index)
 
 
 def parent_to_rig(obj: bpy.types.Object, rig: bpy.types.Object) -> None:

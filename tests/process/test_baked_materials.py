@@ -143,6 +143,8 @@ def test_shared_cap_texture_holds_eyebrows_and_eyelashes(male_human):
                 n.image for n in material.node_tree.nodes if n.type == "TEX_IMAGE" and "BaseColor" in n.image.name
             )
             alpha = _uv_box_alpha(obj, image)
-            assert alpha.max() > 0.5, f"{name}: no alpha in its part of {image.name}"
+            # The alpha is the strand texture averaged down from 4096 to the
+            # 256 of this test, so even the densest eyelash texel is well below one
+            assert alpha.max() > 0.2, f"{name}: no alpha in its part of {image.name}, max {alpha.max():.3f}"
     finally:
         copy.delete()

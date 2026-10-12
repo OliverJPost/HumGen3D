@@ -16,6 +16,7 @@ from HumGen3D.common.object_finding import (
 from HumGen3D.common.progress import ProgressCallback, Steps
 from HumGen3D.common.progress import run as run_steps
 from HumGen3D.common.type_aliases import C
+from HumGen3D.human.hair import haircards
 
 from .lod import LOD_KEY, LOD_RIG_KEY, LodSettings, merge_levels
 
@@ -283,6 +284,26 @@ class ProcessSettings:
             body.modifiers.remove(mod)
         self._human.objects.rig[HAIRCARDS_KEY] = True
         return made
+
+    @injected_context
+    def separate_haircaps(self, context: C = None) -> List[bpy.types.Object]:
+        """Puts the cap and the cards of every hair type in objects of their own.
+
+        The cards are made as one object with the cap in the first material
+        slot and the cards in the second. A game engine sorts, culls and lights
+        the blended cap and the cut-out cards of one mesh as one renderer; as
+        meshes of their own each gets the treatment of its kind. The export
+        pipeline runs this before the names are applied, so a file holds
+        `Jake_Haircap` and `Jake_HairCards`. Objects that hold one material are
+        left alone, so this can run again.
+
+        Args:
+            context (C): Blender context. bpy.context if not provided.
+
+        Returns:
+            List[bpy.types.Object]: The new objects, with the cards.
+        """
+        return haircards.separate_caps(self._human, context)
 
     # Textures
 

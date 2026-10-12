@@ -9150,7 +9150,7 @@
    "examples": [],
    "bases": [],
    "file": "human/materials.py",
-   "line": 11,
+   "line": 12,
    "members": [
     {
      "name": "body",
@@ -9159,7 +9159,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 18,
+     "line": 19,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -9171,7 +9171,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 27,
+     "line": 28,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -9183,7 +9183,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 44,
+     "line": 45,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -9195,7 +9195,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 53,
+     "line": 54,
      "kind": "property",
      "type": "Optional[bpy.types.Material]",
      "readonly": true
@@ -9207,7 +9207,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 65,
+     "line": 66,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -9219,7 +9219,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 74,
+     "line": 75,
      "kind": "property",
      "type": "int",
      "readonly": true
@@ -9231,7 +9231,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 83,
+     "line": 84,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -9243,7 +9243,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 97,
+     "line": 100,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -9255,7 +9255,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 112,
+     "line": 115,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -9267,7 +9267,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 116,
+     "line": 119,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -9279,7 +9279,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/materials.py",
-     "line": 120,
+     "line": 123,
      "kind": "property",
      "type": "bpy.types.Material",
      "readonly": true
@@ -11373,7 +11373,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/process.py",
-   "line": 57,
+   "line": 58,
    "members": [
     {
      "name": "baking",
@@ -11382,7 +11382,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 92,
+     "line": 93,
      "kind": "property",
      "type": "BakeSettings",
      "readonly": true
@@ -11394,7 +11394,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "LodSettings",
      "readonly": true
@@ -11406,7 +11406,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 107,
+     "line": 108,
      "kind": "method",
      "params": [
       {
@@ -11437,7 +11437,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -11480,7 +11480,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 151,
+     "line": 152,
      "kind": "method",
      "params": [
       {
@@ -11511,7 +11511,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 159,
+     "line": 160,
      "kind": "property",
      "type": "Optional[ExportSettings]",
      "readonly": true
@@ -11523,7 +11523,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 167,
+     "line": 168,
      "kind": "method",
      "params": [
       {
@@ -11615,7 +11615,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 226,
+     "line": 227,
      "kind": "method",
      "params": [
       {
@@ -11639,7 +11639,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 242,
+     "line": 243,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11651,7 +11651,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 250,
+     "line": 251,
      "kind": "method",
      "params": [
       {
@@ -11681,13 +11681,37 @@
      ]
     },
     {
+     "name": "separate_haircaps",
+     "summary": "Puts the cap and the cards of every hair type in objects of their own.",
+     "description": "The cards are made as one object with the cap in the first material\nslot and the cards in the second. A game engine sorts, culls and lights\nthe blended cap and the cut-out cards of one mesh as one renderer; as\nmeshes of their own each gets the treatment of its kind. The export\npipeline runs this before the names are applied, so a file holds\n`Jake_Haircap` and `Jake_HairCards`. Objects that hold one material are\nleft alone, so this can run again.",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/process.py",
+     "line": 288,
+     "kind": "method",
+     "params": [
+      {
+       "name": "context",
+       "type": "C",
+       "default": "None",
+       "kind": "positional or keyword",
+       "description": "Blender context. bpy.context if not provided."
+      }
+     ],
+     "returns": {
+      "type": "List[bpy.types.Object]",
+      "description": "List[bpy.types.Object]: The new objects, with the cards."
+     },
+     "raises": []
+    },
+    {
      "name": "was_baked",
      "summary": "Checks if materials were baked.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 290,
+     "line": 311,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11699,7 +11723,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 298,
+     "line": 319,
      "kind": "method",
      "params": [
       {
@@ -11770,7 +11794,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 360,
+     "line": 381,
      "kind": "method",
      "params": [
       {
@@ -11794,7 +11818,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 376,
+     "line": 397,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11806,7 +11830,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 385,
+     "line": 406,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11818,7 +11842,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 393,
+     "line": 414,
      "kind": "method",
      "params": [
       {
@@ -11842,7 +11866,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 408,
+     "line": 429,
      "kind": "method",
      "params": [
       {
@@ -11880,7 +11904,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 447,
+     "line": 468,
      "kind": "method",
      "params": [
       {
@@ -11904,7 +11928,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 463,
+     "line": 484,
      "kind": "method",
      "params": [
       {
@@ -11949,7 +11973,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 490,
+     "line": 511,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11961,7 +11985,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 498,
+     "line": 519,
      "kind": "method",
      "params": [
       {
@@ -11990,7 +12014,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 516,
+     "line": 537,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -12002,7 +12026,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 525,
+     "line": 546,
      "kind": "property",
      "type": "Optional[str]",
      "readonly": true
@@ -12014,7 +12038,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 534,
+     "line": 555,
      "kind": "method",
      "params": [
       {
@@ -12117,7 +12141,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 615,
+     "line": 636,
      "kind": "method",
      "params": [
       {
@@ -12155,7 +12179,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 653,
+     "line": 674,
      "kind": "method",
      "params": [
       {
@@ -12193,7 +12217,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 689,
+     "line": 710,
      "kind": "method",
      "params": [
       {
@@ -12217,7 +12241,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 703,
+     "line": 724,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -12229,7 +12253,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 711,
+     "line": 732,
      "kind": "method",
      "params": [
       {

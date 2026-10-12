@@ -41,7 +41,7 @@ How every object, mesh, material and texture in the file is named. Engines show 
 
 | Scheme | Rig | Meshes | Materials | Textures |
 | --- | --- | --- | --- | --- |
-| **Plain** | `Jake` | `Jake_Body`, `Jake_Eyes`, `Jake_Hair`, `Jake_Jeans` | `Jake_Skin`, `Jake_Teeth`, `Jake_Haircap` | `Jake_Skin_BaseColor`, `Jake_Skin_Normal`, `Jake_Skin_ORM` |
+| **Plain** | `Jake` | `Jake_Body`, `Jake_Eyes`, `Jake_Haircap`, `Jake_HairCards`, `Jake_Jeans` | `Jake_Skin`, `Jake_Teeth`, `Jake_Haircap` | `Jake_Skin_BaseColor`, `Jake_Skin_Normal`, `Jake_Skin_ORM` |
 | **Unreal prefixes** | `SK_Jake` | `SK_Jake_Body` | `M_Jake_Skin` | `T_Jake_Skin_BC`, `T_Jake_Skin_N`, `T_Jake_Skin_ORM` |
 | **Custom** | Your own templates with the `{name}`, `{part}` and `{pass}` tokens | | | |
 

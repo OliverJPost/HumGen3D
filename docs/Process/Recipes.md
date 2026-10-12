@@ -14,7 +14,7 @@ A recipe is the complete state of the Process tab, saved under a name. Picking o
 
 | Recipe | Output | Skeleton | Textures |
 | --- | --- | --- | --- |
-| **Unity** | FBX, textures in a folder next to it | Humanoid names, T-pose, root bone, meters | Metallic-Smoothness, DirectX normal map |
+| **Unity** | FBX, textures in a folder next to it | Humanoid names, T-pose, root bone, meters | Metallic-Smoothness, OpenGL normal map |
 | **Unreal** | FBX with the `SK_`/`M_`/`T_` prefixes of the Unreal style guide | Mannequin names, A-pose, root bone, centimeters | ORM, DirectX normal map |
 | **Godot** | glTF Binary (.glb) with the textures inside | Humanoid names, T-pose, root bone | Metallic-Roughness, OpenGL normal map |
 | **Mixamo** | FBX, textures in a folder | Mixamo names, T-pose, no root bone | Separate maps, OpenGL normal map |
@@ -76,7 +76,7 @@ A recipe is readable JSON with the same structure as the Python [[ExportSettings
         {"body": 2, "clothing": "low", "eyes": "low", "teeth": 2, "haircards": "low", "bones_per_vertex": 4}
     ],
     "skeleton": {"enabled": true, "names": "humanoid", "rest_pose": "t_pose"},
-    "textures": {"workflow": "metallic_smoothness", "normal_map": "directx"}
+    "textures": {"workflow": "metallic_smoothness", "normal_map": "opengl"}
 }
 ```
 

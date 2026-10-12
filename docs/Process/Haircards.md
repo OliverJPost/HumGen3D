@@ -21,7 +21,7 @@ The hair, eyebrows, eyelashes and beards of Human Generator are particle hair: t
 
 ![[process_haircards.webp|520]]
 
-You get one mesh per hair type (*Hair*, *Eyebrows*, *Eyelashes*, *FaceHair*). Scalp hair and beards get a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**. Eyebrows get a haircap only, and eyelashes are pre-made lash strips. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
+Scalp hair and beards get a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**, as two meshes (*Haircap* and *HairCards*, *FaceHair* and *FaceHairCards*), so a game engine sorts, culls and lights the blended cap and the cut-out cards each as its kind, and you can hide or swap one without the other. Eyebrows get a haircap only, and eyelashes are pre-made lash strips, one mesh each. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
 
 ## Quality
 
@@ -42,10 +42,12 @@ With more than one [[Optimize Meshes|LOD level]] every level has its own quality
 
 ## In the engine
 
-The alpha of the cards is the transparency between the strands. Two things to set on the hair materials in the other program, if its importer doesn't do it:
+The alpha of the cards is the coverage of the strands: full strands with anti-aliased edges, cut out at **half alpha**, which is what the cutout materials of Unity, Unreal and Godot default to. Every strand the hair material draws at a fifth of full opacity or more is solid in the baked alpha, so the fine strands survive the cut-out; below that the alpha fades out as drawn, which alpha-to-coverage and dithering turn into soft edges. In Blender the cards render translucent, which is why they look softer there; a game engine can't sort translucent cards, so the export bakes the coverage instead and fades the strands out at the sides of every card. Two things to set on the hair materials in the other program, if its importer doesn't do it:
 
-- Use an **alpha clip / cutout** material (alpha scissor in Godot, masked in Unreal, Alpha Clipping in Unity), not blended transparency, so the cards don't sort wrongly against each other.
+- Use an **alpha clip / cutout** material (alpha scissor in Godot, masked in Unreal, Alpha Clipping in Unity) at the default threshold of 0.5, not blended transparency, so the cards don't sort wrongly against each other.
 - Make the material **two-sided**, as the cards are single planes.
+
+The alpha and normal maps of the hair are baked at the size of the strand atlas and scaled down to the texture size, so a strand finer than a texel still counts and the normals of the cap don't turn to noise. Engines average the alpha for their mipmaps, which makes cut-out strands thinner with distance. Unity (*Preserve Coverage* on the texture) and Unreal (*Alpha Coverage* on the texture) can scale the mipmaps so the strands keep their width; the Companions set that up. For the soft look of Blender in Unreal, the Companion dithers the opacity mask, which the temporal anti-aliasing resolves to translucent-looking strands.
 
 Keep the texture format at **PNG**: with JPEG the alpha becomes a separate map that not every importer uses, and the tab warns you when both are chosen. By default the alpha is packed into the alpha channel of the color texture, as engines expect; see [[Bake Textures]].
 

@@ -23,7 +23,7 @@ What the recipe sets, and why:
 | --- | --- | --- |
 | [[Output]] | FBX, textures in a `Textures` folder next to it | Unity finds textures in a *Textures* folder next to the model |
 | [[Skeleton]] | **Humanoid** names, **T-pose**, root bone `Root`, 4 bones per vertex, meters | Unity's Humanoid avatar maps the bones by name; it expects a T-pose |
-| [[Bake Textures]] | **Metallic-Smoothness** packing, **DirectX** normal map, PNG | What the Standard and URP Lit shaders read |
+| [[Bake Textures]] | **Metallic-Smoothness** packing, **OpenGL** normal map, PNG | What the Standard and URP Lit shaders read |
 | [[Shape Keys]] | Face rig, expressions and correctives kept, sliders baked | The face as blend shapes, the body fixed |
 
 <!-- hidden while the Animations section is experimental:
@@ -38,7 +38,11 @@ Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones,
 2. **Rig**: select `Jake.fbx`, open the *Rig* tab of the Inspector, set *Animation Type* to **Humanoid** with *Avatar Definition: Create From This Model*, and press *Apply*. Unity maps the bones by name.
 3. **Materials**: Unity creates a material per part and finds the textures next to the model. When it asks to mark the normal maps as *Normal map*, press *Fix now*. If a material has an empty *Metallic* slot, drop its `_MetallicSmoothness` texture in; the smoothness is read from the alpha channel. The materials inside the model are read-only; use *Extract Materials* on the Materials tab of the importer to edit them.
 4. **Hair**: set the hair materials to *Cutout* (Built-in) or *Alpha Clipping* (URP, HDRP) and make them two-sided (*Render Face: Both* in URP and HDRP; the Built-in Standard shader has no two-sided option, so use a double-sided shader there), so the cards show their transparency.
+   The haircap materials (`Jake_Haircap`, `Jake_FaceHair`) fade out at the hairline and want a blended material (*Fade* in Built-in). In URP set them to *Alpha Clipping* at about 0.4 as well: URP 17 does not draw a blended skinned cap at all, the scalp shows skin under the hair. With MSAA on, *Alpha to Mask* softens the hairline again.
    <!-- 5. **Animation**: the `Jake@Run.fbx` clips appear under the model and can be dropped into an Animator Controller. For root motion, enable *Apply Root Motion* on the Animator; the clips carry the movement on the root bone. -->
+
+> [!tip] Human Generator 3D Companion for Unity
+> A free, open source package that does the steps above the moment Unity imports the file: Humanoid avatar and clips, texture types, materials for the active render pipeline, two-sided cutout hair at 0.5 with coverage-preserving mipmaps, and in HDRP the *Subsurface Scattering* material type on the skin. [github.com/OliverJPost/humgen3d-companion-unity](https://github.com/OliverJPost/humgen3d-companion-unity)
 
 > [!feedback] Did Unity import it like this?
 > These steps are what we see in Unity. If your import differs, or a step is missing, we want to know which one, and your Unity version. [Tell us](https://humgen3d.com/feedback/process?page=unity&step=import).
@@ -51,8 +55,9 @@ Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones,
 
 #### Troubleshooting
 
-- **The skin looks dented or inverted**: the normal map direction. Unity uses DirectX (Y−); the recipe sets it, check it wasn't changed.
+- **The skin looks dented, or a seam shows at the shoulders**: the normal map direction. Unity reads OpenGL (Y+) normal maps; the recipe sets it, check it wasn't changed to DirectX.
 - **The hair is solid**: the hair material needs alpha clipping, see above. Make sure the textures were exported as PNG, not JPEG.
+- **The scalp shows skin under the hair (URP)**: the haircap material is blended, which URP does not draw on a skinned mesh. Set `Jake_Haircap` and `Jake_FaceHair` to *Alpha Clipping* at 0.4; the Companion does this.
 - **The eyes look like glass balls**: the character was exported with the original eyes. Set the eyes to *High* or lower in [[Optimize Meshes]].
 - **Arms are raised or lowered in every animation**: the rest pose of the character and the animation differ. Animations made in the A-pose need the A-pose rest pose.<!-- Humanoid retargeting handles the Human Generator clips. -->
 

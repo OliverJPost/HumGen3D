@@ -16,7 +16,10 @@ import bpy
 import pytest
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.object_finding import HUMAN_ID_KEY, ORIGINAL_ID_KEY
+from HumGen3D.human.hair.hair_binding import BODY_OFFSET_ATTRIBUTE
+from HumGen3D.human.hair.haircards import CARDS_KEY
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.naming import material_part, part_names
 from HumGen3D.human.process.settings import (
     AnimationClipSettings,
     ExportSettings,
@@ -132,6 +135,29 @@ def test_haircards_after_baked_shape_keys(copy, source):
 def _cap_center(obj):
     coords = [obj.matrix_world @ vert.co for vert in obj.data.vertices]
     return sum(coords, coords[0] * 0) / len(coords)
+
+
+def test_separate_haircaps(copy):
+    """The cap and the cards of the scalp hair and the beard end up in objects of
+    their own, named and tagged for the file, and the step can run again."""
+    copy.process.convert_to_haircards("low", bpy.context)
+    before = {obj.name: len(obj.data.polygons) for obj in copy.objects.haircards}
+    made = copy.process.separate_haircaps(bpy.context)
+    assert len(made) == 2 and all(CARDS_KEY in obj for obj in made)
+    hair = copy.objects.haircards
+    assert len(hair) == len(before) + 2
+    assert all(len(obj.data.materials) == 1 for obj in hair), "One material per object"
+    assert all({p.material_index for p in obj.data.polygons} == {0} for obj in hair)
+    parts = part_names(copy)
+    assert {parts[obj] for obj in hair} == {"Haircap", "HairCards", "FaceHair", "FaceHairCards", "Eyebrows", "Eyelashes"}
+    for obj in hair:
+        assert material_part(copy, obj, 0, parts[obj]) == (parts[obj] if parts[obj] != "Eyebrows" and parts[obj] != "Eyelashes" else "Haircap")
+        assert obj.parent == copy.objects.rig and obj.vertex_groups, obj.name
+        assert BODY_OFFSET_ATTRIBUTE in obj.data.attributes, "The attachment to the body is kept"
+    cap, cards = (next(obj for obj in hair if parts[obj] == part) for part in ("Haircap", "HairCards"))
+    assert len(cap.data.polygons) + len(cards.data.polygons) == before["Haircards"]
+    assert len(copy.materials.haircards) == 2
+    assert copy.process.separate_haircaps(bpy.context) == []
 
 
 # The whole level, step by step, in the order of run

@@ -526,6 +526,9 @@ def _process_level(  # noqa: CCR001
         )
     yield 0.95
 
+    # The blended cap and the cut-out cards as meshes of their own, see
+    # haircards.separate_caps
+    copy.process.separate_haircaps(context)
     naming.apply_names(copy, namer)
     copy.objects.rig[EXPORT_KEY] = settings.to_json()
     # The hair cards are made after the copy moved to the results collection

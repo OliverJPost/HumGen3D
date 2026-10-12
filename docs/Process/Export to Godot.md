@@ -35,9 +35,12 @@ Tested with Godot 4.7 and Blender 5.1: all 56 bones of the humanoid profile matc
 
 1. **Import**: with the file inside the project, Godot imports `Jake.glb` as a scene. Drag it into your scene, or open it with *Advanced Import Settings* to change how it is imported.
 2. **Skeleton**: to use the character with animations made for other humanoid characters, open the import settings, select the *Skeleton3D* and under *Retarget* set *Bone Map* to a new `BoneMap` with the `SkeletonProfileHumanoid` profile. The bones should match without manual mapping, as they carry the profile's names.
-3. **Materials**: the materials come in with the metallic-roughness textures assigned. The hair cards import with *Alpha Scissor* transparency and *Cull Mode* disabled, so both sides of the cards show; the haircap imports as alpha blend with a depth pre-pass.
+3. **Materials**: the materials come in with the metallic-roughness textures assigned. The hair cards import with *Alpha Scissor* transparency at the default threshold of 0.5 and *Cull Mode* disabled, so both sides of the cards show; the haircap imports as alpha blend with a depth pre-pass. For skin that looks like it does in Blender, turn on *Subsurface Scattering* in skin mode on the `_Skin` material; see [[Bake Textures#Advanced|why]].
    <!-- 4. **Animation**: the clips are in the *AnimationPlayer* of the imported scene. For root motion, set the *Root Motion Track* of the AnimationPlayer or AnimationTree to the `Root` bone of the skeleton. -->
 5. **Blend shapes**: the face blend shapes are on the body's *MeshInstance3D* and can be animated or driven from a script.
+
+> [!tip] Human Generator 3D Companion for Godot
+> A free, open source editor plugin that does the steps above on import: the alpha scissor and alpha to coverage of the hair cards, the subsurface scattering of the skin, a humanoid `BoneMap` on the skeleton and an `AnimationPlayer`. [github.com/OliverJPost/humgen3d-companion-godot](https://github.com/OliverJPost/humgen3d-companion-godot)
 
 > [!feedback] Did Godot import it like this?
 > These steps are what we see in Godot 4. If your import differs, or a step is missing, we want to know which one, and your Godot version. [Tell us](https://humgen3d.com/feedback/process?page=godot&step=import).

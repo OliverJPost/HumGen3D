@@ -43,7 +43,7 @@ SHIPPED_SCRIPT = os.path.join(
     "write_export_info.py",
 )
 # Parts every processed character has, besides its clothing
-PARTS = ("Body", "Eyes", "TeethUpper", "TeethLower", "Eyebrows", "Eyelashes", "Hair", "FaceHair")
+PARTS = ("Body", "Eyes", "TeethUpper", "TeethLower", "Eyebrows", "Eyelashes", "Haircap", "HairCards", "FaceHair", "FaceHairCards")
 
 
 @pytest.fixture(scope="module")
@@ -327,6 +327,11 @@ def test_unity_character(unity_run):
         materials = {slot.material.name for obj in data.meshes for slot in obj.material_slots}
         for material in ("Skin", "Eyes", "Teeth", "Haircap", "HairCards", "FaceHair", "FaceHairCards"):
             assert f"{name}_{material}" in materials
+        # The cap and the cards of a hair type are meshes of their own, with one material each
+        for part in ("Haircap", "HairCards", "FaceHair", "FaceHairCards"):
+            hair = bpy.data.objects[f"{name}_{part}"]
+            assert [slot.material.name for slot in hair.material_slots] == [f"{name}_{part}"], part
+            assert hair.data.shape_keys and len(hair.data.shape_keys.key_blocks) > 1, f"{part} follows the expressions"
         eyes = bpy.data.objects[f"{name}_Eyes"]
         assert len(eyes.material_slots) == 1, "Game eyes have one opaque material"
         upper, lower = (bpy.data.objects[f"{name}_Teeth{part}"] for part in ("Upper", "Lower"))
@@ -648,14 +653,14 @@ def test_infile_unity(infile_unity_run, source):
         copy.process.run(run.settings, bpy.context)
 
 
-def test_infile_unity_directx_normals(infile_unity_run):
-    """Unity wants DirectX normal maps, the material flips them back for Blender."""
+def test_infile_unity_opengl_normals(infile_unity_run):
+    """Unity reads OpenGL normal maps like Blender, so nothing flips the green channel."""
     copy = infile_unity_run.result.humans[0]
     skin = copy.objects.body.material_slots[0].material
     nodes = skin.node_tree.nodes
-    assert any(node.bl_idname == "ShaderNodeSeparateColor" for node in nodes)
     normal_map = next(node for node in nodes if node.bl_idname == "ShaderNodeNormalMap")
-    assert normal_map.inputs["Color"].links[0].from_node.bl_idname == "ShaderNodeCombineColor"
+    # The image feeds the Normal Map node directly, no flip of the green channel in between
+    assert normal_map.inputs["Color"].links[0].from_node.bl_idname == "ShaderNodeTexImage"
 
 
 def test_infile_blender(infile_blender_run, source):
