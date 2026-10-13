@@ -40,6 +40,10 @@ With more than one [[Optimize Meshes|LOD level]] every level has its own quality
 > [!feedback] Which hairstyle came out rough?
 > The generator handles some styles worse than others. The name of the hairstyle and a screenshot help us improve it. [Tell us](https://humgen3d.com/feedback/process?page=haircards&step=quality).
 
+## Textures of the cards
+
+The cards are textured with a **strand atlas that is generated for the hairstyle**. Cards of the same length, width, density and curl share a part of it, and the hairs of their clumps are drawn into that part where they are on the cards, with their width, their own length, their tapered tips and a brightness variation between hairs. So the cards of a short, sparse clump show the hairs it has, a dense clump is dense, the tips of the cards end where the hairs end, and no card is cut through strands at its sides. The atlas is packed into the file with the human and baked along with the other textures by [[Bake Textures]]. A hair finer than a texel of the atlas is drawn one texel wide, and fewer of them are drawn so the coverage of the clump stays the same; that is what lets fine hair survive the cut-out of a game engine.
+
 ## In the engine
 
 The alpha of the cards is the coverage of the strands: full strands with anti-aliased edges, cut out at **half alpha**, which is what the cutout materials of Unity, Unreal and Godot default to. Every strand the hair material draws at a fifth of full opacity or more is solid in the baked alpha, so the fine strands survive the cut-out; below that the alpha fades out as drawn, which alpha-to-coverage and dithering turn into soft edges. In Blender the cards render translucent, which is why they look softer there; a game engine can't sort translucent cards, so the export bakes the coverage instead and fades the strands out at the sides of every card. Two things to set on the hair materials in the other program, if its importer doesn't do it:

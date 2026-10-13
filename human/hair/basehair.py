@@ -27,7 +27,7 @@ from HumGen3D.human import hair
 from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
 from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair import hair_binding, haircap, haircards
+from HumGen3D.human.hair import card_atlas, hair_binding, haircap, haircards
 from HumGen3D.human.hair.compatibility import set_children_percent
 from HumGen3D.human.hair.saving import save_hair
 from HumGen3D.human.height.height import apply_armature
@@ -171,6 +171,7 @@ class BaseHair:
 
         card_obj = None
         strands = None
+        card_images = None
         with haircards.rest_pose(rig, context):
             body = haircards.BodyReference(self._human, context)
             if has_cards:
@@ -192,9 +193,10 @@ class BaseHair:
                 if triangle_budget is None:
                     triangle_budget = settings.triangle_budgets[quality]
                 cap_obj.data.calc_loop_triangles()
+                proxy = haircards.outward_proxy(self._human, body, settings)
                 geometry = haircards.build_card_geometry(
                     strands.card_strands(),
-                    haircards.outward_proxy(self._human, body, settings),
+                    proxy,
                     body,
                     triangle_budget - len(cap_obj.data.loop_triangles),
                     settings,
@@ -203,11 +205,23 @@ class BaseHair:
                     card_obj = haircards.create_card_object(
                         geometry, self._human, body, context, settings
                     )
+                if geometry and geometry.atlas is not None:
+                    card_images = haircards.draw_card_atlas(
+                        self._human,
+                        visible_modifiers,
+                        geometry,
+                        proxy,
+                        context,
+                        settings,
+                        f"{self._human.name}_{self._haircap_type}Cards",
+                    )
 
         # The haircap material is in the first slot, the cards in the second
         materials = [cap_obj.data.materials[0]]
         if card_obj:
             card_material = haircards.load_card_material()
+            if card_images:
+                card_atlas.assign_images(card_material, card_images)
             card_obj.data.materials.append(card_material)
             materials.append(card_material)
 

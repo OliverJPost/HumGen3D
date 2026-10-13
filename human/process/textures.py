@@ -775,15 +775,31 @@ def _card_rects(obj: bpy.types.Object, slot: int) -> List[Rect]:
     np.minimum.at(u_min, polygon, u)
     np.maximum.at(u_max, polygon, u)
     sides = np.round(np.stack((u_min[polygon], u_max[polygon]), axis=1), 4)
+    v_min = np.full(count, np.inf)
+    v_max = np.full(count, -np.inf)
+    np.minimum.at(v_min, polygon, v)
+    np.maximum.at(v_max, polygon, v)
     rects: List[Rect] = []
     for u0, u1 in np.unique(sides, axis=0):
         if u1 - u0 < 1e-4:
             continue
-        of_rect = (sides[:, 0] == u0) & (sides[:, 1] == u1)
-        rects.append(
-            (float(u0), float(u1), float(v[of_rect].min()), float(v[of_rect].max()))
-        )
+        of_rect = np.unique(polygon[(sides[:, 0] == u0) & (sides[:, 1] == u1)])
+        # Cards of a generated atlas stack in the same column with a gap between
+        # their tiles: every run of touching polygons is one part
+        order = of_rect[np.argsort(v_min[of_rect], kind="stable")]
+        start, end = float(v_min[order[0]]), float(v_max[order[0]])
+        for poly in order[1:]:
+            if v_min[poly] > end + CARD_RECT_GAP:
+                rects.append((float(u0), float(u1), start, end))
+                start = float(v_min[poly])
+            end = max(end, float(v_max[poly]))
+        rects.append((float(u0), float(u1), start, end))
     return rects
+
+
+# Gap in v between the polygons of two cards in the same column of the atlas, at
+# which they are two parts; the quads of one card touch
+CARD_RECT_GAP = 0.0005
 
 
 def _card_edge_fade(texture_set: TextureSet, size: int) -> np.ndarray:

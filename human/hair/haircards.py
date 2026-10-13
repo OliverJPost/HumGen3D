@@ -18,8 +18,17 @@ attached to the skin in hair_binding.py.
 import contextlib
 import json
 import os
-from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, List, Optional, Union
+from dataclasses import dataclass, field, replace
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Union,
+)
 
 import bmesh
 import bpy
@@ -30,7 +39,7 @@ from HumGen3D.common.geometry import world_coords_from_obj
 from HumGen3D.common.math import create_kdtree
 from HumGen3D.common.memory_management import hg_delete
 from HumGen3D.common.shadernode import COLOR1_INPUT_NAME, COLOR2_INPUT_NAME
-from HumGen3D.human.hair import hair_binding
+from HumGen3D.human.hair import card_atlas, hair_binding
 from HumGen3D.human.hair.compatibility import (
     SPECULAR_INPUT_NAME,
     get_children_percent,
@@ -174,7 +183,7 @@ DENSITY_STATION_STEP = 4
 # Number of standard deviations of the clump the card extends to each side
 SPREAD_FACTOR = 1.6
 # Number of standard deviations of the tips of the clump the card is extended with
-TIP_SPREAD_FACTOR = 1.0
+TIP_SPREAD_FACTOR = 1.5
 # Extra weight of the distance to the head when comparing strands, to get clumps that
 # are layers on top of each other instead of thick bundles
 LAYER_WEIGHT = 1.5
@@ -212,6 +221,8 @@ class HairStrands:
     #: (m, 3) points on the hairs of systems without a density vertex group, to
     #: find out where those systems cover the skin
     density_points: np.ndarray
+    #: (n, 2) diameter of the rendered hairs at the root and at the tip in meters
+    diameters: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
 
     def card_strands(self) -> "HairStrands":
         """Get the strands that are long enough to get a card.
@@ -225,6 +236,7 @@ class HairStrands:
             system=self.system[self.for_cards],
             weights=self.weights[self.for_cards],
             for_cards=self.for_cards[self.for_cards],
+            diameters=self.diameters[self.for_cards],
         )
 
 
@@ -247,6 +259,9 @@ class CardGeometry:
     #: (v, 3) root of the card of every vertex
     root_points: np.ndarray
     card_count: int
+    #: Tiles of the generated atlas and the frames to draw the hairs into them, None
+    #: when the cards use the painted atlas of the library
+    atlas: Optional[card_atlas.AtlasLayout] = None
 
     @property
     def triangle_count(self) -> int:
@@ -583,7 +598,9 @@ def outward_proxy(human: "Human", body: BodyReference, settings: CardSettings) -
 
 
 @contextlib.contextmanager
-def _limited_children(particle_system: bpy.types.ParticleSystem) -> Iterator[float]:
+def _limited_children(
+    particle_system: bpy.types.ParticleSystem, max_strands: int = MAX_STRANDS_PER_SYSTEM
+) -> Iterator[float]:
     """Temporarily shows a workable number of child hairs in the viewport.
 
     Yields:
@@ -597,7 +614,7 @@ def _limited_children(particle_system: bpy.types.ParticleSystem) -> Iterator[flo
     old_amount = get_children_percent(settings)
     rendered = max(settings.rendered_child_count, 1)
     parent_count = max(len(particle_system.particles), 1)
-    amount = max(1, min(rendered, MAX_STRANDS_PER_SYSTEM // parent_count))
+    amount = max(1, min(rendered, max_strands // parent_count))
     set_children_percent(settings, amount)
     try:
         yield rendered / amount
@@ -677,6 +694,7 @@ def extract_strands(
     modifiers: Iterable[bpy.types.ParticleSystemModifier],
     context: bpy.types.Context,
     settings: CardSettings = SCALP_SETTINGS,
+    max_strands: int = MAX_STRANDS_PER_SYSTEM,
 ) -> HairStrands:
     """Gets the hairs of the passed particle systems as resampled strands.
 
@@ -688,16 +706,19 @@ def extract_strands(
             particle systems to get the hairs of.
         context (bpy.types.Context): Blender context.
         settings (CardSettings): Settings of the hair type.
+        max_strands (int): Most strands to take from one particle system, the
+            children are thinned out above it and every strand stands for more hairs.
 
     Returns:
         HairStrands: Strands of all the particle systems.
     """
     body_obj = human.objects.body
     all_points, all_systems, all_weights, all_for_cards = [], [], [], []
+    all_diameters = []
     density_points = []
     for system_idx, modifier in enumerate(modifiers):
         particle_system = modifier.particle_system
-        with _limited_children(particle_system) as hairs_per_strand:
+        with _limited_children(particle_system, max_strands) as hairs_per_strand:
             coords, starts, ends = _strands_from_modifier(body_obj, modifier, context)
         if not len(starts):
             continue
@@ -716,6 +737,7 @@ def extract_strands(
         all_systems.append(np.full(len(points), system_idx))
         all_weights.append(np.full(len(points), hairs_per_strand))
         all_for_cards.append(is_long_system & (lengths > settings.min_strand_length))
+        all_diameters.append(np.tile(_hair_diameters(particle_system), (len(points), 1)))
 
     if not all_points:
         return HairStrands(
@@ -724,6 +746,7 @@ def extract_strands(
             weights=np.zeros(0),
             for_cards=np.zeros(0, dtype=bool),
             density_points=np.zeros((0, 3)),
+            diameters=np.zeros((0, 2)),
         )
 
     return HairStrands(
@@ -734,7 +757,18 @@ def extract_strands(
         density_points=(
             np.concatenate(density_points) if density_points else np.zeros((0, 3))
         ),
+        diameters=np.concatenate(all_diameters),
     )
+
+
+def _hair_diameters(particle_system: bpy.types.ParticleSystem) -> tuple[float, float]:
+    """Diameter of the rendered hairs of a system at the root and at the tip."""
+    settings = particle_system.settings
+    root = settings.radius_scale * settings.root_radius
+    tip = settings.radius_scale * settings.tip_radius
+    if root <= 1e-7:
+        return card_atlas.DEFAULT_DIAMETER, 0.0
+    return float(root), float(tip)
 
 
 def _kmeans(
@@ -774,6 +808,25 @@ def _kmeans(
     return labels
 
 
+def _strand_features(strands: HairStrands, proxy: Proxy) -> np.ndarray:
+    """The values the strands are clustered by: the position at six stations and,
+    weighted, how far from the head those stations are.
+
+    Returns:
+        np.ndarray: (n, f) features.
+    """
+    feature_stations = np.linspace(0, STATIONS - 1, 6).astype(int)
+    feature_points = strands.points[:, feature_stations]
+    _, distance = proxy.outward(feature_points.reshape((-1, 3)))
+    return np.concatenate(
+        (
+            feature_points.reshape((len(feature_points), -1)),
+            distance.reshape((len(feature_points), -1)) * LAYER_WEIGHT,
+        ),
+        axis=1,
+    )
+
+
 def _cluster_strands(
     strands: HairStrands, proxy: Proxy, clump_count: int
 ) -> np.ndarray:
@@ -785,16 +838,7 @@ def _cluster_strands(
     Returns:
         np.ndarray: (n,) index of the clump of every strand.
     """
-    feature_stations = np.linspace(0, STATIONS - 1, 6).astype(int)
-    feature_points = strands.points[:, feature_stations]
-    _, distance = proxy.outward(feature_points.reshape((-1, 3)))
-    features = np.concatenate(
-        (
-            feature_points.reshape((len(feature_points), -1)),
-            distance.reshape((len(feature_points), -1)) * LAYER_WEIGHT,
-        ),
-        axis=1,
-    )
+    features = _strand_features(strands, proxy)
 
     systems = np.unique(strands.system)
     shares = np.array(
@@ -876,6 +920,8 @@ class _Cards:
     depths: np.ndarray
     #: (c,) number of rendered hairs the card stands for
     hair_counts: np.ndarray
+    #: (c,) clump the card was fitted to; a crossing card shares its clump
+    clump: np.ndarray
 
     def __len__(self) -> int:
         return len(self.centers)
@@ -1029,6 +1075,7 @@ def _fit_cards(
         significance=with_crossing(significance),
         depths=with_crossing(depths),
         hair_counts=with_crossing(hair_counts),
+        clump=with_crossing(np.arange(clump_count)),
     )
 
 
@@ -1137,6 +1184,7 @@ def build_card_geometry(
     triangle_budget: int,
     settings: CardSettings = SCALP_SETTINGS,
     seed: int = 0,
+    atlas_mode: Literal["generated", "library"] = "generated",
 ) -> Optional[CardGeometry]:
     """Builds haircards for the strands that fit within the triangle budget.
 
@@ -1148,6 +1196,9 @@ def build_card_geometry(
         triangle_budget (int): Maximum number of triangles of the cards.
         settings (CardSettings): Settings of the hair type.
         seed (int): Seed for the random choices, the same seed gives the same cards.
+        atlas_mode (Literal["generated", "library"]): Whether the cards get tiles
+            of an atlas drawn from their hairs (see card_atlas) or parts of the
+            painted atlas of the library.
 
     Returns:
         Optional[CardGeometry]: Mesh data of the cards, None if there are no strands
@@ -1188,7 +1239,6 @@ def build_card_geometry(
 
     card_count = len(cards)
     rng = np.random.default_rng(seed)
-    atlas = HairAtlas()
     lengths = cards.arc[:, -1]
     widths = 2 * cards.half_widths.mean(axis=1)
     hairs_per_cm = cards.hair_counts / (widths * 100)
@@ -1202,18 +1252,58 @@ def build_card_geometry(
     )
     along = cards.arc[card_idxs, station_idxs] / np.maximum(lengths[card_idxs], 1e-9)
 
-    uv_rects = np.empty((card_count, 4))
-    for card_idx in range(card_count):
-        (u_min, v_min), (u_max, v_max) = atlas.pick(
-            lengths[card_idx],
-            widths[card_idx],
-            hairs_per_cm[card_idx],
-            layers[card_idx] < SOLID_SHARE,
-            rng,
+    layout = None
+    if atlas_mode == "generated":
+        clump_count = int(labels.max()) + 1
+        features = _strand_features(strands, proxy)
+        clump_sizes = np.bincount(labels, minlength=clump_count)
+        centroids = np.zeros((clump_count, features.shape[1]))
+        np.add.at(centroids, labels, features)
+        centroids /= np.maximum(clump_sizes, 1)[:, None]
+        clump_system = np.zeros(clump_count, dtype=np.int64)
+        clump_system[labels] = strands.system
+        tile_of_card = _group_cards(
+            cards, hairs_per_cm, clump_system[cards.clump], card_atlas.tile_count(lengths, widths)
         )
-        if rng.random() < 0.5:
-            u_min, u_max = u_max, u_min
-        uv_rects[card_idx] = (u_min, v_min, u_max, v_max)
+        tile_count = int(tile_of_card.max()) + 1
+        tile_lengths = np.array(
+            [np.median(lengths[tile_of_card == tile]) for tile in range(tile_count)]
+        )
+        tile_widths = np.array(
+            [np.median(widths[tile_of_card == tile]) for tile in range(tile_count)]
+        )
+        tiles = card_atlas.pack_tiles(tile_lengths, tile_widths)
+        uv_rects = card_atlas.tiles_to_uv(tiles, card_atlas.ATLAS_SIZE)[tile_of_card]
+        # Half the cards use their tile mirrored, so the shared tiles repeat less
+        mirrored = rng.random(card_count) < 0.5
+        uv_rects[mirrored] = uv_rects[mirrored][:, [2, 1, 0, 3]]
+        layout = card_atlas.AtlasLayout(
+            uv_rects=uv_rects,
+            tiles=tiles,
+            tile_of_card=tile_of_card,
+            centers=cards.centers,
+            sides=cards.sides,
+            half_widths=cards.half_widths,
+            arc=cards.arc,
+            clump=cards.clump,
+            clump_centroids=centroids,
+            clump_system=clump_system,
+            clump_sizes=clump_sizes,
+        )
+    else:
+        atlas = HairAtlas()
+        uv_rects = np.empty((card_count, 4))
+        for card_idx in range(card_count):
+            (u_min, v_min), (u_max, v_max) = atlas.pick(
+                lengths[card_idx],
+                widths[card_idx],
+                hairs_per_cm[card_idx],
+                layers[card_idx] < SOLID_SHARE,
+                rng,
+            )
+            if rng.random() < 0.5:
+                u_min, u_max = u_max, u_min
+            uv_rects[card_idx] = (u_min, v_min, u_max, v_max)
     u_min, v_min, u_max, v_max = uv_rects[card_idxs].T
     # The roots are at the top of the texture
     v = v_max - (v_max - v_min) * along
@@ -1248,7 +1338,124 @@ def build_card_geometry(
         skin_points=per_side(centers, centers),
         root_points=cards.centers[np.repeat(card_idxs, 2), 0],
         card_count=card_count,
+        atlas=layout,
     )
+
+
+def _group_cards(
+    cards: _Cards, hairs_per_cm: np.ndarray, system: np.ndarray, tile_count: int
+) -> np.ndarray:
+    """Groups the cards that can share a tile of the generated atlas: cards of the
+    same system with a similar length, width, hair density, taper and curvature.
+
+    Args:
+        cards (_Cards): The cards.
+        hairs_per_cm (np.ndarray): (c,) hairs per centimeter of width of every card.
+        system (np.ndarray): (c,) particle system of every card.
+        tile_count (int): Number of groups to make, see card_atlas.tile_count.
+
+    Returns:
+        np.ndarray: (c,) tile of every card, without gaps.
+    """
+    lengths = cards.arc[:, -1]
+    half_widths = cards.half_widths
+    widths = 2 * half_widths.mean(axis=1)
+    feature_stations = np.linspace(0, STATIONS - 1, 6).astype(int)
+    taper = half_widths[:, feature_stations] / np.maximum(half_widths.mean(axis=1), 1e-6)[:, None]
+    chord = np.linalg.norm(cards.centers[:, -1] - cards.centers[:, 0], axis=1)
+    straightness = chord / np.maximum(lengths, 1e-6)
+    columns = [
+        (lengths, 2.0),
+        (widths, 1.0),
+        (np.log1p(hairs_per_cm), 1.0),
+        (straightness, 1.0),
+    ] + [(taper[:, idx], 0.5) for idx in range(taper.shape[1])]
+    features = np.stack(
+        [column / max(float(column.std()), 1e-9) * weight for column, weight in columns],
+        axis=1,
+    )
+    card_count = len(cards)
+    labels = np.zeros(card_count, dtype=np.int64)
+    systems, counts = np.unique(system, return_counts=True)
+    offset = 0
+    for system_idx, count in zip(systems, counts):
+        in_system = np.flatnonzero(system == system_idx)
+        system_tiles = int(np.clip(round(tile_count * count / card_count), 1, count))
+        system_labels = _kmeans(features[in_system], system_tiles)
+        _, system_labels = np.unique(system_labels, return_inverse=True)
+        labels[in_system] = system_labels.ravel() + offset
+        offset += int(system_labels.max()) + 1
+    return labels
+
+
+def assign_clumps(
+    strands: HairStrands, proxy: Proxy, layout: card_atlas.AtlasLayout
+) -> np.ndarray:
+    """Finds the clump of the cards every strand belongs to.
+
+    For strands other than the ones the cards were fitted to, such as a denser set
+    of the hairs of the same systems, to draw them onto the cards.
+
+    Args:
+        strands (HairStrands): Strands of the same particle systems, in the same
+            order, as the cards were built from.
+        proxy (Proxy): The proxy the cards were built with.
+        layout (card_atlas.AtlasLayout): Layout from build_card_geometry.
+
+    Returns:
+        np.ndarray: (n,) clump of every strand, -1 for strands of a system without
+            clumps.
+    """
+    features = _strand_features(strands, proxy)
+    labels = np.full(len(features), -1, dtype=np.int64)
+    for system in np.unique(strands.system):
+        clumps = np.flatnonzero(layout.clump_system == system)
+        in_system = np.flatnonzero(strands.system == system)
+        if not len(clumps):
+            continue
+        centroids = layout.clump_centroids[clumps]
+        for start in range(0, len(in_system), 2048):
+            chunk = in_system[start : start + 2048]  # noqa
+            distances = ((features[chunk, None, :] - centroids[None]) ** 2).sum(axis=2)
+            labels[chunk] = clumps[distances.argmin(axis=1)]
+    return labels
+
+
+def draw_card_atlas(
+    human: "Human",
+    modifiers: Iterable[bpy.types.ParticleSystemModifier],
+    geometry: CardGeometry,
+    proxy: Proxy,
+    context: bpy.types.Context,
+    settings: CardSettings,
+    name: str,
+) -> dict[str, bpy.types.Image]:
+    """Draws the hairs of the systems onto the tiles of the cards, see card_atlas.
+
+    The human is expected to be in its rest pose, see rest_pose().
+
+    Args:
+        human (Human): Human the particle systems belong to.
+        modifiers (Iterable[bpy.types.ParticleSystemModifier]): The modifiers the
+            cards were built from, in the same order.
+        geometry (CardGeometry): Cards with an atlas layout.
+        proxy (Proxy): The proxy the cards were built with.
+        context (bpy.types.Context): Blender context.
+        settings (CardSettings): Settings of the hair type.
+        name (str): Name of the images.
+
+    Returns:
+        dict[str, bpy.types.Image]: Packed images by texture name.
+    """
+    assert geometry.atlas is not None
+    dense = extract_strands(
+        human, modifiers, context, settings, card_atlas.DRAW_STRANDS_PER_SYSTEM
+    ).card_strands()
+    labels = assign_clumps(dense, proxy, geometry.atlas)
+    pixels = card_atlas.draw_atlas(
+        geometry.atlas, dense.points, labels, dense.weights, dense.diameters
+    )
+    return card_atlas.create_images(name, pixels)
 
 
 def set_custom_normals(mesh: bpy.types.Mesh, normals: np.ndarray) -> None:
