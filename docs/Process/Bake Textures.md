@@ -22,7 +22,7 @@ You get one set of textures per part: the **body** (skin), each piece of **cloth
 
 Inputs that don't get a map of their own, like the specular of the skin and the hair cards, are kept as one value on the baked material, so the baked material carries the same values; how it looks depends on the shader of the other program.
 
-The hair cards are baked for a cutout: their alpha is the strand coverage of the hair atlas rather than the translucent alpha the cards have in Blender (see [[Haircards#In the engine]]), the color is spread into the gaps between the strands so filtering doesn't darken their edges, and their roughness map comes from the strand highlights of the atlas, so every strand reflects on its own instead of the whole card.
+The hair cards are baked for a cutout: their alpha is the strand coverage of the hair atlas rather than the translucent alpha the cards have in Blender (see [[Haircards#In the engine]]), the color is spread into the gaps between the strands so filtering doesn't darken their edges, and their roughness map comes from the strand highlights of the atlas, so every strand reflects on its own instead of the whole card. They also get a **flow map** (`Jake_HairCards_Flow.png`) with the direction of the strands and a noise per strand, which the Companions' hair shaders read; no material of the baked copy uses it, see [[Haircards#Hair shading]].
 
 ## Resolution
 
@@ -61,7 +61,7 @@ The two conventions differ in the direction of the green channel. Choose the wro
 
 ## Advanced
 
-**Resolution per set** sets each part on its own; the tier at the top then reads *Custom*. **Passes** chooses which maps are baked per part. Base color and normal are what every material needs; roughness and metallic can be left out for parts where they are constant (the add-on already skips maps whose inputs are plain values and puts the value on the material instead). Alpha is only needed for the hair.
+**Resolution per set** sets each part on its own; the tier at the top then reads *Custom*. **Passes** chooses which maps are baked per part. Base color and normal are what every material needs; roughness and metallic can be left out for parts where they are constant (the add-on already skips maps whose inputs are plain values and puts the value on the material instead). Alpha is only needed for the hair, and Flow only for the hair cards: leave it out when nothing in the other program reads it.
 
 **Pack hair alpha into color** puts the transparency of the hair cards in the alpha channel of their color texture, which is how engines expect it. Off, the alpha is a separate grayscale map. **Samples** is the number of render samples per pixel. 4 is enough as the maps are baked from the material inputs rather than lit; raise it if you see noise in a normal map.
 

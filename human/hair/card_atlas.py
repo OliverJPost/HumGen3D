@@ -67,19 +67,27 @@ MAX_STEP = 0.75
 #: Cap on the points drawn per atlas, long hairs are drawn coarser above it
 MAX_SAMPLES = 60_000_000
 
-#: Name parts of the images of the card material, by the texture they hold
+#: Name parts of the images of the card material, by the texture they hold. The
+#: flow image is not read by the material: it holds the direction of the hairs
+#: across the tile (red and green, in the UV space of the card, from root to tip)
+#: and a random value per hair (blue), for the hair shaders of game engines
 IMAGE_NAME_PARTS = {
     "alpha": "_ALPHA",
     "occlusion": "_AO",
     "specular": "_SPECULAR",
     "normal": "_NORMAL",
+    "flow": "_FLOW",
 }
 COLOR_SPACES = {
     "alpha": "sRGB",
     "occlusion": "sRGB",
     "specular": "Non-Color",
     "normal": "Non-Color",
+    "flow": "Non-Color",
 }
+#: Flow of a texel without hairs: straight from the root to the tip of the card
+#: (towards -v), with the noise in the middle
+FLOW_DEFAULT = (0.5, 0.0, 0.5)
 
 
 @dataclass
@@ -263,6 +271,9 @@ def draw_atlas(
     ink = np.zeros(ss_size * ss_size, dtype=np.float64)
     bright_ink = np.zeros_like(ink)
     gloss_ink = np.zeros_like(ink)
+    flow_x_ink = np.zeros_like(ink)
+    flow_y_ink = np.zeros_like(ink)
+    noise_ink = np.zeros_like(ink)
 
     if pair_count:
         centers = layout.centers[pair_card]
@@ -294,6 +305,7 @@ def draw_atlas(
         copies = np.clip(np.ceil(strand_weight), 1, MAX_COPIES).astype(np.int64)
         brightness = rng.uniform(MIN_BRIGHTNESS, 1.0, len(points))[pair_strand]
         gloss = rng.uniform(MIN_GLOSS, 1.0, len(points))[pair_strand]
+        noise = rng.uniform(0.0, 1.0, len(points))[pair_strand]
 
         # Segments between stations
         seg = stations - 1
@@ -372,6 +384,10 @@ def draw_atlas(
             flat, weights=area * brightness[pair_of_sample][in_tile] * shade[in_tile], minlength=ink.size
         )
         gloss_ink += np.bincount(flat, weights=area * gloss[pair_of_sample][in_tile], minlength=ink.size)
+        # The direction of the hair at every sample, from the root to the tip
+        flow_x_ink += np.bincount(flat, weights=area * (dx / norm)[in_tile], minlength=ink.size)
+        flow_y_ink += np.bincount(flat, weights=area * (dy / norm)[in_tile], minlength=ink.size)
+        noise_ink += np.bincount(flat, weights=area * noise[pair_of_sample][in_tile], minlength=ink.size)
 
     ink = ink.reshape((ss_size, ss_size))
     coverage = 1 - np.exp(-ink)
@@ -387,6 +403,7 @@ def draw_atlas(
         brightness_down = np.where(alpha > 0, brightness_down / np.maximum(alpha, 1e-6), 0.0)
     occlusion = _linear_to_srgb(_srgb_to_linear(alpha) * brightness_down).astype(np.float32)
     specular = _box_down(gloss_map * (ink > 0), SUPERSAMPLING).astype(np.float32)
+    flow = _flow_image(ink, coverage, alpha, flow_x_ink, flow_y_ink, noise_ink)
 
     normal = np.empty((size, size, 3), dtype=np.float32)
     normal[..., 0] = normal[..., 1] = 0.5
@@ -406,7 +423,40 @@ def draw_atlas(
         "occlusion": grey(occlusion),
         "specular": grey(specular),
         "normal": normal,
+        "flow": flow,
     }
+
+
+def _flow_image(
+    ink: np.ndarray,
+    coverage: np.ndarray,
+    alpha: np.ndarray,
+    flow_x_ink: np.ndarray,
+    flow_y_ink: np.ndarray,
+    noise_ink: np.ndarray,
+) -> np.ndarray:
+    """The flow image of the atlas, see IMAGE_NAME_PARTS: the direction of the
+    hairs averaged over the hairs of a texel and weighted by their coverage when
+    scaled down, so the edge of a hair keeps the direction of that hair, with
+    the default where no hair is."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        maps = [
+            np.where(ink > 0, values.reshape(ink.shape) / ink, 0.0)
+            for values in (flow_x_ink, flow_y_ink, noise_ink)
+        ]
+    weighted = [_box_down(coverage * values, SUPERSAMPLING) for values in maps]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        flow_x, flow_y, noise = (
+            np.where(alpha > 0, values / np.maximum(alpha, 1e-6), 0.0) for values in weighted
+        )
+    length = np.hypot(flow_x, flow_y)
+    has_hair = (alpha > 0) & (length > 1e-6)
+    flow = np.empty(alpha.shape + (3,), dtype=np.float32)
+    flow[...] = FLOW_DEFAULT
+    flow[has_hair, 0] = (flow_x[has_hair] / length[has_hair] + 1) / 2
+    flow[has_hair, 1] = (flow_y[has_hair] / length[has_hair] + 1) / 2
+    flow[has_hair, 2] = np.clip(noise[has_hair], 0, 1)
+    return flow
 
 
 def create_images(name: str, images: Dict[str, np.ndarray]) -> Dict[str, bpy.types.Image]:
@@ -441,7 +491,9 @@ def assign_images(
     """Points the strand textures of a card material at the generated images.
 
     The node group of the material is shared between all card materials, it is
-    copied for this material first.
+    copied for this material first. An image the group has no texture for, like
+    the flow image, is put in an image node of its own in the group, unlinked,
+    so the texture bake of the process system finds it with the others.
 
     Args:
         material (bpy.types.Material): Material from haircards.load_card_material.
@@ -452,13 +504,22 @@ def assign_images(
     )
     if group_node.node_tree.users > 1:
         group_node.node_tree = group_node.node_tree.copy()
+    assigned = set()
     for node in group_node.node_tree.nodes:
         if node.bl_idname != "ShaderNodeTexImage" or not node.image:
             continue
         for key, name_part in IMAGE_NAME_PARTS.items():
             if name_part in node.image.name and key in images:
                 node.image = images[key]
+                assigned.add(key)
                 break
+    for key, image in images.items():
+        if key in assigned:
+            continue
+        node = group_node.node_tree.nodes.new("ShaderNodeTexImage")
+        node.image = image
+        node.name = node.label = f"hg_{key}"
+        node.location = (-900, -600)
 
 
 def coverage_of(images: Dict[str, np.ndarray], layout: AtlasLayout) -> Tuple[float, float]:

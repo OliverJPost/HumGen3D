@@ -19,6 +19,7 @@ from HumGen3D.human.hair.haircards import (
     STATIONS,
     BodyReference,
     HairStrands,
+    hair_near,
     reuse_images,
 )
 from mathutils.bvhtree import BVHTree
@@ -42,6 +43,26 @@ TEXTURE_STATIONS = 5
 STROKE_OPACITY = 2.2
 # How much more transparent the tip of a hair is than its root
 TIP_FADE = 0.6
+# Name of the attribute of the scalp haircap with how much hair lies over the skin,
+# from 0 for none to 1 for the mass of the hair
+COVER_ATTRIBUTE = "Cover"
+# Size of the cells the hair over the skin is counted in
+COVER_CELL = 0.01
+# Hair around a vertex, as a share of the hair around a well covered vertex, between
+# which the haircap goes from a see-through film to solid
+COVER_RANGE = (0.2, 0.6)
+# How much the alpha of the haircap is raised under the mass of the hair. The painted
+# hair is a see-through film, which is right for short hair on its own and at the
+# hairline, but between cards it showed the skin where the hair is too thick to see
+# through.
+COVER_GAIN = 0.8
+# Distance from the border of the hair over which the haircap gets to be solid. At
+# the hairline the hair is thin and the skin shows through it, and a solid haircap
+# there is a hard line beyond the first cards.
+COVER_BORDER = (0.004, 0.03)
+# Times the cover is averaged with the neighbouring vertices: counted in cells, it
+# has steps of the size of a cell
+COVER_SMOOTHING = 3
 UV_MARGIN = 0.01
 DRAWN_BUMP_STRENGTH = 0.1
 # Lines that are this many times longer on the texture than expected from the length
@@ -349,13 +370,85 @@ def _set_density(mesh: bpy.types.Mesh, density: np.ndarray) -> None:
     mesh.color_attributes[0].data.foreach_set("color", colors.ravel())
 
 
+def _cover(
+    mesh: bpy.types.Mesh,
+    strands: Optional[HairStrands],
+    coords_world: np.ndarray,
+    density: np.ndarray,
+) -> np.ndarray:
+    """Calculates how much hair lies over every vertex of a haircap.
+
+    Only hair that gets cards counts: under those the haircap stands in for the hair
+    that can't be seen through, hair without cards is only the haircap itself.
+
+    Returns:
+        np.ndarray: (v,) from 0 for no hair over the vertex to 1 for the mass of the
+            hair.
+    """
+    if strands is None or not strands.for_cards.any():
+        return np.zeros(len(coords_world), dtype=np.float32)
+    near = hair_near(strands.card_strands(), coords_world, COVER_CELL)
+    grown = near[density > 0.5]
+    if not len(grown) or grown.max() <= 0:
+        return np.zeros(len(coords_world), dtype=np.float32)
+    # Relative to a well covered vertex: the number of hairs differs between styles
+    reference = float(np.percentile(grown, 75))
+    cover = _smoothstep(*COVER_RANGE, near / max(reference, 1e-9))
+
+    edges = np.empty(len(mesh.edges) * 2, dtype=np.int32)
+    mesh.edges.foreach_get("vertices", edges)
+    edges = edges.reshape((-1, 2))
+    neighbours = np.bincount(edges.ravel(), minlength=len(cover)) + 1
+    for _ in range(COVER_SMOOTHING):
+        summed = cover.copy()
+        np.add.at(summed, edges[:, 0], cover[edges[:, 1]])
+        np.add.at(summed, edges[:, 1], cover[edges[:, 0]])
+        cover = summed / neighbours
+
+    bare = density <= 0
+    if bare.any():
+        kd_bare = create_kdtree(coords_world[bare])
+        border_distance = np.array([kd_bare.find(co)[2] for co in coords_world])
+        cover *= _smoothstep(*COVER_BORDER, border_distance)
+    return cover.astype(np.float32)
+
+
+def _set_cover(mesh: bpy.types.Mesh, cover: np.ndarray) -> None:
+    """Makes the haircap solid where hair covers it, see COVER_GAIN."""
+    attribute = mesh.attributes.get(COVER_ATTRIBUTE) or mesh.attributes.new(
+        COVER_ATTRIBUTE, "FLOAT", "POINT"
+    )
+    attribute.data.foreach_set("value", cover)
+
+    material = mesh.materials[0]
+    tree = material.node_tree
+    shader = next(n for n in tree.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled")
+    if not shader.inputs["Alpha"].is_linked:
+        return
+    opacity = shader.inputs["Alpha"].links[0].from_node
+    if opacity.bl_idname != "ShaderNodeMath" or opacity.operation != "MULTIPLY":
+        return
+    factor = next(socket for socket in opacity.inputs if not socket.is_linked)
+    cover_node = tree.nodes.new("ShaderNodeAttribute")
+    cover_node.attribute_name = COVER_ATTRIBUTE
+    cover_node.location = (opacity.location.x - 400, opacity.location.y - 200)
+    raised = tree.nodes.new("ShaderNodeMath")
+    raised.operation = "MULTIPLY_ADD"
+    raised.location = (opacity.location.x - 200, opacity.location.y - 200)
+    raised.inputs[1].default_value = COVER_GAIN
+    raised.inputs[2].default_value = factor.default_value
+    tree.links.new(cover_node.outputs["Fac"], raised.inputs[0])
+    tree.links.new(raised.outputs[0], factor)
+    opacity.use_clamp = True
+
+
 def _mask_painted_hair(
     human: "Human",
     mesh: bpy.types.Mesh,
     body_vert_idxs: np.ndarray,
     coords_world: np.ndarray,
     density_vertex_groups: list[tuple[bpy.types.VertexGroup, float]],
-    density_points: np.ndarray,
+    strands: Optional[HairStrands],
 ) -> None:
     """Shows the painted hair texture only where the human has hair.
 
@@ -375,6 +468,7 @@ def _mask_painted_hair(
                 body_density[vert.index] += group.weight * factors[group.group]
     density = np.clip(np.round(body_density[body_vert_idxs], 4), 0, 1)
 
+    density_points = strands.density_points if strands else np.zeros((0, 3))
     if len(density_points):
         kd_hair = create_kdtree(density_points)
         hair_distance = np.array([kd_hair.find(co)[2] for co in coords_world])
@@ -386,6 +480,7 @@ def _mask_painted_hair(
     density[_boundary_verts(mesh)] = 0
 
     _set_density(mesh, density)
+    _set_cover(mesh, _cover(mesh, strands, coords_world, density))
     _delete_polygons(mesh, _polygons_with_verts(mesh, density > 0))
 
 
@@ -686,14 +781,13 @@ def create_haircap(
     if haircap_type in DRAWN_HAIRCAP_TYPES and has_strands:
         _draw_hair_texture(human, haircap_obj, haircap_type, strands)
     elif haircap_type in ("Scalp", "Beard"):
-        density_points = strands.density_points if strands else np.zeros((0, 3))
         _mask_painted_hair(
             human,
             mesh,
             body_vert_idxs,
             coords_world,
             density_vertex_groups,
-            density_points,
+            strands,
         )
     mesh.update()
 

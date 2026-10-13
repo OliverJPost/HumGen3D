@@ -23,7 +23,7 @@ from HumGen3D.common.exceptions import HumGenException
 
 from . import naming
 from .animations import rig_actions
-from .textures import DIRECTX_FLIP_NODE
+from .textures import DIRECTX_FLIP_NODE, write_sidecar_images
 from .settings import FILE_FORMATS, OutputSettings
 
 if TYPE_CHECKING:
@@ -259,7 +259,7 @@ class ExportBuilder:
         if file_format == "fbx":
             # The exporter samples every `bake_anim_step` frames of the scene
             fps = context.scene.render.fps / context.scene.render.fps_base
-            return self.to_fbx(
+            written = self.to_fbx(
                 filepath,
                 animation=animation,
                 armature_only=armature_only,
@@ -267,25 +267,31 @@ class ExportBuilder:
                 context=context,
                 **fbx_kwargs(output, units),
             )
-        if file_format == "glb":
-            return self.to_glb(
+        elif file_format == "glb":
+            written = self.to_glb(
                 filepath,
                 animation=animation,
                 armature_only=armature_only,
                 context=context,
                 **gltf_kwargs(output),
             )
-        if file_format == "gltf":
-            return self.to_gltf_separate(
+        elif file_format == "gltf":
+            written = self.to_gltf_separate(
                 filepath,
                 animation=animation,
                 armature_only=armature_only,
                 context=context,
                 **gltf_kwargs(output),
             )
-        if file_format == "obj":
-            return self.to_obj(filepath, context=context)
-        return self.to_abc(filepath, context=context)
+        elif file_format == "obj":
+            written = self.to_obj(filepath, context=context)
+        else:
+            written = self.to_abc(filepath, context=context)
+        if output.textures == "embedded" and not armature_only:
+            # Embedded textures only carry the images a material input reads;
+            # the flow maps of the hair cards go next to the file
+            write_sidecar_images(self._human, os.path.dirname(written))
+        return written
 
     @exporter
     def to_fbx(

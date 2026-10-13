@@ -87,6 +87,7 @@ TEXTURE_PASSES = [
     ("roughness", "Roughness", ""),
     ("metallic", "Metallic", ""),
     ("alpha", "Alpha", "Transparency, the hair cards need it"),
+    ("flow", "Flow", "Direction of the strands and a noise per strand on the hair cards, for the hair shaders of the Companions"),
 ]
 CLIP_SOURCES = [
     ("human", "On this human", "The animations set on the human, active and in the NLA"),
@@ -291,7 +292,7 @@ class TextureBakeSettings(Settings):
             "clothing": ["base_color", "normal", "roughness", "metallic"],
             "eyes": ["base_color"],
             "teeth": ["base_color", "normal", "roughness"],
-            "hair": ["base_color", "normal", "roughness", "alpha"],
+            "hair": ["base_color", "normal", "roughness", "alpha", "flow"],
         }
     )
     file_format: str = "png"  # png, jpeg

@@ -120,6 +120,8 @@ class CardSettings:
     scalp_only_skin: bool
     #: Use the normals of the skin as outward direction, instead of the head proxy
     skin_normals: bool
+    #: Size of the cells the hair around a card is counted in, see _exposure
+    exposure_cell: float
     #: Corrections for the color of the card material
     color_match: ColorMatch
 
@@ -138,6 +140,7 @@ SCALP_SETTINGS = CardSettings(
     max_width_to_length=0.25,
     scalp_only_skin=True,
     skin_normals=False,
+    exposure_cell=0.008,
     color_match=ColorMatch(value=0.26, saturations=(0.97, 0.89)),
 )
 # Face hair is a lot shorter and its skin moves with the expressions of the face
@@ -155,6 +158,7 @@ FACE_SETTINGS = CardSettings(
     max_width_to_length=0.5,
     scalp_only_skin=False,
     skin_normals=True,
+    exposure_cell=0.003,
     # Darker than the cards on the scalp: face hair cards stand apart on the skin,
     # without other cards casting shadows on them
     color_match=ColorMatch(value=0.36, saturations=(1.1, 1.0)),
@@ -187,6 +191,17 @@ TIP_SPREAD_FACTOR = 1.5
 # Extra weight of the distance to the head when comparing strands, to get clumps that
 # are layers on top of each other instead of thick bundles
 LAYER_WEIGHT = 1.5
+# Hair of other clumps around a card, as a share of the hair around the roots of the
+# hairstyle: below the first value the card hangs free, above the second it is part
+# of the mass of the hair
+EXPOSURE_RANGE = (0.1, 0.3)
+# How many times smaller the deviation from the clump is that a card that hangs free
+# gets segments for. Its bends show against the background, those of a card in the
+# mass of the hair don't.
+EXPOSED_DETAIL = 2.0
+# Exposure of the most exposed quarter of a card above which it gets a crossing
+# card: a lock that only leaves the hair near its tip shows as a line there too
+LOOSE_EXPOSURE = 0.6
 
 
 # How far the hair color is mixed with white for the maximum amount of grey hairs,
@@ -860,14 +875,147 @@ def _cluster_strands(
     return labels
 
 
+_NEIGHBOUR_CELLS = np.array(
+    [(x, y, z) for x in (-1, 0, 1) for y in (-1, 0, 1) for z in (-1, 0, 1)]
+)
+
+
+def _lookup(keys: np.ndarray, values: np.ndarray, wanted: np.ndarray) -> np.ndarray:
+    """Gets the values of the wanted keys from sorted keys, 0 for missing keys."""
+    idxs = np.minimum(np.searchsorted(keys, wanted), len(keys) - 1)
+    return np.where(keys[idxs] == wanted, values[idxs], 0.0)  # type:ignore
+
+
+def hair_near(strands: HairStrands, coords: np.ndarray, cell: float) -> np.ndarray:
+    """Counts the hairs around every one of a set of points.
+
+    Counted in a grid like _hair_around: the hairs that pass through the cell of a
+    point and the 26 cells next to it, once for every one of those cells.
+
+    Returns:
+        np.ndarray: (len(coords),) rendered hairs times cells.
+    """
+    points = strands.points
+    strand_count = len(points)
+    if not strand_count:
+        return np.zeros(len(coords))
+    origin = np.minimum(points.reshape((-1, 3)).min(axis=0), coords.min(axis=0))
+    cells = np.floor((points - origin) / cell).astype(np.int64) + 1
+    coord_cells = np.floor((coords - origin) / cell).astype(np.int64) + 1
+    size_y, size_z = (
+        np.maximum(cells.reshape((-1, 3)).max(axis=0), coord_cells.max(axis=0)) + 2
+    )[1:]
+    keys = (cells[..., 0] * size_y + cells[..., 1]) * size_z + cells[..., 2]
+    coord_keys = (
+        coord_cells[:, 0] * size_y + coord_cells[:, 1]
+    ) * size_z + coord_cells[:, 2]
+    neighbours = (
+        _NEIGHBOUR_CELLS[:, 0] * size_y + _NEIGHBOUR_CELLS[:, 1]
+    ) * size_z + _NEIGHBOUR_CELLS[:, 2]
+
+    visits = np.unique(keys * strand_count + np.arange(strand_count)[:, None])
+    cell_keys, cell_idxs = np.unique(visits // strand_count, return_inverse=True)
+    cell_hairs = np.bincount(
+        cell_idxs.ravel(), weights=strands.weights[visits % strand_count]
+    )
+    near = np.zeros(len(coords))
+    for neighbour in neighbours:
+        near += _lookup(cell_keys, cell_hairs, coord_keys + neighbour)
+    return near
+
+
+def _hair_around(strands: HairStrands, labels: np.ndarray, cell: float) -> np.ndarray:
+    """Counts the hairs of other clumps around every point of every strand.
+
+    The hairs are counted in a grid: around a point are the hairs that pass through
+    its cell and the 26 cells next to it, counted once for every one of those cells
+    they pass through. So the count is a measure to compare points by, not a number
+    of hairs.
+
+    Returns:
+        np.ndarray: (n, STATIONS) rendered hairs times cells.
+    """
+    points = strands.points
+    strand_count = len(points)
+    clump_count = int(labels.max()) + 1
+    cells = np.floor(points / cell).astype(np.int64)
+    cells -= cells.reshape((-1, 3)).min(axis=0) - 1
+    size_y, size_z = (cells.reshape((-1, 3)).max(axis=0) + 2)[1:]
+    keys = (cells[..., 0] * size_y + cells[..., 1]) * size_z + cells[..., 2]
+    neighbours = (
+        _NEIGHBOUR_CELLS[:, 0] * size_y + _NEIGHBOUR_CELLS[:, 1]
+    ) * size_z + _NEIGHBOUR_CELLS[:, 2]
+
+    # A strand counts once for every cell it passes through
+    visits = np.unique(keys * strand_count + np.arange(strand_count)[:, None])
+    visit_cell, visit_strand = visits // strand_count, visits % strand_count
+    hairs = strands.weights[visit_strand]
+    cell_keys, cell_idxs = np.unique(visit_cell, return_inverse=True)
+    cell_hairs = np.bincount(cell_idxs.ravel(), weights=hairs)
+    # The hairs of every clump in every cell, to leave the clump's own hairs out
+    own_keys, own_idxs = np.unique(
+        visit_cell * clump_count + labels[visit_strand], return_inverse=True
+    )
+    own_hairs = np.bincount(own_idxs.ravel(), weights=hairs)
+    own_cell, own_clump = own_keys // clump_count, own_keys % clump_count
+
+    around = np.zeros(len(own_keys))
+    for neighbour in neighbours:
+        near = own_cell + neighbour
+        around += _lookup(cell_keys, cell_hairs, near)
+        around -= _lookup(own_keys, own_hairs, near * clump_count + own_clump)
+
+    return _lookup(own_keys, around, keys * clump_count + labels[:, None])
+
+
+def _exposure(
+    strands: HairStrands,
+    labels: np.ndarray,
+    centers: np.ndarray,
+    body: BodyReference,
+    settings: CardSettings,
+) -> np.ndarray:
+    """Calculates where the clumps hang free of the mass of the hair.
+
+    A card in the mass of the hair is one of many layers, which hide that it is flat
+    and where it bends. A card with little hair around it shows both: seen from its
+    side it is a line, and its bends stand out against the background. Unless it
+    lies on the skin, where it is seen from the front from every side.
+
+    Returns:
+        np.ndarray: (k, STATIONS) from 0 for stations in the mass of the hair or on
+            the skin to 1 for stations away from the skin with next to no hair of
+            other clumps around them.
+    """
+    around = _hair_around(strands, labels, settings.exposure_cell)
+    # Relative to the hair around the roots, which are always in the mass: the
+    # number of hairs a strand stands for differs between hairstyles
+    reference = max(float(np.median(around[:, 0])), 1e-9)
+
+    clump_count = int(labels.max()) + 1
+    hairs = np.bincount(labels, weights=strands.weights, minlength=clump_count)
+    clump_around = np.zeros((clump_count, STATIONS))
+    np.add.at(clump_around, labels, around * strands.weights[:, None])
+    clump_around /= np.maximum(hairs, 1e-9)[:, None] * reference
+
+    exposure = 1 - _smoothstep(*EXPOSURE_RANGE, clump_around)
+
+    cell = settings.exposure_cell
+    skin_distances = body.distances(centers.reshape((-1, 3))).reshape(exposure.shape)
+    exposure *= _smoothstep(1.5 * cell, 4 * cell, skin_distances)
+
+    return _smooth_along_card(exposure)
+
+
 def _significance(
-    centers: np.ndarray, arc: np.ndarray, settings: CardSettings
+    centers: np.ndarray, arc: np.ndarray, exposure: np.ndarray, settings: CardSettings
 ) -> np.ndarray:
     """Calculates how much every station matters for the shape of its card.
 
     Stations are judged from coarse to fine: the middle station by its distance to
     the line between the ends of the card, the stations at a quarter by their
-    distance to the line between the middle and an end, and so on.
+    distance to the line between the middle and an end, and so on. The distance
+    counts for more where the card hangs free, see _exposure.
 
     Returns:
         np.ndarray: (k, STATIONS) error in meters that leaving out the station would
@@ -881,6 +1029,7 @@ def _significance(
         relative = centers[:, mids] - centers[:, mids - step]
         chord_length = np.maximum(np.linalg.norm(chord, axis=2), 1e-9)
         error = np.linalg.norm(np.cross(chord, relative), axis=2) / chord_length
+        error *= 1 + (EXPOSED_DETAIL - 1) * exposure[:, mids]
         span = arc[:, mids + step] - arc[:, mids - step]
         too_long = span > settings.max_segment_length
         significance[:, mids] = np.where(too_long, np.inf, error)
@@ -997,7 +1146,8 @@ def _fit_cards(
     body: BodyReference,
     settings: CardSettings,
 ) -> _Cards:
-    """Fits a card to every clump, and a second crossing card to standing clumps."""
+    """Fits a card to every clump, and a second crossing card to the clumps that
+    stand on the head or hang free of the rest of the hair."""
     points = strands.points
     clump_count = int(labels.max()) + 1
     strand_counts = np.bincount(labels, minlength=clump_count)
@@ -1059,13 +1209,21 @@ def _fit_cards(
     depths = body.distances(depth_stations.reshape((-1, 3)))
     depths = depths.reshape((clump_count, -1)).mean(axis=1)
     hair_counts = np.bincount(labels, weights=strands.weights, minlength=clump_count)
-    significance = _significance(centers, arc, settings)
+    exposure = _exposure(strands, labels, centers, body, settings)
+    significance = _significance(centers, arc, exposure, settings)
+    # Seen from its side a card is a line. In the mass of the hair the cards around
+    # it fill that in, a card on its own needs a second one across it.
+    window = STATIONS // 4
+    summed = np.cumsum(np.pad(exposure, ((0, 0), (1, 0))), axis=1)
+    quarters = (summed[:, window:] - summed[:, :-window]) / window
+    loose = quarters.max(axis=1) > LOOSE_EXPOSURE
+    crossed = standing | loose
 
     def with_crossing(
         values: np.ndarray, crossing: Optional[np.ndarray] = None
     ) -> np.ndarray:
         crossing = values if crossing is None else crossing
-        return np.concatenate((values, crossing[standing]))
+        return np.concatenate((values, crossing[crossed]))
 
     return _Cards(
         centers=with_crossing(centers),

@@ -34,11 +34,11 @@ Tested with Unreal Engine 5.8 and Blender 5.1: the skeletal mesh imports at 176 
 
 1. **Import**: drag `SK_Jake.fbx` into the Content Browser. Unreal 5.4 and later import it through Interchange: keep *Skeletal Mesh* on, leave *Skeleton* empty to create one, and the morph targets come along. In the legacy FBX importer, turn on **Import Morph Targets** (it is off there). The textures in the `Textures` folder next to the file are imported along with the mesh.
 2. **Materials**: a material instance per part is created with the base color and normal map connected. The ORM texture needs wiring once: open the material, add `T_Jake_Body_ORM` with *sRGB* off, and connect **R to Ambient Occlusion, G to Roughness, B to Metallic**.
-3. **Hair**: set the hair materials to *Masked* blend mode, connect the alpha channel of the color texture to *Opacity Mask*, and make them *Two Sided*.
+3. **Hair**: set the hair materials to *Masked* blend mode, connect the alpha channel of the color texture to *Opacity Mask*, and make them *Two Sided*. For the cards, the *Hair* shading model with the red and green of `T_Jake_HairCards_Flow` (scaled from 0..1 to -1..1, third component 0) as the *Tangent* gives highlights that run along the strands instead of across the card, see [[Haircards#Hair shading]].
    <!-- 4. **Animation**: import `SK_Jake_Animations.fbx` onto the skeleton that was created; every take becomes an Animation Sequence. Animations made for the Mannequin retarget with the IK Retargeter, the bone names and A-pose make the chains line up. -->
 
 > [!tip] Human Generator 3D Companion for Unreal Engine
-> A free, open source content-only plugin that does the steps above after the import: the ORM textures, master materials with instances per part, masked and dithered two-sided hair, and the *Subsurface Profile* shading model on the skin, which it needs to look like it does in Blender. [github.com/OliverJPost/humgen3d-companion-unreal](https://github.com/OliverJPost/humgen3d-companion-unreal)
+> A free, open source content-only plugin that does the steps above after the import: the ORM and flow textures, master materials with instances per part, masked and dithered two-sided hair with the *Hair* shading model on the cards, and the *Subsurface Profile* shading model on the skin, which it needs to look like it does in Blender. [github.com/OliverJPost/humgen3d-companion-unreal](https://github.com/OliverJPost/humgen3d-companion-unreal)
 
 > [!feedback] Did Unreal import it like this?
 > These steps are what we see in Unreal Engine 5. If your import differs, or a step is missing, we want to know which one, and your engine version. [Tell us](https://humgen3d.com/feedback/process?page=unreal&step=import).

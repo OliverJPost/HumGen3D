@@ -2,6 +2,7 @@
 # flake8:noqa: F811
 
 import math
+import os
 
 import bpy
 import numpy as np
@@ -146,6 +147,12 @@ def _colors(obj) -> np.ndarray:
     return colors.reshape((-1, 4))
 
 
+def _cover(obj) -> np.ndarray:
+    cover = np.empty(len(obj.data.vertices), dtype=np.float32)
+    obj.data.attributes[haircap.COVER_ATTRIBUTE].data.foreach_get("value", cover)
+    return cover
+
+
 def _hair_node_value(material, input_name) -> float:
     node = next(
         node for node in material.node_tree.nodes if node.bl_idname == "ShaderNodeGroup"
@@ -194,6 +201,35 @@ def test_short_hair_only_gets_haircap(short_haired_human, context):
 
     assert len(hair_obj.data.materials) == 1
     assert _triangle_count(hair_obj) < haircards.QUALITY_TRIANGLE_BUDGETS["low"]
+
+
+def test_haircap_is_solid_under_the_hair(long_haired_human, context):
+    hair_obj = long_haired_human.hair.regular_hair.convert_to_haircards("high", context)
+
+    on_cap = ~_card_vert_mask(hair_obj)
+    cover = _cover(hair_obj)[on_cap]
+    density = _colors(hair_obj)[on_cap, 0]
+    # Solid under the mass of the hair, the see-through film it was at the hairline
+    assert (cover > 0.9).mean() > 0.3
+    assert cover[density == 0].max() == 0
+    assert cover.min() == 0
+    material = hair_obj.data.materials[0]
+    shader = next(
+        node
+        for node in material.node_tree.nodes
+        if node.bl_idname == "ShaderNodeBsdfPrincipled"
+    )
+    opacity = shader.inputs["Alpha"].links[0].from_node
+    assert opacity.use_clamp
+    assert all(socket.is_linked for socket in opacity.inputs[:2])
+
+
+def test_haircap_of_short_hair_stays_see_through(short_haired_human, context):
+    hair_obj = short_haired_human.hair.regular_hair.convert_to_haircards(
+        "ultra", context
+    )
+
+    assert _cover(hair_obj).max() == 0
 
 
 def test_conversion_restores_human(long_haired_human, context):
@@ -331,6 +367,67 @@ def test_same_strands_give_same_cards(long_haired_human, context):
     assert smaller_geometry.card_count < geometry.card_count
 
 
+def test_counts_hair_around_strands():
+    """A lock on its own has no hair of other clumps around it, one in a bundle has."""
+    rng = np.random.default_rng(0)
+    along = np.linspace(0, 0.2, haircards.STATIONS)
+
+    def lock(x, count):
+        points = np.zeros((count, haircards.STATIONS, 3))
+        points[..., 0] = x + rng.normal(0, 0.001, (count, 1))
+        points[..., 1] = rng.normal(0, 0.001, (count, 1))
+        points[..., 2] = -along
+        return points
+
+    # Two locks side by side and one 10 cm away
+    points = np.concatenate((lock(0, 20), lock(0.004, 20), lock(0.1, 20)))
+    labels = np.repeat(np.arange(3), 20)
+    strands = haircards.HairStrands(
+        points=points,
+        system=np.zeros(60, dtype=np.int64),
+        weights=np.full(60, 2.0),
+        for_cards=np.ones(60, dtype=bool),
+        density_points=np.zeros((0, 3)),
+    )
+
+    around = haircards._hair_around(strands, labels, 0.008)
+
+    assert around.shape == (60, haircards.STATIONS)
+    # The 20 strands of the other lock, 2 hairs each, in up to three cells along them
+    assert around[:40].min() >= 40
+    assert np.allclose(around[:20], around[20:40])
+    assert np.allclose(around[40:], 0)
+
+
+def test_loose_locks_get_a_crossing_card(long_haired_human, context):
+    human = long_haired_human
+    proxy = haircards.HeadProxy.from_human(human)
+    with haircards.rest_pose(human.objects.rig, context):
+        body = haircards.BodyReference(human, context)
+        strands = haircards.extract_strands(
+            human, list(human.hair.regular_hair.modifiers), context
+        ).card_strands()
+    # A lock of strands that hangs 10 cm away from the rest of the hair
+    lock = strands.points[:8].copy()
+    lock[..., 0] += lock[:, :1, 0].max() - lock[..., 0].min() + 0.1
+    with_lock = haircards.HairStrands(
+        points=np.concatenate((strands.points, lock)),
+        system=np.concatenate((strands.system, np.full(8, strands.system.max() + 1))),
+        weights=np.concatenate((strands.weights, strands.weights[:8])),
+        for_cards=np.ones(len(strands.points) + 8, dtype=bool),
+        density_points=strands.density_points,
+        diameters=np.concatenate((strands.diameters, strands.diameters[:8])),
+    )
+    labels = haircards._cluster_strands(with_lock, proxy, 300)
+
+    cards = haircards._fit_cards(with_lock, labels, proxy, body, haircards.SCALP_SETTINGS)
+
+    lock_clumps = np.unique(labels[-8:])
+    for clump in lock_clumps:
+        assert (cards.clump == clump).sum() == 2, "A loose lock gets a card across it"
+    assert len(cards) < 2 * (labels.max() + 1), "The hair as a whole doesn't"
+
+
 def _alpha_source(nodes):
     """The node feeding the alpha of a card material, behind its cut-out node."""
     node = nodes["Principled BSDF"].inputs["Alpha"].links[0].from_node
@@ -367,6 +464,56 @@ def test_bake_packs_alpha(long_haired_human, context, tmp_path, pack):
             assert _alpha_source(nodes) == nodes["alpha"]
         assert alpha.max() > alpha.min() + 0.1
         assert (alpha < 0.5).mean() > 0.2, "Most of a card is transparent"
+    finally:
+        human.delete()
+
+
+def test_bake_writes_flow_map(long_haired_human, context, tmp_path):
+    """The cards get a flow map: the strands run from the root to the tip of the
+    card, so the green channel (the v direction) is low, and the blue channel
+    varies between strands."""
+    from HumGen3D.human.process.settings import TextureBakeSettings
+
+    human = long_haired_human.duplicate(context)
+    try:
+        hair_obj = human.hair.regular_hair.convert_to_haircards("low", context)
+        textures = TextureBakeSettings(
+            resolution={key: 128 for key in TextureBakeSettings().resolution},
+        )
+        human.process.bake_textures(textures, str(tmp_path), only_sets=("hair",), context=context)
+
+        cards = hair_obj.data.materials[1]
+        nodes = cards.node_tree.nodes
+        flow_node = nodes["flow"]
+        assert flow_node.image is not None
+        assert not flow_node.outputs[0].links, "No material input reads the flow map"
+        assert flow_node.image.name.endswith("_Flow")
+        assert os.path.isfile(os.path.join(tmp_path, f"{flow_node.image.name}.png"))
+        pixels = np.array(flow_node.image.pixels).reshape(-1, 4)
+        assert abs(pixels[:, 0].mean() - 0.5) < 0.1, "The strands lean to neither side"
+        assert pixels[:, 1].mean() < 0.3, "The strands run from the root (v max) to the tip"
+        assert (np.abs(pixels[:, 2] - 0.5) > 0.02).mean() > 0.05, "A noise per strand"
+        cap = hair_obj.data.materials[0]
+        assert "flow" not in cap.node_tree.nodes, "The cap has no strands to follow"
+    finally:
+        human.delete()
+
+
+def test_embedded_export_writes_flow_map_next_to_file(long_haired_human, context, tmp_path):
+    """Embedded textures only carry the images a material input reads, so the
+    flow map of the hair cards is written next to the file."""
+    from HumGen3D.human.process.settings import OutputSettings, TextureBakeSettings
+
+    human = long_haired_human.duplicate(context)
+    try:
+        human.hair.regular_hair.convert_to_haircards("low", context)
+        textures = TextureBakeSettings(resolution={key: 64 for key in TextureBakeSettings().resolution})
+        human.process.bake_textures(textures, folder=None, only_sets=("hair",), context=context)
+        output = OutputSettings(format="glb", textures="embedded")
+        path = human.export.write(os.path.join(tmp_path, "Embedded"), output, context=context)
+        assert os.path.isfile(path)
+        sidecars = [name for name in os.listdir(tmp_path) if name.endswith("_HairCards_Flow.png")]
+        assert len(sidecars) == 1, os.listdir(tmp_path)
     finally:
         human.delete()
 

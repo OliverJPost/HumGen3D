@@ -21,7 +21,7 @@ The hair, eyebrows, eyelashes and beards of Human Generator are particle hair: t
 
 ![[process_haircards.webp|520]]
 
-Scalp hair and beards get a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**, as two meshes (*Haircap* and *HairCards*, *FaceHair* and *FaceHairCards*), so a game engine sorts, culls and lights the blended cap and the cut-out cards each as its kind, and you can hide or swap one without the other. Eyebrows get a haircap only, and eyelashes are pre-made lash strips, one mesh each. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
+Scalp hair and beards get a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**, as two meshes (*Haircap* and *HairCards*, *FaceHair* and *FaceHairCards*), so a game engine sorts, culls and lights the blended cap and the cut-out cards each as its kind, and you can hide or swap one without the other. The haircap is solid where hair with cards lies over the scalp and fades to a see-through film of painted strands over the last centimetres to the hairline, so the skin never shows between the cards and the cap doesn't end in a line beyond them. Hair that is too short for cards keeps the film everywhere. Eyebrows get a haircap only, and eyelashes are pre-made lash strips, one mesh each. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
 
 ## Quality
 
@@ -34,6 +34,8 @@ The quality sets the triangle budget of the cards. The thumbnails show what you 
 | ![[haircards_medium.webp\|64]] **Medium** | up to 7,000 | up to 5,000 | Secondary characters |
 | ![[haircards_low.webp\|64]] **Low** | up to 4,500 | up to 3,500 | Crowds, distant LOD levels |
 | ![[haircards_haircap_only.webp\|64]] **Haircap only** | only the haircap texture on the skin, no cards | | Mobile, the last LOD level |
+
+The budget is spent where it shows. A card in the mass of the hair is one of many layers, which hide that it is flat and where it bends. A lock that **hangs free** of the rest of the hair shows both, so it gets more segments, which keeps its bends smooth against the background, and a second card across the first, so it is not a line when you look along it. Cards that stand on the head, as in an afro, get that second card too. The cards in the mass of the hair pay for it with fewer segments.
 
 With more than one [[Optimize Meshes|LOD level]] every level has its own quality, and its own hair card textures, as the layout of the cards changes with the quality.
 
@@ -48,8 +50,19 @@ The cards are textured with a **strand atlas that is generated for the hairstyle
 
 The alpha of the cards is the coverage of the strands: full strands with anti-aliased edges, cut out at **half alpha**, which is what the cutout materials of Unity, Unreal and Godot default to. Every strand the hair material draws at a fifth of full opacity or more is solid in the baked alpha, so the fine strands survive the cut-out; below that the alpha fades out as drawn, which alpha-to-coverage and dithering turn into soft edges. In Blender the cards render translucent, which is why they look softer there; a game engine can't sort translucent cards, so the export bakes the coverage instead and fades the strands out at the sides of every card. Two things to set on the hair materials in the other program, if its importer doesn't do it:
 
-- Use an **alpha clip / cutout** material (alpha scissor in Godot, masked in Unreal, Alpha Clipping in Unity) at the default threshold of 0.5, not blended transparency, so the cards don't sort wrongly against each other.
+- Use an **alpha clip / cutout** material (alpha scissor in Godot, masked in Unreal, Alpha Clipping in Unity) at the default threshold of 0.5, not blended transparency, so the cards don't sort wrongly against each other. Godot is the exception: it discards everything under the scissor before alpha to coverage, which loses the fine strands and the anti-aliased edges, so with MSAA on set its scissor to about 0.15 (the Companion does); Unity's alpha to mask and Unreal's dithered mask keep them as partial coverage at 0.5.
 - Make the material **two-sided**, as the cards are single planes.
+
+#### Hair shading
+
+Lit as a flat surface, a card has its highlight across the card and mirrors the sky; hair reflects along its strands. So the cards also get a **flow map** (`Jake_HairCards_Flow.png`): the direction of the strands on the card in the red and green channels, in the UV space of the card from root to tip, and a random value per strand in blue. The Companions use it to shade the cards as hair: a white highlight and one in the hair color that run along the strands and are shifted apart (Kajiya-Kay with the two lobes of Marschner), broken up between the strands by the noise, which also varies the color from strand to strand. In Unity the Companion assigns a shipped URP shader, in Unreal the cards get the *Hair* shading model with the flow map as the strand tangent, in Godot a shipped shader. A plain lit material ignores the map. With embedded textures the flow map is written next to the file, as an embedded texture can only be one a material input reads.
+
+The shaders of the Companions for Unity and Godot also **fade a card out when you look along it**, where it would be a line with all its strands pressed into it, down to its solid strands; the cards around it, or the card across it, show the hair there instead. In Unreal the cards master does the same. The normals of the cards follow the shape of the head, so the whole hairstyle is lit as one volume, and the normal map is relative to the card itself.
+
+```compare
+before: compare_hair_shading_before.webp | Lit as cards
+after: compare_hair_shading_after.webp | Shaded as hair
+```
 
 The alpha and normal maps of the hair are baked at the size of the strand atlas and scaled down to the texture size, so a strand finer than a texel still counts and the normals of the cap don't turn to noise. Engines average the alpha for their mipmaps, which makes cut-out strands thinner with distance. Unity (*Preserve Coverage* on the texture) and Unreal (*Alpha Coverage* on the texture) can scale the mipmaps so the strands keep their width; the Companions set that up. For the soft look of Blender in Unreal, the Companion dithers the opacity mask, which the temporal anti-aliasing resolves to translucent-looking strands.
 

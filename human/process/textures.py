@@ -8,6 +8,8 @@ nodes. The maps are written the way the chosen engine expects them: roughness
 and metallic packed into one image for Unreal (ORM), Unity (metallic in RGB,
 smoothness in A) or glTF, the normal map with a flipped green channel for
 DirectX engines, and the alpha of the hair cards inside their color texture.
+The hair cards also get a flow map (see FLOW_PASS), which no material of the
+baked copy reads: it is for the hair shaders of the Companions.
 
 The materials in Blender get the same packed images, through Separate Color
 nodes, so the processed copy renders in Blender and the glTF exporter finds the
@@ -47,7 +49,15 @@ if TYPE_CHECKING:
     from HumGen3D.human.human import Human
 
 # Order the passes are baked in, see planned_passes
-PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha", "specular")
+PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha", "specular", "flow")
+# The flow map of the hair cards: the direction of the strands in the UV space
+# of the card from root to tip (red and green, around 0.5) and a random value
+# per strand (blue). It is baked from the flow image of the generated card
+# atlas, see card_atlas, and read by no Principled input: the engines' hair
+# shaders use it for the anisotropic highlights and the variation between
+# strands. The baked material keeps it in an unlinked image node, so an
+# export with embedded textures can write it next to the file
+FLOW_PASS = "flow"
 # Principled BSDF input of each pass
 PASS_INPUTS = {
     "base_color": "Base Color",
@@ -81,6 +91,7 @@ NODE_LOCATIONS = {
     "metallic": (-1100, 200),
     "alpha": (-1100, -100),
     "packed": (-1100, 100),
+    "flow": (-700, -650),
 }
 HAIRCARD_KEY = "hg_haircard"
 # The number Blender adds to a name that is taken
@@ -257,7 +268,11 @@ def bake_steps(  # noqa: CCR001
                     if isinstance(baked, bpy.types.Image):
                         for material in texture_set.materials:
                             targets[material] = baked
-                _bake(objects, targets, pass_id, context)
+                if pass_id == "normal":
+                    with _card_face_normals(sets):
+                        _bake(objects, targets, pass_id, context)
+                else:
+                    _bake(objects, targets, pass_id, context)
                 for texture_set in sets:
                     baked = texture_set.baked.get(pass_id)
                     if isinstance(baked, bpy.types.Image):
@@ -349,6 +364,69 @@ class _bake_visibility:
             mod.show_render = True
 
 
+class _card_face_normals:
+    """The hair cards have the normals of their faces while the block runs.
+
+    The normals of the cards follow the shape of the head, so a card that
+    stands on the head or crosses another one has them in its own plane. A
+    tangent space bake can't express a normal relative to such a card: it
+    baked noise into the parts of the atlas those cards use, which lit them
+    and every card that shares their part dark in engines. With the normals
+    of the faces the bake writes the normals of the atlas as they are,
+    relative to the card, which is how the Companions apply them.
+    """
+
+    def __init__(self, sets: List[TextureSet]) -> None:
+        self.slots = [
+            slot for texture_set in sets if texture_set.is_cards for slot in texture_set.slots
+        ]
+        # Mesh, its normals per face corner and its sharp edges
+        self.original: List[Tuple[bpy.types.Mesh, np.ndarray, np.ndarray]] = []
+
+    def __enter__(self) -> None:
+        for obj, slot in self.slots:
+            mesh = obj.data
+            loop_count = len(mesh.loops)  # type:ignore[union-attr]
+            if not loop_count:
+                continue
+            normals = np.empty(loop_count * 3, dtype=np.float32)
+            if hasattr(mesh, "corner_normals"):
+                mesh.corner_normals.foreach_get("vector", normals)  # type:ignore[union-attr]
+            else:
+                mesh.calc_normals_split()  # type:ignore[union-attr]
+                mesh.loops.foreach_get("normal", normals)  # type:ignore[union-attr]
+            normals = normals.reshape(-1, 3)
+            polygon_count = len(mesh.polygons)  # type:ignore[union-attr]
+            face_normals = np.empty(polygon_count * 3, dtype=np.float32)
+            mesh.polygons.foreach_get("normal", face_normals)  # type:ignore[union-attr]
+            material_index = np.empty(polygon_count, dtype=np.int32)
+            mesh.polygons.foreach_get("material_index", material_index)  # type:ignore[union-attr]
+            loop_total = np.empty(polygon_count, dtype=np.int32)
+            mesh.polygons.foreach_get("loop_total", loop_total)  # type:ignore[union-attr]
+            loop_start = np.empty(polygon_count, dtype=np.int32)
+            mesh.polygons.foreach_get("loop_start", loop_start)  # type:ignore[union-attr]
+
+            polygon_of_loop = np.empty(loop_count, dtype=np.int64)
+            polygon_of_loop[np.concatenate([np.arange(s, s + t) for s, t in zip(loop_start, loop_total)])] = (
+                np.repeat(np.arange(polygon_count), loop_total)
+            )
+            of_slot = material_index[polygon_of_loop] == slot
+            flat = normals.copy()
+            flat[of_slot] = face_normals.reshape(-1, 3)[polygon_of_loop[of_slot]]
+            # Setting normals marks the edges sharp that need it to keep them
+            sharp = np.empty(len(mesh.edges), dtype=bool)  # type:ignore[union-attr]
+            mesh.edges.foreach_get("use_edge_sharp", sharp)  # type:ignore[union-attr]
+            self.original.append((mesh, normals, sharp))  # type:ignore[arg-type]
+            mesh.normals_split_custom_set(flat.tolist())  # type:ignore[union-attr]
+
+    def __exit__(self, *_: object) -> None:
+        for mesh, normals, sharp in self.original:
+            mesh.edges.foreach_set("use_edge_sharp", sharp)
+            mesh.normals_split_custom_set(normals.tolist())
+            mesh.update()
+        self.original.clear()
+
+
 def _hide_solidify(objects: List[bpy.types.Object]) -> List[bpy.types.Modifier]:
     """Hides the solidify modifiers, which would bake the inside of the cloth."""
     hidden = []
@@ -388,7 +466,7 @@ def _input_source(
 
 # Passes of the hair cards that are baked from the atlas textures of their
 # material rather than from the Principled inputs, see _card_source
-CARD_ATLAS_PASSES = ("alpha", "roughness")
+CARD_ATLAS_PASSES = ("alpha", "roughness", FLOW_PASS)
 # Roughness of a hair card texel between the strands, and how much the
 # strand specular map of the atlas lowers it on a strand: the Principled
 # roughness of the cards is one value, and cut-out cards lit with one
@@ -398,14 +476,14 @@ CARD_ATLAS_PASSES = ("alpha", "roughness")
 CARD_ROUGHNESS = 0.55
 CARD_STRAND_GLOSS = 0.15
 # Name part of the atlas image that feeds each pass
-CARD_ATLAS_IMAGES = {"alpha": "_ALPHA", "roughness": "_SPECULAR"}
+CARD_ATLAS_IMAGES = {"alpha": "_ALPHA", "roughness": "_SPECULAR", FLOW_PASS: "_FLOW"}
 # Passes of the hair that are baked at the size of the strand texture of the
 # material and scaled down after, see _prepare_pass. Cycles samples a texture
 # once per baked texel, so a 4096 strand texture baked into 1024 texels
 # aliased: a strand's normal landed on a random side of the strand, which
 # lit half of the texels of the caps from the back, and a strand thinner
 # than a texel was lost from the alpha
-NATIVE_PASSES = ("alpha", "normal")
+NATIVE_PASSES = ("alpha", "normal", FLOW_PASS)
 # Largest native bake, the atlas of the library is 4096
 MAX_NATIVE_SIZE = 4096
 # Baked (sRGB encoded) alpha at and above which a hair card texel is solid,
@@ -488,7 +566,7 @@ def _card_source(
     atlas = nodes.new("ShaderNodeTexImage")
     atlas.image = image
     atlas.label = f"atlas_{pass_id}"
-    if pass_id == "alpha":
+    if pass_id in ("alpha", FLOW_PASS):
         return atlas.outputs["Color"], 0.0  # type:ignore[return-value]
     gloss = nodes.new("ShaderNodeMath")
     gloss.operation = "MULTIPLY_ADD"
@@ -508,8 +586,12 @@ def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
     restored: they are replaced by the baked material afterwards.
     """
     materials = texture_set.materials
-    if pass_id != "normal":
+    if pass_id == FLOW_PASS:
+        # No Principled input: only cards with a generated atlas have it
+        sources = [(None, 0.0) for _ in materials]
+    elif pass_id != "normal":
         sources = [_input_source(_principled(material), pass_id) for material in materials]
+    if pass_id != "normal":
         if texture_set.is_cards and pass_id in CARD_ATLAS_PASSES:
             sources = [
                 _card_source(material, pass_id, source)
@@ -645,7 +727,7 @@ def _sharing_groups(
 _SNAPSHOTS: Dict[str, np.ndarray] = {}
 # Channels a snapshot keeps per pass: the native passes of the hair are
 # baked at up to 4096 px, see NATIVE_PASSES
-SNAPSHOT_CHANNELS = {"alpha": 1, "normal": 3}
+SNAPSHOT_CHANNELS = {"alpha": 1, "normal": 3, FLOW_PASS: 3}
 
 
 def _snapshot(image: bpy.types.Image, channels: int = 4) -> None:
@@ -743,6 +825,46 @@ def _normal_pixels(texture_set: TextureSet, size: int) -> np.ndarray:
         rgb = (vectors / np.maximum(length, 1e-6) * 0.5 + 0.5).reshape(-1, 3)
     out = np.ones((size * size, 4), dtype=np.float32)
     out[:, :3] = rgb
+    return out
+
+
+def _flow_pixels(texture_set: TextureSet, size: int) -> np.ndarray:
+    """The baked flow map of a set as (size * size, 4) pixels, see FLOW_PASS.
+
+    A native bake is scaled down like the normals: the directions averaged,
+    weighted by the alpha baked at the same size, so the edge of a strand
+    keeps the direction of that strand, and a texel without strands flows
+    straight from root to tip. The noise is averaged the same way.
+    """
+    from HumGen3D.human.hair.card_atlas import FLOW_DEFAULT
+
+    pixels = _pixels(texture_set.baked[FLOW_PASS])  # type:ignore[arg-type]
+    native = int(round(math.sqrt(len(pixels))))
+    rgb = pixels[:, :3].reshape(native, native, 3)
+    direction = rgb[..., :2] * 2.0 - 1.0
+    noise = rgb[..., 2:]
+    if native > size:
+        factor = native // size
+        alpha = texture_set.baked.get("alpha")
+        if isinstance(alpha, bpy.types.Image) and alpha.size[0] == native:
+            weight = np.clip(_pixels(alpha)[:, 0].reshape(native, native, 1), 0.0, 1.0)
+        else:
+            weight = np.ones((native, native, 1), dtype=np.float32)
+        total = _box_down(weight, factor)
+        direction = _box_down(direction * weight, factor)
+        noise = _box_down(noise * weight, factor)
+        covered = total[..., 0] > 1e-4
+        noise = np.where(covered[..., None], noise / np.maximum(total, 1e-6), FLOW_DEFAULT[2])
+    else:
+        covered = np.ones((size, size), dtype=bool)
+    length = np.linalg.norm(direction, axis=2)
+    covered &= length > 1e-6
+    out = np.ones((size * size, 4), dtype=np.float32)
+    flow = np.empty((size, size, 3), dtype=np.float32)
+    flow[...] = FLOW_DEFAULT
+    flow[covered, :2] = direction[covered] / length[covered][:, None] * 0.5 + 0.5
+    flow[covered, 2] = np.clip(noise[covered, 0], 0.0, 1.0)
+    out[:, :3] = flow.reshape(-1, 3)
     return out
 
 
@@ -981,6 +1103,12 @@ def _build_material(  # noqa: CCR001
             namer.texture(part, "normal", per_level), size, pixels, False, False
         )
 
+    flow = baked.get(FLOW_PASS)
+    if isinstance(flow, bpy.types.Image):
+        images[FLOW_PASS] = _new_image(
+            namer.texture(part, FLOW_PASS, per_level), size, _flow_pixels(texture_set, size), False, False
+        )
+
     roughness = baked.get("roughness")
     metallic = baked.get("metallic")
     workflow = settings.workflow
@@ -1062,6 +1190,8 @@ def _build_material(  # noqa: CCR001
             links.new(normal_node.outputs["Normal"], principled.inputs["Normal"])  # type:ignore[index]
         elif pass_id in ("roughness", "metallic"):
             links.new(node.outputs["Color"], principled.inputs[PASS_INPUTS[pass_id]])  # type:ignore[index]
+        elif pass_id == FLOW_PASS:
+            pass  # Read by no input, kept for the export, see FLOW_PASS
         else:
             _link_packed(nodes, links, node, principled, workflow)
 
@@ -1156,6 +1286,39 @@ def _link_packed(nodes, links, image_node, principled, workflow: str) -> None:  
     else:
         links.new(separate.outputs["Green"], principled.inputs["Roughness"])  # type:ignore[index]
         links.new(separate.outputs["Blue"], principled.inputs["Metallic"])  # type:ignore[index]
+
+
+def write_sidecar_images(human: "Human", folder: str) -> List[str]:
+    """Writes the baked images of the human that no exporter carries next to
+    the file: the flow maps of the hair cards, which no material input reads
+    and which embedded textures therefore leave out.
+
+    Args:
+        human (Human): The processed copy with baked materials.
+        folder (str): Folder of the written file.
+
+    Returns:
+        List[str]: The paths written, as PNG files named like the images.
+    """
+    written: List[str] = []
+    seen = set()
+    for obj in human.objects:
+        if obj.type != "MESH":
+            continue
+        for slot in obj.material_slots:
+            material = slot.material
+            if not material or BAKED_KEY not in material or not material.node_tree:
+                continue
+            node = material.node_tree.nodes.get(FLOW_PASS)
+            image = getattr(node, "image", None)
+            if image is None or image.name in seen:
+                continue
+            seen.add(image.name)
+            path = os.path.join(folder, f"{SUFFIX.sub('', image.name)}.png")
+            image.file_format = "PNG"
+            image.save(filepath=path)
+            written.append(path)
+    return written
 
 
 def copy_materials(
