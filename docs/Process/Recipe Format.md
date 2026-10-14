@@ -1,16 +1,15 @@
 ---
-description: Reference of the Human Generator recipe file - every section, option and allowed value of the JSON that the Process tab saves and the Python ExportSettings hold.
+description: "Reference of the Human Generator export recipe file: every section, option and allowed value of the JSON the Process tab saves and ExportSettings holds."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Recipe format
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
-# Recipe format
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
 A [[Recipes|recipe]] is a JSON file with the state of the whole Process tab. The sections and options are the same as those of [[ExportSettings]] in Python, with the same names and values. Every option can be left out: it then gets the default in the tables below, so a recipe only needs what it changes. Options the add-on doesn't know are ignored, and so are files that can't be read: those are left out of the recipe list.
 
-Your recipes live in the `process_templates` folder of your content folder, in a subfolder per group; the subfolder is the group name in the list, and recipes directly in `process_templates` are listed under *Saved*.
+> [!info] Where recipes live
+> Your recipes are in the `process_templates` folder of your content folder, in a subfolder per group; the subfolder is the group name in the list, and recipes directly in `process_templates` are listed under *Saved*.
 
 ```json
 {

@@ -1,12 +1,10 @@
 ---
-description: Download and install the free Human Generator 3D Companion for Unreal Engine, the plugin that sets up exported Human Generator characters after import - ORM textures, skin, hair and hair card materials.
+description: "Download and install the free Human Generator 3D Companion for Unreal Engine, which sets up exported characters: ORM textures, skin, hair and hair cards."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Human Generator 3D Companion for Unreal Engine
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
-# Human Generator 3D Companion for Unreal Engine
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
 A free Unreal Engine plugin that sets up a character exported with the **Unreal** recipe right after the import: the ORM and flow textures, master materials with an instance per part, the *Subsurface Profile* shading model on the skin, and masked, two-sided hair with the *Hair* shading model on the cards. Without it you do the steps of [[Export to Unreal Engine#In Unreal Engine]] by hand.
 
@@ -32,7 +30,7 @@ Export with the **Unreal** recipe and drag the `.fbx` into the Content Browser, 
 
 The master materials are made once, in `/Game/HumGen3D/`. A new version of the Companion updates them where they are, so your material instances keep working.
 
-> [!info] Only characters with their .humgen3d.json file
+> [!warning] Only characters with their .humgen3d.json file
 > Human Generator writes `Jake.humgen3d.json` next to every exported character (`Jake.fbx`). It tells the Companion which files belong to the character and what each material is. The Companion only sets up a mesh whose file has one, so other characters in your project are never touched, and the [[Output#Naming|naming scheme]] doesn't matter. Characters exported by earlier versions of Human Generator don't have it; export them again.
 
 ## Update

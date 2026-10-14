@@ -1,27 +1,25 @@
 ---
-description: The output options of the Human Generator Process tab - FBX, glTF, OBJ and Alembic export, processed copies in the Blender file, file names, naming schemes and where the textures go.
+description: "Output options of the Human Generator Process tab: FBX, glTF, OBJ and Alembic export, processed copies in the Blender file, naming, texture folders, licence."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Output formats and names
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Output: file formats, names and folders
-
-The **Output** dropdown at the top of the Process tab decides what you get. The box at the bottom holds the name, the folder and the format options.
+The **Output** dropdown at the top of the Process tab decides what you get: a character file for a game engine, a plain mesh file, or a processed copy that stays in your Blender scene. The box at the bottom holds the name, the folder and the format options.
 
 ## Output formats
 
 | Output | What you get | Use it for |
 | --- | --- | --- |
 | **In this file** | A frozen, processed copy of the human in your scene, see [[#Processed copies]] | A lightweight copy to render, a crowd of baked humans, or checking a result before exporting |
-| **FBX** | One `.fbx` file with the skeleton, meshes and blend shapes<!-- and animations--> | Unity, Unreal Engine, Mixamo and most other 3D programs |
+| **FBX** | One `.fbx` file with the skeleton, meshes and blend shapes | Unity, Unreal Engine, Mixamo and most other 3D programs |
 | **glTF Binary (.glb)** | One `.glb` file with the textures inside | Godot, glTF viewers and the web, Blender |
 | **glTF + textures** | A `.gltf` file with the textures as separate files next to it | The same, when you want to edit the textures |
 | **OBJ (no rig)** | Meshes only. No skeleton, animation or blend shapes | Static props, 3D printing, programs that only read OBJ |
 | **Alembic (no rig)** | A mesh cache. No skeleton | VFX pipelines |
 
-The sections adjust to the format: a file always needs [[Bake Textures|baked textures]].<!-- , and the [[Animations]] section is only shown for formats with a skeleton. -->
+The sections adjust to the format: a file always needs [[Bake Textures|baked textures]].
 
 ## Name
 
@@ -32,6 +30,9 @@ The name of the file, and the prefix of every object, material and texture insid
 Where the files go. Leave it empty for the `export_results` folder inside your Human Generator content folder (the folder from the add-on preferences). The grey line under the field always shows the folder that will be used. Paths starting with `//` are relative to your Blender file. The folder is created if it doesn't exist.
 
 ![[process_output.webp|520]]
+
+> [!tip] Export straight into your project
+> Point the folder at a folder inside your Unity `Assets`, your Godot project or next to your Unreal content, and the engine picks the files up as soon as they are written.
 
 ## Advanced
 
@@ -59,13 +60,11 @@ Where the baked textures end up:
 
 After the file is written, the processed copy normally disappears from your scene. Turn this on to keep it, for example to check the result in Blender or to render with the baked materials. The copy behaves like an *In this file* result, see below.
 
-#### FBX options
+> [!note]- FBX options
+> The recipes set these for the engine, you rarely need to touch them. **Forward** and **Up** are the axes of the file (`-Z` forward, `Y` up is what Unity and Unreal read correctly). **Primary** and **secondary bone axis** orient the bones. **Smoothing** writes smoothing groups per face, per edge, or normals only. **Triangulate** writes triangles instead of quads. **Leaf bones** adds an extra bone at the end of every chain, which engines show as extra bones, so it is off. **Custom properties** also writes the custom properties of the objects.
 
-The recipes set these for the engine, you rarely need to touch them. **Forward** and **Up** are the axes of the file (`-Z` forward, `Y` up is what Unity and Unreal read correctly). **Primary** and **secondary bone axis** orient the bones. **Smoothing** writes smoothing groups per face, per edge, or normals only. **Triangulate** writes triangles instead of quads. **Leaf bones** adds an extra bone at the end of every chain, which engines show as extra bones, so it is off. **Custom properties** also writes the custom properties of the objects.
-
-#### glTF options
-
-**Images** writes PNG, or JPEG where no alpha channel is needed (*Auto*), or always JPEG for smaller files. **Tangents** writes the tangents into the file instead of letting the engine compute them. **Draco compression** makes the geometry much smaller; the textures stay as they are; the program that reads it needs to support Draco.
+> [!note]- glTF options
+> **Images** writes PNG, or JPEG where no alpha channel is needed (*Auto*), or always JPEG for smaller files. **Tangents** writes the tangents into the file instead of letting the engine compute them. **Draco compression** makes the geometry much smaller; the textures stay as they are; the program that reads it needs to support Draco.
 
 ## What is in the file
 
@@ -75,7 +74,10 @@ The skeleton, the body, the eyes, the teeth, the clothing and footwear, and the 
 
 Next to every character file with a skeleton (FBX and glTF), Human Generator writes a small file with the same name: `Jake.fbx` gets `Jake.humgen3d.json`. It lists the files of the character, what every mesh and material is (skin, eyes, teeth, haircap, hair cards, clothing), which texture file is which map, and the settings the character was made with.
 
-The [[Unity Companion|Companions]] for Unity, Unreal Engine and Godot read it to set the character up, and only touch characters that have one. Keep it next to the character file when you copy the export into your project; the engine imports it as a plain data file. To export another character the same way, load it like a recipe: `ExportSettings.from_recipe("/path/to/Jake.humgen3d.json")`. Your own tools can read it too: the format is described in `human/process/manifest.py` inside the add-on, and the number in `humgen3d_export` only goes up when a change would make older readers misread it.
+The Companions for [[Unity Companion|Unity]], [[Unreal Engine Companion|Unreal Engine]] and [[Godot Companion|Godot]] read it to set the character up, and only touch characters that have one. Keep it next to the character file when you copy the export into your project; the engine imports it as a plain data file. To export another character the same way, load it like a recipe: `ExportSettings.from_recipe("/path/to/Jake.humgen3d.json")`.
+
+> [!note]- Reading it from your own tools
+> The format is described in `human/process/manifest.py` inside the add-on. The number in `humgen3d_export` only goes up when a change would make older readers misread it.
 
 ## Licence of exported characters
 
@@ -84,6 +86,8 @@ Exported characters fall under the [Human Generator Asset License](https://humge
 ## Processed copies
 
 A processed copy is what *In this file* gives you, and what *Keep copy in this file* leaves behind. It stands two meters behind the original, in a collection called **Processing Results**, and it is frozen: a finished character rather than an editable human.
+
+![[process_results_viewport.webp]]
 
 Select it and the Human Generator panel shows:
 
@@ -96,7 +100,7 @@ You can rename, move, animate, render and delete a processed copy like any other
 > [!feedback] Is a frozen copy what you wanted?
 > Or did you expect to keep editing it with the Human Generator panel? Either answer helps. [Tell us](https://humgen3d.com/feedback/process?page=output&step=processed-copies).
 
-> [!tip]- Python API - Output and processed copies
+> [!python]- Output and processed copies from Python
 > ```python
 > settings.output.format = "glb"        # "in_file", "fbx", "glb", "gltf", "obj", "abc"
 > settings.output.name = "Hero_{name}"
@@ -113,3 +117,13 @@ You can rename, move, animate, render and delete a processed copy like any other
 > copy.process.settings       # the ExportSettings it was made with
 > ```
 > See [[OutputSettings]], [[ExportResult]] and [[ProcessSettings]]. To write a human to a file without the rest of the process, see [[ExportBuilder]] (`human.export.write`).
+
+## Frequently asked questions
+
+### Which file formats can Human Generator export?
+
+FBX, glTF (binary `.glb` or `.gltf` with separate textures), OBJ and Alembic, plus a processed copy inside the Blender file. FBX and glTF carry the skeleton and blend shapes; OBJ and Alembic are meshes only.
+
+### Can I export one file with the textures inside?
+
+Yes. Set *Textures* to *Embedded* under Advanced for FBX, or use the glTF Binary output, which always holds the textures. Only the flow map of the hair is written next to the file, as no material input reads it.

@@ -1,14 +1,14 @@
 ---
-description: What the built-in Unity, Unreal, Godot, Mixamo and Blender recipes of Human Generator set, and how to save, reuse and share recipes of your own.
+description: "What the built-in Unity, Unreal, Godot, Mixamo and Blender export recipes of Human Generator set, and how to save, reuse and share recipes of your own."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
-
-> [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
 # Recipes
 
+> [!earlyaccess] Early access
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
+
 A recipe is the complete state of the Process tab, saved under a name. Picking one from the **Recipe** dropdown fills in every option: the output format, the skeleton, how the textures are packed, which shape keys stay. You normally pick the recipe of the program you export to and never touch the rest.
+
+![[process_recipes.mp4]]
 
 ## Built-in recipes
 
@@ -21,16 +21,7 @@ A recipe is the complete state of the Process tab, saved under a name. Picking o
 | **Generic game** | FBX, textures in a folder | Human Generator names, A-pose, root bone | Separate maps, OpenGL normal map |
 | **Blender render copy** | In this file | Off, the full rig stays | Off, the materials stay as they are |
 
-<!-- hidden while the Animations section is experimental, the column it drops from the table:
-**Unity**: One file per clip (`Jake@Run.fbx`), root motion on the root bone
-**Unreal**: One file with all clips, root motion on the root bone
-**Godot**: Clips inside the character file, root motion on the root bone
-**Mixamo**: One file per clip
-**Generic game**: One file with all clips
-**Blender render copy**: Off
--->
-
-Every game recipe makes **one LOD level** at the *High* quality, converts the hair to **high** hair cards, keeps the face rig, the 1-click expressions and the corrective shape keys, and bakes the body, face and age sliders into the mesh. Unreal removes the correctives, as they would be static there without extra setup. *Blender render copy* keeps every mesh and the particle hair as they are.<!-- Animations are off everywhere until you turn them on. -->
+Every game recipe makes **one LOD level** at the *High* quality, converts the hair to **high** hair cards, keeps the face rig, the 1-click expressions and the corrective shape keys, and bakes the body, face and age sliders into the mesh. Unreal removes the correctives, as they would be static there without extra setup. *Blender render copy* keeps every mesh and the particle hair as they are.
 
 Each program has its own page with what the recipe does and what to do on the other side: [[Export to Unity]], [[Export to Unreal Engine]], [[Export to Godot]], [[Export to Mixamo]].
 
@@ -47,7 +38,7 @@ Your changes are kept in the Blender file, so you can close and reopen it withou
 
 ## Saving your own recipes
 
-Press the save icon, give the recipe a name and choose a **group**. The groups are the headings of the dropdown; create a new one for a project, or add the recipe to an existing group. A recipe with the same name as an existing one overwrites it, the dialog warns you.
+Press the save icon, give the recipe a name and choose a **group**. The groups are the headings of the dropdown; create a new one for a project, or add the recipe to an existing group. A recipe with the same name as an existing one overwrites it; the dialog warns you.
 
 Your recipes are files in the `process_templates` folder of your Human Generator content folder, one subfolder per group:
 
@@ -55,14 +46,14 @@ Your recipes are files in the `process_templates` folder of your Human Generator
 <content folder>/process_templates/MyGame/Mobile characters.json
 ```
 
+> [!tip] A recipe per target
+> It pays off to save a recipe per use: *MyGame hero* with 4k textures and three LOD levels, *MyGame crowd* with 1k textures and the *Mobile* quality, *Preview* with 512 textures for quick checks. Switching between them is one click, and every human you export with it gets the same settings.
+
 > [!tip] Sharing a recipe
 > A recipe is one JSON file. Copy it into the `process_templates` folder on another computer, or commit it with your project, and it shows up in the dropdown there.
 
 > [!feedback] What recipe did you make?
 > The program you export to and what you changed from the built-in recipe. [Tell us](https://humgen3d.com/feedback/process?page=recipes&step=saving).
-
-> [!example] A recipe per target
-> It pays off to save a recipe per use: *MyGame hero* with 4k textures and three LOD levels, *MyGame crowd* with 1k textures and the *Mobile* quality, *Preview* with 512 textures for quick checks. Switching between them is one click, and every human you export with it gets the same settings.
 
 ## Inside a recipe file
 
@@ -80,13 +71,12 @@ A recipe is readable JSON with the same structure as the Python [[ExportSettings
 }
 ```
 
-<!-- hidden while the Animations section is experimental; the example also had: "animations": {"enabled": false} -->
-
 A recipe of your own is listed under its file name. Every option and its values are in the [[Recipe Format]] reference.
 
-Recipes saved with the process tab of version 4.0 are converted when they are loaded; options that no longer exist are ignored. A file that can't be read is left out of the list, see [[Troubleshooting#A recipe is missing from the list]].
+> [!info] Recipes from version 4.0
+> Recipes saved with the process tab of version 4.0 are converted when they are loaded; options that no longer exist are ignored. A file that can't be read is left out of the list, see [[Troubleshooting#A recipe is missing from the list]].
 
-> [!tip]- Python API - Recipes
+> [!python]- Recipes from Python
 > ```python
 > from HumGen3D import ExportSettings
 >

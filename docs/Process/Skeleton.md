@@ -1,23 +1,23 @@
 ---
 permalink: gamerig
-description: Turn the Human Generator rig into a clean game skeleton with Unity Humanoid, Unreal Mannequin, Mixamo or custom bone names, a T-pose or A-pose rest pose, a root bone and a bones-per-vertex limit.
+description: "Turn the Human Generator rig into a clean game skeleton: Unity Humanoid, Unreal Mannequin, Mixamo or custom bone names, T-pose or A-pose and a root bone."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Skeleton and bone names
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Skeleton
+The rig of a Human Generator human is made for animating in Blender: it has control bones, constraints, drivers and a face rig. A game engine wants the opposite, a plain hierarchy of deforming bones with names it recognizes. The **Skeleton** section makes that skeleton from the rig, with the names and rest pose of Unity, Unreal Engine, Godot or Mixamo, so the engine maps the character to its own skeleton without manual work.
 
-The rig of a Human Generator human is made for animating in Blender: it has control bones, constraints, drivers and a face rig. A game engine wants the opposite, a plain hierarchy of deforming bones with names it recognizes. The **Skeleton** section makes that skeleton from the rig:
+![[process_skeleton.webp|520]]
+
+What the section does:
 
 - Control bones, constraints and drivers are removed; what they did to the pose is baked in.
 - The weights of bones you don't keep (see below) are merged into their parents, so the mesh still deforms, with small differences at the palm and the shoulders.
 - A **root bone** is added at the origin, which carries the movement of the character.
 - The bones are **renamed** for the engine, the number of bones per vertex is limited, and the rest pose becomes the **T-pose** when the engine expects it.
 - Shape keys driven by bones, like the face rig and the correctives, stay as blend shapes, see [[Shape Keys]].
-
-![[process_skeleton.webp|520]]
 
 ## Names
 
@@ -38,7 +38,8 @@ The pose the skeleton has when no animation plays.
 - **T-pose**: arms straight out. What Unity, Godot, Mixamo and most retargeting tools expect. The body pose of the human is discarded; the face rig keeps its pose.
 - **A-pose**: arms down at an angle, the rest pose of Human Generator itself and of the Unreal Mannequin.
 
-Pick what the engine or your animations expect; a mismatch shows as arms that are raised or lowered in every animation. The shoulder corrective shape keys only make sense in the A-pose, so they are removed with the T-pose.
+> [!warning] Match the rest pose to your animations
+> A mismatch shows as arms that are raised or lowered in every animation. Pick what the engine or your animation library expects. The shoulder corrective shape keys only make sense in the A-pose, so they are removed with the T-pose.
 
 ## Advanced
 
@@ -92,12 +93,12 @@ For a program that is not covered, set **Names** to *Custom file* and point **Fi
 }
 ```
 
-The keys of `names` are the Human Generator bone names without their `.L`/`.R` side suffix. A name can hold `{side}`, `{Side}` or `{suffix}`, which are filled in from `sides` for the left and right bone: `upperarm_{side}` gives `upperarm_l` and `upperarm_r`, `{Side}UpperArm` gives `LeftUpperArm`. Only `names` is required; bones you leave out keep their name. The built-in presets are in `human/process/game_rig_presets.json` inside the add-on and list every bone, copy one as a starting point.
+The keys of `names` are the Human Generator bone names without their `.L`/`.R` side suffix. A name can hold `{side}`, `{Side}` or `{suffix}`, which are filled in from `sides` for the left and right bone: `upperarm_{side}` gives `upperarm_l` and `upperarm_r`, `{Side}UpperArm` gives `LeftUpperArm`. Only `names` is required; bones you leave out keep their name. The built-in presets are in `human/process/game_rig_presets.json` inside the add-on and list every bone; copy one as a starting point.
 
 > [!warning] Blend shapes driven by bones
-> In Blender the face rig and the corrective shape keys are driven by bones. Exported files don't carry drivers, so in the other program those blend shapes exist but don't move with the bones until you connect them there, or you drive them from your own animation. See [[Shape Keys]].
+> In Blender the face rig and the corrective shape keys are driven by bones. Exported files don't carry drivers, so in the other program those blend shapes exist but don't move with the bones until you connect them there, or drive them from your own animation. See [[Shape Keys#Keys driven by bones]].
 
-> [!tip]- Python API - Skeleton
+> [!python]- Skeleton from Python
 > ```python
 > settings.skeleton.names = "unreal"      # "humanoid", "unreal", "mixamo", "humgen", "custom"
 > settings.skeleton.rest_pose = "a_pose"  # or "t_pose"
@@ -110,3 +111,17 @@ The keys of `names` are the Human Generator bone names without their `.L`/`.R` s
 > human.process.convert_to_game_rig(settings=settings.skeleton, max_influences=4)
 > ```
 > See [[SkeletonSettings]], [[ProcessSettings#convert_to_game_rig]] and [[ProcessSettings#set_t_pose_as_rest]].
+
+## Frequently asked questions
+
+### Does the exported character work with Unity's Humanoid rig?
+
+Yes. The *Unity* recipe names the bones for the Humanoid avatar and exports a T-pose, so *Create From This Model* maps all Humanoid bones by name. The same names serve Godot's humanoid skeleton profile.
+
+### Can I retarget Unreal Mannequin animations to it?
+
+The *Unreal* recipe gives the skeleton the Mannequin bone names and the A-pose, in centimeters, so the chains line up in the IK Retargeter.
+
+### Can I use Mixamo animations?
+
+Export with the *Mixamo* recipe and the skeleton has the Mixamo bone names and the T-pose the library animations are made for. Upload the character to Mixamo, or download the animations *without skin* and play them on the character in your engine. See [[Export to Mixamo]].

@@ -1,12 +1,10 @@
 ---
-description: Download and install the free Human Generator 3D Companion for Godot, the editor plugin that sets up exported Human Generator characters on import - hair shader, skin, bone map and animation.
+description: "Download and install the free Human Generator 3D Companion for Godot, which sets up exported characters on import: hair shader, skin scattering and bone map."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Human Generator 3D Companion for Godot
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
-# Human Generator 3D Companion for Godot
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
 A free Godot editor plugin that sets up a character exported with the **Godot** recipe when Godot imports it: a hair shader on the cards that lights them along their strands, subsurface scattering on the skin, a humanoid `BoneMap` on the skeleton and an `AnimationPlayer`. Without it you do the steps of [[Export to Godot#In Godot]] by hand.
 
@@ -27,7 +25,7 @@ A free Godot editor plugin that sets up a character exported with the **Godot** 
 
 Export with the **Godot** recipe to a folder inside your project. Godot imports `Jake.glb`, and the Companion sets it up as part of the import. What it does can be changed per file in the **Import** dock, under the `humgen3d/` options; press *Reimport* after changing them.
 
-> [!info] Only characters with their .humgen3d.json file
+> [!warning] Only characters with their .humgen3d.json file
 > Human Generator writes `Jake.humgen3d.json` next to every exported character. It tells the Companion which files belong to the character, what each material is and where the flow map of the hair is. The Companion only sets up a file that such a file lists, so other characters in your project are never touched, and the [[Output#Naming|naming scheme]] doesn't matter. Characters exported by earlier versions of Human Generator don't have it; export them again.
 
 ## Update

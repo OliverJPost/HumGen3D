@@ -1,15 +1,13 @@
 ---
 permalink: scripts
-description: Run your own Python scripts while Human Generator processes a character - at any stage, with arguments from the interface - to automate what the Process tab doesn't cover.
+description: "Run your own Python scripts while Human Generator processes a character in Blender, at any stage of the export, with arguments set from the interface."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Scripts in the process
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Scripts
-
-**Scripts** runs Python scripts of your own on the processed copy, at the point of the process you choose: right at the start, before the textures are baked, after the skeleton is made, or after the files are written. Anything the other sections don't cover, like adding a prop, setting custom properties your pipeline reads, or writing a sidecar file, becomes a script that runs with every export.
+**Scripts** runs Python scripts of your own on the processed copy, at the point of the process you choose: right at the start, before the textures are baked, after the skeleton is made, or after the files are written. Anything the other sections don't cover, like adding a prop, setting custom properties your pipeline reads, or writing a sidecar file, becomes a script that runs with every export and is saved in the recipe.
 
 ![[process_scripts.webp|520]]
 
@@ -102,7 +100,7 @@ def main(context, human: Human, tag: str = "character"):
 > [!tip] A script fails?
 > The error and its traceback are printed to Blender's system console (*Window ▸ Toggle System Console* on Windows, the terminal on macOS and Linux). With *On error* set to *Skip* the failure is listed as a warning in the popup afterwards.
 
-> [!tip]- Python API - Scripts in a recipe
+> [!python]- Scripts in a recipe
 > ```python
 > from HumGen3D import ScriptSettings
 >

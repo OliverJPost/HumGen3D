@@ -1,14 +1,12 @@
 ---
-description: Fix common problems with the Human Generator Process tab - the red and grey lines, missing recipes, slow exports, bald or solid hair, and Companions that don't set up a character.
+description: "Fix common problems with the Human Generator Process tab in Blender: red and grey lines, missing recipes, slow exports, bald or solid hair, idle Companions."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Troubleshooting the Process tab
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Troubleshooting
-
-Problems with the Process tab itself. What to do in the engine is on the pages per program: [[Export to Unity#Troubleshooting|Unity]], [[Export to Unreal Engine#Troubleshooting|Unreal Engine]], [[Export to Godot#Troubleshooting|Godot]].
+Problems with the Process tab itself. What to do in the engine is on the pages per program: [[Export to Unity#Troubleshooting|Unity]], [[Export to Unreal Engine#Troubleshooting|Unreal Engine]], [[Export to Godot#Troubleshooting|Godot]], [[Export to Mixamo#Troubleshooting|Mixamo]].
 
 ## The red lines under the button
 

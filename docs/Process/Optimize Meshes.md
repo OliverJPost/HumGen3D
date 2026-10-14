@@ -1,53 +1,77 @@
 ---
 permalink: lod
-description: Reduce the polygon count of Human Generator characters for games and crowds - body, clothing, eye and teeth quality, levels of detail (LOD) and removing the skin under clothing.
+description: "Reduce the polygon count of Human Generator characters in Blender for games and crowds: body, clothing, eye and teeth quality, LOD levels, skin under clothing."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Optimize meshes and LOD levels
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Optimize meshes and LOD levels
+A Human Generator human is made for close-up rendering: about 50,000 triangles for the body alone, plus layered eyes with a transparent cornea and detailed teeth. **Optimize Meshes** brings that down to what a game or a crowd needs, with one picker per part, and makes up to four LOD levels of the same character.
 
 ```compare
 before: compare_mesh_full.webp | Full resolution
 after: compare_mesh_optimized.webp | Optimized mesh
 ```
 
-A Human Generator human is made for close-up rendering: about 50,000 triangles for the body alone, plus layered eyes with a transparent cornea and detailed teeth. **Optimize Meshes** brings that down to what a game or a crowd needs, and replaces the layered eyes by simple *game eyes* with one opaque layer, which every engine can render but which look flat up close.
+Every part has its own picker in the section. Click a thumbnail and the triangle count next to the part updates; the total is shown at the bottom.
 
-![[process_meshes.webp|520]]
+## Body
 
-Every part has its own picker. Click a thumbnail and the triangle count next to the part updates, the total is shown at the bottom.
+```options
+lod_body_original.webp | Original | About 50,500 triangles, the full mesh
+lod_body_lower_face.webp | Lower face | About 36,000. The face gets the density of the body, plenty unless the camera is close
+lod_body_quarter.webp | 1/4th | About 9,600. The whole body at a fifth of the triangles, for crowds and mobile
+```
 
-| Part | Options |
-| --- | --- |
-| **Body** | ![[lod_body_original.webp\|72]] **Original**, about 50,500 triangles. ![[lod_body_lower_face.webp\|72]] **Lower face**, about 36,000: the face gets the same density as the body, which is plenty unless the camera is close. ![[lod_body_quarter.webp\|72]] **1/4th**, about 9,600: the whole body at a fifth of the triangles, for crowds and mobile. |
-| **Clothing** | **Original**, or decimated to roughly **High** (half the triangles), **Medium** (a quarter) or **Low** (a tenth). |
-| **Eyes** | ![[lod_eyes_original.webp\|72]] **Original**: the layered eyes of Human Generator, about 10,600 triangles, which only render in Blender. ![[lod_eyes_high.webp\|72]] **High** (3,600), **Medium** (900) and **Low** (200) are game eyes with one opaque layer. |
-| **Teeth** | **Original** (12,400), **Medium** (4,600) or **Low** (3,300 triangles). |
+## Clothing
+
+```options
+lod_clothing_original.webp | Original | As made, with its modifiers removed
+lod_clothing_high.webp | High | Roughly half the triangles
+lod_clothing_medium.webp | Medium | A quarter
+lod_clothing_low.webp | Low | A tenth
+```
+
+## Eyes
+
+```options
+lod_eyes_original.webp | Original | The layered eyes of Human Generator, about 10,600 triangles. Only render in Blender
+lod_eyes_high.webp | High | 3,600 triangles, game eyes with one opaque layer
+lod_eyes_medium.webp | Medium | 900 triangles
+lod_eyes_low.webp | Low | 200 triangles
+```
 
 > [!warning] The original eyes are not game ready
-> The transparent cornea of the original eyes relies on Blender's material system. In other programs it renders as a solid shell, hiding the iris. Keep the eyes at *High* or lower for any file export; the tab warns you when they are set to *Original*.
+> The transparent cornea of the original eyes relies on Blender's material system. In other programs it renders as a solid shell, hiding the iris. Keep the eyes at *High* or lower for any file export; the tab warns you when they are set to *Original*. Game eyes look flat up close, which is the trade-off.
+
+## Teeth
+
+```options
+lod_teeth_original.webp | Original | 12,400 triangles
+lod_teeth_medium.webp | Medium | 4,600 triangles
+lod_teeth_low.webp | Low | 3,300 triangles
+```
 
 > [!feedback] Did the game eyes and the lower face hold up?
 > Tell us at what camera distance they stopped looking right, and in which program. [Tell us](https://humgen3d.com/feedback/process?page=optimize-meshes&step=parts).
 
+## Skin under clothing
+
 **Remove skin under clothing** (on by default) deletes the parts of the body that the clothing covers. In Blender this is done by mask modifiers, which exporters don't apply, so without it the whole body is in the file under every garment. Turn it off if you plan to swap or remove the clothing in the engine.
 
-#### Advanced
-
-**Remove clothing subdivision** and **Remove clothing solidify** strip those modifiers from the clothing before it is exported. Exporters apply modifiers, so a subdivision modifier would multiply the triangles of the clothing by four, and a solidify modifier doubles them. Leave both on for games; turn them off if you make a render copy and want the clothing exactly as it is in Blender.
+> [!note]- Advanced: clothing modifiers
+> **Remove clothing subdivision** and **Remove clothing solidify** strip those modifiers from the clothing before it is exported. Exporters apply modifiers, so a subdivision modifier would multiply the triangles of the clothing by four, and a solidify modifier doubles them. Leave both on for games; turn them off if you make a render copy and want the clothing exactly as it is in Blender.
 
 ## LOD levels
 
 Set **LOD levels** at the top of the tab to 2, 3 or 4 and every part gets one row per level: level 0 is the full character, each further level a lighter one. A new level starts one quality tier below the previous one (from *Original* it starts at *High*), so you only adjust what you want. The totals at the bottom show the triangles of each level.
 
-![[process_lod_levels.webp|520]]
+![[process_lod_levels.mp4]]
 
-Each level is a complete copy of the character with its own hair cards. In a file export the levels share one skeleton and one set of textures (only the eyes and hair cards get their own, their UVs change with the quality), and the meshes are named `Jake_Body_LOD0`, `Jake_Body_LOD1`, … Unity turns these into an LOD group on import, other engines have an import option for LOD meshes. With *In this file* each level is a separate processed copy.
+Each level is a complete copy of the character with its own hair cards. In a file export the levels share one skeleton and one set of textures (only the eyes and hair cards get their own, as their UVs change with the quality), and the meshes are named `Jake_Body_LOD0`, `Jake_Body_LOD1`, … Unity turns these into an LOD Group on import; other engines have an import option for LOD meshes. With *In this file* each level is a separate processed copy.
 
-> [!tip]- The quality tiers
+> [!note]- The quality tiers
 > When you add a level, its parts are set from a tier. The tiers are also what the Python API uses:
 >
 > | Tier | Body | Clothing | Eyes | Teeth | Hair cards | Bones per vertex |
@@ -63,13 +87,13 @@ Each level is a complete copy of the character with its own hair cards. In a fil
 
 With the checkbox off, every mesh stays as it is, including the original eyes, and nothing under it applies. That is what the *Blender render copy* recipe does, and with several LOD levels it means every level has the same meshes, so there is little point in having more than one.
 
-> [!note] Using lower detail inside Blender
+> [!info] Lower detail inside Blender
 > Render times in Cycles hardly change with fewer triangles; the texture resolution matters far more for speed and memory. See the [[Skin|Skin guide]] for lowering the texture resolution of a human, or [[Bake Textures]] for a baked copy.
 
-> [!note] Humans from the trial version
+> [!warning] Humans from the trial version
 > The body of a human made with the trial version can't be reduced. Clothing, eyes and teeth can.
 
-> [!tip]- Python API - Mesh quality
+> [!python]- Mesh quality from Python
 > ```python
 > from HumGen3D import QualitySettings
 >

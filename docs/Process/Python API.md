@@ -1,14 +1,12 @@
 ---
-description: Export and process Human Generator characters from Python - run a recipe on a human, change the settings, process many humans in a batch or from the command line, and use the single steps.
+description: "Export and process Human Generator characters from Python in Blender: run a recipe on a human, change the settings, batch-process or export headless."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]] and the [[API/Overview|Python API]]
+# Processing from Python
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Processing humans from Python
-
-Everything the Process tab does is available from Python, through `human.process`. The settings of the tab are one object, [[ExportSettings]], and one call processes a human with them. This page walks through the common cases; the reference is on [[ProcessSettings]] and [[ExportSettings]].
+Everything the Process tab does is available from Python, through `human.process`. The settings of the tab are one object, [[ExportSettings]], and one call processes a human with them, so a build step or a render farm can export characters without anyone clicking. This page walks through the common cases; the reference is on [[ProcessSettings]] and [[ExportSettings]], and the [[API/Overview|Python API guide]] covers the rest of the add-on.
 
 ## Run a recipe
 
@@ -50,12 +48,7 @@ settings.textures.set_resolution_tier("1k")
 settings.textures.workflow = "metallic_roughness"
 ```
 
-<!-- hidden while the Animations section is experimental; the example also had:
-settings.animations.enabled = True
-settings.animations.source = "library"
--->
-
-Or start from the defaults with `ExportSettings()` and set what you need. The classes per section: [[OutputSettings]], [[QualitySettings]], [[MeshSettings]], [[HaircardSettings]], [[SkeletonSettings]], [[ShapeKeySettings]], [[TextureBakeSettings]]<!--, [[AnimationClipSettings]]--> and [[ScriptsSettings]]. `settings.to_dict()` and `ExportSettings.from_dict()` turn them into plain data, `settings.save_recipe("MyGame", "Hero")` saves them as a recipe for the interface.
+Or start from the defaults with `ExportSettings()` and set what you need. The classes per section: [[OutputSettings]], [[QualitySettings]], [[MeshSettings]], [[HaircardSettings]], [[SkeletonSettings]], [[ShapeKeySettings]], [[TextureBakeSettings]] and [[ScriptsSettings]]. `settings.to_dict()` and `ExportSettings.from_dict()` turn them into plain data, `settings.save_recipe("MyGame", "Hero")` saves them as a recipe for the interface.
 
 ## Check before running
 
@@ -125,7 +118,10 @@ for rig in find_multiple_in_list(bpy.context.scene.objects):
 
 ## The single steps
 
-`run` is a sequence of steps, each a method of [[ProcessSettings]] that takes the matching section of the settings, or plain arguments. You can call them yourself, for example to make a game-ready copy without exporting it, or to insert something between two steps. The steps change the human they are called on and can't be undone, so call them on a duplicate:
+`run` is a sequence of steps, each a method of [[ProcessSettings]] that takes the matching section of the settings, or plain arguments. You can call them yourself, for example to make a game-ready copy without exporting it, or to insert something between two steps.
+
+> [!warning] The steps change the human they are called on
+> They can't be undone, so call them on a `human.duplicate()`, never on the original.
 
 ```python
 from HumGen3D import QualitySettings, SkeletonSettings
@@ -142,12 +138,18 @@ copy.export.write("/path/to/Jake", settings.output)  # a file format; "in_file" 
 copy.process.mark_as_processed(human)
 ```
 
-<!-- hidden while the Animations section is experimental; before the export the example also had:
-clips = copy.process.prepare_clips(source=human)
-copy.export.write("/path/to/Jake", settings.output, animation="strips")
--->
+The order is the one `run` uses, and it matters:
 
-The order matters and is the one `run` uses: shape keys first, so the later steps carry only the keys that stay; hair cards, game eyes and teeth before baking, as they change the materials; baking before the meshes are reduced; the skeleton after the meshes; names last. The steps with a `has_*` or `was_*` property (hair cards, baking, the game rig, the T-pose) refuse to run twice; the other steps run again. For one file with several LOD levels, make one copy per level and join them with [[ProcessSettings#merge_levels]].
+```pipeline
+set_shape_keys | First, so the later steps carry only the keys that stay
+convert_to_haircards | Hair cards, game eyes and teeth before baking, as they change the materials
+bake_textures | Before the meshes are reduced
+set_quality | After baking
+convert_to_game_rig | After the meshes
+apply_names | Last
+```
+
+The steps with a `has_*` or `was_*` property (hair cards, baking, the game rig, the T-pose) refuse to run twice; the other steps run again. For one file with several LOD levels, make one copy per level and join them with [[ProcessSettings#merge_levels]].
 
 Two more steps exist for scripts: [[ProcessSettings#apply_modifiers]] applies modifiers while keeping the shape keys, which Blender itself refuses, and [[ProcessSettings#remove_hidden_skin]] deletes the body under the clothing. To write a human to a file without any processing, use [[ExportBuilder]] (`human.export.to_fbx`, `to_glb`, `to_gltf_separate`, `to_obj`, `to_abc`).
 
@@ -164,3 +166,13 @@ copy.process.settings            # the ExportSettings it was made with, None oth
 
 > [!feedback] Something missing from the API?
 > A step you had to work around, or a setting the recipe cannot hold. [Tell us](https://humgen3d.com/feedback/process?page=python-api&step=api).
+
+## Frequently asked questions
+
+### Can I export Human Generator characters without opening Blender's interface?
+
+Yes. Run Blender in background mode with a script that loads a recipe and calls `human.process.run` for every human in the file. The add-on has to be enabled in the Blender preferences of that machine.
+
+### Can I process the humans the batch generator made?
+
+Yes. Find them with `find_multiple_in_list` on the scene objects and run the same settings on each, or select them all in the Process tab and press the button once.

@@ -1,15 +1,13 @@
 ---
 permalink: shapekeys
-description: Choose which shape keys of a Human Generator character are exported as blend shapes - the face rig, 1-click expressions, correctives, body, face and age sliders - and which are baked in.
+description: "Choose which shape keys of a Human Generator character export as blend shapes: the face rig, expressions, correctives and the body, face and age sliders."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Shape keys and blend shapes
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-# Shape Keys
-
-A Human Generator human carries hundreds of shape keys: the FACS keys of the face rig, the expressions, the body, face and age sliders, and corrective keys that fix the joints when the bones bend. Exporting all of them makes big, slow files, and a game normally only needs the face. **Shape Keys** decides per group what happens to them.
+A Human Generator human carries hundreds of shape keys: the FACS keys of the face rig, the expressions, the body, face and age sliders, and corrective keys that fix the joints when the bones bend. Exporting all of them makes big, slow files, and a game normally only needs the face. **Shape Keys** decides per group what happens to them, so the face comes through as blend shapes and the body is fixed in the mesh.
 
 ![[process_shape_keys.webp|520]]
 
@@ -42,7 +40,10 @@ With more than one [[Optimize Meshes|LOD level]], the kept keys are only on the 
 
 ## Keys driven by bones
 
-The face rig and the correctives are driven by bones in Blender: bend the arm and the corrective key goes up by itself. Exported files don't carry drivers, so in the other program these blend shapes are there but static. The section shows a warning when you keep them. You have three options:
+> [!warning] Driven blend shapes are static in the engine
+> The face rig and the correctives are driven by bones in Blender: bend the arm and the corrective key goes up by itself. Exported files don't carry drivers, so in the other program these blend shapes are there but static. The section shows a warning when you keep them.
+
+You have three options:
 
 - Drive them in the engine, with a script or a blueprint that sets the blend shape weight from the bone rotation.
 - Animate them directly: face capture tools (ARKit and others) set the FACS blend shapes themselves, which is the normal way to use the face rig in a game.
@@ -55,7 +56,7 @@ The face rig and the correctives are driven by bones in Blender: bend the arm an
 
 No shape keys are kept: the face rig, the expressions and the correctives are removed, and the sliders are baked at their current values. The lightest possible character, for crowds and props.
 
-> [!tip]- Python API - Shape keys
+> [!python]- Shape keys from Python
 > ```python
 > settings.shape_keys.face_rig = "keep"
 > settings.shape_keys.expressions = "remove"
@@ -67,3 +68,13 @@ No shape keys are kept: the face rig, the expressions and the correctives are re
 > human.process.set_shape_keys(body="keep", face="bake", age="remove")
 > ```
 > See [[ShapeKeySettings]], [[ProcessSettings#set_shape_keys]] and [[ProcessSettings#shape_key_options]].
+
+## Frequently asked questions
+
+### Does the face rig export as blend shapes?
+
+Yes. With *Face rig / FACS* set to *Keep*, the FACS shape keys are exported as blend shapes on the body, loaded from the library even if the human has no face rig yet. Face capture tools drive them by name.
+
+### Can I keep the body sliders adjustable in the engine?
+
+Set *Body proportions* to *Keep* and the sliders become blend shapes you can animate or set at runtime. The default bakes them into the mesh, which keeps the file small.

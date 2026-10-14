@@ -1,12 +1,10 @@
 ---
-description: What the Human Generator process system can't do yet, or does differently from what you might expect - Blender versions, humans it can't process, blend shapes, hair and the engine Companions.
+description: "What the Human Generator process system can't do yet, or does differently from what you expect: Blender versions, humans it can't process, blend shapes, hair."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Known limitations
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
-# Known limitations
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
 What the process system can't do yet, or does differently from what you might expect. The list changes during the early access; if something here stops you, [tell us](https://humgen3d.com/feedback/process?page=limitations).
 
@@ -27,9 +25,10 @@ What the process system can't do yet, or does differently from what you might ex
 ## In the file
 
 - **Particle hair** never ends up in a file; turn on [[Haircards]] or the character is bald.
-- **Driven blend shapes are static**: the face rig and the corrective shape keys are driven by bones in Blender, and no file format carries those drivers. The blend shapes are there, but you drive them yourself in the engine, see [[Shape Keys]].
+- **Driven blend shapes are static**: the face rig and the corrective shape keys are driven by bones in Blender, and no file format carries those drivers. The blend shapes are there, but you drive them yourself in the engine, see [[Shape Keys#Keys driven by bones]].
+- **Hair cards are generated**, not hand-made, and some hairstyles come out rougher than others; long hair doesn't follow the shoulders. See [[Haircards]].
 - **OBJ and Alembic** have no skeleton and no blend shapes.
-- The **skin** of the engine materials can't match Blender's subsurface scattering exactly; the Companions get close, see [[Bake Textures#Advanced]].
+- The **skin** of the engine materials can't match Blender's subsurface scattering exactly; the Companions get close, see [[Bake Textures#Skin in a game engine]].
 
 ## Not in the early access yet
 

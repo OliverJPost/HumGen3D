@@ -1,13 +1,11 @@
 ---
 hidden: true
-description: Export the animations of a Human Generator character, or clips from the animation library, to FBX or glTF for Unity, Unreal and Godot - one file per clip, one file with all clips, or inside the character file.
+description: "Export the animations of a Human Generator character, or clips from the animation library, to FBX or glTF for Unity, Unreal and Godot, fitted to the skeleton."
 ---
-> [!info] Part of the [[Process/Overview|Process guide]]
+# Animations
 
 > [!earlyaccess] Early access
-> The new process system is only in the early access version of Human Generator. It replaces the process tab of earlier versions, which is deprecated. Details can still change. If something doesn't work, or the result is not what you expected, [let us know](https://humgen3d.com/feedback/process), on the Discord or by email.
-
-# Animations
+> The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
 **Animations** exports animation clips along with the character: the animations you put on the human in the [[Pose|Pose section]], or clips straight from the Human Generator animation library. The clips are fitted to the exported skeleton, so they play on it in the engine even though the bones were renamed, removed or put in a T-pose by the [[Skeleton]] section.
 
@@ -53,7 +51,7 @@ Where the forward movement of a walk or run lives.
 
 FBX only. The frames per second the clips are sampled at in the file: the frame rate of the **Scene**, or a fixed **24**, **30** or **60**. Use a fixed rate when the engine expects one regardless of your scene settings.
 
-> [!tip]- Python API - Animations
+> [!python]- Animations from Python
 > ```python
 > settings.animations.enabled = True
 > settings.animations.source = "library"   # or "human"
