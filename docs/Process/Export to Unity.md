@@ -42,7 +42,7 @@ Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones,
    <!-- 5. **Animation**: the `Jake@Run.fbx` clips appear under the model and can be dropped into an Animator Controller. For root motion, enable *Apply Root Motion* on the Animator; the clips carry the movement on the root bone. -->
 
 > [!tip] Human Generator 3D Companion for Unity
-> A free, open source package that does the steps above the moment Unity imports the file: Humanoid avatar and clips, texture types, materials for the active render pipeline, two-sided cutout hair at 0.5 with coverage-preserving mipmaps, in URP a shipped hair shader that lights the cards along their strands from the flow map, and in HDRP the *Subsurface Scattering* material type on the skin. [github.com/OliverJPost/humgen3d-companion-unity](https://github.com/OliverJPost/humgen3d-companion-unity)
+> A free, open source package that does the steps above the moment Unity imports the file: Humanoid avatar and clips, texture types, materials for the active render pipeline, two-sided cutout hair at 0.5 with coverage-preserving mipmaps, in URP a shipped hair shader that lights the cards along their strands from the flow map, and on the skin a shipped skin shader in URP (light scattered under the skin, skin reflectance; the inputs, passes and cost of URP Lit) or the *Subsurface Scattering* material type in HDRP. [github.com/OliverJPost/humgen3d-companion-unity](https://github.com/OliverJPost/humgen3d-companion-unity)
 
 > [!feedback] Did Unity import it like this?
 > These steps are what we see in Unity. If your import differs, or a step is missing, we want to know which one, and your Unity version. [Tell us](https://humgen3d.com/feedback/process?page=unity&step=import).
@@ -58,6 +58,7 @@ Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones,
 - **The skin looks dented, or a seam shows at the shoulders**: the normal map direction. Unity reads OpenGL (Y+) normal maps; the recipe sets it, check it wasn't changed to DirectX.
 - **The hair is solid**: the hair material needs alpha clipping, see above. Make sure the textures were exported as PNG, not JPEG.
 - **The scalp shows skin under the hair (URP)**: with *Haircap* set to *As meshes*, the haircap material is blended, which URP does not draw on a skinned mesh. Set `Jake_Haircap` and `Jake_FaceHair` to *Alpha Clipping* at 0.4; the Companion does this.
+- **The skin looks oiled or wet**: the smoothness map at full strength with the reflectance of URP Lit. Lower *Smoothness* on `Jake_Skin` to about 0.7; the Companion does this and gives the skin its skin shader in URP.
 - **The eyes look like glass balls**: the character was exported with the original eyes. Set the eyes to *High* or lower in [[Optimize Meshes]].
 - **Arms are raised or lowered in every animation**: the rest pose of the character and the animation differ. Animations made in the A-pose need the A-pose rest pose.<!-- Humanoid retargeting handles the Human Generator clips. -->
 
