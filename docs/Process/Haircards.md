@@ -17,7 +17,7 @@ after: compare_hair_cards.webp | Hair cards
 The hair, eyebrows, eyelashes and beards of Human Generator are particle hair: thousands of strands that only Blender can render. No file format carries them. **Haircards** replaces every hair system by a mesh of textured, transparent cards generated from the strands. The cards are skinned to the head and neck, so they move with it; long hair does not follow the shoulders.
 
 > [!note] Automatic hair cards
-> The cards are generated from the strands. Hand-made hair cards will always look better, and some hairstyles, like afros and very curly styles, are hard for the generator and come out rough. Check the result in Blender with *Keep copy in this file* before you commit to a hairstyle for a hero character.
+> The cards are generated from the strands. Hand-made hair cards will always look better, and some hairstyles come out rougher than others. Check the result in Blender with *Keep copy in this file* before you commit to a hairstyle for a hero character.
 
 ![[process_haircards.webp|520]]
 
@@ -37,6 +37,17 @@ The quality sets the triangle budget of the cards. The thumbnails show what you 
 
 The budget is spent where it shows. A card in the mass of the hair is one of many layers, which hide that it is flat and where it bends. A lock that **hangs free** of the rest of the hair shows both, so it gets more segments, which keeps its bends smooth against the background, and a second card across the first, so it is not a line when you look along it. Cards that stand on the head, as in an afro, get that second card too. The cards in the mass of the hair pay for it with fewer segments.
 
+#### Afros, curls and locks
+
+Hair that **stands on the head**, like an afro, short curls or a flat top, is looked at along its hairs. Cards that follow the hairs are seen from their side and their tip there, so the hairstyle used to come out as a see-through burst of spikes. Such hair also gets **shells**: cards that lie across the hairs, each a tuft of the surface of the hairstyle with ragged edges, with the hair below it drawn onto it as you see it from outside, the outer hairs light and the deeper ones dark. Tall hair gets two layers of them, so the inner one shows through the gaps of the outer one. They cost a few hundred triangles. The cards along the hairs are still there for the outline of the hairstyle, where the shells are seen from their side.
+
+**Curls** are told from hair that just bends around the head by how much a hair winds around its own line. A card of curls follows that line instead of the wobble of the average hair, is wide enough to show whole curls and has no highlight, as curls scatter the light. **Locks**, as in dreadlocks, get one pair of crossing cards each, as the hairs around one parent hair become one clump. Where locks stand apart there are no shells, as you look past them deep into the hairstyle.
+
+```compare
+before: compare_hair_afro_before.webp | Cards along the hairs only
+after: compare_hair_afro_after.webp | With shells
+```
+
 With more than one [[Optimize Meshes|LOD level]] every level has its own quality, and its own hair card textures, as the layout of the cards changes with the quality.
 
 > [!feedback] Which hairstyle came out rough?
@@ -44,7 +55,7 @@ With more than one [[Optimize Meshes|LOD level]] every level has its own quality
 
 ## Textures of the cards
 
-The cards are textured with a **strand atlas that is generated for the hairstyle**. Cards of the same length, width, density and curl share a part of it, and the hairs of their clumps are drawn into that part where they are on the cards, with their width, their own length, their tapered tips and a brightness variation between hairs. So the cards of a short, sparse clump show the hairs it has, a dense clump is dense, the tips of the cards end where the hairs end, and no card is cut through strands at its sides. The atlas is packed into the file with the human and baked along with the other textures by [[Bake Textures]]. A hair finer than a texel of the atlas is drawn one texel wide, and fewer of them are drawn so the coverage of the clump stays the same; that is what lets fine hair survive the cut-out of a game engine.
+The cards are textured with a **strand atlas that is generated for the hairstyle**. Cards of the same length, width, density and curl share a part of it, and the hairs of their clumps are drawn into that part where they are on the cards (for curls the hairs of one of the clumps, as the average of curls that don't line up is noise), with their width, their own length, their tapered tips and a brightness variation between hairs. So the cards of a short, sparse clump show the hairs it has, a dense clump is dense, the tips of the cards end where the hairs end, and no card is cut through strands at its sides. The atlas is packed into the file with the human and baked along with the other textures by [[Bake Textures]]. A hair finer than a texel of the atlas is drawn one texel wide, and fewer of them are drawn so the coverage of the clump stays the same; that is what lets fine hair survive the cut-out of a game engine.
 
 ## In the engine
 

@@ -14,8 +14,8 @@ the tiles are shared to keep the texel density of the painted atlas.
 """
 
 import math
-from dataclasses import dataclass
-from typing import Dict, Tuple
+from dataclasses import dataclass, replace
+from typing import Dict, List, Optional, Tuple
 
 import bpy
 import numpy as np
@@ -40,6 +40,9 @@ MIN_TILES = 8
 #: than the clustering uses, so the drawn hairs are the real children of the system
 #: instead of one strand standing for many
 DRAW_STRANDS_PER_SYSTEM = 40000
+#: Points the drawn hairs are resampled to. More than the cards are fitted with: a
+#: curl of a few points draws as a polygon
+DRAW_STATIONS = 65
 #: Diameter of a hair when the particle settings give none
 DEFAULT_DIAMETER = 0.00007
 #: Hairs are drawn at least this many atlas texels wide. A real hair is thinner
@@ -62,6 +65,31 @@ MIN_GLOSS = 0.25
 #: Tilt of the normal at the sides of a card, so a flat card shades like a bundle of
 #: hair with a round cross-section. 1 would be a full cylinder
 NORMAL_TILT = 0.4
+#: A shell (see haircards.STANDING_STRAND) shows the hair below it, darker the
+#: deeper it is: the brightness at the bottom of what the shell shows
+SHELL_DEPTH_SHADE = 0.35
+#: On a shell the hairs are on top of each other. The color of a texel is that of
+#: its hairs weighted by how close to the shell they are, halved for every time
+#: this distance deeper, so the outer hairs stand out against the ones below them
+#: instead of all of them mixing into one flat color
+SHELL_TOP_DEPTH = 0.002
+#: A shell draws its hairs as they are seen straight from above, where standing
+#: hair covers the least: from any other side it is seen along more of its
+#: length. Every hair is drawn this many times to make up for that
+SHELL_HAIRS = 2.0
+#: Depth below a shell at which the hair is that dark, light does not get further
+#: into a head of hair
+SHELL_SHADE_DEPTH = 0.02
+#: A shell is drawn as a round tuft: its hairs end at a random distance from its
+#: middle, between this share of half its size and all of it. So the shells run
+#: into each other with ragged edges instead of showing as squares, which the
+#: cut-out of the engines made of a shell with straight sides
+SHELL_TUFT = 0.35
+#: The outline of a tuft goes in and out by this share of its size, a few times
+#: around
+SHELL_LOBES = 0.5
+#: Hair this far above a shell is still drawn onto it, the tips that stick out
+SHELL_ABOVE = 0.05
 #: Longest distance between two drawn points of a hair, in supersampled texels
 MAX_STEP = 0.75
 #: Cap on the points drawn per atlas, long hairs are drawn coarser above it
@@ -120,6 +148,15 @@ class AtlasLayout:
     clump_sizes: np.ndarray
     #: Width and height of the atlas in texels
     size: int = ATLAS_SIZE
+    #: (c,) depth of the hair below a shell that is drawn onto it, 0 for the cards
+    #: that follow a clump. None when there are no shells
+    slab: Optional[np.ndarray] = None
+    #: (c,) share of its hairs every card draws onto its tile, 0 for a card that
+    #: only uses what the other cards of its tile drew. None for every card of a
+    #: tile drawing an equal share, so the tile shows the average of them
+    draw_share: Optional[np.ndarray] = None
+    #: (c,) factor for the gloss of the hairs of every card. None for 1
+    gloss: Optional[np.ndarray] = None
 
 
 def tile_count(lengths: np.ndarray, widths: np.ndarray, size: int = ATLAS_SIZE) -> int:
@@ -223,6 +260,189 @@ def _linear_to_srgb(values: np.ndarray) -> np.ndarray:
     )
 
 
+def _with_stations(layout: AtlasLayout, stations: int) -> AtlasLayout:
+    """The layout with the frames of its cards at another number of stations."""
+    old = layout.centers.shape[1]
+    if old == stations:
+        return layout
+    position = np.linspace(0, old - 1, stations)
+    low = np.minimum(position.astype(np.int64), old - 2)
+    factor = position - low
+
+    def at_stations(values: np.ndarray) -> np.ndarray:
+        weight = factor if values.ndim == 2 else factor[:, None]
+        return values[:, low] * (1 - weight) + values[:, low + 1] * weight  # type:ignore
+
+    sides = at_stations(layout.sides)
+    sides /= np.maximum(np.linalg.norm(sides, axis=2, keepdims=True), 1e-9)
+    return replace(
+        layout,
+        centers=at_stations(layout.centers),
+        sides=sides,
+        half_widths=at_stations(layout.half_widths),
+        arc=at_stations(layout.arc),
+    )
+
+
+@dataclass
+class _Pairs:
+    """Strands to draw onto the tile of a card, as texel coordinates."""
+
+    #: (p,) card and strand of every pair
+    card: np.ndarray
+    strand: np.ndarray
+    #: (p, STATIONS) supersampled texel coordinates of the stations of the strand
+    x: np.ndarray
+    y: np.ndarray
+    #: (p, STATIONS) where along the hair every station is, 0 at the root, for
+    #: its width
+    along: np.ndarray
+    #: (p, STATIONS) brightness of the hair at every station
+    shade: np.ndarray
+    #: (p,) factor for the gloss of the strand
+    gloss: np.ndarray
+    #: (p,) factor for the number of hairs the strand stands for
+    hairs: np.ndarray
+    #: (p, STATIONS) how much the hair counts for the color of its texels
+    #: compared to the other hairs there, see SHELL_TOP_DEPTH
+    on_top: np.ndarray
+    #: (p, STATIONS) mask of the stations that are drawn
+    valid: np.ndarray
+    #: (p,) size of a supersampled texel of the tile
+    meters_per_px: np.ndarray
+    #: (p,) room a strand has between its neighbours, for the copies that stand
+    #: for the hairs around it
+    spacing: np.ndarray
+
+    @classmethod
+    def joined(cls, parts: List["_Pairs"]) -> "_Pairs":
+        names = cls.__dataclass_fields__
+        return cls(**{name: np.concatenate([getattr(p, name) for p in parts]) for name in names})
+
+
+def _clump_pairs(
+    layout: AtlasLayout,
+    points: np.ndarray,
+    labels: np.ndarray,
+    draw_share: np.ndarray,
+    follows: np.ndarray,
+    tiles: np.ndarray,
+    flip: np.ndarray,
+) -> _Pairs:
+    """Pairs every card that follows a clump with the strands of that clump, where
+    they are across and along the card. A clump with a crossing card draws its
+    strands on both."""
+    stations = layout.centers.shape[1]
+    tile_x, tile_y, tile_w, tile_h = tiles.T
+    strand_of_clump = [np.flatnonzero(labels == k) for k in range(len(layout.clump_sizes))]
+    drawing = [
+        (card, strand_of_clump[clump])
+        for card, clump in enumerate(layout.clump)
+        if follows[card] and clump >= 0 and draw_share[card] > 0
+    ]
+    empty = np.zeros(0, dtype=np.int64)
+    pair_card = np.concatenate(
+        [empty] + [np.full(len(strands), card) for card, strands in drawing]
+    ).astype(np.int64)
+    pair_strand = np.concatenate([empty] + [strands for _, strands in drawing]).astype(np.int64)
+
+    centers = layout.centers[pair_card]
+    offsets = points[pair_strand] - centers
+    u = np.einsum("nmi,nmi->nm", offsets, layout.sides[pair_card])
+    u = u / np.maximum(layout.half_widths[pair_card], 1e-6)
+    # Where along the card every station of a strand is: the arc of the card
+    # at that station plus how far ahead of or behind the station the point
+    # is along the card. A hair that is shorter than the middle line of its
+    # clump, or curls more, ends before the tip of the card instead of being
+    # stretched to it, which is what makes the tips of the cards ragged
+    tangents = np.gradient(layout.centers, axis=1)
+    tangents /= np.maximum(np.linalg.norm(tangents, axis=2, keepdims=True), 1e-9)
+    ahead = np.einsum("nmi,nmi->nm", offsets, tangents[pair_card])
+    along = (layout.arc[pair_card] + ahead) / np.maximum(layout.arc[pair_card, -1:], 1e-9)
+    # Supersampled texel coordinates of every station
+    u = u * flip[pair_card, None]
+    px = (tile_x[pair_card, None] + tile_w[pair_card, None] * (1 + u) / 2) * SUPERSAMPLING
+    py = (tile_y[pair_card, None] + tile_h[pair_card, None] * (1 - along)) * SUPERSAMPLING
+    meters_per_px = layout.arc[pair_card, -1] / np.maximum(tile_h[pair_card] * SUPERSAMPLING, 1)
+    clump_width_px = tile_w[pair_card] * SUPERSAMPLING
+    spacing = clump_width_px / np.maximum(layout.clump_sizes[layout.clump[pair_card]], 1)
+    return _Pairs(
+        card=pair_card,
+        strand=pair_strand,
+        x=px,
+        y=py,
+        along=along,
+        shade=1 - ROOT_DARKENING * (1 - _smoothstep(0.0, ROOT_SHARE, along)),
+        on_top=np.ones((len(pair_card), stations)),
+        gloss=np.ones(len(pair_card)) if layout.gloss is None else layout.gloss[pair_card],
+        hairs=np.ones(len(pair_card)),
+        valid=np.ones((len(pair_card), stations), dtype=bool),
+        meters_per_px=meters_per_px,
+        spacing=spacing,
+    )
+
+
+def _shell_pairs(
+    layout: AtlasLayout, points: np.ndarray, card: int, tile: np.ndarray, flip: float
+) -> _Pairs:
+    """Pairs a shell with the strands that pass below it, where they are seen on
+    it from outside: every point straight above itself on the shell."""
+    assert layout.slab is not None
+    stations = layout.centers.shape[1]
+    tile_x, tile_y, tile_w, tile_h = tile
+    centers = layout.centers[card]
+    sideways = layout.sides[card, 0]
+    half_width = float(layout.half_widths[card, 0])
+    lengthwise = centers[-1] - centers[0]
+    chord = max(float(np.linalg.norm(lengthwise)), 1e-9)
+    lengthwise = lengthwise / chord
+    normal = np.cross(lengthwise, sideways)
+
+    relative = points - centers[0]
+    x = relative @ lengthwise
+    y = relative @ sideways
+    surface = np.interp(x, (centers - centers[0]) @ lengthwise, (centers - centers[0]) @ normal)
+    depth = relative @ normal - surface
+    margin = 0.1 * half_width
+    valid = (
+        (x > -margin)
+        & (x < chord + margin)
+        & (np.abs(y) < half_width + margin)
+        & (depth > -layout.slab[card])
+        & (depth < SHELL_ABOVE)
+    )
+    # Where every hair ends, see SHELL_TUFT. The same hair ends at the same share
+    # on every shell it is drawn on
+    reach = SHELL_TUFT + (1 - SHELL_TUFT) * ((np.arange(len(points)) * 0.6180339887) % 1.0)
+    from_middle = np.hypot(2 * x / chord - 1, y / half_width)
+    angle = np.arctan2(y / half_width, 2 * x / chord - 1)
+    lobes = np.random.default_rng(card)
+    outline = np.ones_like(angle)
+    for count in (2, 3, 5, 8):
+        outline -= SHELL_LOBES / 4 * (0.5 + 0.5 * np.sin(count * angle + lobes.uniform(0, 2 * np.pi)))
+    valid &= from_middle < reach[:, None] * outline
+    strands = np.flatnonzero((valid[:, :-1] & valid[:, 1:]).any(axis=1))
+    x, y, depth, valid = x[strands], y[strands], depth[strands], valid[strands]
+    meters_per_px = chord / max(tile_h * SUPERSAMPLING, 1)
+    count = len(strands)
+    shade_depth = min(float(layout.slab[card]), SHELL_SHADE_DEPTH)
+    return _Pairs(
+        card=np.full(count, card, dtype=np.int64),
+        strand=strands.astype(np.int64),
+        x=(tile_x + tile_w * (1 + flip * y / half_width) / 2) * SUPERSAMPLING,
+        y=(tile_y + tile_h * (1 - x / chord)) * SUPERSAMPLING,
+        along=np.tile(np.linspace(0, 1, stations), (count, 1)),
+        shade=SHELL_DEPTH_SHADE
+        + (1 - SHELL_DEPTH_SHADE) * _smoothstep(-shade_depth, 0.0, depth),
+        on_top=np.exp2(np.clip(depth, -20 * SHELL_TOP_DEPTH, 0.0) / SHELL_TOP_DEPTH),
+        gloss=np.full(count, 0.0 if layout.gloss is None else layout.gloss[card]),
+        hairs=np.full(count, SHELL_HAIRS),
+        valid=valid,
+        meters_per_px=np.full(count, meters_per_px),
+        spacing=np.full(count, 0.001 / meters_per_px),
+    )
+
+
 def draw_atlas(
     layout: AtlasLayout,
     points: np.ndarray,
@@ -253,22 +473,32 @@ def draw_atlas(
     size = layout.size
     ss_size = size * SUPERSAMPLING
     rng = np.random.default_rng(seed)
-    stations = layout.centers.shape[1]
+    stations = points.shape[1]
+    layout = _with_stations(layout, stations)
     tiles = layout.tiles[layout.tile_of_card]
     tile_x, tile_y, tile_w, tile_h = tiles.T
     # The cards that use their tile mirrored draw their hairs mirrored
     flip = np.where(layout.uv_rects[:, 2] < layout.uv_rects[:, 0], -1.0, 1.0)
     cards_per_tile = np.bincount(layout.tile_of_card, minlength=len(layout.tiles))
 
-    # Pairs of a card and a strand of its clump; a clump with a crossing card draws
-    # its strands on both
-    strand_of_clump = [np.flatnonzero(labels == k) for k in range(len(layout.clump_sizes))]
-    pair_card = np.concatenate(
-        [np.full(len(strand_of_clump[k]), c) for c, k in enumerate(layout.clump)]
-    ).astype(np.int64)
-    pair_strand = np.concatenate([strand_of_clump[k] for k in layout.clump]).astype(np.int64)
+    if layout.draw_share is None:
+        draw_share = 1 / np.maximum(cards_per_tile[layout.tile_of_card], 1)
+    else:
+        draw_share = layout.draw_share
+    is_shell = np.zeros(len(tiles), dtype=bool)
+    if layout.slab is not None:
+        is_shell = layout.slab > 0
+    pairs = _Pairs.joined(
+        [_clump_pairs(layout, points, labels, draw_share, ~is_shell, tiles, flip)]
+        + [
+            _shell_pairs(layout, points, card, tiles[card], flip[card])
+            for card in np.flatnonzero(is_shell & (draw_share > 0))
+        ]
+    )
+    pair_card, pair_strand = pairs.card, pairs.strand
     pair_count = len(pair_card)
     ink = np.zeros(ss_size * ss_size, dtype=np.float64)
+    look_ink = np.zeros_like(ink)
     bright_ink = np.zeros_like(ink)
     gloss_ink = np.zeros_like(ink)
     flow_x_ink = np.zeros_like(ink)
@@ -276,42 +506,24 @@ def draw_atlas(
     noise_ink = np.zeros_like(ink)
 
     if pair_count:
-        centers = layout.centers[pair_card]
-        offsets = points[pair_strand] - centers
-        u = np.einsum("nmi,nmi->nm", offsets, layout.sides[pair_card])
-        u = u / np.maximum(layout.half_widths[pair_card], 1e-6)
-        # Where along the card every station of a strand is: the arc of the card
-        # at that station plus how far ahead of or behind the station the point
-        # is along the card. A hair that is shorter than the middle line of its
-        # clump, or curls more, ends before the tip of the card instead of being
-        # stretched to it, which is what makes the tips of the cards ragged
-        tangents = np.gradient(layout.centers, axis=1)
-        tangents /= np.maximum(np.linalg.norm(tangents, axis=2, keepdims=True), 1e-9)
-        ahead = np.einsum("nmi,nmi->nm", offsets, tangents[pair_card])
-        along = (layout.arc[pair_card] + ahead) / np.maximum(layout.arc[pair_card, -1:], 1e-9)
-        # Supersampled texel coordinates of every station
-        u = u * flip[pair_card, None]
-        px = (tile_x[pair_card, None] + tile_w[pair_card, None] * (1 + u) / 2) * SUPERSAMPLING
-        py = (tile_y[pair_card, None] + tile_h[pair_card, None] * (1 - along)) * SUPERSAMPLING
-        meters_per_px = (
-            layout.arc[pair_card, -1] / np.maximum(tile_h[pair_card] * SUPERSAMPLING, 1)
-        )
+        px, py = pairs.x, pairs.y
+        meters_per_px = pairs.meters_per_px
         root_px = diameters[pair_strand, 0] / np.maximum(meters_per_px, 1e-9)
         tip_px = diameters[pair_strand, 1] / np.maximum(meters_per_px, 1e-9)
-        # Room a strand has between its neighbours across the card, for the copies
-        clump_width_px = tile_w[pair_card] * SUPERSAMPLING
-        spacing = clump_width_px / np.maximum(layout.clump_sizes[layout.clump[pair_card]], 1)
-        strand_weight = weights[pair_strand]
+        spacing = pairs.spacing
+        strand_weight = weights[pair_strand] * pairs.hairs
         copies = np.clip(np.ceil(strand_weight), 1, MAX_COPIES).astype(np.int64)
         brightness = rng.uniform(MIN_BRIGHTNESS, 1.0, len(points))[pair_strand]
-        gloss = rng.uniform(MIN_GLOSS, 1.0, len(points))[pair_strand]
+        gloss = rng.uniform(MIN_GLOSS, 1.0, len(points))[pair_strand] * pairs.gloss
         noise = rng.uniform(0.0, 1.0, len(points))[pair_strand]
 
         # Segments between stations
         seg = stations - 1
         x0, x1 = px[:, :-1].ravel(), px[:, 1:].ravel()
         y0, y1 = py[:, :-1].ravel(), py[:, 1:].ravel()
-        along_mid = ((along[:, :-1] + along[:, 1:]) / 2).ravel()
+        along_mid = ((pairs.along[:, :-1] + pairs.along[:, 1:]) / 2).ravel()
+        shade_mid = ((pairs.shade[:, :-1] + pairs.shade[:, 1:]) / 2).ravel()
+        top_mid = ((pairs.on_top[:, :-1] + pairs.on_top[:, 1:]) / 2).ravel()
         seg_pair = np.repeat(np.arange(pair_count), seg)
         width_px = root_px[seg_pair] + (tip_px[seg_pair] - root_px[seg_pair]) * along_mid
         # A hair that tapers is drawn fainter towards its tip, as the one-texel
@@ -321,8 +533,8 @@ def draw_atlas(
         # Thin out the strands that are drawn wider than they are, see MIN_STRAND_TEXELS
         mean_width = (root_px + tip_px) / 2
         keep_share = np.clip(mean_width / floor_px, 0.0, 1.0)
-        # A tile shows the average of the cards that share it
-        keep_share /= cards_per_tile[layout.tile_of_card[pair_card]]
+        # A tile shows the average of the cards that draw onto it
+        keep_share *= draw_share[pair_card]
         kept = rng.random((pair_count, MAX_COPIES)) < keep_share[:, None]
         width_px = np.maximum(width_px, floor_px)
         lengths = np.hypot(x1 - x0, y1 - y0)
@@ -330,6 +542,7 @@ def draw_atlas(
         tx0 = tile_x[pair_card[seg_pair]] * SUPERSAMPLING
         tx1 = tx0 + tile_w[pair_card[seg_pair]] * SUPERSAMPLING
         inside = (np.maximum(x0, x1) >= tx0) & (np.minimum(x0, x1) < tx1)
+        inside &= (pairs.valid[:, :-1] & pairs.valid[:, 1:]).ravel()
         seg_copies = copies[seg_pair]
         step = MAX_STEP
         wanted = float((np.ceil(lengths[inside] / step) * seg_copies[inside]).sum())
@@ -365,7 +578,7 @@ def draw_atlas(
         per_copy = strand_weight[pair_of_sample] / copies[pair_of_sample]
         area = per_copy * np.maximum(width_px[s], 0.0) * (lengths[s] / run_steps[run_of_sample])
         area = np.minimum(area, 4.0) * taper[s]
-        shade = 1 - ROOT_DARKENING * (1 - _smoothstep(0.0, ROOT_SHARE, along_mid[s]))
+        shade = shade_mid[s]
 
         ix = np.floor(sx).astype(np.int64)
         iy = np.floor(sy).astype(np.int64)
@@ -380,20 +593,25 @@ def draw_atlas(
         flat = (iy * ss_size + ix)[in_tile]
         area = area[in_tile]
         ink += np.bincount(flat, weights=area, minlength=ink.size)
+        # What the hairs of a texel look like is weighted by how much they are on
+        # top of the others
+        look = area * top_mid[s][in_tile]
+        look_ink += np.bincount(flat, weights=look, minlength=ink.size)
         bright_ink += np.bincount(
-            flat, weights=area * brightness[pair_of_sample][in_tile] * shade[in_tile], minlength=ink.size
+            flat, weights=look * brightness[pair_of_sample][in_tile] * shade[in_tile], minlength=ink.size
         )
-        gloss_ink += np.bincount(flat, weights=area * gloss[pair_of_sample][in_tile], minlength=ink.size)
+        gloss_ink += np.bincount(flat, weights=look * gloss[pair_of_sample][in_tile], minlength=ink.size)
         # The direction of the hair at every sample, from the root to the tip
-        flow_x_ink += np.bincount(flat, weights=area * (dx / norm)[in_tile], minlength=ink.size)
-        flow_y_ink += np.bincount(flat, weights=area * (dy / norm)[in_tile], minlength=ink.size)
-        noise_ink += np.bincount(flat, weights=area * noise[pair_of_sample][in_tile], minlength=ink.size)
+        flow_x_ink += np.bincount(flat, weights=look * (dx / norm)[in_tile], minlength=ink.size)
+        flow_y_ink += np.bincount(flat, weights=look * (dy / norm)[in_tile], minlength=ink.size)
+        noise_ink += np.bincount(flat, weights=look * noise[pair_of_sample][in_tile], minlength=ink.size)
 
     ink = ink.reshape((ss_size, ss_size))
+    look_ink = look_ink.reshape(ink.shape)
     coverage = 1 - np.exp(-ink)
     with np.errstate(invalid="ignore", divide="ignore"):
-        brightness_map = np.where(ink > 0, bright_ink.reshape(ink.shape) / ink, 0.0)
-        gloss_map = np.where(ink > 0, gloss_ink.reshape(ink.shape) / ink, 0.0)
+        brightness_map = np.where(look_ink > 0, bright_ink.reshape(ink.shape) / look_ink, 0.0)
+        gloss_map = np.where(look_ink > 0, gloss_ink.reshape(ink.shape) / look_ink, 0.0)
     alpha = _box_down(coverage, SUPERSAMPLING).astype(np.float32)
     # The card material divides the occlusion by the alpha to get the brightness
     # of the hairs, both decoded from sRGB, so the occlusion is stored such that
@@ -403,12 +621,18 @@ def draw_atlas(
         brightness_down = np.where(alpha > 0, brightness_down / np.maximum(alpha, 1e-6), 0.0)
     occlusion = _linear_to_srgb(_srgb_to_linear(alpha) * brightness_down).astype(np.float32)
     specular = _box_down(gloss_map * (ink > 0), SUPERSAMPLING).astype(np.float32)
-    flow = _flow_image(ink, coverage, alpha, flow_x_ink, flow_y_ink, noise_ink)
+    flow = _flow_image(look_ink, coverage, alpha, flow_x_ink, flow_y_ink, noise_ink)
 
     normal = np.empty((size, size, 3), dtype=np.float32)
     normal[..., 0] = normal[..., 1] = 0.5
     normal[..., 2] = 1.0
-    for x, y, w, h in layout.tiles:
+    shell_tiles = set()
+    if layout.slab is not None:
+        shell_tiles = set(layout.tile_of_card[layout.slab > 0].tolist())
+    for tile, (x, y, w, h) in enumerate(layout.tiles):
+        # A shell is not a bundle of hair, it keeps the flat normal
+        if tile in shell_tiles:
+            continue
         across = (np.arange(w) + 0.5) / max(w, 1) * 2 - 1
         tilt_x = across * NORMAL_TILT
         tilt_z = np.sqrt(np.maximum(1 - tilt_x**2, 0))

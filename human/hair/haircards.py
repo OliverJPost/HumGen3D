@@ -186,6 +186,9 @@ DENSITY_STATION_STEP = 4
 
 # Number of standard deviations of the clump the card extends to each side
 SPREAD_FACTOR = 1.6
+# The same for a clump of tight curls: with the hairs cut off at the sides of
+# the card, a card of curls shows as a sheet with straight sides
+CURLY_SPREAD_FACTOR = 2.3
 # Number of standard deviations of the tips of the clump the card is extended with
 TIP_SPREAD_FACTOR = 1.5
 # Extra weight of the distance to the head when comparing strands, to get clumps that
@@ -203,6 +206,71 @@ EXPOSED_DETAIL = 2.0
 # card: a lock that only leaves the hair near its tip shows as a line there too
 LOOSE_EXPOSURE = 0.6
 
+# Hair that stands on the head, like an afro or short curls, is looked at along
+# its hairs: the cards that follow the hairs are seen from their side and their
+# tip there, as lines, and the skin shows between them. Such hair gets shells as
+# well: cards that lie across the hairs, a patch of the surface of the hairstyle
+# each, with the hair below them drawn onto them as it is seen from outside.
+# A strand stands when the line from its root to its tip is this much along the
+# outward direction (1 is straight out)
+STANDING_STRAND = 0.5
+# Share of the hairs that has to stand for the hairstyle to get shells
+MIN_STANDING_SHARE = 0.15
+# Hair with its tips closer to the skin than this is left to the haircap
+SHELL_MIN_HEIGHT = 0.008
+# Where along the standing strands the shells are, for hair that is lower and
+# higher than SHELL_TALL_HEIGHT. Tall hair gets a second shell halfway, which
+# shows through the gaps of the outer one and moves against it
+SHELL_TALL_HEIGHT = 0.03
+SHELL_LEVELS_SHORT = (0.8,)
+SHELL_LEVELS_TALL = (0.45, 0.8)
+# The lowest shell shows the hair down to this share of the strands, the hair
+# below it is the haircap
+SHELL_FLOOR = 0.1
+# Share of the hair a shell shows that the shell above it shows as well
+SHELL_OVERLAP = 0.3
+# Distance between the middles of neighbouring shells
+SHELL_SPACING = 0.035
+# Half the size of a shell in standard deviations of the points it stands for,
+# 2 covers its patch, more makes it overlap its neighbours
+SHELL_SPREAD = 2.4
+SHELL_HALF_SIZES = (0.012, 0.03)
+# Strongest bend of a shell, as the factor of the square of the distance to its
+# middle: a radius of 5 cm
+SHELL_MAX_BEND = 10.0
+# Factor for how much the bend of a shell matters when the segments are divided,
+# compared to the bends of a card that follows a clump: a shell is seen from the
+# front, where its bend does not show
+SHELL_DETAIL = 0.5
+# Size of the cells and depth below a shell that are used to find out whether
+# the hair is a closed surface there
+SHELL_FILL_CELL = 0.004
+SHELL_FILL_DEPTH = 0.01
+SHELL_MIN_FILL = 0.75
+# Shells share tiles of the atlas like the other cards, see card_atlas. A tile
+# shows the hair of one of them, the others use it turned another way
+SHELL_CARDS_PER_TILE = 8
+SHELL_TILE_COUNTS = (4, 24)
+# Times a strand is smoothed to get the line it winds around, see
+# _strand_straightness
+STRAIGHTNESS_SMOOTHING = 6
+# Straightness of hair that is all curls and of hair that has none. For the cards
+# of a tile of the atlas: below the first value the tile shows the hair of one
+# of its cards, above the second the average of all. The average of curls that
+# do not line up is noise.
+CURLY_STRAIGHTNESS = (0.75, 0.9)
+# How many times more strands a clump of tight curls has at least, compared to
+# MIN_STRANDS_PER_CLUMP, see _most_clumps
+CURLY_CLUMP_SIZE = 4.0
+# Times the middle line of a clump of curls is smoothed, see _fit_cards
+CURL_SMOOTHING = 3
+# Straightness of the hairs of a clump below which its card has no highlight and
+# above which it has all of it: curls scatter the light instead of lining up
+# into a highlight, which showed as a grey sheen on their cards
+GLOSSY_STRAIGHTNESS = (0.6, 0.9)
+# Share of the highlight a card keeps that stands on the head: hair seen along
+# its length has none
+STANDING_GLOSS = 0.15
 
 # How far the hair color is mixed with white for the maximum amount of grey hairs,
 # measured in the same way
@@ -238,6 +306,9 @@ class HairStrands:
     density_points: np.ndarray
     #: (n, 2) diameter of the rendered hairs at the root and at the tip in meters
     diameters: np.ndarray = field(default_factory=lambda: np.zeros((0, 2)))
+    #: (n,) number of parent hairs of the particle system of every strand, empty
+    #: when that is not known
+    parents: np.ndarray = field(default_factory=lambda: np.zeros(0, dtype=np.int64))
 
     def card_strands(self) -> "HairStrands":
         """Get the strands that are long enough to get a card.
@@ -252,6 +323,11 @@ class HairStrands:
             weights=self.weights[self.for_cards],
             for_cards=self.for_cards[self.for_cards],
             diameters=self.diameters[self.for_cards],
+            parents=(
+                self.parents[self.for_cards]
+                if len(self.parents) == len(self.for_cards)
+                else self.parents
+            ),
         )
 
 
@@ -680,12 +756,13 @@ def _strands_from_modifier(
 
 
 def _resample(
-    coords: np.ndarray, starts: np.ndarray, ends: np.ndarray
+    coords: np.ndarray, starts: np.ndarray, ends: np.ndarray, stations: int = STATIONS
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Resamples every hair to STATIONS points, spread evenly along its length.
+    """Resamples every hair to the same number of points, spread evenly along
+    its length.
 
     Returns:
-        tuple[np.ndarray, np.ndarray]: (n, STATIONS, 3) points and (n,) lengths.
+        tuple[np.ndarray, np.ndarray]: (n, stations, 3) points and (n,) lengths.
     """
     segment_lengths = np.linalg.norm(np.diff(coords, axis=0), axis=1)
     # Vertices of different hairs are not connected
@@ -693,7 +770,7 @@ def _resample(
     cumulative = np.concatenate(([0], np.cumsum(segment_lengths)))
     lengths = cumulative[ends - 1] - cumulative[starts]
 
-    fractions = np.linspace(0, 1, STATIONS)
+    fractions = np.linspace(0, 1, stations)
     targets = cumulative[starts, None] + lengths[:, None] * fractions
     idxs = np.searchsorted(cumulative, targets, side="right") - 1
     idxs = np.clip(idxs, starts[:, None], ends[:, None] - 2)
@@ -710,6 +787,7 @@ def extract_strands(
     context: bpy.types.Context,
     settings: CardSettings = SCALP_SETTINGS,
     max_strands: int = MAX_STRANDS_PER_SYSTEM,
+    stations: int = STATIONS,
 ) -> HairStrands:
     """Gets the hairs of the passed particle systems as resampled strands.
 
@@ -723,6 +801,8 @@ def extract_strands(
         settings (CardSettings): Settings of the hair type.
         max_strands (int): Most strands to take from one particle system, the
             children are thinned out above it and every strand stands for more hairs.
+        stations (int): Number of points of every strand. Cards can only be
+            built from strands of STATIONS points.
 
     Returns:
         HairStrands: Strands of all the particle systems.
@@ -730,6 +810,7 @@ def extract_strands(
     body_obj = human.objects.body
     all_points, all_systems, all_weights, all_for_cards = [], [], [], []
     all_diameters = []
+    all_parents = []
     density_points = []
     for system_idx, modifier in enumerate(modifiers):
         particle_system = modifier.particle_system
@@ -738,7 +819,7 @@ def extract_strands(
         if not len(starts):
             continue
 
-        points, lengths = _resample(coords, starts, ends)
+        points, lengths = _resample(coords, starts, ends, stations)
         # Hairs can have no length because of a length vertex group
         has_length = lengths > settings.min_root_length
         if not has_length.any():
@@ -753,10 +834,11 @@ def extract_strands(
         all_weights.append(np.full(len(points), hairs_per_strand))
         all_for_cards.append(is_long_system & (lengths > settings.min_strand_length))
         all_diameters.append(np.tile(_hair_diameters(particle_system), (len(points), 1)))
+        all_parents.append(np.full(len(points), len(particle_system.particles)))
 
     if not all_points:
         return HairStrands(
-            points=np.zeros((0, STATIONS, 3)),
+            points=np.zeros((0, stations, 3)),
             system=np.zeros(0, dtype=int),
             weights=np.zeros(0),
             for_cards=np.zeros(0, dtype=bool),
@@ -773,6 +855,7 @@ def extract_strands(
             np.concatenate(density_points) if density_points else np.zeros((0, 3))
         ),
         diameters=np.concatenate(all_diameters),
+        parents=np.concatenate(all_parents),
     )
 
 
@@ -830,7 +913,9 @@ def _strand_features(strands: HairStrands, proxy: Proxy) -> np.ndarray:
     Returns:
         np.ndarray: (n, f) features.
     """
-    feature_stations = np.linspace(0, STATIONS - 1, 6).astype(int)
+    # The same places along the hair for strands of any number of points
+    station_count = strands.points.shape[1]
+    feature_stations = np.linspace(0, station_count - 1, 6).astype(int)
     feature_points = strands.points[:, feature_stations]
     _, distance = proxy.outward(feature_points.reshape((-1, 3)))
     return np.concatenate(
@@ -840,6 +925,31 @@ def _strand_features(strands: HairStrands, proxy: Proxy) -> np.ndarray:
         ),
         axis=1,
     )
+
+
+def _most_clumps(strands: HairStrands) -> dict[int, int]:
+    """The most clumps the strands of every particle system are divided into.
+
+    Straight hair can have a clump for every few strands. A card of curls is as
+    wide as its curls and needs more hairs to fill it: as many as grow around one
+    parent hair, which is also what makes a lock of a hairstyle of locks one
+    clump.
+
+    Returns:
+        dict[int, int]: Number of clumps by the index of the system.
+    """
+    straightness = _clump_straightness(strands, np.arange(len(strands.points)))
+    most = {}
+    for system in np.unique(strands.system):
+        in_system = np.flatnonzero(strands.system == system)
+        count = len(in_system)
+        straight = count / MIN_STRANDS_PER_CLUMP
+        curly = straight / CURLY_CLUMP_SIZE
+        if len(strands.parents) == len(strands.points):
+            curly = min(curly, float(strands.parents[in_system[0]]))
+        share = float(_smoothstep(*CURLY_STRAIGHTNESS, straightness[in_system]).mean())
+        most[int(system)] = max(1, int(round(curly + (straight - curly) * share)))
+    return most
 
 
 def _cluster_strands(
@@ -861,11 +971,12 @@ def _cluster_strands(
     )
     shares /= shares.sum()
 
+    most = _most_clumps(strands)
     labels = np.zeros(len(strands.points), dtype=np.int64)
     label_offset = 0
     for system, share in zip(systems, shares):
         in_system = np.flatnonzero(strands.system == system)
-        system_clumps = int(np.clip(round(clump_count * share), 1, len(in_system)))
+        system_clumps = int(np.clip(round(clump_count * share), 1, most[int(system)]))
         system_labels = _kmeans(features[in_system], system_clumps)
         # Some clusters can be empty, make the labels consecutive
         _, system_labels = np.unique(system_labels, return_inverse=True)
@@ -1069,8 +1180,27 @@ class _Cards:
     depths: np.ndarray
     #: (c,) number of rendered hairs the card stands for
     hair_counts: np.ndarray
-    #: (c,) clump the card was fitted to; a crossing card shares its clump
+    #: (c,) clump the card was fitted to; a crossing card shares its clump. -1 for
+    #: a shell
     clump: np.ndarray
+    #: (c,) depth of the hair below a shell that is drawn onto it, 0 for the cards
+    #: that follow a clump
+    slab: np.ndarray
+    #: (c,) how much of the highlight of its hairs the card shows, 0 to 1
+    gloss: np.ndarray
+
+    def take(self, idxs: np.ndarray) -> "_Cards":
+        return _Cards(**{name: value[idxs] for name, value in vars(self).items()})
+
+    def joined(self, other: Optional["_Cards"]) -> "_Cards":
+        if other is None:
+            return self
+        return _Cards(
+            **{
+                name: np.concatenate((value, getattr(other, name)))
+                for name, value in vars(self).items()
+            }
+        )
 
     def __len__(self) -> int:
         return len(self.centers)
@@ -1155,6 +1285,14 @@ def _fit_cards(
     centers = np.zeros((clump_count, STATIONS, 3))
     np.add.at(centers, labels, points)
     centers /= strand_counts[:, None, None]
+    # The average of a few curls is a line that wobbles, which is not the shape
+    # of the clump: a card that follows it takes all the segments it can get,
+    # which leaves a head of curls with a tenth of the cards. The card follows
+    # the line the curls wind around instead, the curls are on its texture.
+    straightness = _clump_straightness(strands, labels)
+    curly = 1 - _smoothstep(*CURLY_STRAIGHTNESS, straightness)
+    smooth = _smooth_lines(centers, CURL_SMOOTHING)
+    centers = centers + (smooth - centers) * curly[:, None, None]
     offsets = points - centers[labels]
     tangents = _normalized(np.gradient(centers, axis=1))
 
@@ -1182,13 +1320,16 @@ def _fit_cards(
     sides, standing = _card_frames(centers, tangents, outward, spread)
     fronts = np.cross(tangents, sides)
 
+    # A card of curls is drawn with whole curls, see CURLY_SPREAD_FACTOR
+    spread_factor = SPREAD_FACTOR + (CURLY_SPREAD_FACTOR - SPREAD_FACTOR) * curly
+
     def half_widths(directions: np.ndarray) -> np.ndarray:
         distance = np.einsum("nmi,nmi->nm", offsets, directions[labels])
         variance = np.zeros((clump_count, STATIONS))
         np.add.at(variance, labels, distance**2)
         deviation = np.sqrt(variance / strand_counts[:, None])
         widths = np.clip(
-            deviation * SPREAD_FACTOR + settings.width_padding,
+            deviation * spread_factor[:, None] + settings.width_padding,
             settings.min_half_width,
             settings.max_half_width,
         )
@@ -1218,6 +1359,8 @@ def _fit_cards(
     quarters = (summed[:, window:] - summed[:, :-window]) / window
     loose = quarters.max(axis=1) > LOOSE_EXPOSURE
     crossed = standing | loose
+    gloss = _smoothstep(*GLOSSY_STRAIGHTNESS, straightness)
+    gloss = gloss * np.where(standing, STANDING_GLOSS, 1.0)
 
     def with_crossing(
         values: np.ndarray, crossing: Optional[np.ndarray] = None
@@ -1234,7 +1377,183 @@ def _fit_cards(
         depths=with_crossing(depths),
         hair_counts=with_crossing(hair_counts),
         clump=with_crossing(np.arange(clump_count)),
+        slab=np.zeros(clump_count + int(crossed.sum())),
+        gloss=with_crossing(gloss),
     )
+
+
+def _fit_shells(
+    strands: HairStrands,
+    proxy: Proxy,
+    body: BodyReference,
+    settings: CardSettings,
+    seed: int,
+) -> Optional[_Cards]:
+    """Fits shells to the hair that stands on the head, see STANDING_STRAND.
+
+    The points of the standing strands at a share of their length are a surface
+    around the head. It is divided into patches, every patch gets a card that
+    lies in it: square, turned a random way and bent along its length to follow
+    the surface.
+
+    Returns:
+        Optional[_Cards]: The shells, None for hair that does not stand.
+    """
+    points = strands.points
+    chord = _normalized(points[:, -1] - points[:, 0])
+    outward, _ = proxy.outward(points[:, 0])
+    standing = np.flatnonzero(np.einsum("ni,ni->n", chord, outward) > STANDING_STRAND)
+    if not len(standing):
+        return None
+    heights = body.distances(points[standing, -1])
+    standing = standing[heights >= SHELL_MIN_HEIGHT]
+    heights = heights[heights >= SHELL_MIN_HEIGHT]
+    weights = strands.weights[standing]
+    if weights.sum() < MIN_STANDING_SHARE * strands.weights.sum():
+        return None
+    points = points[standing]
+
+    is_tall = np.median(heights) >= SHELL_TALL_HEIGHT
+    levels = SHELL_LEVELS_TALL if is_tall else SHELL_LEVELS_SHORT
+    rng = np.random.default_rng(seed)
+    shells = None
+    lower = SHELL_FLOOR
+    for level in levels:
+        station = int(round(level * (STATIONS - 1)))
+        level_points = points[:, station]
+        # Every shell shows the hair down to the shell below it, and some of
+        # what that one shows: the gaps of a shell show the shell below it,
+        # which moves against it as the head turns
+        shells = _level_shells(
+            level_points,
+            points,
+            weights,
+            (1 + SHELL_OVERLAP) * (1 - lower / level),
+            proxy,
+            body,
+            settings,
+            rng,
+        ).joined(shells)
+        lower = level
+    return shells if shells is not None and len(shells) else None
+
+
+def _level_shells(
+    points: np.ndarray,
+    around: np.ndarray,
+    weights: np.ndarray,
+    slab_share: float,
+    proxy: Proxy,
+    body: BodyReference,
+    settings: CardSettings,
+    rng: np.random.Generator,
+) -> _Cards:
+    """Fits shells to the points of the standing strands at one level.
+
+    Args:
+        points (np.ndarray): (n, 3) point of every strand.
+        around (np.ndarray): (n, STATIONS, 3) all points of every strand, to find
+            out where the hair is a closed surface at this level.
+        weights (np.ndarray): (n,) hairs every strand stands for.
+        slab_share (float): Share of the distance between a shell and the skin
+            that is drawn onto the shell.
+    """
+    # The area of the surface the points are on, from the cells it passes through
+    cell = SHELL_SPACING / 2
+    cell_count = len(np.unique(np.floor(points / cell).astype(np.int64), axis=0))
+    area = cell_count * cell * cell / 1.3
+    count = int(round(area / SHELL_SPACING**2))
+    max_count = max(len(points) // MIN_STRANDS_PER_CLUMP, 1)
+    labels = np.zeros(len(points), dtype=np.int64)
+    for _ in range(2):
+        count = int(np.clip(count, 1, max_count))
+        _, labels = np.unique(_kmeans(points, count), return_inverse=True)
+        labels = labels.ravel()
+        # The points of curls are a layer more than a surface, which counts
+        # for more cells: correct the number of patches by the size they get
+        middles = np.stack(
+            [np.bincount(labels, weights=points[:, axis]) for axis in range(3)], axis=1
+        ) / np.bincount(labels)[:, None]
+        spread = np.sqrt(((points - middles[labels]) ** 2).sum(axis=1).mean() / 2)
+        wanted_spread = SHELL_SPACING / np.sqrt(12)
+        count = int(round((int(labels.max()) + 1) * (spread / wanted_spread) ** 2))
+    count = int(labels.max()) + 1
+    sizes = np.bincount(labels, minlength=count)
+
+    def per_shell(values: np.ndarray) -> np.ndarray:
+        return np.bincount(labels, weights=values, minlength=count) / sizes
+
+    middles = np.stack([per_shell(points[:, axis]) for axis in range(3)], axis=1)
+    outward, _ = proxy.outward(points)
+    normals = _normalized(
+        np.stack([per_shell(outward[:, axis]) for axis in range(3)], axis=1)
+    )
+    lengthwise = _normalized(
+        _project_perpendicular(rng.normal(size=(count, 3)), normals)
+    )
+    sideways = np.cross(normals, lengthwise)
+
+    offsets = points - middles[labels]
+    x = np.einsum("ni,ni->n", offsets, lengthwise[labels])
+    y = np.einsum("ni,ni->n", offsets, sideways[labels])
+    z = np.einsum("ni,ni->n", offsets, normals[labels])
+    half_sizes = np.clip(
+        SHELL_SPREAD * np.sqrt((per_shell(x * x) + per_shell(y * y)) / 2),
+        *SHELL_HALF_SIZES,
+    )
+    # The surface along the card as a parabola through the points of the patch
+    x_squared = x * x - per_shell(x * x)[labels]
+    slope = per_shell(x * z) / np.maximum(per_shell(x * x), 1e-9)
+    bend = per_shell(x_squared * z) / np.maximum(per_shell(x_squared**2), 1e-12)
+    bend = np.clip(bend, -SHELL_MAX_BEND, SHELL_MAX_BEND)
+
+    # Locks that stand apart are not a surface: between them the hair is seen
+    # far below a shell, which shows it as if it were at the shell. Count the
+    # cells of every shell that have hair right below them.
+    fill = np.zeros(count)
+    cell = SHELL_FILL_CELL
+    for shell in range(count):
+        reach = 1.5 * half_sizes[shell] + SHELL_FILL_DEPTH
+        close = np.linalg.norm(points - middles[shell], axis=1) < reach
+        near = around[close] - middles[shell]
+        depth = near @ normals[shell] - bend[shell] * (near @ lengthwise[shell]) ** 2
+        cells_x = np.floor((near @ lengthwise[shell]) / cell + 0.5)
+        cells_y = np.floor((near @ sideways[shell]) / cell + 0.5)
+        span = int(half_sizes[shell] / cell)
+        inside = (
+            (np.abs(cells_x) <= span) & (np.abs(cells_y) <= span) & (depth > -SHELL_FILL_DEPTH)
+        )
+        keys = cells_x[inside] * (2 * span + 1) + cells_y[inside]
+        fill[shell] = len(np.unique(keys)) / (2 * span + 1) ** 2
+    kept = np.flatnonzero(fill >= SHELL_MIN_FILL)
+
+    along = np.linspace(-1, 1, STATIONS)[None, :] * half_sizes[:, None]
+    height = bend[:, None] * (along**2 - per_shell(x * x)[:, None])
+    height += slope[:, None] * along
+    centers = (
+        middles[:, None]
+        + lengthwise[:, None] * along[..., None]
+        + normals[:, None] * height[..., None]
+    )
+    arc = np.zeros((count, STATIONS))
+    arc[:, 1:] = np.cumsum(np.linalg.norm(np.diff(centers, axis=1), axis=2), axis=1)
+    depths = body.distances(middles)
+
+    return _Cards(
+        centers=centers,
+        sides=np.repeat(sideways[:, None], STATIONS, axis=1),
+        half_widths=np.repeat(half_sizes[:, None], STATIONS, axis=1),
+        arc=arc,
+        significance=_significance(
+            centers, arc, np.zeros((count, STATIONS)), settings
+        )
+        * SHELL_DETAIL,
+        depths=depths,
+        hair_counts=np.bincount(labels, weights=weights, minlength=count),
+        clump=np.full(count, -1),
+        slab=np.maximum(depths * slab_share, 0.004),
+        gloss=np.zeros(count),
+    ).take(kept)
 
 
 def _select_stations(
@@ -1366,12 +1685,18 @@ def build_card_geometry(
     if not strand_count or triangle_budget < 2:
         return None
 
-    system_count = len(np.unique(strands.system))
-    max_clumps = max(system_count, strand_count // MIN_STRANDS_PER_CLUMP)
+    max_clumps = sum(_most_clumps(strands).values())
     clump_count = min(max_clumps, max(1, triangle_budget // 8))
+    shells = _fit_shells(strands, proxy, body, settings, seed)
+    shell_triangles = 0
+    if shells is not None:
+        is_wanted = shells.significance[:, 1:-1] >= settings.wanted_tolerance
+        shell_triangles = 2 * len(shells) + 2 * int(is_wanted.sum())
+        if 2 * shell_triangles > triangle_budget:
+            shells, shell_triangles = None, 0
     for attempt in range(4):
         labels = _cluster_strands(strands, proxy, clump_count)
-        cards = _fit_cards(strands, labels, proxy, body, settings)
+        cards = _fit_cards(strands, labels, proxy, body, settings).joined(shells)
         if attempt == 3:
             break
         # Change the number of clumps until the cards with the segments they need
@@ -1379,7 +1704,12 @@ def build_card_geometry(
         is_wanted = cards.significance[:, 1:-1] >= settings.wanted_tolerance
         wanted_triangles = 2 * len(cards) + 2 * int(is_wanted.sum())
         fits = 0.8 * triangle_budget <= wanted_triangles <= triangle_budget
-        new_count = int(clump_count * 0.95 * triangle_budget / wanted_triangles)
+        new_count = int(
+            clump_count
+            * 0.95
+            * (triangle_budget - shell_triangles)
+            / max(wanted_triangles - shell_triangles, 1)
+        )
         new_count = int(np.clip(new_count, 1, max_clumps))
         if fits or new_count == clump_count:
             break
@@ -1392,7 +1722,7 @@ def build_card_geometry(
 
     # From the inner to the outer cards, the order engines should draw them in
     order = np.argsort(cards.depths, kind="stable")
-    cards = _Cards(**{name: value[order] for name, value in vars(cards).items()})
+    cards = cards.take(order)
     selected = _select_stations(cards, triangle_budget, settings)
 
     card_count = len(cards)
@@ -1420,8 +1750,8 @@ def build_card_geometry(
         centroids /= np.maximum(clump_sizes, 1)[:, None]
         clump_system = np.zeros(clump_count, dtype=np.int64)
         clump_system[labels] = strands.system
-        tile_of_card = _group_cards(
-            cards, hairs_per_cm, clump_system[cards.clump], card_atlas.tile_count(lengths, widths)
+        tile_of_card, draw_share = _share_tiles(
+            cards, hairs_per_cm, clump_system, _clump_straightness(strands, labels)
         )
         tile_count = int(tile_of_card.max()) + 1
         tile_lengths = np.array(
@@ -1447,6 +1777,9 @@ def build_card_geometry(
             clump_centroids=centroids,
             clump_system=clump_system,
             clump_sizes=clump_sizes,
+            slab=cards.slab,
+            draw_share=draw_share,
+            gloss=cards.gloss,
         )
     else:
         atlas = HairAtlas()
@@ -1500,9 +1833,119 @@ def build_card_geometry(
     )
 
 
+def _smooth_lines(points: np.ndarray, times: int) -> np.ndarray:
+    """Smooths (n, STATIONS, 3) lines along their length."""
+    for _ in range(times):
+        points = np.stack(
+            [_smooth_along_card(points[..., axis]) for axis in range(3)], axis=2
+        )
+    return points
+
+
+def _line_lengths(points: np.ndarray) -> np.ndarray:
+    return np.linalg.norm(np.diff(points, axis=1), axis=2).sum(axis=1)  # type:ignore
+
+
+def _strand_straightness(points: np.ndarray) -> np.ndarray:
+    """How straight every strand is: the length of the line it winds around as a
+    share of its own length. 1 for straight hair, however it bends around the
+    head, about half that for tight curls.
+
+    Returns:
+        np.ndarray: (n,) straightness of the (n, STATIONS, 3) strands.
+    """
+    # Smoothing pulls the ends of a line in, also of a straight one
+    straight = np.linspace((0.0, 0.0, 0.0), (1.0, 0.0, 0.0), points.shape[1])[None]
+    shrink = _line_lengths(_smooth_lines(straight, STRAIGHTNESS_SMOOTHING))[0]
+    smooth = _line_lengths(_smooth_lines(points, STRAIGHTNESS_SMOOTHING))
+    straightness = smooth / np.maximum(_line_lengths(points) * shrink, 1e-9)
+    return np.minimum(straightness, 1.0)  # type:ignore[no-any-return]
+
+
+def _clump_straightness(strands: HairStrands, labels: np.ndarray) -> np.ndarray:
+    """Average straightness of the strands of every clump, see
+    _strand_straightness."""
+    straightness = _strand_straightness(strands.points)
+    return np.bincount(labels, weights=straightness) / np.maximum(  # type:ignore
+        np.bincount(labels), 1
+    )
+
+
+def _nearest_first(features: np.ndarray) -> np.ndarray:
+    """Orders rows by their distance to the average row."""
+    distance = ((features - features.mean(axis=0)) ** 2).sum(axis=1)
+    return np.argsort(distance, kind="stable")  # type:ignore[no-any-return]
+
+
+def _share_tiles(
+    cards: _Cards,
+    hairs_per_cm: np.ndarray,
+    clump_system: np.ndarray,
+    clump_straightness: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Divides the cards over the tiles of the generated atlas.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray]: (c,) tile of every card, without gaps, and
+            the (c,) share of its hairs every card draws onto its tile: one over
+            the number of cards that draw onto the tile, 0 for a card that only
+            uses what the others drew.
+    """
+    card_count = len(cards)
+    tile_of_card = np.zeros(card_count, dtype=np.int64)
+    draw_share = np.zeros(card_count)
+    lengths = cards.arc[:, -1]
+    widths = 2 * cards.half_widths.mean(axis=1)
+    is_shell = cards.slab > 0
+    tile_count = 0
+
+    along = np.flatnonzero(~is_shell)
+    if len(along):
+        tiles, features = _group_cards(
+            cards.take(along),
+            hairs_per_cm[along],
+            clump_system[cards.clump[along]],
+            card_atlas.tile_count(lengths[along], widths[along]),
+        )
+        tile_of_card[along] = tiles
+        tile_count = int(tiles.max()) + 1
+        straightness = clump_straightness[cards.clump[along]]
+        for tile in range(tile_count):
+            in_tile = np.flatnonzero(tiles == tile)
+            averaged = _smoothstep(
+                *CURLY_STRAIGHTNESS, np.array(straightness[in_tile].mean())
+            )
+            drawing = max(1, int(np.ceil(len(in_tile) * float(averaged))))
+            drawn = in_tile[_nearest_first(features[in_tile])[:drawing]]
+            draw_share[along[drawn]] = 1 / drawing
+
+    shells = np.flatnonzero(is_shell)
+    if len(shells):
+        wanted = int(np.clip(len(shells) // SHELL_CARDS_PER_TILE, *SHELL_TILE_COUNTS))
+        columns = (
+            (widths[shells], 1.0),
+            (np.log1p(cards.hair_counts[shells] / widths[shells] ** 2), 1.0),
+            (cards.slab[shells], 1.0),
+        )
+        features = np.stack(
+            [values / max(float(values.std()), 1e-9) * weight for values, weight in columns],
+            axis=1,
+        )
+        _, tiles = np.unique(
+            _kmeans(features, min(wanted, len(shells))), return_inverse=True
+        )
+        tiles = tiles.ravel()
+        tile_of_card[shells] = tiles + tile_count
+        for tile in range(int(tiles.max()) + 1):
+            in_tile = np.flatnonzero(tiles == tile)
+            draw_share[shells[in_tile[_nearest_first(features[in_tile])[0]]]] = 1.0
+
+    return tile_of_card, draw_share
+
+
 def _group_cards(
     cards: _Cards, hairs_per_cm: np.ndarray, system: np.ndarray, tile_count: int
-) -> np.ndarray:
+) -> tuple[np.ndarray, np.ndarray]:
     """Groups the cards that can share a tile of the generated atlas: cards of the
     same system with a similar length, width, hair density, taper and curvature.
 
@@ -1513,7 +1956,8 @@ def _group_cards(
         tile_count (int): Number of groups to make, see card_atlas.tile_count.
 
     Returns:
-        np.ndarray: (c,) tile of every card, without gaps.
+        tuple[np.ndarray, np.ndarray]: (c,) tile of every card, without gaps, and
+            the (c, f) values the cards were compared by.
     """
     lengths = cards.arc[:, -1]
     half_widths = cards.half_widths
@@ -1543,7 +1987,7 @@ def _group_cards(
         _, system_labels = np.unique(system_labels, return_inverse=True)
         labels[in_system] = system_labels.ravel() + offset
         offset += int(system_labels.max()) + 1
-    return labels
+    return labels, features
 
 
 def assign_clumps(
@@ -1607,7 +2051,12 @@ def draw_card_atlas(
     """
     assert geometry.atlas is not None
     dense = extract_strands(
-        human, modifiers, context, settings, card_atlas.DRAW_STRANDS_PER_SYSTEM
+        human,
+        modifiers,
+        context,
+        settings,
+        card_atlas.DRAW_STRANDS_PER_SYSTEM,
+        card_atlas.DRAW_STATIONS,
     ).card_strands()
     labels = assign_clumps(dense, proxy, geometry.atlas)
     pixels = card_atlas.draw_atlas(

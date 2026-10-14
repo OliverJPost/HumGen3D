@@ -10,7 +10,7 @@ import pytest
 from mathutils import Euler
 
 from HumGen3D.common.math import create_kdtree
-from HumGen3D.human.hair import hair_binding, haircap, haircards
+from HumGen3D.human.hair import card_atlas, hair_binding, haircap, haircards
 from HumGen3D.human.hair.hair import HAIRCAP_TRIS
 from HumGen3D.human.human import Human
 from HumGen3D.tests.test_fixtures import *
@@ -426,6 +426,110 @@ def test_loose_locks_get_a_crossing_card(long_haired_human, context):
     for clump in lock_clumps:
         assert (cards.clump == clump).sum() == 2, "A loose lock gets a card across it"
     assert len(cards) < 2 * (labels.max() + 1), "The hair as a whole doesn't"
+
+
+@pytest.fixture
+def afro_human(context) -> Human:
+    human = _human_with_hair("male", "Curly Afro", context)
+    yield human
+    human.delete()
+
+
+def _card_strands(human, context):
+    proxy = haircards.HeadProxy.from_human(human)
+    with haircards.rest_pose(human.objects.rig, context):
+        body = haircards.BodyReference(human, context)
+        strands = haircards.extract_strands(
+            human, list(human.hair.regular_hair.modifiers), context
+        ).card_strands()
+    return strands, proxy, body
+
+
+def test_straightness_tells_curls_from_bends():
+    """Hair that bends around the head is straight, hair that winds is not."""
+    along = np.linspace(0, 1, haircards.STATIONS)
+    straight = np.stack((along * 0.2, along * 0, along * 0), axis=1)
+    angle = along * math.pi / 2
+    bent = np.stack((np.sin(angle) * 0.1, (1 - np.cos(angle)) * 0.1, along * 0), axis=1)
+    turns = along * 2 * math.pi * 5
+    curl = np.stack((along * 0.1, np.cos(turns) * 0.01, np.sin(turns) * 0.01), axis=1)
+
+    straightness = haircards._strand_straightness(np.stack((straight, bent, curl)))
+
+    low, high = haircards.CURLY_STRAIGHTNESS
+    assert straightness[0] == pytest.approx(1, abs=0.01)
+    assert straightness[1] > high
+    assert straightness[2] < low
+
+
+def test_standing_curls_get_shells(afro_human, context):
+    """An afro is looked at along its hairs, so it gets cards across them too."""
+    strands, proxy, body = _card_strands(afro_human, context)
+
+    geometry = haircards.build_card_geometry(strands, proxy, body, 8000)
+
+    layout = geometry.atlas
+    shells = np.flatnonzero(layout.slab > 0)
+    assert geometry.triangle_count <= 8000
+    assert 20 < len(shells) < geometry.card_count / 2
+    # A shell lies across the hair: its front is the outward direction
+    middle = haircards.STATIONS // 2
+    lengthwise = layout.centers[shells, -1] - layout.centers[shells, 0]
+    fronts = np.cross(lengthwise, layout.sides[shells, middle])
+    fronts /= np.linalg.norm(fronts, axis=1, keepdims=True)
+    outward, _ = proxy.outward(layout.centers[shells, middle])
+    facing = np.einsum("ni,ni->n", fronts, outward)
+    assert np.median(facing) > 0.95
+    assert facing.min() > 0.5
+    # and is well away from the skin, where the haircap is
+    assert body.distances(layout.centers[shells, middle]).min() > haircards.SHELL_MIN_HEIGHT / 2
+    # One card of every tile of curls and shells draws its hair onto it, the
+    # others use what it drew
+    drawing = np.bincount(layout.tile_of_card, weights=layout.draw_share > 0)
+    assert np.all(drawing[np.unique(layout.tile_of_card[shells])] == 1)
+    assert np.all(drawing >= 1)
+
+
+def test_hair_that_lies_on_the_head_gets_no_shells(long_haired_human, context):
+    strands, proxy, body = _card_strands(long_haired_human, context)
+
+    geometry = haircards.build_card_geometry(strands, proxy, body, 8000)
+
+    layout = geometry.atlas
+    assert not (layout.slab > 0).any()
+    # Straight hair is averaged over the cards of a tile
+    cards_per_tile = np.bincount(layout.tile_of_card)
+    assert np.allclose(layout.draw_share, 1 / cards_per_tile[layout.tile_of_card])
+
+
+def test_shell_is_drawn_as_a_tuft(afro_human, context):
+    """A shell shows the hair below it, closed in its middle and open at its corners."""
+    human = afro_human
+    strands, proxy, body = _card_strands(human, context)
+    geometry = haircards.build_card_geometry(strands, proxy, body, 8000)
+    layout = geometry.atlas
+    with haircards.rest_pose(human.objects.rig, context):
+        dense = haircards.extract_strands(
+            human,
+            list(human.hair.regular_hair.modifiers),
+            context,
+            max_strands=card_atlas.DRAW_STRANDS_PER_SYSTEM,
+            stations=card_atlas.DRAW_STATIONS,
+        ).card_strands()
+    labels = haircards.assign_clumps(dense, proxy, layout)
+
+    images = card_atlas.draw_atlas(
+        layout, dense.points, labels, dense.weights, dense.diameters
+    )
+
+    alpha = images["alpha"][..., 0]
+    shell_tiles = np.unique(layout.tile_of_card[layout.slab > 0])
+    middles, corners = [], []
+    for x, y, w, h in layout.tiles[shell_tiles]:
+        middles.append(alpha[y + h // 3 : y + 2 * h // 3, x + w // 3 : x + 2 * w // 3].mean())
+        corners.append(alpha[y : y + h // 8, x : x + w // 8].mean())
+    assert np.median(middles) > 0.5
+    assert np.max(corners) < 0.05
 
 
 def _alpha_source(nodes):
