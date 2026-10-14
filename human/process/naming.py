@@ -78,6 +78,9 @@ CARD_TAGS = ("hg_main_hair", "hg_face_hair")
 HAIRCAP_PART = "Haircap"
 SKIN_PART = "Skin"
 TEMP_SUFFIX = ".hg_tmp"
+# Custom property with the part name on the objects and materials of a
+# processed human, for the export manifest, see manifest.py
+PART_KEY = "hg_part"
 
 
 class Namer:
@@ -209,6 +212,7 @@ def apply_names(human: "Human", namer: Namer) -> None:
     for obj, part in part_names(human).items():
         _set_name(obj, namer.mesh(part))
         _set_name(obj.data, namer.mesh(part))
+        obj[PART_KEY] = part
         _remove_unused_slots(obj, namer.keep_particles)
         # The eyes and hair cards of a level have materials of their own, see
         # textures.share_textures
@@ -217,10 +221,9 @@ def apply_names(human: "Human", namer: Namer) -> None:
             material = slot.material
             if not material:
                 continue
-            _set_name(
-                material,
-                namer.material(material_part(human, obj, slot_index, part), per_level),
-            )
+            material_name = material_part(human, obj, slot_index, part)
+            _set_name(material, namer.material(material_name, per_level))
+            material[PART_KEY] = material_name
 
 
 def _set_name(datablock: bpy.types.ID, name: str) -> None:

@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Test files, kept out of the archives of the add-on
+tests/process/files/** export-ignore

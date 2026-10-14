@@ -104,7 +104,7 @@ def main(context, human: Human, tag: str = "character"):
 
 > [!tip]- Python API - Scripts in a recipe
 > ```python
-> from HumGen3D.human.process.settings import ScriptSettings
+> from HumGen3D import ScriptSettings
 >
 > settings.scripts.enabled = True
 > settings.scripts.items.append(

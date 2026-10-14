@@ -9,7 +9,7 @@ the texture resolutions.
 
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
-from .settings import QualitySettings
+from .settings import BODY_LEVELS, TEETH_LEVELS, QualitySettings
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -21,10 +21,10 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "Original",
         "Every mesh as it is, with the layered eyes that only render in Blender",
         QualitySettings(
-            body=0,
+            body="original",
             clothing="original",
             eyes="original",
-            teeth=0,
+            teeth="original",
             haircards="ultra",
             bones_per_vertex=0,
         ),
@@ -34,10 +34,10 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "Ultra",
         "Full body and clothing, the most hair cards, eight bones per vertex",
         QualitySettings(
-            body=0,
+            body="original",
             clothing="original",
             eyes="high",
-            teeth=0,
+            teeth="original",
             haircards="ultra",
             bones_per_vertex=8,
         ),
@@ -47,7 +47,7 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "High",
         "Full body, clothing halved, high hair cards",
         QualitySettings(
-            body=0, clothing="high", eyes="high", teeth=1, haircards="high"
+            body="original", clothing="high", eyes="high", teeth="medium", haircards="high"
         ),
     ),
     (
@@ -55,7 +55,7 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "Medium",
         "Lower face, clothing a quarter, medium hair cards",
         QualitySettings(
-            body=1, clothing="medium", eyes="medium", teeth=1, haircards="medium"
+            body="lower_face", clothing="medium", eyes="medium", teeth="medium", haircards="medium"
         ),
     ),
     (
@@ -63,7 +63,7 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "Low",
         "A quarter of the body, clothing a tenth, low hair cards",
         QualitySettings(
-            body=2, clothing="low", eyes="low", teeth=2, haircards="low"
+            body="quarter", clothing="low", eyes="low", teeth="low", haircards="low"
         ),
     ),
     (
@@ -71,10 +71,10 @@ QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [
         "Mobile",
         "Like low with only a hair texture on the skin and two bones per vertex",
         QualitySettings(
-            body=2,
+            body="quarter",
             clothing="low",
             eyes="low",
-            teeth=2,
+            teeth="low",
             haircards="haircap_only",
             bones_per_vertex=2,
         ),
@@ -146,10 +146,10 @@ def estimate_triangles(
             is 0 when the particle hair is not converted to cards.
     """
     tris = human.process.lod.estimate_triangles(
-        quality.body,
+        BODY_LEVELS[quality.body],  # type:ignore[arg-type]
         quality.clothing,
         quality.eyes,
-        quality.teeth,
+        TEETH_LEVELS[quality.teeth],  # type:ignore[arg-type]
         remove_clothing_subdiv,
         remove_clothing_solidify,
     )

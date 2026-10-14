@@ -8,10 +8,10 @@
     },
     "lods": [
         {
-            "body": 0,
+            "body": "original",
             "clothing": "high",
             "eyes": "high",
-            "teeth": 1,
+            "teeth": "medium",
             "haircards": "high",
             "bones_per_vertex": 4
         }

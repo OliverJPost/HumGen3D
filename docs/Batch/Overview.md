@@ -54,3 +54,8 @@ The batch generator has a progress bar to see how much longer it will take. Unfo
 	- Inside, you can select which libraries will be considered when a random outfit is chosen. This box shows all possible categories, and how many outfits for each gender are inside them. The colors of the clothing will be automatically randomized.
 - *Expression:* Selecting this will add a random expression to each generated human.
 	- Just like with the clothing menu, you can select which expression libraries the randomizer will choose from.
+---
+
+## Exporting batch humans
+
+The batch generator makes humans in your scene; it doesn't export them. To export them for a game engine, select them all and use the [[Process/Overview|Process tab]]: every selected human is processed with the same recipe and gets its own files. To do it from a script, see [[Process/Python API#Several humans]].

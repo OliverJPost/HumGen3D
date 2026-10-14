@@ -23,7 +23,7 @@ bl_info = {
     "name": "Human Generator 3D",
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",  # noqa
-    "blender": (3, 2, 0),
+    "blender": (4, 0, 0),
     "version": (4, 0, 32),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "https://humgen3d.com",
@@ -57,6 +57,22 @@ from HumGen3D.backend.vscode_reload import _post_vscode_reload  # noqa
 from HumGen3D.batch_generator.generator import BatchHumanGenerator
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.pipeline import ExportResult
+from HumGen3D.human.process.settings import (
+    AnimationClipSettings,
+    ExportSettings,
+    FbxSettings,
+    GltfSettings,
+    HaircardSettings,
+    MeshSettings,
+    OutputSettings,
+    QualitySettings,
+    ScriptSettings,
+    ScriptsSettings,
+    ShapeKeySettings,
+    SkeletonSettings,
+    TextureBakeSettings,
+)
 from HumGen3D.human.keys.bpy_livekey import BpyLiveKey
 from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
 from HumGen3D.user_interface.batch_panel import batch_ui_lists
@@ -71,6 +87,21 @@ __all__ = [
     "ShapeKeyItem",
     "KeyItem",
     "get_prefs",
+    # The settings of the process system, see human/process/settings.py
+    "ExportSettings",
+    "ExportResult",
+    "OutputSettings",
+    "FbxSettings",
+    "GltfSettings",
+    "QualitySettings",
+    "MeshSettings",
+    "HaircardSettings",
+    "SkeletonSettings",
+    "ShapeKeySettings",
+    "TextureBakeSettings",
+    "AnimationClipSettings",
+    "ScriptsSettings",
+    "ScriptSettings",
 ]
 
 

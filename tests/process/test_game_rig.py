@@ -95,12 +95,14 @@ def _driver_bone_targets(obj):
 def test_game_rig_is_clean(human, context, preset):
     if PRESETS[preset]["rest_pose"] == "t_pose":
         human.process.set_t_pose_as_rest(context)
-    human.process.convert_to_game_rig(preset=preset, context=context)
+    names = "humgen" if preset.startswith("generic") else preset
+    human.process.convert_to_game_rig(names=names, context=context)
     rig = human.objects.rig
     bone_names = {bone.name for bone in rig.data.bones}
 
     assert human.process.has_game_rig
-    assert human.process.game_rig_preset == preset
+    assert human.process.game_rig_names == names
+    assert rig[game_rig.GAME_RIG_KEY] == preset
     assert not any(pose_bone.constraints for pose_bone in rig.pose.bones)
     assert not any(
         key.startswith("rigify") for pose_bone in rig.pose.bones for key in pose_bone.keys()
@@ -135,7 +137,7 @@ def test_game_rig_is_clean(human, context, preset):
 
 def test_humanoid_names(human, context):
     human.process.set_t_pose_as_rest(context)
-    human.process.convert_to_game_rig(preset="humanoid", context=context)
+    human.process.convert_to_game_rig(names="humanoid", context=context)
     bone_names = {bone.name for bone in human.objects.rig.data.bones}
     for name in HUMANOID_REQUIRED + ("LeftEye", "Jaw", "LeftThumbMetacarpal", "RightLittleDistal"):
         assert name in bone_names, name
@@ -144,7 +146,7 @@ def test_humanoid_names(human, context):
 
 
 def test_unreal_names(human, context):
-    human.process.convert_to_game_rig(preset="unreal", keep_metacarpals=True, context=context)
+    human.process.convert_to_game_rig(names="unreal", keep_metacarpals=True, context=context)
     bone_names = {bone.name for bone in human.objects.rig.data.bones}
     for name in UNREAL_SAMPLE + ("index_metacarpal_l", "thumb_03_r", "eye_l"):
         assert name in bone_names, name
@@ -155,7 +157,7 @@ def test_unreal_names(human, context):
 
 def test_mixamo_names(human, context):
     human.process.set_t_pose_as_rest(context)
-    human.process.convert_to_game_rig(preset="mixamo", context=context)
+    human.process.convert_to_game_rig(names="mixamo", context=context)
     bones = human.objects.rig.data.bones
     for name in MIXAMO_SAMPLE:
         assert name in bones, name
@@ -173,7 +175,7 @@ def test_game_rig_keeps_shape(human, context):
     before = [_evaluated_coords(obj, context) for obj in meshes]
 
     human.process.convert_to_game_rig(
-        preset="generic_a",
+        names="humgen",
         keep_breasts=False,
         keep_metacarpals=False,
         max_influences=0,
@@ -191,7 +193,7 @@ def test_game_rig_keeps_posed_shape(human, context):
     before = [_evaluated_coords(obj, context) for obj in meshes]
 
     human.process.convert_to_game_rig(
-        preset="generic_a", keep_metacarpals=True, max_influences=0, context=context
+        names="humgen", keep_metacarpals=True, max_influences=0, context=context
     )
 
     for obj, coords in zip(meshes, before):
@@ -204,7 +206,7 @@ def test_merged_weights(human, context):
     sums_before = [sum(weights) for weights in _bone_weights(body, bone_names)]
 
     human.process.convert_to_game_rig(
-        preset="generic_a",
+        names="humgen",
         keep_eyes=False,
         keep_jaw=False,
         keep_breasts=False,
@@ -232,7 +234,7 @@ def test_unused_vertex_groups_removed(human, context):
     used_groups = game_rig._referenced_vertex_groups(body)
     assert "Hair_Eyebrows" in used_groups
 
-    human.process.convert_to_game_rig(preset="generic_a", context=context)
+    human.process.convert_to_game_rig(names="humgen", context=context)
 
     group_names = {group.name for group in body.vertex_groups}
     bone_names = {bone.name for bone in human.objects.rig.data.bones}
@@ -244,7 +246,7 @@ def test_unused_vertex_groups_removed(human, context):
 @pytest.mark.parametrize("limit", (4, 2))
 def test_influence_limit(human, context, limit):
     human.process.convert_to_game_rig(
-        preset="generic_a", max_influences=limit, context=context
+        names="humgen", max_influences=limit, context=context
     )
     bone_names = {bone.name for bone in human.objects.rig.data.bones}
     for obj in _skinned_meshes(human):
@@ -266,7 +268,7 @@ def test_removed_bone_drivers_are_baked(human, context):
     driven_value = key_eval.key_blocks["mouthSmile_L"].value
     assert driven_value > 0.01
 
-    human.process.convert_to_game_rig(preset="generic_a", context=context)
+    human.process.convert_to_game_rig(names="humgen", context=context)
 
     key = body.data.shape_keys
     assert "mouthSmile_L" in key.key_blocks
@@ -278,7 +280,7 @@ def test_removed_bone_drivers_are_baked(human, context):
 
 
 def test_game_rig_export(human, context, tmp_path):
-    human.process.convert_to_game_rig(preset="unreal", context=context)
+    human.process.convert_to_game_rig(names="unreal", context=context)
     path = os.path.join(tmp_path, "unreal.fbx")
     kwargs = fbx_kwargs(OutputSettings(), PRESETS["unreal"]["units"])
     assert kwargs["apply_scale_options"] == "FBX_SCALE_ALL"
@@ -295,7 +297,7 @@ def test_game_rig_twice_raises(human, context):
 def test_custom_names_file(human, context, tmp_path):
     path = tmp_path / "names.json"
     path.write_text(json.dumps({"names": {"spine": "Root_Hips", "upper_arm": "Arm{suffix}_{Side}_{side}"}}))
-    human.process.convert_to_game_rig(preset="custom", names_file=str(path), context=context)
+    human.process.convert_to_game_rig(names="custom", names_file=str(path), context=context)
     bones = human.objects.rig.data.bones
     assert "Root_Hips" in bones
     assert "Arm.L_Left_l" in bones and "Arm.R_Right_r" in bones
@@ -306,13 +308,13 @@ def test_custom_names_file_unknown_token(human, context, tmp_path):
     path = tmp_path / "names.json"
     path.write_text(json.dumps({"names": {"upper_arm": "{Side}Arm{foo}"}}))
     with pytest.raises(HumGenException, match=r"'upper_arm'.*\{foo\}"):
-        human.process.convert_to_game_rig(preset="custom", names_file=str(path), context=context)
+        human.process.convert_to_game_rig(names="custom", names_file=str(path), context=context)
     assert not human.process.has_game_rig
 
 
-def test_unknown_preset_raises(human, context):
+def test_unknown_names_raise(human, context):
     with pytest.raises(ValueError):
-        human.process.convert_to_game_rig(preset="nonexistent", context=context)
+        human.process.convert_to_game_rig(names="nonexistent", context=context)
 
 
 def test_rigify_raises(male_rigify_human, context):

@@ -19,7 +19,7 @@ import json
 import os
 import typing
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar
 
 from HumGen3D.backend.logging import hg_log
 from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
@@ -159,6 +159,10 @@ GLTF_IMAGE_FORMATS = [("AUTO", "Auto", "PNG, JPEG where no alpha is needed"), ("
 
 T = TypeVar("T", bound="Settings")
 
+# The level of `LodSettings.set_body_lod` and `set_teeth_lod` of each option
+BODY_LEVELS: Dict[str, int] = {"original": 0, "lower_face": 1, "quarter": 2}
+TEETH_LEVELS: Dict[str, int] = {"original": 0, "medium": 1, "low": 2}
+
 
 @dataclass
 class Settings:
@@ -181,17 +185,33 @@ class Settings:
         """A deep copy."""
         return self.from_dict(self.to_dict())
 
+    @classmethod
+    def _upgrade(cls, data: Dict[str, Any]) -> Dict[str, Any]:
+        """The data with values of earlier versions turned into current ones."""
+        return data
+
 
 @dataclass
 class QualitySettings(Settings):
     """Detail of the meshes of one LOD level, see quality.py for the tiers."""
 
-    body: int = 0  # 0 original, 1 lower face, 2 a quarter of the body
-    clothing: str = "high"  # original, high, medium, low
-    eyes: str = "high"  # original (layered, not game ready), high, medium, low
-    teeth: int = 1  # 0 original, 1 medium, 2 low
-    haircards: str = "high"  # ultra, high, medium, low, haircap_only
+    # "lower_face" reduces the face only, "quarter" the whole body to a quarter
+    body: Literal["original", "lower_face", "quarter"] = "original"
+    clothing: Literal["original", "high", "medium", "low"] = "high"
+    # "original" keeps the layered eyes, which are not game ready
+    eyes: Literal["original", "high", "medium", "low"] = "high"
+    teeth: Literal["original", "medium", "low"] = "medium"
+    haircards: Literal["ultra", "high", "medium", "low", "haircap_only"] = "high"
     bones_per_vertex: int = 4  # 0 for no limit
+
+    @classmethod
+    def _upgrade(cls, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Body and teeth were numbers before they were names."""
+        for key, levels in (("body", BODY_LEVELS), ("teeth", TEETH_LEVELS)):
+            value = data.get(key)
+            if isinstance(value, int) and not isinstance(value, bool):
+                data[key] = next((name for name, level in levels.items() if level == value), value)
+        return data
 
     @classmethod
     def from_tier(cls, tier: str) -> "QualitySettings":
@@ -449,7 +469,9 @@ class ExportSettings(Settings):
         """Settings of a recipe, shipped or from the content folder.
 
         Args:
-            recipe (str): Identifier from `recipe_items`, or a path of a recipe file.
+            recipe (str): Identifier from `recipe_items`, or a path of a recipe
+                file, or of the `.humgen3d.json` file next to an exported
+                character for the settings it was made with.
 
         Returns:
             ExportSettings: The settings of the recipe.
@@ -462,6 +484,9 @@ class ExportSettings(Settings):
             raise FileNotFoundError(f"No recipe '{recipe}'")
         with open(path, "r") as f:
             data = json.load(f)
+        if "humgen3d_export" in data:
+            # The manifest next to an exported character, see manifest.py
+            data = data.get("settings", {})
         if data.get("version", 1) < 2:
             from .migrate import migrate_v1
 
@@ -547,9 +572,40 @@ def recipe_items() -> List[Tuple[str, str, str]]:
         for file in sorted(files):
             if not file.endswith(RECIPE_EXTENSION):
                 continue
-            relpath = os.path.relpath(os.path.join(directory, file), root)
+            path = os.path.join(directory, file)
+            if not _loads(path):
+                continue
+            relpath = os.path.relpath(path, root)
             items.append((relpath, file[: -len(RECIPE_EXTENSION)], group))
     return items
+
+
+# Whether a recipe file of the user loads, by path, with the time it was changed
+_load_checks: Dict[str, Tuple[float, bool]] = {}
+
+
+def _loads(path: str) -> bool:
+    """Whether a recipe file loads, so files that don't are left out of the list.
+
+    Recipes of older versions that the migration can't read and files that
+    are no recipe at all are dropped this way. The answer is kept until the
+    file changes, the interface asks for the list on every redraw.
+    """
+    try:
+        changed = os.path.getmtime(path)
+    except OSError:
+        return False
+    known = _load_checks.get(path)
+    if known and known[0] == changed:
+        return known[1]
+    try:
+        ExportSettings.from_recipe(path)
+        ok = True
+    except Exception as e:  # noqa: B902, a broken file must not break the list
+        hg_log(f"Leaving out recipe {path}, it can't be loaded: {e}", level="WARNING")
+        ok = False
+    _load_checks[path] = (changed, ok)
+    return ok
 
 
 def _to_plain(value: Any) -> Any:
@@ -565,6 +621,7 @@ def _to_plain(value: Any) -> Any:
 
 
 def _from_plain(cls: Type[T], data: Dict[str, Any]) -> T:
+    data = cls._upgrade(dict(data))
     hints = typing.get_type_hints(cls)
     kwargs = {}
     known = {f.name for f in dataclasses.fields(cls)}

@@ -33,9 +33,9 @@ from HumGen3D.common.progress import ProgressCallback, Steps
 from HumGen3D.common.progress import run as run_steps
 from mathutils import Vector
 
-from . import animations, naming, scripts, textures
+from . import animations, manifest, naming, scripts, textures
 from .game_rig import check_names_file
-from .settings import EXPORT_STAGES, ExportSettings, QualitySettings
+from .settings import EXPORT_STAGES, TEETH_LEVELS, ExportSettings, QualitySettings
 from .shape_keys import driven_groups_kept
 
 if TYPE_CHECKING:
@@ -50,6 +50,15 @@ TEXTURES_FOLDER = "Textures"
 PER_LEVEL_SETS = ("eyes", "hair")
 # Distance between the in-file results, along Y
 RESULT_SPACING = 2.0
+# What the Process tab of 4.0, and the same steps of the Python API, set on the
+# rig of a human they changed in place. Such a human has lost vertices, bones
+# or names the process system needs.
+OLD_PROCESS_KEYS = {
+    "lod": "lower level of detail",
+    "bones_renamed": "renamed bones",
+    "parts_renamed": "renamed parts",
+    "modifiers_applied": "applied modifiers",
+}
 
 
 @dataclass
@@ -131,6 +140,14 @@ def preflight(  # noqa: CCR001
         result.errors.append("This is a processed human, process its original instead")
     if is_legacy(rig):
         result.errors.append("Humans made before version 4 can't be processed")
+    changed = [key for key in OLD_PROCESS_KEYS if key in rig]
+    if changed:
+        result.errors.append(
+            "This human was already processed in place"
+            f" ({', '.join(OLD_PROCESS_KEYS[key] for key in changed)}), by the"
+            " Process tab of version 4.0 or the steps of the Python API. Process"
+            " a human that was not processed before"
+        )
     if not settings.lods:
         result.errors.append("The settings have no LOD level")
     if output.is_file:
@@ -213,7 +230,7 @@ def preflight(  # noqa: CCR001
             no_clips = not animations.source_clips(human, settings.animations)
         if no_clips:
             result.warnings.append("Animations is on, but no clip is selected")
-    if human.is_trial and any(level.body for level in settings.lods):
+    if human.is_trial and any(level.body != "original" for level in settings.lods):
         result.warnings.append("The body can't be reduced in the trial version")
     return result
 
@@ -389,7 +406,7 @@ def _effective_settings(settings: ExportSettings) -> ExportSettings:
     if not settings.meshes.enabled:
         # Every mesh as it is, the levels only differ in their hair cards
         for quality in settings.lods:
-            quality.body, quality.clothing, quality.eyes, quality.teeth = 0, "original", "original", 0
+            quality.body = quality.clothing = quality.eyes = quality.teeth = "original"
         meshes = settings.meshes
         meshes.remove_hidden_skin = meshes.remove_clothing_subdiv = meshes.remove_clothing_solidify = False
     if not settings.shape_keys.enabled:
@@ -488,8 +505,8 @@ def _process_level(  # noqa: CCR001
     # The eyes and teeth before baking, they change the materials
     if quality.eyes != "original" and not copy.process.has_game_eyes:
         copy.process.convert_to_game_eyes(quality.eyes)
-    if quality.teeth:
-        copy.process.lod.set_teeth_lod(quality.teeth, context=context)
+    if quality.teeth != "original":
+        copy.process.lod.set_teeth_lod(TEETH_LEVELS[quality.teeth], context=context)  # type:ignore[arg-type]
     _run_scripts(settings, "before_baking", context, copy, result)
     yield 0.35
 
@@ -621,8 +638,12 @@ def _write_steps(  # noqa: CCR001
                     )
     yield 0.9
 
+    files = [path for path in files if path]
+    if files and output.has_rig:
+        # Next to the character, the Companions only set up a file that has one
+        files.append(manifest.write(human, settings, name, files[0], files[1:]))
     _run_scripts(settings, "after_export", context, human, result, files)
-    return [path for path in files if path]
+    return files
 
 
 def _keep_in_file(copies: List["Human"], source: "Human", result: ExportResult) -> None:

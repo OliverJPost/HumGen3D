@@ -27,11 +27,13 @@ from . import animations, naming, textures
 from .apply_modifiers import apply_modifiers
 from .bake import BakeSettings
 from .game_eyes import GAME_EYES_KEY, convert_to_game_eyes
-from .game_rig import GAME_RIG_KEY, CUSTOM_PRESET, convert_to_game_rig, preset_for_names
+from .game_rig import GAME_RIG_KEY, CUSTOM_PRESET, HUMGEN_NAMES, convert_to_game_rig, preset_for_names
 from .masks import remove_hidden_skin
 from .pipeline import ExportResult, Preflight
 from .rest_pose import T_POSE_KEY, set_t_pose_as_rest
 from .settings import (
+    BODY_LEVELS,
+    TEETH_LEVELS,
     AnimationClipSettings,
     ExportSettings,
     MeshSettings,
@@ -449,12 +451,12 @@ class ProcessSettings:
         meshes = meshes or MeshSettings()
         if quality.eyes != "original" and not self.has_game_eyes:
             self.convert_to_game_eyes(quality.eyes)
-        if quality.teeth and not any(
+        if quality.teeth != "original" and not any(
             LOD_KEY in obj for obj in (self._human.objects.upper_teeth, self._human.objects.lower_teeth)
         ):
-            self.lod.set_teeth_lod(quality.teeth, context=context)
-        if quality.body and not self._human.is_trial:
-            self.lod.set_body_lod(quality.body, context=context)
+            self.lod.set_teeth_lod(TEETH_LEVELS[quality.teeth], context=context)  # type:ignore[arg-type]
+        if quality.body != "original" and not self._human.is_trial:
+            self.lod.set_body_lod(BODY_LEVELS[quality.body], context=context)  # type:ignore[arg-type]
         self.lod.set_clothing_lod(
             quality.clothing,
             meshes.remove_clothing_subdiv,
@@ -543,19 +545,23 @@ class ProcessSettings:
         return GAME_RIG_KEY in self._human.objects.rig
 
     @property
-    def game_rig_preset(self) -> Optional[str]:
-        """The preset the rig was converted with, None if it has no game rig.
+    def game_rig_names(self) -> Optional[str]:
+        """The bone names the rig was converted to, None if it has no game rig.
 
         Returns:
-            Optional[str]: Identifier of the preset, see game_rig.PRESETS, or the
-                path of the names file of a custom preset.
+            Optional[str]: "humgen", "humanoid", "unreal" or "mixamo", as
+                `SkeletonSettings.names`, or the path of the names file of
+                custom names.
         """
-        return self._human.objects.rig.get(GAME_RIG_KEY)
+        preset = self._human.objects.rig.get(GAME_RIG_KEY)
+        if preset in ("generic_a", "generic_t"):
+            return HUMGEN_NAMES
+        return preset
 
     @injected_context
     def convert_to_game_rig(
         self,
-        preset: str = "generic_a",
+        names: str = HUMGEN_NAMES,
         keep_eyes: bool = True,
         keep_jaw: bool = True,
         keep_breasts: bool = True,
@@ -574,18 +580,16 @@ class ProcessSettings:
         Merges the weights of the bones that are not kept into their parents, adds
         a root bone at the origin, bakes the constraints into the pose, removes the
         vertex groups that are neither bones nor used by a modifier, limits the
-        number of bones per vertex and renames the bones for the preset. The face
+        number of bones per vertex and renames the bones. The face
         rig, poses and animations of Human Generator won't work on this human
-        anymore. Combine with set_t_pose_as_rest for the presets that expect a
-        T-pose, which happens by itself when `settings` ask for it.
+        anymore. Call set_t_pose_as_rest first for a T-pose, which happens by
+        itself when `settings` ask for it.
 
         Args:
-            preset (str): Engine to name the bones for: "generic_a" and
-                "generic_t" keep the Human Generator names ("humgen" picks one
-                by the rest pose), "humanoid" uses the names of Unity, Godot and
-                VRM, "unreal" the Mannequin names, "mixamo" the Mixamo names
-                and "custom" the names of names_file. The rest pose of the
-                preset is not applied here, see set_t_pose_as_rest.
+            names (str): The bone names, as `SkeletonSettings.names`: "humgen"
+                keeps the Human Generator names, "humanoid" uses the names of
+                Unity, Godot and VRM, "unreal" the Mannequin names, "mixamo" the
+                Mixamo names and "custom" the names of names_file.
             keep_eyes (bool): Keep the eye bones, otherwise the eyes follow the head.
             keep_jaw (bool): Keep the jaw bones that move the teeth.
             keep_breasts (bool): Keep the breast bones.
@@ -594,11 +598,11 @@ class ProcessSettings:
                 limit. Also with `settings`, as `QualitySettings.bones_per_vertex`
                 holds it per LOD level.
             root_bone (Optional[bool]): Add a root bone at the origin, None uses the
-                choice of the preset. Mixamo has none, the others do.
+                choice of the names. Mixamo has none, the others do.
             root_bone_name (Optional[str]): Name of the root bone, None uses the
-                name of the preset.
+                name that goes with the names.
             names_file (Optional[str]): JSON file with "names" and "sides" like
-                game_rig_presets.json, for the "custom" preset.
+                game_rig_presets.json, for "custom" names.
             settings (Optional[SkeletonSettings]): The skeleton as a recipe holds
                 it, replaces the arguments above except max_influences. Its rest
                 pose is applied first when it is the T-pose.
@@ -607,20 +611,21 @@ class ProcessSettings:
         Raises:
             HumGenException: If the human has a game rig already, or is a Rigify
                 or legacy human.
-            ValueError: If the preset does not exist.
+            ValueError: If the names do not exist.
         """
         if settings is not None:
             if settings.rest_pose == "t_pose" and not self.has_t_pose_rest:
                 self.set_t_pose_as_rest(context)
-            preset = preset_for_names(settings.names, settings.rest_pose)
+            names = settings.names
             keep_eyes, keep_jaw = settings.keep_eyes, settings.keep_jaw
             keep_breasts, keep_metacarpals = settings.keep_breasts, settings.keep_metacarpals
             root_bone, root_bone_name = settings.root_bone, settings.root_bone_name
             names_file = settings.names_file if settings.names == CUSTOM_PRESET else None
+        rest_pose = "t_pose" if self.has_t_pose_rest else "a_pose"
         convert_to_game_rig(
             self._human,
             context,
-            preset=preset,
+            preset=preset_for_names(names, rest_pose),
             keep_eyes=keep_eyes,
             keep_jaw=keep_jaw,
             keep_breasts=keep_breasts,

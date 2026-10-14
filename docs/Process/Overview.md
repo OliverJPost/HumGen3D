@@ -29,8 +29,7 @@ That is all most people need. The rest of this guide explains what the sections 
 > [!tip]- Python API - Processing a human
 > The whole Process tab is one call. Load a recipe, change what you want, and run it:
 > ```python
-> from HumGen3D import Human
-> from HumGen3D.human.process.settings import ExportSettings
+> from HumGen3D import ExportSettings, Human
 >
 > human = Human.from_existing(bpy.context.object)
 > settings = ExportSettings.from_recipe("unity")
@@ -82,12 +81,21 @@ With the *In this file* output (the *Blender render copy* recipe) the result sta
 > - The Process tab is not available in the **trial version**.
 > - **Rigify** humans can't get a game skeleton. The skeleton section is skipped and their Rigify rig is exported as it is; the other sections run.
 > - **Humans made before version 4** can't be processed.
+> - Human Generator needs **Blender 4.0 or newer**; the process system is tested with Blender 5.1.
+>
+> More in [[Known Limitations]].
 > - The original human is not changed, so there is nothing to undo. If you still want the original gone after exporting, delete it yourself.
 
 ## Guides per program
 
-- [[Export to Unity]]
-- [[Export to Unreal Engine]]
-- [[Export to Godot]]
+- [[Export to Unity]], and the [[Unity Companion]] that sets the character up on import
+- [[Export to Unreal Engine]], and the [[Unreal Engine Companion]]
+- [[Export to Godot]], and the [[Godot Companion]]
 - [[Export to Mixamo]]
 - [[Process/Python API|Python API]]: process humans from your own scripts, also from the command line.
+
+## Reference
+
+- [[Recipe Format]]: every option of a recipe file.
+- [[Known Limitations]]: what the process system can't do yet.
+- [[Troubleshooting]]: the red lines in the tab, missing recipes, and Companions that do nothing.

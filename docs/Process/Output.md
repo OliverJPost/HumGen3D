@@ -71,6 +71,16 @@ The recipes set these for the engine, you rarely need to touch them. **Forward**
 
 The skeleton, the body, the eyes, the teeth, the clothing and footwear, and the hair cards when [[Haircards]] is on. Particle hair is never exported, no file format can carry it. The processed copy is placed at the world origin before it is written, so the character stands at `0, 0, 0` and without rotation in the engine regardless of where it is in your scene.
 
+## The .humgen3d.json file
+
+Next to every character file with a skeleton (FBX and glTF), Human Generator writes a small file with the same name: `Jake.fbx` gets `Jake.humgen3d.json`. It lists the files of the character, what every mesh and material is (skin, eyes, teeth, haircap, hair cards, clothing), which texture file is which map, and the settings the character was made with.
+
+The [[Unity Companion|Companions]] for Unity, Unreal Engine and Godot read it to set the character up, and only touch characters that have one. Keep it next to the character file when you copy the export into your project; the engine imports it as a plain data file. To export another character the same way, load it like a recipe: `ExportSettings.from_recipe("/path/to/Jake.humgen3d.json")`. Your own tools can read it too: the format is described in `human/process/manifest.py` inside the add-on, and the number in `humgen3d_export` only goes up when a change would make older readers misread it.
+
+## Licence of exported characters
+
+Exported characters fall under the [Human Generator Asset License](https://humgen3d.com/docs/faq/human-generator-asset-license). With the commercial licence you can ship them in commercial games and software, as long as players can't take the character out and reuse it. The personal licence covers personal, educational and portfolio work, not commercial games. With either licence, don't share or sell the exported files themselves (the FBX, glTF or texture files), also not modified. glTF files carry a line about this licence in their copyright field. The [License FAQ](https://humgen3d.com/docs/faq/license-faq) answers the common questions.
+
 ## Processed copies
 
 A processed copy is what *In this file* gives you, and what *Keep copy in this file* leaves behind. It stands two meters behind the original, in a collection called **Processing Results**, and it is frozen: a finished character rather than an editable human.

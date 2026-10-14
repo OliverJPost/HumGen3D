@@ -7,7 +7,7 @@
         "textures": "folder"
     },
     "lods": [
-        {"body": 0, "clothing": "high", "eyes": "high", "teeth": 1, "haircards": "high", "bones_per_vertex": 4}
+        {"body": "original", "clothing": "high", "eyes": "high", "teeth": "medium", "haircards": "high", "bones_per_vertex": 4}
     ],
     "skeleton": {
         "enabled": true,

@@ -49,7 +49,7 @@ def migrate_v1(data: Dict[str, Any]) -> Dict[str, Any]:  # noqa: CCR001
     quality: Dict[str, Any] = {}
     lod = data.get("lod")
     if lod:
-        quality["body"] = int(lod.get("body_lod", 0))
+        quality["body"] = int(lod.get("body_lod", 0))  # a number, QualitySettings names it
         if "decimate_ratio" in lod:
             ratio = lod["decimate_ratio"]
             quality["clothing"] = min(

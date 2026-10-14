@@ -8,6 +8,7 @@ Nothing here needs a human, these tests are fast.
 
 import json
 import os
+import typing
 from types import SimpleNamespace
 
 import bpy
@@ -34,6 +35,8 @@ from HumGen3D.human.process.settings import (
     TEXTURE_PLACEMENTS,
     TEXTURE_SETS,
     TEXTURE_WORKFLOWS,
+    BODY_LEVELS,
+    TEETH_LEVELS,
     AnimationClipSettings,
     ExportSettings,
     OutputSettings,
@@ -70,8 +73,8 @@ def exotic_settings() -> ExportSettings:
     out.fbx.smoothing = "EDGE"
     out.gltf.tangents, out.gltf.image_format, out.gltf.draco = True, "JPEG", True
     settings.lods = [
-        QualitySettings(body=1, clothing="medium", eyes="medium", teeth=2, haircards="low", bones_per_vertex=8),
-        QualitySettings(body=2, clothing="low", eyes="low", teeth=0, haircards="haircap_only", bones_per_vertex=2),
+        QualitySettings(body="lower_face", clothing="medium", eyes="medium", teeth="low", haircards="low", bones_per_vertex=8),
+        QualitySettings(body="quarter", clothing="low", eyes="low", teeth="original", haircards="haircap_only", bones_per_vertex=2),
     ]
     settings.meshes.enabled = False
     settings.meshes.remove_hidden_skin = settings.meshes.remove_clothing_subdiv = False
@@ -140,10 +143,10 @@ def test_exotic_differs_from_defaults_everywhere():
 def test_copy_is_deep():
     settings = exotic_settings()
     copy = settings.copy()
-    copy.lods[0].body = 0
+    copy.lods[0].body = "original"
     copy.textures.resolution["body"] = 1
     copy.scripts.items[0].args["n"] = 99
-    assert settings.lods[0].body == 1
+    assert settings.lods[0].body == "lower_face"
     assert settings.textures.resolution["body"] == 512
     assert settings.scripts.items[0].args["n"] == 2
 
@@ -157,11 +160,18 @@ def test_unknown_keys_are_ignored():
     assert settings == ExportSettings()
 
 
+def test_numbered_body_and_teeth_load_as_names():
+    # Recipes saved before the options had names
+    settings = ExportSettings.from_dict({"lods": [{"body": 1, "teeth": 2}, {"body": 0, "teeth": 0}]})
+    assert (settings.lods[0].body, settings.lods[0].teeth) == ("lower_face", "low")
+    assert (settings.lods[1].body, settings.lods[1].teeth) == ("original", "original")
+
+
 def test_missing_fields_get_defaults():
-    settings = ExportSettings.from_dict({"output": {"format": "glb"}, "lods": [{"body": 2}]})
+    settings = ExportSettings.from_dict({"output": {"format": "glb"}, "lods": [{"body": "quarter"}]})
     assert settings.output.format == "glb"
     assert settings.output.naming == "plain"
-    assert settings.lods[0].body == 2
+    assert settings.lods[0].body == "quarter"
     assert settings.lods[0].clothing == QualitySettings().clothing
     assert settings.textures == TextureBakeSettings()
 
@@ -193,7 +203,7 @@ def test_scripts_active():
 def test_differs_from_ignores_recipe_name():
     a, b = ExportSettings(recipe="unity"), ExportSettings(recipe="other")
     assert not a.differs_from(b)
-    b.lods[0].body = 2
+    b.lods[0].body = "quarter"
     assert a.differs_from(b)
 
 
@@ -260,10 +270,10 @@ def test_shipped_recipe_is_valid(recipe):
     assert not output.folder, "A shipped recipe must not point at a folder"
     assert settings.lods
     for level in settings.lods:
-        assert level.body in (0, 1, 2)
+        assert level.body in typing.get_args(typing.get_type_hints(QualitySettings)["body"])
         assert level.clothing in CLOTHING_DECIMATE_RATIOS
         assert level.eyes in ("original", "high", "medium", "low")
-        assert level.teeth in (0, 1, 2)
+        assert level.teeth in typing.get_args(typing.get_type_hints(QualitySettings)["teeth"])
         assert level.haircards in HAIRCARD_QUALITIES
         assert str(level.bones_per_vertex) in _ids(INFLUENCE_LIMITS)
     skeleton = settings.skeleton
@@ -387,7 +397,7 @@ def test_migrate_v1():
     assert settings.output.format == "gltf"
     assert settings.output.folder == "/tmp/old"
     level = settings.lods[0]
-    assert (level.body, level.clothing, level.eyes, level.teeth) == (2, "medium", "low", 1)
+    assert (level.body, level.clothing, level.eyes, level.teeth) == ("quarter", "medium", "low", "medium")
     assert level.haircards == "medium"
     assert level.bones_per_vertex == 2
     assert settings.haircards.enabled
@@ -412,7 +422,7 @@ def test_migrate_v1_minimal():
     assert settings.output.format == "in_file"
     assert settings.textures.enabled
     level = settings.lods[0]
-    assert (level.body, level.clothing, level.eyes, level.teeth) == (0, "original", "original", 0)
+    assert (level.body, level.clothing, level.eyes, level.teeth) == ("original",) * 4
     assert not settings.haircards.enabled
     assert not settings.skeleton.enabled
 
@@ -434,19 +444,20 @@ def test_quality_tier_roundtrip(tier):
     assert quality.tier_of(settings) == tier
     assert quality.tier_label(tier)
     # A copy, changing it doesn't change the tier
-    settings.body = 9
-    assert quality.quality_of_tier(tier).body != 9
+    settings.body = "potato"
+    assert quality.quality_of_tier(tier).body != "potato"
 
 
 def test_quality_tiers_get_lower():
     tiers = [quality.quality_of_tier(ident) for ident, *_ in quality.QUALITY_TIERS[1:]]
     for higher, lower in zip(tiers, tiers[1:]):
-        assert lower.body >= higher.body
+        assert BODY_LEVELS[lower.body] >= BODY_LEVELS[higher.body]
+        assert TEETH_LEVELS[lower.teeth] >= TEETH_LEVELS[higher.teeth]
         assert CLOTHING_DECIMATE_RATIOS[lower.clothing] <= CLOTHING_DECIMATE_RATIOS[higher.clothing]
 
 
 def test_custom_and_unknown_tiers():
-    assert quality.tier_of(QualitySettings(body=2, clothing="original")) == "custom"
+    assert quality.tier_of(QualitySettings(body="quarter", clothing="original")) == "custom"
     with pytest.raises(ValueError):
         quality.quality_of_tier("potato")
     assert quality.texture_tier_of({"body": 1}) == "custom"
@@ -559,7 +570,7 @@ def test_effective_settings_meshes_off():
     settings.lods.append(QualitySettings.from_tier("low"))
     effective = pipeline._effective_settings(settings)
     for level in effective.lods:
-        assert (level.body, level.clothing, level.eyes, level.teeth) == (0, "original", "original", 0)
+        assert (level.body, level.clothing, level.eyes, level.teeth) == ("original",) * 4
     assert effective.lods[1].haircards == "low", "The levels still differ in hair cards"
     assert not effective.meshes.remove_hidden_skin
 

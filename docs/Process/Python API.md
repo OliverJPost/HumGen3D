@@ -14,8 +14,7 @@ Everything the Process tab does is available from Python, through `human.process
 
 ```python
 import bpy
-from HumGen3D import Human
-from HumGen3D.human.process.settings import ExportSettings
+from HumGen3D import ExportSettings, Human
 
 human = Human.from_existing(bpy.context.object)
 
@@ -36,7 +35,7 @@ Recipes of your own are loaded by their path inside the `process_templates` fold
 The settings mirror the sections of the tab. Every field has the same name and values as the [[Recipes|recipe file]]:
 
 ```python
-from HumGen3D.human.process.settings import ExportSettings, QualitySettings
+from HumGen3D import ExportSettings, QualitySettings
 
 settings = ExportSettings.from_recipe("unreal")
 settings.output.format = "glb"                 # see Output
@@ -106,9 +105,8 @@ blender -b characters.blend --python export_characters.py
 ```python
 # export_characters.py
 import bpy
-from HumGen3D import Human
+from HumGen3D import ExportSettings, Human
 from HumGen3D.common import find_multiple_in_list
-from HumGen3D.human.process.settings import ExportSettings
 
 settings = ExportSettings.from_recipe("godot")
 settings.output.folder = "/builds/characters"
@@ -130,7 +128,7 @@ for rig in find_multiple_in_list(bpy.context.scene.objects):
 `run` is a sequence of steps, each a method of [[ProcessSettings]] that takes the matching section of the settings, or plain arguments. You can call them yourself, for example to make a game-ready copy without exporting it, or to insert something between two steps. The steps change the human they are called on and can't be undone, so call them on a duplicate:
 
 ```python
-from HumGen3D.human.process.settings import QualitySettings, SkeletonSettings
+from HumGen3D import QualitySettings, SkeletonSettings
 
 copy = human.duplicate()
 copy.process.set_shape_keys(body="keep", face="bake", age="bake")

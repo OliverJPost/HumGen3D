@@ -117,11 +117,11 @@ class QualityLevelProps(bpy.types.PropertyGroup):
     body: EnumProperty(
         name="Body",
         items=[
-            ("0", "Original", "Keep the body mesh as it is, about 50,500 triangles", 0),
-            ("1", "Lower face", "Reduce the polycount of the face only, about 36,000 triangles", 1),
-            ("2", "1/4th", "Reduce the polycount of the whole body to a quarter, about 9,600 triangles", 2),
+            ("original", "Original", "Keep the body mesh as it is, about 50,500 triangles", 0),
+            ("lower_face", "Lower face", "Reduce the polycount of the face only, about 36,000 triangles", 1),
+            ("quarter", "1/4th", "Reduce the polycount of the whole body to a quarter, about 9,600 triangles", 2),
         ],
-        default="0",
+        default="original",
     )
     clothing: EnumProperty(
         name="Clothing",
@@ -146,11 +146,11 @@ class QualityLevelProps(bpy.types.PropertyGroup):
     teeth: EnumProperty(
         name="Teeth",
         items=[
-            ("0", "Original", "About 12,400 triangles", 0),
-            ("1", "Medium", "About 4,600 triangles", 1),
-            ("2", "Low", "About 3,300 triangles", 2),
+            ("original", "Original", "About 12,400 triangles", 0),
+            ("medium", "Medium", "About 4,600 triangles", 1),
+            ("low", "Low", "About 3,300 triangles", 2),
         ],
-        default="1",
+        default="medium",
     )
     haircards: EnumProperty(name="Hair cards", items=get_haircard_quality_items)
     bones_per_vertex: EnumProperty(
@@ -163,20 +163,20 @@ class QualityLevelProps(bpy.types.PropertyGroup):
 
 def quality_from_props(props: QualityLevelProps) -> QualitySettings:
     return QualitySettings(
-        body=int(props.body),
+        body=props.body,
         clothing=props.clothing,
         eyes=props.eyes,
-        teeth=int(props.teeth),
+        teeth=props.teeth,
         haircards=props.haircards,
         bones_per_vertex=int(props.bones_per_vertex),
     )
 
 
 def quality_to_props(props: QualityLevelProps, quality: QualitySettings) -> None:
-    props.body = str(quality.body)
+    props.body = quality.body
     props.clothing = quality.clothing
     props.eyes = quality.eyes
-    props.teeth = str(quality.teeth)
+    props.teeth = quality.teeth
     props.haircards = quality.haircards
     props.bones_per_vertex = str(quality.bones_per_vertex)
 
@@ -538,11 +538,9 @@ def _load_recipe(self, context) -> None:
     if _loading or not self.recipe:
         return
     try:
-        settings = ExportSettings.from_recipe(self.recipe)
-    except (OSError, ValueError) as e:
+        settings_to_props(self, ExportSettings.from_recipe(self.recipe))
+    except Exception as e:  # noqa: B902, a broken recipe must not break the panel
         hg_log(f"Could not load recipe {self.recipe}: {e}", level="WARNING")
-        return
-    settings_to_props(self, settings)
 
 
 def _set_lod_count(self, context) -> None:

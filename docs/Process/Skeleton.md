@@ -106,7 +106,7 @@ The keys of `names` are the Human Generator bone names without their `.L`/`.R` s
 > ```
 > To convert a human in place (on a `human.duplicate()`, it can't be undone):
 > ```python
-> human.process.convert_to_game_rig(preset="humanoid")  # keeps the rest pose; call set_t_pose_as_rest first for a T-pose
+> human.process.convert_to_game_rig(names="humanoid")  # keeps the rest pose; call set_t_pose_as_rest first for a T-pose
 > human.process.convert_to_game_rig(settings=settings.skeleton, max_influences=4)
 > ```
 > See [[SkeletonSettings]], [[ProcessSettings#convert_to_game_rig]] and [[ProcessSettings#set_t_pose_as_rest]].

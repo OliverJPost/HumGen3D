@@ -175,12 +175,12 @@ def test_choosing_a_recipe_loads_it(props):
 def test_modified_and_reset(props):
     props.recipe = "unity"
     assert not is_modified(props)
-    props.lods[0].body = "2"
+    props.lods[0].body = "quarter"
     assert is_modified(props)
     labels = {ident: label for ident, label, *_ in process_props.get_recipe_items(props, bpy.context) if ident}
     assert labels["unity"].endswith("(modified)")
     assert bpy.ops.hg3d.reset_recipe() == {"FINISHED"}
-    assert props.lods[0].body == "0"
+    assert props.lods[0].body == "original"
     assert not is_modified(props)
 
 
@@ -194,7 +194,7 @@ def test_lod_count_adds_lower_levels(props):
     assert len(props.lods) == 2
     assert len(props_to_settings(props).lods) == 2
     # A level added after a custom level is lower than it
-    props.lods[1].body = "0"
+    props.lods[1].body = "original"
     props.lod_count = 3
     assert tier_of(process_props.quality_from_props(props.lods[2])) == NEXT_TIERS["custom"]
 
@@ -228,9 +228,9 @@ def test_initialize_fresh_scene():
         assert props.loaded_recipe == SHIPPED_RECIPES[0]
         assert len(props.lods) == 1
         # Twice changes nothing
-        props.lods[0].body = "2"
+        props.lods[0].body = "quarter"
         ensure_initialized(props)
-        assert props.lods[0].body == "2"
+        assert props.lods[0].body == "quarter"
     finally:
         bpy.data.scenes.remove(scene)
 
@@ -273,7 +273,7 @@ def test_relative_folder_survives(props):
 
 def test_save_recipe_operator(props, content_folder):
     props.recipe = "godot"
-    props.lods[0].body = "1"
+    props.lods[0].body = "lower_face"
     result = bpy.ops.hg3d.save_process_template(name="Hero", new_or_existing="new", new_group_name="Team")
     assert result == {"FINISHED"}
     path = content_folder / "process_templates" / "Team" / "Hero.json"
@@ -281,7 +281,7 @@ def test_save_recipe_operator(props, content_folder):
     assert props.loaded_recipe == os.path.join("Team", "Hero.json")
     assert not is_modified(props)
     loaded = ExportSettings.from_recipe(props.loaded_recipe)
-    assert loaded.lods[0].body == 1
+    assert loaded.lods[0].body == "lower_face"
     assert loaded.output.format == "glb"
     # The saved recipe is in the dropdown, under its group
     items = process_props.get_recipe_items(props, None)
@@ -485,7 +485,7 @@ def test_process_operator_failure_cleans_up(props, source, context, monkeypatch)
 def test_result_operators(props, source, context):
     """The buttons of the panel of a processed human."""
     settings = cheap_settings("blender")
-    settings.lods[0].teeth = 2
+    settings.lods[0].teeth = "low"
     result = source.process.run(settings, context).humans[0]
     try:
         settings_to_props(props, ExportSettings.from_recipe("unity"))
@@ -494,7 +494,7 @@ def test_result_operators(props, source, context):
         assert bpy.ops.hg3d.load_result_settings() == {"FINISHED"}
         assert context.scene.HG3D.ui.active_tab == "PROCESS"
         assert props.output.format == "in_file"
-        assert props.lods[0].teeth == "2"
+        assert props.lods[0].teeth == "low"
 
         assert bpy.ops.hg3d.select_original_human() == {"FINISHED"}
         assert context.view_layer.objects.active == source.objects.rig

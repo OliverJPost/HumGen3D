@@ -73,7 +73,7 @@ A recipe is readable JSON with the same structure as the Python [[ExportSettings
     "version": 2,
     "output": {"format": "fbx", "naming": "plain", "textures": "folder"},
     "lods": [
-        {"body": 2, "clothing": "low", "eyes": "low", "teeth": 2, "haircards": "low", "bones_per_vertex": 4}
+        {"body": "quarter", "clothing": "low", "eyes": "low", "teeth": "low", "haircards": "low", "bones_per_vertex": 4}
     ],
     "skeleton": {"enabled": true, "names": "humanoid", "rest_pose": "t_pose"},
     "textures": {"workflow": "metallic_smoothness", "normal_map": "opengl"}
@@ -82,13 +82,13 @@ A recipe is readable JSON with the same structure as the Python [[ExportSettings
 
 <!-- hidden while the Animations section is experimental; the example also had: "animations": {"enabled": false} -->
 
-A recipe of your own is listed under its file name.
+A recipe of your own is listed under its file name. Every option and its values are in the [[Recipe Format]] reference.
 
-Recipes saved with the process system of earlier versions are loaded; options that no longer exist are ignored.
+Recipes saved with the process tab of version 4.0 are converted when they are loaded; options that no longer exist are ignored. A file that can't be read is left out of the list, see [[Troubleshooting#A recipe is missing from the list]].
 
 > [!tip]- Python API - Recipes
 > ```python
-> from HumGen3D.human.process.settings import ExportSettings
+> from HumGen3D import ExportSettings
 >
 > settings = ExportSettings.from_recipe("unity")      # a built-in one
 > settings = ExportSettings.from_recipe("MyGame/Mobile characters.json")  # one of yours

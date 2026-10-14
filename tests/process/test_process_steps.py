@@ -292,10 +292,10 @@ def test_lod_levels_share_textures(source, tmp_path):
 
 def test_game_rig_presets(copy):
     with pytest.raises(ValueError):
-        copy.process.convert_to_game_rig(preset="no_such_engine", context=bpy.context)
+        copy.process.convert_to_game_rig(names="no_such_engine", context=bpy.context)
     assert not copy.process.has_game_rig
-    copy.process.convert_to_game_rig(preset="humgen", context=bpy.context)
-    assert copy.process.game_rig_preset == "generic_a"
+    copy.process.convert_to_game_rig(names="humgen", context=bpy.context)
+    assert copy.process.game_rig_names == "humgen"
     assert "spine" in copy.objects.rig.data.bones
     assert not copy.process.has_t_pose_rest
 

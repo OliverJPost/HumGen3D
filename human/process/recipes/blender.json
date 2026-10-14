@@ -7,7 +7,7 @@
         "textures": "folder"
     },
     "lods": [
-        {"body": 0, "clothing": "original", "eyes": "original", "teeth": 0, "haircards": "ultra", "bones_per_vertex": 0}
+        {"body": "original", "clothing": "original", "eyes": "original", "teeth": "original", "haircards": "ultra", "bones_per_vertex": 0}
     ],
     "meshes": {
         "remove_hidden_skin": false,

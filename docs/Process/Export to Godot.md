@@ -40,7 +40,7 @@ Tested with Godot 4.7 and Blender 5.1: all 56 bones of the humanoid profile matc
 5. **Blend shapes**: the face blend shapes are on the body's *MeshInstance3D* and can be animated or driven from a script.
 
 > [!tip] Human Generator 3D Companion for Godot
-> A free, open source editor plugin that does the steps above on import: a shipped hair shader on the cards that lights them along their strands from the flow map (alpha scissor at 0.15 with alpha to coverage), the subsurface scattering of the skin, a humanoid `BoneMap` on the skeleton and an `AnimationPlayer`. What it sets up can be changed per file in the Import dock (the `humgen3d/` options). [github.com/OliverJPost/humgen3d-companion-godot](https://github.com/OliverJPost/humgen3d-companion-godot)
+> A free, open source editor plugin that does the steps above on import: a shipped hair shader on the cards that lights them along their strands from the flow map (alpha scissor at 0.15 with alpha to coverage), the subsurface scattering of the skin, a humanoid `BoneMap` on the skeleton and an `AnimationPlayer`. What it sets up can be changed per file in the Import dock (the `humgen3d/` options). [[Godot Companion|Download and install it]]. It sets up characters that have their `.humgen3d.json` file next to them, see [[Output#The .humgen3d.json file]].
 
 > [!feedback] Did Godot import it like this?
 > These steps are what we see in Godot 4. If your import differs, or a step is missing, we want to know which one, and your Godot version. [Tell us](https://humgen3d.com/feedback/process?page=godot&step=import).

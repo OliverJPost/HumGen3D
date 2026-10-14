@@ -71,7 +71,7 @@ With the checkbox off, every mesh stays as it is, including the original eyes, a
 
 > [!tip]- Python API - Mesh quality
 > ```python
-> from HumGen3D.human.process.settings import QualitySettings
+> from HumGen3D import QualitySettings
 >
 > settings.lods = [QualitySettings.from_tier("high"), QualitySettings.from_tier("low")]
 > settings.lods[1].clothing = "medium"

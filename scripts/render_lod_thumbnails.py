@@ -15,6 +15,10 @@ from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.human.human import Human
 from HumGen3D.human.keys.keys import apply_shapekeys
 from HumGen3D.human.process.lod import CLOTHING_DECIMATE_RATIOS
+from HumGen3D.human.process.settings import BODY_LEVELS, TEETH_LEVELS
+
+BODY_NAMES = {level: name for name, level in BODY_LEVELS.items()}
+TEETH_NAMES = {level: name for name, level in TEETH_LEVELS.items()}
 from mathutils import Vector
 
 THUMB_SIZE = 256
@@ -141,7 +145,7 @@ def _render_body(human, context, scene, cam, mats):
     for lod in (0, 1, 2):
         if lod > 0:
             human.process.lod.set_body_lod(lod, context=context)
-        path = os.path.join(OUT_DIR, f"lod_body_{lod}.png")
+        path = os.path.join(OUT_DIR, f"lod_body_{BODY_NAMES[lod]}.png")
         _render_wireframe(scene, [body], path, *mats, wire_thickness=0.001)
         print(f"TRIS body {lod}: {_tris_count([body])}")
 
@@ -214,7 +218,7 @@ def _render_teeth(human, context, scene, cam, mats):
                 obj.data = mesh.copy()
                 obj.pop("hg_lod", None)
             human.process.lod.set_teeth_lod(lod, context=context)
-        path = os.path.join(OUT_DIR, f"lod_teeth_{lod}.png")
+        path = os.path.join(OUT_DIR, f"lod_teeth_{TEETH_NAMES[lod]}.png")
         _render_wireframe(scene, teeth, path, *mats, wire_thickness=0.0003)
         print(f"TRIS teeth {lod}: {_tris_count(teeth)}")
 

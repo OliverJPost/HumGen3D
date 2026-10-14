@@ -24,6 +24,7 @@ import pytest
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.object_finding import find_original_rig
 from HumGen3D.human.human import Human
+from HumGen3D.human.process import manifest
 from HumGen3D.human.process.operators import process_with_settings
 from HumGen3D.human.process.pipeline import (
     LEVEL_KEY,
@@ -43,7 +44,10 @@ SHIPPED_SCRIPT = os.path.join(
     "write_export_info.py",
 )
 # Parts every processed character has, besides its clothing
-PARTS = ("Body", "Eyes", "TeethUpper", "TeethLower", "Eyebrows", "Eyelashes", "Haircap", "HairCards", "FaceHair", "FaceHairCards")
+# The meshes of a file. The haircaps of the scalp hair, eyebrows and beard are
+# painted into the skin by default (textures.haircap_in_skin), the eyelashes
+# keep their cap mesh
+PARTS = ("Body", "Eyes", "TeethUpper", "TeethLower", "Eyelashes", "HairCards", "FaceHairCards")
 
 
 @pytest.fixture(scope="module")
@@ -210,7 +214,19 @@ def test_result(request, run_name):
         for path in result.files:
             assert os.path.isfile(path)
             assert os.path.dirname(path) == str(run.folder)
-            assert os.path.getsize(path) > 10_000
+            if not path.endswith(manifest.EXTENSION):
+                assert os.path.getsize(path) > 10_000
+        manifests = [path for path in result.files if path.endswith(manifest.EXTENSION)]
+        if run.settings.output.has_rig:
+            # One manifest, written last, next to the character file
+            assert manifests == [manifest.manifest_path(result.files[0])] == result.files[-1:]
+            data = manifest.read(manifests[0])
+            assert data[manifest.FORMAT_KEY] == manifest.FORMAT
+            assert data["files"]["character"] == os.path.basename(result.files[0])
+            assert sorted(data["files"]["animations"]) == sorted(os.path.basename(p) for p in result.files[1:-1])
+            assert "skin" in {material["type"] for material in data["materials"].values()}
+        else:
+            assert not manifests
 
 
 @pytest.mark.parametrize("run_name", [name for name in FILE_RUNS if name != "obj_run"])
@@ -299,10 +315,10 @@ def test_unity_files(unity_run, source):
     run, name = unity_run, unity_run.name
     folder = str(run.folder)
     clips = [action.name[len(source.name) + 1 :] for action in source.animation.actions]
-    expected = {f"{name}.fbx", "info.json"} | {f"{name}@{clip}.fbx" for clip in clips}
+    expected = {f"{name}.fbx", f"{name}.humgen3d.json", "info.json"} | {f"{name}@{clip}.fbx" for clip in clips}
     top = {path for path in files_in(folder) if os.sep not in path}
     assert top == expected
-    assert sorted(run.result.files) == sorted(os.path.join(folder, f) for f in expected if f.endswith(".fbx"))
+    assert sorted(run.result.files) == sorted(os.path.join(folder, f) for f in expected if f != "info.json")
     assert fbx_unit_scale(os.path.join(folder, f"{name}.fbx")) == pytest.approx(1.0)
 
 
@@ -325,13 +341,17 @@ def test_unity_character(unity_run):
         assert not any(key.startswith(("height_", "LIVE")) for key in keys)
 
         materials = {slot.material.name for obj in data.meshes for slot in obj.material_slots}
-        for material in ("Skin", "Eyes", "Teeth", "Haircap", "HairCards", "FaceHair", "FaceHairCards"):
+        for material in ("Skin", "Eyes", "Teeth", "Haircap", "HairCards", "FaceHairCards"):
             assert f"{name}_{material}" in materials
-        # The cap and the cards of a hair type are meshes of their own, with one material each
-        for part in ("Haircap", "HairCards", "FaceHair", "FaceHairCards"):
+        # The cards of a hair type are meshes of their own with one material each;
+        # the caps are painted into the skin, only the eyelashes keep the shared cap
+        for part in ("HairCards", "FaceHairCards"):
             hair = bpy.data.objects[f"{name}_{part}"]
             assert [slot.material.name for slot in hair.material_slots] == [f"{name}_{part}"], part
             assert hair.data.shape_keys and len(hair.data.shape_keys.key_blocks) > 1, f"{part} follows the expressions"
+        lashes = bpy.data.objects[f"{name}_Eyelashes"]
+        assert [slot.material.name for slot in lashes.material_slots] == [f"{name}_Haircap"]
+        assert f"{name}_FaceHair" not in materials, "The beard cap is in the skin"
         eyes = bpy.data.objects[f"{name}_Eyes"]
         assert len(eyes.material_slots) == 1, "Game eyes have one opaque material"
         upper, lower = (bpy.data.objects[f"{name}_Teeth{part}"] for part in ("Upper", "Lower"))
@@ -342,7 +362,7 @@ def test_unity_textures(unity_run):
     run, name = unity_run, unity_run.name
     textures = os.path.join(str(run.folder), TEXTURES_FOLDER)
     files = files_in(textures)
-    for file in (f"{name}_Skin_BaseColor.png", f"{name}_Skin_Normal.png", f"{name}_Haircap_BaseColor.png", f"{name}_FaceHair_BaseColor.png"):
+    for file in (f"{name}_Skin_BaseColor.png", f"{name}_Skin_Normal.png", f"{name}_Haircap_BaseColor.png"):
         assert file in files
     assert all(file.startswith(name + "_") and file.endswith(".png") for file in files)
     assert not [file for file in files if file.endswith(("_Roughness.png", "_Metallic.png"))], "Packed"
@@ -403,7 +423,7 @@ def test_unity_warnings(unity_run):
 def test_unreal_files(unreal_run):
     run, name = unreal_run, unreal_run.name
     folder = str(run.folder)
-    assert [os.path.basename(path) for path in run.result.files] == [f"{name}.fbx", f"{name}_Animations.fbx"]
+    assert [os.path.basename(path) for path in run.result.files] == [f"{name}.fbx", f"{name}_Animations.fbx", f"{name}.humgen3d.json"]
     assert fbx_unit_scale(run.result.files[0]) == pytest.approx(100.0)
     assert fbx_unit_scale(run.result.files[1]) == pytest.approx(100.0)
     files = files_in(os.path.join(folder, TEXTURES_FOLDER))
@@ -467,8 +487,11 @@ def test_unreal_clips(unreal_run, source):
 
 def test_godot_file(godot_run, source):
     run, name = godot_run, godot_run.name
-    assert [os.path.basename(path) for path in run.result.files] == [f"{name}.glb"]
-    assert files_in(str(run.folder)) == [f"{name}.glb"], "The textures are inside"
+    assert [os.path.basename(path) for path in run.result.files] == [f"{name}.glb", f"{name}.humgen3d.json"]
+    # The flow maps of the cards are read by no material input, so no exporter
+    # embeds them; they go next to the file, see textures.write_sidecar_images
+    flow = {f"{name}_HairCards_Flow.png", f"{name}_FaceHairCards_Flow.png"}
+    assert set(files_in(str(run.folder))) == {f"{name}.glb", f"{name}.humgen3d.json"} | flow, "The textures are inside"
     gltf = gltf_document(run.result.files[0])
     assert "Human Generator" in gltf.asset.copyright
     assert gltf.images and all(image.bufferView is not None and not image.uri for image in gltf.images)
@@ -610,7 +633,8 @@ def test_abc(abc_run):
 def test_mixamo_embedded(mixamo_embedded_run):
     run, name = mixamo_embedded_run, mixamo_embedded_run.name
     folder = str(run.folder)
-    assert files_in(folder) == [f"{name}.fbx"], "No texture files next to it"
+    flow = {f"{name}_HairCards_Flow.png", f"{name}_FaceHairCards_Flow.png"}
+    assert set(files_in(folder)) == {f"{name}.fbx", f"{name}.humgen3d.json"} | flow, "Only the flow maps next to it"
     assert not run.scratch_left, "The scratch folder of the textures is removed"
     with open(run.result.files[0], "rb") as f:
         assert f.read().count(b"\x89PNG") >= 8, "The images are in the file"
