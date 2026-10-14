@@ -54,6 +54,7 @@ PASS_LABELS = {
     "roughness": "Rough",
     "metallic": "Metal",
     "alpha": "Alpha",
+    "flow": "Flow",
 }
 SKELETON_LABELS = {
     "humanoid": "Humanoid",
@@ -464,6 +465,11 @@ class HG_PT_HAIRCARDS(ProcessPanel, bpy.types.Panel):
                 else None
             )
             self._draw_level_rows(col, levels, "haircards", tris)
+        row = self.layout.row(align=True)
+        # The caps go into the skin as the skin is baked
+        row.enabled = props.textures.enabled or props.output.format != "in_file"
+        row.label(text="Haircap")
+        row.prop(props.textures, "haircap", expand=True)
         draw_paragraph(
             self.layout,
             "The particle hair is not carried by any file format. The cards"

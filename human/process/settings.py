@@ -299,6 +299,9 @@ class TextureBakeSettings(Settings):
     workflow: str = "separate"  # see TEXTURE_WORKFLOWS
     normal_map: str = "opengl"  # opengl, directx
     pack_hair_alpha: bool = True
+    # Paint the haircaps of the scalp hair, face hair and eyebrows into the skin
+    # textures and leave their meshes out, see haircap_skin.py
+    haircap_in_skin: bool = True
     samples: int = 4
 
     def set_resolution_tier(self, tier: str) -> None:

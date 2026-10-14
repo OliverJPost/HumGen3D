@@ -18,7 +18,7 @@ The skin, eyes and hair of a Human Generator human are procedural materials: nod
 
 ![[process_textures.webp|520]]
 
-You get one set of textures per part: the **body** (skin), each piece of **clothing**, the **eyes**, the **teeth** and the **hair** (the cards, and one shared haircap for the hair, eyebrows and eyelashes). The maps are written to the texture folder of the [[Output]] and named after the material and the pass: the skin of the body gives `Jake_Skin_BaseColor.png`, the hair cards `Jake_HairCards_BaseColor.png` and the haircap `Jake_Haircap_BaseColor.png`.
+You get one set of textures per part: the **body** (skin), each piece of **clothing**, the **eyes**, the **teeth** and the **hair** (the cards, and one shared haircap for the hair, eyebrows and eyelashes; with *Haircap* [[Haircards#Haircap on skin or as meshes|On skin]] the haircaps of the hair, beard and eyebrows are baked into the skin instead, and the shared haircap textures are only those of the eyelashes). The maps are written to the texture folder of the [[Output]] and named after the material and the pass: the skin of the body gives `Jake_Skin_BaseColor.png`, the hair cards `Jake_HairCards_BaseColor.png` and the haircap `Jake_Haircap_BaseColor.png`.
 
 Inputs that don't get a map of their own, like the specular of the skin and the hair cards, are kept as one value on the baked material, so the baked material carries the same values; how it looks depends on the shader of the other program.
 

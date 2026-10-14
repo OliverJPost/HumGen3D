@@ -363,6 +363,14 @@ class TextureProps(bpy.types.PropertyGroup):
         description="Store the transparency of the hair cards in the alpha channel of their color texture, as engines expect",
         default=True,
     )
+    haircap: EnumProperty(
+        name="Haircap",
+        items=[
+            ("skin", "On skin", "Paint the haircaps of the hair, beard and eyebrows into the skin textures", 0),
+            ("meshes", "As meshes", "Export the haircaps as see-through meshes over the skin", 1),
+        ],
+        default="skin",
+    )
     samples: EnumProperty(
         name="Samples", items=[("4", "4", "", 0), ("16", "16", "", 1), ("64", "64", "", 2)], default="4"
     )
@@ -718,6 +726,7 @@ def props_to_settings(props: ProcessProps) -> ExportSettings:  # noqa: CCR001
         workflow=tex_props.workflow,
         normal_map=tex_props.normal_map,
         pack_hair_alpha=tex_props.pack_hair_alpha,
+        haircap_in_skin=tex_props.haircap == "skin",
         samples=int(tex_props.samples),
     )
     anim_props = props.animations
@@ -816,6 +825,7 @@ def _settings_to_props(props: ProcessProps, settings: ExportSettings) -> None:  
     tex_props.workflow = textures.workflow
     tex_props.normal_map = textures.normal_map
     tex_props.pack_hair_alpha = textures.pack_hair_alpha
+    tex_props.haircap = "skin" if textures.haircap_in_skin else "meshes"
     tex_props.samples = str(textures.samples) if str(textures.samples) in ("4", "16", "64") else "4"
 
     animations, anim_props = settings.animations, props.animations

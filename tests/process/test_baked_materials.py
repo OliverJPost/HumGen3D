@@ -132,6 +132,7 @@ def test_shared_cap_texture_holds_eyebrows_and_eyelashes(male_human):
         settings = TextureBakeSettings()
         settings.resolution = {key: 64 for key in settings.resolution}
         settings.resolution["hair"] = 256
+        settings.haircap_in_skin = False
         copy.process.bake_textures(settings, folder=None, context=bpy.context)
         caps = {
             obj.name: obj for obj in copy.objects.haircards if "Brows" in obj.name or "Eyelashes" in obj.name
@@ -146,5 +147,40 @@ def test_shared_cap_texture_holds_eyebrows_and_eyelashes(male_human):
             # The alpha is the strand texture averaged down from 4096 to the
             # 256 of this test, so even the densest eyelash texel is well below one
             assert alpha.max() > 0.2, f"{name}: no alpha in its part of {image.name}, max {alpha.max():.3f}"
+    finally:
+        copy.delete()
+
+
+def test_haircap_in_skin(male_human):
+    """The caps of the hair and eyebrows go into the skin texture and their
+    meshes are left out; the eyelashes and the cards stay."""
+    from HumGen3D.human.process.haircap_skin import UV_LAYER_PREFIX
+    from HumGen3D.human.process.settings import TextureBakeSettings
+
+    copy = male_human.duplicate(bpy.context)
+    try:
+        copy.process.convert_to_haircards("low", context=bpy.context)
+        body = copy.objects.body
+        uv_layers = [layer.name for layer in body.data.uv_layers]
+        settings = TextureBakeSettings()
+        settings.resolution = {key: 64 for key in settings.resolution}
+        settings.resolution["hair"] = 256
+        copy.process.bake_textures(settings, folder=None, context=bpy.context)
+
+        assert [layer.name for layer in body.data.uv_layers] == uv_layers
+        assert not any(layer.startswith(UV_LAYER_PREFIX) for layer in uv_layers)
+        names = [obj.name for obj in copy.objects.haircards]
+        assert not any("Brows" in name for name in names), names
+        assert any("Eyelashes" in name for name in names), names
+        for obj in copy.objects.haircards:
+            if "hg_main_hair" in obj:
+                # Only the cards are left, as an object of cards
+                assert len(obj.data.materials) == 1
+                assert "hg_haircard_cards" in obj
+        skin = body.material_slots[0].material
+        assert not any(
+            n.type == "TEX_IMAGE" and n.image and n.image.name.startswith("hg_capskin")
+            for n in skin.node_tree.nodes
+        )
     finally:
         copy.delete()

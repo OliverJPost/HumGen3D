@@ -41,6 +41,7 @@ from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.progress import Steps
 from HumGen3D.human.hair.compatibility import SPECULAR_INPUT_NAME
 
+from . import haircap_skin
 from .game_eyes import ROUGHNESS as GAME_EYE_ROUGHNESS
 from .naming import Namer, material_part, part_names
 from .settings import TextureBakeSettings
@@ -254,43 +255,75 @@ def bake_steps(  # noqa: CCR001
         os.makedirs(folder, exist_ok=True)
 
     objects = list(dict.fromkeys(obj for texture_set in sets for obj in texture_set.objects))
-    passes = planned_passes(sets)
+    # The caps that go into the skin are baked first, then mixed over the
+    # skin material before its bake, see haircap_skin.py
+    cap_sets = [s for s in sets if settings.haircap_in_skin and haircap_skin.has_skin_caps(s)]
+    body_set = next((s for s in sets if s.set_name == "body"), None)
+    if cap_sets and body_set:
+        phases = [cap_sets, [s for s in sets if s not in cap_sets]]
+    else:
+        phases = [sets]
+    total = sum(len(planned_passes(phase)) for phase in phases)
+    done = 0
+    cap_images: List[bpy.types.Image] = []
     with _render_settings(context, settings.samples), _bake_visibility(context, objects):
         was_solidified = _hide_solidify(objects)
         try:
-            for index, pass_id in enumerate(passes):
-                targets: Dict[bpy.types.Material, bpy.types.Image] = {}
-                for texture_set in sets:
-                    if pass_id not in texture_set.passes:
-                        continue
-                    baked = _prepare_pass(texture_set, pass_id)
-                    texture_set.baked[pass_id] = baked
-                    if isinstance(baked, bpy.types.Image):
-                        for material in texture_set.materials:
-                            targets[material] = baked
-                if pass_id == "normal":
-                    with _card_face_normals(sets):
-                        _bake(objects, targets, pass_id, context)
-                else:
-                    _bake(objects, targets, pass_id, context)
-                for texture_set in sets:
-                    baked = texture_set.baked.get(pass_id)
-                    if isinstance(baked, bpy.types.Image):
-                        _snapshot(baked, channels=SNAPSHOT_CHANNELS.get(pass_id, 4))
-                yield (index + 1) / len(passes)
+            for phase_index, phase in enumerate(phases):
+                if phase_index == 1:
+                    cap_images = haircap_skin.paint_into_skin(human, body_set, cap_sets)  # type:ignore[arg-type]
+                for pass_id in planned_passes(phase):
+                    _bake_pass(phase, objects, pass_id, context)
+                    done += 1
+                    yield done / total
         finally:
             _show_solidify(was_solidified)
+            haircap_skin.remove_uv_layers(human)
 
     images = []
     for texture_set in sets:
+        if settings.haircap_in_skin and haircap_skin.only_skin_caps(texture_set):
+            continue
         images.extend(_build_material(human, texture_set, settings, namer, folder, per_level))
+    if settings.haircap_in_skin:
+        haircap_skin.remove_caps(human)
     for texture_set in sets:
         for image in texture_set.baked.values():
             if isinstance(image, bpy.types.Image) and image.users == 0:
                 bpy.data.images.remove(image)
+    for image in cap_images:
+        if image.users == 0:
+            bpy.data.images.remove(image)
     human.objects.rig[BAKED_KEY] = True
     _SNAPSHOTS.clear()
     return images
+
+
+def _bake_pass(
+    sets: List[TextureSet],
+    objects: List[bpy.types.Object],
+    pass_id: str,
+    context: bpy.types.Context,
+) -> None:
+    """Bakes one pass of the sets that have it, in one bake call per object."""
+    targets: Dict[bpy.types.Material, bpy.types.Image] = {}
+    for texture_set in sets:
+        if pass_id not in texture_set.passes:
+            continue
+        baked = _prepare_pass(texture_set, pass_id)
+        texture_set.baked[pass_id] = baked
+        if isinstance(baked, bpy.types.Image):
+            for material in texture_set.materials:
+                targets[material] = baked
+    if pass_id == "normal":
+        with _card_face_normals(sets):
+            _bake(objects, targets, pass_id, context)
+    else:
+        _bake(objects, targets, pass_id, context)
+    for texture_set in sets:
+        baked = texture_set.baked.get(pass_id)
+        if isinstance(baked, bpy.types.Image):
+            _snapshot(baked, channels=SNAPSHOT_CHANNELS.get(pass_id, 4))
 
 
 class _render_settings:

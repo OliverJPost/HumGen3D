@@ -92,7 +92,7 @@ def exotic_settings() -> ExportSettings:
     tex.resolution = {"body": 512, "clothing": 256, "eyes": 128, "teeth": 4096, "hair": 2048}
     tex.passes = {"body": ["base_color"], "clothing": ["normal"], "eyes": [], "teeth": ["metallic"], "hair": ["roughness", "alpha"]}
     tex.file_format, tex.workflow, tex.normal_map = "jpeg", "orm", "directx"
-    tex.pack_hair_alpha, tex.samples = False, 64
+    tex.pack_hair_alpha, tex.haircap_in_skin, tex.samples = False, False, 64
     anim = settings.animations
     anim.enabled, anim.source, anim.clips, anim.layout = True, "library", ["a/b.json"], "per_clip"
     anim.sample_rate, anim.root_motion = 30, "root"

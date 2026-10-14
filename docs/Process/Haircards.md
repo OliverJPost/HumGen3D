@@ -21,7 +21,13 @@ The hair, eyebrows, eyelashes and beards of Human Generator are particle hair: t
 
 ![[process_haircards.webp|520]]
 
-Scalp hair and beards get a **haircap**, a textured skin under the cards so the scalp doesn't show through, and the **cards**, as two meshes (*Haircap* and *HairCards*, *FaceHair* and *FaceHairCards*), so a game engine sorts, culls and lights the blended cap and the cut-out cards each as its kind, and you can hide or swap one without the other. The haircap is solid where hair with cards lies over the scalp and fades to a see-through film of painted strands over the last centimetres to the hairline, so the skin never shows between the cards and the cap doesn't end in a line beyond them. Hair that is too short for cards keeps the film everywhere. Eyebrows get a haircap only, and eyelashes are pre-made lash strips, one mesh each. Their textures (color, normal, roughness and alpha) are baked by [[Bake Textures]] along with everything else.
+Scalp hair and beards get a **haircap**, the hair painted on the skin under the cards so the scalp doesn't show through, and the **cards**. The haircap is solid where hair with cards lies over the scalp and fades to a see-through film of painted strands over the last centimetres to the hairline, so the skin never shows between the cards and the cap doesn't end in a line beyond them. Hair that is too short for cards keeps the film everywhere. Eyebrows get a haircap only, and eyelashes are pre-made lash strips, one mesh each.
+
+### Haircap on skin or as meshes
+
+With **Haircap: On skin** (the default) the haircaps of the hair, beard and eyebrows are painted into the textures of the skin when they are baked, and they are not in the result as meshes. The skin is opaque, so there is nothing for the engine to sort or blend, no transparent mesh over the skin, and a few thousand triangles and a material less. At the 2k skin textures of the engine recipes the hair on the skin is as sharp as on a 1k haircap of its own.
+
+Choose **As meshes** to get the haircaps as blended meshes of their own (*Haircap*, *FaceHair* and *Eyebrows*, next to *HairCards* and *FaceHairCards*), when you want to hide or swap the hair in the engine without a second skin texture, or for a bald version of the same character. The option only applies when the textures are baked: a copy in this file without baking keeps its haircaps as meshes. The eyelashes are always a mesh, their textures are the *Haircap* textures.
 
 ## Quality
 

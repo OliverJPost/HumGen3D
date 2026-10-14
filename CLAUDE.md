@@ -145,6 +145,8 @@ User documentation lives in `docs/` as an Obsidian vault (open the folder in Obs
 
 Tests must be run within Blender's Python environment, not standard Python. Test fixtures are defined in `tests/test_fixtures.py`. Tests use pytest with lazy fixtures for Blender objects.
 
+Most process tests make a human, convert hair to cards and bake textures, so `tests/process` (345 tests) runs well over an hour and `test_haircards.py` alone takes about 8 minutes. Don't run a whole folder to check a change: run the test files that cover the code you touched (for example `test_baked_materials.py`, `test_process_settings.py` and `test_process_ui.py` for a bake option), and add `-x`. Don't filter the output down to the summary line; keep the progress visible so a long run can be judged.
+
 ## Documentation
 
 - `docs/` holds the user documentation as Obsidian-style markdown (`[[Page]]`, `![[file.webp|520]]`, `> [!info]` callouts); the website repo renders it at `humgen3d.com/docs/<folder>/<file>` with lower-case, dash-separated slugs (`docs/Process/Bake Textures.md` → `/docs/process/bake-textures`, a folder's `Overview.md` is the folder URL). Every page starts with a `description:` frontmatter (the meta description) and one `# Heading`; pages are listed in the sidebar in the order their folder's Overview links them. Media goes in `docs/attachments/`.
