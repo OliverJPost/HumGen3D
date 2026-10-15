@@ -26,6 +26,10 @@ DETAIL_LEVELS = {"high": 0, "medium": 1, "low": 2}
 VISIBLE_ANGLE = math.radians(110)
 # The eye is a single opaque surface, the low roughness replaces the glossy cornea
 ROUGHNESS = 0.1
+# Strength of the normal map of the iris on the game eyes. The eyeball has it at 2
+# on top of a real cavity; on the glossy single surface an engine's specular
+# glitters on every fibre at that strength
+NORMAL_STRENGTH = 0.75
 CORNEA_SLOT = 0
 EYEBALL_SLOT = 1
 LOOKAT_BONE_PREFIX = "eyeball_lookat"
@@ -37,7 +41,8 @@ def convert_to_game_eyes(human: "Human", detail: str = "medium") -> None:
     """Replaces the layered eyes of this human by single layer eyes.
 
     Only the front of the cornea is kept, with the eye color as opaque material on
-    it. The shape keys of the eyes are applied.
+    it, including the normal map of the iris, which gives the flat iris its cavity
+    under a light. The shape keys of the eyes are applied.
 
     Args:
         human (Human): Human to convert the eyes of.
@@ -246,6 +251,8 @@ def _set_single_material(mesh: bpy.types.Mesh) -> None:
     principled.inputs[SPECULAR_INPUT_NAME].default_value = 0.5
     # Subsurface scattering is not part of the materials exported to game engines
     principled.inputs[SUBSURFACE_INPUT_NAME].default_value = 0
-    # The normal map of the iris is made for the hollow iris of the eyeball
+    # The normal map of the iris stays linked: it was made for the hollow iris of
+    # the eyeball, and on the cornea shell it is what makes the iris look hollow
     for link in principled.inputs["Normal"].links:
-        node_tree.links.remove(link)
+        if link.from_node.bl_idname == "ShaderNodeNormalMap":
+            link.from_node.inputs["Strength"].default_value = NORMAL_STRENGTH

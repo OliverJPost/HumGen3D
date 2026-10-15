@@ -43,7 +43,7 @@ lod_eyes_low.webp | Low | 200 triangles
 ```
 
 > [!warning] The original eyes are not game ready
-> The transparent cornea of the original eyes relies on Blender's material system. In other programs it renders as a solid shell, hiding the iris. Keep the eyes at *High* or lower for any file export; the tab warns you when they are set to *Original*. Game eyes look flat up close, which is the trade-off.
+> The transparent cornea of the original eyes relies on Blender's material system. In other programs it renders as a solid shell, hiding the iris. Keep the eyes at *High* or lower for any file export; the tab warns you when they are set to *Original*. Game eyes are one surface: the baked normal map gives the iris its cavity, and the [[Unity Companion]]'s eye shader refracts it behind the cornea; without such a shader they look flat up close, which is the trade-off.
 
 ## Teeth
 

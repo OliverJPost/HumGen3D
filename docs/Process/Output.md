@@ -72,7 +72,7 @@ The skeleton, the body, the eyes, the teeth, the clothing and footwear, and the 
 
 ## The .humgen3d.json file
 
-Next to every character file with a skeleton (FBX and glTF), Human Generator writes a small file with the same name: `Jake.fbx` gets `Jake.humgen3d.json`. It lists the files of the character, what every mesh and material is (skin, eyes, teeth, haircap, hair cards, clothing), which texture file is which map, and the settings the character was made with.
+Next to every character file with a skeleton (FBX and glTF), Human Generator writes a small file with the same name: `Jake.fbx` gets `Jake.humgen3d.json`. It lists the files of the character, what every mesh and material is (skin, eyes, teeth, haircap, hair cards, clothing), which texture file is which map, the material inputs that are a plain value instead of a map (the roughness of the eyes, the specular of the skin), and the settings the character was made with.
 
 The Companions for [[Unity Companion|Unity]], [[Unreal Engine Companion|Unreal Engine]] and [[Godot Companion|Godot]] read it to set the character up, and only touch characters that have one. Keep it next to the character file when you copy the export into your project; the engine imports it as a plain data file. To export another character the same way, load it like a recipe: `ExportSettings.from_recipe("/path/to/Jake.humgen3d.json")`.
 

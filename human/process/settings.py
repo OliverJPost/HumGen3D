@@ -310,7 +310,7 @@ class TextureBakeSettings(Settings):
         default_factory=lambda: {
             "body": ["base_color", "normal", "roughness", "metallic"],
             "clothing": ["base_color", "normal", "roughness", "metallic"],
-            "eyes": ["base_color"],
+            "eyes": ["base_color", "normal"],
             "teeth": ["base_color", "normal", "roughness"],
             "hair": ["base_color", "normal", "roughness", "alpha", "flow"],
         }

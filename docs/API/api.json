@@ -2985,7 +2985,7 @@
        "type": "str",
        "default": null,
        "kind": "positional or keyword",
-       "description": "Identifier from `recipe_items`, or a path of a recipe file."
+       "description": "Identifier from `recipe_items`, or a path of a recipe file, or of the `.humgen3d.json` file next to an exported character for the settings it was made with."
       }
      ],
      "returns": {
@@ -3006,7 +3006,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 494,
+     "line": 499,
      "kind": "method",
      "params": [
       {
@@ -3037,7 +3037,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 514,
+     "line": 519,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3053,7 +3053,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 518,
+     "line": 523,
      "kind": "classmethod",
      "params": [
       {
@@ -3077,7 +3077,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 523,
+     "line": 528,
      "kind": "method",
      "params": [
       {
@@ -3101,7 +3101,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 530,
+     "line": 535,
      "kind": "method",
      "params": [
       {

@@ -21,16 +21,21 @@ which are its textures, and what every mesh and material is:
                 "type": "skin",
                 "textures": {
                     "base_color": {"image": "Jake_Skin_BaseColor", "file": "Textures/Jake_Skin_BaseColor.png"}
-                }
+                },
+                "values": {"specular": 0.06}
             }
         },
         "settings": {...}
     }
 
 Paths are relative to the manifest, with forward slashes. "file" is null for
-a texture embedded in the character file. "settings" is the `ExportSettings`
-the character was made with. `FORMAT` only goes up when a Companion that reads
-the current format would misread the new one; new keys don't change it.
+a texture embedded in the character file. "values" are the inputs of the baked
+material that are a plain value instead of a map ("roughness", "metallic",
+"specular", on Blender's 0 to 1 scales): the eyes have no roughness map but a
+roughness of 0.1, which an engine can't read from the character file. "settings"
+is the `ExportSettings` the character was made with. `FORMAT` only goes up when
+a Companion that reads the current format would misread the new one; new keys
+don't change it.
 """
 
 import json
@@ -39,6 +44,7 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import bpy
+from HumGen3D.human.hair.compatibility import SPECULAR_INPUT_NAME
 
 from .naming import HAIRCAP_PART, PART_KEY, SKIN_PART
 from .settings import ExportSettings
@@ -51,6 +57,12 @@ EXTENSION = ".humgen3d.json"
 FORMAT_KEY = "humgen3d_export"
 # Blender's number suffix, the file has the names without it, see naming.exact_names
 _SUFFIX = re.compile(r"\.\d{3}$")
+# Principled inputs listed under "values" when they are not linked to a map
+VALUE_INPUTS = {
+    "roughness": "Roughness",
+    "metallic": "Metallic",
+    "specular": SPECULAR_INPUT_NAME,
+}
 # What a part is, for the parts that are not clothing
 PART_TYPES = {
     "Body": "body",
@@ -118,6 +130,7 @@ def build(
                 "part": material_part,
                 "type": part_type(material_part),
                 "textures": _textures(material, folder),
+                "values": _values(material),
             }
 
     return {
@@ -176,6 +189,24 @@ def _textures(material: bpy.types.Material, folder: str) -> Dict[str, Any]:
             "file": _relative(path, folder) if path else None,
         }
     return textures
+
+
+def _values(material: bpy.types.Material) -> Dict[str, float]:
+    """The Principled inputs of a baked material that are a plain value, see VALUE_INPUTS."""
+    if not material.node_tree:
+        return {}
+    principled = next(
+        (node for node in material.node_tree.nodes if node.bl_idname == "ShaderNodeBsdfPrincipled"),
+        None,
+    )
+    if principled is None:
+        return {}
+    values = {}
+    for key, input_name in VALUE_INPUTS.items():
+        socket = principled.inputs.get(input_name)
+        if socket is not None and not socket.is_linked:
+            values[key] = round(float(socket.default_value), 4)  # type:ignore[arg-type]
+    return values
 
 
 def _name(datablock: bpy.types.ID) -> str:

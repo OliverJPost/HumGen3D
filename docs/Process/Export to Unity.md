@@ -25,7 +25,7 @@ The **Unity** recipe of the Process tab exports a Human Generator human from Ble
 ## In Unity
 
 > [!tip] Let the Companion do this
-> The [[Unity Companion]] is a free, open source package that does every step below the moment Unity imports the file: the Humanoid avatar, the texture types, materials for your render pipeline, two-sided cutout hair with a hair shader that lights the cards along their strands, and a skin shader in URP. Install it once and skip to the troubleshooting.
+> The [[Unity Companion]] is a free, open source package that does every step below the moment Unity imports the file: the Humanoid avatar, the texture types, materials for your render pipeline, two-sided cutout hair with a hair shader that lights the cards along their strands, and a skin and an eye shader in URP. Install it once and skip to the troubleshooting.
 
 Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones, every material gets its base color and normal map, and the blend shapes come through. By hand:
 
@@ -50,6 +50,7 @@ Tested with Unity 6000.6 and Blender 5.1: the avatar maps all 55 Humanoid bones,
 - **The scalp shows skin under the hair (URP)**: with *Haircap* set to *As meshes*, the haircap material is blended, which URP does not draw on a skinned mesh. Set `Jake_Haircap` and `Jake_FaceHair` to *Alpha Clipping* at 0.4; the Companion does this.
 - **The skin looks oiled or wet**: the smoothness map at full strength with the reflectance of URP Lit. Lower *Smoothness* on `Jake_Skin` to about 0.7; the Companion does this and gives the skin its skin shader in URP.
 - **The eyes look like glass balls**: the character was exported with the original eyes. Set the eyes to *High* or lower in [[Optimize Meshes]].
+- **The eyes look matte, the pupil grey**: the eyes have no smoothness map, so Unity gives them its default smoothness of 0.5. Set *Smoothness* on `Jake_Eyes` to 0.9; the Companion reads it from the `.humgen3d.json` file and gives the eyes its eye shader in URP, with the iris refracted behind the cornea.
 - **Arms are raised or lowered in every animation**: the rest pose of the character and the animation differ. Animations made in the A-pose need the A-pose rest pose.
 
 > [!feedback] A problem that is not listed?

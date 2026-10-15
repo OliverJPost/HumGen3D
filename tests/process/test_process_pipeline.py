@@ -225,6 +225,10 @@ def test_result(request, run_name):
             assert data["files"]["character"] == os.path.basename(result.files[0])
             assert sorted(data["files"]["animations"]) == sorted(os.path.basename(p) for p in result.files[1:-1])
             assert "skin" in {material["type"] for material in data["materials"].values()}
+            # The plain inputs of the baked materials: the game eyes have no roughness map
+            eyes = [m for m in data["materials"].values() if m["type"] == "eyes"]
+            assert all(m["values"]["roughness"] == pytest.approx(0.1) for m in eyes)
+            assert all("specular" in m["values"] for m in data["materials"].values())
         else:
             assert not manifests
 

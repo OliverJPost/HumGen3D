@@ -6,7 +6,7 @@ description: "Download and install the free Human Generator 3D Companion for Uni
 > [!earlyaccess] Early access
 > The process system is new and only in the early access version of Human Generator. It replaces the process tab of version 4.0, which is deprecated. Details can still change; if something doesn't work or looks wrong, [let us know](https://humgen3d.com/feedback/process).
 
-A free Unity package that sets up a character exported with the **Unity** recipe the moment Unity imports it: the Humanoid avatar, the texture types, a material per part for your render pipeline, two-sided hair cards with a hair shader that lights them along their strands, and a skin shader in URP. Without it you do the steps of [[Export to Unity#In Unity]] by hand.
+A free Unity package that sets up a character exported with the **Unity** recipe the moment Unity imports it: the Humanoid avatar, the texture types, a material per part for your render pipeline, two-sided hair cards with a hair shader that lights them along their strands, and a skin shader and an eye shader in URP. Without it you do the steps of [[Export to Unity#In Unity]] by hand.
 
 **[Download the Unity Companion (.tgz)](https://github.com/OliverJPost/humgen3d-companion-unity/releases/latest/download/humgen3d-companion-unity.tgz)**
 
@@ -28,7 +28,7 @@ A free Unity package that sets up a character exported with the **Unity** recipe
 
 ## Use
 
-Export with the **Unity** recipe to a folder inside your project's `Assets`. Unity imports `Jake.fbx`, the `Textures` folder and `Jake.humgen3d.json`, and the Companion sets the character up; the Console shows *Human Generator 3D Companion: set up Jake.fbx*. After a new character is imported, a window opens with the import settings: the hair and skin shading and the haircap. Change the defaults for the whole project in **Edit > Project Settings > Human Generator 3D**, and the settings of one character with **Human Generator 3D > Import Settings...** in the right-click menu of its `.fbx`.
+Export with the **Unity** recipe to a folder inside your project's `Assets`. Unity imports `Jake.fbx`, the `Textures` folder and `Jake.humgen3d.json`, and the Companion sets the character up; the Console shows *Human Generator 3D Companion: set up Jake.fbx*. After a new character is imported, a window opens with the import settings: the hair, skin and eye shading and the haircap. Change the defaults for the whole project in **Edit > Project Settings > Human Generator 3D**, and the settings of one character with **Human Generator 3D > Import Settings...** in the right-click menu of its `.fbx`.
 
 > [!warning] Only characters with their .humgen3d.json file
 > Human Generator writes `Jake.humgen3d.json` next to every exported character. It tells the Companion which files belong to the character and what each material is. The Companion only changes files that such a file lists, so other characters in your project are never touched, and the [[Output#Naming|naming scheme]] doesn't matter. Keep the file next to the character when you copy it into the project. Characters exported by earlier versions of Human Generator don't have it; export them again.

@@ -89,7 +89,10 @@ def test_game_eyes_material(human):
     assert principled.inputs["Roughness"].default_value == pytest.approx(
         game_eyes.ROUGHNESS
     )
-    assert not principled.inputs["Normal"].is_linked
+    # The normal map of the iris stays, it is baked for the engines
+    assert principled.inputs["Normal"].is_linked
+    normal_map = principled.inputs["Normal"].links[0].from_node
+    assert normal_map.inputs["Strength"].default_value == pytest.approx(game_eyes.NORMAL_STRENGTH)
 
     # The eye color can still be changed, as long as the eyes are not baked
     assert human.eyes.iris_color.value == iris_color
@@ -132,6 +135,8 @@ def test_game_eyes_baked(male_human, context, tmp_path):
         game_eyes.ROUGHNESS
     )
     assert nodes["base_color"].image.size[0] == 128
+    # The iris cavity, see convert_to_game_eyes
+    assert nodes["normal"].image.size[0] == 128
 
 
 @pytest.mark.parametrize("game_eyes_enabled", [False, True])
