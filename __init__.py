@@ -57,6 +57,7 @@ from HumGen3D.backend.vscode_reload import _post_vscode_reload  # noqa
 from HumGen3D.batch_generator.generator import BatchHumanGenerator
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.human import Human
+from HumGen3D.human.process.export_pack import ExportPackMissing
 from HumGen3D.human.process.pipeline import ExportResult
 from HumGen3D.human.process.settings import (
     AnimationClipSettings,
@@ -90,6 +91,7 @@ __all__ = [
     # The settings of the process system, see human/process/settings.py
     "ExportSettings",
     "ExportResult",
+    "ExportPackMissing",
     "OutputSettings",
     "FbxSettings",
     "GltfSettings",

@@ -6,11 +6,12 @@ from typing import TYPE_CHECKING, List, Literal, Union
 
 import bmesh
 import bpy
-from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common.context import context_override
 from HumGen3D.common.decorators import injected_context
 from HumGen3D.common.type_aliases import C
 from HumGen3D.human.keys.keys import apply_shapekeys
+
+from . import export_pack
 
 if TYPE_CHECKING:
     from HumGen3D.human.human import Human
@@ -124,7 +125,7 @@ class LodSettings:
         bm = bmesh.new()  # type:ignore[call-arg]
         bm.from_mesh(body_obj.data)
 
-        directory = os.path.join(get_addon_root(), "human", "process")
+        directory = export_pack.data_path("lod")
 
         edge_files = []
         if lod >= 1 and current_lod == 0:

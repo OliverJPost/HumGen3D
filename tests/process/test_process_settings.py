@@ -19,7 +19,7 @@ from HumGen3D.common.progress import phase, run
 from HumGen3D.human.process import migrate, naming, pipeline, quality
 from HumGen3D.human.process import settings as settings_module
 from HumGen3D.human.process.export import fbx_kwargs, gltf_kwargs
-from HumGen3D.human.process.game_rig import INFLUENCE_LIMITS, PRESETS, REST_POSE_ITEMS, UNIT_ITEMS
+from HumGen3D.human.process.game_rig import INFLUENCE_LIMITS, REST_POSE_ITEMS, UNIT_ITEMS, presets
 from HumGen3D.human.process.lod import CLOTHING_DECIMATE_RATIOS
 from HumGen3D.human.process.settings import (
     CLIP_LAYOUTS,
@@ -29,7 +29,6 @@ from HumGen3D.human.process.settings import (
     OUTPUT_FORMATS,
     ROOT_MOTION_OPTIONS,
     SCHEMA_VERSION,
-    SHIPPED_RECIPE_FOLDER,
     TEXTURE_FORMATS,
     TEXTURE_PASSES,
     TEXTURE_PLACEMENTS,
@@ -45,10 +44,12 @@ from HumGen3D.human.process.settings import (
     ShapeKeySettings,
     TextureBakeSettings,
     recipe_items,
+    shipped_recipe_folder,
 )
 from HumGen3D.human.process.shape_keys import GROUP_ACTIONS, KEY_GROUPS, actions_for_level
 from HumGen3D.tests.test_fixtures import *
 
+SHIPPED_RECIPE_FOLDER = shipped_recipe_folder()
 with open(os.path.join(SHIPPED_RECIPE_FOLDER, "order.json")) as _f:
     SHIPPED_RECIPES = json.load(_f)
 
@@ -319,7 +320,7 @@ def test_recipe_bone_names_match_preset():
     """The humanoid, unreal and mixamo names of the recipes are game rig presets."""
     for recipe in SHIPPED_RECIPES:
         names = ExportSettings.from_recipe(recipe).skeleton.names
-        assert names == "humgen" or names in PRESETS
+        assert names == "humgen" or names in presets()
 
 
 def test_recipe_items():

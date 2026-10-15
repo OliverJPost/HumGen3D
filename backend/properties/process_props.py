@@ -20,6 +20,8 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from HumGen3D.backend.logging import hg_log
+from HumGen3D.common.exceptions import HumGenException
+from HumGen3D.human.process import export_pack
 from HumGen3D.human.process import scripts as script_tools
 from HumGen3D.human.process.game_rig import INFLUENCE_LIMITS, REST_POSE_ITEMS, UNIT_ITEMS
 from HumGen3D.human.process.quality import (
@@ -518,7 +520,7 @@ def get_recipe_items(self, context):
     index = 0
     try:
         items = recipe_items()
-    except OSError as e:
+    except (OSError, HumGenException) as e:
         hg_log(f"Could not list recipes: {e}", level="WARNING")
         items = []
     modified = self.loaded_recipe if context and is_modified(self) else None
@@ -628,8 +630,11 @@ class ProcessProps(bpy.types.PropertyGroup):
 
 
 def ensure_initialized(props: ProcessProps) -> None:
-    """Loads the first recipe when the scene has no process settings yet."""
-    if props.lods:
+    """Loads the first recipe when the scene has no process settings yet.
+
+    Does nothing without the HG_Export content pack, which holds the recipes.
+    """
+    if props.lods or not export_pack.is_installed():
         return
     items = get_recipe_items(props, None)
     first = next((ident for ident, *_ in items if ident), None)

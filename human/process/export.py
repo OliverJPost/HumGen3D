@@ -23,6 +23,7 @@ from HumGen3D.common.exceptions import HumGenException
 
 from . import naming
 from .animations import rig_actions
+from .export_pack import needs_export_pack
 from .textures import DIRECTX_FLIP_NODE, write_sidecar_images
 from .settings import FILE_FORMATS, OutputSettings
 
@@ -216,6 +217,7 @@ class ExportBuilder:
     def __init__(self, _human: "Human"):
         self._human = _human
 
+    @needs_export_pack
     @injected_context
     def write(
         self,
@@ -249,6 +251,7 @@ class ExportBuilder:
             str: The path that was written.
 
         Raises:
+            ExportPackMissing: If the HG_Export content pack is not installed.
             ValueError: If the output is not a file format.
         """
         file_format = output.format

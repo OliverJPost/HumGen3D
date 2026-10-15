@@ -62,7 +62,7 @@ for warning in check.warnings:
     print("warning:", warning)
 ```
 
-`run` raises a `HumGenException` when the preflight finds an error. When a step fails, its own exception comes through unchanged. In both cases the copies made so far are removed.
+`run` raises a `HumGenException` when the preflight finds an error. Without the [[Process/Overview#Install the Export pack|Export pack]], `run`, `preflight`, `ExportSettings.from_recipe` and the single steps raise `ExportPackMissing`, a `HumGenException` that says what to download. When a step fails, its own exception comes through unchanged. In both cases the copies made so far are removed.
 
 ## Several humans
 

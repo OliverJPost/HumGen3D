@@ -7,9 +7,10 @@ the metadata on a processed human all hold the same `ExportSettings`. Every
 field has a control in the interface and every control is a field here, so a
 recipe is nothing more than the serialized state of the panel.
 
-The shipped recipes in `recipes/` hold the knowledge about each engine: bone
-names, rest pose, texture packing, normal map direction and file layout. Adding
-an engine is adding a recipe, not code.
+The built-in recipes hold the knowledge about each engine: bone names, rest
+pose, texture packing, normal map direction and file layout. Adding an engine is
+adding a recipe, not code. They come with the HG_Export content pack, in the
+`process/recipes` folder of the content folder, see `export_pack`.
 """
 
 from __future__ import annotations
@@ -22,15 +23,20 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar
 
 from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
+from HumGen3D.backend.preferences.preference_func import get_prefs
+
+from . import export_pack
 
 SCHEMA_VERSION = 2
 RECIPE_EXTENSION = ".json"
 # Folder in the content folder with the recipes of the user, kept from older versions
 USER_RECIPE_FOLDER = "process_templates"
-SHIPPED_RECIPE_FOLDER = os.path.join(
-    get_addon_root(), "human", "process", "recipes"
-)
+
+
+def shipped_recipe_folder() -> str:
+    """Folder with the built-in recipes, raises `ExportPackMissing` without the pack."""
+    return export_pack.data_path("recipes")
+
 
 # Identifier, label and description of the enum settings. The interface draws
 # these, the settings store the identifier.
@@ -477,8 +483,11 @@ class ExportSettings(Settings):
             ExportSettings: The settings of the recipe.
 
         Raises:
+            ExportPackMissing: If the HG_Export content pack, which holds the
+                built-in recipes, is not installed.
             FileNotFoundError: If there is no such recipe.
         """
+        export_pack.require()
         path = recipe_path(recipe)
         if not os.path.isfile(path):
             raise FileNotFoundError(f"No recipe '{recipe}'")
@@ -545,7 +554,7 @@ def recipe_path(recipe: str) -> str:
     """
     if os.path.isabs(recipe) and os.path.isfile(recipe):
         return recipe
-    shipped = os.path.join(SHIPPED_RECIPE_FOLDER, recipe + RECIPE_EXTENSION)
+    shipped = os.path.join(shipped_recipe_folder(), recipe + RECIPE_EXTENSION)
     if os.path.isfile(shipped):
         return shipped
     return os.path.join(get_prefs().filepath, USER_RECIPE_FOLDER, recipe)
@@ -555,9 +564,12 @@ def recipe_items() -> List[Tuple[str, str, str]]:
     """Identifier, label and group of every recipe, shipped ones first.
 
     The order of the shipped recipes is that of `recipes/order.json`.
+
+    Raises:
+        ExportPackMissing: If the HG_Export content pack is not installed.
     """
     items = []
-    order_path = os.path.join(SHIPPED_RECIPE_FOLDER, "order.json")
+    order_path = os.path.join(shipped_recipe_folder(), "order.json")
     with open(order_path, "r") as f:
         for identifier in json.load(f):
             with open(recipe_path(identifier), "r") as recipe_file:

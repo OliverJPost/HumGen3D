@@ -4,6 +4,7 @@
 
 import os
 import time
+import zipfile
 from typing import List, Optional
 
 import bpy
@@ -24,6 +25,7 @@ from HumGen3D.common.documentation import EARLY_ACCESS, feedback_url
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.common.progress import Steps, phase, run
 from HumGen3D.human.human import Human
+from HumGen3D.human.process import export_pack
 from HumGen3D.human.process import scripts as script_tools
 from HumGen3D.human.process.pipeline import ExportResult, output_folder
 from HumGen3D.human.process.settings import (
@@ -31,6 +33,15 @@ from HumGen3D.human.process.settings import (
     USER_RECIPE_FOLDER,
     ExportSettings,
 )
+
+
+
+def _export_pack_poll(cls) -> bool:  # noqa: ANN001
+    """Poll of the operators that need the HG_Export content pack."""
+    if export_pack.is_installed():
+        return True
+    cls.poll_message_set(export_pack.message())
+    return False
 
 
 class HG_OT_PROCESS(bpy.types.Operator):
@@ -45,6 +56,10 @@ class HG_OT_PROCESS(bpy.types.Operator):
     bl_label = "Process"
     bl_description = "Process the selected humans with these settings"
     bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return _export_pack_poll(cls)
 
     # Work per timer tick. Long enough to get work done, short enough to keep
     # the interface fluid.
@@ -253,6 +268,10 @@ class HG_OT_SAVE_RECIPE(bpy.types.Operator):
     bl_label = "Save recipe"
     bl_description = "Save the current settings as a recipe"
 
+    @classmethod
+    def poll(cls, context):
+        return _export_pack_poll(cls)
+
     name: bpy.props.StringProperty(name="Recipe name")
     new_or_existing: bpy.props.EnumProperty(
         items=[
@@ -321,6 +340,10 @@ class HG_OT_RESET_RECIPE(bpy.types.Operator):
     bl_description = "Set the settings back to those of the recipe"
     bl_options = {"UNDO"}
 
+    @classmethod
+    def poll(cls, context):
+        return _export_pack_poll(cls)
+
     def execute(self, context):
         props = context.scene.HG3D.process
         if not props.loaded_recipe:
@@ -338,8 +361,59 @@ class HG_OT_INIT_PROCESS(bpy.types.Operator):
     bl_label = "Start"
     bl_description = "Load the first recipe into the Process tab"
 
+    @classmethod
+    def poll(cls, context):
+        return _export_pack_poll(cls)
+
     def execute(self, context):
         ensure_initialized(context.scene.HG3D.process)
+        return {"FINISHED"}
+
+
+class HG_OT_INSTALL_EXPORT_PACK(bpy.types.Operator):
+    """Installs the HG_Export content pack from the file the user picks."""
+
+    bl_idname = "hg3d.install_export_pack"
+    bl_label = "Install " + export_pack.PACK_FILE
+    bl_description = (
+        "Pick the " + export_pack.PACK_FILE + " you downloaded from your"
+        " Superhive account (formerly BlenderMarket) to install it"
+    )
+
+    filepath: bpy.props.StringProperty(subtype="FILE_PATH")  # noqa: F722
+    filter_glob: bpy.props.StringProperty(default="*.hgpack", options={"HIDDEN"})  # noqa: F722, F821
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+    def execute(self, context):
+        manifest = f"content_packs/{export_pack.PACK_NAME}.json"
+        try:
+            with zipfile.ZipFile(self.filepath) as zf:
+                is_pack = manifest in zf.namelist()
+        except (OSError, zipfile.BadZipFile):
+            is_pack = False
+        if not is_pack:
+            self.report({"ERROR"}, f"This is not {export_pack.PACK_FILE}")
+            return {"CANCELLED"}
+
+        # Installed like the other content packs, so the preferences list it
+        # and can delete it. A newer pack replaces the files of the old one.
+        packs = context.scene.installpacks_col
+        packs.clear()
+        item = packs.add()
+        item.name = self.filepath
+        item.pack_name = os.path.basename(self.filepath)
+        item.json_path = manifest
+        item.alert = "None"
+        bpy.ops.hg3d.cpackinstall()
+
+        if not export_pack.is_installed():
+            self.report({"ERROR"}, export_pack.message())
+            return {"CANCELLED"}
+        ensure_initialized(context.scene.HG3D.process)
+        self.report({"INFO"}, f"Installed {export_pack.PACK_FILE}")
         return {"FINISHED"}
 
 
@@ -386,6 +460,10 @@ class HG_OT_PROCESS_AGAIN(bpy.types.Operator):
     bl_label = "Process again"
     bl_description = "Process the original human again with the settings this one was made with"
     bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return _export_pack_poll(cls)
 
     def invoke(self, context, event):
         human = Human.from_existing(context.object)

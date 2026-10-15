@@ -134,7 +134,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 338,
+   "line": 344,
    "members": [
     {
      "name": "enabled",
@@ -143,7 +143,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 342,
+     "line": 348,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -155,7 +155,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 344,
+     "line": 350,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -167,7 +167,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 346,
+     "line": 352,
      "kind": "attribute",
      "type": "Optional[List[str]]",
      "readonly": false
@@ -179,7 +179,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 347,
+     "line": 353,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -191,7 +191,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 348,
+     "line": 354,
      "kind": "attribute",
      "type": "int",
      "readonly": false
@@ -203,7 +203,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 349,
+     "line": 355,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -215,7 +215,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -231,7 +231,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -255,7 +255,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -2133,7 +2133,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/export.py",
-   "line": 208,
+   "line": 209,
    "members": [
     {
      "name": "write",
@@ -2142,7 +2142,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 219,
+     "line": 220,
      "kind": "method",
      "params": [
       {
@@ -2201,6 +2201,10 @@
      },
      "raises": [
       {
+       "type": "ExportPackMissing",
+       "description": "If the HG_Export content pack is not installed."
+      },
+      {
        "type": "ValueError",
        "description": "If the output is not a file format."
       }
@@ -2213,7 +2217,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 296,
+     "line": 299,
      "kind": "method",
      "params": [
       {
@@ -2349,7 +2353,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 361,
+     "line": 364,
      "kind": "method",
      "params": [
       {
@@ -2429,7 +2433,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 407,
+     "line": 410,
      "kind": "method",
      "params": [
       {
@@ -2467,7 +2471,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 418,
+     "line": 421,
      "kind": "method",
      "params": [
       {
@@ -2505,7 +2509,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 428,
+     "line": 431,
      "kind": "method",
      "params": [
       {
@@ -2578,7 +2582,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 445,
+     "line": 448,
      "kind": "method",
      "params": [
       {
@@ -2651,7 +2655,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/export.py",
-     "line": 556,
+     "line": 559,
      "kind": "method",
      "params": [
       {
@@ -2812,7 +2816,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 440,
+   "line": 446,
    "members": [
     {
      "name": "version",
@@ -2821,7 +2825,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 444,
+     "line": 450,
      "kind": "attribute",
      "type": "int",
      "readonly": false
@@ -2833,7 +2837,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 446,
+     "line": 452,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -2845,7 +2849,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 447,
+     "line": 453,
      "kind": "attribute",
      "type": "OutputSettings",
      "readonly": false
@@ -2857,7 +2861,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 449,
+     "line": 455,
      "kind": "attribute",
      "type": "List[QualitySettings]",
      "readonly": false
@@ -2869,7 +2873,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 450,
+     "line": 456,
      "kind": "attribute",
      "type": "MeshSettings",
      "readonly": false
@@ -2881,7 +2885,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 451,
+     "line": 457,
      "kind": "attribute",
      "type": "HaircardSettings",
      "readonly": false
@@ -2893,7 +2897,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 452,
+     "line": 458,
      "kind": "attribute",
      "type": "SkeletonSettings",
      "readonly": false
@@ -2905,7 +2909,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 453,
+     "line": 459,
      "kind": "attribute",
      "type": "ShapeKeySettings",
      "readonly": false
@@ -2917,7 +2921,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 454,
+     "line": 460,
      "kind": "attribute",
      "type": "TextureBakeSettings",
      "readonly": false
@@ -2929,7 +2933,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 455,
+     "line": 461,
      "kind": "attribute",
      "type": "AnimationClipSettings",
      "readonly": false
@@ -2941,7 +2945,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 456,
+     "line": 462,
      "kind": "attribute",
      "type": "ScriptsSettings",
      "readonly": false
@@ -2953,7 +2957,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 458,
+     "line": 464,
      "kind": "classmethod",
      "params": [
       {
@@ -2977,7 +2981,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 467,
+     "line": 473,
      "kind": "classmethod",
      "params": [
       {
@@ -2994,6 +2998,10 @@
      },
      "raises": [
       {
+       "type": "ExportPackMissing",
+       "description": "If the HG_Export content pack, which holds the built-in recipes, is not installed."
+      },
+      {
        "type": "FileNotFoundError",
        "description": "If there is no such recipe."
       }
@@ -3006,7 +3014,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 499,
+     "line": 508,
      "kind": "method",
      "params": [
       {
@@ -3037,7 +3045,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 519,
+     "line": 528,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3053,7 +3061,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 523,
+     "line": 532,
      "kind": "classmethod",
      "params": [
       {
@@ -3077,7 +3085,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 528,
+     "line": 537,
      "kind": "method",
      "params": [
       {
@@ -3101,7 +3109,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 535,
+     "line": 544,
      "kind": "method",
      "params": [
       {
@@ -3125,7 +3133,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3141,7 +3149,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -5228,7 +5236,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 374,
+   "line": 380,
    "members": [
     {
      "name": "axis_forward",
@@ -5237,7 +5245,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 378,
+     "line": 384,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -5249,7 +5257,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 379,
+     "line": 385,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -5261,7 +5269,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 380,
+     "line": 386,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -5273,7 +5281,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 381,
+     "line": 387,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -5285,7 +5293,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 382,
+     "line": 388,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -5297,7 +5305,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 383,
+     "line": 389,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -5309,7 +5317,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 384,
+     "line": 390,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -5321,7 +5329,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 385,
+     "line": 391,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -5333,7 +5341,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -5349,7 +5357,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -5373,7 +5381,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6151,7 +6159,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 388,
+   "line": 394,
    "members": [
     {
      "name": "tangents",
@@ -6160,7 +6168,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 392,
+     "line": 398,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -6172,7 +6180,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 393,
+     "line": 399,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -6184,7 +6192,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 394,
+     "line": 400,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -6196,7 +6204,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6212,7 +6220,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -6236,7 +6244,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6756,7 +6764,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 247,
+   "line": 253,
    "members": [
     {
      "name": "enabled",
@@ -6765,7 +6773,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 251,
+     "line": 257,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -6777,7 +6785,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -6793,7 +6801,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -6817,7 +6825,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -8894,7 +8902,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/lod.py",
-   "line": 38,
+   "line": 39,
    "members": [
     {
      "name": "estimate_triangles",
@@ -8903,7 +8911,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 44,
+     "line": 45,
      "kind": "method",
      "params": [
       {
@@ -8962,7 +8970,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 100,
+     "line": 101,
      "kind": "method",
      "params": [
       {
@@ -8998,7 +9006,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 152,
+     "line": 153,
      "kind": "method",
      "params": [
       {
@@ -9055,7 +9063,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/lod.py",
-     "line": 206,
+     "line": 207,
      "kind": "method",
      "params": [
       {
@@ -9300,7 +9308,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 231,
+   "line": 237,
    "members": [
     {
      "name": "enabled",
@@ -9309,7 +9317,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 240,
+     "line": 246,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -9321,7 +9329,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 242,
+     "line": 248,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -9333,7 +9341,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 243,
+     "line": 249,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -9345,7 +9353,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 244,
+     "line": 250,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -9357,7 +9365,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -9373,7 +9381,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -9397,7 +9405,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -10327,7 +10335,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 397,
+   "line": 403,
    "members": [
     {
      "name": "format",
@@ -10336,7 +10344,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 401,
+     "line": 407,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -10348,7 +10356,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 402,
+     "line": 408,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -10360,7 +10368,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 404,
+     "line": 410,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -10372,7 +10380,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 405,
+     "line": 411,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -10384,7 +10392,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 406,
+     "line": 412,
      "kind": "attribute",
      "type": "Dict[str, str]",
      "readonly": false
@@ -10396,7 +10404,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 414,
+     "line": 420,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -10408,7 +10416,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 416,
+     "line": 422,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -10420,7 +10428,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 417,
+     "line": 423,
      "kind": "attribute",
      "type": "FbxSettings",
      "readonly": false
@@ -10432,7 +10440,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 418,
+     "line": 424,
      "kind": "attribute",
      "type": "GltfSettings",
      "readonly": false
@@ -10444,7 +10452,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 421,
+     "line": 427,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -10456,7 +10464,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 426,
+     "line": 432,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -10468,7 +10476,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 430,
+     "line": 436,
      "kind": "method",
      "params": [
       {
@@ -10492,7 +10500,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -10508,7 +10516,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -10532,7 +10540,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -11369,11 +11377,11 @@
    "name": "ProcessSettings",
    "path": "human.process.process.ProcessSettings",
    "summary": "Processes the human for export, as the Process tab does, or step by step.",
-   "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.",
+   "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.\n\nThe process system runs on the data of the HG_Export content pack, which is\ndownloaded from your Superhive account (formerly BlenderMarket). Without it, `run`, the steps,\n`lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The\n`has_*`, `was_*` and `is_*` properties and `settings` work without it.",
    "examples": [],
    "bases": [],
    "file": "human/process/process.py",
-   "line": 60,
+   "line": 61,
    "members": [
     {
      "name": "baking",
@@ -11382,7 +11390,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 95,
+     "line": 101,
      "kind": "property",
      "type": "BakeSettings",
      "readonly": true
@@ -11394,7 +11402,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 100,
+     "line": 107,
      "kind": "property",
      "type": "LodSettings",
      "readonly": true
@@ -11406,7 +11414,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 110,
+     "line": 121,
      "kind": "method",
      "params": [
       {
@@ -11437,7 +11445,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 125,
+     "line": 137,
      "kind": "method",
      "params": [
       {
@@ -11480,7 +11488,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 154,
+     "line": 167,
      "kind": "method",
      "params": [
       {
@@ -11511,7 +11519,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 162,
+     "line": 176,
      "kind": "property",
      "type": "Optional[ExportSettings]",
      "readonly": true
@@ -11523,7 +11531,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 170,
+     "line": 184,
      "kind": "method",
      "params": [
       {
@@ -11615,7 +11623,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 229,
+     "line": 244,
      "kind": "method",
      "params": [
       {
@@ -11639,7 +11647,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 245,
+     "line": 261,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11651,7 +11659,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 253,
+     "line": 269,
      "kind": "method",
      "params": [
       {
@@ -11687,7 +11695,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 290,
+     "line": 307,
      "kind": "method",
      "params": [
       {
@@ -11711,7 +11719,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 313,
+     "line": 331,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11723,7 +11731,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 321,
+     "line": 339,
      "kind": "method",
      "params": [
       {
@@ -11794,7 +11802,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 383,
+     "line": 402,
      "kind": "method",
      "params": [
       {
@@ -11818,7 +11826,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 399,
+     "line": 419,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11830,7 +11838,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 408,
+     "line": 428,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11842,7 +11850,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 416,
+     "line": 436,
      "kind": "method",
      "params": [
       {
@@ -11866,7 +11874,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 431,
+     "line": 452,
      "kind": "method",
      "params": [
       {
@@ -11904,7 +11912,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 470,
+     "line": 492,
      "kind": "method",
      "params": [
       {
@@ -11928,7 +11936,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 486,
+     "line": 509,
      "kind": "method",
      "params": [
       {
@@ -11973,7 +11981,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 513,
+     "line": 537,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -11985,7 +11993,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 521,
+     "line": 545,
      "kind": "method",
      "params": [
       {
@@ -12014,7 +12022,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 539,
+     "line": 564,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -12026,7 +12034,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 548,
+     "line": 573,
      "kind": "property",
      "type": "Optional[str]",
      "readonly": true
@@ -12038,7 +12046,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 561,
+     "line": 586,
      "kind": "method",
      "params": [
       {
@@ -12141,7 +12149,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 641,
+     "line": 667,
      "kind": "method",
      "params": [
       {
@@ -12179,7 +12187,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 679,
+     "line": 706,
      "kind": "method",
      "params": [
       {
@@ -12217,7 +12225,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 715,
+     "line": 743,
      "kind": "method",
      "params": [
       {
@@ -12241,7 +12249,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 729,
+     "line": 758,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -12253,7 +12261,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/process.py",
-     "line": 737,
+     "line": 766,
      "kind": "method",
      "params": [
       {
@@ -12540,7 +12548,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 194,
+   "line": 200,
    "members": [
     {
      "name": "body",
@@ -12549,7 +12557,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 199,
+     "line": 205,
      "kind": "attribute",
      "type": "Literal['original', 'lower_face', 'quarter']",
      "readonly": false
@@ -12561,7 +12569,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 200,
+     "line": 206,
      "kind": "attribute",
      "type": "Literal['original', 'high', 'medium', 'low']",
      "readonly": false
@@ -12573,7 +12581,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 202,
+     "line": 208,
      "kind": "attribute",
      "type": "Literal['original', 'high', 'medium', 'low']",
      "readonly": false
@@ -12585,7 +12593,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 203,
+     "line": 209,
      "kind": "attribute",
      "type": "Literal['original', 'medium', 'low']",
      "readonly": false
@@ -12597,7 +12605,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 204,
+     "line": 210,
      "kind": "attribute",
      "type": "Literal['ultra', 'high', 'medium', 'low', 'haircap_only']",
      "readonly": false
@@ -12609,7 +12617,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 205,
+     "line": 211,
      "kind": "attribute",
      "type": "int",
      "readonly": false
@@ -12621,7 +12629,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 216,
+     "line": 222,
      "kind": "classmethod",
      "params": [
       {
@@ -12650,7 +12658,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -12666,7 +12674,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -12690,7 +12698,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13592,7 +13600,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 352,
+   "line": 358,
    "members": [
     {
      "name": "path",
@@ -13601,7 +13609,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 356,
+     "line": 362,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -13613,7 +13621,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 357,
+     "line": 363,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -13625,7 +13633,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 358,
+     "line": 364,
      "kind": "attribute",
      "type": "Dict[str, Any]",
      "readonly": false
@@ -13637,7 +13645,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 359,
+     "line": 365,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -13649,7 +13657,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13665,7 +13673,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -13689,7 +13697,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13712,7 +13720,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 362,
+   "line": 368,
    "members": [
     {
      "name": "enabled",
@@ -13721,7 +13729,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 366,
+     "line": 372,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -13733,7 +13741,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 367,
+     "line": 373,
      "kind": "attribute",
      "type": "List[ScriptSettings]",
      "readonly": false
@@ -13745,7 +13753,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 369,
+     "line": 375,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13761,7 +13769,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13777,7 +13785,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -13801,7 +13809,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13824,7 +13832,7 @@
    "examples": [],
    "bases": [],
    "file": "human/process/settings.py",
-   "line": 167,
+   "line": 173,
    "members": [
     {
      "name": "to_dict",
@@ -13833,7 +13841,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13849,7 +13857,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -13873,7 +13881,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14195,7 +14203,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 271,
+   "line": 277,
    "members": [
     {
      "name": "enabled",
@@ -14204,7 +14212,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 279,
+     "line": 285,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -14216,7 +14224,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 280,
+     "line": 286,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14228,7 +14236,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 281,
+     "line": 287,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14240,7 +14248,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 282,
+     "line": 288,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14252,7 +14260,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 283,
+     "line": 289,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14264,7 +14272,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 284,
+     "line": 290,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14276,7 +14284,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 285,
+     "line": 291,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14288,7 +14296,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 289,
+     "line": 295,
      "kind": "attribute",
      "type": "Dict[str, Optional[List[str]]]",
      "readonly": false
@@ -14300,7 +14308,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 291,
+     "line": 297,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -14312,7 +14320,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14328,7 +14336,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -14352,7 +14360,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14377,82 +14385,10 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 254,
+   "line": 260,
    "members": [
     {
      "name": "enabled",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 258,
-     "kind": "attribute",
-     "type": "bool",
-     "readonly": false
-    },
-    {
-     "name": "names",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 259,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "names_file",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 260,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "rest_pose",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 261,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "root_bone",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 262,
-     "kind": "attribute",
-     "type": "bool",
-     "readonly": false
-    },
-    {
-     "name": "root_bone_name",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/process/settings.py",
-     "line": 263,
-     "kind": "attribute",
-     "type": "str",
-     "readonly": false
-    },
-    {
-     "name": "keep_eyes",
      "summary": "",
      "description": "",
      "examples": [],
@@ -14464,13 +14400,85 @@
      "readonly": false
     },
     {
-     "name": "keep_jaw",
+     "name": "names",
      "summary": "",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
      "line": 265,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "names_file",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 266,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "rest_pose",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 267,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "root_bone",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 268,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "root_bone_name",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 269,
+     "kind": "attribute",
+     "type": "str",
+     "readonly": false
+    },
+    {
+     "name": "keep_eyes",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 270,
+     "kind": "attribute",
+     "type": "bool",
+     "readonly": false
+    },
+    {
+     "name": "keep_jaw",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/process/settings.py",
+     "line": 271,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -14482,7 +14490,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 266,
+     "line": 272,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -14494,7 +14502,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 267,
+     "line": 273,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -14506,7 +14514,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 268,
+     "line": 274,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -14518,7 +14526,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14534,7 +14542,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -14558,7 +14566,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14980,7 +14988,7 @@
     "Settings"
    ],
    "file": "human/process/settings.py",
-   "line": 294,
+   "line": 300,
    "members": [
     {
      "name": "enabled",
@@ -14989,7 +14997,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 299,
+     "line": 305,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -15001,7 +15009,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 300,
+     "line": 306,
      "kind": "attribute",
      "type": "Dict[str, int]",
      "readonly": false
@@ -15013,7 +15021,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 309,
+     "line": 315,
      "kind": "attribute",
      "type": "Dict[str, List[str]]",
      "readonly": false
@@ -15025,7 +15033,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 318,
+     "line": 324,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -15037,7 +15045,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 319,
+     "line": 325,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -15049,7 +15057,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 320,
+     "line": 326,
      "kind": "attribute",
      "type": "str",
      "readonly": false
@@ -15061,7 +15069,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 321,
+     "line": 327,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -15073,7 +15081,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 324,
+     "line": 330,
      "kind": "attribute",
      "type": "bool",
      "readonly": false
@@ -15085,7 +15093,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 325,
+     "line": 331,
      "kind": "attribute",
      "type": "int",
      "readonly": false
@@ -15097,7 +15105,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/process/settings.py",
-     "line": 327,
+     "line": 333,
      "kind": "method",
      "params": [
       {
@@ -15126,7 +15134,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 171,
+     "line": 177,
      "kind": "method",
      "params": [],
      "returns": {
@@ -15142,7 +15150,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 175,
+     "line": 181,
      "kind": "classmethod",
      "params": [
       {
@@ -15166,7 +15174,7 @@
      "examples": [],
      "inheritedFrom": "Settings",
      "file": "human/process/settings.py",
-     "line": 184,
+     "line": 190,
      "kind": "method",
      "params": [],
      "returns": {

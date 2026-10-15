@@ -140,6 +140,12 @@ def _context_specific_updates(sett, human, ui_phase):
             getattr(human, ui_phase).refresh_pcoll(context)
 
 
+def _export_pack_installed() -> bool:
+    from HumGen3D.human.process import export_pack
+
+    return export_pack.is_installed()
+
+
 @no_type_check
 def tab_change_update(self, context):
     """Update function for when the user switches between the main tabs (Main UI,
@@ -147,7 +153,7 @@ def tab_change_update(self, context):
 
     human = Human.from_existing(context.object, strict_check=False)
     set_human_categ_props()
-    if context.scene.HG3D.ui.active_tab == "PROCESS":
+    if context.scene.HG3D.ui.active_tab == "PROCESS" and _export_pack_installed():
         from HumGen3D.backend.properties.process_props import (
             ensure_initialized,
             refresh_clips,

@@ -19,15 +19,15 @@ import json
 import os
 import string
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Iterator, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
 
 import bmesh
 import bpy
-from HumGen3D.backend.preferences.preference_func import get_addon_root
 from HumGen3D.common import is_legacy
 from HumGen3D.common.exceptions import HumGenException
 from mathutils import Matrix
 
+from . import export_pack
 from .rest_pose import T_POSE_KEY
 
 if TYPE_CHECKING:
@@ -79,26 +79,35 @@ INFLUENCE_LIMITS = [
 ]
 
 
-def _load_presets() -> dict[str, dict[str, Any]]:
-    path = os.path.join(get_addon_root(), "human", "process", "game_rig_presets.json")
+# The presets by path of the file, with the time it was changed
+_presets_cache: Dict[str, Tuple[float, Dict[str, Dict[str, Any]]]] = {}
+
+
+def presets() -> Dict[str, Dict[str, Any]]:
+    """The game rig presets of game_rig_presets.json in the HG_Export pack.
+
+    Raises:
+        ExportPackMissing: If the HG_Export content pack is not installed.
+    """
+    path = export_pack.data_path("game_rig_presets.json")
+    changed = os.path.getmtime(path)
+    known = _presets_cache.get(path)
+    if known and known[0] == changed:
+        return known[1]
     with open(path, "r") as f:
-        return json.load(f)  # type:ignore[no-any-return]
+        data: Dict[str, Dict[str, Any]] = json.load(f)
+    _presets_cache[path] = (changed, data)
+    return data
 
 
-PRESETS = _load_presets()
 CUSTOM_PRESET = "custom"
-# Identifier, name, description and value, in the order of the file
-PRESET_ITEMS = [
-    (identifier, preset["label"], preset["description"], i)
-    for i, (identifier, preset) in enumerate(PRESETS.items())
-]
 
 
 def get_preset(preset: str, names_file: Optional[str] = None) -> dict[str, Any]:
     """Settings of a game rig preset.
 
     Args:
-        preset (str): Identifier of the preset, see PRESETS, or "custom" for a
+        preset (str): Identifier of the preset, see `presets`, or "custom" for a
             names profile file.
         names_file (Optional[str]): Path of a JSON file with "names" and
             "sides" like the presets, for the "custom" preset.
@@ -113,9 +122,10 @@ def get_preset(preset: str, names_file: Optional[str] = None) -> dict[str, Any]:
     """
     if preset == CUSTOM_PRESET:
         return _load_names_file(names_file)
-    if preset not in PRESETS:
-        raise ValueError(f"Preset has to be one of {tuple(PRESETS)}")
-    return PRESETS[preset]
+    known = presets()
+    if preset not in known:
+        raise ValueError(f"Preset has to be one of {tuple(known)}")
+    return known[preset]
 
 
 # The tokens a bone name template of a names file can use, filled from "sides"
@@ -133,10 +143,10 @@ def _load_names_file(path: Optional[str]) -> dict[str, Any]:
             raise HumGenException(f"Bone names file {os.path.basename(path)} is not valid JSON: {e}") from e
     if not isinstance(data, dict) or not isinstance(data.get("names"), dict):
         raise HumGenException(f"Bone names file {os.path.basename(path)} has no 'names'")
-    profile = dict(PRESETS["generic_a"])
+    profile = dict(presets()["generic_a"])
     profile["names"] = data["names"]
     # Sides of the file fill in those of the generic preset, so every token has a value
-    generic_sides = PRESETS["generic_a"]["sides"]
+    generic_sides = presets()["generic_a"]["sides"]
     file_sides = data.get("sides") if isinstance(data.get("sides"), dict) else {}
     profile["sides"] = {
         side: {**tokens, **(file_sides.get(side) or {})} for side, tokens in generic_sides.items()
@@ -217,7 +227,7 @@ def convert_to_game_rig(
     Args:
         human (Human): Human to convert the rig of.
         context (bpy.types.Context): Blender context.
-        preset (str): Engine to name the bones for, see PRESETS. "humgen" keeps
+        preset (str): Engine to name the bones for, see `presets`. "humgen" keeps
             the Human Generator names, for the rest pose the human has.
         keep_eyes (bool): Keep the eye bones, otherwise the eyes follow the head.
         keep_jaw (bool): Keep the jaw bones that move the teeth.

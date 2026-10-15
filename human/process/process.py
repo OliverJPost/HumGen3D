@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 from . import animations, naming, textures
 from .apply_modifiers import apply_modifiers
 from .bake import BakeSettings
+from .export_pack import needs_export_pack, require
 from .game_eyes import GAME_EYES_KEY, convert_to_game_eyes
 from .game_rig import GAME_RIG_KEY, CUSTOM_PRESET, HUMGEN_NAMES, convert_to_game_rig, preset_for_names
 from .masks import remove_hidden_skin
@@ -86,6 +87,11 @@ class ProcessSettings:
 
     The steps that change the human for good refuse to run twice, see the
     `has_*` and `was_*` properties.
+
+    The process system runs on the data of the HG_Export content pack, which is
+    downloaded from your Superhive account (formerly BlenderMarket). Without it, `run`, the steps,
+    `lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The
+    `has_*`, `was_*` and `is_*` properties and `settings` work without it.
     """
 
     def __init__(self, human: "Human") -> None:
@@ -94,6 +100,7 @@ class ProcessSettings:
     @property
     def baking(self) -> BakeSettings:
         """The baking API of earlier versions, see `bake_textures`."""
+        require()
         return BakeSettings(self._human)
 
     @property
@@ -102,11 +109,16 @@ class ProcessSettings:
 
         Returns:
             LodSettings: The LOD settings.
+
+        Raises:
+            ExportPackMissing: If the HG_Export content pack is not installed.
         """
+        require()
         return LodSettings(self._human)
 
     # Running the whole pipeline
 
+    @needs_export_pack
     @injected_context
     def preflight(self, settings: ExportSettings, context: C = None) -> Preflight:
         """Checks what `run` with these settings would complain about.
@@ -122,6 +134,7 @@ class ProcessSettings:
 
         return preflight(self._human, settings, context)
 
+    @needs_export_pack
     @injected_context
     def run(
         self,
@@ -151,6 +164,7 @@ class ProcessSettings:
 
         return run(self._human, settings, context, progress)
 
+    @needs_export_pack
     @injected_context
     def run_steps(self, settings: ExportSettings, context: C = None) -> Steps[ExportResult]:
         """The work of `run` as resumable steps, see `HumGen3D.common.progress`."""
@@ -167,6 +181,7 @@ class ProcessSettings:
 
     # Shape keys
 
+    @needs_export_pack
     @injected_context
     def set_shape_keys(
         self,
@@ -226,6 +241,7 @@ class ProcessSettings:
             context=context,
         )
 
+    @needs_export_pack
     @injected_context
     def shape_key_options(self, context: C = None) -> Dict[str, List[str]]:
         """The keys `set_shape_keys` can keep, per group, by display name.
@@ -250,6 +266,7 @@ class ProcessSettings:
         """
         return bool(self._human.objects.haircards)
 
+    @needs_export_pack
     @injected_context
     def convert_to_haircards(
         self,
@@ -287,6 +304,7 @@ class ProcessSettings:
         self._human.objects.rig[HAIRCARDS_KEY] = True
         return made
 
+    @needs_export_pack
     @injected_context
     def separate_haircaps(self, context: C = None) -> List[bpy.types.Object]:
         """Puts the cap and the cards of every hair type in objects of their own.
@@ -318,6 +336,7 @@ class ProcessSettings:
         """
         return textures.BAKED_KEY in self._human.objects.rig
 
+    @needs_export_pack
     @injected_context
     def bake_textures(
         self,
@@ -380,6 +399,7 @@ class ProcessSettings:
             )
         )
 
+    @needs_export_pack
     def share_textures(self, source: "Human") -> None:
         """Gives this human the baked materials of another, per part.
 
@@ -413,6 +433,7 @@ class ProcessSettings:
         """
         return GAME_EYES_KEY in self._human.objects.rig
 
+    @needs_export_pack
     def convert_to_game_eyes(
         self, detail: Literal["high", "medium", "low"] = "medium"
     ) -> None:
@@ -428,6 +449,7 @@ class ProcessSettings:
         """
         convert_to_game_eyes(self._human, detail)
 
+    @needs_export_pack
     @injected_context
     def set_quality(
         self,
@@ -467,6 +489,7 @@ class ProcessSettings:
         if meshes.remove_hidden_skin:
             self.remove_hidden_skin(context)
 
+    @needs_export_pack
     @injected_context
     def remove_hidden_skin(self, context: C = None) -> int:
         """Deletes the vertices of the body that the clothing hides.
@@ -483,6 +506,7 @@ class ProcessSettings:
         """
         return remove_hidden_skin(self._human, context)
 
+    @needs_export_pack
     @injected_context
     def apply_modifiers(
         self,
@@ -518,6 +542,7 @@ class ProcessSettings:
         """
         return T_POSE_KEY in self._human.objects.rig
 
+    @needs_export_pack
     @injected_context
     def set_t_pose_as_rest(self, context: C = None) -> None:
         """Bakes the T-pose into the rest pose of the meshes and armature.
@@ -558,6 +583,7 @@ class ProcessSettings:
             return HUMGEN_NAMES
         return preset
 
+    @needs_export_pack
     @injected_context
     def convert_to_game_rig(
         self,
@@ -638,6 +664,7 @@ class ProcessSettings:
 
     # Naming, animation and results
 
+    @needs_export_pack
     def apply_names(
         self,
         output: Optional[OutputSettings] = None,
@@ -676,6 +703,7 @@ class ProcessSettings:
         name = output.resolved_name(str(base))
         return naming.Namer(output, name, level, levels)
 
+    @needs_export_pack
     @injected_context
     def prepare_clips(
         self,
@@ -712,6 +740,7 @@ class ProcessSettings:
             hg_log(warning, level="WARNING")
         return clips
 
+    @needs_export_pack
     def merge_levels(self, levels: List["Human"]) -> None:
         """Puts the meshes of other LOD levels under the skeleton of this human.
 
@@ -734,6 +763,7 @@ class ProcessSettings:
         """
         return PROCESSED_KEY in self._human.objects.rig
 
+    @needs_export_pack
     def mark_as_processed(self, original_human: "Human") -> None:
         """Marks this human as the frozen, processed result of another human.
 

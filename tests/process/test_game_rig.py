@@ -10,7 +10,7 @@ import pytest
 from HumGen3D.common.exceptions import HumGenException
 from HumGen3D.human.process import game_rig
 from HumGen3D.human.process.export import fbx_kwargs
-from HumGen3D.human.process.game_rig import PRESETS
+from HumGen3D.human.process.game_rig import presets
 from HumGen3D.human.process.settings import OutputSettings
 from HumGen3D.tests.test_fixtures import *
 
@@ -91,9 +91,9 @@ def _driver_bone_targets(obj):
     }
 
 
-@pytest.mark.parametrize("preset", list(PRESETS))
+@pytest.mark.parametrize("preset", list(presets()))
 def test_game_rig_is_clean(human, context, preset):
-    if PRESETS[preset]["rest_pose"] == "t_pose":
+    if presets()[preset]["rest_pose"] == "t_pose":
         human.process.set_t_pose_as_rest(context)
     names = "humgen" if preset.startswith("generic") else preset
     human.process.convert_to_game_rig(names=names, context=context)
@@ -114,7 +114,7 @@ def test_game_rig_is_clean(human, context, preset):
 
     roots = [bone for bone in rig.data.bones if not bone.parent]
     assert len(roots) == 1
-    root_name = PRESETS[preset]["root_bone"]
+    root_name = presets()[preset]["root_bone"]
     if root_name:
         assert roots[0].name == root_name
         assert roots[0].head_local.length == pytest.approx(0, abs=1e-6)
@@ -282,7 +282,7 @@ def test_removed_bone_drivers_are_baked(human, context):
 def test_game_rig_export(human, context, tmp_path):
     human.process.convert_to_game_rig(names="unreal", context=context)
     path = os.path.join(tmp_path, "unreal.fbx")
-    kwargs = fbx_kwargs(OutputSettings(), PRESETS["unreal"]["units"])
+    kwargs = fbx_kwargs(OutputSettings(), presets()["unreal"]["units"])
     assert kwargs["apply_scale_options"] == "FBX_SCALE_ALL"
     human.export.to_fbx(path, context=context, **kwargs)
     assert os.path.getsize(path) > 0

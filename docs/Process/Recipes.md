@@ -12,6 +12,8 @@ A recipe is the complete state of the Process tab, saved under a name. Picking o
 
 ## Built-in recipes
 
+The built-in recipes come with the [[Process/Overview#Install the Export pack|Export pack]].
+
 | Recipe | Output | Skeleton | Textures |
 | --- | --- | --- | --- |
 | **Unity** | FBX, textures in a folder next to it | Humanoid names, T-pose, root bone, meters | Metallic-Smoothness, OpenGL normal map |

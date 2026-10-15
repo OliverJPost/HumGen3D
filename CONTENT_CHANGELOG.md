@@ -4,6 +4,20 @@ Changes to the content folder (`get_prefs().filepath`), which is not in this
 repository. The code has to work with content from before and after each entry,
 users update the add-on and the content separately. Newest first.
 
+## 2026-10-15 — `process/`, `content_packs/HG_Export.json`: the HG_Export pack
+
+- New content pack HG_Export (version 1.0), built with
+  `scripts/build_export_pack.py`. The data the process system runs on moved here
+  from the add-on, which no longer ships it (anti-piracy, the add-on repo is
+  public): `process/recipes/*.json` with `order.json` (was
+  `human/process/recipes/`), `process/game_rig_presets.json` and
+  `process/lod/edges.json`, `collar_edges.json`, `lod2.json` (were in
+  `human/process/`). Contents unchanged.
+- Add-ons from this version on need the pack for the Process tab and the process
+  API (`human/process/export_pack.py`); older add-ons ignore it.
+- Edit the recipes and presets here, then raise `pack_version` in
+  `content_packs/HG_Export.json` and rebuild the pack.
+
 ## 2026-10-07 — `models/HG_HUMAN.blend`: deform flags
 
 - The 36 bones that deform no mesh are flagged non-deforming (`use_deform=False`):
