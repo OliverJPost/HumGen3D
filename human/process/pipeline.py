@@ -34,7 +34,7 @@ from HumGen3D.common.progress import run as run_steps
 from mathutils import Vector
 
 from . import animations, manifest, naming, scripts, textures
-from .game_rig import check_names_file
+from .game_rig import check_names_file, set_deform_flags
 from .settings import EXPORT_STAGES, TEETH_LEVELS, ExportSettings, QualitySettings
 from .shape_keys import driven_groups_kept
 
@@ -491,6 +491,10 @@ def _process_level(  # noqa: CCR001
     for obj in copy.objects:
         add_to_collection(context, obj, RESULTS_COLLECTION)
     copy.objects.rig[LEVEL_KEY] = level
+    # Humans from the old base rig file flag their control bones as deforming
+    corrected = set_deform_flags(copy)
+    if corrected:
+        hg_log(f"Corrected the deform flag of {len(corrected)} bones", level="DEBUG")
     _run_scripts(settings, "start", context, copy, result)
     yield 0.02
 

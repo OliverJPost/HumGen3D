@@ -320,3 +320,23 @@ def test_unknown_names_raise(human, context):
 def test_rigify_raises(male_rigify_human, context):
     with pytest.raises(HumGenException):
         male_rigify_human.process.convert_to_game_rig(context=context)
+
+
+def test_set_deform_flags_corrects_old_rig_file(human):
+    """A human from the base rig file of before October 2026 flags its control
+    bones as deforming, the process step sets the flags from the weights."""
+    rig = human.objects.rig
+    control = [b for b in rig.data.bones if b.name.startswith(("facs", "eyeball_lookat", "heel.02"))]
+    assert control
+    for bone in control:
+        bone.use_deform = True
+    assert "spine" in rig.data.bones
+    rig.data.bones["spine"].use_deform = False
+
+    changed = game_rig.set_deform_flags(human)
+
+    assert set(changed) == {b.name for b in control} | {"spine"}
+    weighted = game_rig._weighted_group_names(game_rig._skinned_meshes(human, rig))
+    for bone in rig.data.bones:
+        assert bone.use_deform == (bone.name in weighted), bone.name
+    assert game_rig.set_deform_flags(human) == []

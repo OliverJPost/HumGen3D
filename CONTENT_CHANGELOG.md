@@ -16,7 +16,8 @@ users update the add-on and the content separately. Newest first.
   that lists deform bones (clothing weight transfer, haircards, clothing saving)
   only ever saw weighted bones, so the result is the same.
 - Humans created from the old file still work: the game rig step removes bones by
-  weights, not by this flag.
+  weights, not by this flag, and the process system sets the flags of every
+  processed copy from the weights (`game_rig.set_deform_flags`, 2026-10-15).
 
 ## 2026-10-07 — `animations/`: NLA strips
 

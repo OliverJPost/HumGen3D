@@ -84,6 +84,11 @@ def test_hair_card_human_processes_in_file(v4_humans):
     try:
         assert len(result.humans) == 1
         assert result.humans[0].objects.haircards
+        # The control bones the old rig file flagged as deforming are corrected
+        rig = result.humans[0].objects.rig
+        assert not any(
+            bone.use_deform for bone in rig.data.bones if bone.name.startswith(OLD_DEFORM_BONES)
+        )
     finally:
         for copy in result.humans:
             copy.delete()

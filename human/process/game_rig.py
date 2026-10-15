@@ -317,6 +317,33 @@ def _weighted_group_names(meshes: list[bpy.types.Object]) -> set[str]:
     return names
 
 
+def set_deform_flags(human: "Human") -> list[str]:
+    """Flags the bones that deform a mesh as deforming and the others as not.
+
+    The base rig file of before October 2026 flagged every bone as deforming,
+    the face rig sliders, the eye targets and the heel helpers included (see
+    CONTENT_CHANGELOG.md). A human made from that file keeps those flags, and
+    Blender's exporters with "only deform bones", the engine importers and
+    the root motion step would take the control bones for skeleton bones. The
+    flags are set from the weights, like the current file has them.
+
+    Args:
+        human (Human): Human to correct the flags of, a processed copy.
+
+    Returns:
+        list[str]: Names of the bones whose flag changed.
+    """
+    rig = human.objects.rig
+    weighted = _weighted_group_names(_skinned_meshes(human, rig))
+    changed = []
+    for bone in rig.data.bones:
+        deforms = bone.name in weighted
+        if bone.use_deform != deforms:
+            bone.use_deform = deforms
+            changed.append(bone.name)
+    return changed
+
+
 def _original_name(bone: bpy.types.Bone) -> str:
     return str(bone.get("original_name", bone.name))
 
