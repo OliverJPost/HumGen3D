@@ -9,6 +9,7 @@ checked here without baking anything.
 """
 
 import bpy
+import numpy as np
 import pytest
 
 from HumGen3D.human.process.export import direct_normal_maps
@@ -182,5 +183,50 @@ def test_haircap_in_skin(male_human):
             n.type == "TEX_IMAGE" and n.image and n.image.name.startswith("hg_capskin")
             for n in skin.node_tree.nodes
         )
+    finally:
+        copy.delete()
+
+
+def test_haircap_projection_fades_out_past_the_border(male_human):
+    """Corners of the body under a cap show it, corners past its border don't:
+    without the weight the border row of the cap texture was smeared over the
+    skin next to the eyebrows."""
+    from mathutils.bvhtree import BVHTree
+
+    from HumGen3D.human.process import haircap_skin
+
+    copy = male_human.duplicate(bpy.context)
+    try:
+        copy.process.convert_to_haircards("low", context=bpy.context)
+        body = copy.objects.body
+        brows = next(obj for obj in copy.objects.haircards if "hg_eyebrows" in obj)
+        assert haircap_skin._project_uvs(body, [(brows, 0)], "hg_cap_test")
+        mesh = body.data
+        attribute = mesh.color_attributes["hg_cap_test_weight"]
+        colors = np.empty(len(mesh.loops) * 4, dtype=np.float32)
+        attribute.data.foreach_get("color", colors)
+        weights = colors.reshape(-1, 4)[:, 0]
+        uvs = np.empty(len(mesh.loops) * 2, dtype=np.float32)
+        mesh.uv_layers["hg_cap_test"].data.foreach_get("uv", uvs)
+        mapped = uvs.reshape(-1, 2)[:, 1] > -0.5
+
+        vertices, triangles, _ = haircap_skin._cap_triangles([(brows, 0)], bpy.context)
+        tree = BVHTree.FromPolygons(vertices, triangles)
+        coords = haircap_skin._evaluated_coords(body, bpy.context)
+        loop_verts = np.empty(len(mesh.loops), dtype=np.int32)
+        mesh.loops.foreach_get("vertex_index", loop_verts)
+        distances = np.array(
+            [tree.find_nearest(coords[v], 1.0)[3] for v in loop_verts[mapped]]
+        )
+        under = distances < haircap_skin.FADE_START
+        past = distances > haircap_skin.FADE_END
+        assert under.sum() > 20 and past.sum() > 20
+        assert (weights[mapped][under] == 1.0).all()
+        assert (weights[mapped][past] == 0.0).all()
+        assert (weights[~mapped] == 0.0).all()
+
+        haircap_skin.remove_uv_layers(copy)
+        assert "hg_cap_test" not in mesh.uv_layers
+        assert not any(a.name.startswith("hg_cap_") for a in mesh.attributes)
     finally:
         copy.delete()
