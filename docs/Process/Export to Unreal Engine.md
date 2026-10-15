@@ -24,7 +24,7 @@ The **Unreal** recipe of the Process tab exports a Human Generator human from Bl
 ## In Unreal Engine
 
 > [!tip] Let the Companion do this
-> The [[Unreal Engine Companion]] is a free, open source plugin that does every step below after the import: the ORM and flow textures, master materials with an instance per part, masked and dithered two-sided hair with the *Hair* shading model on the cards, and the *Subsurface Profile* shading model on the skin, which it needs to look like it does in Blender. Install it once and skip to the troubleshooting.
+> The [[Unreal Engine Companion]] is a free, open source plugin that does every step below after the import: the ORM and flow textures, master materials with an instance per part, masked and dithered two-sided hair with the *Hair* shading model on the cards, the *Subsurface Profile* shading model on the skin, which it needs to look like it does in Blender, and an eye material with the iris refracted behind the cornea. Install it once and skip to the troubleshooting.
 
 Tested with Unreal Engine 5.8 and Blender 5.1: the skeletal mesh imports at 176 cm with the Mannequin bone names, 81 morph targets, and a material per part with the base color and normal map connected. By hand:
 
@@ -41,6 +41,7 @@ Tested with Unreal Engine 5.8 and Blender 5.1: the skeletal mesh imports at 176 
 - **No morph targets**: the legacy FBX importer has *Import Morph Targets* off by default. Reimport with it on.
 - **Roughness and metallic look wrong**: the ORM texture is not wired, or has sRGB on. See step 2.
 - **The skin looks pressed in**: the normal map direction, Unreal expects DirectX (Y−).
+- **The eyes look matte, the pupil grey**: the eyes have no ORM texture, so the material has the engine's default roughness. Set *Roughness* to 0.1 on the eye material; the Companion reads it from the `.humgen3d.json` file and gives the eyes its eye master, with the iris refracted behind the cornea.
 - **The hair is solid**: the hair material needs the Masked blend mode, see step 3, and PNG textures.
 
 > [!feedback] A problem that is not listed?
