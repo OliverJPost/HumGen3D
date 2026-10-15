@@ -18,7 +18,7 @@ A free Unity package that sets up a character exported with the **Unity** recipe
 
 ## Install
 
-1. Download `humgen3d-companion-unity.tgz` and save it in the `Packages` folder of your Unity project. Unity keeps reading the package from where it is, so don't leave it in your Downloads folder.
+1. Download `humgen3d-companion-unity.tgz` and put it in your Unity project folder, next to `Assets`. Unity unpacks the tarball into `Library`, but it remembers where the file is and unpacks it again whenever `Library` is rebuilt, after a clone, a Unity upgrade or a cleanup. A tarball left in Downloads is gone by then and the project opens with *Tarball package [com.humgen3d.companion] cannot be found*.
 2. In Unity, open **Window > Package Manager**, click **+** at the top left and choose **Install package from tarball...**.
 3. Pick the `.tgz` file. *Human Generator 3D Companion* appears in the list of packages.
 
@@ -35,7 +35,7 @@ Export with the **Unity** recipe to a folder inside your project's `Assets`. Uni
 
 ## Update
 
-Download the new `.tgz`, replace the old file in your `Packages` folder, and in the Package Manager select the Companion and install it from the new tarball again. The characters are imported again with the new version.
+Download the new `.tgz`, replace the old file in your project folder, and in the Package Manager select the Companion and install it from the new tarball again. The characters are imported again with the new version.
 
 ## Remove
 
