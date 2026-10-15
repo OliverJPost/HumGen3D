@@ -400,7 +400,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         )
 
         box.separator()
-        draw_docs_button(box, "process#install-the-export-pack", text="How to install", emboss=False)
+        draw_docs_button(box, "process#hg-export-pack-missing", text="How to install", emboss=False)
 
 class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MESHES"

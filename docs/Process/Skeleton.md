@@ -93,7 +93,7 @@ For a program that is not covered, set **Names** to *Custom file* and point **Fi
 }
 ```
 
-The keys of `names` are the Human Generator bone names without their `.L`/`.R` side suffix. A name can hold `{side}`, `{Side}` or `{suffix}`, which are filled in from `sides` for the left and right bone: `upperarm_{side}` gives `upperarm_l` and `upperarm_r`, `{Side}UpperArm` gives `LeftUpperArm`. Only `names` is required; bones you leave out keep their name. The built-in presets are in `process/game_rig_presets.json` in your Human Generator content folder, installed by the [[Process/Overview#Install the Export pack|Export pack]], and list every bone; copy one as a starting point.
+The keys of `names` are the Human Generator bone names without their `.L`/`.R` side suffix. A name can hold `{side}`, `{Side}` or `{suffix}`, which are filled in from `sides` for the left and right bone: `upperarm_{side}` gives `upperarm_l` and `upperarm_r`, `{Side}UpperArm` gives `LeftUpperArm`. Only `names` is required; bones you leave out keep their name. The built-in presets are in `process/game_rig_presets.json` in your Human Generator content folder, installed by the [[Process/Overview#HG Export pack missing?|Export pack]], and list every bone; copy one as a starting point.
 
 > [!warning] Blend shapes driven by bones
 > In Blender the face rig and the corrective shape keys are driven by bones. Exported files don't carry drivers, so in the other program those blend shapes exist but don't move with the bones until you connect them there, or drive them from your own animation. See [[Shape Keys#Keys driven by bones]].
