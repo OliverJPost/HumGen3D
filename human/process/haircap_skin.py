@@ -17,9 +17,11 @@ the eyelashes are strips off the skin and stay meshes.
 
 Past the border of a cap the nearest point of the cap is on its border, so the
 corners there would smear the border row of the cap texture over the skin, up
-to a centimetre of stretched hairs next to the eyebrows. Every corner also
-gets a weight from its distance to the cap, 1 under the cap and 0 from two
-millimetres away, and the cap is mixed in by its alpha times that weight.
+to a centimetre of stretched hairs next to the eyebrows. The UV of such a
+corner continues the mapping of the nearest cap triangle past its edge
+instead, into the transparent texels outside the cap, and every corner also
+stores its distance to the cap: the cap is mixed in by its alpha times a
+weight that falls from 1 at a millimetre from the cap to 0 at two.
 """
 
 from __future__ import annotations
@@ -49,12 +51,14 @@ REACH_DISTANCE = 0.05
 # UV of the corners away from the caps, their weight mixes no cap in
 OUTSIDE_UV = (-1.0, -1.0)
 UV_LAYER_PREFIX = "hg_cap_"
-# The weight of a corner is 1 up to the first distance from the cap and 0 from
-# the second: the skin lies within a millimetre under a cap, a corner further
-# away is past its border
+# A corner shows the cap in full up to the first distance from it and not at
+# all from the second: the skin lies within a millimetre under a cap, a corner
+# further away is past its border
 FADE_START = 0.001
 FADE_END = 0.002
-WEIGHT_SUFFIX = "_weight"
+# The distance stored for the corners away from the caps
+FAR_DISTANCE = 1.0
+DISTANCE_SUFFIX = "_distance"
 # Largest UV extent of a body face that is projected corner by corner; more is
 # a face across a seam of the cap, a body face is a few cap texels wide
 SEAM_SPAN = 0.1
@@ -188,18 +192,23 @@ def _project_uvs(  # noqa: CCR001
     body: bpy.types.Object, slots: List[Tuple[bpy.types.Object, int]], layer: str
 ) -> bool:
     """Gives every corner of the body near a cap the UV of the nearest point of
-    the cap, in a new UV map, and a weight for how much of the cap it shows,
-    in a color attribute of the same name with WEIGHT_SUFFIX. False when there
-    is nothing to project on.
+    the cap, in a new UV map, and its distance to the cap, in a color
+    attribute of the same name with DISTANCE_SUFFIX. False when there is
+    nothing to project on.
+
+    The UV of a corner past the border of a cap continues the mapping of the
+    nearest cap triangle past its edge, so the corner reads the transparent
+    texels outside the cap instead of the border of the cap stretched out.
 
     A face whose corners land on both sides of a seam of the cap would reach
     from one side of its texture to the other: its corners get the UVs of the
     cap triangle nearest to the middle of the face instead, extended past the
     edges of that triangle.
 
-    The weight of a corner falls from 1 to 0 between FADE_START and FADE_END
-    from the cap, see the module docstring; the weight of a corner away from
-    the caps is 0.
+    The distance is interpolated over the faces, so the fade from FADE_START
+    to FADE_END (see the module docstring) is mixed in the material where it
+    lies, not spread over a face of several millimetres; a corner away from
+    the caps gets FAR_DISTANCE.
     """
     context = bpy.context
     vertices, triangles, tri_uvs = _cap_triangles(slots, context)
@@ -236,9 +245,9 @@ def _project_uvs(  # noqa: CCR001
 
     uvs = np.empty((len(mesh.loops), 2), dtype=np.float32)
     uvs[:] = OUTSIDE_UV
-    weights = np.zeros(len(mesh.loops), dtype=np.float32)
+    distances = np.full(len(mesh.loops), FAR_DISTANCE, dtype=np.float32)
     vert_uv: Dict[int, Optional[Tuple[float, float]]] = {}
-    vert_weight: Dict[int, float] = {}
+    vert_distance: Dict[int, float] = {}
     for polygon in np.flatnonzero(near_polygon):
         start, total = int(loop_start[polygon]), int(loop_total[polygon])
         verts = loop_verts[start : start + total]
@@ -247,8 +256,8 @@ def _project_uvs(  # noqa: CCR001
             vert = int(vert)
             if vert not in vert_uv:
                 location, _, tri, distance = tree.find_nearest(coords[vert], REACH_DISTANCE)
-                vert_uv[vert] = None if location is None else uv_on(tri, location)
-                vert_weight[vert] = 0.0 if location is None else _weight(distance)
+                vert_uv[vert] = None if location is None else uv_on(tri, coords[vert])
+                vert_distance[vert] = FAR_DISTANCE if location is None else distance
             corner_uvs.append(vert_uv[vert])
         if any(uv is None for uv in corner_uvs):
             continue
@@ -259,22 +268,19 @@ def _project_uvs(  # noqa: CCR001
                 continue
             corner_uvs = [uv_on(tri, coords[vert]) for vert in verts]
         uvs[start : start + total] = corner_uvs
-        weights[start : start + total] = [vert_weight[int(vert)] for vert in verts]
+        distances[start : start + total] = [vert_distance[int(vert)] for vert in verts]
 
     active = mesh.uv_layers.active_index
     uv_layer = mesh.uv_layers.new(name=layer, do_init=False)
     uv_layer.data.foreach_set("uv", uvs.ravel())
     mesh.uv_layers.active_index = active
-    attribute = mesh.color_attributes.new(name=layer + WEIGHT_SUFFIX, type="FLOAT_COLOR", domain="CORNER")
+    attribute = mesh.color_attributes.new(
+        name=layer + DISTANCE_SUFFIX, type="FLOAT_COLOR", domain="CORNER"
+    )
     colors = np.ones((len(mesh.loops), 4), dtype=np.float32)
-    colors[:, :3] = weights[:, None]
+    colors[:, :3] = distances[:, None]
     attribute.data.foreach_set("color", colors.ravel())
     return True
-
-
-def _weight(distance: float) -> float:
-    """How much of the cap a corner at a distance from it shows, 1 to 0."""
-    return float(1.0 - min(max((distance - FADE_START) / (FADE_END - FADE_START), 0.0), 1.0))
 
 
 def _constant(texture_set: "TextureSet", pass_id: str) -> Optional[float]:
@@ -365,14 +371,22 @@ def _mix_over_skin(
         return node
 
     color = texture(images["color"])
-    # The weight of the corners away from the caps and past their borders is
-    # 0, see _project_uvs; it is stored in every channel of the color
-    weight = nodes.new("ShaderNodeVertexColor")
-    weight.layer_name = layer + WEIGHT_SUFFIX
+    # The cap fades out with the distance of the skin to it, see _project_uvs;
+    # the distance is stored in every channel of the color
+    distance = nodes.new("ShaderNodeVertexColor")
+    distance.layer_name = layer + DISTANCE_SUFFIX
+    weight = nodes.new("ShaderNodeMapRange")
+    weight.data_type = "FLOAT"
+    weight.clamp = True
+    links.new(distance.outputs["Color"], _socket(weight.inputs, "Value"))
+    _socket(weight.inputs, "From Min").default_value = FADE_START
+    _socket(weight.inputs, "From Max").default_value = FADE_END
+    _socket(weight.inputs, "To Min").default_value = 1.0
+    _socket(weight.inputs, "To Max").default_value = 0.0
     masked = nodes.new("ShaderNodeMath")
     masked.operation = "MULTIPLY"
     links.new(color.outputs["Alpha"], masked.inputs[0])
-    links.new(weight.outputs["Color"], masked.inputs[1])
+    links.new(_socket(weight.outputs, "Result"), masked.inputs[1])
     alpha = masked.outputs[0]
 
     def mix(input_name: str, data_type: str, cap_socket: Optional[bpy.types.NodeSocket], cap_value: object = None) -> None:

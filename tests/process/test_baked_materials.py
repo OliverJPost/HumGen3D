@@ -188,9 +188,9 @@ def test_haircap_in_skin(male_human):
 
 
 def test_haircap_projection_fades_out_past_the_border(male_human):
-    """Corners of the body under a cap show it, corners past its border don't:
-    without the weight the border row of the cap texture was smeared over the
-    skin next to the eyebrows."""
+    """Corners of the body under a cap store their distance to it, by which
+    the material fades the cap out past its border; without that the border
+    row of the cap texture was smeared over the skin next to the eyebrows."""
     from mathutils.bvhtree import BVHTree
 
     from HumGen3D.human.process import haircap_skin
@@ -202,10 +202,10 @@ def test_haircap_projection_fades_out_past_the_border(male_human):
         brows = next(obj for obj in copy.objects.haircards if "hg_eyebrows" in obj)
         assert haircap_skin._project_uvs(body, [(brows, 0)], "hg_cap_test")
         mesh = body.data
-        attribute = mesh.color_attributes["hg_cap_test_weight"]
+        attribute = mesh.color_attributes["hg_cap_test_distance"]
         colors = np.empty(len(mesh.loops) * 4, dtype=np.float32)
         attribute.data.foreach_get("color", colors)
-        weights = colors.reshape(-1, 4)[:, 0]
+        stored = colors.reshape(-1, 4)[:, 0]
         uvs = np.empty(len(mesh.loops) * 2, dtype=np.float32)
         mesh.uv_layers["hg_cap_test"].data.foreach_get("uv", uvs)
         mapped = uvs.reshape(-1, 2)[:, 1] > -0.5
@@ -221,9 +221,8 @@ def test_haircap_projection_fades_out_past_the_border(male_human):
         under = distances < haircap_skin.FADE_START
         past = distances > haircap_skin.FADE_END
         assert under.sum() > 20 and past.sum() > 20
-        assert (weights[mapped][under] == 1.0).all()
-        assert (weights[mapped][past] == 0.0).all()
-        assert (weights[~mapped] == 0.0).all()
+        assert np.allclose(stored[mapped], distances, atol=1e-5)
+        assert (stored[~mapped] >= haircap_skin.FADE_END).all()
 
         haircap_skin.remove_uv_layers(copy)
         assert "hg_cap_test" not in mesh.uv_layers
