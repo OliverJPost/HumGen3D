@@ -48,6 +48,14 @@ repos:
           darglint
           ]
 
+      - id: windows-filenames
+        name: File names Windows can create
+        stages: [commit]
+        language: system
+        entry: python3 scripts/check_filenames.py
+        pass_filenames: false
+        always_run: true
+
       - id: api-docs
         name: API docs up to date
         stages: [commit]
