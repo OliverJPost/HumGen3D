@@ -17,14 +17,14 @@
 
 # flake8: noqa E402
 
-__version__ = (4, 0, 37)
+__version__ = (4, 0, 38)
 
 bl_info = {
     "name": "Human Generator 3D",
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",  # noqa
     "blender": (4, 0, 0),
-    "version": (4, 0, 37),  # RELEASE update version number
+    "version": (4, 0, 38),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "https://humgen3d.com",
     "tracker_url": "https://humgen3d.com",

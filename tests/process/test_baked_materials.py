@@ -187,6 +187,27 @@ def test_haircap_in_skin(male_human):
         copy.delete()
 
 
+def test_cap_uv_layers_are_removed_by_name(male_human):
+    """Removing the cap UV maps leaves the UV map of the body, also with several
+    caps: up to Blender 5.0 a layer reference goes stale once another is removed."""
+    from HumGen3D.human.process.haircap_skin import UV_LAYER_PREFIX, remove_uv_layers
+
+    mesh = male_human.objects.body.data
+    uv_layers = [layer.name for layer in mesh.uv_layers]
+    for index in range(3):
+        active = mesh.uv_layers.active_index
+        mesh.uv_layers.new(name=f"{UV_LAYER_PREFIX}{index}", do_init=False)
+        mesh.uv_layers.active_index = active
+        mesh.color_attributes.new(
+            name=f"{UV_LAYER_PREFIX}{index}_distance", type="FLOAT_COLOR", domain="CORNER"
+        )
+
+    remove_uv_layers(male_human)
+
+    assert [layer.name for layer in mesh.uv_layers] == uv_layers
+    assert not [a.name for a in mesh.attributes if a.name.startswith(UV_LAYER_PREFIX)]
+
+
 def test_haircap_projection_fades_out_past_the_border(male_human):
     """Corners of the body under a cap store their distance to it, by which
     the material fades the cap out past its border; without that the border

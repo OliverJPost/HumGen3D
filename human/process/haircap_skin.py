@@ -109,12 +109,17 @@ def paint_into_skin(
 
 
 def remove_uv_layers(human: "Human") -> None:
-    """Removes the UV maps and the weights the caps were projected into."""
+    """Removes the UV maps and the weights the caps were projected into.
+
+    By name: up to Blender 5.0 a layer taken from the collection points into
+    the layer array of the mesh, which shifts when one is removed, so removing
+    a list of layers deletes the wrong ones, among them the UV map of the body.
+    """
     mesh = human.objects.body.data
-    for layer in [layer for layer in mesh.uv_layers if layer.name.startswith(UV_LAYER_PREFIX)]:
-        mesh.uv_layers.remove(layer)
-    for attribute in [a for a in mesh.attributes if a.name.startswith(UV_LAYER_PREFIX)]:
-        mesh.attributes.remove(attribute)
+    for name in [layer.name for layer in mesh.uv_layers if layer.name.startswith(UV_LAYER_PREFIX)]:
+        mesh.uv_layers.remove(mesh.uv_layers[name])
+    for name in [a.name for a in mesh.attributes if a.name.startswith(UV_LAYER_PREFIX)]:
+        mesh.attributes.remove(mesh.attributes[name])
 
 
 def remove_caps(human: "Human") -> None:
