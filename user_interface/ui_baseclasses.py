@@ -186,12 +186,18 @@ class HGPanel:
         if self.pref.filepath:
             return False
 
-        layout.alert = True
-        layout.label(text="No filepath selected")
-        layout.label(text="Select one in the preferences")
-        layout.operator("hg3d.openpref", text="Open preferences", icon="PREFERENCES")
-
+        self._setup_prompt(layout, "No content installed yet")
         return True
+
+    @staticmethod
+    def _setup_prompt(layout, text: str) -> None:
+        """Point at the setup, which installs the content and sets the folder."""
+        col = layout.column(align=True)
+        col.label(text=text, icon="INFO")
+        row = col.row(align=True)
+        row.scale_y = 1.4
+        row.operator("hg3d.setup_start", text="Set up Human Generator", icon="IMPORT")
+        col.operator("hg3d.openpref", text="Preferences", icon="PREFERENCES", emboss=False)
 
     def _base_content_warning(self, layout) -> bool:
         """Looks if base content is installed, otherwise shows warning cancels UI.
@@ -213,16 +219,7 @@ class HGPanel:
         trial_content = os.path.exists(trial_content_path)
 
         if not base_content and not trial_content:
-            layout.alert = True
-
-            layout.label(text="Filepath selected, but couldn't")
-            layout.label(text="find any humans.")
-            layout.label(text="Check if filepath is correct and")
-            layout.label(text="if the content packs are installed.")
-
-            layout.operator(
-                "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
-            )
+            self._setup_prompt(layout, "No humans in the content folder")
 
         return (base_content or trial_content)
 
@@ -250,25 +247,14 @@ class HGPanel:
         if not self.update:
             return False
 
+        # The Setup panel above carries the notice and the Update button; here
+        # only a required update stops the interface
         if self.update == "cpack_required":
             layout.alert = True
-            layout.label(text="One or more cpacks outdated!")
-            layout.operator(
-                "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
-            )
+            layout.label(text="Content update needed", icon="ERROR")
+            layout.operator("hg3d.setup_update", text="Update content", icon="IMPORT")
             return True
-        else:
-            addon_label = "Add-on update available!"
-            cpack_label = "CPack updates available"
-            label = addon_label if self.update == "addon" else cpack_label
-            layout.operator(
-                "hg3d.openpref",
-                text=label,
-                icon="PACKAGE",
-                depress=True,
-                emboss=self.update == "addon",
-            )
-            return False
+        return False
 
     def _welcome_menu(self, layout):
         col = layout.column()

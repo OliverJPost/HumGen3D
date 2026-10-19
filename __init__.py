@@ -53,7 +53,9 @@ from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollect
 from .backend.preview_collections import preview_collections as _preview_collections
 from .backend.properties.object_props import HG_OBJECT_PROPS
 from .backend.updates import addon_updater_ops
-from .backend.updates.update import check_update as _check_update
+from .common import i18n as _i18n
+from .backend.setup import migration as _migration
+from .backend.setup import update_check as _update_check
 from .backend.vscode_reload import _post_vscode_reload  # noqa
 from .batch_generator.generator import BatchHumanGenerator
 from .common.exceptions import HumGenException
@@ -116,9 +118,13 @@ _alias.install()
 @_persistent
 def HG_start(dummy: Any) -> None:
     """Runs the activating class when a file is loaded or blender is opened"""
-    bpy.ops.HG3D.activate()
+    folder = _migration.resolve_content_folder()
+    if _migration.folder_has_content(folder):
+        bpy.ops.HG3D.activate()
+    else:  # nothing installed yet: the Setup panel takes over
+        print("HumGen: no content installed yet, open the Setup panel in the HumGen tab")
     _cpacks_refresh(None, bpy.context)
-    _check_update()
+    _update_check.schedule()
 
 
 def _initiate_preview_collections() -> None:
@@ -178,6 +184,7 @@ non_ui_tab_classes = [cls for cls in hg_classes if cls not in ui_tab_classes]
 
 def register() -> None:
     _alias.install()
+    _i18n.register()
     # As an extension, Blender's repository delivers the updates instead
     if not _is_extension():
         addon_updater_ops.register(bl_info)
@@ -209,6 +216,10 @@ def register() -> None:
     livekeys_coll = bpy.props.CollectionProperty(type=BpyLiveKey)  # type:ignore
     bpy.types.WindowManager.livekeys = livekeys_coll
 
+    from .user_interface.setup_overlay.operator import HG_SETUP_PROPS
+
+    bpy.types.WindowManager.hg_setup = bpy.props.PointerProperty(type=HG_SETUP_PROPS)  # type:ignore
+
     # load handler
     if HG_start not in bpy.app.handlers.load_post:
         bpy.app.handlers.load_post.append(HG_start)
@@ -236,6 +247,8 @@ def unregister() -> None:
     bpy.utils.previews.remove(hg_icons.pop())
 
     _preview_collections.clear()
+    del bpy.types.WindowManager.hg_setup
+    _i18n.unregister()
     _alias.uninstall()
 
 

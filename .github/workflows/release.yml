@@ -1,0 +1,55 @@
+# A pushed tag `v<version>` becomes a GitHub release carrying the extension
+# zip and the repository index Blender reads. The website serves
+# humgen3d.com/ext/index.json from the latest release's index.json and
+# redirects the zip downloads to the release asset, so publishing an add-on
+# version is: bump blender_manifest.toml (and bl_info), merge to main, tag.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  extension:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match the manifest version
+        shell: bash
+        run: |
+          MANIFEST=$(python3 -c "import re;print(re.search(r'^version\s*=\s*\"([^\"]+)\"', open('blender_manifest.toml').read(), re.M).group(1))")
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "manifest $MANIFEST, tag $TAG"
+          test "$MANIFEST" = "$TAG"
+
+      - name: Libraries Blender needs on a bare Linux runner
+        run: sudo apt-get update -q && sudo apt-get install -y -q libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6 libxkbcommon0
+
+      - name: Cache Blender
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: blender-dist
+          key: blender-4.2.23-${{ runner.os }}
+
+      - name: Download Blender
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: python3 scripts/ci/fetch_blender.py 4.2.23 blender-dist
+
+      - name: Build the zip and the repository index
+        shell: bash
+        run: |
+          BLENDER=$(python3 scripts/ci/fetch_blender.py --path blender-dist)
+          python3 scripts/release_extension.py --blender "$BLENDER" --out build/ext
+          ls -l build/ext
+
+      - name: Create the release with both files
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/ext/humgen3d-*.zip
+            build/ext/index.json
+          generate_release_notes: true

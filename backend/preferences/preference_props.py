@@ -182,6 +182,11 @@ class HGPreferenceBackend:
     silence_all_console_messages: BoolProperty(default=False)
 
     skip_url_request: BoolProperty(default=True)
+    fake_setup: BoolProperty(
+        name="Fake setup downloads",
+        description="Dev tools: run the setup against a fake server, counting bytes instead of downloading",
+        default=False,
+    )
 
     show_tips: BoolProperty(default=True)
     compress_zip: BoolProperty(default=True)
