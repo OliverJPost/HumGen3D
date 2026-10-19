@@ -15,6 +15,8 @@ import urllib.request
 import zipfile
 
 MIRROR = "https://download.blender.org/release"
+# The mirror refuses Python's default user agent with a 403
+USER_AGENT = "Mozilla/5.0 (HumGen3D CI; +https://github.com/OliverJPost/HumGen3D)"
 
 
 def archive_name(version: str) -> str:
@@ -41,7 +43,9 @@ def fetch(version: str, dist: str) -> str:
     url = f"{MIRROR}/{archive_name(version)}"
     archive = os.path.join(dist, os.path.basename(url))
     print("downloading", url, flush=True)
-    urllib.request.urlretrieve(url, archive)
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=120) as response, open(archive, "wb") as f:
+        shutil.copyfileobj(response, f, 4 * 1024 * 1024)
     print("unpacking", archive, flush=True)
     if archive.endswith(".zip"):
         with zipfile.ZipFile(archive) as zf:
