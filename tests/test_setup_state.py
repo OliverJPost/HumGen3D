@@ -222,6 +222,28 @@ def test_update_mode_preselects_updates(st, tmp_path):
     assert st.screen == "welcome"
 
 
+def test_links_are_fetched_per_pack_and_again_on_retry(st):
+    """Signed links expire: ask right before each download, and again after a failure."""
+    requests = []
+    original = st.services.content_urls
+
+    def content_urls(keys, order_guid, email, rid):
+        requests.append(list(keys))
+        return original(keys, order_guid, email, rid)
+
+    st.services.content_urls = content_urls
+    st.set_mode("licensed")
+    loaded(st)
+    for pack in st.packs:
+        pack.selected = pack.key in ("Base_Poses", "HG_Export")
+    st.start()
+    assert wait_for(lambda: st.phase == "done")
+    assert requests == [["Base_Poses"], ["HG_Export"]]
+    st.start()  # a retry asks again instead of reusing old links
+    assert wait_for(lambda: st.phase == "done")
+    assert len(requests) == 4
+
+
 def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
     """The real worker with the real downloader and installer, URLs from a fake API."""
     from setup_fakes import Handler, make_pack
@@ -240,7 +262,13 @@ def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
     try:
         catalogue = Catalogue.from_dict({"packs": [{"key": "Trial_Content", "name": "Trial Content", "access": "trial", "required": True, "versions": [{"version": [1, 0], "size": len(pack_bytes), "min_addon": "4.0.0", "file": "HG_Trial_Content.hgpack", "url": url}]}]})
         monkeypatch.setattr(api_client, "fetch_catalogue", lambda: catalogue)
-        monkeypatch.setattr(api_client, "content_urls", lambda keys, g="", e="", rid="": {"files": {k: {"url": url, "size": len(pack_bytes)} for k in keys}, "errors": {}})
+        calls = []
+
+        def content_urls(keys, g="", e="", rid=""):
+            calls.append(list(keys))
+            return {"files": {k: {"url": url, "size": len(pack_bytes)} for k in keys}, "errors": {}}
+
+        monkeypatch.setattr(api_client, "content_urls", content_urls)
         st = SetupState(services=RealServices())
         st.folder = str(tmp_path / "content")
         st.choose("trial")
@@ -251,5 +279,6 @@ def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
         assert os.path.exists(tmp_path / "content" / "models" / "trial.blend")
         assert os.path.exists(tmp_path / "content" / "content_packs" / "Trial_Content.json")
         assert not os.path.exists(tmp_path / "content" / "content_packs" / "downloads" / "HG_Trial_Content.hgpack")
+        assert calls == [["Trial_Content"]]  # one request per pack, right before its download
     finally:
         httpd.shutdown()

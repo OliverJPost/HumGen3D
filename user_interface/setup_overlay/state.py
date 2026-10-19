@@ -668,22 +668,6 @@ class InstallWorker(threading.Thread):
         if not packs:
             state.phase = "done"
             return
-        creds = state.credentials
-        answer = state.services.content_urls([p.key for p in packs], creds["order_guid"], creds["email"], state.rid)
-        files = answer.get("files", {})
-        errors = answer.get("errors", {})
-        for pack in packs:
-            info = files.get(pack.key)
-            if info and info.get("url"):
-                pack.url = info["url"]
-                if pack.target is not None:
-                    if info.get("size"):
-                        pack.target.size = int(info["size"])
-                        pack.size = pack.target.size
-                    if info.get("sha256"):
-                        pack.target.sha256 = info["sha256"]
-            elif not pack.url:
-                raise downloader.DownloadError("http", f"{pack.name} is not available: {errors.get(pack.key, 'no download')}.")
         folder = downloader.download_folder(state.folder)
         for pack in packs:
             if cancel.is_set():
@@ -691,6 +675,10 @@ class InstallWorker(threading.Thread):
             state.current = pack
             pack.state = "downloading"
             state.phase = "downloading"
+            # Ask for this pack's link right before its download: signed links
+            # expire after an hour, and a retry or a resumed download can come
+            # days later
+            self._fetch_url(state, pack)
             dest = os.path.join(folder, pack.file or (pack.key + ".hgpack"))
 
             def progress(done: int, total: Optional[int], pack: Pack = pack) -> None:
@@ -707,6 +695,23 @@ class InstallWorker(threading.Thread):
                 downloader._remove(dest)
             pack.state = "done"
         state.phase = "done"
+
+    @staticmethod
+    def _fetch_url(state: "SetupState", pack: Pack) -> None:
+        creds = state.credentials
+        answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid)
+        info = (answer.get("files") or {}).get(pack.key)
+        if info and info.get("url"):
+            pack.url = info["url"]
+            if pack.target is not None:
+                if info.get("size"):
+                    pack.target.size = int(info["size"])
+                    pack.size = pack.target.size
+                if info.get("sha256"):
+                    pack.target.sha256 = info["sha256"]
+        elif not pack.url:
+            reason = (answer.get("errors") or {}).get(pack.key, "no download")
+            raise downloader.DownloadError("http", f"{pack.name} is not available: {reason}.")
 
 
 state = SetupState()

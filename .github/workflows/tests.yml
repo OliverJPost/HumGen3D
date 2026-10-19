@@ -50,5 +50,6 @@ jobs:
         run: |
           BLENDER=$(python3 scripts/ci/fetch_blender.py --path "$RUNNER_TEMP/blender-dist")
           "$BLENDER" --command extension validate .
+          mkdir -p build
           "$BLENDER" --command extension build --source-dir . --output-dir build
           ls -l build
