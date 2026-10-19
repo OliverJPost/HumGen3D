@@ -28,7 +28,7 @@ jobs:
         id: cache
         uses: actions/cache@v4
         with:
-          path: blender-dist
+          path: ${{ runner.temp }}/blender-dist
           key: blender-${{ matrix.blender }}-${{ runner.os }}
 
       - name: Libraries Blender needs on a bare Linux runner
@@ -38,17 +38,17 @@ jobs:
       - name: Download Blender
         if: steps.cache.outputs.cache-hit != 'true'
         shell: bash
-        run: python3 scripts/ci/fetch_blender.py "${{ matrix.blender }}" blender-dist
+        run: python3 scripts/ci/fetch_blender.py "${{ matrix.blender }}" "$RUNNER_TEMP/blender-dist"
 
       - name: Run the setup tests inside Blender
         shell: bash
-        run: python3 scripts/ci/run_in_blender.py blender-dist "$GITHUB_WORKSPACE" tests/test_setup_catalogue.py tests/test_setup_downloader.py tests/test_setup_client.py tests/test_setup_state.py tests/test_extension.py
+        run: python3 scripts/ci/run_in_blender.py "$RUNNER_TEMP/blender-dist" "$GITHUB_WORKSPACE" tests/test_setup_catalogue.py tests/test_setup_downloader.py tests/test_setup_client.py tests/test_setup_state.py tests/test_extension.py
 
       - name: Validate and build the extension
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          BLENDER=$(python3 scripts/ci/fetch_blender.py --path blender-dist)
+          BLENDER=$(python3 scripts/ci/fetch_blender.py --path "$RUNNER_TEMP/blender-dist")
           "$BLENDER" --command extension validate .
           "$BLENDER" --command extension build --source-dir . --output-dir build
           ls -l build
