@@ -37,6 +37,7 @@ paths_exclude_pattern = [
   "/venv/",
   "/.venv/",
   "/reports/",
+  "/build/",
   "/research_notes/",
   "/*.zip",
   "/setup.py",
