@@ -1,0 +1,48 @@
+# Blender extension manifest (Blender 4.2 and later). Blender 4.0 and 4.1 load the
+# same folder as a legacy add-on through bl_info in __init__.py. The version here is
+# the one the add-on reports; bl_info mirrors it for the legacy loader.
+schema_version = "1.0.0"
+
+id = "humgen3d"
+version = "4.0.38"
+name = "Human Generator 3D"
+tagline = "Generate photorealistic humans with clothing, hair and poses"
+maintainer = "Oliver J. Post <support@humgen3d.com>"
+type = "add-on"
+website = "https://humgen3d.com"
+tags = ["Object", "Rigging", "Material"]
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = ["2022-2026 Oliver J. Post & Alexander Lashko"]
+
+[permissions]
+network = "Check for updates of the add-on and the content packs"
+files = "Install and read content packs in the content folder you choose"
+
+[build]
+paths_exclude_pattern = [
+  "__pycache__/",
+  "*.pyc",
+  "/.git/",
+  "/.github/",
+  "/.vscode/",
+  "/.mypy_cache/",
+  "/.idea/",
+  "/.pytest_cache/",
+  "*_updater/",
+  "/tests/",
+  "/docs/",
+  "/scripts/",
+  "/venv/",
+  "/.venv/",
+  "/reports/",
+  "/research_notes/",
+  "/*.zip",
+  "/setup.py",
+  "/setup.cfg",
+  "/.pre-commit-config.yaml",
+  "/.gitattributes",
+  "/.gitignore",
+  "/CLAUDE.md",
+]

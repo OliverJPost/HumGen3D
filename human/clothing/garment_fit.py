@@ -22,16 +22,16 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional
 
 import bpy
 import numpy as np
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.geometry import world_coords_from_obj
-from HumGen3D.common.progress import Steps, phase, run
-from HumGen3D.common.surface import (
+from ...common.exceptions import HumGenException
+from ...common.geometry import world_coords_from_obj
+from ...common.progress import Steps, phase, run
+from ...common.surface import (
     edges_from_tris,
     make_bvh,
     smooth_field,
     vert_normals,
 )
-from HumGen3D.human.clothing.fitting import (
+from ...human.clothing.fitting import (
     BodyBinding,
     drape_envelope,
     fit_shape,
@@ -39,12 +39,12 @@ from HumGen3D.human.clothing.fitting import (
     resolve_collisions,
     vertex_covariance,
 )
-from HumGen3D.human.clothing.skinning import skin_matrices, unskin
-from HumGen3D.human.clothing.weights import transfer_weights_steps
+from ...human.clothing.skinning import skin_matrices, unskin
+from ...human.clothing.weights import transfer_weights_steps
 from mathutils.bvhtree import BVHTree
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 LOOSE_GROUP = "hg_loose"
 DEFAULT_SLOPE = 0.6

@@ -8,13 +8,14 @@ import os
 from typing import Optional
 
 import bpy  # type: ignore
-import HumGen3D.backend.updates.addon_updater_ops as addon_updater_ops
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
+from ...backend.updates import addon_updater_ops as addon_updater_ops
+from ...common.documentation import docs_url
+from ...package import addon_package, is_extension
+from ...user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from .content_pack_saving_ui import CpackEditingSystem
 from .preference_props import HGPreferenceBackend
-from HumGen3D import __version__
+from ... import __version__
 
 ALERT_DICT = {
     "cpack_required": [
@@ -36,7 +37,8 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
     """HumGen user preferences."""
 
     _register_priority = 1
-    bl_idname = __package__.split(".")[0]
+    # The package name differs between the legacy add-on and the extension
+    bl_idname = addon_package()
 
     def draw(self, context):
         # check if base content is installed, otherwise show installation ui
@@ -83,7 +85,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         elif self.pref_tabs == "cpacks":
             self._draw_cpack_ui(context)
 
-        addon_updater_ops.update_settings_ui(self, context)
+        # As an extension, Blender's repository handles updates
+        if not is_extension():
+            addon_updater_ops.update_settings_ui(self, context)
 
     def _check_if_basecontent_is_installed(self) -> tuple[bool, bool]:
         """Determines if this is the first time loading Human Generator.

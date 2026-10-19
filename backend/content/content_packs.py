@@ -22,9 +22,9 @@ from typing import Any, no_type_check
 
 import bpy
 from bpy_extras.io_utils import ImportHelper  # type: ignore
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...backend import get_prefs, hg_log
+from ...user_interface.documentation.feedback_func import ShowMessageBox
+from ...user_interface.icons.icons import get_hg_icon
 
 from ..updates.update import check_update
 

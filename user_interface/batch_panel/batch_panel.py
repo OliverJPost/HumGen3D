@@ -1,16 +1,16 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.batch_generator.batch_functions import (
+from ...backend import get_prefs
+from ...batch_generator.batch_functions import (
     get_batch_marker_list,
     height_from_bell_curve,
 )
-from HumGen3D.common import is_processed
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.icons.icons import get_hg_icon
-from HumGen3D.user_interface.ui_baseclasses import draw_icon_title
+from ...common import is_processed
+from ...common.documentation import docs_url
+from ...human.human import Human
+from ...user_interface.icons.icons import get_hg_icon
+from ...user_interface.ui_baseclasses import draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
 from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow

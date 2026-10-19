@@ -5,7 +5,7 @@ import os
 import addon_utils
 import bpy
 
-from HumGen3D.backend import get_prefs
+from ...backend import get_prefs
 from ..panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw

@@ -6,7 +6,7 @@ import functools
 from typing import Any, Callable, Iterable, TypeVar, Union, cast
 
 from bpy.types import ID, bpy_prop_collection  # type:ignore
-from HumGen3D.common.exceptions import HumGenException
+from ...common.exceptions import HumGenException
 from numpy import ndarray  # type:ignore
 
 F = TypeVar("F", bound=Callable[..., Any])

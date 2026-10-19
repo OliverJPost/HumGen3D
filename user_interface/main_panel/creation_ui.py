@@ -1,8 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.common import find_hg_rig
-from HumGen3D.human.human import Human
+from ...common import find_hg_rig
+from ...human.human import Human
 
 from ... import get_prefs
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui

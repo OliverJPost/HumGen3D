@@ -6,7 +6,7 @@ import bpy  # type:ignore
 import numpy as np
 
 if TYPE_CHECKING:
-    from HumGen3D.backend.properties.batch_props import BatchProps
+    from ..backend.properties.batch_props import BatchProps
 
 
 def height_from_bell_curve(

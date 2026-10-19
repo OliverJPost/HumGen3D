@@ -6,7 +6,8 @@ from types import ModuleType
 from typing import Any, Callable
 
 import bpy
-import HumGen3D
+
+from ..package import addon_package, addon_root
 
 # There are more, but I'm not using them
 BPY_CLASSES = (
@@ -23,7 +24,7 @@ Class = Callable[..., Any]
 
 
 def _get_bpy_classes() -> list[Class]:
-    dir_path = os.path.dirname(os.path.abspath(HumGen3D.__file__))
+    dir_path = addon_root()
 
     py_files = get_python_files_from_dir(dir_path)
 
@@ -57,7 +58,7 @@ def _import_pyfile_as_module(dir_path: str, root: str, filename: str) -> ModuleT
     module_import_path = ".".join(rel_path_split)
 
     module = __import__(
-        ".".join(["HumGen3D", module_import_path[:-3]]),
+        ".".join([addon_package(), module_import_path[:-3]]),
         fromlist=[module_import_path[:-3]],
     )
 

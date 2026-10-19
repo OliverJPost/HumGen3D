@@ -2,7 +2,7 @@
 
 import bpy
 
-from HumGen3D.backend import get_prefs
+from ...backend import get_prefs
 from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 

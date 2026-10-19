@@ -14,24 +14,25 @@ from typing import Any, Literal, Optional, cast
 import bpy
 import numpy as np
 from bpy.types import Image  # type:ignore
-from HumGen3D.backend import get_prefs, hg_delete, remove_broken_drivers
-from HumGen3D.backend.preferences.preferences import HG_PREF
-from HumGen3D.common.collections import add_to_collection
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import disable_mesh_changing_modifiers, injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.math import round_vector_to_tuple
-from HumGen3D.common.shadernode import NodeInput
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human import hair
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
-from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair import card_atlas, hair_binding, haircap, haircards
-from HumGen3D.human.hair.compatibility import set_children_percent
-from HumGen3D.human.hair.saving import save_hair
-from HumGen3D.human.height.height import apply_armature
-from HumGen3D.human.keys.keys import apply_shapekeys
+from ...backend import get_prefs, hg_delete, remove_broken_drivers
+from ...backend.preferences.preferences import HG_PREF
+from ...common.collections import add_to_collection
+from ...common.context import context_override
+from ...common.decorators import disable_mesh_changing_modifiers, injected_context
+from ...common.exceptions import HumGenException
+from ...common.math import round_vector_to_tuple
+from ...common.render import set_cycles_transparent_bounces
+from ...common.shadernode import NodeInput
+from ...common.type_aliases import C
+from ...human import hair
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...human.common_baseclasses.prop_collection import PropCollection
+from ...human.common_baseclasses.savable_content import SavableContent
+from ...human.hair import card_atlas, hair_binding, haircap, haircards
+from ...human.hair.compatibility import set_children_percent
+from ...human.hair.saving import save_hair
+from ...human.height.height import apply_armature
+from ...human.keys.keys import apply_shapekeys
 
 HAIR_NODE_NAME = "HG_Hair"
 
@@ -265,6 +266,9 @@ class BaseHair:
                 old_hair_node.inputs["Redness"].default_value,
                 grey_hair,
             )
+        if len(materials) > 1:
+            haircards.add_blender_look(materials[1])
+        set_cycles_transparent_bounces(context)
 
         for mod in self.modifiers:  # noqa
             mod.show_viewport = False

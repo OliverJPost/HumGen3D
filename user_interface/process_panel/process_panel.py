@@ -10,38 +10,38 @@ import os
 from typing import Optional
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.backend.properties.process_props import (
+from ...backend import get_prefs
+from ...backend.properties.process_props import (
     _resolution_from_props,
     is_modified,
     props_to_settings,
     quality_from_props,
 )
-from HumGen3D.common import find_multiple_in_list
-from HumGen3D.common.documentation import (
+from ...common import find_multiple_in_list
+from ...common.documentation import (
     EARLY_ACCESS,
     draw_docs_button,
     draw_early_access,
     feedback_url,
 )
-from HumGen3D.human.human import Human
-from HumGen3D.human.process import export_pack
-from HumGen3D.human.process.pipeline import output_folder, preflight
-from HumGen3D.human.process.quality import (
+from ...human.human import Human
+from ...human.process import export_pack
+from ...human.process.pipeline import output_folder, preflight
+from ...human.process.quality import (
     CUSTOM_TIER,
     TEXTURE_TIERS,
     estimate_triangles,
     quality_of_tier,
     texture_tier_of,
 )
-from HumGen3D.human.process.settings import (
+from ...human.process.settings import (
     OUTPUT_FORMATS,
     TEXTURE_PASSES,
     TEXTURE_SETS,
 )
-from HumGen3D.human.process.shape_keys import KEY_GROUPS, driven_groups_kept
-from HumGen3D.user_interface.icons.icons import get_hg_icon
-from HumGen3D.user_interface.panel_functions import (
+from ...human.process.shape_keys import KEY_GROUPS, driven_groups_kept
+from ...user_interface.icons.icons import get_hg_icon
+from ...user_interface.panel_functions import (
     draw_panel_switch_header,
     draw_paragraph,
 )

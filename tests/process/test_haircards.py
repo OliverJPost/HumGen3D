@@ -266,6 +266,74 @@ def test_hair_color(long_haired_human, context):
     assert human.materials.haircards == [hair_obj.data.materials[1]]
 
 
+def _plain(value):
+    return tuple(round(v, 6) for v in value) if hasattr(value, "__len__") else value
+
+
+def _principled_sources(material):
+    principled = next(
+        n for n in material.node_tree.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"
+    )
+    return {
+        socket.identifier: (
+            (socket.links[0].from_node.name, socket.links[0].from_socket.identifier)
+            if socket.links
+            else _plain(getattr(socket, "default_value", None))
+        )
+        for socket in principled.inputs
+        if socket.enabled
+    }
+
+
+def test_blender_look_is_left_out_of_the_bake(long_haired_human, context):
+    context.scene.cycles.transparent_max_bounces = 8
+    hair_obj = long_haired_human.hair.regular_hair.convert_to_haircards("low", context)
+    material = hair_obj.data.materials[1]
+    look = [
+        n for n in material.node_tree.nodes if n.name.startswith(haircards.BLENDER_LOOK_PREFIX)
+    ]
+    assert look
+    assert context.scene.cycles.transparent_max_bounces >= 64
+
+    plain = material.copy()
+    haircards.remove_blender_look(plain)
+    assert not any(
+        n.name.startswith(haircards.BLENDER_LOOK_PREFIX) for n in plain.node_tree.nodes
+    )
+    sources = _principled_sources(plain)
+    assert sources["Base Color"][0] == haircards.GREY_HAIR_NODE_NAME
+    assert sources["Alpha"][0] == "HG_Hair"
+
+    again = plain.copy()
+    haircards.add_blender_look(again)
+    assert _principled_sources(again) != sources
+    haircards.remove_blender_look(again)
+    assert _principled_sources(again) == sources
+    bpy.data.materials.remove(plain)
+    bpy.data.materials.remove(again)
+
+
+def test_blender_look_reads_own_atlas(long_haired_human, context):
+    """The card material of a second human is a copy of the first one's."""
+    second = _human_with_hair("male", LONG_HAIRSTYLE, context)
+    for human in (long_haired_human, second):
+        human.hair.regular_hair.convert_to_haircards("low", context)
+        material = human.materials.haircards[0]
+        group = next(n for n in material.node_tree.nodes if n.bl_idname == "ShaderNodeGroup")
+        atlas = next(
+            n.image
+            for n in group.node_tree.nodes
+            if n.bl_idname == "ShaderNodeTexImage" and n.image and "_ALPHA" in n.image.name
+        )
+        look_images = {
+            n.image
+            for n in material.node_tree.nodes
+            if n.name.startswith(haircards.BLENDER_LOOK_PREFIX) and getattr(n, "image", None)
+        }
+        assert look_images == {atlas}
+    second.delete()
+
+
 def test_card_mesh_data(long_haired_human, context):
     hair_obj = long_haired_human.hair.regular_hair.convert_to_haircards("high", context)
     mesh = hair_obj.data

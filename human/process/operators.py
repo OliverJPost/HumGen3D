@@ -8,9 +8,9 @@ import zipfile
 from typing import List, Optional
 
 import bpy
-from HumGen3D.backend import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.process_props import (
+from ...backend import hg_log
+from ...backend.preferences.preference_func import get_prefs
+from ...backend.properties.process_props import (
     add_script,
     ensure_initialized,
     get_script_items,
@@ -20,15 +20,15 @@ from HumGen3D.backend.properties.process_props import (
     select_list,
     settings_to_props,
 )
-from HumGen3D.common import find_multiple_in_list, find_original_rig
-from HumGen3D.common.documentation import EARLY_ACCESS, feedback_url
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.progress import Steps, phase, run
-from HumGen3D.human.human import Human
-from HumGen3D.human.process import export_pack
-from HumGen3D.human.process import scripts as script_tools
-from HumGen3D.human.process.pipeline import ExportResult, output_folder
-from HumGen3D.human.process.settings import (
+from ...common import find_multiple_in_list, find_original_rig
+from ...common.documentation import EARLY_ACCESS, feedback_url
+from ...common.exceptions import HumGenException
+from ...common.progress import Steps, phase, run
+from ...human.human import Human
+from ...human.process import export_pack
+from ...human.process import scripts as script_tools
+from ...human.process.pipeline import ExportResult, output_folder
+from ...human.process.settings import (
     RECIPE_EXTENSION,
     USER_RECIPE_FOLDER,
     ExportSettings,

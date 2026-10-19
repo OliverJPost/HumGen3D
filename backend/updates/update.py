@@ -12,12 +12,11 @@ if TYPE_CHECKING:
     from ..content.content_packs import HG_CONTENT_PACK  # type: ignore
 
 from .. import get_prefs, hg_log  # type: ignore
+from ...package import addon_version
 
 
 def check_update() -> None:
     """Checks if there are any code or cpack updates available."""
-    from HumGen3D import bl_info
-
     pref = get_prefs()
     if pref.skip_url_request:
         return
@@ -35,14 +34,15 @@ def check_update() -> None:
 
     # only get 2 first version numbers for required cpacks, last number can
     # be updated without needing a new required cpack item
-    current_main_version = str([bl_info["version"][0], bl_info["version"][1]])
+    version = addon_version()
+    current_main_version = str([version[0], version[1]])
 
     pref.latest_version = tuple(update_data["latest_addon"])
 
     update_col = bpy.context.scene.hg_update_col  # type:ignore[attr-defined]
     update_col.clear()
     for version, update_types in update_data["addon_updates"].items():
-        if tuple([int(i) for i in version.split(",")]) <= bl_info["version"]:
+        if tuple([int(i) for i in version.split(",")]) <= addon_version():
             continue
         for update_type, lines in update_types.items():
             for line in lines:

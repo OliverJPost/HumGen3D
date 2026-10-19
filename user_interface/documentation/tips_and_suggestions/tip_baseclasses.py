@@ -1,6 +1,6 @@
 from typing import Optional
 
-from HumGen3D.user_interface.panel_functions import lines_from_text
+from ....user_interface.panel_functions import lines_from_text
 
 
 class Operator:

@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING, List, Literal, Union
 
 import bmesh
 import bpy
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.keys.keys import apply_shapekeys
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
+from ...human.keys.keys import apply_shapekeys
 
 from . import export_pack
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 
 # Set on the reduced meshes, with the level, and on the rig of a human whose

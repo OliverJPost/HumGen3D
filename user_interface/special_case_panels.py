@@ -1,8 +1,8 @@
 import bpy
-from HumGen3D.common import find_original_rig, is_legacy, is_processed
-from HumGen3D.common.documentation import EARLY_ACCESS, draw_docs_button, feedback_url
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.panel_functions import draw_paragraph
+from ..common import find_original_rig, is_legacy, is_processed
+from ..common.documentation import EARLY_ACCESS, draw_docs_button, feedback_url
+from ..human.human import Human
+from ..user_interface.panel_functions import draw_paragraph
 
 
 class HG_PT_LEGACYINSTALL(bpy.types.Panel):

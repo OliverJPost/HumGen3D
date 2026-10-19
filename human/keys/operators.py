@@ -1,8 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ...human.human import Human
+from ...user_interface.documentation.feedback_func import ShowMessageBox
 
 
 class HG_OT_LIVETOSHAPEKEY(bpy.types.Operator):

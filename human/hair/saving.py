@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING, Iterable, Literal, Optional
 import bpy
 import numpy as np
 from mathutils import Matrix
-from HumGen3D.human.hair.compatibility import get_children_percent
+from ...human.hair.compatibility import get_children_percent
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend.content.content_saving import save_objects_optimized, save_thumb
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common.memory_management import hg_delete
+from ...backend.content.content_saving import save_objects_optimized, save_thumb
+from ...backend.preferences.preference_func import get_prefs
+from ...common.memory_management import hg_delete
 
 HAIR_OBJ_NAME = "HG_Body"
 

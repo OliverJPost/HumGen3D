@@ -156,6 +156,13 @@ Most process tests make a human, convert hair to cards and bake textures, so `te
 
 ## Version Management
 
-Version is stored in two places (keep in sync):
-- `__init__.py`: `__version__` tuple and `bl_info["version"]`
-- Both must be updated together for releases
+The version lives in `blender_manifest.toml` (`version = "x.y.z"`); `__version__` in `__init__.py` is read from it at import (`package.manifest_version`). `bl_info["version"]` in `__init__.py` must be a literal for the legacy loader of Blender 4.0 and 4.1, so update it together with the manifest; `tests/test_extension.py` fails when they differ.
+
+## Extension and legacy add-on
+
+The same folder loads as a legacy add-on (`bl_info`, Blender 4.0 and 4.1, package `HumGen3D`) and as a Blender extension (`blender_manifest.toml`, 4.2 and later, package `bl_ext.<repository>.humgen3d`). Rules that follow from this:
+- Only relative imports inside the package, never `from HumGen3D...`. `package.py` gives the real package name (`addon_package()`, `is_extension()`, `addon_root()`, `addon_version()`); use it for the preferences lookup and the `bl_idname` of the preferences.
+- `alias.py` keeps `from HumGen3D import Human` (and the old `HG3D`) working for scripts when the package has another name: a `sys.meta_path` finder hands out the real modules, so there is never a second copy of a class. Installed at import and in `register()`, removed in `unregister()`.
+- No runtime `pip`, no bundled wheels: image work goes through `common/images.py` (Blender's image API) instead of Pillow.
+- The CG Cookie self-updater is skipped as an extension (`is_extension()`); Blender's repository delivers updates there.
+- Build the extension zip with `"/Applications/Blender 5.1.app/Contents/MacOS/Blender" --command extension build --source-dir . --output-dir <folder>` (the `[build]` excludes in the manifest keep tests, docs, scripts and venvs out); `--command extension validate .` checks the manifest. `tests/test_extension_mode.py` loads the folder as an extension in a separate Blender Python.

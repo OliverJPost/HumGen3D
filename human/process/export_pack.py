@@ -23,8 +23,8 @@ import json
 import os
 from typing import Any, Callable, Dict, Literal, Optional, Tuple, TypeVar
 
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common.exceptions import HumGenException
+from ...backend.preferences.preference_func import get_prefs
+from ...common.exceptions import HumGenException
 
 PACK_NAME = "HG_Export"
 PACK_FILE = PACK_NAME + ".hgpack"

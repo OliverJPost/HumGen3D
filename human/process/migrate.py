@@ -10,8 +10,8 @@ sections of that version have no equivalent and are dropped with a warning.
 import os
 from typing import Any, Dict
 
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_addon_root, get_prefs
 
 from .settings import SCHEMA_VERSION
 

@@ -20,22 +20,22 @@ from typing import Any, Callable, Iterable, Literal, Optional, Tuple, Union
 
 import bpy
 import numpy as np
-from HumGen3D.backend import get_prefs, hg_delete, hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.common.collections import add_to_collection
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human import clothing
-from HumGen3D.common.progress import Steps, run
-from HumGen3D.human.clothing.add_obj_to_clothing import (
+from ...backend import get_prefs, hg_delete, hg_log
+from ...backend.preferences.preference_func import get_addon_root
+from ...backend.preview_collections import PREVIEW_COLLECTION_DATA
+from ...common.collections import add_to_collection
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
+from ...human import clothing
+from ...common.progress import Steps, run
+from ...human.clothing.add_obj_to_clothing import (
     convert_obj_to_clothing_steps,
 )
-from HumGen3D.human.clothing.garment_fit import fit_to_human, missing_correctives
-from HumGen3D.human.clothing.pattern import PatternSettings
-from HumGen3D.human.clothing.saving import _save_clothing
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from ...human.clothing.garment_fit import fit_to_human, missing_correctives
+from ...human.clothing.pattern import PatternSettings
+from ...human.clothing.saving import _save_clothing
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...human.common_baseclasses.savable_content import SavableContent
 from mathutils import Vector
 
 

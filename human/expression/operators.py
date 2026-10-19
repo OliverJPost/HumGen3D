@@ -2,8 +2,8 @@
 
 
 import bpy
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import show_message
+from ...human.human import Human
+from ...user_interface.documentation.feedback_func import show_message
 
 
 class HG_REMOVE_SHAPEKEY(bpy.types.Operator):
@@ -83,7 +83,7 @@ class HG_OT_PREPARE_FOR_ARKIT(bpy.types.Operator):
 
     def execute(self, context):  # FIXME
         import bpy
-        from HumGen3D import Human
+        from ... import Human
 
         human = Human.from_existing(bpy.context.object)
 

@@ -23,15 +23,15 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, Optional, Tuple
 
 import bmesh
 import bpy
-from HumGen3D.common import is_legacy
-from HumGen3D.common.exceptions import HumGenException
+from ...common import is_legacy
+from ...common.exceptions import HumGenException
 from mathutils import Matrix
 
 from . import export_pack
 from .rest_pose import T_POSE_KEY
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 GAME_RIG_KEY = "game_rig"
 # The names profile of the settings that keeps the Human Generator bone names,

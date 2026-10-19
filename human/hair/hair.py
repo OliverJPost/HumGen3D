@@ -8,22 +8,22 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import bpy
 from bpy.types import bpy_prop_collection
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.os import correct_presetpath
-from HumGen3D.common.type_aliases import C  # type:ignore
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.os import correct_presetpath
+from ...common.type_aliases import C  # type:ignore
 from .compatibility import set_children_percent, get_children_percent
 
 from ...backend import hg_log
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
-from HumGen3D.human.hair.basehair import BaseHair
-from HumGen3D.human.hair.eyelashes import EyelashSettings
-from HumGen3D.human.hair.face_hair import FacialHairSettings
-from HumGen3D.human.hair.regular_hair import RegularHairSettings
+from ...human.common_baseclasses.prop_collection import PropCollection
+from ...human.hair.basehair import BaseHair
+from ...human.hair.eyelashes import EyelashSettings
+from ...human.hair.face_hair import FacialHairSettings
+from ...human.hair.regular_hair import RegularHairSettings
 
 from ..hair.eyebrows import EyebrowSettings
 from .haircap import EYELASH_SEGMENTS, EYELASH_STRIP_TRIS

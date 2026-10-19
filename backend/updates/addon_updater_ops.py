@@ -25,8 +25,9 @@ import os
 import traceback
 
 import bpy
-from HumGen3D import get_prefs
-from HumGen3D.common.documentation import docs_url
+from ... import get_prefs
+from ...common.documentation import docs_url
+from ...package import addon_package
 from bpy.app.handlers import persistent
 
 from .. import hg_log
@@ -117,9 +118,9 @@ def get_user_preferences(context=None):
         context = bpy.context
     prefs = None
     if hasattr(context, "user_preferences"):
-        prefs = context.user_preferences.addons.get("HumGen3D", None)
+        prefs = context.user_preferences.addons.get(addon_package(), None)
     elif hasattr(context, "preferences"):
-        prefs = context.preferences.addons.get("HumGen3D", None)
+        prefs = context.preferences.addons.get(addon_package(), None)
     if prefs:
         return prefs.preferences
     # To make the addon stable and non-exception prone, return None

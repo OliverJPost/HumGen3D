@@ -5,13 +5,13 @@
 from typing import TYPE_CHECKING, Any
 
 import bpy
-from HumGen3D.common.type_aliases import C  # type:ignore
+from ...common.type_aliases import C  # type:ignore
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.human.hair.basehair import BaseHair
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ...human.hair.basehair import BaseHair
+from ...user_interface.documentation.feedback_func import ShowMessageBox
 
 
 class EyebrowSettings(BaseHair):

@@ -9,18 +9,18 @@ import time
 import bpy
 import numpy as np
 from bpy.props import BoolProperty, EnumProperty, StringProperty  # type:ignore
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common import find_hg_rig
-from HumGen3D.human.clothing.add_obj_to_clothing import get_human_from_distance
-from HumGen3D.human.human import Human
-from HumGen3D.human.keys.keys import update_livekey_collection
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.user_interface.content_panel.operators import (
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_prefs
+from ...common import find_hg_rig
+from ...human.clothing.add_obj_to_clothing import get_human_from_distance
+from ...human.human import Human
+from ...human.keys.keys import update_livekey_collection
+from ...common.exceptions import HumGenException
+from ...user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_outfit_ul,
 )
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ...user_interface.documentation.feedback_func import ShowMessageBox
 
 from .possible_content import find_possible_content
 from ...human.clothing.saving import has_deform_weights, is_valid_clothing_object

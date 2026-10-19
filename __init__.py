@@ -17,8 +17,6 @@
 
 # flake8: noqa E402
 
-__version__ = (4, 0, 38)
-
 bl_info = {
     "name": "Human Generator 3D",
     "author": "OliverJPost",
@@ -33,33 +31,36 @@ bl_info = {
 }
 
 import os
-import sys
 from typing import Any
 
 import bpy  # type: ignore
 
+from . import alias as _alias
+from .package import is_extension as _is_extension
+from .package import manifest_version as _manifest_version
 
+__version__ = _manifest_version()
+"""The version, from blender_manifest.toml. bl_info mirrors it for Blender 4.0 and 4.1."""
 
 # Has to be imported like this, otherwise returns error for some users
 import bpy.utils.previews  # type: ignore
 from bpy.app.handlers import persistent as _persistent
-import HumGen3D
-from HumGen3D.backend.auto_classes import _get_bpy_classes
-from HumGen3D.backend.content import content_packs  # type: ignore
-from HumGen3D.backend.content.content_packs import cpacks_refresh as _cpacks_refresh
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
-from HumGen3D.backend.preview_collections import preview_collections as _preview_collections
-from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
-from HumGen3D.backend.updates import addon_updater_ops
-from HumGen3D.backend.updates.update import check_update as _check_update
-from HumGen3D.backend.vscode_reload import _post_vscode_reload  # noqa
-from HumGen3D.batch_generator.generator import BatchHumanGenerator
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.human import Human
-from HumGen3D.human.process.export_pack import ExportPackMissing
-from HumGen3D.human.process.pipeline import ExportResult
-from HumGen3D.human.process.settings import (
+from .backend.auto_classes import _get_bpy_classes
+from .backend.content import content_packs  # type: ignore
+from .backend.content.content_packs import cpacks_refresh as _cpacks_refresh
+from .backend.preferences.preference_func import get_prefs
+from .backend.preview_collections import PREVIEW_COLLECTION_DATA, PreviewCollection
+from .backend.preview_collections import preview_collections as _preview_collections
+from .backend.properties.object_props import HG_OBJECT_PROPS
+from .backend.updates import addon_updater_ops
+from .backend.updates.update import check_update as _check_update
+from .backend.vscode_reload import _post_vscode_reload  # noqa
+from .batch_generator.generator import BatchHumanGenerator
+from .common.exceptions import HumGenException
+from .human.human import Human
+from .human.process.export_pack import ExportPackMissing
+from .human.process.pipeline import ExportResult
+from .human.process.settings import (
     AnimationClipSettings,
     ExportSettings,
     FbxSettings,
@@ -74,11 +75,11 @@ from HumGen3D.human.process.settings import (
     SkeletonSettings,
     TextureBakeSettings,
 )
-from HumGen3D.human.keys.bpy_livekey import BpyLiveKey
-from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
-from HumGen3D.user_interface.batch_panel import batch_ui_lists
-from HumGen3D.user_interface.content_panel import utility_ui_lists
-from HumGen3D.user_interface.icons.icons import hg_icons
+from .human.keys.bpy_livekey import BpyLiveKey
+from .human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
+from .user_interface.batch_panel import batch_ui_lists
+from .user_interface.content_panel import utility_ui_lists
+from .user_interface.icons.icons import hg_icons
 
 __all__ = [
     "Human",
@@ -107,8 +108,8 @@ __all__ = [
 ]
 
 
-if __name__ != "HG3D":  # FIXME
-    sys.modules["HG3D"] = sys.modules[__name__]
+# `import HumGen3D` keeps working when Blender loaded the package as an extension
+_alias.install()
 
 
 # Startup procedure
@@ -176,7 +177,10 @@ non_ui_tab_classes = [cls for cls in hg_classes if cls not in ui_tab_classes]
 
 
 def register() -> None:
-    addon_updater_ops.register(bl_info)
+    _alias.install()
+    # As an extension, Blender's repository delivers the updates instead
+    if not _is_extension():
+        addon_updater_ops.register(bl_info)
 
     _initiate_custom_icons()
 
@@ -211,7 +215,8 @@ def register() -> None:
 
 
 def unregister() -> None:
-    addon_updater_ops.unregister()
+    if not _is_extension():
+        addon_updater_ops.unregister()
     # from .classes import hg_classes
 
     for cls in hg_classes:
@@ -231,6 +236,7 @@ def unregister() -> None:
     bpy.utils.previews.remove(hg_icons.pop())
 
     _preview_collections.clear()
+    _alias.uninstall()
 
 
 if __name__ == "__main__":

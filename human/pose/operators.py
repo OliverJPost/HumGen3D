@@ -2,12 +2,12 @@
 
 import bpy
 
-from HumGen3D import HumGenException
-from HumGen3D.backend import hg_delete, hg_log
-from HumGen3D.common.collections import add_to_collection
-from HumGen3D.common.drivers import build_driver_dict
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ... import HumGenException
+from ...backend import hg_delete, hg_log
+from ...common.collections import add_to_collection
+from ...common.drivers import build_driver_dict
+from ...human.human import Human
+from ...user_interface.documentation.feedback_func import ShowMessageBox
 
 RIGIFY_ERROR = "Rigify addon not enabled. Please enable it in Blender preferences."
 

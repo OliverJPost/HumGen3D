@@ -1,4 +1,4 @@
-from HumGen3D.user_interface.content_panel.base_draw_functions import (
+from ...user_interface.content_panel.base_draw_functions import (
     _draw_header_box,
     _draw_next_button,
 )

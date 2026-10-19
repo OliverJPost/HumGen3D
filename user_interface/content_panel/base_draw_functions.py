@@ -1,9 +1,8 @@
 import os
 
 import bpy
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.panel_functions import draw_paragraph
+from ...backend.preferences.preference_func import get_prefs
+from ...human.human import Human
 
 
 def draw_category_ui(context, layout, content_type):
@@ -85,17 +84,6 @@ def _draw_name_ui(context, layout, content_type):
 
     if content_type in ("footwear", "outfit"):
         col.prop(cc_sett, "open_when_finished", text="Open when finished")
-
-    if content_type == "texture":
-        try:
-            from PIL import Image
-        except ImportError:
-            col_a = col.column(align=True)
-            col_a.alert = True
-            draw_paragraph(
-                col_a,
-                "Python Image Library not installed. We'll try to install it for you. This might take a while.",
-            )
 
     poll = bool(name)
 

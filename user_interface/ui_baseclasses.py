@@ -6,12 +6,12 @@ from pathlib import Path
 from typing import Literal
 
 import bpy
-from HumGen3D import HumGenException, __version__
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.ui_properties import active_phase_enum
-from HumGen3D.common import is_legacy, is_processed
-from HumGen3D.common.documentation import draw_docs_button
-from HumGen3D.human.human import Human
+from .. import HumGenException, __version__
+from ..backend.preferences.preference_func import get_prefs
+from ..backend.properties.ui_properties import active_phase_enum
+from ..common import is_legacy, is_processed
+from ..common.documentation import draw_docs_button
+from ..human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui

@@ -3,9 +3,9 @@
 import contextlib
 
 import bpy
-from HumGen3D import Human
-from HumGen3D.backend.callback import hg_callback
-from HumGen3D.backend.preferences.preference_func import (
+from .. import Human
+from ..backend.callback import hg_callback
+from ..backend.preferences.preference_func import (
     get_prefs,
     open_preferences_as_new_window,
 )

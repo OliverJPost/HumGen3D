@@ -2,7 +2,7 @@
 
 
 import bpy
-from HumGen3D.backend import get_prefs
+from ...backend import get_prefs
 
 from ...human.human import Human  # type: ignore
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore

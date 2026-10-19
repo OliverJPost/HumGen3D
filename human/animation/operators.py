@@ -4,8 +4,8 @@ import os
 
 import bpy
 from bpy_extras.io_utils import ImportHelper  # type:ignore
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.human import Human
+from ...common.exceptions import HumGenException
+from ...human.human import Human
 
 
 class HG_OT_REMOVE_ANIMATION(bpy.types.Operator):

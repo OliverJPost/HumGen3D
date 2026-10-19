@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, Optional
 
 import bpy
 import numpy as np
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.type_aliases import C
+from ...common.decorators import injected_context
+from ...common.exceptions import HumGenException
+from ...common.type_aliases import C
 
 from .settings import TextureBakeSettings
 

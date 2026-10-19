@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import List, Optional
 
 import bpy
-from HumGen3D.backend import get_prefs, preview_collections
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.type_aliases import BpyEnum, C
+from ...backend import get_prefs, preview_collections
+from ...common.decorators import injected_context
+from ...common.exceptions import HumGenException
+from ...common.type_aliases import BpyEnum, C
 
 
 class PreviewCollectionContent:

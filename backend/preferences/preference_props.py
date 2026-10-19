@@ -7,7 +7,7 @@ import os.path
 
 import bpy
 from typing import no_type_check
-from HumGen3D.backend.auto_classes import _get_bpy_classes
+from ...backend.auto_classes import _get_bpy_classes
 
 from bpy.props import (  # type:ignore
     BoolProperty,

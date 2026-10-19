@@ -13,13 +13,13 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Literal
 
 import bpy
 
-from HumGen3D.backend import hg_log
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.process.shape_keys import bake_live_keys
-from HumGen3D.common.decorators import deprecated
-from HumGen3D.common.exceptions import HumGenException
+from ...backend import hg_log
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
+from ...human.process.shape_keys import bake_live_keys
+from ...common.decorators import deprecated
+from ...common.exceptions import HumGenException
 
 from . import naming
 from .animations import rig_actions
@@ -28,7 +28,7 @@ from .textures import DIRECTX_FLIP_NODE, write_sidecar_images
 from .settings import FILE_FORMATS, OutputSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 Axis = Literal["X", "Y", "Z", "-X", "-Y", "-Z"]
 # What of the animation of the rig goes into the file: nothing, the active
