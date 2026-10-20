@@ -8,7 +8,7 @@ import threading
 import zipfile
 
 import pytest
-from setup_fakes import Handler, make_pack
+from setup_fakes import Handler, exists, make_pack, write_file, write_pack
 
 from HumGen3D.backend.setup import downloader
 from HumGen3D.backend.setup.catalogue import installed_packs
@@ -28,6 +28,7 @@ def fresh_server_state():
     Handler.files = {}
     Handler.ranges = True
     Handler.hits = []
+    Handler.overrides = {}
 
 
 def test_download_verifies_checksum(server, tmp_path):
@@ -171,3 +172,192 @@ def test_clear_downloads(tmp_path):
     downloader.clear_downloads(folder)
     assert not os.path.exists(dl)
     downloader.clear_downloads(folder)  # nothing there: fine
+
+
+# Network errors in plain words
+
+
+def test_resume_refuses_a_portal_page(server, tmp_path):
+    """A sign-in page answering a resume must not truncate a big .part."""
+    Handler.overrides["/f.bin"] = (200, "text/html; charset=utf-8", b"<html>Please sign in</html>")
+    dest = tmp_path / "f.bin"
+    part = str(dest) + ".part"
+    with open(part, "wb") as f:
+        f.write(b"p" * 5000)
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.download(server + "/f.bin", str(dest), 10000)
+    assert e.value.code == "bad_response" and e.value.retryable
+    assert os.path.getsize(part) == 5000
+
+
+def test_proxy_tls_and_server_errors(server, tmp_path):
+    Handler.overrides["/p.bin"] = (407, "text/html", b"<html>Proxy Authentication Required</html>")
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.download(server + "/p.bin", str(tmp_path / "p.bin"))
+    assert e.value.code == "proxy" and not e.value.retryable
+    Handler.overrides["/s.bin"] = (503, "text/html", b"<html>busy</html>")
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.download(server + "/s.bin", str(tmp_path / "s.bin"))
+    assert e.value.code == "http" and e.value.status == 503 and e.value.retryable
+    # https against a plain http server: the handshake fails
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.download(server.replace("http://", "https://") + "/a.bin", str(tmp_path / "t.bin"))
+    assert e.value.code == "tls" and not e.value.retryable
+
+
+def test_retryable():
+    retry = {code: downloader.DownloadError(code).retryable for code in ("offline", "timeout", "bad_response", "tls", "proxy", "disk", "checksum", "cancelled", "not_a_pack")}
+    assert retry == {"offline": True, "timeout": True, "bad_response": True, "tls": False, "proxy": False, "disk": False, "checksum": False, "cancelled": False, "not_a_pack": False}
+    assert downloader.DownloadError("http", status=500).retryable and downloader.DownloadError("http", status=403).retryable
+    assert not downloader.DownloadError("http", status=404).retryable
+
+
+def test_unwritable_destination_is_a_disk_error(server, tmp_path):
+    blocker = tmp_path / "a_file"
+    blocker.write_bytes(b"x")
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.download(server + "/a.bin", str(blocker / "sub" / "a.bin"))
+    assert e.value.code == "disk"
+
+
+def test_free_space(tmp_path):
+    assert downloader.free_space(str(tmp_path)) > 0
+    assert downloader.free_space(str(tmp_path / "not" / "yet")) > 0  # the nearest existing parent
+    assert downloader.free_space("") is None
+
+
+# Removing only what nobody else lists
+
+
+def test_remove_keeps_files_other_packs_list(tmp_path):
+    folder = str(tmp_path)
+    write_pack(folder, "Base_Hair", (4, 1), ["hair/shared.blend", "hair/base.blend"])
+    write_pack(folder, "Extra", (1, 0), ["hair/shared.blend", "hair/extra.blend"])
+    assert downloader.remove(folder, "Extra")
+    assert exists(folder, "hair/shared.blend") and exists(folder, "hair/base.blend")
+    assert not exists(folder, "hair/extra.blend")
+    assert set(installed_packs(folder)) == {"Base_Hair"}
+
+
+def test_update_keeps_a_dropped_file_another_pack_lists(tmp_path):
+    folder = str(tmp_path / "content")
+    v1 = tmp_path / "v1.hgpack"
+    v1.write_bytes(make_pack("Base_Poses", (4, 0), {"poses/a.blend": b"a", "poses/shared.blend": b"s"}))
+    downloader.install(str(v1), folder)
+    write_pack(folder, "Other", (1, 0), ["poses/shared.blend"], on_disk=False)
+    v2 = tmp_path / "v2.hgpack"
+    v2.write_bytes(make_pack("Base_Poses", (4, 1), {"poses/a.blend": b"a2"}))
+    downloader.install(str(v2), folder)
+    assert exists(folder, "poses/shared.blend")
+    assert installed_packs(folder)["Base_Poses"].files == ["poses/a.blend"]
+
+
+def test_interrupted_update_keeps_the_old_version(tmp_path):
+    """Cancel (or a crash, or a full disk) halfway through: the old version
+    stays recorded, with every file that may be on disk, so the pack is not
+    "up to date" with an empty list, and the next install cleans up."""
+    folder = str(tmp_path / "content")
+    v1 = tmp_path / "v1.hgpack"
+    v1.write_bytes(make_pack("Base_Clothes", (4, 0), {"a.blend": b"a1", "old_only.blend": b"o"}))
+    downloader.install(str(v1), folder)
+    v2 = tmp_path / "v2.hgpack"
+    v2.write_bytes(make_pack("Base_Clothes", (4, 1), {"a.blend": b"a2", "b.blend": b"b", "c.blend": b"c", "d.blend": b"d"}))
+    cancel = threading.Event()
+
+    def progress(done, total):
+        if done == 2:
+            cancel.set()
+
+    with pytest.raises(downloader.DownloadError) as e:
+        downloader.install(str(v2), folder, progress, cancel)
+    assert e.value.code == "cancelled"
+    pack = installed_packs(folder)["Base_Clothes"]
+    assert pack.version == (4, 0)
+    assert set(pack.files) == {"a.blend", "old_only.blend", "b.blend", "c.blend", "d.blend"}
+    assert exists(folder, "old_only.blend")
+    downloader.install(str(v2), folder)
+    pack = installed_packs(folder)["Base_Clothes"]
+    assert pack.version == (4, 1) and sorted(pack.files) == ["a.blend", "b.blend", "c.blend", "d.blend"]
+    assert not exists(folder, "old_only.blend")
+    assert sorted(os.listdir(os.path.join(folder, "content_packs"))) == ["Base_Clothes.json"]
+
+
+def test_case_only_rename_keeps_the_new_file(tmp_path):
+    folder = str(tmp_path / "content")
+    v1 = tmp_path / "v1.hgpack"
+    v1.write_bytes(make_pack("Base_Hair", (4, 0), {"hair/Short Bob.blend": b"old"}))
+    downloader.install(str(v1), folder)
+    v2 = tmp_path / "v2.hgpack"
+    v2.write_bytes(make_pack("Base_Hair", (4, 1), {"hair/short bob.blend": b"new"}))
+    downloader.install(str(v2), folder)
+    names = os.listdir(os.path.join(folder, "hair"))
+    assert len(names) == 1
+    with open(os.path.join(folder, "hair", names[0]), "rb") as f:
+        assert f.read() == b"new"
+
+
+def test_case_insensitive_detection(tmp_path):
+    (tmp_path / "Probe").mkdir()
+    insensitive = os.path.exists(str(tmp_path / "PROBE"))
+    assert downloader.is_case_insensitive(str(tmp_path)) == insensitive
+
+
+def test_remove_empty_dirs_prunes_only_emptied_parents(tmp_path):
+    folder = str(tmp_path)
+    os.makedirs(os.path.join(folder, "my projects", "empty"))
+    path = write_file(folder, "poses/deep/er/a.blend")
+    write_file(folder, "poses/keep.blend")
+    os.remove(path)
+    downloader.remove_empty_dirs(folder, [path])
+    assert not os.path.exists(os.path.join(folder, "poses", "deep"))
+    assert exists(folder, "poses/keep.blend")
+    assert os.path.isdir(os.path.join(folder, "my projects", "empty"))
+    downloader.remove_empty_dirs(folder, [os.path.join(folder, "x.blend")])  # the folder itself stays
+    assert os.path.isdir(folder)
+
+
+def test_remove_leaves_the_users_empty_folders(tmp_path):
+    folder = str(tmp_path / "content")
+    os.makedirs(os.path.join(folder, "outfits", "my empty folder"))
+    pack = tmp_path / "p.hgpack"
+    pack.write_bytes(make_pack("Base_Poses", (4, 0), {"poses/a.blend": b"a"}))
+    downloader.install(str(pack), folder)
+    downloader.remove(folder, "Base_Poses")
+    assert os.path.isdir(os.path.join(folder, "outfits", "my empty folder"))
+    assert not os.path.exists(os.path.join(folder, "poses"))
+
+
+# The download lock
+
+
+def test_lock(tmp_path):
+    folder = str(tmp_path)
+    assert downloader.acquire_lock(folder)
+    assert downloader.acquire_lock(folder)  # ours already
+    assert downloader.lock_holder(folder) is None
+    downloader.refresh_lock(folder)
+    downloader.clear_downloads(folder)  # keeps a held lock
+    assert os.path.exists(downloader.lock_path(folder))
+    downloader.release_lock(folder)
+    assert not os.path.exists(downloader.lock_path(folder))
+    # Another live process on this machine holds it
+    os.makedirs(downloader.download_folder(folder), exist_ok=True)
+    other = {"pid": os.getppid(), "host": __import__("socket").gethostname(), "time": __import__("time").time()}
+    with open(downloader.lock_path(folder), "w") as f:
+        json.dump(other, f)
+    assert not downloader.acquire_lock(folder)
+    assert downloader.lock_holder(folder)["pid"] == os.getppid()
+    downloader.release_lock(folder)  # not ours: stays
+    assert os.path.exists(downloader.lock_path(folder))
+    # A lock not refreshed for longer than LOCK_STALE is taken over
+    other["time"] -= downloader.LOCK_STALE + 1
+    with open(downloader.lock_path(folder), "w") as f:
+        json.dump(other, f)
+    assert downloader.acquire_lock(folder)
+    downloader.release_lock(folder)
+    # So is a garbled one
+    os.makedirs(downloader.download_folder(folder), exist_ok=True)
+    with open(downloader.lock_path(folder), "w") as f:
+        f.write("{")
+    assert downloader.acquire_lock(folder)
+    downloader.release_lock(folder)

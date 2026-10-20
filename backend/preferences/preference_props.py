@@ -2,8 +2,7 @@
 
 # flake8: noqa F722
 
-import getpass
-import os.path
+import os
 
 import bpy
 from typing import no_type_check
@@ -18,7 +17,12 @@ from bpy.props import (  # type:ignore
 )
 from bpy.types import AddonPreferences  # type:ignore
 
+from ..content import content_state
 from ..content.content_packs import cpacks_refresh
+
+# A content folder to use while the preferences have none, for developing
+# and running the tests without setting the folder in every Blender profile
+DEV_CONTENT_ENV = "HUMGEN_DEV_CONTENT"
 
 def update_tab_name(self, context):
     """Dynamically change category & reload some panel upon update.
@@ -98,12 +102,7 @@ class HGPreferenceBackend:
     def filepath(self) -> str:
         if self.filepath_:
             return self.filepath_
-        else:
-            # Return hard coded path if developing from my computer, prevents having to remove path for every release.
-            if getpass.getuser() == "ole":
-                return "/Users/ole/Library/Mobile Documents/com~apple~CloudDocs/Areas/Human Generator/Content/"
-            else:
-                return ""
+        return os.environ.get(DEV_CONTENT_ENV, "")
 
     @filepath.setter
     def filepath(self, value: str) -> None:
@@ -111,10 +110,8 @@ class HGPreferenceBackend:
 
     @property
     def is_trial(self) -> bool:
-        trial_pack_name = "Trial_Content.json"
-        search_path = os.path.join(self.filepath, "content_packs", trial_pack_name)
-
-        return os.path.isfile(search_path)
+        """The trial pack without the full one, see `catalogue.is_trial_install`."""
+        return content_state.is_trial(self.filepath)
 
     # update props
     latest_version: IntVectorProperty(default=(0, 0, 0))
@@ -181,7 +178,9 @@ class HGPreferenceBackend:
     debug_mode: BoolProperty(default=False)
     silence_all_console_messages: BoolProperty(default=False)
 
-    skip_url_request: BoolProperty(default=True)
+    # Obsolete, Blender's online access setting decides now. Kept so stored
+    # preferences still load
+    skip_url_request: BoolProperty(default=True, options={"HIDDEN"})
     fake_setup: BoolProperty(
         name="Fake setup downloads",
         description="Dev tools: run the setup against a fake server, counting bytes instead of downloading",
@@ -189,4 +188,9 @@ class HGPreferenceBackend:
     )
 
     show_tips: BoolProperty(default=True)
+    show_other_packs: BoolProperty(
+        name="Packs from other creators",
+        description="Install content packs made by other creators from their files",
+        default=False,
+    )
     compress_zip: BoolProperty(default=True)

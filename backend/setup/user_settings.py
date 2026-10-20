@@ -10,20 +10,32 @@ folder, one per user, shared by every Blender version.
 
 Keys in use:
     content_folder   the folder the packs are installed in
-    order_guid       the Superhive order the user activated with
+    order_guid       the credential the user activated with: a Superhive
+                     order GUID or a licence key starting with HG3D- (the
+                     key name stays for the files older versions wrote)
     email            the address they entered with it
-    newsletter       whether they ticked "updates and offers"
-    license          "personal" or "commercial", as the server answered
+    license          "personal" or "commercial", as the server last answered
+    upgrade_url      where a Personal owner upgrades, as the server answered
     activated_at     ISO time of the last successful activation
+    credential_status        "ok", or "rejected" when the server turned the
+                     stored credential down (it is kept, to prefill the form)
+    credential_error_code    the server's code for that rejection
+    credential_error_message its sentence for it
+    newsletter       whether they ticked "updates and offers"
     terms_accepted_at ISO time the licence and privacy policy were accepted
     trial_rid        the trial request id found in the extension repository URL
-    catalogue_checked_at  ISO time of the last catalogue fetch
+    setup_shown_at   ISO time the setup opened by itself (it does so once)
+    catalogue_checked_at  epoch seconds of the last successful catalogue fetch
+    catalogue_failed_at   epoch seconds of the last failed one (backoff)
 """
 import json
 import os
 import platform
+import re
 import tempfile
 import threading
+import time
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 APP_FOLDER = "HumGen3D"
@@ -96,3 +108,128 @@ def update(**values: Any) -> bool:
 def content_folder() -> Optional[str]:
     folder = get("content_folder")
     return folder if isinstance(folder, str) and folder else None
+
+
+# The credential
+
+
+KEY_PREFIX = "HG3D-"
+CREDENTIAL_KEYS = (
+    "order_guid",
+    "email",
+    "license",
+    "upgrade_url",
+    "activated_at",
+    "credential_status",
+    "credential_error_code",
+    "credential_error_message",
+)
+
+
+def _now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def credential_kind(value: str) -> str:
+    """"key" for a licence key (HG3D-..., dashes and spaces optional), else
+    "superhive". An order GUID is hexadecimal, so it never starts with HG3D."""
+    compact = re.sub(r"[\s-]", "", value or "").upper()
+    return "key" if compact.startswith(KEY_PREFIX.rstrip("-")) else "superhive"
+
+
+@dataclass
+class Credential:
+    value: str
+    email: str
+    kind: str
+    license: Optional[str]
+    status: str
+    error_code: str
+    error_message: str
+    upgrade_url: str
+
+    @property
+    def masked(self) -> str:
+        """The last four characters, for showing which credential is stored."""
+        tail = re.sub(r"[\s-]", "", self.value)[-4:]
+        return "\u2022\u2022\u2022\u2022" + tail
+
+    @property
+    def masked_email(self) -> str:
+        name, at, domain = self.email.partition("@")
+        if not at:
+            return self.email[:1] + "\u2022\u2022\u2022" if self.email else ""
+        return name[:1] + "\u2022\u2022\u2022@" + domain
+
+    @property
+    def is_personal(self) -> bool:
+        return self.license == "personal"
+
+    @property
+    def rejected(self) -> bool:
+        return self.status == "rejected"
+
+
+def credential() -> Optional[Credential]:
+    """The stored credential, or None when the user never activated."""
+    data = load()
+    value = data.get("order_guid")
+    if not isinstance(value, str) or not value:
+        return None
+
+    def text(key: str) -> str:
+        found = data.get(key)
+        return found if isinstance(found, str) else ""
+
+    return Credential(
+        value=value,
+        email=text("email"),
+        kind=credential_kind(value),
+        license=text("license") or None,
+        status=text("credential_status") or "ok",
+        error_code=text("credential_error_code"),
+        error_message=text("credential_error_message"),
+        upgrade_url=text("upgrade_url"),
+    )
+
+
+def save_credential(value: str, email: str, license: Optional[str] = None, upgrade_url: Optional[str] = None) -> bool:
+    """Store a credential the server accepted, with what it said about it."""
+    return update(
+        order_guid=value.strip(),
+        email=email.strip(),
+        license=license or None,
+        upgrade_url=upgrade_url or None,
+        activated_at=_now_iso(),
+        credential_status="ok",
+        credential_error_code=None,
+        credential_error_message=None,
+    )
+
+
+def mark_credential_rejected(code: str, message: str) -> bool:
+    """The server turned the stored credential down. It stays stored, so the
+    form can show it again; only the status changes."""
+    return update(credential_status="rejected", credential_error_code=code or None, credential_error_message=message or None)
+
+
+def update_license(license: Optional[str], upgrade_url: Optional[str]) -> bool:
+    """Store the tier a later answer reported. Nothing changes when the
+    answer had no tier, so an older server never erases it."""
+    if not license:
+        return True
+    return update(license=license, upgrade_url=upgrade_url or None)
+
+
+def forget_credential() -> bool:
+    """Remove the credential from this computer. Installed content and the
+    other settings stay."""
+    return update(**{key: None for key in CREDENTIAL_KEYS})
+
+
+def mark_setup_shown() -> bool:
+    return update(setup_shown_at=_now_iso())
+
+
+def setup_shown() -> bool:
+    return bool(get("setup_shown_at"))

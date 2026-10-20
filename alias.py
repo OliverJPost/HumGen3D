@@ -11,6 +11,11 @@ under their real name.
 
 The finder is a no-op when the package already is `HumGen3D` (legacy install
 and the tests). `HG3D`, the name of an early version, is kept as a second alias.
+
+While the legacy `HumGen3D` add-on is switched on next to the extension, the
+finder leaves the name `HumGen3D` to it: Blender imports that add-on by its
+name, and must get the legacy package, not this one (see
+`user_interface/install_notices.py`).
 """
 import importlib
 import importlib.abc
@@ -18,7 +23,7 @@ import importlib.util
 import sys
 from importlib.machinery import ModuleSpec
 from types import ModuleType
-from typing import Dict, Optional, Sequence, Tuple
+from typing import Callable, Dict, Optional, Sequence, Tuple
 
 from .package import PUBLIC_NAME, addon_package
 
@@ -28,9 +33,11 @@ ALIASES: Tuple[str, ...] = (PUBLIC_NAME, "HG3D")
 class AliasFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
     """Resolves `<alias>[.sub.module]` to the modules of `package`."""
 
-    def __init__(self, aliases: Sequence[str], package: str) -> None:
+    def __init__(self, aliases: Sequence[str], package: str, declines: Optional[Callable[[str], bool]] = None) -> None:
         self.aliases = tuple(aliases)
         self.package = package
+        # Called with an alias: True leaves that name to the normal import
+        self.declines = declines
         # The real `__spec__` of a module, between create_module and exec_module
         self._specs: Dict[str, Optional[ModuleSpec]] = {}
 
@@ -45,6 +52,8 @@ class AliasFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 
     def find_spec(self, name, path=None, target=None):  # type: ignore[no-untyped-def]
         if self.real_name(name) is None:
+            return None
+        if self.declines is not None and self.declines(name.partition(".")[0]):
             return None
         return importlib.util.spec_from_loader(name, self)
 
@@ -66,6 +75,18 @@ class AliasFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
 _finder: Optional[AliasFinder] = None
 
 
+def legacy_enabled(alias: str) -> bool:
+    """Whether `alias` is the legacy add-on and that is switched on in Blender."""
+    if alias != PUBLIC_NAME:
+        return False
+    try:
+        import bpy
+
+        return PUBLIC_NAME in bpy.context.preferences.addons
+    except (ImportError, AttributeError):
+        return False
+
+
 def install() -> None:
     """Put the alias finder in place, once per package name."""
     global _finder
@@ -78,7 +99,7 @@ def install() -> None:
     aliases = [alias for alias in ALIASES if alias != package]
     if not aliases:
         return
-    _finder = AliasFinder(aliases, package)
+    _finder = AliasFinder(aliases, package, declines=legacy_enabled)
     sys.meta_path.insert(0, _finder)
 
 

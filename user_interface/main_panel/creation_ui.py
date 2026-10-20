@@ -6,7 +6,7 @@ from ...human.human import Human
 
 from ... import get_prefs
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
-from ..panel_functions import draw_panel_switch_header
+from ..panel_functions import draw_panel_switch_header, draw_trial_buttons
 from ..ui_baseclasses import HGPanel, MainPanelPart
 
 
@@ -55,12 +55,7 @@ class HG_PT_CREATE(MainPanelPart, bpy.types.Panel):
         if is_trial_selected:
             row = col.row(align=True)
             row.scale_y = 1.5
-            row.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
+            draw_trial_buttons(row, "starting_human", text="Buy Human Generator")
 
         row = box.row(align=True)
         row.scale_y = 2

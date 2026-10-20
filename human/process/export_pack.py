@@ -4,8 +4,8 @@
 
 The built-in recipes, the bone names of the game skeletons and the edge lists
 of the mesh reduction are not part of the add-on. They come as the content
-pack `HG_Export.hgpack`, downloaded from the Superhive account (Superhive is
-the new name of BlenderMarket) and installed like the other content packs. It unpacks to:
+pack HG Export (`HG_Export.hgpack`), which the setup downloads with the other
+content packs of a licence. It unpacks to:
 
     <content folder>/content_packs/HG_Export.json
     <content folder>/process/recipes/*.json, with order.json
@@ -15,7 +15,7 @@ the new name of BlenderMarket) and installed like the other content packs. It un
 Without it the Process tab is greyed out and the process API raises
 `ExportPackMissing`. `scripts/build_export_pack.py` builds the pack from the
 content folder. Raise `REQUIRED_VERSION` when the add-on needs data that older
-packs don't have, so users are told to download it again.
+packs don't have, so users are told to update it.
 """
 
 import functools
@@ -32,9 +32,6 @@ PACK_FILE = PACK_NAME + ".hgpack"
 REQUIRED_VERSION = (1, 0)
 # Folder in the content folder the pack unpacks its data to
 DATA_FOLDER = "process"
-# Where customers download the pack. Superhive is the new name of BlenderMarket.
-STORE_NAME = "Superhive"
-DOWNLOAD_URL = "https://superhivemarket.com/account/orders"
 
 Status = Literal["installed", "missing", "outdated"]
 F = TypeVar("F", bound=Callable[..., Any])
@@ -47,8 +44,8 @@ _status_cache: Dict[str, Tuple[float, Status]] = {}
 class ExportPackMissing(HumGenException):
     """The HG_Export content pack the process system needs is not installed.
 
-    Download `HG_Export.hgpack` from your Superhive account (formerly
-    BlenderMarket) and install it in the add-on preferences, under Content Packs.
+    Install it with the "Install HG Export" button of the Process tab, which
+    downloads it like the other content packs.
     """
 
 
@@ -109,16 +106,10 @@ def message(pack_status: Optional[Status] = None) -> str:
     if pack_status == "outdated":
         required = ".".join(str(n) for n in REQUIRED_VERSION)
         return (
-            f"{PACK_FILE} is outdated, this version of Human Generator needs"
-            f" version {required} or newer. Download it again from your"
-            f" {STORE_NAME} account (formerly BlenderMarket) and install it in"
-            " the preferences, under Content Packs"
+            f"Export data needs an update: this version of Human Generator needs"
+            f" HG Export {required} or newer. Update it with the button in the Process tab"
         )
-    return (
-        f"{PACK_FILE} missing. Download it from your {STORE_NAME} account"
-        " (formerly BlenderMarket) and install it in the preferences, under"
-        " Content Packs"
-    )
+    return "Export data not installed. Install HG Export with the button in the Process tab"
 
 
 def require() -> None:

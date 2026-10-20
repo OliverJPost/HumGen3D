@@ -4,7 +4,6 @@
 
 import os
 import time
-import zipfile
 from typing import List, Optional
 
 import bpy
@@ -367,53 +366,6 @@ class HG_OT_INIT_PROCESS(bpy.types.Operator):
 
     def execute(self, context):
         ensure_initialized(context.scene.HG3D.process)
-        return {"FINISHED"}
-
-
-class HG_OT_INSTALL_EXPORT_PACK(bpy.types.Operator):
-    """Installs the HG_Export content pack from the file the user picks."""
-
-    bl_idname = "hg3d.install_export_pack"
-    bl_label = "Install " + export_pack.PACK_FILE
-    bl_description = (
-        "Pick the " + export_pack.PACK_FILE + " you downloaded from your"
-        " Superhive account (formerly BlenderMarket) to install it"
-    )
-
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")  # noqa: F722
-    filter_glob: bpy.props.StringProperty(default="*.hgpack", options={"HIDDEN"})  # noqa: F722, F821
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
-
-    def execute(self, context):
-        manifest = f"content_packs/{export_pack.PACK_NAME}.json"
-        try:
-            with zipfile.ZipFile(self.filepath) as zf:
-                is_pack = manifest in zf.namelist()
-        except (OSError, zipfile.BadZipFile):
-            is_pack = False
-        if not is_pack:
-            self.report({"ERROR"}, f"This is not {export_pack.PACK_FILE}")
-            return {"CANCELLED"}
-
-        # Installed like the other content packs, so the preferences list it
-        # and can delete it. A newer pack replaces the files of the old one.
-        packs = context.scene.installpacks_col
-        packs.clear()
-        item = packs.add()
-        item.name = self.filepath
-        item.pack_name = os.path.basename(self.filepath)
-        item.json_path = manifest
-        item.alert = "None"
-        bpy.ops.hg3d.cpackinstall()
-
-        if not export_pack.is_installed():
-            self.report({"ERROR"}, export_pack.message())
-            return {"CANCELLED"}
-        ensure_initialized(context.scene.HG3D.process)
-        self.report({"INFO"}, f"Installed {export_pack.PACK_FILE}")
         return {"FINISHED"}
 
 

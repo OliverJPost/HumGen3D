@@ -87,6 +87,25 @@ class HG_OPENPREF(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class HG_OT_BUY_FULL_VERSION(bpy.types.Operator):
+    """Open the pricing page of Human Generator in your browser"""
+
+    bl_idname = "hg3d.buy_full_version"
+    bl_label = "Buy full version"
+    bl_options = {"INTERNAL"}
+
+    panel: bpy.props.StringProperty()  # noqa: F821  which button, for utm_content
+
+    def execute(self, context):
+        from ..backend.preferences.licence import buy_url
+        from ..backend.setup import repository, user_settings
+
+        # Read here, not while drawing: the settings file is a file on disk
+        rid = user_settings.get("trial_rid") or repository.trial_rid()
+        bpy.ops.wm.url_open(url=buy_url(self.panel, rid))
+        return {"FINISHED"}
+
+
 class HG_CLEAR_SEARCH(bpy.types.Operator):
     """Clears the passed searchfield."""
 

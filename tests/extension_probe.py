@@ -6,8 +6,14 @@ user config, because the add-on can only be registered once per process and
 the test process runs it as the legacy add-on `HumGen3D`. Prints one line that
 starts with `PROBE ` followed by a JSON object with everything checked.
 
-Usage: python extension_probe.py <path of the add-on folder>
-   or: blender -b --python extension_probe.py -- <path of the add-on folder>
+Usage: python extension_probe.py [scenario] <path of the add-on folder>
+   or: blender -b --python extension_probe.py -- [scenario] <path of the add-on folder>
+
+Scenarios:
+    extension   (default) the extension alone
+    twice       the legacy add-on in use, then the extension switched on next to it
+    old_copy    the extension in use, then the legacy add-on switched on next to it
+    old_blender the legacy add-on on a Blender older than 4.2: only a notice
 """
 import json
 import os
@@ -38,6 +44,11 @@ def make_repository(addon_dir: str) -> str:
 def main() -> None:
     # Last argument, so it also works as `blender -b --python extension_probe.py -- <folder>`
     addon_dir = os.path.abspath(sys.argv[-1])
+    scenario = sys.argv[-2] if len(sys.argv) >= 3 and sys.argv[-2] in SCENARIOS else "extension"
+    SCENARIOS[scenario](addon_dir)
+
+
+def probe_extension(addon_dir: str) -> None:
     import bpy
 
     report = {
@@ -106,6 +117,162 @@ def main() -> None:
     finally:
         repos.remove(repo)
     print("PROBE " + json.dumps(report))
+
+
+# Two copies at once
+
+
+def _handlers(name: str) -> list:
+    """The modules of the load_post handlers called `name`."""
+    import bpy
+
+    return [h.__module__ for h in bpy.app.handlers.load_post if getattr(h, "__name__", "") == name]
+
+
+def _add_menu_entries() -> list:
+    import bpy
+
+    funcs = bpy.types.VIEW3D_MT_add._dyn_ui_initialize()
+    return [f.__module__ for f in funcs if getattr(f, "__name__", "") == "add_hg_primitive_menu"]
+
+
+def _main_panel_owner() -> str:
+    """The package whose main panel class is registered, "" for none."""
+    import bpy
+
+    cls = getattr(bpy.types, "HG_PT_Panel", None)
+    return cls.__module__.rsplit(".user_interface", 1)[0] if cls is not None else ""
+
+
+def _state(report: dict, prefix: str) -> None:
+    import bpy
+
+    addons = bpy.context.preferences.addons
+    report[prefix + "_legacy_enabled"] = LEGACY in addons
+    report[prefix + "_extension_enabled"] = MODULE_NAME in addons
+    report[prefix + "_main_panel"] = _main_panel_owner()
+    report[prefix + "_twice_notice"] = hasattr(bpy.types, "HG_PT_notice_twice")
+    report[prefix + "_old_copy_notice"] = hasattr(bpy.types, "HG_PT_notice_old_copy")
+    report[prefix + "_handlers"] = _handlers("HG_start")
+    report[prefix + "_add_menu"] = _add_menu_entries()
+    report[prefix + "_modes"] = {
+        name: getattr(sys.modules.get(name), "_mode", None) for name in (LEGACY, MODULE_NAME) if name in addons
+    }
+
+
+def probe_twice(addon_dir: str) -> None:
+    import bpy
+
+    report: dict = {"blender": bpy.app.version_string, "scenario": "twice"}
+    settings_file = os.environ.get("HUMGEN_SETTINGS_FILE", "")
+    content = tempfile.mkdtemp(prefix="hg_twice_content_")
+    repo_dir = make_repository(addon_dir)
+    repos = bpy.context.preferences.extensions.repos
+    repo = repos.new(name="HG Test Repo", module=REPO_MODULE)
+    repo.use_custom_directory = True
+    repo.custom_directory = repo_dir
+    try:
+        # 1. The legacy add-on in use, then the new zip dragged in next to it
+        report["legacy_enable"] = sorted(bpy.ops.preferences.addon_enable(module=LEGACY))
+        legacy_prefs = bpy.context.preferences.addons[LEGACY].preferences
+        legacy_prefs.filepath_ = content
+        legacy_prefs.units = "imperial"
+        legacy_prefs.tab_name = "HG Test"
+        report["extension_enable"] = sorted(bpy.ops.preferences.addon_enable(module=MODULE_NAME))
+        _state(report, "both")
+        report["extension_prefs_class"] = type(bpy.context.preferences.addons[MODULE_NAME].preferences).__name__
+
+        # 2. "Use the new version"
+        report["use_new_version"] = sorted(bpy.ops.hg3d.use_new_version())
+        _state(report, "switched")
+        prefs = bpy.context.preferences.addons[MODULE_NAME].preferences
+        report["switched_filepath"] = prefs.filepath_ == content
+        report["switched_units"] = prefs.units
+        report["switched_tab_name"] = prefs.tab_name
+        report["switched_panel_category"] = getattr(getattr(bpy.types, "HG_PT_Panel", None), "bl_category", "")
+        if settings_file and os.path.isfile(settings_file):
+            with open(settings_file, encoding="utf-8") as f:
+                report["settings_content_folder"] = json.load(f).get("content_folder") == content
+        import HumGen3D
+
+        report["public_import_is_extension"] = HumGen3D is sys.modules[MODULE_NAME]
+
+        # 3. Off: nothing of either copy left behind
+        report["extension_disable"] = sorted(bpy.ops.preferences.addon_disable(module=MODULE_NAME))
+        _state(report, "all_off")
+    except Exception:  # noqa: BLE001
+        report["error"] = traceback.format_exc()
+    finally:
+        repos.remove(repo)
+    print("PROBE " + json.dumps(report))
+
+
+def probe_old_copy(addon_dir: str) -> None:
+    """The extension in use, then the legacy add-on switched on again.
+
+    In a session of its own: once a script did `import HumGen3D`, that name is
+    the extension, and Blender would take it for the legacy add-on.
+    """
+    import bpy
+
+    report: dict = {"blender": bpy.app.version_string, "scenario": "old_copy"}
+    repo_dir = make_repository(addon_dir)
+    repos = bpy.context.preferences.extensions.repos
+    repo = repos.new(name="HG Test Repo", module=REPO_MODULE)
+    repo.use_custom_directory = True
+    repo.custom_directory = repo_dir
+    try:
+        report["extension_enable"] = sorted(bpy.ops.preferences.addon_enable(module=MODULE_NAME))
+        _state(report, "extension")
+        report["legacy_enable"] = sorted(bpy.ops.preferences.addon_enable(module=LEGACY))
+        _state(report, "both")
+        report["legacy_file"] = getattr(sys.modules.get(LEGACY), "__file__", "")
+        report["legacy_prefs_class"] = type(bpy.context.preferences.addons[LEGACY].preferences).__name__
+        report["legacy_disable"] = sorted(bpy.ops.preferences.addon_disable(module=LEGACY))
+        _state(report, "legacy_off")
+        report["extension_disable"] = sorted(bpy.ops.preferences.addon_disable(module=MODULE_NAME))
+        _state(report, "all_off")
+    except Exception:  # noqa: BLE001
+        report["error"] = traceback.format_exc()
+    finally:
+        repos.remove(repo)
+    print("PROBE " + json.dumps(report))
+
+
+def probe_old_blender(addon_dir: str) -> None:
+    """The legacy add-on on Blender 4.0 or 4.1, run with that Blender's Python."""
+    import bpy
+
+    report: dict = {"blender": list(bpy.app.version), "scenario": "old_blender"}
+    try:
+        report["enable"] = sorted(bpy.ops.preferences.addon_enable(module=LEGACY))
+        module = sys.modules[LEGACY]
+        report["file"] = module.__file__
+        report["mode"] = module._mode
+        report["notice_panel"] = hasattr(bpy.types, "HG_PT_notice_unsupported")
+        report["main_panel"] = hasattr(bpy.types, "HG_PT_Panel")
+        report["setup_panel"] = hasattr(bpy.types, "HG_PT_SETUP")
+        report["prefs_class"] = type(bpy.context.preferences.addons[LEGACY].preferences).__name__
+        report["handlers"] = _handlers("HG_start")
+        report["timers_or_scene_props"] = hasattr(bpy.types.Scene, "HG3D")
+        # Nothing that may need a newer Blender is even imported
+        report["heavy_imported"] = sorted(
+            name for name in (LEGACY + ".human.human", LEGACY + ".user_interface.setup_overlay.operator") if name in sys.modules
+        )
+        report["disable"] = sorted(bpy.ops.preferences.addon_disable(module=LEGACY))
+        report["notice_after_disable"] = hasattr(bpy.types, "HG_PT_notice_unsupported")
+    except Exception:  # noqa: BLE001
+        report["error"] = traceback.format_exc()
+    print("PROBE " + json.dumps(report))
+
+
+LEGACY = "HumGen3D"
+SCENARIOS = {
+    "extension": probe_extension,
+    "twice": probe_twice,
+    "old_copy": probe_old_copy,
+    "old_blender": probe_old_blender,
+}
 
 
 if __name__ == "__main__":

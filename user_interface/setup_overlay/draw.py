@@ -170,11 +170,15 @@ class Palette:
 
 
 class Canvas:
-    """Draws in region pixels. Sizes passed to the methods are design units."""
+    """Draws in region pixels. Sizes passed to the methods are design units.
 
-    def __init__(self, context: bpy.types.Context, alpha: float = 1.0) -> None:
+    `fit` shrinks everything below the interface scale, so the card fits a
+    small viewport or a large interface scale."""
+
+    def __init__(self, context: bpy.types.Context, alpha: float = 1.0, fit: float = 1.0) -> None:
         self.context = context
-        self.scale = context.preferences.system.ui_scale
+        self.ui_scale = context.preferences.system.ui_scale
+        self.scale = self.ui_scale * fit
         self.alpha = alpha
         self.palette = Palette(context)
         self.width = context.region.width

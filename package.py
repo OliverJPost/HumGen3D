@@ -11,7 +11,7 @@ safe to import while the package is still initializing.
 import os
 import re
 import sys
-from typing import Tuple
+from typing import Iterable, List, Optional, Sequence, Tuple
 
 PUBLIC_NAME = "HumGen3D"
 """The name scripts import the add-on by, kept working by `alias`."""
@@ -19,9 +19,15 @@ PUBLIC_NAME = "HumGen3D"
 EXTENSION_PREFIX = "bl_ext."
 """Blender loads extensions as `bl_ext.<repository>.<id>`."""
 
+EXTENSION_ID = "humgen3d"
+"""The id in the manifest, the last part of the extension's package name."""
+
 MANIFEST_FILE = "blender_manifest.toml"
 
 Version = Tuple[int, int, int]
+
+MIN_BLENDER: Version = (4, 2, 0)
+"""The oldest Blender the add-on runs on. Older ones only get a notice."""
 
 
 def addon_package() -> str:
@@ -36,6 +42,31 @@ def addon_package() -> str:
 def is_extension() -> bool:
     """Whether Blender loaded the add-on through its extension system."""
     return addon_package().startswith(EXTENSION_PREFIX)
+
+
+def is_extension_package(name: str) -> bool:
+    """Whether `name` is Human Generator as an extension, from any repository."""
+    return name.startswith(EXTENSION_PREFIX) and name.rpartition(".")[2] == EXTENSION_ID
+
+
+def other_copies(enabled: Iterable[str], own: str) -> List[str]:
+    """The other Human Generator packages among the names of enabled add-ons.
+
+    The extension looks for the legacy `HumGen3D`, the legacy add-on for any
+    `bl_ext.<repository>.humgen3d`.
+    """
+    if own.startswith(EXTENSION_PREFIX):
+        return [name for name in enabled if name == PUBLIC_NAME]
+    return [name for name in enabled if is_extension_package(name)]
+
+
+def blender_supported(version: Optional[Sequence[int]] = None) -> bool:
+    """Whether this Blender, or `version`, is one the add-on runs on."""
+    if version is None:
+        import bpy
+
+        version = bpy.app.version
+    return tuple(version[:3]) >= MIN_BLENDER
 
 
 def addon_root() -> str:

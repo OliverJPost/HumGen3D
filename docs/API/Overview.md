@@ -23,7 +23,7 @@ from HumGen3D import Human
 ```
 
 > [!info]
-> This works the same whether Human Generator is installed as a legacy add-on (Blender 4.0 and 4.1) or as an extension (Blender 4.2 and later). As an extension, Blender loads the add-on under a different internal name, but `HumGen3D` is kept as the name to import from as long as the add-on is enabled.
+> This works the same whether Human Generator is installed as an extension or as a legacy add-on in your add-ons folder. As an extension, Blender loads the add-on under a different internal name, but `HumGen3D` is kept as the name to import from as long as the add-on is enabled.
 
 ###### Currently, the available imports are:
 - [[Human]]

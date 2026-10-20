@@ -9,7 +9,7 @@ from ...user_interface.icons.icons import get_hg_icon
 from ...user_interface.ui_baseclasses import HGPanel, draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
-from ..panel_functions import draw_panel_switch_header, draw_paragraph
+from ..panel_functions import draw_panel_switch_header, draw_paragraph, draw_trial_notice
 
 
 class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
@@ -64,16 +64,7 @@ class HG_PT_CONTENT(HGPanel, bpy.types.Panel):
             draw_paragraph(box, message, alignment="CENTER")
 
         if is_trial:
-            box = self.layout.box()
-            row = box.row(align=True)
-            row.alert = True
-            row.label(text="Disabled in Trial Version")
-            box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
+            draw_trial_notice(self.layout, "content")
 
 
 class HG_PT_ADD_TO_HUMAN(HGPanel, bpy.types.Panel):

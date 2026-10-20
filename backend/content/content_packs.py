@@ -4,9 +4,10 @@
 Operators and functions used for installing and managing HumGen's content packs.
 
 Nomenclature:
-Installpack = a collection item that represents a zip file the user has selected.
-    Pressing 'install all packs' unzips these files into the file structure,
-    making them cpacks (content packs)
+Installpack = a collection item that represents a zip file the user has selected,
+    a pack made by another creator. Pressing 'install' unzips these files into
+    the file structure, making them cpacks (content packs). Human Generator's
+    own packs come through the setup (`backend/setup`), not from files.
 cpack = Abbreviation of content pack. Represents a collection of items
     downloaded together and extracted in the HumGen file strucure, forming
     content to be used in the add-on. Settings and properties stored in a
@@ -17,7 +18,6 @@ import contextlib
 import json
 import os
 import zipfile
-from pathlib import Path
 from typing import Any, no_type_check
 
 import bpy
@@ -26,7 +26,10 @@ from ...backend import get_prefs, hg_log
 from ...user_interface.documentation.feedback_func import ShowMessageBox
 from ...user_interface.icons.icons import get_hg_icon
 
+from ..setup import downloader
 from ..updates.update import check_update
+
+CPACK_FOLDER = "content_packs"
 
 ICON_DICT = {
     "humans": "humans",
@@ -273,19 +276,20 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
         if not filepath.endswith("hgpack"):
             return "not_cpack"  # return error code if the prefix is not correct
 
-        zf = zipfile.ZipFile(filepath)
+        try:
+            zf = zipfile.ZipFile(filepath)
+        except (OSError, zipfile.BadZipFile):
+            return "not_zip"
 
-        cpack_json_files = [
-            file for file in zf.namelist() if file.startswith("content_packs")
-        ]
+        members = [file for file in zf.namelist() if file.startswith(CPACK_FOLDER)]
 
-        if not cpack_json_files:
+        if not members:
             return "incorrect_structure"
             # return error code if the content_packs folder is not present or not
             # in the correct place
 
         json_path = next(
-            (file for file in cpack_json_files if os.path.splitext(file)[1] == ".json"),
+            (file for file in members if os.path.splitext(file)[1] == ".json"),
             None,
         )
         if json_path:
@@ -293,18 +297,8 @@ class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
         else:
             return "no_json"
 
-        json_folder = str(get_prefs().filepath) + str(Path("/content_packs/"))
-
-        try:
-            dirlist = os.listdir(json_folder)
-            if [fn for fn in dirlist if os.path.basename(item.json_path) == fn]:
-                return "already_installed"
-                # return error code if a .json already exists in the file
-                # structure with the same name
-            else:
-                return "None"
-        except Exception:  # noqa PIE786
-            return "None"
+        # A pack that is already installed is updated by the installer
+        return "None"
 
 
 class HG_INSTALL_CPACK(bpy.types.Operator):
@@ -316,67 +310,27 @@ class HG_INSTALL_CPACK(bpy.types.Operator):
 
     @no_type_check
     def execute(self, context):
-        pref = get_prefs()
-        self.files = [
-            file for file in context.scene.installpacks_col if file.alert == "None"
-        ]
+        folder = get_prefs().filepath
+        if not folder or not os.path.isdir(folder):
+            self.report({"WARNING"}, "Choose a content folder first")
+            return {"CANCELLED"}
 
-        filepath = pref.filepath
+        # The setup's installer: no paths outside the folder, the file list
+        # recorded for removal, and an older version of the pack updated
+        for item in context.scene.installpacks_col:
+            if item.alert != "None":
+                continue
+            hg_log("Installing content pack:", item.name)
+            try:
+                downloader.install(item.name, folder)
+            except (downloader.DownloadError, OSError, zipfile.BadZipFile) as e:
+                self.report({"WARNING"}, f"Could not install {os.path.basename(item.name)}: {e}")
 
-        for zip_path in self.files:
-            file_dict = self._unzip_file(zip_path, filepath)
-            self._add_filelist_to_json(filepath, zip_path, file_dict)
-
-        coll = context.scene.installpacks_col
-        coll.clear()
+        context.scene.installpacks_col.clear()
         with contextlib.suppress(Exception):
             cpacks_refresh(self, context)
 
         return {"FINISHED"}
-
-    @no_type_check
-    def _unzip_file(self, zip_path, filepath) -> dict:
-        """Unzips the file to the HumGen cpack directory.
-
-        Args:
-            filepath (str): filepath of the HumGen cpack directory
-            zip_path (str): filepath of the zip to unzip
-
-        Returns:
-            dict: directory of files that were installed, used for deleting cpack
-        """
-        hg_log("Starting unzip, file:", zipfile)
-        zf = zipfile.ZipFile(zip_path.name)
-
-        file_list = [fn for fn in zf.namelist() if not fn.endswith("/")]
-        zf.extractall(path=filepath)  # FIXME apperantly insecure # noqa DUO112
-
-        return {"files": file_list}
-
-    @no_type_check
-    def _add_filelist_to_json(self, filepath, zip_path, file_dict):
-        """Adds a dictionary to the json file with all filenames of files in the cpack.
-
-        This will be used by the HG_DELETE_CPACK operator
-
-        Args:
-            filepath (str): filepath of the HumGen cpack directory
-            zip_path (str): filepath of the zip to unzip
-            file_dict (dict): dictionary of all files in zip
-        """
-        json_path = filepath + str(Path(zip_path.json_path))
-
-        with open(json_path) as f:
-            data = json.load(f)
-
-        data.update(file_dict)
-
-        with open(json_path, "w") as f:
-            json.dump(
-                data,
-                f,
-                indent=4,
-            )
 
 
 class HG_CONTENT_PACK(bpy.types.PropertyGroup):
@@ -423,6 +377,7 @@ class HG_INSTALLPACK(bpy.types.PropertyGroup):
         items=[
             ("None", "None", "", 0),
             ("not_cpack", "Not a content pack", "", 1),
+            ("not_zip", "Not a zip file", "", 5),
             ("incorrect_structure", "Incorrect zip method", "", 2),
             ("no_json", "Doesn't contain .json file", "", 3),
             (
@@ -453,6 +408,31 @@ class HG_REFRESH_CPACKS(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def cpack_folder(content_folder: str, path_module: Any = os.path) -> str:
+    """`<content folder>/content_packs`, "" when no content folder is set.
+
+    Joined, not concatenated, so a UNC path (\\\\nas\\share) keeps its two
+    backslashes and an empty folder never becomes "/content_packs".
+    `path_module` is for tests of Windows paths (ntpath).
+    """
+    if not content_folder:
+        return ""
+    return path_module.join(content_folder, CPACK_FOLDER)
+
+
+def cpack_json_files(content_folder: str) -> "list[str]":
+    """Paths of the pack JSONs in the content folder. Creates nothing: an
+    unplugged drive or a missing folder simply has no packs."""
+    json_folder = cpack_folder(content_folder)
+    if not json_folder:
+        return []
+    try:
+        names = sorted(os.listdir(json_folder))
+    except OSError:
+        return []
+    return [os.path.join(json_folder, fn) for fn in names if os.path.splitext(fn)[1] == ".json"]
+
+
 # TODO slow switch between preferences tabs
 def cpacks_refresh(self: Any, context: bpy.types.Context) -> None:
     """Refreshes the content pack ui list.
@@ -468,35 +448,31 @@ def cpacks_refresh(self: Any, context: bpy.types.Context) -> None:
     header = coll.add()
     header.name = "header"
 
-    json_folder = (str(pref.filepath) + str(Path("/content_packs/"))).replace("\\\\", "\\").replace("//", "/")
-    if not os.path.exists(json_folder):
-        os.makedirs(json_folder)
-
-    dirlist = os.listdir(json_folder)
-
-    for fn in dirlist:
-        if os.path.splitext(fn)[1] == ".json":
-            _add_cpack_to_coll(coll, json_folder, fn)
+    for json_path in cpack_json_files(str(pref.filepath)):
+        count = len(coll)
+        try:
+            _add_cpack_to_coll(coll, json_path)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+            hg_log("Skipping unreadable content pack", json_path, repr(e), level="WARNING")
+            # One broken pack never hides the others, nor shows as an empty row
+            while len(coll) > count:
+                coll.remove(len(coll) - 1)
 
     check_update()
 
 
-def _add_cpack_to_coll(
-    coll: bpy.types.CollectionProperty, json_folder: str, fn: str
-) -> None:
+def _add_cpack_to_coll(coll: bpy.types.CollectionProperty, filepath: str) -> None:
     """Adds this cpack to the content pack collection.
 
     Args:
         coll (CollectionProperty): cpack collection
-        json_folder (str): folder where the cpack jsons are
-        fn (str): filename of json file for this cpack
+        filepath (str): path of the json file of this cpack
     """
-    filepath = json_folder + str(Path("/{}".format(fn)))
-    with open(filepath) as f:
+    with open(filepath, encoding="utf-8") as f:
         data = json.load(f)
 
-    item = coll.add()  # type:ignore[attr-defined]
     config = data["config"]
+    item = coll.add()  # type:ignore[attr-defined]
 
     item.name = config["pack_name"]
 
@@ -526,8 +502,8 @@ def _add_cpack_to_coll(
 class HG_DELETE_CPACK(bpy.types.Operator):
     """Deletes the cpack from the content pack collection.
 
-    Uses the dictionary of files in the .json of the cpack to delete all files
-    belonging to this cpack
+    Removes the files listed in the .json of the cpack, except those another
+    installed pack lists too (see `downloader.remove`)
     """
 
     bl_idname = "hg3d.cpackdel"
@@ -545,57 +521,16 @@ class HG_DELETE_CPACK(bpy.types.Operator):
     def execute(self, context):
         pref = get_prefs()
         col = context.scene.contentpacks_col
-        index = context.scene.contentpacks_col_index
         item = col[self.item_name]
 
-        # delete files from dict in json
-        with open(item.json_path) as f:
-            data = json.load(f)
-
-        os.remove(item.json_path)
-        if "files" in data:
-            file_list = data["files"]
-
-            for fn in file_list:
-                filepath = pref.filepath + str(Path(fn))
-                try:
-                    os.remove(filepath)
-                except PermissionError:
-                    hg_log("Could not remove ", filepath, level="WARNING")
-                except FileNotFoundError as e:
-                    hg_log("Could not remove ", filepath, level="WARNING")
-                    print(e)  # noqa T201
-
-        # remove item from collection
-        col.remove(index)
-        context.scene.contentpacks_col_index = min(max(0, index - 1), len(col) - 1)
-
-        self._removeEmptyFolders(pref.filepath)
+        key = os.path.splitext(os.path.basename(item.json_path))[0]
+        if not downloader.remove(pref.filepath, key):
+            self.report({"WARNING"}, f"Could not remove {item.pack_name}")
 
         cpacks_refresh(self, context)
+        context.scene.contentpacks_col_index = min(context.scene.contentpacks_col_index, len(col) - 1)
 
         return {"FINISHED"}
-
-    @no_type_check
-    def _removeEmptyFolders(self, path):
-        """Recursive function to remove empty folders.
-
-        Args:
-            path (str): filepath of HumGen cpack directory
-        """
-        if not os.path.isdir(path):
-            return
-
-        files = os.listdir(path)
-        if files:
-            for f in files:
-                fullpath = os.path.join(path, f)
-                if os.path.isdir(fullpath):
-                    self._removeEmptyFolders(fullpath)
-
-        files = os.listdir(path)
-        if len(files) == 0:
-            os.rmdir(path)
 
 
 class HG_DELETE_INSTALLPACK(bpy.types.Operator):

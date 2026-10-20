@@ -88,8 +88,8 @@ class ProcessSettings:
     The steps that change the human for good refuse to run twice, see the
     `has_*` and `was_*` properties.
 
-    The process system runs on the data of the HG_Export content pack, which is
-    downloaded from your Superhive account (formerly BlenderMarket). Without it, `run`, the steps,
+    The process system runs on the data of the HG_Export content pack, which the
+    add-on's setup installs ("Install HG Export" in the Process tab). Without it, `run`, the steps,
     `lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The
     `has_*`, `was_*` and `is_*` properties and `settings` work without it.
     """

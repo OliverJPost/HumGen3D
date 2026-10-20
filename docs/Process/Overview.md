@@ -12,12 +12,11 @@ description: "Export Human Generator characters from Blender to Unity, Unreal En
 The **Process** tab turns a Human Generator human into a game-ready character file: an FBX or glTF with baked textures, hair cards, a clean skeleton with the bone names Unity, Unreal Engine, Godot or Mixamo expect, and the face as blend shapes. It can also make a frozen, lightweight copy of the human inside your Blender file, for rendering crowds. You pick a *recipe* for the program you use, check the folder and press one button. Everything else, like baking the materials, converting the particle hair to cards and building the skeleton, happens in Blender.
 
 > [!question]- HG Export pack missing?
-> The recipes and engine data the Process tab runs on come as a separate content pack, **HG_Export.hgpack**, which is included with your license. Until it is installed, the tab is greyed out and says *HG_Export.hgpack missing*. Getting it takes two steps:
+> The recipes and engine data the Process tab runs on come as a separate content pack, **HG Export**, which is included with your licence. Until it is installed, the tab is greyed out and says *Export data not installed*.
 >
-> 1. **Download** `HG_Export.hgpack` from your [Superhive account](https://superhivemarket.com/account/orders): log in, go to *Orders* and find it in the downloads of your Human Generator order. The **Download from Superhive** button in the Process tab opens that page. Superhive is the new name of BlenderMarket; if you bought Human Generator there, log in with the same account.
-> 2. **Install** it: press **Install HG_Export.hgpack** in the Process tab and pick the file you downloaded.
+> Press **Install HG Export** in the Process tab. The setup opens on the pack list with HG Export ticked; press the install button. If this computer doesn't know your order yet, the setup asks for it once, see [[Installation#Activate your order]].
 >
-> That's a one-time step. The pack is also listed, and can be removed, under *Content Packs* in the add-on preferences, like the other packs. When an update of Human Generator needs a newer pack, the tab says *HG_Export.hgpack outdated*; download and install it again the same way.
+> That's a one-time step. The pack is also listed under *Content Packs* in the add-on preferences, like the other packs. When an update of Human Generator needs a newer pack, the tab says *Export data needs an update*; press **Update HG Export**.
 
 ## Quickstart
 
@@ -116,7 +115,7 @@ With the *In this file* output (the *Blender render copy* recipe) the result sta
 > - The Process tab needs the **HG_Export** content pack, see [[#HG Export pack missing?|HG Export pack missing?]]. It is not available in the **trial version**.
 > - **Humans made before version 4** can't be processed.
 > - **Rigify** humans can't get a game skeleton. The skeleton section is skipped and their Rigify rig is exported as it is; the other sections run.
-> - Human Generator needs **Blender 4.0 or newer**; the process system is tested with Blender 5.1.
+> - Human Generator needs **Blender 4.2 or newer**; the process system is tested with Blender 5.1.
 >
 > More in [[Known Limitations]].
 

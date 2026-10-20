@@ -138,3 +138,66 @@ def test_plan_update_available_not_required(catalogue, tmp_path):
     assert by_key["Base_Humans"].status == "update_available"
     assert by_key["Base_Humans"].target.version == (5, 0)
     assert isinstance(by_key["Base_Humans"], PackStatus) and by_key["Base_Humans"].needs_install
+
+
+def test_catalogue_switches_and_schema():
+    plain = Catalogue.from_dict(SAMPLE)
+    assert plain.schema == 1 and plain.supported
+    assert plain.notices and plain.setup_enabled
+    assert plain.message == plain.message_url == plain.upgrade_url == ""
+    data = dict(SAMPLE, addon={"latest": "4.1.0", "notices": False, "setup": False, "message": "Downloads are slow today.", "message_url": "https://humgen3d.com/status", "upgrade_url": "https://humgen3d.com/upgrade"})
+    switched = Catalogue.from_dict(data)
+    assert not switched.notices and not switched.setup_enabled
+    assert switched.message == "Downloads are slow today." and switched.message_url.endswith("/status")
+    assert switched.upgrade_url == "https://humgen3d.com/upgrade"
+    newer = Catalogue.from_dict(dict(SAMPLE, schema=cat.SUPPORTED_SCHEMA + 1))
+    assert not newer.supported and newer.get("Base_Humans") is not None  # the pack list is still read
+    assert not Catalogue.from_dict(dict(SAMPLE, schema="1")).supported
+    assert Catalogue.from_dict({k: v for k, v in SAMPLE.items() if k != "schema"}).supported
+    assert Catalogue.from_dict(dict(SAMPLE, addon=None)).notices
+    with pytest.raises(ValueError):
+        Catalogue.from_dict({"packs": None})
+
+
+def test_unpacked_size_and_required_space():
+    data = json.loads(json.dumps(SAMPLE))
+    data["packs"][0]["versions"][0]["unpacked_size"] = 150  # Base_Humans 4.1
+    catalogue = Catalogue.from_dict(data)
+    statuses = {s.key: s for s in plan(catalogue, {}, (4, 0, 38), "licensed")}
+    assert statuses["Base_Humans"].target.unpacked_size == 150
+    assert statuses["Base_Poses"].target.unpacked_size is None
+    # Every pack unpacked (twice the zip when unknown), plus the largest zip
+    selected = [statuses["Base_Humans"], statuses["Base_Poses"]]
+    assert cat.required_space(selected) == 150 + 2 * 50 + 100
+    assert cat.required_space([]) == 0
+    assert cat.required_space([statuses["HG_Export"], statuses["Base_Poses"]]) == 2 * 10 + 2 * 50 + 50
+
+
+def test_install_mode(tmp_path):
+    assert cat.install_mode({}) == "licensed"
+    write_pack(tmp_path, "Trial_Content", (4, 1))
+    assert cat.install_mode(installed_packs(str(tmp_path))) == "trial"
+    write_pack(tmp_path, "Base_Humans", (4, 1))
+    assert cat.install_mode(installed_packs(str(tmp_path))) == "licensed"
+    assert cat.REQUIRED["Trial_Content"] == (4, 1)
+
+
+def test_malformed_pack_json_is_skipped(tmp_path):
+    write_pack(tmp_path, "Base_Humans", (4, 1), files=["models/HG_HUMAN.blend"])
+    packs = tmp_path / "content_packs"
+    (packs / "NullConfig.json").write_text(json.dumps({"config": None, "files": ["a"]}))
+    (packs / "BadFiles.json").write_text(json.dumps({"config": {"pack_name": "x"}, "files": "abc"}))
+    (packs / "List.json").write_text("[1, 2]")
+    (packs / "BadConfig.json").write_text(json.dumps({"config": "nope"}))
+    (packs / "Odd.json").write_text(json.dumps({"config": {"pack_name": None, "pack_version": "x"}, "files": ["a", 3, None]}))
+    found = installed_packs(str(tmp_path))
+    assert set(found) == {"Base_Humans", "NullConfig", "Odd"}
+    assert found["NullConfig"].name == "NullConfig" and found["NullConfig"].files == ["a"]
+    assert found["Odd"].version == (0,) and found["Odd"].files == ["a"]
+
+
+def test_plan_trial_locks_unknown_access(catalogue):
+    data = json.loads(json.dumps(SAMPLE))
+    data["packs"].append({"key": "Future", "name": "Future", "access": "members", "versions": [{"version": [1, 0], "file": "f", "min_addon": "4.0.0"}]})
+    by_key = {s.key: s for s in plan(Catalogue.from_dict(data), {}, (4, 0, 38), "trial")}
+    assert by_key["Future"].status == "locked"

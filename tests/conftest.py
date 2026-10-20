@@ -10,6 +10,14 @@ import tempfile
 import pytest
 
 
+# The developer's content folder, for the tests that make humans when the
+# preferences of the bpy module have no folder (HUMGEN_DEV_CONTENT overrides)
+DEV_CONTENT = "~/Library/Mobile Documents/com~apple~CloudDocs/Areas/Human Generator/Content/"
+
+if "HUMGEN_DEV_CONTENT" not in os.environ and os.path.isdir(os.path.expanduser(DEV_CONTENT)):
+    os.environ["HUMGEN_DEV_CONTENT"] = os.path.expanduser(DEV_CONTENT)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def isolated_user_settings():
     path = os.path.join(tempfile.mkdtemp(prefix="hg_test_settings_"), "settings.json")

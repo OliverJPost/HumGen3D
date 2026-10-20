@@ -19,6 +19,10 @@ from typing import Dict, List, Optional, Sequence, Tuple
 Version = Tuple[int, ...]
 
 CATALOGUE_SCHEMA = 1
+# The newest catalogue schema this add-on understands. A catalogue with a
+# higher number is still read for its pack list, but the add-on shows no
+# notices from it (`Catalogue.supported`).
+SUPPORTED_SCHEMA = 1
 
 # The pack versions this add-on needs. A pack below its entry is "update
 # required"; one that is only behind the catalogue is "update available".
@@ -29,6 +33,7 @@ REQUIRED: Dict[str, Version] = {
     "Base_Clothes": (4, 0),
     "Base_Hair": (4, 0),
     "HG_Export": (1, 0),
+    "Trial_Content": (4, 1),
 }
 
 # Packs a standard install includes (the catalogue says the same with
@@ -74,18 +79,24 @@ class PackVersion:
     min_addon: Version
     file: str
     url: Optional[str] = None
+    # Bytes on disk once unzipped, when the catalogue says
+    unpacked_size: Optional[int] = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "PackVersion":
-        size = data.get("size")
         return cls(
             version=parse_version(data.get("version", [0])),
-            size=int(size) if isinstance(size, (int, float)) and size > 0 else None,
+            size=_positive(data.get("size")),
             sha256=(data.get("sha256") or None),
             min_addon=parse_version(data.get("min_addon", "0.0.0")),
             file=str(data.get("file", "")),
             url=data.get("url") or None,
+            unpacked_size=_positive(data.get("unpacked_size")),
         )
+
+
+def _positive(value) -> Optional[int]:
+    return int(value) if isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0 else None
 
 
 @dataclass
@@ -139,20 +150,46 @@ class Catalogue:
     latest_addon: Version = (0,)
     min_blender: Version = (0,)
     generated_at: str = ""
+    schema: int = CATALOGUE_SCHEMA
+    # Switches the server can flip without a release: `notices` off silences
+    # every content notice, `setup_enabled` off stops new downloads
+    notices: bool = True
+    setup_enabled: bool = True
+    # A sentence the server wants shown (an outage, a known problem), with
+    # an optional link
+    message: str = ""
+    message_url: str = ""
+    # Where a Personal owner upgrades, when the credential did not say
+    upgrade_url: str = ""
 
     @classmethod
     def from_dict(cls, data: dict) -> "Catalogue":
-        if not isinstance(data, dict) or "packs" not in data:
+        if not isinstance(data, dict) or not isinstance(data.get("packs"), list):
             raise ValueError("Not a catalogue")
-        addon = data.get("addon") or {}
+        addon = data.get("addon")
+        if not isinstance(addon, dict):
+            addon = {}
         packs = [CataloguePack.from_dict(p) for p in data["packs"] if isinstance(p, dict) and "key" in p]
         packs.sort(key=lambda p: (p.order, p.name))
+        schema = data.get("schema", CATALOGUE_SCHEMA)
         return cls(
             packs=packs,
             latest_addon=parse_version(addon.get("latest", "0")),
             min_blender=parse_version(addon.get("min_blender", "0")),
             generated_at=str(data.get("generated_at", "")),
+            schema=schema if isinstance(schema, int) and not isinstance(schema, bool) else 0,
+            notices=addon.get("notices", True) is not False,
+            setup_enabled=addon.get("setup", True) is not False,
+            message=str(addon.get("message") or ""),
+            message_url=str(addon.get("message_url") or ""),
+            upgrade_url=str(addon.get("upgrade_url") or ""),
         )
+
+    @property
+    def supported(self) -> bool:
+        """False for a catalogue written for a newer add-on (or a malformed
+        schema field): its pack list is still read, its notices are not shown."""
+        return 1 <= self.schema <= SUPPORTED_SCHEMA
 
     @classmethod
     def from_json(cls, text: str) -> "Catalogue":
@@ -173,7 +210,11 @@ class InstalledPack:
 
 
 def installed_packs(folder: str) -> Dict[str, InstalledPack]:
-    """The packs in `<folder>/content_packs/*.json`, keyed by file stem."""
+    """The packs in `<folder>/content_packs/*.json`, keyed by file stem.
+
+    A JSON that cannot be read or has an unexpected shape is skipped, so one
+    broken file never hides the other packs.
+    """
     result: Dict[str, InstalledPack] = {}
     if not folder:
         return result
@@ -183,30 +224,38 @@ def installed_packs(folder: str) -> Dict[str, InstalledPack]:
     except OSError:
         return result
     for fn in names:
-        if not fn.endswith(".json"):
+        if not fn.endswith(".json") or fn.startswith("."):
             continue
         path = os.path.join(packs_dir, fn)
+        key = fn[:-5]
         try:
             with open(path, encoding="utf-8") as f:
                 data = json.load(f)
-            config = data.get("config", {})
-        except (OSError, ValueError, AttributeError):
+            config = data.get("config") or {}
+            files = data.get("files") or []
+            if not isinstance(config, dict) or not isinstance(files, list):
+                continue
+            result[key] = InstalledPack(
+                key=key,
+                name=str(config.get("pack_name") or key),
+                version=parse_version(config.get("pack_version", [0, 0])),
+                json_path=path,
+                files=[p for p in files if isinstance(p, str) and p],
+                creator=str(config.get("creator") or ""),
+            )
+        except (OSError, ValueError, AttributeError, TypeError):
             continue
-        key = fn[:-5]
-        result[key] = InstalledPack(
-            key=key,
-            name=str(config.get("pack_name", key)),
-            version=parse_version(config.get("pack_version", [0, 0])),
-            json_path=path,
-            files=[str(p) for p in data.get("files", [])],
-            creator=str(config.get("creator", "")),
-        )
     return result
 
 
 def is_trial_install(installed: Dict[str, InstalledPack]) -> bool:
     """A trial install is one with the trial pack and without the base pack."""
     return TRIAL_KEY in installed and BASE_KEY not in installed
+
+
+def install_mode(installed: Dict[str, InstalledPack]) -> str:
+    """"trial" for a trial install (see `is_trial_install`), else "licensed"."""
+    return "trial" if is_trial_install(installed) else "licensed"
 
 
 def has_humans(installed: Dict[str, InstalledPack]) -> bool:
@@ -261,7 +310,7 @@ def plan(catalogue: Catalogue, installed: Dict[str, InstalledPack], addon_versio
     result = []
     for pack in catalogue.packs:
         if mode == "trial":
-            if pack.access == "licensed":
+            if not pack.free:
                 result.append(PackStatus(pack, "locked", None, installed.get(pack.key)))
                 continue
         elif pack.access == "trial":
@@ -286,3 +335,15 @@ def addon_update_available(catalogue: Catalogue, addon_version: Sequence[int]) -
 def version_blocks_packs(statuses: Sequence[PackStatus]) -> bool:
     """True when some pack this add-on requires only exists for a newer add-on."""
     return any(s.status == "needs_newer_addon" and s.pack.key in REQUIRED for s in statuses)
+
+
+def required_space(selected: Sequence[PackStatus]) -> int:
+    """Disk space an install of `selected` needs at its peak: every pack
+    unpacked (twice its download when the catalogue has no unpacked size),
+    plus the largest download, which sits next to its unpacked files until it
+    is deleted. Takes anything with a `target` PackVersion."""
+    targets = [s.target for s in selected if getattr(s, "target", None) is not None]
+    if not targets:
+        return 0
+    unpacked = sum(t.unpacked_size or 2 * (t.size or 0) for t in targets)
+    return unpacked + max(t.size or 0 for t in targets)

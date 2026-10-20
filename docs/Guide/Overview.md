@@ -8,7 +8,7 @@ permalink: guide
 
 *This guide goes step by step through the process of creating a human in Human Generator!*
 
-> [!info] New here? Start with [[Installation]]: installing the add-on, setting up the content and activating your order.
+> [!info] New here? Start with [[Installation]]: installing the add-on, setting up the content and activating your order. If the setup shows an error, see [[Setup troubleshooting]].
 
 > [!info] Besides the Human Generator Guide, we also have:
 > - The [[Batch/Overview|Batch Generator Guide]]

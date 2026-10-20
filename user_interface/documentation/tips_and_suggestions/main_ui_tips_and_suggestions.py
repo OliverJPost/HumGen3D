@@ -1,6 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 from enum import Enum
 
+from ....backend.preferences.licence import buy_url
+
 from ....user_interface.documentation.tips_and_suggestions.tip_baseclasses import (
     Tip,
     URLOperator,
@@ -72,13 +74,13 @@ trial use. Both personal and commercial use
 are not permitted.
 
 Want to purchase a full version? Click the
-link below to go to the BlenderMarket.
+link below to see the prices.
 """,
     important=True,
     operator =
         URLOperator(
-            url="https://blendermarket.com/products/humgen3d",
-            text="Shop page",
+            url=buy_url("tip_trial_human"),
+            text="Buy full version",
         )
 
 )

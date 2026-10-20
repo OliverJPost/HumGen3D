@@ -13,7 +13,12 @@ from ...user_interface.icons.icons import get_hg_icon
 from ...user_interface.ui_baseclasses import draw_icon_title
 
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui
-from ..panel_functions import draw_panel_switch_header, draw_paragraph, get_flow
+from ..panel_functions import (
+    draw_panel_switch_header,
+    draw_paragraph,
+    draw_trial_notice,
+    get_flow,
+)
 
 
 class Batch_PT_Base:
@@ -81,16 +86,7 @@ class HG_PT_BATCH_Panel(Batch_PT_Base, bpy.types.Panel):
             ).run_immediately = False
 
         if is_trial:
-            box = self.layout.box()
-            row = box.row(align=True)
-            row.alert = True
-            row.label(text="Disabled in Trial Version")
-            box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
+            draw_trial_notice(self.layout, "batch")
 
 
 class HG_PT_B_GENERATION_PROBABILITY(Batch_PT_Base, bpy.types.Panel):

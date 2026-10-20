@@ -3,6 +3,7 @@
 import bpy
 
 from ...backend import get_prefs
+from ..panel_functions import draw_trial_notice
 from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw
 
 
@@ -83,16 +84,7 @@ class HG_PT_EXPRESSION(MainPanelPart, bpy.types.Panel):
         """
         is_trial = get_prefs().is_trial
         if is_trial:
-            tbox = box.box()
-            row = tbox.row(align=True)
-            row.alert = True
-            row.label(text="Disabled in Trial Version")
-            tbox.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
+            draw_trial_notice(box, "facial_rig")
         col = box.column()
         col.enabled = not is_trial
         if "facial_rig" in self.human.objects.body:

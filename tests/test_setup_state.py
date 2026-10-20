@@ -18,7 +18,9 @@ def isolated(monkeypatch, tmp_path):
     monkeypatch.setattr(setup_state, "FAKE_CHECK_SECONDS", 0.05)
     monkeypatch.setattr(setup_state, "_start_poll", lambda: None)
     monkeypatch.setenv(user_settings.ENV_OVERRIDE, str(tmp_path / "settings.json"))
+    monkeypatch.setattr(setup_state, "RETRY_DELAYS", (0.0, 0.0, 0.0))
     monkeypatch.setattr(setup_state.repository, "trial_rid", lambda: None)
+    monkeypatch.setattr(setup_state.migration, "find_existing_content", lambda: None)
     monkeypatch.setattr(online, "allowed", lambda: True)
 
 
@@ -92,7 +94,7 @@ def test_guid_cleaning():
 
 def test_activate_validates_the_form(st):
     assert not st.activate("", "a@b.co", True)
-    assert "GUID" in st.license_error
+    assert "order ID" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "nope", True)
     assert "email" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "a@b.co", False)
@@ -109,6 +111,7 @@ def test_activate_ok_goes_to_packs_and_remembers(st):
     saved = user_settings.load()
     assert saved["order_guid"] == "3f2b9c1e-7d4a" and saved["email"] == "a@b.co" and saved["newsletter"] is True
     assert saved["license"] == "commercial" and saved["activated_at"] and saved["terms_accepted_at"]
+    assert user_settings.credential().status == "ok"
     assert st.activated
     # Next time, the licence screen is skipped
     st2 = SetupState(services=FakeServices())
@@ -123,20 +126,34 @@ def test_activate_failed_stays(st):
     st.choose("licensed")
     assert st.activate("0000-fails", "a@b.co", True)
     assert wait_for(lambda: st.license_phase == "failed")
-    assert st.screen == "license" and "could not find" in st.license_error
+    assert st.screen == "license" and "couldn't find" in st.license_error
     assert not st.activated
 
 
+class Form:
+    def __init__(self, order_guid="", email="", accept_terms=False):
+        self.order_guid = order_guid
+        self.email = email
+        self.accept_terms = accept_terms
+
+
 def test_prefill_form(st):
-    user_settings.update(order_guid="g", email="e@x.io")
-
-    class Form:
-        order_guid = ""
-        email = "typed@x.io"
-
-    form = Form()
+    user_settings.save_credential("g", "e@x.io")
+    form = Form(email="typed@x.io")
     st.prefill_form(form)
     assert form.order_guid == "g" and form.email == "typed@x.io"
+    # Right after a step asked for it, the stored order replaces what was typed
+    st.begin_change_credential()
+    assert st.screen == "license" and st.prefill_due
+    st.prefill_form(form)
+    assert form.email == "e@x.io" and not st.prefill_due
+
+
+def test_licence_keys_pass_the_form_check():
+    from HumGen3D.user_interface.setup_overlay.state import clean_guid, looks_like_guid
+
+    assert clean_guid(" HG3D-ABCDE-FGHJK-MNPQR-STVW \n") == "HG3D-ABCDE-FGHJK-MNPQR-STVW"
+    assert looks_like_guid("hg3d-abcde")
 
 
 def test_fake_download_runs_to_done(st):
@@ -151,6 +168,7 @@ def test_fake_download_runs_to_done(st):
 
 
 def test_abort_goes_back_to_packs(st):
+    user_settings.save_credential("g", "e@x.io")
     st.set_mode("licensed")
     loaded(st)
     st.start()
@@ -164,6 +182,7 @@ def test_abort_goes_back_to_packs(st):
 
 
 def test_fake_download_failure_and_reset(st):
+    user_settings.save_credential("g", "e@x.io")
     st.set_mode("licensed")
     loaded(st)
     st.start()
@@ -207,9 +226,8 @@ def test_update_mode_preselects_updates(st, tmp_path):
     packs.mkdir(parents=True)
     for key, version in (("Base_Humans", [4, 0]), ("Base_Poses", [4, 0])):
         (packs / f"{key}.json").write_text(json.dumps({"config": {"pack_name": key.replace("_", " "), "pack_version": version}}))
-    user_settings.update(order_guid="g", email="e@x.io")
     st.begin_update()
-    assert st.update_mode and st.prompted and st.screen == "packs"
+    assert st.update_mode and st.prompted and st.screen == "packs" and st.mode == "licensed"
     loaded(st)
     by_key = {p.key: p for p in st.packs}
     assert by_key["Base_Humans"].status == "update_required" and by_key["Base_Humans"].selected
@@ -217,9 +235,11 @@ def test_update_mode_preselects_updates(st, tmp_path):
     assert by_key["Base_Poses"].status == "up_to_date" and not by_key["Base_Poses"].selected
     # A standard pack this install lacks is offered too, but can be unticked
     assert by_key["Base_Clothes"].status == "missing" and by_key["Base_Clothes"].selected and not by_key["Base_Clothes"].required
-    assert by_key["Extra_Presets"].status == "missing" and not by_key["Extra_Presets"].selected
+    assert by_key["8K_Textures"].status == "missing" and not by_key["8K_Textures"].selected
+    # Update mode starts on the pack list: there is nothing to go back to
+    assert not st.can_go_back
     st.back()
-    assert st.screen == "welcome"
+    assert st.screen == "packs"
 
 
 def test_links_are_fetched_per_pack_and_again_on_retry(st):
@@ -227,11 +247,12 @@ def test_links_are_fetched_per_pack_and_again_on_retry(st):
     requests = []
     original = st.services.content_urls
 
-    def content_urls(keys, order_guid, email, rid):
+    def content_urls(keys, credential, email, rid):
         requests.append(list(keys))
-        return original(keys, order_guid, email, rid)
+        return original(keys, credential, email, rid)
 
     st.services.content_urls = content_urls
+    user_settings.save_credential("g", "e@x.io")
     st.set_mode("licensed")
     loaded(st)
     for pack in st.packs:
@@ -239,7 +260,9 @@ def test_links_are_fetched_per_pack_and_again_on_retry(st):
     st.start()
     assert wait_for(lambda: st.phase == "done")
     assert requests == [["Base_Poses"], ["HG_Export"]]
-    st.start()  # a retry asks again instead of reusing old links
+    for pack in st.packs:
+        pack.state = "pending"
+    st.start()  # a new run asks again instead of reusing old links
     assert wait_for(lambda: st.phase == "done")
     assert len(requests) == 4
 
@@ -264,7 +287,7 @@ def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
         monkeypatch.setattr(api_client, "fetch_catalogue", lambda: catalogue)
         calls = []
 
-        def content_urls(keys, g="", e="", rid=""):
+        def content_urls(keys, credential="", email="", rid=""):
             calls.append(list(keys))
             return {"files": {k: {"url": url, "size": len(pack_bytes)} for k in keys}, "errors": {}}
 
