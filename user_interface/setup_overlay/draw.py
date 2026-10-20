@@ -19,6 +19,18 @@ from gpu_extras.batch import batch_for_shader
 Color = Tuple[float, float, float, float]
 
 FONT = 0  # Blender's interface font
+# Titles and button labels: Inter SemiBold, the interface font one weight up.
+# Characters it lacks (Chinese, Japanese, ...) come from Blender's fallback fonts.
+BOLD_FONT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts", "Inter-SemiBold.woff2")
+_bold_font: Optional[int] = None
+
+
+def bold_font() -> int:
+    global _bold_font
+    if _bold_font is None:
+        loaded = blf.load(BOLD_FONT_PATH) if os.path.isfile(BOLD_FONT_PATH) else -1
+        _bold_font = loaded if loaded != -1 else FONT
+    return _bold_font
 
 _UNIT_QUAD = [(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 0.0), (1.0, 1.0), (0.0, 1.0)]
 
@@ -125,39 +137,36 @@ def _mvp():
     return gpu.matrix.get_projection_matrix() @ gpu.matrix.get_model_view_matrix()
 
 
-class Palette:
-    """Colours taken from the user's Blender theme, so the card looks native."""
+def hex_color(value: str, alpha: float = 1.0) -> Color:
+    value = value.lstrip("#")
+    return (int(value[0:2], 16) / 255, int(value[2:4], 16) / 255, int(value[4:6], 16) / 255, alpha)
 
-    def __init__(self, context: bpy.types.Context) -> None:
-        theme = context.preferences.themes[0]
-        ui = theme.user_interface
-        back = tuple(ui.wcol_menu_back.inner)
-        dark = sum(back[:3]) / 3 < 0.5
-        self.dark = dark
-        self.backdrop: Color = (0.0, 0.0, 0.0, 0.55 if dark else 0.35)
-        self.card: Color = (0.10, 0.10, 0.11, 1.0) if dark else (0.98, 0.98, 0.98, 1.0)
-        self.card_border: Color = (1.0, 1.0, 1.0, 0.08) if dark else (0.0, 0.0, 0.0, 0.10)
-        self.panel: Color = (1.0, 1.0, 1.0, 0.045) if dark else (0.0, 0.0, 0.0, 0.035)
-        self.panel_hover: Color = (1.0, 1.0, 1.0, 0.09) if dark else (0.0, 0.0, 0.0, 0.07)
-        self.text: Color = (0.93, 0.93, 0.93, 1.0) if dark else (0.12, 0.12, 0.12, 1.0)
-        self.muted: Color = (0.62, 0.62, 0.64, 1.0) if dark else (0.42, 0.42, 0.44, 1.0)
-        self.faint: Color = (1.0, 1.0, 1.0, 0.12) if dark else (0.0, 0.0, 0.0, 0.10)
-        sel = tuple(ui.wcol_option.inner_sel)
-        self.accent: Color = (sel[0], sel[1], sel[2], 1.0)
-        self.accent_hover: Color = (min(sel[0] + 0.08, 1), min(sel[1] + 0.08, 1), min(sel[2] + 0.08, 1), 1.0)
+
+class Palette:
+    """The colours of humgen3d.com, the same in every Blender theme, like
+    Blender's own splash screen."""
+
+    def __init__(self, context: Optional[bpy.types.Context] = None) -> None:
+        self.backdrop: Color = (0.0, 0.0, 0.0, 0.6)
+        self.card: Color = hex_color("1b1b1d")
+        self.inset: Color = hex_color("141416")  # fields and lists, a step below the card
+        self.line: Color = hex_color("2a2a2e")  # dividers and container borders
+        self.border: Color = hex_color("3a3a40")  # borders of fields and secondary buttons
+        self.hover: Color = hex_color("232326")
+        self.text: Color = hex_color("f3f2f0")
+        self.muted: Color = hex_color("a6a6ad")
+        self.faint: Color = hex_color("6c6c73")
+        self.accent: Color = hex_color("8c4f70")
+        self.accent_hover: Color = hex_color("9d5a7e")
+        self.link: Color = hex_color("d4a5c1")
         self.on_accent: Color = (1.0, 1.0, 1.0, 1.0)
-        self.success: Color = (0.30, 0.69, 0.42, 1.0)
-        self.danger: Color = (0.86, 0.33, 0.30, 1.0)
-        self.shadow: Color = (0.0, 0.0, 0.0, 0.5 if dark else 0.25)
-        # Opaque versions, for the inside of an outline (drawn over the outline colour)
-        self.panel_solid: Color = self.over(self.card, self.panel)
-        self.panel_hover_solid: Color = self.over(self.card, self.panel_hover)
+        self.success: Color = hex_color("6fbf8b")
+        self.danger: Color = hex_color("e5736b")
+        self.shadow: Color = (0.0, 0.0, 0.0, 0.45)
 
     @staticmethod
-    def over(base: Color, layer: Color) -> Color:
-        """`layer` composited over `base`."""
-        a = layer[3]
-        return tuple(base[i] * (1 - a) + layer[i] * a for i in range(3)) + (base[3],)
+    def with_alpha(color: Color, alpha: float) -> Color:
+        return (color[0], color[1], color[2], color[3] * alpha)
 
 
 class Canvas:
@@ -209,6 +218,10 @@ class Canvas:
         self.rect(x, y, w, h, color, radius)
         self.rect(x + thickness, y + thickness, w - 2 * thickness, h - 2 * thickness, inner, max(radius - thickness, 0))
 
+    def hline(self, x: float, y: float, w: float, color: Color) -> None:
+        """A one-pixel divider, snapped to the pixel grid."""
+        self.rect(round(x), round(y), w, max(1.0, round(self.scale)), color)
+
     def image(self, texture: gpu.types.GPUTexture, x: float, y: float, w: float, h: float, radius: float = 0.0, alpha: float = 1.0, cover: bool = True) -> None:
         """Draw a texture in a rounded rectangle, cropped to fill it (`cover`)."""
         gpu.state.blend_set("ALPHA")
@@ -242,41 +255,43 @@ class Canvas:
 
     # Text
 
-    def _font(self, size: float) -> None:
-        blf.size(FONT, self.px(size))
+    def _font(self, size: float, bold: bool = False) -> int:
+        font = bold_font() if bold else FONT
+        blf.size(font, self.px(size))
+        return font
 
-    def text_width(self, text: str, size: float) -> float:
-        self._font(size)
-        return blf.dimensions(FONT, text)[0]
+    def text_width(self, text: str, size: float, bold: bool = False) -> float:
+        font = self._font(size, bold)
+        return blf.dimensions(font, text)[0]
 
-    def text(self, text: str, x: float, y: float, size: float, color: Color, align: str = "LEFT") -> float:
+    def text(self, text: str, x: float, y: float, size: float, color: Color, align: str = "LEFT", bold: bool = False) -> float:
         """Draw one line with its baseline at `y`. Returns the width in pixels."""
-        self._font(size)
-        width = blf.dimensions(FONT, text)[0]
+        font = self._font(size, bold)
+        width = blf.dimensions(font, text)[0]
         if align == "CENTER":
             x -= width / 2
         elif align == "RIGHT":
             x -= width
-        blf.position(FONT, round(x), round(y), 0)
-        blf.color(FONT, *self._fade(color))
-        blf.draw(FONT, text)
+        blf.position(font, round(x), round(y), 0)
+        blf.color(font, *self._fade(color))
+        blf.draw(font, text)
         return width
 
-    def ellipsize(self, text: str, size: float, max_width: float) -> str:
-        if self.text_width(text, size) <= max_width:
+    def ellipsize(self, text: str, size: float, max_width: float, bold: bool = False) -> str:
+        if self.text_width(text, size, bold) <= max_width:
             return text
-        while text and self.text_width(text + "…", size) > max_width:
+        while text and self.text_width(text + "…", size, bold) > max_width:
             text = text[:-1]
         return text + "…"
 
-    def wrap(self, text: str, size: float, max_width: float) -> List[str]:
-        self._font(size)
+    def wrap(self, text: str, size: float, max_width: float, bold: bool = False) -> List[str]:
+        font = self._font(size, bold)
         lines: List[str] = []
         for paragraph in text.split("\n"):
             line = ""
             for word in paragraph.split(" "):
                 candidate = word if not line else line + " " + word
-                if blf.dimensions(FONT, candidate)[0] <= max_width or not line:
+                if blf.dimensions(font, candidate)[0] <= max_width or not line:
                     line = candidate
                 else:
                     lines.append(line)
@@ -284,14 +299,14 @@ class Canvas:
             lines.append(line)
         return lines
 
-    def paragraph(self, text: str, x: float, top: float, size: float, color: Color, max_width: float, leading: float = 1.45, align: str = "LEFT") -> float:
+    def paragraph(self, text: str, x: float, top: float, size: float, color: Color, max_width: float, leading: float = 1.45, align: str = "LEFT", bold: bool = False) -> float:
         """Draw wrapped text below `top`. Returns the height used, in pixels."""
         line_height = self.px(size) * leading
         y = top - self.px(size)
-        for line in self.wrap(text, size, max_width):
-            self.text(line, x, y, size, color, align)
+        for line in self.wrap(text, size, max_width, bold):
+            self.text(line, x, y, size, color, align, bold)
             y -= line_height
-        return top - y - (line_height - self.px(size))
+        return top - y - line_height
 
 
 class TextureCache:

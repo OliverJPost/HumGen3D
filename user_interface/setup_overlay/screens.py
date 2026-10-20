@@ -6,6 +6,11 @@ and interface scale can change), draws, and answers mouse and keyboard events
 through the widgets it placed. Screens talk to the operator through
 `Controller`. Which screen shows is `state.screen`, so the sidebar fallback and
 the overlay always show the same step.
+
+Every step uses the same card: a header with the logo, the step's content and
+a footer with its buttons, so moving through the setup never resizes or
+rearranges the window. The welcome and slide screens split the card into a
+picture and a text column instead.
 """
 import os
 import re
@@ -27,6 +32,7 @@ SLIDE_IMAGE_DIR = os.path.join(
 )
 # Pictures of the welcome and choice screens ship with the add-on
 SETUP_IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
+LOGO = os.path.join(SETUP_IMAGE_DIR, "hg_logo.png")
 
 # PROTOTYPE decks. The real ones are fetched from the server as JSON + WebP.
 # Texts are English keys, translated through tr() when drawn.
@@ -51,6 +57,20 @@ FADE_SECONDS = 0.35
 CLOSE_GLYPH = "✕"
 CHECK_GLYPH = "✓"
 
+# Layout, in design units
+CARD_W, CARD_H = 820, 580
+CARD_RADIUS = 12
+PAD = 32  # left and right margin of the content
+HEADER = 64
+FOOTER = 76
+CONTROL_H = 36  # buttons and fields
+RADIUS = 8  # buttons, fields and lists
+
+# Type scale, in design units
+TITLE = 20
+BODY = 13
+SMALL = 12
+
 
 def props():
     """The licence form, shared with the sidebar panel through the window manager."""
@@ -59,8 +79,8 @@ def props():
 
 def pack_count(count: int, size: str) -> str:
     if count == 1:
-        return tr("1 pack · {size}").format(size=size)
-    return tr("{count} packs · {size}").format(count=count, size=size)
+        return tr("1 pack, {size}").format(size=size)
+    return tr("{count} packs, {size}").format(count=count, size=size)
 
 
 def in_rect(rect: Rect, x: float, y: float) -> bool:
@@ -68,15 +88,20 @@ def in_rect(rect: Rect, x: float, y: float) -> bool:
     return rx <= x <= rx + rw and ry <= y <= ry + rh
 
 
+def centered_baseline(c: Canvas, y: float, h: float, size: float) -> float:
+    """Baseline that centres a line of `size` text vertically in y..y+h."""
+    return y + h / 2 - c.px(size) * 0.36
+
+
 @dataclass
 class Button:
     label: str
     rect: Rect
     on_click: Callable[[], None]
-    kind: str = "secondary"  # primary, secondary, ghost, danger, link
+    kind: str = "secondary"  # primary, secondary, ghost, link
     enabled: bool = True
     hover: bool = False
-    size: float = 13
+    size: float = BODY
 
     def hit(self, x: float, y: float) -> bool:
         return in_rect(self.rect, x, y)
@@ -84,31 +109,26 @@ class Button:
     def draw(self, c: Canvas) -> None:
         p = c.palette
         x, y, w, h = self.rect
-        radius = c.px(8)
+        radius = c.px(RADIUS)
+        hover = self.hover and self.enabled
+        alpha = c.alpha
+        if not self.enabled:
+            c.alpha = alpha * 0.45
+        bold = self.kind in ("primary", "secondary")
         if self.kind == "primary":
-            fill = p.accent_hover if self.hover else p.accent
-            text = p.on_accent
-        elif self.kind == "danger":
-            fill = p.danger
+            c.rect(x, y, w, h, p.accent_hover if hover else p.accent, radius)
             text = p.on_accent
         elif self.kind == "secondary":
-            fill = p.panel_hover if self.hover else p.panel
+            c.outline(x, y, w, h, p.border, radius, max(1.0, round(c.scale)), p.hover if hover else p.card)
             text = p.text
         elif self.kind == "link":
-            fill = (0, 0, 0, 0)
-            text = p.accent_hover if self.hover else p.accent
+            text = p.text if hover else p.link
         else:  # ghost
-            fill = p.panel if self.hover else (0, 0, 0, 0)
-            text = p.muted if not self.hover else p.text
-        if not self.enabled:
-            fill = (fill[0], fill[1], fill[2], fill[3] * 0.4)
-            text = (text[0], text[1], text[2], text[3] * 0.5)
-        c.rect(x, y, w, h, fill, radius)
-        baseline = y + h / 2 - c.px(self.size * 0.38)
-        c.text(self.label, x + w / 2, baseline, self.size, text, "CENTER")
-        if self.kind == "link":
-            tw = c.text_width(self.label, self.size)
-            c.rect(x + w / 2 - tw / 2, baseline - c.px(3), tw, c.px(1), text)
+            if hover:
+                c.rect(x, y, w, h, p.hover, radius)
+            text = p.text if hover else p.muted
+        c.text(self.label, x + w / 2, centered_baseline(c, y, h, self.size), self.size, text, "CENTER", bold=bold)
+        c.alpha = alpha
 
 
 class TextField:
@@ -137,31 +157,29 @@ class TextField:
     def draw(self, c: Canvas, x: float, y: float, w: float, h: float) -> None:
         p = c.palette
         self.rect = (x, y, w, h)
-        radius = c.px(8)
-        if self.focused:
-            c.outline(x, y, w, h, p.accent, radius, c.px(1.5), p.panel_hover_solid)
-        else:
-            c.rect(x, y, w, h, p.panel, radius)
+        alpha = c.alpha
         if not self.enabled:
-            c.rect(x, y, w, h, (p.card[0], p.card[1], p.card[2], 0.5), radius)
+            c.alpha = alpha * 0.5
+        line = max(1.0, round(c.scale))
+        c.outline(x, y, w, h, p.accent if self.focused else p.border, c.px(RADIUS), line * (1.5 if self.focused else 1), p.inset)
         text = self.value
-        size = 13.5
         pad = c.px(12)
-        baseline = y + h / 2 - c.px(5)
-        c.clip(x + c.px(2), y, w - c.px(4), h)
+        baseline = centered_baseline(c, y, h, BODY)
+        c.clip(x + line, y, w - 2 * line, h)
         if text:
-            tw = c.text_width(text, size)
+            tw = c.text_width(text, BODY)
             shift = max(0.0, tw - (w - 2 * pad))  # keep the end in view
             if self.select_all and self.focused:
-                c.rect(x + pad - shift, baseline - c.px(4), tw, c.px(size) + c.px(4), (p.accent[0], p.accent[1], p.accent[2], 0.35), c.px(2))
-            c.text(text, x + pad - shift, baseline, size, p.text)
+                c.rect(x + pad - shift, baseline - c.px(4), tw, c.px(BODY) + c.px(5), p.with_alpha(p.accent, 0.55), c.px(2))
+            c.text(text, x + pad - shift, baseline, BODY, p.text)
             caret_x = x + pad - shift + tw + c.px(1)
         else:
-            c.text(self.placeholder, x + pad, baseline, size, p.muted)
+            c.text(self.placeholder, x + pad, baseline, BODY, p.faint)
             caret_x = x + pad
         if self.focused and int(time.monotonic() * 2) % 2 == 0:
-            c.rect(caret_x, baseline - c.px(3), c.px(1.5), c.px(size) + c.px(2), p.text)
+            c.rect(round(caret_x), baseline - c.px(3), line, c.px(BODY) + c.px(3), p.text)
         c.unclip()
+        c.alpha = alpha
 
     def key(self, event) -> bool:
         """Edit on a key press. Returns True when the event was used."""
@@ -205,7 +223,6 @@ class Controller:
 
 class Screen:
     name = "screen"
-    show_close = True
 
     def __init__(self, controller: Controller, textures: TextureCache) -> None:
         self.controller = controller
@@ -216,7 +233,7 @@ class Screen:
         self.mouse: Tuple[float, float] = (-1.0, -1.0)
 
     def card_size(self, c: Canvas) -> Tuple[float, float]:
-        return c.px(820), c.px(560)
+        return c.px(CARD_W), c.px(CARD_H)
 
     def enter(self) -> None:
         """The screen was just switched to."""
@@ -226,20 +243,12 @@ class Screen:
         self.buttons = []
         self.rows = []
         self.layout(c)
-        if self.show_close:
-            self.close_button(c)
         for button in self.buttons:
             button.hover = button.enabled and button.hit(*self.mouse)
             button.draw(c)
 
     def layout(self, c: Canvas) -> None:  # draws and places widgets
         raise NotImplementedError
-
-    def close_button(self, c: Canvas) -> None:
-        x, y, w, h = self.rect
-        size = c.px(32)
-        inset = c.px(12)
-        self.button(CLOSE_GLYPH, x + w - inset - size, y + h - inset - size, size, size, self.controller.close, "ghost", size=14)
 
     # Input. Coordinates are region pixels.
 
@@ -279,47 +288,103 @@ class Screen:
     def tick(self, now: float) -> None:
         pass
 
-    # Helpers
+    # Card structure
 
-    def button(self, label: str, x: float, y: float, w: float, h: float, on_click: Callable[[], None], kind: str = "secondary", enabled: bool = True, size: float = 13) -> Button:
-        button = Button(label, (x, y, w, h), on_click, kind, enabled, size=size)
+    def chrome(self, c: Canvas) -> Rect:
+        """Header with logo and close button, dividers above the footer.
+        Returns the content rectangle between them, without the side margins."""
+        p = c.palette
+        x, y, w, h = self.rect
+        header_y = y + h - c.px(HEADER)
+        self.brand(c, x + c.px(PAD), header_y, c.px(HEADER))
+        self.close_button(c, header_y, c.px(HEADER))
+        c.hline(x, header_y, w, p.line)
+        c.hline(x, y + c.px(FOOTER), w, p.line)
+        return (x + c.px(PAD), y + c.px(FOOTER), w - 2 * c.px(PAD), header_y - y - c.px(FOOTER))
+
+    def brand(self, c: Canvas, x: float, y: float, h: float) -> None:
+        """The logo and the product name, centred vertically in y..y+h."""
+        size = c.px(24)
+        logo_y = round(y + (h - size) / 2)
+        self.logo(c, x, logo_y, size)
+        c.text("Human Generator", x + size + c.px(10), centered_baseline(c, logo_y, size, BODY), BODY, c.palette.text, bold=True)
+
+    def logo(self, c: Canvas, x: float, y: float, size: float) -> None:
+        texture = self.textures.get(LOGO)
+        if texture:
+            c.image(texture, round(x), round(y), size, size, size * 0.18)
+        else:
+            c.rect(x, y, size, size, c.palette.accent, size * 0.18)
+
+    def close_button(self, c: Canvas, y: float, h: float) -> None:
+        x, _, w, _ = self.rect
+        size = c.px(30)
+        self.button(CLOSE_GLYPH, x + w - c.px(PAD) + c.px(8) - size, y + (h - size) / 2, size, size, self.controller.close, "ghost", size=SMALL)
+
+    def title_block(self, c: Canvas, content: Rect, title: str, subtitle: str) -> float:
+        """Title and one sentence under it, at the top of the content. Returns
+        the y below them where the next element can start."""
+        x, y, w, h = content
+        top = y + h - c.px(28)
+        used = c.paragraph(title, x, top, TITLE, c.palette.text, w, leading=1.25, bold=True)
+        top -= used + c.px(10)
+        if subtitle:
+            used = c.paragraph(subtitle, x, top, BODY, c.palette.muted, w * 0.85, leading=1.45)
+            top -= used
+        return top - c.px(24)
+
+    def footer_actions(self, c: Canvas, actions: List[Tuple[str, Callable[[], None], str, bool]]) -> float:
+        """Buttons right-aligned in the footer, (label, action, kind, enabled)
+        from left to right. Returns the x where the leftmost one starts."""
+        x, y, w, h = self.rect
+        right = x + w - c.px(PAD)
+        button_y = y + (c.px(FOOTER) - c.px(CONTROL_H)) / 2
+        for label, action, kind, enabled in reversed(actions):
+            bw = self.button_width(c, label, kind)
+            right -= bw
+            self.button(label, right, button_y, bw, c.px(CONTROL_H), action, kind, enabled)
+            right -= c.px(8)
+        return right
+
+    @staticmethod
+    def button_width(c: Canvas, label: str, kind: str) -> float:
+        if kind == "ghost":
+            return c.text_width(label, BODY) + c.px(28)
+        return max(c.text_width(label, BODY, bold=True) + c.px(40), c.px(96))
+
+    # Widgets
+
+    def button(self, label: str, x: float, y: float, w: float, h: float, on_click: Callable[[], None], kind: str = "secondary", enabled: bool = True, size: float = BODY) -> Button:
+        button = Button(label, (round(x), round(y), round(w), round(h)), on_click, kind, enabled, size=size)
         self.buttons.append(button)
         return button
 
-    def header(self, c: Canvas, title: str, subtitle: str) -> float:
-        x, y, w, h = self.rect
-        pad = c.px(36)
-        top = y + h - pad
-        c.text(title, x + pad, top - c.px(22), 24, c.palette.text)
-        used = c.paragraph(subtitle, x + pad, top - c.px(34), 13.5, c.palette.muted, w - 2 * pad - c.px(40), leading=1.4)
-        return top - c.px(34) - used - c.px(14)
-
     def draw_progress_bar(self, c: Canvas, x: float, y: float, w: float, fraction: float, color: Optional[Color] = None) -> None:
-        h = c.px(6)
-        c.rect(x, y, w, h, c.palette.faint, h / 2)
+        h = c.px(4)
+        c.rect(x, y, w, h, c.palette.line, h / 2)
         if fraction > 0:
             c.rect(x, y, max(w * fraction, h), h, color or c.palette.accent, h / 2)
 
     def checkbox(self, c: Canvas, x: float, y: float, checked: bool, on_toggle: Callable[[], None], enabled: bool = True, soft: bool = False) -> float:
-        """An 18-unit checkbox with its bottom-left at x, y. Returns its size."""
+        """A 16-unit checkbox with its bottom-left at x, y. Returns its size."""
         p = c.palette
-        size = c.px(18)
+        size = c.px(16)
+        x, y = round(x), round(y)
         if checked:
-            fill = p.accent if not soft else (p.accent[0], p.accent[1], p.accent[2], 0.55)
-            c.rect(x, y, size, size, fill, c.px(4))
-            c.text(CHECK_GLYPH, x + size / 2, y + c.px(3.5), 12, p.on_accent, "CENTER")
+            c.rect(x, y, size, size, p.with_alpha(p.accent, 0.5) if soft else p.accent, c.px(4))
+            c.text(CHECK_GLYPH, x + size / 2, centered_baseline(c, y, size, 11), 11, p.on_accent, "CENTER", bold=True)
         else:
-            c.outline(x, y, size, size, p.faint, c.px(4), c.px(1.2), p.card)
+            c.outline(x, y, size, size, p.border, c.px(4), max(1.0, round(c.scale)), p.inset)
         if enabled:
             self.rows.append(((x - c.px(4), y - c.px(4), size + c.px(8), size + c.px(8)), on_toggle))
         return size
 
     def lock_glyph(self, c: Canvas, x: float, y: float, color: Color) -> None:
-        """A small padlock, 14 units wide, with its bottom-left at x, y."""
-        body_w, body_h = c.px(14), c.px(10)
-        ring = c.px(9)
-        c.outline(x + (body_w - ring) / 2, y + body_h - c.px(2), ring, ring, color, ring / 2, c.px(2), (0, 0, 0, 0))
-        c.rect(x, y, body_w, body_h, color, c.px(2.5))
+        """A small padlock, 12 units wide, with its bottom-left at x, y."""
+        body_w, body_h = c.px(12), c.px(9)
+        ring = c.px(8)
+        c.outline(x + (body_w - ring) / 2, y + body_h - c.px(2), ring, ring, color, ring / 2, c.px(1.6), (0, 0, 0, 0))
+        c.rect(x, y, body_w, body_h, color, c.px(2))
 
     def online_notice(self, c: Canvas, x: float, y: float, w: float) -> float:
         """Blender's online access is off: one sentence and the button that turns it on.
@@ -328,18 +393,19 @@ class Screen:
         if not st.online_blocked:
             return 0.0
         p = c.palette
-        h = c.px(56)
-        c.rect(x, y, w, h, p.panel, c.px(8))
+        h = c.px(52)
+        c.outline(x, y, w, h, p.line, c.px(RADIUS), max(1.0, round(c.scale)), p.inset)
         from ...backend.setup import online
 
         if online.locked():
             text = tr("Blender was started in offline mode. Start it normally to download content.")
-            c.paragraph(text, x + c.px(14), y + h - c.px(14), 12.5, p.text, w - c.px(28), leading=1.35)
+            c.text(c.ellipsize(text, BODY, w - c.px(32)), x + c.px(16), centered_baseline(c, y, h, BODY), BODY, p.text)
             return h
+        label = tr("Allow online access")
+        bw, bh = self.button_width(c, label, "primary"), c.px(32)
         text = tr("Downloading needs Blender's online access, which is turned off.")
-        bw, bh = c.px(170), c.px(32)
-        c.paragraph(text, x + c.px(14), y + h - c.px(14), 12.5, p.text, w - bw - c.px(40), leading=1.35)
-        self.button(tr("Allow online access"), x + w - bw - c.px(12), y + (h - bh) / 2, bw, bh, st.allow_online, "primary", size=12.5)
+        c.text(c.ellipsize(text, BODY, w - bw - c.px(48)), x + c.px(16), centered_baseline(c, y, h, BODY), BODY, p.text)
+        self.button(label, x + w - bw - c.px(10), y + (h - bh) / 2, bw, bh, st.allow_online, "primary")
         return h
 
     def rich_text(self, c: Canvas, text: str, x: float, y: float, size: float, color: Color, links: List[str]) -> float:
@@ -354,36 +420,52 @@ class Screen:
                 url = links[link_index] if link_index < len(links) else ""
                 link_index += 1
                 width = c.text_width(label, size)
-                self.button(label, cursor - c.px(2), y - c.px(6), width + c.px(4), c.px(size) + c.px(8), lambda url=url: self.controller.open_url(url), "link", size=size)
+                self.buttons.append(Button(label, (cursor, y - c.px(5), width, c.px(size) + c.px(8)), lambda url=url: self.controller.open_url(url), "link", size=size))
                 cursor += width
             else:
                 cursor += c.text(part, cursor, y, size, color)
         return cursor - x
 
+    def picture_column(self, c: Canvas, image: str, alpha: float = 1.0) -> float:
+        """A picture filling the left part of the card. Returns the x where it ends."""
+        x, y, w, h = self.rect
+        image_w = round(w * 0.46)
+        radius = c.px(CARD_RADIUS)
+        line = max(1.0, round(c.scale))
+        c.rect(x + line, y + line, image_w - line, h - 2 * line, c.palette.inset, radius)
+        texture = self.textures.get(image)
+        if texture:
+            # Rounded on the card's corners only: draw wider and clip at the column edge
+            c.clip(x, y, image_w, h)
+            c.image(texture, x + line, y + line, image_w + radius, h - 2 * line, radius - line, alpha=alpha)
+            c.unclip()
+        return x + image_w
+
 
 class WelcomeScreen(Screen):
-    """The first thing a new user sees: a picture and one button."""
+    """The first thing a new user sees: a picture, a few words and one button."""
 
     name = "welcome"
-
-    def card_size(self, c: Canvas) -> Tuple[float, float]:
-        return c.px(720), c.px(560)
 
     def layout(self, c: Canvas) -> None:
         p = c.palette
         x, y, w, h = self.rect
-        pad = c.px(36)
-        c.text(tr("Welcome to Human Generator"), x + w / 2, y + h - pad - c.px(22), 24, p.text, "CENTER")
-        bw, bh = c.px(260), c.px(48)
-        button_y = y + pad
-        image_y = button_y + bh + c.px(28)
-        image_h = y + h - pad - c.px(50) - image_y
-        image_w = w - 2 * pad
-        c.rect(x + pad, image_y, image_w, image_h, p.panel, c.px(14))
-        texture = self.textures.get(os.path.join(SETUP_IMAGE_DIR, "welcome.jpg"))
-        if texture:
-            c.image(texture, x + pad, image_y, image_w, image_h, c.px(14))
-        self.button(tr("Get started"), x + (w - bw) / 2, button_y, bw, bh, lambda: self.controller.go("choose"), "primary", size=15)
+        column_x = self.picture_column(c, os.path.join(SETUP_IMAGE_DIR, "welcome.jpg")) + c.px(48)
+        column_w = x + w - c.px(48) - column_x
+        self.close_button(c, y + h - c.px(HEADER), c.px(HEADER))
+
+        top = y + h - c.px(72)
+        logo = c.px(44)
+        self.logo(c, column_x, top - logo, logo)
+        top -= logo + c.px(32)
+        top -= c.paragraph(tr("Welcome to Human Generator"), column_x, top, 26, p.text, column_w, leading=1.2, bold=True) + c.px(20)
+        body = tr("Make realistic humans in Blender: shape the body and face, then add clothing, hair, poses and expressions.")
+        top -= c.paragraph(body, column_x, top, 14, p.muted, column_w, leading=1.55) + c.px(18)
+        c.paragraph(tr("Setup takes a few minutes. Start the free trial or activate your licence, and the content downloads in the background."), column_x, top, 14, p.muted, column_w, leading=1.55)
+
+        label = tr("Get started")
+        bw = self.button_width(c, label, "primary") + c.px(16)
+        self.button(label, column_x, y + c.px(48), bw, c.px(40), lambda: self.controller.go("choose"), "primary")
 
     def key(self, event) -> bool:
         if event.type in ("RET", "NUMPAD_ENTER", "SPACE"):
@@ -397,44 +479,46 @@ class ChooseScreen(Screen):
 
     name = "choose"
 
-    def card_size(self, c: Canvas) -> Tuple[float, float]:
-        return c.px(760), c.px(520)
-
     def layout(self, c: Canvas) -> None:
-        x, y, w, h = self.rect
-        pad = c.px(36)
-        cursor = self.header(c, tr("How do you want to start?"), tr("A licence can be activated later at any time."))
+        content = self.chrome(c)
+        cx, cy, cw, ch = content
+        cursor = self.title_block(c, content, tr("How do you want to start?"), tr("You can activate a licence later at any time."))
         gap = c.px(16)
-        tile_w = (w - 2 * pad - gap) / 2
-        tile_h = cursor - y - pad - c.px(8)
-        tile_y = y + pad
-        self.tile(c, x + pad, tile_y, tile_w, tile_h, "trial.jpg", tr("Free trial"), tr("One human, an outfit, a hairstyle and four poses, so you can try the workflow. No account needed."), tr("Start the trial"), lambda: self._choose("trial"))
-        self.tile(c, x + pad + tile_w + gap, tile_y, tile_w, tile_h, "license.jpg", tr("Activate licence"), tr("Bought Human Generator on Superhive? Enter your order to install the full library."), tr("Enter your order"), lambda: self._choose("licensed"))
+        tile_w = (cw - gap) / 2
+        tile_y = cy + c.px(28)
+        tile_h = cursor - tile_y
+        self.tile(c, cx, tile_y, tile_w, tile_h, "trial.jpg", tr("Free trial"), tr("One human, an outfit, a hairstyle and four poses, so you can try the workflow. No account needed."), tr("Start the trial"), lambda: self._choose("trial"))
+        self.tile(c, cx + tile_w + gap, tile_y, tile_w, tile_h, "license.jpg", tr("Activate licence"), tr("Bought Human Generator on Superhive? Enter your order to install the full library."), tr("Enter your order"), lambda: self._choose("licensed"))
+        self.footer_actions(c, [(tr("Back"), self._back, "ghost", True)])
 
     def tile(self, c: Canvas, x: float, y: float, w: float, h: float, image: str, title: str, blurb: str, action: str, on_click: Callable[[], None]) -> None:
         p = c.palette
+        x, y, w, h = round(x), round(y), round(w), round(h)
         hovered = in_rect((x, y, w, h), *self.mouse)
-        radius = c.px(12)
-        if hovered:
-            c.outline(x, y, w, h, p.accent, radius, c.px(1.5), p.panel_hover_solid)
-        else:
-            c.rect(x, y, w, h, p.panel, radius)
-        inset = c.px(8)
-        image_h = h * 0.42
-        image_y = y + h - inset - image_h
-        c.rect(x + inset, image_y, w - 2 * inset, image_h, p.faint, radius - inset)
+        radius = c.px(10)
+        line = max(1.0, round(c.scale))
+        c.outline(x, y, w, h, p.accent if hovered else p.line, radius, line, p.hover if hovered else p.card)
+        image_h = round(h * 0.5)
+        image_y = y + h - image_h
         texture = self.textures.get(os.path.join(SETUP_IMAGE_DIR, image))
         if texture:
-            c.image(texture, x + inset, image_y, w - 2 * inset, image_h, radius - inset)
-        inner = c.px(22)
-        top = image_y - c.px(18)
-        c.text(title, x + inner, top - c.px(16), 18, p.text)
-        c.paragraph(blurb, x + inner, top - c.px(32), 13, p.muted, w - 2 * inner, leading=1.45)
-        c.text(action + "  ›", x + inner, y + inner, 13.5, p.accent_hover if hovered else p.accent)
+            c.clip(x, image_y, w, image_h)
+            c.image(texture, x + line, image_y, w - 2 * line, image_h - line, radius - line)
+            c.unclip()
+        c.hline(x + line, image_y, w - 2 * line, p.line)
+        inner = c.px(20)
+        top = image_y - c.px(20)
+        c.text(title, x + inner, top - c.px(15), 15, p.text, bold=True)
+        c.paragraph(blurb, x + inner, top - c.px(26), BODY, p.muted, w - 2 * inner, leading=1.45)
+        c.text(action, x + inner, y + inner, BODY, p.text if hovered else p.link, bold=True)
         self.rows.append(((x, y, w, h), on_click))
 
     def _choose(self, mode: str) -> None:
         setup_state.state.choose(mode)
+        self.controller.go(setup_state.state.screen)
+
+    def _back(self) -> None:
+        setup_state.state.back()
         self.controller.go(setup_state.state.screen)
 
 
@@ -447,9 +531,6 @@ class LicenseScreen(Screen):
         self.email = TextField("email", tr("The address of your Superhive account"))
         self.fields = [self.guid, self.email]
 
-    def card_size(self, c: Canvas) -> Tuple[float, float]:
-        return c.px(700), c.px(560 if setup_state.state.online_blocked else 500)
-
     def enter(self) -> None:
         setup_state.state.prefill_form(props())
         for field in self.fields:
@@ -460,50 +541,42 @@ class LicenseScreen(Screen):
         st = setup_state.state
         p = c.palette
         f = props()
-        x, y, w, h = self.rect
-        pad = c.px(36)
-        cursor = self.header(c, tr("Activate your licence"), tr("Enter the order you placed on Superhive. We check it once and remember it on this computer."))
-        inner_w = w - 2 * pad
-        field_h = c.px(40)
+        content = self.chrome(c)
+        cx, cy, cw, ch = content
+        cursor = self.title_block(c, content, tr("Activate your licence"), tr("Enter the order you placed on Superhive. It is checked once and remembered on this computer."))
+        field_h = c.px(CONTROL_H + 2)
         checking = st.checking
         for field in self.fields:
             field.enabled = not checking
 
-        cursor -= c.px(14)
-        c.text(tr("Order GUID"), x + pad, cursor, 12.5, p.muted)
-        help_label = tr("Where do I find it?")
-        help_w = c.text_width(help_label, 12.5) + c.px(8)
-        self.button(help_label, x + w - pad - help_w, cursor - c.px(7), help_w, c.px(24), lambda: self.controller.open_url(setup_state.ORDER_HELP_URL), "link", size=12.5)
-        cursor -= c.px(10) + field_h
-        self.guid.draw(c, x + pad, cursor, inner_w, field_h)
-        cursor -= c.px(26)
-        c.text(tr("Email"), x + pad, cursor, 12.5, p.muted)
-        why_label = tr("Why is this needed?")
-        why_w = c.text_width(why_label, 12.5) + c.px(8)
-        self.button(why_label, x + w - pad - why_w, cursor - c.px(7), why_w, c.px(24), lambda: self.controller.open_url(setup_state.EMAIL_HELP_URL), "link", size=12.5)
-        cursor -= c.px(10) + field_h
-        self.email.draw(c, x + pad, cursor, inner_w, field_h)
-        for field in self.fields:
+        for field, label, link, url in (
+            (self.guid, tr("Order GUID"), tr("Where do I find it?"), setup_state.ORDER_HELP_URL),
+            (self.email, tr("Email"), tr("Why is this needed?"), setup_state.EMAIL_HELP_URL),
+        ):
+            baseline = cursor - c.px(SMALL)
+            c.text(label, cx, baseline, SMALL, p.muted)
+            link_w = c.text_width(link, SMALL)
+            self.buttons.append(Button(link, (cx + cw - link_w, baseline - c.px(5), link_w, c.px(SMALL) + c.px(8)), lambda url=url: self.controller.open_url(url), "link", size=SMALL))
+            cursor = baseline - c.px(10) - field_h
+            field.draw(c, cx, cursor, cw, field_h)
             self.rows.append((field.rect, lambda field=field: self._focus(field)))
+            cursor -= c.px(20)
 
-        cursor -= c.px(32)
-        size = self.checkbox(c, x + pad, cursor - c.px(4), f.accept_terms, lambda: self._toggle("accept_terms"), enabled=not checking)
-        self.rich_text(c, tr("I accept the [Human Generator Asset License] and the [Privacy policy]"), x + pad + size + c.px(12), cursor, 13, p.text, [setup_state.LICENSE_URL, setup_state.PRIVACY_URL])
+        cursor -= c.px(6)
+        size = self.checkbox(c, cx, cursor - c.px(16), f.accept_terms, lambda: self._toggle("accept_terms"), enabled=not checking)
+        text_x = cx + size + c.px(10)
+        self.rich_text(c, tr("I accept the [Human Generator Asset License] and the [Privacy policy]"), text_x, centered_baseline(c, cursor - c.px(16), size, BODY), BODY, p.text, [setup_state.LICENSE_URL, setup_state.PRIVACY_URL])
         cursor -= c.px(30)
-        self.checkbox(c, x + pad, cursor - c.px(4), f.newsletter, lambda: self._toggle("newsletter"), enabled=not checking)
-        c.text(tr("Let me know about updates and offers"), x + pad + size + c.px(12), cursor, 13, p.text)
+        self.checkbox(c, cx, cursor - c.px(16), f.newsletter, lambda: self._toggle("newsletter"), enabled=not checking)
+        c.text(tr("Let me know about updates and offers"), text_x, centered_baseline(c, cursor - c.px(16), size, BODY), BODY, p.text)
 
-        # Footer: error on the left, Back and Activate on the right
-        bw, bh = c.px(150), c.px(40)
-        foot_y = y + pad
-        back_w = c.px(80)
-        if st.online_blocked:
-            self.online_notice(c, x + pad, foot_y + bh + c.px(12), inner_w)
-        elif st.license_error:
-            c.paragraph(tr(st.license_error), x + pad, foot_y + bh, 12.5, p.danger, inner_w - bw - back_w - c.px(30), leading=1.35)
-        self.button(tr("Back"), x + w - pad - bw - c.px(10) - back_w, foot_y, back_w, bh, self._back, "ghost", enabled=not checking)
         label = tr("Checking your order…") if checking else tr("Activate")
-        self.button(label, x + w - pad - bw, foot_y, bw, bh, self._activate, "primary", enabled=not checking)
+        left = self.footer_actions(c, [(tr("Back"), self._back, "ghost", not checking), (label, self._activate, "primary", not checking)])
+        if st.online_blocked:
+            self.online_notice(c, cx, cy + c.px(20), cw)
+        elif st.license_error:
+            x, y = self.rect[:2]
+            c.text(c.ellipsize(tr(st.license_error), BODY, left - cx - c.px(16)), cx, centered_baseline(c, y, c.px(FOOTER), BODY), BODY, p.danger)
 
     def _focus(self, field: TextField) -> None:
         for other in self.fields:
@@ -534,8 +607,7 @@ class LicenseScreen(Screen):
 
 class PacksScreen(Screen):
     name = "packs"
-    ROW = 50
-    FOOTER = 104
+    ROW = 52
 
     def __init__(self, controller, textures) -> None:
         super().__init__(controller, textures)
@@ -544,11 +616,6 @@ class PacksScreen(Screen):
         self._thumb: Rect = (0, 0, 0, 0)
         self._track: Rect = (0, 0, 0, 0)
         self._drag: Optional[Tuple[float, float]] = None  # mouse y and offset at the press
-
-    def card_size(self, c: Canvas) -> Tuple[float, float]:
-        rows = max(len(setup_state.state.packs), 3)
-        extra = 70 if setup_state.state.online_blocked else 0
-        return c.px(760), c.px(36 + 72 + 58 + self.ROW * rows + self.FOOTER + extra)
 
     def scroll(self, pixels: float) -> bool:
         before = self.offset
@@ -582,8 +649,9 @@ class PacksScreen(Screen):
     def layout(self, c: Canvas) -> None:
         st = setup_state.state
         p = c.palette
-        x, y, w, h = self.rect
-        pad = c.px(36)
+        content = self.chrome(c)
+        cx, cy, cw, ch = content
+        line = max(1.0, round(c.scale))
         if st.update_mode:
             title = tr("Update Human Generator")
             subtitle = tr("Newer versions of your content packs are available. Your own content stays as it is.")
@@ -593,103 +661,113 @@ class PacksScreen(Screen):
         else:
             title = tr("Install Human Generator")
             subtitle = tr("Choose what to install. You can add packs later from the preferences.")
-        cursor = self.header(c, title, subtitle)
+        cursor = self.title_block(c, content, title, subtitle)
 
-        # Folder row
-        row_h = c.px(44)
+        # Folder: a read-only field and the button that changes it
+        row_h = c.px(CONTROL_H)
         cursor -= row_h
-        c.rect(x + pad, cursor, w - 2 * pad, row_h, p.panel, c.px(8))
+        change = tr("Change…")
+        button_w = self.button_width(c, change, "secondary")
+        field_w = cw - button_w - c.px(8)
+        c.outline(cx, cursor, field_w, row_h, p.line, c.px(RADIUS), line, p.inset)
         folder_label = tr("Content folder")
-        c.text(folder_label, x + pad + c.px(14), cursor + c.px(16), 12.5, p.muted)
-        label_w = c.text_width(folder_label, 12.5)
-        button_w = c.px(84)
-        path_x = x + pad + c.px(14) + label_w + c.px(14)
-        path_w = (x + w - pad) - button_w - c.px(10) - path_x - c.px(14)
-        c.text(c.ellipsize(st.folder, 13, path_w), path_x, cursor + c.px(16), 13, p.text)
-        self.button(tr("Change"), x + w - pad - button_w - c.px(6), cursor + c.px(7), button_w, row_h - c.px(14), self.controller.change_folder, "ghost")
-        cursor -= c.px(14)
+        baseline = centered_baseline(c, cursor, row_h, BODY)
+        label_w = c.text(folder_label, cx + c.px(12), baseline, BODY, p.muted)
+        path_x = cx + c.px(12) + label_w + c.px(12)
+        c.text(c.ellipsize(st.folder, BODY, cx + field_w - c.px(12) - path_x), path_x, baseline, BODY, p.text)
+        self.button(change, cx + cw - button_w, cursor, button_w, row_h, self.controller.change_folder, "secondary")
+        cursor -= c.px(16)
 
-        # Pack rows, in a clipped, scrollable area between the folder and the footer
-        row_h = c.px(self.ROW)
-        list_top = cursor
-        list_bottom = y + c.px(self.FOOTER)
+        # Pack list, in a clipped, scrollable box between the folder and the footer
+        list_bottom = cy + c.px(24)
         if st.online_blocked:
-            list_bottom += self.online_notice(c, x + pad, list_bottom, w - 2 * pad) + c.px(12)
+            list_bottom += self.online_notice(c, cx, list_bottom, cw) + c.px(12)
+        list_top = cursor
         area_h = list_top - list_bottom
+        c.outline(cx, list_bottom, cw, area_h, p.line, c.px(RADIUS), line, p.inset)
         if not st.packs:
             self._track = self._thumb = (0, 0, 0, 0)
             self._max_offset = 0.0
             mid = list_bottom + area_h / 2
             if st.loading:
-                c.text(tr("Loading the pack list…"), x + w / 2, mid, 13.5, p.muted, "CENTER")
+                c.text(tr("Loading the pack list…"), cx + cw / 2, mid, BODY, p.muted, "CENTER")
             elif st.catalogue_phase == "failed":
-                c.paragraph(tr("Could not load the pack list.") + " " + st.catalogue_error, x + w / 2, mid + c.px(30), 13, p.danger, w - 2 * pad - c.px(40), align="CENTER")
-                bw2, bh2 = c.px(120), c.px(34)
-                self.button(tr("Try again"), x + (w - bw2) / 2, mid - c.px(40), bw2, bh2, st.load_catalogue, "secondary")
+                c.paragraph(tr("Could not load the pack list.") + " " + st.catalogue_error, cx + cw / 2, mid + c.px(36), BODY, p.danger, cw - c.px(80), align="CENTER")
+                label = tr("Try again")
+                bw = self.button_width(c, label, "secondary")
+                self.button(label, cx + (cw - bw) / 2, mid - c.px(36), bw, c.px(CONTROL_H), st.load_catalogue, "secondary")
             elif not st.online_blocked:
-                c.text(tr("Nothing to install."), x + w / 2, mid, 13.5, p.muted, "CENTER")
+                c.text(tr("Nothing to install."), cx + cw / 2, mid, BODY, p.muted, "CENTER")
             self._footer(c, st)
             return
+
+        row_h = c.px(self.ROW)
         content_h = row_h * len(st.packs)
-        self._max_offset = max(0.0, content_h - area_h)
+        self._max_offset = max(0.0, content_h - (area_h - 2 * line))
         self.offset = max(0.0, min(self._max_offset, self.offset))
-        cursor = list_top + self.offset
-        c.clip(x + pad, list_bottom, w - 2 * pad, area_h)
-        for pack in st.packs:
-            cursor -= row_h
-            if cursor + row_h < list_bottom or cursor > list_top:
+        scrolls = self._max_offset > 0
+        right = cx + cw - c.px(28 if scrolls else 16)
+        row_y = list_top - line + self.offset
+        c.clip(cx + line, list_bottom + line, cw - 2 * line, area_h - 2 * line)
+        for index, pack in enumerate(st.packs):
+            row_y -= row_h
+            if row_y + row_h < list_bottom or row_y > list_top:
                 continue
-            rect = (x + pad, cursor, w - 2 * pad, row_h - c.px(4))
-            visible = (rect[0], max(rect[1], list_bottom), rect[2], min(rect[1] + rect[3], list_top) - max(rect[1], list_bottom))
+            visible = (cx, max(row_y, list_bottom), cw, min(row_y + row_h, list_top) - max(row_y, list_bottom))
             toggleable = pack.installable and not pack.required and pack.status != "up_to_date"
-            hovered = toggleable and in_rect(visible, *self.mouse)
-            c.rect(*rect, p.panel_hover if hovered else p.panel, c.px(8))
-            text_x = x + pad + c.px(14)
+            if toggleable and in_rect(visible, *self.mouse):
+                c.rect(cx + c.px(4), row_y + c.px(3), cw - c.px(8), row_h - c.px(6), p.hover, c.px(6))
+            if index:
+                c.hline(cx + c.px(16), row_y + row_h, cw - c.px(32), p.line)
+            mid = row_y + row_h / 2
+            lead_x = cx + c.px(16)
             if pack.locked:
-                self.lock_glyph(c, text_x + c.px(2), cursor + c.px(15), p.muted)
+                self.lock_glyph(c, lead_x + c.px(2), mid - c.px(7), p.faint)
                 name_color = p.muted
             elif pack.status == "up_to_date":
-                c.text(CHECK_GLYPH, text_x + c.px(9), cursor + c.px(18), 14, p.success, "CENTER")
+                c.text(CHECK_GLYPH, lead_x + c.px(8), centered_baseline(c, mid - c.px(8), c.px(16), BODY), BODY, p.success, "CENTER", bold=True)
                 name_color = p.muted
             else:
-                cx, cy = x + pad + c.px(14), cursor + (row_h - c.px(4)) / 2 - c.px(9)
-                self.checkbox(c, cx, cy, pack.selected, self._toggler(pack), enabled=False, soft=pack.required)
+                self.checkbox(c, lead_x, mid - c.px(8), pack.selected, self._toggler(pack), enabled=False, soft=pack.required)
                 name_color = p.text
                 if toggleable:
                     self.rows.append((visible, self._toggler(pack)))
-            text_x += c.px(32)
-            c.text(tr(pack.name), text_x, cursor + c.px(26), 14, name_color)
-            right = x + w - pad - c.px(14)
+            text_x = lead_x + c.px(30)
+            name_baseline = mid + c.px(3)
+            detail_baseline = mid - c.px(14)
+
             tag = tr(pack.tag) if pack.tag else ""
             if pack.status in ("update_available", "update_required") and pack.installed_version:
-                detail = tr("Installed {old} · update to {new}").format(old=".".join(str(n) for n in pack.installed_version), new=pack.version)
-                if pack.size:
-                    detail += " · " + format_bytes(pack.size)
+                detail = tr("Installed {old}, update to {new}").format(old=".".join(str(n) for n in pack.installed_version), new=pack.version)
             else:
                 detail = tr(pack.blurb)
+            right_w = c.px(90)
             if tag:
-                tag_w = c.text_width(tag, 12) + c.px(16)
+                tag_w = c.text_width(tag, 11.5) + c.px(18)
+                tag_h = c.px(20)
                 tag_color = p.danger if pack.status == "update_required" else p.muted
-                c.rect(right - tag_w, cursor + c.px(13), tag_w, c.px(22), p.faint, c.px(11))
-                c.text(tag, right - tag_w / 2, cursor + c.px(19.5), 12, tag_color, "CENTER")
-                detail_w = right - tag_w - c.px(12) - text_x
-            else:
-                detail_w = right - c.px(90) - text_x
-            c.text(c.ellipsize(detail, 12, detail_w), text_x, cursor + c.px(10), 12, p.muted)
-            if pack.installable and pack.status != "up_to_date" and not tag:
-                c.text(format_bytes(pack.size) if pack.size else "", right, cursor + c.px(26), 13, p.text, "RIGHT")
+                c.outline(right - tag_w, mid - tag_h / 2, tag_w, tag_h, p.border, tag_h / 2, line, p.inset)
+                c.text(tag, right - tag_w / 2, centered_baseline(c, mid - tag_h / 2, tag_h, 11.5), 11.5, tag_color, "CENTER")
+                right_w = tag_w
+            elif pack.installable and pack.status != "up_to_date":
+                c.text(format_bytes(pack.size) if pack.size else "", right, name_baseline, BODY, p.text, "RIGHT")
                 if pack.required:
-                    c.text(tr("Required"), right, cursor + c.px(10), 11.5, p.muted, "RIGHT")
+                    c.text(tr("Required"), right, detail_baseline, SMALL, p.faint, "RIGHT")
+            text_w = right - right_w - c.px(16) - text_x
+            c.text(c.ellipsize(tr(pack.name), BODY, text_w, bold=True), text_x, name_baseline, BODY, name_color, bold=True)
+            c.text(c.ellipsize(detail, SMALL, text_w), text_x, detail_baseline, SMALL, p.muted)
         c.unclip()
-        if self._max_offset > 0:
-            bar_w = c.px(8)
-            self._track = (x + w - pad + c.px(6), list_bottom, bar_w, area_h)
-            thumb_h = max(c.px(28), area_h * area_h / content_h)
-            thumb_y = list_top - thumb_h - (area_h - thumb_h) * (self.offset / self._max_offset)
-            self._thumb = (self._track[0], thumb_y, bar_w, thumb_h)
+        if scrolls:
+            bar_w = c.px(4)
+            inset = c.px(6)
+            track_h = area_h - 2 * inset
+            thumb_h = max(c.px(28), track_h * area_h / content_h)
+            thumb_y = list_top - inset - thumb_h - (track_h - thumb_h) * (self.offset / self._max_offset)
+            bar_x = cx + cw - inset - bar_w
+            self._track = (bar_x - c.px(6), list_bottom + inset, bar_w + c.px(12), track_h)
+            self._thumb = (bar_x - c.px(6), thumb_y, bar_w + c.px(12), thumb_h)
             grabbed = self._drag is not None or in_rect(self._thumb, *self.mouse)
-            c.rect(*self._track, p.panel, bar_w / 2)
-            c.rect(*self._thumb, p.muted if grabbed else p.faint, bar_w / 2)
+            c.rect(bar_x, thumb_y, bar_w, thumb_h, p.muted if grabbed else p.border, bar_w / 2)
         else:
             self._track = self._thumb = (0, 0, 0, 0)
 
@@ -698,22 +776,18 @@ class PacksScreen(Screen):
     def _footer(self, c: Canvas, st) -> None:
         p = c.palette
         x, y, w, h = self.rect
-        pad = c.px(36)
         total = st.total_bytes
         free = free_space(st.folder)
         fits = free > total * 1.1
-        foot_y = y + pad
+        label = tr("Update") if st.update_mode else tr("Install")
+        left = self.footer_actions(c, [(tr("Back"), self._back, "ghost", True), (label, self._install, "primary", fits and bool(st.selected) and not st.loading)])
+        text_x = x + c.px(PAD)
+        text_w = left - c.px(16) - text_x
+        mid = y + c.px(FOOTER) / 2
         summary = pack_count(len(st.selected), format_bytes(total))
         space = tr("{free} free on this disk").format(free=format_bytes(free)) if fits else tr("Not enough space on this disk")
-        bw, bh = c.px(150), c.px(40)
-        back_w = c.px(80)
-        back_x = x + w - pad - bw - c.px(10) - back_w
-        text_w = back_x - c.px(16) - (x + pad)
-        c.text(c.ellipsize(summary, 13.5, text_w), x + pad, foot_y + c.px(22), 13.5, p.text)
-        c.text(c.ellipsize(space, 12, text_w), x + pad, foot_y + c.px(4), 12, p.muted if fits else p.danger)
-        self.button(tr("Back"), back_x, foot_y, back_w, bh, self._back, "ghost")
-        label = tr("Update") if st.update_mode else tr("Install")
-        self.button(label, x + w - pad - bw, foot_y, bw, bh, self._install, "primary", enabled=fits and bool(st.selected) and not st.loading)
+        c.text(c.ellipsize(summary, BODY, text_w, bold=True), text_x, mid + c.px(3), BODY, p.text, bold=True)
+        c.text(c.ellipsize(space, SMALL, text_w), text_x, mid - c.px(14), SMALL, p.muted if fits else p.danger)
 
     def _toggler(self, pack):
         def toggle():
@@ -731,6 +805,7 @@ class PacksScreen(Screen):
 
 class SlidesScreen(Screen):
     name = "slides"
+    PROGRESS = 100  # height of the progress block under the slide text
 
     def __init__(self, controller, textures) -> None:
         super().__init__(controller, textures)
@@ -762,87 +837,79 @@ class SlidesScreen(Screen):
             return True
         return False
 
-    def close_button(self, c: Canvas) -> None:
+    def close_button(self, c: Canvas, y: float, h: float) -> None:
         """While the download runs the corner says what closing does."""
         if not setup_state.state.active:
-            super().close_button(c)
+            super().close_button(c, y, h)
             return
-        x, y, w, h = self.rect
-        label = tr("Continue in background") + "   " + CLOSE_GLYPH
-        bw, bh = c.text_width(label, 13) + c.px(28), c.px(32)
-        inset = c.px(12)
-        self.button(label, x + w - inset - bw, y + h - inset - bh, bw, bh, self.controller.close, "secondary")
+        x, _, w, _ = self.rect
+        label = tr("Continue in background")
+        bw, bh = self.button_width(c, label, "secondary"), c.px(30)
+        self.button(label, x + w - c.px(PAD) - bw, y + (h - bh) / 2, bw, bh, self.controller.close, "secondary")
 
     def layout(self, c: Canvas) -> None:
         st = setup_state.state
         p = c.palette
         x, y, w, h = self.rect
-        pad = c.px(32)
-        bar_h = c.px(92)
         fade = ease_out((time.monotonic() - self.changed_at) / FADE_SECONDS)
-
-        # Slide: image left, text right
-        image_w = w * 0.46
-        image_h = h - bar_h - pad
-        image_x, image_y = x + pad * 0.5, y + bar_h + pad * 0.5
         image_name, title, body = self.deck[self.index % len(self.deck)]
         title, body = tr(title), tr(body)
-        texture = self.textures.get(os.path.join(SLIDE_IMAGE_DIR, image_name))
-        c.rect(image_x, image_y, image_w, image_h, p.panel, c.px(14))
-        if texture:
-            c.image(texture, image_x, image_y, image_w, image_h, c.px(14), alpha=fade)
+        column_x = self.picture_column(c, os.path.join(SLIDE_IMAGE_DIR, image_name), alpha=fade) + c.px(40)
+        column_w = x + w - c.px(PAD) - column_x
 
-        text_x = image_x + image_w + pad
-        text_w = x + w - pad - text_x
-        top = y + h - pad - c.px(56)
+        header_y = y + h - c.px(HEADER)
+        self.brand(c, column_x, header_y, c.px(HEADER))
+        self.close_button(c, header_y, c.px(HEADER))
+
+        # Slide text
+        top = header_y - c.px(32)
         c.alpha = fade
-        c.text(f"{self.index + 1} / {len(self.deck)}", text_x, top + c.px(26), 12, p.muted)
-        used = c.paragraph(title, text_x, top + c.px(24), 24, p.text, text_w, leading=1.2)
-        c.paragraph(body, text_x, top + c.px(24) - used - c.px(16), 15, p.muted, text_w, leading=1.5)
+        used = c.paragraph(title, column_x, top, 22, p.text, column_w, leading=1.25, bold=True)
+        c.paragraph(body, column_x, top - used - c.px(14), 14, p.muted, column_w, leading=1.55)
         c.alpha = 1.0
 
         # Dots and arrows
-        dots_y = y + bar_h + pad * 0.5 + c.px(16)
-        dot = c.px(7)
-        dx = text_x
+        block_top = y + c.px(self.PROGRESS)
+        arrow = c.px(30)
+        arrows_y = block_top + c.px(24)
+        dot = c.px(6)
+        dx = column_x
         for i in range(len(self.deck)):
-            c.rect(dx, dots_y, dot, dot, p.accent if i == self.index else p.faint, dot / 2)
-            dx += dot * 2.2
-        arrow = c.px(34)
-        self.button("‹", x + w - pad - arrow * 2 - c.px(8), dots_y - c.px(13), arrow, arrow, lambda: self.go_to(self.index - 1), "ghost", size=16)
-        self.button("›", x + w - pad - arrow, dots_y - c.px(13), arrow, arrow, lambda: self.go_to(self.index + 1), "ghost", size=16)
+            current = i == self.index
+            c.rect(dx, arrows_y + (arrow - dot) / 2, dot * 3 if current else dot, dot, p.text if current else p.border, dot / 2)
+            dx += dot * (3 if current else 1) + c.px(6)
+        right = x + w - c.px(PAD)
+        self.button("‹", right - 2 * arrow - c.px(4), arrows_y, arrow, arrow, lambda: self.go_to(self.index - 1), "ghost", size=16)
+        self.button("›", right - arrow, arrows_y, arrow, arrow, lambda: self.go_to(self.index + 1), "ghost", size=16)
 
-        # Progress strip
-        strip_y = y
-        radius = c.px(16)
-        c.rect(x, strip_y, w, bar_h, p.panel, radius)
-        c.rect(x, strip_y + bar_h - radius, w, radius, p.panel, 0)  # square top corners
-        inner_x = x + pad
-        bw, bh = c.px(150), c.px(38)
-        cancel_w = c.px(96)
-        inner_w = w - 2 * pad - (cancel_w if st.active else bw) - c.px(20)
+        # Progress
+        c.hline(column_x - c.px(40), block_top, x + w - column_x + c.px(40), p.line)
         if st.active:
             pack = st.current
             template = tr("Installing {pack}") if st.phase == "installing" else tr("Downloading {pack}")
             label = template.format(pack=tr(pack.name) if pack else "")
-            detail = tr("{done} of {total} · pack {index} of {count}").format(done=format_bytes(st.done_bytes), total=format_bytes(st.total_bytes), index=min(st.packs_done + 1, len(st.selected)), count=len(st.selected))
+            detail = tr("{done} of {total}, pack {index} of {count}").format(done=format_bytes(st.done_bytes), total=format_bytes(st.total_bytes), index=min(st.packs_done + 1, len(st.selected)), count=len(st.selected))
             fraction = st.fraction
             color = None
+            action = (tr("Cancel"), self._cancel, "secondary")
         elif st.phase == "done":
             label, detail, fraction, color = tr("All packs installed"), tr("Ready to use"), 1.0, p.success
+            action = (tr("Continue"), lambda: self.controller.go("done"), "primary")
         elif st.phase == "failed":
             label, detail, fraction, color = tr("Download failed"), st.error, st.fraction, p.danger
+            action = (tr("Continue"), lambda: self.controller.go("done"), "primary")
         else:
-            label, detail, fraction, color = tr("Cancelled"), "", st.fraction, p.muted
+            label, detail, fraction, color = tr("Cancelled"), "", st.fraction, p.faint
+            action = (tr("Continue"), lambda: self.controller.go("done"), "primary")
+        bw = self.button_width(c, action[0], action[2])
+        bar_w = column_w - bw - c.px(24)
+        mid = y + c.px(self.PROGRESS) / 2
         self.bar_shown = lerp(self.bar_shown, fraction, 0.15)
-        c.text(label, inner_x, strip_y + c.px(56), 13.5, p.text)
-        c.text(c.ellipsize(detail, 12, inner_w - c.px(60)), inner_x, strip_y + c.px(38), 12, p.muted)
-        c.text(f"{self.bar_shown:.0%}", inner_x + inner_w, strip_y + c.px(56), 13.5, p.text, "RIGHT")
-        self.draw_progress_bar(c, inner_x, strip_y + c.px(22), inner_w, self.bar_shown, color)
-        if st.active:
-            self.button(tr("Cancel"), x + w - pad - cancel_w, strip_y + (bar_h - bh) / 2, cancel_w, bh, self._cancel, "ghost")
-        else:
-            self.button(tr("Continue"), x + w - pad - bw, strip_y + (bar_h - bh) / 2, bw, bh, lambda: self.controller.go("done"), "primary")
+        c.text(c.ellipsize(label, BODY, bar_w - c.px(60), bold=True), column_x, mid + c.px(12), BODY, p.text, bold=True)
+        c.text(f"{self.bar_shown:.0%}", column_x + bar_w, mid + c.px(12), BODY, p.muted, "RIGHT")
+        self.draw_progress_bar(c, column_x, mid - c.px(2), bar_w, self.bar_shown, color)
+        c.text(c.ellipsize(detail, SMALL, bar_w), column_x, mid - c.px(22), SMALL, p.muted)
+        self.button(action[0], right - bw, mid - c.px(CONTROL_H) / 2, bw, c.px(CONTROL_H), action[1], action[2])
 
     def _cancel(self) -> None:
         """Stop and forget the download; the pack choice comes back."""
@@ -853,36 +920,37 @@ class SlidesScreen(Screen):
 
 class DoneScreen(Screen):
     name = "done"
-
-    def card_size(self, c: Canvas) -> Tuple[float, float]:
-        return c.px(560), c.px(400)
+    GROUP_H = 200  # mark, title, text and folder, roughly
 
     def layout(self, c: Canvas) -> None:
         st = setup_state.state
         p = c.palette
-        x, y, w, h = self.rect
-        cx = x + w / 2
+        content = self.chrome(c)
+        cx, cy, cw, ch = content
         failed = st.phase == "failed"
-        circle = c.px(64)
-        cy = y + h - c.px(60) - circle
-        c.rect(cx - circle / 2, cy, circle, circle, p.danger if failed else p.success, circle / 2)
-        c.text("!" if failed else CHECK_GLYPH, cx, cy + c.px(20), 30, p.on_accent, "CENTER")
-        title = tr("Download failed") if failed else (tr("Content updated") if st.update_mode else tr("Human Generator is ready"))
-        c.text(title, cx, cy - c.px(40), 24, p.text, "CENTER")
+        mark = c.px(40)
+        # The few lines of this screen sit in the middle of the card, not at its top
+        ch -= max(0.0, (ch - c.px(self.GROUP_H)) / 2 - c.px(28))
+        top = cy + ch - c.px(28)
+        color = p.danger if failed else p.success
+        c.rect(cx, top - mark, mark, mark, p.with_alpha(color, 0.16), mark / 2)
+        c.text("!" if failed else CHECK_GLYPH, cx + mark / 2, centered_baseline(c, top - mark, mark, 18), 18, color, "CENTER", bold=True)
+        title_area = (cx, cy, cw, ch - mark - c.px(16))
         if failed:
-            body = st.error + "\n" + tr("Your progress is kept. Retry when you are back online.")
-        elif st.update_mode:
-            body = tr("{packs} updated in").format(packs=pack_count(len(st.selected), format_bytes(st.total_bytes))) + "\n" + st.folder
+            cursor = self.title_block(c, title_area, tr("Download failed"), st.error)
+            c.paragraph(tr("Your progress is kept. Retry when you are back online."), cx, cursor + c.px(12), BODY, p.muted, cw)
+            self.footer_actions(c, [(tr("Retry"), self._retry, "primary", True)])
+            return
+        packs = pack_count(len(st.selected), format_bytes(st.total_bytes))
+        if st.update_mode:
+            title, subtitle = tr("Content updated"), tr("{packs}, updated in this folder:").format(packs=packs)
         else:
-            body = tr("{packs}, installed in").format(packs=pack_count(len(st.selected), format_bytes(st.total_bytes))) + "\n" + st.folder
-        c.paragraph(body, cx, cy - c.px(60), 13.5, p.muted, w - c.px(100), align="CENTER")
-        bw, bh = c.px(220), c.px(42)
-        by = y + c.px(40)
-        if failed:
-            self.button(tr("Retry"), cx - bw / 2, by, bw, bh, self._retry, "primary")
-        else:
-            self.button(tr("Create your first human"), cx - bw - c.px(6), by, bw, bh, self.controller.create_human, "primary")
-            self.button(tr("Show me around"), cx + c.px(6), by, bw, bh, self._tour, "secondary")
+            title, subtitle = tr("Human Generator is ready"), tr("{packs}, installed in this folder:").format(packs=packs)
+        cursor = self.title_block(c, title_area, title, subtitle) + c.px(8)
+        row_h = c.px(CONTROL_H)
+        c.outline(cx, cursor - row_h, cw, row_h, p.line, c.px(RADIUS), max(1.0, round(c.scale)), p.inset)
+        c.text(c.ellipsize(st.folder, BODY, cw - c.px(24)), cx + c.px(12), centered_baseline(c, cursor - row_h, row_h, BODY), BODY, p.text)
+        self.footer_actions(c, [(tr("Show me around"), self._tour, "secondary", True), (tr("Create your first human"), self.controller.create_human, "primary", True)])
 
     def _retry(self) -> None:
         setup_state.state.start()

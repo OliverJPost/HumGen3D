@@ -19,7 +19,7 @@ from ...backend.setup.catalogue import has_humans, installed_packs
 from ...common.i18n import tr
 from . import state as setup_state
 from .draw import Canvas, TextureCache, ease_out
-from .screens import SCREENS, Controller, pack_count, props
+from .screens import CARD_RADIUS, SCREENS, Controller, pack_count, props
 
 OPEN_SECONDS = 0.28
 WHEEL_STEP = 60  # pixels per wheel click
@@ -224,10 +224,10 @@ class HG_OT_setup_overlay(bpy.types.Operator, Controller):
         h = min(h, c.height - 2 * margin)
         x = (c.width - w) / 2
         y = (c.height - h) / 2 - c.px(10) * (1 - opening)
-        radius = c.px(16)
-        c.shadow(x, y, w, h, radius, c.px(28), p.shadow, offset_y=-c.px(10))
-        c.rect(x, y, w, h, p.card, radius)
-        c.outline(x, y, w, h, p.card_border, radius, c.px(1), p.card)
+        x, y = round(x), round(y)
+        radius = c.px(CARD_RADIUS)
+        c.shadow(x, y, w, h, radius, c.px(24), p.shadow, offset_y=-c.px(8))
+        c.outline(x, y, w, h, p.line, radius, max(1.0, round(c.scale)), p.card)
         self._screen.draw(c, (x, y, w, h))
         gpu.state.blend_set("NONE")
         gpu.state.depth_mask_set(True)
