@@ -140,14 +140,14 @@ def license_copy(st) -> Tuple[str, str]:
     reason = st.license_reason
     if reason == "update":
         title = tr("One more step to download content packs") if st.add_packs else tr("One more step to download updates")
-        return title, tr("Downloads are linked to your order. You do this once on this computer; your installed content keeps working either way.")
+        return title, tr("Downloads are linked to your license. You do this once on this computer; your installed content keeps working either way.")
     if reason == "upgrade":
-        return tr("Activate the full version"), tr("Enter the order ID or licence key of your purchase. The trial content is replaced by the full library.")
+        return tr("Activate the full version"), tr("Enter the license key of your purchase. The trial content is replaced by the full library.")
     if reason == "change":
-        return tr("Change the order on this computer"), tr("Enter another order ID or licence key. Your installed content keeps working either way.")
+        return tr("Change the license on this computer"), tr("Enter another license key. Your installed content keeps working either way.")
     if reason == "rejected":
-        return tr("Check your order"), tr("The order on this computer was not accepted. Correct it or enter another one; your installed content keeps working either way.")
-    return tr("Activate your licence"), tr("Enter your order ID or licence key. It is checked once and remembered on this computer.")
+        return tr("Check your license key"), tr("The license key on this computer was not accepted. Correct it or enter another one; your installed content keeps working either way.")
+    return tr("Activate your license"), tr("Enter your license key. It is checked once and remembered on this computer.")
 
 
 def packs_copy(st) -> Tuple[str, str]:
@@ -160,7 +160,7 @@ def packs_copy(st) -> Tuple[str, str]:
         return tr("Update Human Generator"), tr("Newer versions of your content packs are available. Your own content stays as it is.")
     if st.mode == "trial":
         if st.trial_installed_here:
-            return tr("The trial is installed"), tr("Get the full version for the whole library, or activate a licence you already have.")
+            return tr("The trial is installed"), tr("Get the full version for the whole library, or activate a license you already have.")
         return tr("Install the free trial"), tr("One human, an outfit, a hairstyle and four poses. The rest of the library comes with the full version.")
     return tr("Install Human Generator"), tr("Choose what to install. You can add packs later from the preferences.")
 
@@ -644,7 +644,7 @@ class WelcomeScreen(Screen):
             label = tr("Install the free trial")
             bw = self.button_width(c, label, "primary") + c.px(16)
             self.button(label, column_x, button_y, bw, c.px(40), self._trial, "primary")
-            other = tr("I have a licence")
+            other = tr("I have a license")
             self.button(other, column_x + bw + c.px(8), button_y, self.button_width(c, other, "ghost"), c.px(40), self._licence, "ghost")
         else:
             label = tr("Get started")
@@ -688,13 +688,13 @@ class ChooseScreen(Screen):
     def layout(self, c: Canvas) -> None:
         content = self.chrome(c)
         cx, cy, cw, ch = content
-        cursor = self.title_block(c, content, tr("How do you want to start?"), tr("You can activate a licence later at any time."))
+        cursor = self.title_block(c, content, tr("How do you want to start?"), tr("You can activate a license later at any time."))
         gap = c.px(16)
         tile_w = (cw - gap) / 2
         tile_y = cy + c.px(28)
         tile_h = cursor - tile_y
         self.tile(c, cx, tile_y, tile_w, tile_h, "trial.jpg", tr("Free trial"), tr("One human, an outfit, a hairstyle and four poses, so you can try the workflow."), tr("Start the trial"), lambda: self._choose("trial"))
-        self.tile(c, cx + tile_w + gap, tile_y, tile_w, tile_h, "license.jpg", tr("Activate licence"), tr("Bought Human Generator? Enter your order ID or licence key to install the full library."), tr("Enter your order"), lambda: self._choose("licensed"))
+        self.tile(c, cx + tile_w + gap, tile_y, tile_w, tile_h, "license.jpg", tr("Activate license"), tr("Bought Human Generator? Enter your license key to install the full library."), tr("Enter license key"), lambda: self._choose("licensed"))
         self.footer_actions(c, [self.back_or_close()])
 
     def tile(self, c: Canvas, x: float, y: float, w: float, h: float, image: str, title: str, blurb: str, action: str, on_click: Callable[[], None]) -> None:
@@ -729,7 +729,7 @@ class LicenseScreen(Screen):
 
     def __init__(self, controller, textures) -> None:
         super().__init__(controller, textures)
-        self.guid = TextField("order_guid", tr("The long code in your order email, or an HG3D- key"))
+        self.guid = TextField("order_guid", tr("Bought on Superhive? Use your order ID"))
         self.email = TextField("email", tr("you@example.com"))
         self.fields = [self.guid, self.email]
 
@@ -753,8 +753,8 @@ class LicenseScreen(Screen):
             field.enabled = not checking
 
         for field, label, link, url in (
-            (self.guid, tr("Order ID or licence key"), tr("Where do I find it?"), setup_state.ORDER_HELP_URL),
-            (self.email, tr("The email you used for the order"), tr("Why is this needed?"), setup_state.EMAIL_HELP_URL),
+            (self.guid, tr("License key"), tr("Where do I find this?"), setup_state.ORDER_HELP_URL),
+            (self.email, tr("The email you bought with"), tr("Why is this needed?"), setup_state.EMAIL_HELP_URL),
         ):
             baseline = cursor - c.px(SMALL)
             c.text(label, cx, baseline, SMALL, p.muted)
@@ -773,7 +773,7 @@ class LicenseScreen(Screen):
         c.text(tr("Let me know about updates and offers"), text_x, centered_baseline(c, cursor - c.px(16), size, BODY), BODY, p.text)
         cursor -= c.px(16)
 
-        label = tr("Checking your order…") if checking else tr("Activate")
+        label = tr("Checking your license…") if checking else tr("Activate")
         if st.license_reason == "update" and st.can_go_back:
             left = (tr("Not now"), self._back, "ghost", not checking)
         else:
@@ -1029,7 +1029,7 @@ class PacksScreen(Screen):
         if st.trial_installed_here and not st.in_progress:
             left = self.footer_actions(c, [
                 (tr("Close"), self.controller.close, "ghost", True),
-                (tr("I have a licence"), self._upgrade, "secondary", True),
+                (tr("I have a license"), self._upgrade, "secondary", True),
                 (tr("Get the full version"), lambda: self.controller.open_url(setup_state.buy_url(st.rid)), "primary", True),
             ])
             mid = y + c.px(FOOTER) / 2
@@ -1235,7 +1235,7 @@ class DoneScreen(Screen):
         cursor -= row_h + c.px(28)
         cred = st.credential
         if cred is not None and cred.status == "ok" and cred.is_personal:
-            used = c.text(tr("Personal licence") + " · ", cx, cursor, SMALL, p.muted)
+            used = c.text(tr("Personal license") + " · ", cx, cursor, SMALL, p.muted)
             self.link(c, tr("Upgrade to Commercial"), cx + used, cursor, SMALL, self.controller.open_upgrade)
             cursor -= c.px(SMALL) * 1.8
         if can_open_sidebar_tab():
@@ -1253,13 +1253,13 @@ class DoneScreen(Screen):
         cx, cy, cw, ch = area
         message = error_text(st.error, tr)
         if st.credential_failed:
-            cursor = self.title_block(c, area, tr("We couldn't confirm your order"), "")
+            cursor = self.title_block(c, area, tr("We couldn't confirm your license"), "")
             height = self.error_paragraph(c, message, cx, 0, cw * 0.9, p.muted, measure=True)
             self.error_paragraph(c, message, cx, cursor + c.px(12) - height, cw * 0.9, p.muted)
             self.footer_actions(c, [
                 (tr("Contact support"), lambda: self.controller.open_url(setup_state.SUPPORT_URL), "ghost", True),
                 (tr("Retry"), self._retry, "secondary", True),
-                (tr("Enter order or key"), self._enter_order, "primary", True),
+                (tr("Enter license key"), self._enter_order, "primary", True),
             ])
             return
         cursor = self.title_block(c, area, tr("Download failed"), "")

@@ -228,7 +228,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         if row_data.rejected:
             col = box.column(align=True)
             col.alert = True
-            col.label(text=tr("Your order or licence key was not accepted."), icon="ERROR")
+            col.label(text=tr("Your license key was not accepted."), icon="ERROR")
             col.alert = False
             sub = col.column(align=True)
             sub.enabled = False
@@ -238,7 +238,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             row.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = support_url(credential.error_code)
             return
         row = box.row(align=True)
-        row.label(text=row_data.tier or tr("Licence"), icon="CHECKMARK")
+        row.label(text=row_data.tier or tr("License"), icon="CHECKMARK")
         sub = row.row(align=True)
         sub.enabled = False
         sub.label(text=row_data.summary)

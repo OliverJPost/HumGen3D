@@ -197,7 +197,7 @@ def searchbox(sett, name, layout):
 
 
 def draw_trial_buttons(layout, panel: str, text: str = "Buy full version") -> None:
-    """The "Buy" button of a trial notice, with "I have a licence" next to it.
+    """The "Buy" button of a trial notice, with "I have a license" next to it.
 
     Args:
         layout (UILayout): where the row goes
@@ -206,7 +206,7 @@ def draw_trial_buttons(layout, panel: str, text: str = "Buy full version") -> No
     """
     row = layout.row(align=True)
     row.operator("hg3d.buy_full_version", text=text, depress=True).panel = panel
-    row.operator("hg3d.setup_upgrade", text="I have a licence")
+    row.operator("hg3d.setup_upgrade", text="I have a license")
 
 
 def draw_trial_notice(layout, panel: str) -> None:

@@ -94,7 +94,7 @@ def test_guid_cleaning():
 
 def test_activate_validates_the_form(st):
     assert not st.activate("", "a@b.co", True)
-    assert "order ID" in st.license_error
+    assert "license key" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "nope", True)
     assert "email" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "a@b.co", False)

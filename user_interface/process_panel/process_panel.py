@@ -351,7 +351,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             (
                 "This version of Human Generator needs a newer version of the HG Export pack."
                 if outdated
-                else "The Process tab needs the HG Export pack, which is included with your licence."
+                else "The Process tab needs the HG Export pack, which is included with your license."
             ),
             alignment="CENTER",
             enabled=False,

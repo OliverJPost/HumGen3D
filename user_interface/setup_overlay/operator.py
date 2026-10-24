@@ -52,6 +52,8 @@ MARGIN = 24  # design units between the card and the viewport edge
 # Below this the card is not scaled down further; the sidebar takes over
 MIN_FIT = 0.55
 MIN_EFFECTIVE_SCALE = 0.72
+# Grey hint text in a text field (`UILayout.prop(placeholder=...)`), not in every 4.2 build
+PLACEHOLDERS = "placeholder" in bpy.types.UILayout.bl_rna.functions["prop"].parameters
 
 # The running operator, for the sidebar panel and the screenshot harness
 active: Optional["HG_OT_setup_overlay"] = None
@@ -62,8 +64,8 @@ class HG_SETUP_PROPS(bpy.types.PropertyGroup):
     """The licence form. Lives on the window manager, so the overlay and the
     sidebar panel edit the same values and nothing is saved in the .blend."""
 
-    order_guid: StringProperty(name="Order ID or licence key", description="The order ID from your order email, or a licence key that starts with HG3D-")  # noqa: F821
-    email: StringProperty(name="Email", description="The email you used for the order")  # noqa: F821
+    order_guid: StringProperty(name="License key", description="Your license key. Bought on Superhive? Use the order ID from your order email")  # noqa: F821
+    email: StringProperty(name="Email", description="The email you bought with")  # noqa: F821
     accept_terms: BoolProperty(name="I accept the Human Generator Asset License and the Privacy policy", default=False)  # noqa: F821
     newsletter: BoolProperty(name="Let me know about updates and offers", default=False)  # noqa: F821
 
@@ -589,10 +591,10 @@ class HG_OT_setup_add_packs(bpy.types.Operator):
 
 
 class HG_OT_setup_upgrade(bpy.types.Operator):
-    """Activate the order or licence key you bought and install the full library"""
+    """Activate the license you bought and install the full library"""
 
     bl_idname = "hg3d.setup_upgrade"
-    bl_label = "I have a licence"
+    bl_label = "I have a license"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
@@ -607,7 +609,7 @@ class HG_OT_setup_upgrade(bpy.types.Operator):
 
 
 class HG_OT_setup_change_licence(bpy.types.Operator):
-    """Enter another order ID or licence key on this computer"""
+    """Enter another license key on this computer"""
 
     bl_idname = "hg3d.setup_change_licence"
     bl_label = "Change…"
@@ -625,7 +627,7 @@ class HG_OT_setup_change_licence(bpy.types.Operator):
 
 
 class HG_OT_setup_forget_licence(bpy.types.Operator):
-    """Remove the order from this computer. Installed content keeps working"""
+    """Remove the license key from this computer. Installed content keeps working"""
 
     bl_idname = "hg3d.setup_forget_licence"
     bl_label = "Forget"
@@ -642,7 +644,7 @@ class HG_OT_setup_forget_licence(bpy.types.Operator):
             st.forget_pending = True
         else:
             st.forget_credential()
-            self.report({"INFO"}, tr("The order is no longer stored on this computer. Installed content stays."))
+            self.report({"INFO"}, tr("The license key is no longer stored on this computer. Installed content stays."))
         for window in context.window_manager.windows:
             for area in window.screen.areas:
                 area.tag_redraw()
@@ -672,7 +674,7 @@ def upgrade_url() -> str:
 
 
 class HG_OT_setup_open_upgrade(bpy.types.Operator):
-    """Upgrade your Personal licence to a Commercial one"""
+    """Upgrade your Personal license to a Commercial one"""
 
     bl_idname = "hg3d.setup_open_upgrade"
     bl_label = "Upgrade to Commercial"
@@ -795,7 +797,7 @@ class HG_OT_setup_fallback(bpy.types.Operator):
 
 
 class HG_OT_setup_choose(bpy.types.Operator):
-    """Start with the free trial or activate a licence"""
+    """Start with the free trial or activate a license"""
 
     bl_idname = "hg3d.setup_choose"
     bl_label = "Choose"
@@ -827,10 +829,10 @@ class HG_OT_setup_go(bpy.types.Operator):
 
 
 class HG_OT_setup_enter_order(bpy.types.Operator):
-    """Correct the order ID or licence key, or enter another one"""
+    """Correct the license key, or enter another one"""
 
     bl_idname = "hg3d.setup_enter_order"
-    bl_label = "Enter order or key"
+    bl_label = "Enter license key"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
@@ -857,7 +859,7 @@ class HG_OT_setup_back(bpy.types.Operator):
 
 
 class HG_OT_setup_activate(bpy.types.Operator):
-    """Check the order and unlock the full library"""
+    """Check the license key and unlock the full library"""
 
     bl_idname = "hg3d.setup_activate"
     bl_label = "Activate"
@@ -1142,7 +1144,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         col.label(text=tr("Trial version"), icon="INFO")
         row = col.row(align=True)
         row.operator("wm.url_open", text=tr("Get the full version"), icon="URL").url = setup_state.buy_url(setup_state.trial_rid())
-        row.operator("hg3d.setup_upgrade", text=tr("I have a licence"))
+        row.operator("hg3d.setup_upgrade", text=tr("I have a license"))
 
     # The steps, as the overlay shows them
 
@@ -1163,7 +1165,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         col.separator()
         if st.rid:
             col.operator("hg3d.setup_choose", text=tr("Install the free trial"), icon="PLAY").mode = "trial"
-            col.operator("hg3d.setup_choose", text=tr("I have a licence"), icon="KEYINGSET").mode = "licensed"
+            col.operator("hg3d.setup_choose", text=tr("I have a license"), icon="KEYINGSET").mode = "licensed"
         else:
             col.operator("hg3d.setup_go", text=tr("Get started"), icon="PLAY").screen = "choose"
         col.separator()
@@ -1178,7 +1180,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         col = layout.column(align=True)
         col.label(text=tr("How do you want to start?"))
         col.operator("hg3d.setup_choose", text=tr("Free trial"), icon="PLAY").mode = "trial"
-        col.operator("hg3d.setup_choose", text=tr("Activate licence"), icon="KEYINGSET").mode = "licensed"
+        col.operator("hg3d.setup_choose", text=tr("Activate license"), icon="KEYINGSET").mode = "licensed"
         if st.can_go_back:
             layout.operator("hg3d.setup_back", text=tr("Back"), icon="BACK")
 
@@ -1192,12 +1194,15 @@ class HG_PT_SETUP(bpy.types.Panel):
         wrapped(layout, context, subtitle)
         col = layout.column()
         col.enabled = not st.checking
-        col.label(text=tr("Order ID or licence key"))
-        col.prop(f, "order_guid", text="")
-        col.label(text=tr("The email you used for the order"))
+        col.label(text=tr("License key"))
+        if PLACEHOLDERS:
+            col.prop(f, "order_guid", text="", placeholder=tr("Bought on Superhive? Use your order ID"))
+        else:
+            col.prop(f, "order_guid", text="")
+        col.label(text=tr("The email you bought with"))
         col.prop(f, "email", text="")
         row = col.row(align=True)
-        row.operator("wm.url_open", text=tr("Where do I find it?"), icon="QUESTION").url = setup_state.ORDER_HELP_URL
+        row.operator("wm.url_open", text=tr("Where do I find this?"), icon="QUESTION").url = setup_state.ORDER_HELP_URL
         row.operator("wm.url_open", text=tr("Why is this needed?"), icon="QUESTION").url = setup_state.EMAIL_HELP_URL
         col.prop(f, "accept_terms")
         row = col.row(align=True)
@@ -1213,7 +1218,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         if st.can_go_back:
             row.operator("hg3d.setup_back", text=tr("Not now") if st.license_reason == "update" else "", icon="BACK")
         if st.checking:
-            row.label(text=tr("Checking your order…"))
+            row.label(text=tr("Checking your license…"))
         else:
             row.operator("hg3d.setup_activate", text=tr("Activate"), icon="CHECKMARK")
 
@@ -1257,7 +1262,7 @@ class HG_PT_SETUP(bpy.types.Panel):
             layout.label(text=tr("Trial installed"), icon="CHECKMARK")
             row = layout.row(align=True)
             row.operator("wm.url_open", text=tr("Get the full version"), icon="URL").url = setup_state.buy_url(st.rid)
-            row.operator("hg3d.setup_upgrade", text=tr("I have a licence"))
+            row.operator("hg3d.setup_upgrade", text=tr("I have a license"))
             return
         if st.paused:
             layout.label(text=tr("Download paused"))
@@ -1329,17 +1334,17 @@ class HG_PT_SETUP(bpy.types.Panel):
             cred = st.credential
             if cred is not None and cred.status == "ok" and cred.is_personal:
                 row = col.row(align=True)
-                row.label(text=tr("Personal licence"))
+                row.label(text=tr("Personal license"))
                 row.operator("hg3d.setup_open_upgrade", text=tr("Upgrade to Commercial"), emboss=False)
             row = col.row(align=True)
             row.operator("hg3d.setup_dismiss", text=tr("Done"), icon="CHECKMARK")
             row.operator("hg3d.setup_overlay", text="", icon="WINDOW")
             return
         if st.credential_failed:
-            col.label(text=tr("We couldn't confirm your order"), icon="ERROR")
+            col.label(text=tr("We couldn't confirm your license"), icon="ERROR")
             wrapped(col, context, error_text(st.error, tr), alert=True)
             col.separator()
-            col.operator("hg3d.setup_enter_order", text=tr("Enter order or key"), icon="KEYINGSET")
+            col.operator("hg3d.setup_enter_order", text=tr("Enter license key"), icon="KEYINGSET")
             row = col.row(align=True)
             row.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = setup_state.SUPPORT_URL
             row.operator("hg3d.setup_install", text=tr("Retry"), icon="FILE_REFRESH")

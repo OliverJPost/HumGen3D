@@ -14,7 +14,7 @@ A free Unity package that sets up a character exported with the **Unity** recipe
 | --- | --- |
 | Tested with | Unity 6000.6 with the Built-in render pipeline and URP 17.2. HDRP materials are set up but not reviewed. |
 | Needs | A character exported by the early access version of Human Generator, with its `.humgen3d.json` file next to it |
-| Licence | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-unity) |
+| License | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-unity) |
 
 ## Install
 

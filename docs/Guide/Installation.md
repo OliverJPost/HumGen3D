@@ -1,5 +1,5 @@
 ---
-description: "Install Human Generator in Blender 4.2 or newer, download the content packs with the setup, activate your order, and find your content folder again after a move."
+description: "Install Human Generator in Blender 4.2 or newer, download the content packs with the setup, activate your license, and find your content folder again after a move."
 ---
 
 # Installation
@@ -41,8 +41,8 @@ The standard content packs are a 2 to 4 GB download, and installing them needs r
 
 The setup opens by itself the first time Blender starts with Human Generator and no content. If it doesn't, or you closed it, press `N` in the 3D viewport, open the **HumGen** tab and press **Set up Human Generator**.
 
-1. **Welcome.** Press **Get started**. If you installed from the trial page, the buttons are **Install the free trial** and **I have a licence** instead. If the setup found Human Generator content on this computer, it offers that folder first, see [[#Already a customer? Nothing changes]].
-2. **How do you want to start?** Choose **Free trial** or **Activate licence**. The trial needs no account and installs one human, an outfit, a hairstyle and four poses. Activate licence asks for your order and installs the full library, see [[#Activate your order]].
+1. **Welcome.** Press **Get started**. If you installed from the trial page, the buttons are **Install the free trial** and **I have a license** instead. If the setup found Human Generator content on this computer, it offers that folder first, see [[#Already a customer? Nothing changes]].
+2. **How do you want to start?** Choose **Free trial** or **Activate license**. The trial needs no account and installs one human, an outfit, a hairstyle and four poses. Activate license asks for your license key and installs the full library, see [[#Activate your license]].
 3. **Packs.** The standard packs are ticked. **8K Textures** is unticked: it is a 2 GB download for close-ups and large prints, and Base Humans already has the same skins in 4K. Tick it now or add it later from the preferences. Press **Change…** next to *Content folder* to pick where the content goes.
 4. **Install.** The download runs in the background. Press **Continue in background** to keep working; the progress stays in the HumGen tab. **Pause** stops the download and keeps what it fetched.
 5. **Done.** *Human Generator is ready* shows the folder. Press **Create your first human**, or **Show me around** for a short tour.
@@ -50,25 +50,27 @@ The setup opens by itself the first time Blender starts with Human Generator and
 > [!info]- Setup window not showing?
 > The setup is a window inside the 3D viewport. If it doesn't show, open the HumGen tab in the sidebar. The *Setup* panel there has **Continue setup**, and **Pop-up not showing? Set up in this panel**, which has the same steps as plain buttons.
 
-## Activate your order
+## Activate your license
 
-The licence step asks for two things: your **Order ID or licence key** and **The email you used for the order**. You also tick that you accept the Human Generator Asset License and the privacy policy. Then press **Activate**.
+The license step asks for two things: your **License key** and **The email you bought with**. You also tick that you accept the Human Generator Asset License and the privacy policy. Then press **Activate**.
 
-Your order is checked once. The add-on remembers it on this computer, in a small settings file outside Blender, and uses it only to download content packs and their updates. Only downloads are linked to your order: content you installed keeps working without it, also offline, and also if you forget the order later.
+Your license is checked once. The add-on remembers it on this computer, in a small settings file outside Blender, and uses it only to download content packs and their updates. Only downloads are linked to your license: content you installed keeps working without it, also offline, and also if you forget the license key later.
 
 <span id="order-guid"></span>
-### Order ID or licence key
+### License key
 
-The order ID is the long code of your Superhive order (Superhive was called BlenderMarket before). You find it in two places:
+[humgen3d.com/license-key](https://humgen3d.com/license-key) shows where to find it. The setup's **Where do I find this?** link opens that page.
+
+Bought on Superhive (called BlenderMarket before)? Then the order ID is your license key: the long code of your Superhive order. You find it in two places:
 
 - the order confirmation email from Superhive;
 - your Superhive account: log in, go to [Orders](https://superhivemarket.com/account/orders) and open your Human Generator order.
 
-Copy the whole code as it is. If you have a licence key instead, it starts with `HG3D-`; enter that in the same field.
+Copy the whole code as it is. A license key bought on humgen3d.com starts with `HG3D-` and goes in the same field.
 
 ### Email
 
-Enter the email you placed the order with, the address the order email from Superhive went to. It ties the order to you: once an order is activated with an address, only that address can activate it again. That stops someone who guesses an order ID from downloading your content. Our server stores the address as a hash, not as text.
+Enter the email you bought with: for Superhive, the address the order email went to. It ties the license to you: once a license is activated with an address, only that address can activate it again. That stops someone who guesses an order ID from downloading your content. Our server stores the address as a hash, not as text.
 
 Tick **Let me know about updates and offers** if you want our news at this address. It is off by default.
 
@@ -76,9 +78,9 @@ Tick **Let me know about updates and offers** if you want our news at this addre
 
 If you used Human Generator 4 before, you don't need to download or activate anything to keep working.
 
-- **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, the welcome screen shows *Found Human Generator content in* with the folder. Press **Use this folder**. Nothing is downloaded and no order is asked.
+- **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, the welcome screen shows *Found Human Generator content in* with the folder. Press **Use this folder**. Nothing is downloaded and no license key is asked.
 - **If it isn't found,** press **Select folder** next to *I already have the content packs* on the welcome screen, and pick the folder with your packs.
-- **Your order is asked once,** only when you download something: an update, or a pack you add. The setup then shows *One more step to download updates*. Enter your order, or press **Not now** to keep working with the content you have.
+- **Your license key is asked once,** only when you download something: an update, or a pack you add. The setup then shows *One more step to download updates*. Enter your license key (your Superhive order ID), or press **Not now** to keep working with the content you have.
 
 ## Updates
 
@@ -116,22 +118,22 @@ Nothing is created or downloaded while the folder is missing.
 
 To move the content on purpose, move the folder in your file manager, then press **Locate folder…**. You can also change the folder in the add-on preferences: Content Packs tab, **Change folder…** next to *Content folder*. Blend files you saved before the move may still look for textures in the old place. Blender's File > External Data > Find Missing Files fixes those.
 
-## Your licence
+## Your license
 
-The Content Packs tab of the add-on preferences shows the order this computer downloads with, masked, with its tier: *Personal licence* or *Commercial licence*.
+The Content Packs tab of the add-on preferences shows the license this computer downloads with, masked, with its tier: *Personal license* or *Commercial license*. It says *Superhive order* for an order ID and *License key* for an `HG3D-` key.
 
-- **Upgrade to Commercial** shows for a Personal licence. It opens [humgen3d.com/upgrade](https://humgen3d.com/upgrade), which takes you to the Commercial upgrade on Superhive. The row shows *Commercial licence* after the next download. To update it right away, press **Change…** and activate again.
-- **Change…** opens the licence step of the setup, to enter another order ID or licence key.
-- **Forget** removes the order from this computer, after you confirm. Installed content stays. The setup asks for an order again the next time you download.
+- **Upgrade to Commercial** shows for a Personal license. It opens [humgen3d.com/upgrade](https://humgen3d.com/upgrade), which takes you to the Commercial upgrade on Superhive. The row shows *Commercial license* after the next download. To update it right away, press **Change…** and activate again.
+- **Change…** opens the license step of the setup, to enter another license key.
+- **Forget** removes the license key from this computer, after you confirm. Installed content stays. The setup asks for it again the next time you download.
 
-When the server didn't accept the stored order, the row says *Your order or licence key was not accepted.* with the reason, **Enter again…** and **Contact support**. See [[Setup troubleshooting#Order and licence]].
+When the server didn't accept the stored license key, the row says *Your license key was not accepted.* with the reason, **Enter again…** and **Contact support**. See [[Setup troubleshooting#License key]].
 
 ## Upgrading from the trial
 
-The trial shows **I have a licence** next to every buy button, and next to **Get the full version** in the *Setup* panel of the HumGen tab. After you buy Human Generator:
+The trial shows **I have a license** next to every buy button, and next to **Get the full version** in the *Setup* panel of the HumGen tab. After you buy Human Generator:
 
-1. Press **I have a licence**.
-2. Enter your order ID and email in *Activate the full version*, see [[#Activate your order]].
+1. Press **I have a license**.
+2. Enter your license key and email in *Activate the full version*, see [[#Activate your license]].
 3. Choose the packs and press **Install**.
 
 The full library replaces the trial content automatically. Your own saved content stays.

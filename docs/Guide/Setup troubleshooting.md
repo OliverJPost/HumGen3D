@@ -1,45 +1,45 @@
 ---
-description: "What the Human Generator setup's messages mean and what to do: order not found, wrong email, connection and proxy errors, disk space, paused downloads, online access."
+description: "What the Human Generator setup's messages mean and what to do: license key not found, wrong email, connection and proxy errors, disk space, paused downloads, online access."
 ---
 
 # Setup troubleshooting
 
-This page lists the messages the setup can show while it activates your order or downloads the content packs, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
+This page lists the messages the setup can show while it activates your license or downloads the content packs, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
 
-For the normal steps, see [[Installation]]. If nothing here helps, write to support@humgen3d.com with your order ID and the message you see.
+For the normal steps, see [[Installation]]. If nothing here helps, write to support@humgen3d.com with your license key (your Superhive order ID) and the message you see.
 
-## Order and licence
+## License key
 
-### We couldn't find an order with this order ID
+### We couldn't find a Superhive order with this order ID
 
-> We couldn't find an order with this order ID. Check the order email from Superhive, or contact support@humgen3d.com.
+> We couldn't find a Superhive order with this order ID. Copy it again from your order email, or contact support@humgen3d.com.
 
-- Copy the order ID again from the order email or from [Orders](https://superhivemarket.com/account/orders) in your Superhive account, see [[Installation#Order ID or licence key]]. Copy the whole code.
+- Copy the order ID again from the order email or from [Orders](https://superhivemarket.com/account/orders) in your Superhive account, see [humgen3d.com/license-key](https://humgen3d.com/license-key). Copy the whole code.
 - Use the order of Human Generator. Orders of other products don't count, also when they are from the same shop.
-- For a licence key the message is *We could not find this licence key.* Check the key in your purchase email.
+- For an `HG3D-` license key the message is *We couldn't find this license key. Check the key in your purchase email, or contact support@humgen3d.com.*
 - Still not found? Write to support with the order ID.
 
-### This order is linked to a different email
+### This license is linked to a different email
 
-> This order is linked to a different email. Use the email you placed the order with.
+> This license is linked to a different email. Use the email you bought with.
 
-Once an order is activated, only the email it was first activated with can activate it again. Use the address the Superhive order email went to, not for example your PayPal address. If your email address changed, write to support.
+Once a license is activated, only the email it was first activated with can activate it again. Use the address the Superhive order email went to, not for example your PayPal address. If your email address changed, write to support.
 
-### This order was refunded
+### This purchase was refunded
 
-> This order was refunded, so it can't download content. Content you already installed is not affected.
+> This purchase was refunded, so it can't download content. Content you already installed is not affected.
 
-A refunded order can't download content packs. If you moved to another order, for example for an upgrade, press **Change…** in the preferences or **Enter order or key** in the setup and enter the new order.
+A refunded purchase can't download content packs. If you moved to another order, for example for an upgrade, press **Change…** in the preferences or **Enter license key** in the setup and enter the new order ID.
 
-### This licence is no longer active
+### This license is no longer active
 
-> This licence is no longer active. Contact support@humgen3d.com if you think this is a mistake.
+> This license is no longer active. Contact support@humgen3d.com if you think this is a mistake.
 
 Write to support.
 
-### This order is still being processed
+### This purchase is still being processed
 
-> This order is still being processed. Try again in a few minutes.
+> This purchase is still being processed. Try again in a few minutes.
 
 A new order can take a few minutes to reach us. Wait a little, then press **Activate** again.
 
@@ -47,25 +47,25 @@ A new order can take a few minutes to reach us. Wait a little, then press **Acti
 
 > Too many attempts from this network. Try again in an hour.
 
-After many failed attempts from one network, the activation stops for an hour. This counts every computer on the network, so in a studio or school a colleague's attempts count too. Wait an hour, and check the order ID and email before you try again.
+After many failed attempts from one network, the activation stops for an hour. This counts every computer on the network, so in a studio or school a colleague's attempts count too. Wait an hour, and check the license key and email before you try again.
 
-### We couldn't confirm your order
+### We couldn't confirm your license
 
-The setup shows this when the server refuses the stored order during a download, with the reason below it. The buttons:
+The setup shows this when the server refuses the stored license key during a download, with the reason below it. The buttons:
 
-- **Enter order or key** opens the licence step with the stored order filled in. Correct it or enter another one.
-- **Retry** tries again with the same order, for example after support fixed it.
+- **Enter license key** opens the license step with the stored key filled in. Correct it or enter another one.
+- **Retry** tries again with the same key, for example after support fixed it.
 - **Contact support** opens an email to support@humgen3d.com.
 
-The order stays stored. The add-on preferences show *Your order or licence key was not accepted.* with **Enter again…** and **Contact support** until you change it.
+The key stays stored. The add-on preferences show *Your license key was not accepted.* with **Enter again…** and **Contact support** until you change it.
 
-### The licence step says something is missing
+### The license step says something is missing
 
 The setup checks the form before it sends it:
 
-- *Enter the order ID or licence key from your order email.*
-- *Enter the email you used for the order.*
-- *Accept the licence and the privacy policy to continue.* Tick the box below the email field.
+- *Enter your license key. Bought on Superhive? Use the order ID from your order email.*
+- *Enter the email you bought with.*
+- *Accept the license and the privacy policy to continue.* Tick the box below the email field.
 
 ## Connection
 
@@ -186,7 +186,7 @@ The newest content packs need a newer version of the add-on. Update the add-on i
 
 When the server won't hand out one pack, *Download failed* names the pack and the reason, for example *8K Textures: This pack can't be downloaded right now.*
 
-- *This pack needs a licence. Enter your order ID to download it.* The pack is not part of the trial. See [[Installation#Upgrading from the trial]].
+- *This pack needs a license. Enter your license key to download it.* The pack is not part of the trial. See [[Installation#Upgrading from the trial]].
 - *This pack isn't offered for download any more.* Write to support if you need it.
 - *This pack can't be downloaded right now.* Try again later.
 

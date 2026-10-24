@@ -219,12 +219,12 @@ def test_error_code_groups():
     assert api_client.ApiError("refunded").about_credential and not api_client.ApiError("refunded").transient
     for code in api_client.CREDENTIAL_CODES + api_client.TRANSIENT_CODES + ("pending", "invalid"):
         assert api_client.MESSAGES[code] and "!" not in api_client.MESSAGES[code] and "GUID" not in api_client.MESSAGES[code]
-    assert "support@humgen3d.com" in api_client.MESSAGES["not_found"] and "order ID" in api_client.MESSAGES["not_found"]
+    assert "support@humgen3d.com" in api_client.MESSAGES["not_found"] and "license key" in api_client.MESSAGES["not_found"] and "Superhive" in api_client.MESSAGES["not_found"]
     assert api_client.ssl_context() is not None
 
 
 def test_pack_error_message():
-    assert "licence" in api_client.pack_error_message("license_required")
+    assert "license key" in api_client.pack_error_message("license_required")
     assert api_client.pack_error_message("not_found") != api_client.MESSAGES["not_found"]
     assert api_client.pack_error_message("refunded") == api_client.MESSAGES["refunded"]
     assert api_client.pack_error_message("something_new") == api_client.PACK_MESSAGE_DEFAULT

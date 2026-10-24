@@ -13,17 +13,17 @@ from urllib.parse import urlencode
 SUPPORT_EMAIL = "support@humgen3d.com"
 
 TIER_LABELS = {
-    "personal": "Personal licence",
-    "commercial": "Commercial licence",
+    "personal": "Personal license",
+    "commercial": "Commercial license",
 }
 
 
 @dataclass
 class LicenceRow:
     tier: str
-    """"Personal licence", "Commercial licence" or "" when the server didn't say."""
+    """"Personal license", "Commercial license" or "" when the server didn't say."""
     summary: str
-    """The masked credential and email, "Order ••••1a2b · j•••@example.com"."""
+    """The masked credential and email, "Superhive order ••••1a2b · j•••@example.com"."""
     upgrade: bool
     """Whether to offer the upgrade to a commercial licence."""
     rejected: bool
@@ -36,14 +36,14 @@ def licence_row(credential: Optional[Any]) -> Optional[LicenceRow]:
     """The row for `user_settings.credential()`, None when nothing is stored."""
     if credential is None or not getattr(credential, "value", ""):
         return None
-    kind = "Licence key" if credential.kind == "key" else "Order"
+    kind = "License key" if credential.kind == "key" else "Superhive order"
     summary = f"{kind} {credential.masked}"
     if credential.email:
         summary += f" · {credential.masked_email}"
     rejected = credential.status == "rejected"
     message = ""
     if rejected:
-        message = credential.error_message or "This order or licence key was not accepted."
+        message = credential.error_message or "This license key was not accepted."
     return LicenceRow(
         tier=TIER_LABELS.get(credential.license or "", ""),
         summary=summary,
@@ -55,7 +55,7 @@ def licence_row(credential: Optional[Any]) -> Optional[LicenceRow]:
 
 def support_url(code: str = "") -> str:
     """A mail to support about the licence, with the error code in the subject."""
-    subject = "Human Generator licence" + (f" ({code})" if code else "")
+    subject = "Human Generator license" + (f" ({code})" if code else "")
     return f"mailto:{SUPPORT_EMAIL}?subject=" + subject.replace(" ", "%20")
 
 

@@ -2,7 +2,7 @@
 """The requests the add-on makes to humgen3d.com.
 
 Three calls: the public catalogue, the activation of a credential (a
-Superhive order GUID or a licence key), and the download URLs of packs. Every
+Superhive order GUID or a license key), and the download URLs of packs. Every
 call is plain `urllib`, blocking, and meant to run in a thread; nothing here
 touches `bpy` except to read the version numbers it sends along. Errors become
 `ApiError` with the server's code and message, or a local code with a
@@ -39,13 +39,13 @@ MESSAGES = {
     "proxy": "Your network's proxy asks for a login. Sign in to it, or ask your IT department to allow humgen3d.com.",
     "unavailable": "humgen3d.com is having a problem right now. Try again in a few minutes.",
     "bad_response": "humgen3d.com gave an unexpected answer. Try again later, or contact support@humgen3d.com.",
-    "not_found": "We couldn't find an order with this order ID. Check the order email from Superhive, or contact support@humgen3d.com.",
-    "email_mismatch": "This order is linked to a different email. Use the email you placed the order with.",
-    "refunded": "This order was refunded, so it can't download content. Content you already installed is not affected.",
-    "revoked": "This licence is no longer active. Contact support@humgen3d.com if you think this is a mistake.",
-    "pending": "This order is still being processed. Try again in a few minutes.",
+    "not_found": "We couldn't find this license key. Bought on Superhive? Copy the order ID from your order email again, or contact support@humgen3d.com.",
+    "email_mismatch": "This license is linked to a different email. Use the email you bought with.",
+    "refunded": "This purchase was refunded, so it can't download content. Content you already installed is not affected.",
+    "revoked": "This license is no longer active. Contact support@humgen3d.com if you think this is a mistake.",
+    "pending": "This purchase is still being processed. Try again in a few minutes.",
     "rate_limited": "Too many attempts from this network. Try again in an hour.",
-    "invalid": "Enter your order ID and the email you used for the order.",
+    "invalid": "Enter your license key and the email you bought with.",
 }
 
 # Definitive answers about the credential: mark it rejected, keep it stored
@@ -55,7 +55,7 @@ TRANSIENT_CODES = ("offline", "timeout", "unavailable", "tls", "proxy", "rate_li
 
 # Per-pack codes in the `errors` of /api/addon/content
 PACK_MESSAGES = {
-    "license_required": "This pack needs a licence. Enter your order ID to download it.",
+    "license_required": "This pack needs a license. Enter your license key to download it.",
     "not_found": "This pack isn't offered for download any more.",
     "needs_newer_addon": "A newer Human Generator is needed for this content.",
     "unavailable": "This pack can't be downloaded right now. Try again in a few minutes.",

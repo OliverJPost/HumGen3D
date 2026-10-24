@@ -54,8 +54,8 @@ LICENSE_REASONS = ("", "update", "upgrade", "change", "rejected")
 
 LICENSE_URL = "https://humgen3d.com/docs/faq/human-generator-asset-license"
 PRIVACY_URL = "https://humgen3d.com/privacy"
-ORDER_HELP_URL = "https://humgen3d.com/docs/guide/installation#order-guid"
-EMAIL_HELP_URL = "https://humgen3d.com/docs/guide/installation#email"
+ORDER_HELP_URL = "https://humgen3d.com/license-key"
+EMAIL_HELP_URL = "https://humgen3d.com/license-key#email"
 BUY_URL = "https://humgen3d.com/pricing"
 UPGRADE_URL = "https://humgen3d.com/upgrade?from=addon"
 SUPPORT_EMAIL = "support@humgen3d.com"
@@ -822,13 +822,13 @@ class SetupState:
         if self.checking:
             return True
         if not looks_like_guid(order_guid):
-            self.license_error = "Enter the order ID or licence key from your order email."
+            self.license_error = "Enter your license key. Bought on Superhive? Use the order ID from your order email."
             return False
         if not looks_like_email(email):
-            self.license_error = "Enter the email you used for the order."
+            self.license_error = "Enter the email you bought with."
             return False
         if not accepted:
-            self.license_error = "Accept the licence and the privacy policy to continue."
+            self.license_error = "Accept the license and the privacy policy to continue."
             return False
         if not online.allowed():
             self.online_blocked = "activate"

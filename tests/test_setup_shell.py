@@ -245,17 +245,17 @@ def test_no_row_without_a_credential():
 
 def test_personal_licence_offers_the_upgrade():
     row = licence.licence_row(credential())
-    assert row.tier == "Personal licence"
+    assert row.tier == "Personal license"
     assert row.upgrade
     assert not row.rejected
-    assert row.summary.startswith("Order \u2022\u2022\u2022\u20221b2c")
+    assert row.summary.startswith("Superhive order \u2022\u2022\u2022\u20221b2c")
     assert "j\u2022\u2022\u2022@example.com" in row.summary
     assert "jane" not in row.summary
 
 
 def test_commercial_licence_has_no_upgrade():
     row = licence.licence_row(credential(license="commercial"))
-    assert row.tier == "Commercial licence"
+    assert row.tier == "Commercial license"
     assert not row.upgrade
 
 
@@ -267,7 +267,7 @@ def test_unknown_tier_shows_no_label():
 
 def test_licence_key_is_named_as_such():
     row = licence.licence_row(credential(value="HG3D-AAAAA-BBBBB-CCCCC-9Z9Z", kind="key"))
-    assert row.summary.startswith("Licence key \u2022\u2022\u2022\u20229Z9Z")
+    assert row.summary.startswith("License key \u2022\u2022\u2022\u20229Z9Z")
 
 
 def test_rejected_credential_keeps_the_row_with_the_reason():
@@ -470,11 +470,14 @@ def test_prefs_installed_content_tab(tmp_path, stored_credential):
     ops = operators(log)
     # An owner adding packs goes straight to the pack list
     assert "hg3d.setup_add_packs" in ops and "hg3d.setup_start" not in ops
-    assert "Personal licence" in texts(log)
+    assert "Personal license" in texts(log)
     assert {"hg3d.setup_open_upgrade", "hg3d.setup_change_licence", "hg3d.setup_forget_licence"} <= set(ops)
     # Packs of other creators: closed by default
     assert "hg3d.cpackselect" not in ops
     joined = " ".join(texts(log))
+    assert "Superhive order •" in joined
+    # No more downloading pack files from the Superhive order
+    joined = joined.replace("Superhive order •", "")
     assert "Superhive" not in joined and "First delete the Trial" not in joined and "!" not in joined
 
 
@@ -482,7 +485,7 @@ def test_prefs_commercial_licence_has_no_upgrade(tmp_path, stored_credential):
     write_pack(str(tmp_path), "Base_Humans", (4, 1))
     stored_credential(license="commercial")
     log = draw_prefs(str(tmp_path))
-    assert "Commercial licence" in texts(log)
+    assert "Commercial license" in texts(log)
     assert "hg3d.setup_open_upgrade" not in operators(log)
 
 

@@ -202,7 +202,7 @@ def test_rejection_keeps_the_credential_and_routes_to_the_form(st, folder):
     assert st.credential_failed and st.failure_code == "not_found"
     cred = user_settings.credential()
     assert cred is not None and cred.value == "g" and cred.status == "rejected" and cred.error_code == "not_found"
-    # Retry and "Enter order or key" both lead to the form, filled in
+    # Retry and "Enter license key" both lead to the form, filled in
     st.start()
     assert st.screen == "license" and st.license_reason == "rejected"
     assert "couldn't find" in st.license_error and st.prefill_due

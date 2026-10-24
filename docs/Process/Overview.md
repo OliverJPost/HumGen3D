@@ -12,9 +12,9 @@ description: "Export Human Generator characters from Blender to Unity, Unreal En
 The **Process** tab turns a Human Generator human into a game-ready character file: an FBX or glTF with baked textures, hair cards, a clean skeleton with the bone names Unity, Unreal Engine, Godot or Mixamo expect, and the face as blend shapes. It can also make a frozen, lightweight copy of the human inside your Blender file, for rendering crowds. You pick a *recipe* for the program you use, check the folder and press one button. Everything else, like baking the materials, converting the particle hair to cards and building the skeleton, happens in Blender.
 
 > [!question]- HG Export pack missing?
-> The recipes and engine data the Process tab runs on come as a separate content pack, **HG Export**, which is included with your licence. Until it is installed, the tab is greyed out and says *Export data not installed*.
+> The recipes and engine data the Process tab runs on come as a separate content pack, **HG Export**, which is included with your license. Until it is installed, the tab is greyed out and says *Export data not installed*.
 >
-> Press **Install HG Export** in the Process tab. The setup opens on the pack list with HG Export ticked; press the install button. If this computer doesn't know your order yet, the setup asks for it once, see [[Installation#Activate your order]].
+> Press **Install HG Export** in the Process tab. The setup opens on the pack list with HG Export ticked; press the install button. If this computer doesn't know your license key yet, the setup asks for it once, see [[Installation#Activate your license]].
 >
 > That's a one-time step. The pack is also listed under *Content Packs* in the add-on preferences, like the other packs. When an update of Human Generator needs a newer pack, the tab says *Export data needs an update*; press **Update HG Export**.
 
@@ -135,7 +135,7 @@ Yes. The character has a plain deforming skeleton with a root bone, in a T-pose 
 
 ### Can I use exported characters in a commercial game?
 
-With the commercial licence of Human Generator you can ship exported characters in commercial games and software, as long as players can't take the character out and reuse it. See [[Output#Licence of exported characters]].
+With the commercial license of Human Generator you can ship exported characters in commercial games and software, as long as players can't take the character out and reuse it. See [[Output#License of exported characters]].
 
 ### Does processing change my human?
 
