@@ -4,9 +4,9 @@ import json
 import os
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...backend import get_prefs
+from ...common.documentation import docs_url
+from ...user_interface.icons.icons import get_hg_icon
 
 from .tips_and_suggestions.batch_tips_and_suggestions import get_batch_tips_from_context
 from .tips_and_suggestions.content_saving_tips_and_suggestions import (

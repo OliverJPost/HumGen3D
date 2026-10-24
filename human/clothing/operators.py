@@ -3,8 +3,8 @@
 import random
 
 import bpy
-from HumGen3D.backend import hg_delete
-from HumGen3D.human.human import Human
+from ...backend import hg_delete
+from ...human.human import Human
 
 from .base_clothing import find_masks
 

@@ -8,10 +8,10 @@ from typing import Any, Iterable, Optional, Union, cast
 import bpy
 import numpy as np
 from bpy.types import Object, bpy_prop_collection
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import DistanceDict  # type:ignore
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.keys.keys import ShapeKeyItem
+from ..common.decorators import injected_context
+from ..common.type_aliases import DistanceDict  # type:ignore
+from ..common.type_aliases import C
+from ..human.keys.keys import ShapeKeyItem
 from mathutils import Matrix, Vector, kdtree
 
 NDArrayOrList = Union[list, np.ndarray]

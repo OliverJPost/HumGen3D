@@ -8,19 +8,19 @@ from typing import TYPE_CHECKING, Iterable, Optional
 import bpy
 import numpy as np
 from bpy.types import Context, Image, Object
-from HumGen3D.common.memory_management import hg_delete
+from ...common.memory_management import hg_delete
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend.content.content_saving import (
+from ...backend.content.content_saving import (
     remove_number_suffix,
     save_objects_optimized,
     save_thumb,
 )
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.geometry import world_coords_from_obj
-from HumGen3D.human.clothing.garment_fit import (
+from ...backend.logging import hg_log
+from ...common.geometry import world_coords_from_obj
+from ...human.clothing.garment_fit import (
     base_shape_co,
     other_gender_base,
     to_rig_space,

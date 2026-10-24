@@ -1,20 +1,21 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import functools
-import os
-from pathlib import Path
 from typing import Literal
 
 import bpy
-from HumGen3D import HumGenException, __version__
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.ui_properties import active_phase_enum
-from HumGen3D.common import is_legacy, is_processed
-from HumGen3D.common.documentation import draw_docs_button
-from HumGen3D.human.human import Human
+from .. import HumGenException
+from ..backend.content import content_state
+from ..backend.preferences.preference_func import get_prefs
+from ..backend.setup import update_check
+from ..backend.properties.ui_properties import active_phase_enum
+from ..common import find_hg_rig, is_legacy, is_processed
+from ..common.documentation import draw_docs_button
+from ..human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
+from .panel_functions import draw_trial_buttons, draw_unreachable_folder
 from functools import partial
 
 
@@ -52,8 +53,11 @@ def forbidden_for_baked(draw_method):
 def subpanel_draw(draw_method):
     @functools.wraps(draw_method)
     def wrapper(self: MainPanelPart, context):
-        self.human = Human.from_existing(context.object)
         self.sett = context.scene.HG3D  # type:ignore[attr-defined]
+        try:
+            self.human = Human.from_existing(context.object)
+        except HumGenException:  # no content: the labels below say what to do
+            self.human = None
         if self.draw_info_and_warning_labels(context):
             return
 
@@ -124,25 +128,19 @@ class HGPanel:
 
         Returns:
             bool: True if problem was found, causing the HumGen UI to stop
-            displaying anything after the warning labels
+            displaying anything after the warning labels. Notices about
+            updates never stop it, content on disk always stays usable.
         """
         layout = self.layout
         self.pref = get_prefs()
-        filepath_problem = self._filepath_warning(layout)
-        if filepath_problem:
-            return True
-
-        base_content_found = self._base_content_warning(layout)
-        if not base_content_found:
+        if not self._content_found(layout):
             return True
 
         if not self.sett.subscribed:
             self._welcome_menu(layout)
             return True
 
-        update_problem = self._update_notification(layout)
-        if update_problem:
-            return True
+        self._update_notification(layout)
 
         general_problem = self._warning_header(context, layout)
         if general_problem:  # noqa
@@ -174,101 +172,56 @@ class HGPanel:
         )  # TODO is this even necessary now property split is used?
         return flow
 
-    def _filepath_warning(self, layout) -> bool:
-        """Shows warning if no filepath is selected.
+    def _content_found(self, layout) -> bool:
+        """Shows what to do when there is no content to work with.
 
         Args:
             layout (AnyType): Main HumGen panel layout
 
         Returns:
-            Bool: True if filepath was not found, causing the UI to cancel
+            Bool: False when the content folder is not set, empty or can't be
+            found, causing the UI to cancel
         """
-        if self.pref.filepath:
-            return False
-
-        layout.alert = True
-        layout.label(text="No filepath selected")
-        layout.label(text="Select one in the preferences")
-        layout.operator("hg3d.openpref", text="Open preferences", icon="PREFERENCES")
-
-        return True
-
-    def _base_content_warning(self, layout) -> bool:
-        """Looks if base content is installed, otherwise shows warning cancels UI.
-
-        Args:
-            layout (AnyType): Main Layout of HumGen Panel
-
-        Returns:
-            Bool: True if base content found, False causes panel to return
-        """
-        base_humans_path = self.pref.filepath + str(
-            Path("content_packs/Base_Humans.json")
-        )
-        trial_content_path = self.pref.filepath + str(
-            Path("content_packs/Trial_Content.json")
-        )
-
-        base_content = os.path.exists(base_humans_path)
-        trial_content = os.path.exists(trial_content_path)
-
-        if not base_content and not trial_content:
-            layout.alert = True
-
-            layout.label(text="Filepath selected, but couldn't")
-            layout.label(text="find any humans.")
-            layout.label(text="Check if filepath is correct and")
-            layout.label(text="if the content packs are installed.")
-
-            layout.operator(
-                "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
-            )
-
-        return (base_content or trial_content)
-
-    def _update_notification(self, layout) -> bool:
-        """Shows notifications for updates.
-
-        Both for available or required updates of both the add-on and the content packs.
-
-        Args:
-            layout ([AnyType]): Main layout of HumGen panel
-
-        Returns:
-            bool: True if update required, causing panel to only show error message
-        """
-        # find out what kind of update is available
-        if self.pref.cpack_update_required:
-            self.update = "cpack_required"
-        elif tuple(__version__) < tuple(self.pref.latest_version):
-            self.update = "addon"
-        elif self.pref.cpack_update_available:
-            self.update = "cpack_available"
-        else:
-            self.update = None
-
-        if not self.update:
-            return False
-
-        if self.update == "cpack_required":
-            layout.alert = True
-            layout.label(text="One or more cpacks outdated!")
-            layout.operator(
-                "hg3d.openpref", text="Open preferences", icon="PREFERENCES"
-            )
+        folder = self.pref.filepath
+        folder_state = content_state.state(folder)
+        if folder_state == "installed":
             return True
+        if folder_state == "unreachable":
+            draw_unreachable_folder(layout, folder)
         else:
-            addon_label = "Add-on update available!"
-            cpack_label = "CPack updates available"
-            label = addon_label if self.update == "addon" else cpack_label
-            layout.operator(
-                "hg3d.openpref",
-                text=label,
-                icon="PACKAGE",
-                depress=True,
-                emboss=self.update == "addon",
-            )
-            return False
+            self._setup_prompt(layout, "No content installed yet")
+        return False
+
+    @staticmethod
+    def _setup_prompt(layout, text: str) -> None:
+        """Point at the setup, which installs the content and sets the folder."""
+        col = layout.column(align=True)
+        col.label(text=text, icon="INFO")
+        row = col.row(align=True)
+        row.scale_y = 1.4
+        row.operator("hg3d.setup_start", text="Set up Human Generator", icon="IMPORT")
+        col.operator("hg3d.openpref", text="Preferences", icon="PREFERENCES", emboss=False)
+
+    def _update_notification(self, layout) -> None:
+        """A one-line banner at the top for a needed content update, and the
+        message of humgen3d.com when there is one. The rest of the panel
+        draws as usual: the Setup panel above has the details."""
+        us = update_check.status
+        if us.notice() == "required":
+            row = layout.row(align=True)
+            if us.blocked_by_addon:
+                row.label(text="A newer Human Generator is needed for the latest content.", icon="INFO")
+            else:
+                row.label(text="Content update needed", icon="INFO")
+                row.operator("hg3d.setup_update", text="Update", icon="IMPORT")
+                row.operator("hg3d.setup_hide_updates", text="", icon="X")
+        message = getattr(us, "message", "")
+        if message:
+            row = layout.row(align=True)
+            row.label(text=message, icon="INFO")
+            url = getattr(us, "message_url", "")
+            if url:
+                row.operator("wm.url_open", text="", icon="URL").url = url
 
     def _welcome_menu(self, layout):
         col = layout.column()
@@ -355,7 +308,8 @@ class MainPanelPart(HGPanel):
         try:
             human = Human.from_existing(context.object, strict_check=False)
         except HumGenException:  # Error for base humans not installed
-            return True
+            # One panel says what to do: the creation panel, unless a human is selected
+            return find_hg_rig(context.object) is not None
         if not human:
             return False
         if "cloth" in context.object or "shoe" in context.object:  # noqa
@@ -445,12 +399,7 @@ class MainPanelPart(HGPanel):
         if selected_item and selected_item.lower().endswith(".trial"):
             row = col.row(align=True)
             row.scale_y = 1.5
-            row.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
+            draw_trial_buttons(row, "library_" + pcoll_name, text="Buy Human Generator")
 
         row_h = col.row(align=True)
         row_h.scale_y = 1.5
@@ -467,19 +416,7 @@ class MainPanelPart(HGPanel):
             subrow = row.row(align=True)
             subrow.alert = True
             subrow.label(text="Trial version")
-            row.operator(
-                "wm.url_open",
-                text="Buy full version",
-                # icon="VIEWZOOM",
-                depress=True,
-            ).url = (
-                "https://humgen3d.com/pricing"
-                "?utm_source=addon"
-                "&utm_medium=ui_link"
-                "&utm_campaign=trial_click"
-            )
-
-
+            draw_trial_buttons(row, "top_widget")
 
         row = col.row(align=True)
         row.scale_y = 1.5

@@ -35,11 +35,12 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple
 
 import bpy
 import numpy as np
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.context import context_override
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.progress import Steps
-from HumGen3D.human.hair.compatibility import SPECULAR_INPUT_NAME
+from ...backend.logging import hg_log
+from ...common.context import context_override
+from ...common.exceptions import HumGenException
+from ...common.progress import Steps
+from ...human.hair.compatibility import SPECULAR_INPUT_NAME
+from ...human.hair.haircards import remove_blender_look
 
 from . import haircap_skin
 from .game_eyes import ROUGHNESS as GAME_EYE_ROUGHNESS
@@ -47,7 +48,7 @@ from .naming import Namer, material_part, part_names
 from .settings import TextureBakeSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Order the passes are baked in, see planned_passes
 PASS_ORDER = ("normal", "base_color", "roughness", "metallic", "alpha", "specular", "flow")
@@ -326,6 +327,12 @@ def _bake_pass(
             _snapshot(baked, channels=SNAPSHOT_CHANNELS.get(pass_id, 4))
 
 
+# Transparent bounces of the bakes: Blender's default, so the textures do not
+# depend on the scene. Converting hair to cards raises them for rendering, see
+# render.set_cycles_transparent_bounces, which changed the skin normals
+BAKE_TRANSPARENT_BOUNCES = 8
+
+
 class _render_settings:
     """Cycles on the CPU with few samples for the bakes, the scene settings
     restored after.
@@ -345,7 +352,9 @@ class _render_settings:
         self.old_samples = scene.cycles.samples
         self.use_denoising = scene.cycles.use_denoising
         self.use_clear = scene.render.bake.use_clear
+        self.transparent_bounces = scene.cycles.transparent_max_bounces
         scene.render.engine = "CYCLES"
+        scene.cycles.transparent_max_bounces = BAKE_TRANSPARENT_BOUNCES
         scene.cycles.device = "CPU"
         scene.cycles.samples = self.samples
         scene.cycles.use_denoising = False
@@ -358,6 +367,7 @@ class _render_settings:
         scene.cycles.samples = self.old_samples
         scene.cycles.use_denoising = self.use_denoising
         scene.render.bake.use_clear = self.use_clear
+        scene.cycles.transparent_max_bounces = self.transparent_bounces
         try:
             scene.render.engine = self.engine
         except TypeError:
@@ -619,6 +629,9 @@ def _prepare_pass(texture_set: TextureSet, pass_id: str) -> object:
     restored: they are replaced by the baked material afterwards.
     """
     materials = texture_set.materials
+    for material in materials:
+        # The look of hair cards in Blender is no part of the textures
+        remove_blender_look(material)
     if pass_id == FLOW_PASS:
         # No Principled input: only cards with a generated atlas have it
         sources = [(None, 0.0) for _ in materials]
@@ -869,7 +882,7 @@ def _flow_pixels(texture_set: TextureSet, size: int) -> np.ndarray:
     keeps the direction of that strand, and a texel without strands flows
     straight from root to tip. The noise is averaged the same way.
     """
-    from HumGen3D.human.hair.card_atlas import FLOW_DEFAULT
+    from ...human.hair.card_atlas import FLOW_DEFAULT
 
     pixels = _pixels(texture_set.baked[FLOW_PASS])  # type:ignore[arg-type]
     native = int(round(math.sqrt(len(pixels))))

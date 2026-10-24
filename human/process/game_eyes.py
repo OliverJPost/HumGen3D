@@ -7,17 +7,17 @@ from typing import TYPE_CHECKING, Iterable
 
 import bmesh
 import bpy
-from HumGen3D.common import is_legacy
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.objects import remove_all_shapekeys
-from HumGen3D.human.hair.compatibility import (
+from ...common import is_legacy
+from ...common.exceptions import HumGenException
+from ...common.objects import remove_all_shapekeys
+from ...human.hair.compatibility import (
     SPECULAR_INPUT_NAME,
     SUBSURFACE_INPUT_NAME,
 )
 from mathutils import Vector
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Amount of times the resolution of the eye mesh is halved
 DETAIL_LEVELS = {"high": 0, "medium": 1, "low": 2}

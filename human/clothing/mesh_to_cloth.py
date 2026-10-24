@@ -5,8 +5,8 @@ import os
 from pathlib import Path
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.human.human import Human  # type: ignore
+from ...backend import get_prefs
+from ...human.human import Human  # type: ignore
 
 
 class MESH_TO_CLOTH_TOOLS:

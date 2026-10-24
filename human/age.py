@@ -2,16 +2,16 @@
 
 from typing import TYPE_CHECKING, Any, Union
 
-from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
-from HumGen3D.human.keys.keys import (
+from ..common.shadernode import FACTOR_INPUT_NAME, NodeInput
+from ..human.keys.keys import (
     LiveKeyItem,
     ShapeKeyItem,
     update_livekey_collection,
 )
-from HumGen3D.human.skin.skin import SkinNodes
+from ..human.skin.skin import SkinNodes
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ..human.human import Human
 
 
 class AgeSettings:

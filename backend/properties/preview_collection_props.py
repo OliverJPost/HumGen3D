@@ -11,9 +11,9 @@ from operator import attrgetter
 
 import bpy  # type: ignore
 from bpy.props import EnumProperty, StringProperty  # type: ignore
-from HumGen3D.backend.preview_collections import preview_collections
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.human import Human
+from ...backend.preview_collections import preview_collections
+from ...common.exceptions import HumGenException
+from ...human.human import Human
 
 
 def get_items(attr):

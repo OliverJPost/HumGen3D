@@ -10,40 +10,41 @@ import os
 from typing import Optional
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.backend.properties.process_props import (
+from ...backend import get_prefs
+from ...backend.properties.process_props import (
     _resolution_from_props,
     is_modified,
     props_to_settings,
     quality_from_props,
 )
-from HumGen3D.common import find_multiple_in_list
-from HumGen3D.common.documentation import (
+from ...common import find_multiple_in_list
+from ...common.documentation import (
     EARLY_ACCESS,
     draw_docs_button,
     draw_early_access,
     feedback_url,
 )
-from HumGen3D.human.human import Human
-from HumGen3D.human.process import export_pack
-from HumGen3D.human.process.pipeline import output_folder, preflight
-from HumGen3D.human.process.quality import (
+from ...human.human import Human
+from ...human.process import export_pack
+from ...human.process.pipeline import output_folder, preflight
+from ...human.process.quality import (
     CUSTOM_TIER,
     TEXTURE_TIERS,
     estimate_triangles,
     quality_of_tier,
     texture_tier_of,
 )
-from HumGen3D.human.process.settings import (
+from ...human.process.settings import (
     OUTPUT_FORMATS,
     TEXTURE_PASSES,
     TEXTURE_SETS,
 )
-from HumGen3D.human.process.shape_keys import KEY_GROUPS, driven_groups_kept
-from HumGen3D.user_interface.icons.icons import get_hg_icon
-from HumGen3D.user_interface.panel_functions import (
+from ...human.process.shape_keys import KEY_GROUPS, driven_groups_kept
+from ...user_interface.icons.icons import get_hg_icon
+from ...user_interface.panel_functions import (
     draw_panel_switch_header,
     draw_paragraph,
+    draw_trial_notice,
 )
 
 from ..ui_baseclasses import HGPanel, draw_icon_title
@@ -333,74 +334,38 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             self._draw_trial_notice()
 
     def _draw_trial_notice(self) -> None:
-        box = self.layout.box()
-        row = box.row(align=True)
-        row.alert = True
-        row.label(text="Disabled in Trial Version")
-        box.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-            "https://humgen3d.com/pricing"
-            "?utm_source=addon"
-            "&utm_medium=ui_link"
-            "&utm_campaign=trial_click"
-        )
+        draw_trial_notice(self.layout, "process")
 
     def _draw_pack_notice(self, pack_status: str) -> None:
-        """The two steps to get the HG_Export content pack, when missing or outdated."""
+        """The HG_Export content pack is missing or too old: install it through the setup."""
         outdated = pack_status == "outdated"
         box = self.layout.box()
         row = box.row()
         row.alignment = "CENTER"
-        row.alert = True
         row.label(
-            text=f"{export_pack.PACK_FILE} {'outdated' if outdated else 'missing'}",
-            icon="ERROR",
+            text="Export data needs an update" if outdated else "Export data not installed",
+            icon="INFO",
         )
         draw_paragraph(
             box,
             (
-                "This version of Human Generator needs a newer version of the pack."
+                "This version of Human Generator needs a newer version of the HG Export pack."
                 if outdated
-                else "The Process tab needs this content pack, which is included"
-                " with your license."
+                else "The Process tab needs the HG Export pack, which is included with your license."
             ),
             alignment="CENTER",
             enabled=False,
         )
-
-        box.separator()
-        box.label(text="1. Download the pack")
-        draw_paragraph(
-            box,
-            f"Log in to {export_pack.STORE_NAME}, go to Orders and find it in the"
-            " downloads of your Human Generator order.",
-            enabled=False,
-        )
         col = box.column()
         col.scale_y = 1.3
         col.operator(
-            "wm.url_open",
-            text=f"Download from {export_pack.STORE_NAME}",
-            icon="URL",
-            depress=True,
-        ).url = export_pack.DOWNLOAD_URL
-        draw_paragraph(
-            box,
-            f"{export_pack.STORE_NAME} is the new name of BlenderMarket.",
-            enabled=False,
-        )
-
-        box.separator()
-        box.label(text="2. Install the downloaded file")
-        col = box.column()
-        col.scale_y = 1.3
-        col.operator(
-            "hg3d.install_export_pack",
-            text=f"Install {export_pack.PACK_FILE}",
+            "hg3d.setup_update",
+            text="Update HG Export" if outdated else "Install HG Export",
             icon="IMPORT",
-        )
+            depress=True,
+        ).keys = export_pack.PACK_NAME
+        draw_docs_button(box, "process#hg-export-pack-missing", text="Learn more", emboss=False)
 
-        box.separator()
-        draw_docs_button(box, "process#hg-export-pack-missing", text="How to install", emboss=False)
 
 class HG_PT_MESHES(ProcessPanel, bpy.types.Panel):
     bl_idname = "HG_PT_MESHES"

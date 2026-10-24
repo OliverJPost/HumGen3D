@@ -22,6 +22,9 @@ The HumGen3D API module can only be imported on machines that run Human Generato
 from HumGen3D import Human
 ```
 
+> [!info]
+> This works the same whether Human Generator is installed as an extension or as a legacy add-on in your add-ons folder. As an extension, Blender loads the add-on under a different internal name, but `HumGen3D` is kept as the name to import from as long as the add-on is enabled.
+
 ###### Currently, the available imports are:
 - [[Human]]
 - [[BatchHumanGenerator]]

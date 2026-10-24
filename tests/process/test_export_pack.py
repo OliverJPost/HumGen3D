@@ -8,14 +8,12 @@ These point the pack at an empty or outdated content folder of their own.
 
 import json
 import os
-import subprocess
-import sys
 from types import SimpleNamespace
 
 import bpy
 import pytest
 from HumGen3D import ExportPackMissing, ExportSettings, HumGenException
-from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
+from HumGen3D.backend.preferences.preference_func import get_prefs
 from HumGen3D.human.process import export_pack, game_rig
 from HumGen3D.human.process.settings import OutputSettings, recipe_items
 from HumGen3D.tests.process.test_process_ui import (
@@ -56,8 +54,8 @@ def test_installed():
 def test_missing(without_pack):
     assert export_pack.status() == "missing"
     assert not export_pack.is_installed()
-    assert export_pack.message().startswith("HG_Export.hgpack missing")
-    assert "Superhive account (formerly BlenderMarket)" in export_pack.message()
+    assert export_pack.message().startswith("Export data not installed")
+    assert "Install HG Export" in export_pack.message()
 
 
 def test_manifest_without_data_is_missing(without_pack):
@@ -68,8 +66,8 @@ def test_manifest_without_data_is_missing(without_pack):
 def test_outdated(without_pack):
     _pack_folder(without_pack, version=(0, 9))
     assert export_pack.status() == "outdated"
-    assert "outdated" in export_pack.message()
-    with pytest.raises(ExportPackMissing, match="outdated"):
+    assert "needs an update" in export_pack.message()
+    with pytest.raises(ExportPackMissing, match="needs an update"):
         export_pack.require()
 
 
@@ -95,7 +93,7 @@ def test_error_is_a_humgen_exception():
 
 
 def test_data_needs_the_pack(without_pack):
-    with pytest.raises(ExportPackMissing, match="HG_Export.hgpack missing"):
+    with pytest.raises(ExportPackMissing, match="Export data not installed"):
         ExportSettings.from_recipe("unity")
     with pytest.raises(ExportPackMissing):
         recipe_items()
@@ -152,12 +150,10 @@ def test_panel_without_pack(male_human, without_pack, context):
     rig = male_human.objects.rig
     drawn, labels = _draw_all(ContextProxy(rig, [rig]))
     assert drawn == ["HG_PT_PROCESS"], "The sections are hidden without the pack"
-    assert "HG_Export.hgpack missing" in labels
-    steps = [label for label in labels if label[:2] in ("1.", "2.")]
-    assert steps == ["1. Download the pack", "2. Install the downloaded file"]
+    assert "Export data not installed" in labels
     operators = _operators(ContextProxy(rig, [rig]))
-    assert ("wm.url_open", "Download from Superhive") in operators
-    assert ("hg3d.install_export_pack", "Install HG_Export.hgpack") in operators
+    assert ("hg3d.setup_update", "Install HG Export") in operators
+    assert not any("Superhive" in (text or "") for _, text in operators), "No manual download"
     assert not any(op == "hg3d.process" for op, _ in operators)
 
 
@@ -166,7 +162,7 @@ def test_panel_with_outdated_pack(male_human, without_pack, context):
     context.scene.HG3D.ui.active_tab = "PROCESS"
     rig = male_human.objects.rig
     _, labels = _draw_all(ContextProxy(rig, [rig]))
-    assert "HG_Export.hgpack outdated" in labels
+    assert "Export data needs an update" in labels
 
 
 def test_trial_without_pack(male_human, without_pack, context, monkeypatch):
@@ -178,37 +174,4 @@ def test_trial_without_pack(male_human, without_pack, context, monkeypatch):
     rig = male_human.objects.rig
     _, labels = _draw_all(ContextProxy(rig, [rig]))
     assert "Disabled in Trial Version" in labels
-    assert "HG_Export.hgpack missing" not in labels
-
-
-def test_install_operator(tmp_path, monkeypatch):
-    """The install button installs the built pack as a content pack."""
-    content = get_prefs().filepath
-    out = tmp_path / "out"
-    out.mkdir()
-    script = os.path.join(get_addon_root(), "scripts", "build_export_pack.py")
-    subprocess.run([sys.executable, script, content, str(out)], check=True)
-    pack = out / "HG_Export.hgpack"
-
-    target = tmp_path / "content"
-    target.mkdir()
-    monkeypatch.setattr(export_pack, "content_folder", lambda: str(target))
-    prefs = get_prefs()
-    before = prefs.filepath_
-    prefs.filepath_ = str(target) + os.sep
-    try:
-        assert bpy.ops.hg3d.install_export_pack(filepath=str(pack)) == {"FINISHED"}
-        assert export_pack.is_installed()
-        with open(target / "content_packs" / "HG_Export.json") as f:
-            files = json.load(f)["files"]
-        assert "process/recipes/unity.json" in files
-        assert "process/game_rig_presets.json" in files
-    finally:
-        prefs.filepath_ = before
-
-
-def test_install_operator_refuses_other_files(tmp_path):
-    other = tmp_path / "Other.hgpack"
-    other.write_text("not a zip")
-    with pytest.raises(RuntimeError, match="not HG_Export.hgpack"):
-        bpy.ops.hg3d.install_export_pack(filepath=str(other))
+    assert "Export data not installed" not in labels

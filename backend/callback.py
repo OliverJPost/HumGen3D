@@ -14,13 +14,15 @@ This callback has the following usages:
 import contextlib
 from typing import no_type_check
 
+from ..package import addon_version
+
 import bpy
 from bpy.types import Context  # type:ignore[import]
-from HumGen3D.backend import hg_log, preview_collections
-from HumGen3D.backend.content.possible_content import find_possible_content
-from HumGen3D.backend.properties.batch_props import BatchProps
-from HumGen3D.human.keys.keys import update_livekey_collection
-from HumGen3D.user_interface.content_panel.operators import (
+from ..backend import hg_log, preview_collections
+from ..backend.content.possible_content import find_possible_content
+from ..backend.properties.batch_props import BatchProps
+from ..human.keys.keys import update_livekey_collection
+from ..user_interface.content_panel.operators import (
     refresh_hair_ul,
     refresh_shapekeys_ul,
 )
@@ -39,15 +41,13 @@ class HG_ACTIVATE(bpy.types.Operator):  # noqa
 
     @no_type_check
     def execute(self, context):  # noqa
-        from HumGen3D import bl_info
-
         sett = bpy.context.scene.HG3D
 
         sett.subscribed = False
 
         msgbus(self, context)
         preview_collections["humans"].refresh(context, gender=sett.gender)
-        hg_log(f"Activating HumGen, version {bl_info['version']}")
+        hg_log(f"Activating HumGen, version {addon_version()}")
 
         update_livekey_collection()
 
@@ -141,7 +141,7 @@ def _context_specific_updates(sett, human, ui_phase):
 
 
 def _export_pack_installed() -> bool:
-    from HumGen3D.human.process import export_pack
+    from ..human.process import export_pack
 
     return export_pack.is_installed()
 
@@ -154,7 +154,7 @@ def tab_change_update(self, context):
     human = Human.from_existing(context.object, strict_check=False)
     set_human_categ_props()
     if context.scene.HG3D.ui.active_tab == "PROCESS" and _export_pack_installed():
-        from HumGen3D.backend.properties.process_props import (
+        from ..backend.properties.process_props import (
             ensure_initialized,
             refresh_clips,
             refresh_key_lists,

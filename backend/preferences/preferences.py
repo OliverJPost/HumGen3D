@@ -8,37 +8,60 @@ import os
 from typing import Optional
 
 import bpy  # type: ignore
-import HumGen3D.backend.updates.addon_updater_ops as addon_updater_ops
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
+from ...backend.updates import addon_updater_ops as addon_updater_ops
+from ...common.documentation import docs_url
+from ...package import addon_package, is_extension
+from ...user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from .content_pack_saving_ui import CpackEditingSystem
+from .licence import licence_row, support_url
 from .preference_props import HGPreferenceBackend
-from HumGen3D import __version__
+from ..content import content_state
+from ..setup import online, repository, update_check, user_settings
+from ..setup.catalogue import version_text
+from ...common.i18n import tr
+from ...user_interface.panel_functions import draw_unreachable_folder
+from ...user_interface.setup_overlay.operator import draw_forget_button
+from ... import __version__
 
-ALERT_DICT = {
-    "cpack_required": [
-        "One or more Content Packs are incompatible and need to be updated!",
-        "ERROR",
-    ],
-    "addon": [
-        "A new update of the Human Generator add-on is available!",
-        "INFO",
-    ],
-    "cpack_available": [
-        "One or more Content Packs can be updated!",
-        "INFO",
-    ],
-}
+
+def pack_names(statuses) -> str:
+    """"Base Humans" or "Base Humans, Base Hair" for an alert."""
+    return ", ".join(s.pack.name for s in statuses)
+
+
+def alert_text(update_statuscode: str, us) -> str:
+    """The alert at the top of the preferences, naming the packs."""
+    if update_statuscode == "cpack_required":
+        if us.blocked_by_addon:
+            return tr("A newer Human Generator is needed for the latest content.")
+        required = us.required
+        if len(required) == 1:
+            return tr("{pack} needs an update.").format(pack=pack_names(required))
+        if required:
+            return tr("{packs} need an update.").format(packs=pack_names(required))
+        return tr("Some content packs need an update.")
+    if update_statuscode == "addon":
+        return tr("A new version of Human Generator is available.")
+    updates = us.updates
+    if updates:
+        return tr("Updates are available for {packs}.").format(packs=pack_names(updates))
+    return tr("Content pack updates are available.")
 
 
 class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreferences):
     """HumGen user preferences."""
 
     _register_priority = 1
-    bl_idname = __package__.split(".")[0]
+    # The package name differs between the legacy add-on and the extension
+    bl_idname = addon_package()
 
     def draw(self, context):
+        if content_state.state(self.filepath) == "unreachable":
+            draw_unreachable_folder(self.layout, self.filepath)
+            if not is_extension():
+                addon_updater_ops.update_settings_ui(self, context)
+            return
         # check if base content is installed, otherwise show installation ui
         base_content_found, is_legacy = self._check_if_basecontent_is_installed()
         if not base_content_found:
@@ -47,9 +70,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         if is_legacy:
             legacy_text = [
-                "Folder selected, but contains legacy content.",
-                "To prevent textures dissapearing from old humans, select a new folder!",
-                "Follow the update instructions from the button below.",
+                "This folder has content of an older Human Generator.",
+                "Choose a new folder, so older humans keep their textures.",
+                "The button below explains how to update.",
             ]
             for line in legacy_text:
                 row = self.layout.box().row()
@@ -83,7 +106,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         elif self.pref_tabs == "cpacks":
             self._draw_cpack_ui(context)
 
-        addon_updater_ops.update_settings_ui(self, context)
+        # As an extension, Blender's repository handles updates
+        if not is_extension():
+            addon_updater_ops.update_settings_ui(self, context)
 
     def _check_if_basecontent_is_installed(self) -> tuple[bool, bool]:
         """Determines if this is the first time loading Human Generator.
@@ -111,10 +136,13 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         # Check if base content is legacy
         if base_content_found:
-            with open(base_humans_path, "r") as f:
-                base_content = json.load(f)
-            if base_content["config"]["pack_version"][0] < 4:
-                return True, True
+            try:
+                with open(base_humans_path, "r", encoding="utf-8") as f:
+                    base_content = json.load(f)
+                if base_content["config"]["pack_version"][0] < 4:
+                    return True, True
+            except (OSError, ValueError, KeyError, TypeError, IndexError):
+                pass
 
         return base_content_found, False  # noqa
 
@@ -124,7 +152,11 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         Returns:
             str: Code determining what kind of update is available, if any
         """
-        if self.cpack_update_required:
+        notice = update_check.status.notice()
+        if not notice:
+            # Turned off by humgen3d.com, or a catalogue this version can't read
+            return None
+        if notice == "required" or self.cpack_update_required:
             return "cpack_required"
         elif tuple(__version__) < tuple(self.latest_version):
             return "addon"
@@ -140,51 +172,82 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             col (UILayout): draw in this
             update_statuscode (str): code showing what kind of update is available
         """
+        us = update_check.status
         box = col.box().column(align=True)
+        box.label(text=alert_text(update_statuscode, us), icon="INFO")
+        row = box.row(align=True)
+        row.scale_y = 1.5
+        if update_statuscode in ("cpack_required", "cpack_available") and not us.blocked_by_addon:
+            row.operator("hg3d.setup_update", text=tr("Update content packs"), icon="IMPORT", depress=True)
+        else:
+            self._draw_addon_update_row(row)
+        box.operator("wm.url_open", text=tr("How to update"), icon="URL").url = docs_url("guide/installation")
 
-        row = box.row()
-        row.alignment = "CENTER"
-        row.label(text="*****************************************")
+    def _draw_addon_update_row(self, row):
+        """Where the add-on update comes from depends on how it was installed."""
+        if is_extension():
+            if repository.installed_from_site():
+                row.label(text="Update it in Blender's extension list (Get Extensions).", icon="INFO")
+            else:
+                row.operator("hg3d.add_extension_repo", text="Enable add-on updates", icon="URL", depress=True)
+        else:
+            row.label(text=tr("Updates come through the updater below."), icon="INFO")
 
-        col_h = box.column()
-        col_h.scale_y = 3
-        col_h.alert = update_statuscode == "cpack_required"
+    def _draw_update_check_row(self, layout):
+        """Check for updates by hand, with the state of Blender's online access."""
+        us = update_check.status
+        row = layout.row(align=True)
+        if us.checking:
+            row.label(text="Checking for updates…", icon="TIME")
+        else:
+            row.operator("hg3d.setup_check_updates", text="Check for updates", icon="FILE_REFRESH")
+        if not online.allowed():
+            if online.locked():
+                row.label(text="Offline mode", icon="ERROR")
+            else:
+                row.operator("hg3d.setup_allow_online", text="Allow online access", icon="URL")
+        elif us.checked_at:
+            import time
 
-        col_h.operator(
-            "wm.url_open",
-            text=ALERT_DICT[update_statuscode][0],
-            icon=ALERT_DICT[update_statuscode][1],
-            depress=update_statuscode != "cpack_required",
-        ).url = "https://humgen3d.com/support/update"
+            row.label(text=time.strftime("Last check %Y-%m-%d %H:%M", time.localtime(us.checked_at)))
+        if us.error and us.error != "offline_mode":
+            layout.label(text=us.error, icon="ERROR")
+        if getattr(us, "message", ""):
+            row = layout.row(align=True)
+            row.label(text=us.message, icon="INFO")
+            if getattr(us, "message_url", ""):
+                row.operator("wm.url_open", text="", icon="URL").url = us.message_url
 
-        box.operator(
-            "wm.url_open", text="How to update?", icon="URL"
-        ).url = "https://humgen3d.com/support/update"
-
-        row = box.row()
-        row.alignment = "CENTER"
-        row.label(text="*****************************************")
-        box.separator()
-        boxbox = box.box()
-        boxbox.prop(
-            self,
-            "update_info_ui",
-            text="Update information:",
-            icon="TRIA_RIGHT",
-            emboss=False,
-        )
-        if not self.update_info_ui:
+    def _draw_licence_row(self, layout):
+        """The order or licence key this computer downloads with, if any."""
+        credential = user_settings.credential()
+        row_data = licence_row(credential)
+        if row_data is None:
             return
-
-        update_info_dict = self._build_update_info_dict(context)
-        for version, update_types in update_info_dict.items():
-            version_label = "Human Generator V" + str(version)[1:-1].replace(", ", ".")
-            boxbox.label(text=version_label, icon_value=get_hg_icon("HG_icon"))
-            col = boxbox.column(align=True)
-            for update_type, lines in update_types.items():
-                col.label(text=update_type)
-                for line in lines:
-                    col.label(text=line, icon="DOT")
+        box = layout.box()
+        if row_data.rejected:
+            col = box.column(align=True)
+            col.alert = True
+            col.label(text=tr("Your license key was not accepted."), icon="ERROR")
+            col.alert = False
+            sub = col.column(align=True)
+            sub.enabled = False
+            sub.label(text=row_data.message)
+            row = box.row(align=True)
+            row.operator("hg3d.setup_change_licence", text=tr("Enter again…"), icon="GREASEPENCIL")
+            row.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = support_url(credential.error_code)
+            return
+        row = box.row(align=True)
+        row.label(text=row_data.tier or tr("License"), icon="CHECKMARK")
+        sub = row.row(align=True)
+        sub.enabled = False
+        sub.label(text=row_data.summary)
+        row = box.row(align=True)
+        if row_data.upgrade:
+            row.operator("hg3d.setup_open_upgrade", text=tr("Upgrade to Commercial"), icon="URL")
+        row.operator("hg3d.setup_change_licence", text=tr("Change…"))
+        # With its confirmation: "Forget only removes it from this computer"
+        draw_forget_button(row)
 
     def _build_update_info_dict(self, context) -> dict:
         update_col = context.scene.hg_update_col
@@ -263,8 +326,9 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             text="Silence all console messages",
         )
         col.prop(self, "dev_tools")
+        if self.dev_tools:
+            col.prop(self, "fake_setup")
         col.prop(self, "experimental_features")
-        col.prop(self, "skip_url_request", text="Skip URL request")
         col.prop(self, "tab_name", text="N-panel tab name")
 
     def _draw_cpack_ui(self, context):
@@ -277,21 +341,24 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         col = layout.column()
 
         row = col.row()
-        row.label(text="Install path:")
+        row.label(text="Content folder:")
 
         if self.filepath:
             subrow = row.row()
             subrow.enabled = False
             subrow.prop(self, "filepath_", text="")
 
-        row.operator("hg3d.pathchange", text="Change" if self.filepath else "Select")
+        row.operator("hg3d.pathchange", text="Change folder…" if self.filepath else "Select folder…")
 
-        trial_pack_installed = "Trial Content" in [f.name for f in context.scene.contentpacks_col]
-
-        if trial_pack_installed:
+        self._draw_update_check_row(col)
+        self._draw_licence_row(col)
+        us = update_check.status
+        if us.updates and not us.blocked_by_addon:
             row = col.row()
-            row.alert = True
-            row.label(text="Are you upgrading from the trial to full HG? First delete the Trial Content Pack below", icon="ERROR")
+            row.scale_y = 1.3
+            names = ", ".join(f"{u.pack.name} {version_text(u.target.version)}" for u in us.updates if u.target)
+            text = tr("Update {count} packs: {names}") if len(us.updates) > 1 else tr("Update {names}")
+            row.operator("hg3d.setup_update", text=text.format(count=len(us.updates), names=names), icon="IMPORT", depress=True)
 
         row = col.row(align=False)
         row.template_list(
@@ -308,11 +375,37 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         col_side.operator("hg3d.cpacksrefresh", icon="FILE_REFRESH", text="")
         col_side.popover(panel="HG_PT_ICON_LEGEND", text="", icon="PRESET")
 
-        box = col.box()
-        box.label(text="Select packs to install:")
+        row = col.row()
+        row.scale_y = 1.3
+        # An owner adding packs goes straight to the pack list
+        setup_operator = "hg3d.setup_add_packs" if self._content_installed() else "hg3d.setup_start"
+        row.operator(setup_operator, text=tr("Install or add content packs"), icon="IMPORT")
+
+        self._draw_other_creators_packs(col, context)
+
+        box = layout.box()
+        box.scale_y = 1.5
+        box.label(text="Create your own content pack:")
+        row = box.row()
+        row.prop(self, "cpack_name", text="Pack name")
+        row.operator("hg3d.create_cpack", text="Create pack", depress=True)
+
+    def _content_installed(self) -> bool:
+        return content_state.state(self.filepath) == "installed"
+
+    def _draw_other_creators_packs(self, layout, context):
+        """Packs made by other creators, installed from their files. Closed by default."""
+        box = layout.box()
+        box.prop(
+            self,
+            "show_other_packs",
+            icon="TRIA_DOWN" if self.show_other_packs else "TRIA_RIGHT",
+            emboss=False,
+        )
+        if not self.show_other_packs:
+            return
 
         selected_packs = bool(context.scene.installpacks_col)
-
         if selected_packs:
             row = box.row()
             row.template_list(
@@ -325,34 +418,10 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             )
             row.operator("hg3d.removeipack", icon="TRASH")
 
-        row = box.row()
-        row.scale_y = 1.5
-        row.operator(
-            "hg3d.cpackselect",
-            text="Select Content Packs",
-            depress=not selected_packs,
-            icon="PACKAGE",
-        )
-
+        row = box.row(align=True)
+        row.operator("hg3d.cpackselect", text=tr("Select pack files"), icon="PACKAGE")
         if selected_packs:
-            box = col.box()
-            box.label(text="Install selected packs")
-
-            row = box.row()
-            row.scale_y = 1.5
-            row.operator(
-                "hg3d.cpackinstall",
-                text="Install Selected Content Packs",
-                depress=True,
-                icon="PACKAGE",
-            )
-
-        box = layout.box()
-        box.scale_y = 1.5
-        box.label(text="Create your own content pack:")
-        row = box.row()
-        row.prop(self, "cpack_name", text="Pack name")
-        row.operator("hg3d.create_cpack", text="Create pack", depress=True)
+            row.operator("hg3d.cpackinstall", text=tr("Install selected packs"), depress=True, icon="PACKAGE")
 
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned."""
@@ -361,101 +430,28 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.label(text=message, icon="ERROR")
 
     def _draw_first_time_ui(self, context, is_legacy=False):
-        """UI for when no base humans found, promting to install the content packs."""
+        """UI for when no base humans found: the setup, or a folder that has them."""
         layout = self.layout
 
-        # tutorial link section
         box = layout.box()
         box.scale_y = 1.5
-        box.label(text="STEP 1: Follow the installation tutorial")
-
+        if is_legacy:
+            box.label(text="Your content packs are from an older version. Update them to use this add-on.", icon="ERROR")
+        else:
+            box.label(text="Human Generator needs its content packs. The setup downloads them for you.")
         row = box.row()
-        row.alert = True
-        row.operator(
-            "wm.url_open",
-            text="Updating tutorial [Opens browser]"
-            if is_legacy
-            else "Installation tutorial [Opens browser]",
-            icon="HELP",
-            depress=True,
-        ).url = docs_url("faq/how-to-update-hg" if is_legacy else "faq/how-to-install-hg")
+        row.operator("hg3d.setup_start", text="Set up Human Generator", icon="IMPORT", depress=True)
+        row.operator("wm.url_open", text="Installation guide", icon="HELP").url = docs_url("guide/installation")
 
-        # select path section
         box = layout.box()
-        box.scale_y = 1.5
-        box.label(
-            text="STEP 2: Select a folder for HumGen to install content packs in. 2.5 GB free space recommended."  # noqa
-        )
-
+        box.label(text="Content folder")
+        row = box.row()
         if self.filepath:
-            d_row = box.row()
+            d_row = row.row()
             d_row.enabled = False
             d_row.prop(self, "filepath", text="")
-
-        box.operator(
-            "hg3d.pathchange",
-            text="Change folder" if self.filepath else "Select folder",
-            depress=not self.filepath,
-            icon="FILEBROWSER",
-        )
-        box.label(
-            text="If you've already installed content packs, just select that folder.",
-            icon="INFO",
-        )
-
-        if not self.filepath:
-            return
-
-        # select packs section
-        box = layout.box()
-        box.label(text="STEP 3: Select packs to install")
-
-        row = box.row()
-        row.template_list(
-            "HG_UL_INSTALLPACKS",
-            "",
-            context.scene,
-            "installpacks_col",
-            context.scene,
-            "installpacks_col_index",
-        )
-
-        row.operator("hg3d.removeipack", icon="TRASH")
-
-        selected_packs = bool(context.scene.installpacks_col)
-        row = box.row()
-        row.scale_y = 1.5
-        row.operator(
-            "hg3d.cpackselect",
-            text="Select Content Packs",
-            depress=not selected_packs,
-            icon="PACKAGE",
-        )
-
-        box.label(
-            text="Select multiple content packs by pressing Ctrl (Windows) or Cmd (Mac)",  # noqa
-            icon="INFO",
-        )
-        box.label(
-            text="Selected files with a red warning cannot be installed and will be skipped",  # noqa
-            icon="INFO",
-        )
-
-        if selected_packs:
-            # install button section
-            box = layout.box()
-            box.scale_y = 1.5
-            box.label(text="STEP 4: Install all your content packs")
-            box.operator(
-                "hg3d.cpackinstall",
-                text="Install All Content Packs",
-                depress=True,
-                icon="PACKAGE",
-            )
-            box.label(
-                text="Installation time depends on your hardware and the selected packs",  # noqa
-                icon="INFO",
-            )
+        row.operator("hg3d.pathchange", text="Change folder" if self.filepath else "Select folder", icon="FILEBROWSER")
+        box.label(text="Already have the packs on this computer? Select that folder.", icon="INFO")
 
 
 class HG_PT_ICON_LEGEND(bpy.types.Panel):

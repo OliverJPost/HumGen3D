@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 from .settings import BODY_LEVELS, TEETH_LEVELS, QualitySettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Identifier, label, description and settings of each tier, in interface order
 QUALITY_TIERS: List[Tuple[str, str, str, QualitySettings]] = [

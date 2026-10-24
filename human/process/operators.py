@@ -4,13 +4,12 @@
 
 import os
 import time
-import zipfile
 from typing import List, Optional
 
 import bpy
-from HumGen3D.backend import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.backend.properties.process_props import (
+from ...backend import hg_log
+from ...backend.preferences.preference_func import get_prefs
+from ...backend.properties.process_props import (
     add_script,
     ensure_initialized,
     get_script_items,
@@ -20,15 +19,15 @@ from HumGen3D.backend.properties.process_props import (
     select_list,
     settings_to_props,
 )
-from HumGen3D.common import find_multiple_in_list, find_original_rig
-from HumGen3D.common.documentation import EARLY_ACCESS, feedback_url
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.progress import Steps, phase, run
-from HumGen3D.human.human import Human
-from HumGen3D.human.process import export_pack
-from HumGen3D.human.process import scripts as script_tools
-from HumGen3D.human.process.pipeline import ExportResult, output_folder
-from HumGen3D.human.process.settings import (
+from ...common import find_multiple_in_list, find_original_rig
+from ...common.documentation import EARLY_ACCESS, feedback_url
+from ...common.exceptions import HumGenException
+from ...common.progress import Steps, phase, run
+from ...human.human import Human
+from ...human.process import export_pack
+from ...human.process import scripts as script_tools
+from ...human.process.pipeline import ExportResult, output_folder
+from ...human.process.settings import (
     RECIPE_EXTENSION,
     USER_RECIPE_FOLDER,
     ExportSettings,
@@ -367,53 +366,6 @@ class HG_OT_INIT_PROCESS(bpy.types.Operator):
 
     def execute(self, context):
         ensure_initialized(context.scene.HG3D.process)
-        return {"FINISHED"}
-
-
-class HG_OT_INSTALL_EXPORT_PACK(bpy.types.Operator):
-    """Installs the HG_Export content pack from the file the user picks."""
-
-    bl_idname = "hg3d.install_export_pack"
-    bl_label = "Install " + export_pack.PACK_FILE
-    bl_description = (
-        "Pick the " + export_pack.PACK_FILE + " you downloaded from your"
-        " Superhive account (formerly BlenderMarket) to install it"
-    )
-
-    filepath: bpy.props.StringProperty(subtype="FILE_PATH")  # noqa: F722
-    filter_glob: bpy.props.StringProperty(default="*.hgpack", options={"HIDDEN"})  # noqa: F722, F821
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {"RUNNING_MODAL"}
-
-    def execute(self, context):
-        manifest = f"content_packs/{export_pack.PACK_NAME}.json"
-        try:
-            with zipfile.ZipFile(self.filepath) as zf:
-                is_pack = manifest in zf.namelist()
-        except (OSError, zipfile.BadZipFile):
-            is_pack = False
-        if not is_pack:
-            self.report({"ERROR"}, f"This is not {export_pack.PACK_FILE}")
-            return {"CANCELLED"}
-
-        # Installed like the other content packs, so the preferences list it
-        # and can delete it. A newer pack replaces the files of the old one.
-        packs = context.scene.installpacks_col
-        packs.clear()
-        item = packs.add()
-        item.name = self.filepath
-        item.pack_name = os.path.basename(self.filepath)
-        item.json_path = manifest
-        item.alert = "None"
-        bpy.ops.hg3d.cpackinstall()
-
-        if not export_pack.is_installed():
-            self.report({"ERROR"}, export_pack.message())
-            return {"CANCELLED"}
-        ensure_initialized(context.scene.HG3D.process)
-        self.report({"INFO"}, f"Installed {export_pack.PACK_FILE}")
         return {"FINISHED"}
 
 

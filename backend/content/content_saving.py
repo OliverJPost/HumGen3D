@@ -7,9 +7,9 @@ from shutil import copyfile
 from typing import Iterable, Optional
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ...backend import get_prefs, hg_log
+from ...backend.preferences.preference_func import get_addon_root
+from ...user_interface.documentation.feedback_func import ShowMessageBox
 
 
 def save_thumb(folder: str, img_name: str, save_name: str) -> None:

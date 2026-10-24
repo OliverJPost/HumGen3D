@@ -194,3 +194,48 @@ def searchbox(sett, name, layout):
 
     if hasattr(sett.pcoll, f"search_term_{name}"):
         row.operator("hg3d.clear_searchbox", text="", icon="X").searchbox_name = name
+
+
+def draw_trial_buttons(layout, panel: str, text: str = "Buy full version") -> None:
+    """The "Buy" button of a trial notice, with "I have a license" next to it.
+
+    Args:
+        layout (UILayout): where the row goes
+        panel (str): which notice this is, sent along with the link (utm_content)
+        text (str): label of the buy button
+    """
+    row = layout.row(align=True)
+    row.operator("hg3d.buy_full_version", text=text, depress=True).panel = panel
+    row.operator("hg3d.setup_upgrade", text="I have a license")
+
+
+def draw_trial_notice(layout, panel: str) -> None:
+    """A box saying a section is disabled in the trial, with the buy buttons."""
+    box = layout.box()
+    row = box.row(align=True)
+    row.alert = True
+    row.label(text="Disabled in Trial Version")
+    draw_trial_buttons(box, panel, text="Buy Human Generator")
+
+
+def draw_unreachable_folder(layout, folder: str) -> None:
+    """The card for a content folder that is set but can't be found, such as
+    an unplugged drive. Nothing is created or downloaded until the user picks."""
+    box = layout.box()
+    col = box.column(align=True)
+    col.label(text="Can't find your content folder", icon="ERROR")
+    sub = col.column(align=True)
+    sub.enabled = False
+    sub.label(text=folder)
+    draw_paragraph(
+        col,
+        "If it's on an external or network drive, connect it and press Try again.",
+        enabled=False,
+    )
+    col = box.column(align=True)
+    row = col.row(align=True)
+    row.scale_y = 1.3
+    row.operator("hg3d.content_folder_retry", text="Try again", icon="FILE_REFRESH", depress=True)
+    row = col.row(align=True)
+    row.operator("hg3d.pathchange", text="Locate folder…", icon="FILEBROWSER")
+    row.operator("hg3d.setup_start", text="Download again…", icon="IMPORT")

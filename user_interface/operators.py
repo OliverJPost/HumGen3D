@@ -3,9 +3,9 @@
 import contextlib
 
 import bpy
-from HumGen3D import Human
-from HumGen3D.backend.callback import hg_callback
-from HumGen3D.backend.preferences.preference_func import (
+from .. import Human
+from ..backend.callback import hg_callback
+from ..backend.preferences.preference_func import (
     get_prefs,
     open_preferences_as_new_window,
 )
@@ -84,6 +84,25 @@ class HG_OPENPREF(bpy.types.Operator):
 
     def execute(self, context):
         open_preferences_as_new_window()
+        return {"FINISHED"}
+
+
+class HG_OT_BUY_FULL_VERSION(bpy.types.Operator):
+    """Open the pricing page of Human Generator in your browser"""
+
+    bl_idname = "hg3d.buy_full_version"
+    bl_label = "Buy full version"
+    bl_options = {"INTERNAL"}
+
+    panel: bpy.props.StringProperty()  # noqa: F821  which button, for utm_content
+
+    def execute(self, context):
+        from ..backend.preferences.licence import buy_url
+        from ..backend.setup import repository, user_settings
+
+        # Read here, not while drawing: the settings file is a file on disk
+        rid = user_settings.get("trial_rid") or repository.trial_rid()
+        bpy.ops.wm.url_open(url=buy_url(self.panel, rid))
         return {"FINISHED"}
 
 

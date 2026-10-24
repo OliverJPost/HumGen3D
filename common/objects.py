@@ -3,7 +3,7 @@ from typing import Union, Optional
 import bpy
 import numpy as np
 
-from HumGen3D.common.memory_management import hg_delete
+from ..common.memory_management import hg_delete
 
 ALL = "ALL"
 

@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING, Literal, cast
 
 import bpy
 from bpy.types import ShaderNode  # type:ignore
-from HumGen3D.common.type_aliases import C
+from ...common.type_aliases import C
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend import get_prefs
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...backend import get_prefs
+from ...common.decorators import injected_context
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
 
 
 @dataclass

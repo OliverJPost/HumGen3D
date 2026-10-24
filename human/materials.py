@@ -3,10 +3,10 @@
 from typing import TYPE_CHECKING, Optional
 
 import bpy
-from HumGen3D.human.hair.haircards import CARDS_KEY
+from ..human.hair.haircards import CARDS_KEY
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ..human.human import Human
 
 
 class MaterialSettings:

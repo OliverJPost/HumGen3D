@@ -9,7 +9,7 @@ topology and are expected in the rest pose, standing upright along +Z.
 from typing import Optional
 
 import numpy as np
-from HumGen3D.common.surface import (
+from ...common.surface import (
     closest_points,
     edges_from_tris,
     interp,
@@ -18,7 +18,7 @@ from HumGen3D.common.surface import (
     smooth_field,
     vert_normals,
 )
-from HumGen3D.human.clothing.weights import weld
+from ...human.clothing.weights import weld
 from mathutils.bvhtree import BVHTree
 
 

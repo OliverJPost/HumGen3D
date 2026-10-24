@@ -22,8 +22,8 @@ import typing
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Tuple, Type, TypeVar
 
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_prefs
 
 from . import export_pack
 
