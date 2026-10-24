@@ -129,6 +129,27 @@ def _handlers(name: str) -> list:
     return [h.__module__ for h in bpy.app.handlers.load_post if getattr(h, "__name__", "") == name]
 
 
+class _Layout:
+    """Stands in for a UILayout in a background Blender: records the texts of
+    labels and buttons, every other call gives another stand-in."""
+
+    def __init__(self, texts: list) -> None:
+        self.__dict__["texts"] = texts
+
+    def __getattr__(self, name: str):
+        def call(*args, **kwargs):
+            if "text" in kwargs:
+                self.texts.append(kwargs["text"])
+            if name == "operator" and args:
+                self.texts.append("op:" + args[0])
+            return _Layout(self.texts)
+
+        return call
+
+    def __setattr__(self, name: str, value) -> None:
+        pass
+
+
 def _add_menu_entries() -> list:
     import bpy
 
@@ -252,7 +273,21 @@ def probe_old_blender(addon_dir: str) -> None:
         report["notice_panel"] = hasattr(bpy.types, "HG_PT_notice_unsupported")
         report["main_panel"] = hasattr(bpy.types, "HG_PT_Panel")
         report["setup_panel"] = hasattr(bpy.types, "HG_PT_SETUP")
-        report["prefs_class"] = type(bpy.context.preferences.addons[LEGACY].preferences).__name__
+        prefs = bpy.context.preferences.addons[LEGACY].preferences
+        report["prefs_class"] = type(prefs).__name__
+        # The updater, to go back to the last version for this Blender
+        report["updater_settings"] = hasattr(prefs, "auto_check_update") and prefs.updater_interval_days == 7
+        try:
+            bpy.ops.humgen3d.updater_update_target.get_rna_type()
+            report["updater_operators"] = True
+        except (KeyError, AttributeError):
+            report["updater_operators"] = False
+        texts: list = []
+        type(prefs).draw(type("Self", (), {"layout": _Layout(texts)})(), bpy.context)
+        report["prefs_texts"] = texts
+        panel_texts: list = []
+        bpy.types.HG_PT_notice_unsupported.draw(type("Self", (), {"layout": _Layout(panel_texts)})(), bpy.context)
+        report["panel_texts"] = panel_texts
         report["handlers"] = _handlers("HG_start")
         report["timers_or_scene_props"] = hasattr(bpy.types.Scene, "HG3D")
         # Nothing that may need a newer Blender is even imported

@@ -41,6 +41,8 @@ from ..package import (
 MODES = ("full", "unsupported", "twice", "old_copy")
 TWICE_PANEL = "HG_PT_notice_twice"
 USE_NEW_VERSION = "hg3d.use_new_version"
+# The version 4.0 and 4.1 users go back to with the updater (a GitHub tag)
+LAST_OLD_BLENDER_VERSION = "4.0.33"
 
 # The notice classes this copy registered, unregistered by `unregister`
 _registered: List[Any] = []
@@ -188,17 +190,45 @@ def _lines(layout: Any, *texts: str) -> None:
         col.label(text=text)
 
 
-def draw_notice(layout: Any, mode: str) -> None:
-    """The notice of `mode`, for the sidebar panel and the add-on preferences."""
+def _updater_ops() -> Optional[Any]:
+    """The legacy updater's operators module, None when it didn't load."""
+    try:
+        return importlib.import_module(addon_package() + ".backend.updates.addon_updater_ops")
+    except Exception:  # noqa: BLE001 - the notice must draw whatever happens
+        return None
+
+
+def draw_notice(layout: Any, mode: str, prefs: Any = None) -> None:
+    """The notice of `mode`, for the sidebar panel and, with `prefs`, the
+    add-on preferences."""
     if mode == "unsupported":
         _lines(
             layout,
             tr("Human Generator {version} needs Blender 4.2 or newer.").format(version=_version_text()),
             tr("Your content and saved files are not affected."),
         )
+        # The way back: the updater installs the last version for this Blender
+        if prefs is None:
+            _lines(
+                layout,
+                tr("To keep using it here, go back to version {version}").format(version=LAST_OLD_BLENDER_VERSION),
+                tr("with the updater in the add-on preferences."),
+            )
+            layout.operator("preferences.addon_show", text=tr("Open the updater"), icon="PREFERENCES").module = addon_package()
+        else:
+            _lines(
+                layout,
+                tr("To keep using it here, go back to version {version} with the updater below:").format(version=LAST_OLD_BLENDER_VERSION),
+                tr("press Check now for humgen3d update, then Install main / old version, and choose v{version}.").format(
+                    version=LAST_OLD_BLENDER_VERSION
+                ),
+            )
         layout.operator("wm.url_open", text=tr("Learn more"), icon="HELP").url = (
             docs_url("guide/installation") + "#blender-version"
         )
+        ops = _updater_ops() if prefs is not None else None
+        if ops is not None:
+            ops.update_settings_ui(prefs, bpy.context, element=layout)
     elif mode == "twice":
         if other_copy() is not None:
             _lines(
@@ -244,6 +274,48 @@ def _switch_off_later() -> None:
     return None
 
 
+def _updater_properties() -> Dict[str, Any]:
+    from bpy.props import BoolProperty, IntProperty
+
+    return {
+        "auto_check_update": BoolProperty(
+            name="Auto-check for Update", description="If enabled, auto-check for updates using an interval", default=False
+        ),
+        "updater_interval_months": IntProperty(name="Months", description="Number of months between checking for updates", default=0, min=0),
+        "updater_interval_days": IntProperty(name="Days", description="Number of days between checking for updates", default=7, min=0, max=31),
+        "updater_interval_hours": IntProperty(name="Hours", description="Number of hours between checking for updates", default=0, min=0, max=23),
+        "updater_interval_minutes": IntProperty(
+            name="Minutes", description="Number of minutes between checking for updates", default=0, min=0, max=59
+        ),
+    }
+
+
+def register_updater() -> None:
+    """The legacy updater, so Blender 4.0 and 4.1 can go back to
+    `LAST_OLD_BLENDER_VERSION`. The notice works without it."""
+    ops = _updater_ops()
+    if ops is None:
+        print("HumGen: the updater could not be loaded")
+        return
+    try:
+        ops.register(_bl_info())
+    except Exception as e:  # noqa: BLE001
+        print("HumGen: could not register the updater:", repr(e))
+
+
+def unregister_updater() -> None:
+    ops = _updater_ops()
+    if ops is not None:
+        try:
+            ops.unregister()
+        except Exception as e:  # noqa: BLE001
+            print("HumGen: could not unregister the updater:", repr(e))
+
+
+def _bl_info() -> Dict[str, Any]:
+    return getattr(sys.modules[addon_package()], "bl_info")
+
+
 def notice_classes(mode: str) -> List[Any]:
     """New notice classes for `mode`: a sidebar panel, the add-on preferences
     and the operator of the button."""
@@ -268,7 +340,12 @@ def notice_classes(mode: str) -> List[Any]:
         bl_idname = package
 
         def draw(self, context):
-            draw_notice(self.layout, mode)
+            draw_notice(self.layout, mode, prefs=self)
+
+    if mode == "unsupported":
+        # The legacy updater keeps its settings in the add-on preferences, the
+        # same names as in `HGPreferenceBackend`
+        HG_PREF_install_notice.__annotations__ = _updater_properties()
 
     classes: List[Any] = [HG_PT_install_notice, HG_PREF_install_notice]
 

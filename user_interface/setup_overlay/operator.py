@@ -717,6 +717,22 @@ class HG_OT_setup_use_folder(bpy.types.Operator):
             setup_state.reopen_overlay_soon()
 
 
+class HG_OT_setup_hide_updates(bpy.types.Operator):
+    """Hide this content update until a newer one comes out. The preferences still list it"""
+
+    bl_idname = "hg3d.setup_hide_updates"
+    bl_label = "Hide"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        us = update_check.status
+        us.skip(us.shown_updates + [s for s in us.required if not us.is_skipped(s)])
+        for window in context.window_manager.windows:
+            for area in window.screen.areas:
+                area.tag_redraw()
+        return {"FINISHED"}
+
+
 class HG_OT_setup_check_updates(bpy.types.Operator):
     """Ask humgen3d.com for the latest versions of the add-on and the content packs"""
 
@@ -1131,10 +1147,12 @@ class HG_PT_SETUP(bpy.types.Panel):
             col.label(text=tr("Content update available"), icon="INFO")
         if notice and getattr(us, "message", ""):
             wrapped(col, context, tr(us.message))
-        if us.updates and not us.blocked_by_addon:
+        shown = us.shown_updates
+        if shown and not us.blocked_by_addon:
             row = col.row(align=True)
             row.scale_y = 1.3
-            row.operator("hg3d.setup_update", text=update_label(len(us.updates)), icon="IMPORT")
+            row.operator("hg3d.setup_update", text=update_label(len(shown)), icon="IMPORT")
+            row.operator("hg3d.setup_hide_updates", text=tr("Hide"))
         if notice == "addon" or us.blocked_by_addon:
             col.operator("hg3d.openpref", text=tr("How to update the add-on"), icon="PREFERENCES")
 

@@ -7,7 +7,7 @@ import time
 import pytest
 from setup_fakes import LIVE_CATALOGUE, write_pack
 
-from HumGen3D.backend.setup import update_check
+from HumGen3D.backend.setup import update_check, user_settings
 from HumGen3D.backend.setup.catalogue import Catalogue
 
 ADDON = (4, 0, 38)  # the catalogue's addon.latest, so no add-on notice
@@ -64,6 +64,30 @@ def test_early_v4_buyer_needs_base_humans(folder):
     st = check()
     assert [s.key for s in st.required] == ["Base_Humans"]
     assert st.notice() == "required"
+
+
+def test_put_off_updates_stay_hidden_until_a_newer_version(folder, tmp_path, monkeypatch):
+    """A bundle copy without a license: "Not now" or "Hide" silences the
+    notices for these versions, the preferences still list them."""
+    monkeypatch.setenv("HUMGEN_SETTINGS_FILE", str(tmp_path / "settings.json"))
+    buyer(folder, humans=(4, 0))
+    (folder / "content_packs" / "Base_Hair.json").unlink()
+    st = check()
+    assert st.notice() == "required"
+    st.skip(st.shown_updates + st.required)
+    assert st.notice() == "" and st.shown_updates == []
+    assert {s.key for s in st.updates} == {"Base_Humans", "Base_Hair"}
+    # Survives the next check
+    assert check().notice() == ""
+    # A newer version shows again
+    data = copy.deepcopy(LIVE_CATALOGUE)
+    humans = next(p for p in data["packs"] if p["key"] == "Base_Humans")
+    humans["versions"][0]["version"] = [4, 2]
+    assert check(data).notice() == "required"
+    # So does everything after activating
+    user_settings.save_credential("3f2b-9c1e", "a@b.co")
+    st = check()
+    assert {s.key for s in st.shown_updates} == {"Base_Humans", "Base_Hair"}
 
 
 def test_missing_pack_is_never_required(folder):

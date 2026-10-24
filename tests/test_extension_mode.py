@@ -194,6 +194,11 @@ def test_old_blender_only_registers_a_notice():
     assert r["mode"] == "unsupported"
     assert r["notice_panel"]
     assert r["prefs_class"] == "HG_PREF_install_notice"
+    # The way back to the last version for this Blender: the updater, in the preferences
+    assert r["updater_settings"] and r["updater_operators"]
+    assert any("4.0.33" in text for text in r["prefs_texts"])
+    assert "op:humgen3d.updater_update_target" in r["prefs_texts"]
+    assert "op:preferences.addon_show" in r["panel_texts"]
     assert not r["main_panel"] and not r["setup_panel"]
     assert r["handlers"] == []
     assert not r["timers_or_scene_props"]

@@ -25,7 +25,6 @@ import os
 import traceback
 
 import bpy
-from ... import get_prefs
 from ...common.documentation import docs_url
 from ...package import addon_package
 from bpy.app.handlers import persistent

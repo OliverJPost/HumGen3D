@@ -214,6 +214,7 @@ class HGPanel:
             else:
                 row.label(text="Content update needed", icon="INFO")
                 row.operator("hg3d.setup_update", text="Update", icon="IMPORT")
+                row.operator("hg3d.setup_hide_updates", text="", icon="X")
         message = getattr(us, "message", "")
         if message:
             row = layout.row(align=True)

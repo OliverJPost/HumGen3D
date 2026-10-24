@@ -745,6 +745,12 @@ class SetupState:
         if self.screen == "choose":
             self.screen = "welcome"
         elif self.screen == "license":
+            if self.license_reason == "update":
+                # "Not now": the notices stop asking for these versions, so
+                # someone without a license (a bundle copy) isn't asked daily
+                from ...backend.setup import update_check
+
+                update_check.status.skip([p.source for p in self.selected if p.source is not None])
             if self.license_reason in ("update", "change", "rejected"):
                 self.go("packs")
             elif self.license_reason == "upgrade":

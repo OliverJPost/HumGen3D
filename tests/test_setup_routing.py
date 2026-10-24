@@ -154,6 +154,8 @@ def test_update_asks_the_order_only_at_install(st, folder):
     assert st.can_go_back
     st.back()  # "Not now"
     assert st.screen == "packs"
+    # The notices stop asking for this version (someone without a license)
+    assert user_settings.skipped_updates()["Base_Humans"] == (4, 1)
     st.start()
     assert st.activate("3f2b-9c1e", "a@b.co", True)
     assert wait_for(lambda: st.license_phase == "ok")
@@ -161,6 +163,8 @@ def test_update_asks_the_order_only_at_install(st, folder):
     st.run_pending()  # the poll goes on with the download the user chose
     assert st.phase in ("downloading", "installing", "done")
     assert wait_for(lambda: st.phase == "done")
+    # A license makes put-off updates show again
+    assert user_settings.skipped_updates() == {}
 
 
 def test_begin_upgrade_resets_a_finished_run(st, folder):

@@ -27,6 +27,8 @@ Keys in use:
     setup_shown_at   ISO time the setup opened by itself (it does so once)
     catalogue_checked_at  epoch seconds of the last successful catalogue fetch
     catalogue_failed_at   epoch seconds of the last failed one (backoff)
+    skipped_updates  pack key -> the version whose update the user put off
+                     ("Not now", "Hide"); hidden until a newer one comes out
 """
 import json
 import os
@@ -36,7 +38,7 @@ import tempfile
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence, Tuple
 
 APP_FOLDER = "HumGen3D"
 FILE_NAME = "settings.json"
@@ -194,8 +196,10 @@ def credential() -> Optional[Credential]:
 
 
 def save_credential(value: str, email: str, license: Optional[str] = None, upgrade_url: Optional[str] = None) -> bool:
-    """Store a credential the server accepted, with what it said about it."""
+    """Store a credential the server accepted, with what it said about it.
+    Updates put off without one show again: now they can be downloaded."""
     return update(
+        skipped_updates=None,
         order_guid=value.strip(),
         email=email.strip(),
         license=license or None,
@@ -225,6 +229,27 @@ def forget_credential() -> bool:
     """Remove the credential from this computer. Installed content and the
     other settings stay."""
     return update(**{key: None for key in CREDENTIAL_KEYS})
+
+
+def skipped_updates() -> Dict[str, Tuple[int, ...]]:
+    """Pack key -> the version whose update the user put off."""
+    raw = get("skipped_updates")
+    if not isinstance(raw, dict):
+        return {}
+    skipped = {}
+    for key, version in raw.items():
+        try:
+            skipped[str(key)] = tuple(int(n) for n in version)
+        except (TypeError, ValueError):
+            continue
+    return skipped
+
+
+def skip_updates(versions: Dict[str, Sequence[int]]) -> bool:
+    """Put off these pack versions, keeping what was put off before."""
+    merged = {key: list(version) for key, version in skipped_updates().items()}
+    merged.update({key: [int(n) for n in version] for key, version in versions.items()})
+    return update(skipped_updates=merged)
 
 
 def mark_setup_shown() -> bool:

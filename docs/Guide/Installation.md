@@ -14,7 +14,7 @@ If something goes wrong on the way, see [[Setup troubleshooting]].
 
 Human Generator needs **Blender 4.2 or newer**, on Windows, macOS or Linux.
 
-On Blender 4.0 and 4.1 the add-on still loads, but it does nothing except show this notice, with its version number, in the HumGen tab and in its preferences:
+On Blender 4.0 and 4.1 the add-on still loads, but it only shows this notice, with its version number, in the HumGen tab and in its preferences:
 
 > Human Generator needs Blender 4.2 or newer.
 > Your content and saved files are not affected.
@@ -22,7 +22,7 @@ On Blender 4.0 and 4.1 the add-on still loads, but it does nothing except show t
 The **Learn more** button opens this page. You have two choices:
 
 - **Move to Blender 4.2 or newer.** You can install it next to your current Blender. Install the add-on there as described below. It finds the content folder you already have, so you don't download anything again.
-- **Stay on Blender 4.0 or 4.1.** The last version of Human Generator for these Blender versions is **4.0.38**. Keep it installed and don't install a newer version from the updater in its preferences. If you already updated and now see the notice, remove Human Generator under Edit > Preferences > Add-ons and install the 4.0.38 zip again. Write to support@humgen3d.com if you no longer have that zip.
+- **Stay on Blender 4.0 or 4.1.** The last version of Human Generator for these Blender versions is **4.0.33**. If you updated and now see the notice, go back to it with the updater: press **Open the updater** in the notice, or open the add-on preferences. There, press **Check now for humgen3d update**, then **Install main / old version**, choose **v4.0.33** and press OK. Restart Blender afterwards. If its updater later offers a newer version, don't install it on this Blender.
 
 ### Disk space and internet
 
@@ -87,6 +87,8 @@ If you used Human Generator 4 before, you don't need to download or activate any
 **The add-on** updates through Blender's extension list (Edit > Preferences > Get Extensions) when you installed it from the website.
 
 **The content packs** are checked once a day while Blender's online access is on. When there is something new, the *Setup* panel in the HumGen tab shows *Content update available*, or *Content update needed* when this version of the add-on needs the newer pack, with a button such as **Update 2 packs**. The add-on preferences list every pack with its version, and have **Check for updates** and an update button.
+
+Don't want an update now? Press **Hide** next to it, or **Not now** when the setup asks for your license key. The notice then stays away until a newer version of that pack comes out. The preferences still list it. This is also the way to go if you have no license key, for example with a copy of Human Generator from a bundle: the content you have keeps working with every new version of the add-on, and updates and new packs come with a license.
 
 A pack update replaces only the files of that pack. Your own content, saved with the content saving tools, stays where it is.
 

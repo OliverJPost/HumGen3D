@@ -24,7 +24,7 @@ import queue
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import bpy
 
@@ -33,6 +33,7 @@ from .catalogue import (
     REQUIRED,
     Catalogue,
     PackStatus,
+    pad,
     addon_update_available,
     install_mode,
     installed_packs,
@@ -59,10 +60,33 @@ class UpdateStatus:
     checking: bool = False
     mode: str = "licensed"  # catalogue.install_mode of the content folder
     content_state: str = "unset"  # migration.content_state of the content folder
+    # Pack key -> the version put off with "Not now" or "Hide" (user_settings),
+    # None until read
+    skipped: Optional[Dict[str, Tuple[int, ...]]] = None
 
     @property
     def updates(self) -> List[PackStatus]:
         return updates(self.statuses)
+
+    def is_skipped(self, pack_status: PackStatus) -> bool:
+        """The user put off this version of the pack, or a newer one."""
+        if self.skipped is None:
+            self.skipped = user_settings.skipped_updates()
+        skipped = self.skipped.get(pack_status.key)
+        return skipped is not None and pack_status.target is not None and pad(pack_status.target.version) <= pad(skipped)
+
+    @property
+    def shown_updates(self) -> List[PackStatus]:
+        """`updates` without the ones put off, for the notices. The
+        preferences list them all."""
+        return [s for s in self.updates if not self.is_skipped(s)]
+
+    def skip(self, statuses: Sequence[PackStatus]) -> None:
+        """Put off the update to these versions until a newer one comes out."""
+        versions = {s.key: s.target.version for s in statuses if s.target is not None}
+        if versions:
+            user_settings.skip_updates(versions)
+            self.skipped = user_settings.skipped_updates()
 
     @property
     def required(self) -> List[PackStatus]:
@@ -100,11 +124,11 @@ class UpdateStatus:
         is out, or is needed for the content) or "available"."""
         if not self.notices_enabled:
             return ""
-        if any(s.status == "update_required" for s in self.required):
+        if any(s.status == "update_required" and not self.is_skipped(s) for s in self.required):
             return "required"
         if self.blocked_by_addon or self.addon_update:
             return "addon"
-        if self.updates:
+        if self.shown_updates:
             return "available"
         return ""
 
@@ -162,6 +186,7 @@ def apply(catalogue: Optional[Catalogue] = None) -> UpdateStatus:
         status.catalogue = catalogue
     if status.catalogue is None:
         status.catalogue = cached_catalogue()
+    status.skipped = None  # read again, another Blender may have changed it
     folder = content_folder()
     status.content_state = migration.content_state(folder)
     installed = installed_packs(folder)

@@ -237,6 +237,7 @@ def register() -> None:
     _mode = _notices.startup_mode()
     if _mode == "unsupported":
         _notices.register(_mode)
+        _notices.register_updater()
         return
     if _mode != "full":
         print(f"HumGen: {_notices.other_copy()} is switched on too, showing a notice instead of the add-on")
@@ -358,6 +359,8 @@ def _stop_setup() -> None:
 
 
 def unregister() -> None:
+    if _mode == "unsupported":
+        _notices.unregister_updater()
     _notices.unregister()
     if _mode != "full":
         return
