@@ -92,9 +92,19 @@ def test_guid_cleaning():
     assert not looks_like_guid(" 12 ")
 
 
+def test_order_number_is_caught_before_the_check():
+    from HumGen3D.user_interface.setup_overlay.state import looks_like_order_number
+
+    assert looks_like_order_number("#123456") and looks_like_order_number(" 98765 ")
+    assert not looks_like_order_number("3f2b9c1e-7d4a-4c1b-9e2f-5a6b7c8d9e0f")
+    assert not looks_like_order_number("HG3D-AAAA-1234")
+
+
 def test_activate_validates_the_form(st):
     assert not st.activate("", "a@b.co", True)
     assert "license key" in st.license_error
+    assert not st.activate("#123456", "a@b.co", True)
+    assert "order number" in st.license_error and "GUID" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "nope", True)
     assert "email" in st.license_error
     assert not st.activate("3f2b9c1e-7d4a", "a@b.co", False)

@@ -218,8 +218,8 @@ def test_error_code_groups():
     assert not set(api_client.CREDENTIAL_CODES) & set(api_client.TRANSIENT_CODES)
     assert api_client.ApiError("refunded").about_credential and not api_client.ApiError("refunded").transient
     for code in api_client.CREDENTIAL_CODES + api_client.TRANSIENT_CODES + ("pending", "invalid"):
-        assert api_client.MESSAGES[code] and "!" not in api_client.MESSAGES[code] and "GUID" not in api_client.MESSAGES[code]
-    assert "support@humgen3d.com" in api_client.MESSAGES["not_found"] and "license key" in api_client.MESSAGES["not_found"] and "Superhive" in api_client.MESSAGES["not_found"]
+        assert api_client.MESSAGES[code] and "!" not in api_client.MESSAGES[code]
+    assert "support@humgen3d.com" in api_client.MESSAGES["not_found"] and "license key" in api_client.MESSAGES["not_found"] and "order GUID" in api_client.MESSAGES["not_found"]
     assert api_client.ssl_context() is not None
 
 

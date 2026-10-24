@@ -61,7 +61,7 @@ Your license is checked once. The add-on remembers it on this computer, in a sma
 
 [humgen3d.com/license-key](https://humgen3d.com/license-key) shows where to find it. The setup's **Where do I find this?** link opens that page.
 
-Bought on Superhive (called BlenderMarket before)? Then the order ID is your license key: the long code of your Superhive order. You find it in two places:
+Bought on Superhive (called BlenderMarket before)? Then the order GUID is your license key: the long code of letters and numbers of your Superhive order. Superhive also shows a short order number; that one doesn't work. You find the GUID in two places:
 
 - the order confirmation email from Superhive;
 - your Superhive account: log in, go to [Orders](https://superhivemarket.com/account/orders) and open your Human Generator order.
@@ -70,7 +70,7 @@ Copy the whole code as it is. A license key bought on humgen3d.com starts with `
 
 ### Email
 
-Enter the email you bought with: for Superhive, the address the order email went to. It ties the license to you: once a license is activated with an address, only that address can activate it again. That stops someone who guesses an order ID from downloading your content. Our server stores the address as a hash, not as text.
+Enter the email you bought with: for Superhive, the address the order email went to. It ties the license to you: once a license is activated with an address, only that address can activate it again. That stops someone who guesses an order GUID from downloading your content. Our server stores the address as a hash, not as text.
 
 Tick **Let me know about updates and offers** if you want our news at this address. It is off by default.
 
@@ -80,7 +80,7 @@ If you used Human Generator 4 before, you don't need to download or activate any
 
 - **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, the welcome screen shows *Found Human Generator content in* with the folder. Press **Use this folder**. Nothing is downloaded and no license key is asked.
 - **If it isn't found,** press **Select folder** next to *I already have the content packs* on the welcome screen, and pick the folder with your packs.
-- **Your license key is asked once,** only when you download something: an update, or a pack you add. The setup then shows *One more step to download updates*. Enter your license key (your Superhive order ID), or press **Not now** to keep working with the content you have.
+- **Your license key is asked once,** only when you download something: an update, or a pack you add. The setup then shows *One more step to download updates*. Enter your license key (your Superhive order GUID), or press **Not now** to keep working with the content you have.
 
 ## Updates
 
@@ -120,7 +120,7 @@ To move the content on purpose, move the folder in your file manager, then press
 
 ## Your license
 
-The Content Packs tab of the add-on preferences shows the license this computer downloads with, masked, with its tier: *Personal license* or *Commercial license*. It says *Superhive order* for an order ID and *License key* for an `HG3D-` key.
+The Content Packs tab of the add-on preferences shows the license this computer downloads with, masked, with its tier: *Personal license* or *Commercial license*. It says *Superhive order* for an order GUID and *License key* for an `HG3D-` key.
 
 - **Upgrade to Commercial** shows for a Personal license. It opens [humgen3d.com/upgrade](https://humgen3d.com/upgrade), which takes you to the Commercial upgrade on Superhive. The row shows *Commercial license* after the next download. To update it right away, press **Change…** and activate again.
 - **Change…** opens the license step of the setup, to enter another license key.

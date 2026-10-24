@@ -64,7 +64,7 @@ class HG_SETUP_PROPS(bpy.types.PropertyGroup):
     """The licence form. Lives on the window manager, so the overlay and the
     sidebar panel edit the same values and nothing is saved in the .blend."""
 
-    order_guid: StringProperty(name="License key", description="Your license key. Bought on Superhive? Use the order ID from your order email")  # noqa: F821
+    order_guid: StringProperty(name="License key", description="Your license key. Bought on Superhive? Use the order GUID from your order email, not the order number")  # noqa: F821
     email: StringProperty(name="Email", description="The email you bought with")  # noqa: F821
     accept_terms: BoolProperty(name="I accept the Human Generator Asset License and the Privacy policy", default=False)  # noqa: F821
     newsletter: BoolProperty(name="Let me know about updates and offers", default=False)  # noqa: F821
@@ -1196,7 +1196,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         col.enabled = not st.checking
         col.label(text=tr("License key"))
         if PLACEHOLDERS:
-            col.prop(f, "order_guid", text="", placeholder=tr("Bought on Superhive? Use your order ID"))
+            col.prop(f, "order_guid", text="", placeholder=tr("Bought on Superhive? Use the order GUID, not the order number"))
         else:
             col.prop(f, "order_guid", text="")
         col.label(text=tr("The email you bought with"))

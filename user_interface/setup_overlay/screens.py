@@ -729,7 +729,7 @@ class LicenseScreen(Screen):
 
     def __init__(self, controller, textures) -> None:
         super().__init__(controller, textures)
-        self.guid = TextField("order_guid", tr("Bought on Superhive? Use your order ID"))
+        self.guid = TextField("order_guid", tr("Bought on Superhive? Use the order GUID, not the order number"))
         self.email = TextField("email", tr("you@example.com"))
         self.fields = [self.guid, self.email]
 

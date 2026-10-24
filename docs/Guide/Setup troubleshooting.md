@@ -6,18 +6,18 @@ description: "What the Human Generator setup's messages mean and what to do: lic
 
 This page lists the messages the setup can show while it activates your license or downloads the content packs, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
 
-For the normal steps, see [[Installation]]. If nothing here helps, write to support@humgen3d.com with your license key (your Superhive order ID) and the message you see.
+For the normal steps, see [[Installation]]. If nothing here helps, write to support@humgen3d.com with your license key (your Superhive order GUID) and the message you see.
 
 ## License key
 
-### We couldn't find a Superhive order with this order ID
+### We couldn't find a Superhive order with this order GUID
 
-> We couldn't find a Superhive order with this order ID. Copy it again from your order email, or contact support@humgen3d.com.
+> We couldn't find a Superhive order with this order GUID. Copy the long code from your order email again, not the short order number, or contact support@humgen3d.com.
 
-- Copy the order ID again from the order email or from [Orders](https://superhivemarket.com/account/orders) in your Superhive account, see [humgen3d.com/license-key](https://humgen3d.com/license-key). Copy the whole code.
+- Use the order GUID, the long code of letters and numbers, not Superhive's short order number. Copy it again from the order email or from [Orders](https://superhivemarket.com/account/orders) in your Superhive account, see [humgen3d.com/license-key](https://humgen3d.com/license-key). Copy the whole code.
 - Use the order of Human Generator. Orders of other products don't count, also when they are from the same shop.
 - For an `HG3D-` license key the message is *We couldn't find this license key. Check the key in your purchase email, or contact support@humgen3d.com.*
-- Still not found? Write to support with the order ID.
+- Still not found? Write to support with the order GUID.
 
 ### This license is linked to a different email
 
@@ -29,7 +29,7 @@ Once a license is activated, only the email it was first activated with can acti
 
 > This purchase was refunded, so it can't download content. Content you already installed is not affected.
 
-A refunded purchase can't download content packs. If you moved to another order, for example for an upgrade, press **Change…** in the preferences or **Enter license key** in the setup and enter the new order ID.
+A refunded purchase can't download content packs. If you moved to another order, for example for an upgrade, press **Change…** in the preferences or **Enter license key** in the setup and enter the new order GUID.
 
 ### This license is no longer active
 
@@ -63,7 +63,8 @@ The key stays stored. The add-on preferences show *Your license key was not acce
 
 The setup checks the form before it sends it:
 
-- *Enter your license key. Bought on Superhive? Use the order ID from your order email.*
+- *Enter your license key. Bought on Superhive? Use the order GUID from your order email.*
+- *This is the order number. Enter the order GUID instead: the long code of letters and numbers in your order email.* You entered Superhive's short order number. Copy the long order GUID instead.
 - *Enter the email you bought with.*
 - *Accept the license and the privacy policy to continue.* Tick the box below the email field.
 

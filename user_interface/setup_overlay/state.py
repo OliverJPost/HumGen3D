@@ -161,6 +161,12 @@ def looks_like_guid(text: str) -> bool:
     return len(clean_guid(text)) >= 4
 
 
+def looks_like_order_number(text: str) -> bool:
+    """Superhive's short order number (digits only, maybe "#12345"), which
+    people paste instead of the order GUID. A GUID always has letters."""
+    return clean_guid(text).lstrip("#").replace(" ", "").isdigit()
+
+
 def looks_like_email(text: str) -> bool:
     text = text.strip()
     return "@" in text and "." in text.rpartition("@")[2] and " " not in text
@@ -822,7 +828,10 @@ class SetupState:
         if self.checking:
             return True
         if not looks_like_guid(order_guid):
-            self.license_error = "Enter your license key. Bought on Superhive? Use the order ID from your order email."
+            self.license_error = "Enter your license key. Bought on Superhive? Use the order GUID from your order email."
+            return False
+        if looks_like_order_number(order_guid):
+            self.license_error = "This is the order number. Enter the order GUID instead: the long code of letters and numbers in your order email."
             return False
         if not looks_like_email(email):
             self.license_error = "Enter the email you bought with."

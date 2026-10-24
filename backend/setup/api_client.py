@@ -39,7 +39,7 @@ MESSAGES = {
     "proxy": "Your network's proxy asks for a login. Sign in to it, or ask your IT department to allow humgen3d.com.",
     "unavailable": "humgen3d.com is having a problem right now. Try again in a few minutes.",
     "bad_response": "humgen3d.com gave an unexpected answer. Try again later, or contact support@humgen3d.com.",
-    "not_found": "We couldn't find this license key. Bought on Superhive? Copy the order ID from your order email again, or contact support@humgen3d.com.",
+    "not_found": "We couldn't find this license key. Bought on Superhive? Copy the order GUID from your order email again, not the short order number, or contact support@humgen3d.com.",
     "email_mismatch": "This license is linked to a different email. Use the email you bought with.",
     "refunded": "This purchase was refunded, so it can't download content. Content you already installed is not affected.",
     "revoked": "This license is no longer active. Contact support@humgen3d.com if you think this is a mistake.",
