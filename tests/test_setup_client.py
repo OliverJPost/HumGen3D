@@ -241,6 +241,10 @@ def test_content_urls(api):
     assert body["order_guid"] == body["licence"] == "guid" and body["email"] == "a@b.co"
     api_client.content_urls(["A"])
     assert "order_guid" not in FakeApi.requests[-1][2] and "licence" not in FakeApi.requests[-1][2] and "rid" not in FakeApi.requests[-1][2]
+    assert "retry" not in FakeApi.requests[-1][2]
+    # After a failed attempt the request says why, for the server's count of failed downloads
+    api_client.content_urls(["A"], retry="checksum")
+    assert FakeApi.requests[-1][2]["retry"] == "checksum"
     # The tier comes along on every call, so an upgrade shows without a new activation
     FakeApi.routes["/api/addon/content"] = (200, {"ok": True, "files": {}, "errors": {}, "license": "commercial"})
     answer = api_client.content_urls(["A"], credential="guid", email="a@b.co")
@@ -251,6 +255,12 @@ def test_content_urls(api):
     with pytest.raises(api_client.ApiError) as e:
         api_client.content_urls(["A"])
     assert e.value.code == "bad_response"
+
+
+def test_user_agent_names_the_versions():
+    """The catalogue GET has no body: the User-Agent is how the server counts versions."""
+    info = api_client.client_info()
+    assert api_client.user_agent() == f"HumGen3D-addon/{info['addon']} (Blender {info['blender']}; {info['platform']})"
 
 
 def test_offline(monkeypatch):

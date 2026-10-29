@@ -24,6 +24,7 @@ tests and the prototype mode run the same state machine against `FakeServices`.
 import os
 import threading
 import time
+import urllib.parse
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -96,6 +97,7 @@ class Pack:
     file: str = ""
     free: bool = False  # a trial or public pack, downloadable without an order
     source: Optional[PackStatus] = None
+    last_error: str = ""  # code of the attempt that failed, sent with the next link request
 
     @property
     def installable(self) -> bool:
@@ -202,7 +204,7 @@ class Services:
     def activate(self, credential: str, email: str, newsletter: bool, rid: str = "") -> dict:
         raise NotImplementedError
 
-    def content_urls(self, keys: Sequence[str], credential: str, email: str, rid: str) -> dict:
+    def content_urls(self, keys: Sequence[str], credential: str, email: str, rid: str, retry: str = "") -> dict:
         raise NotImplementedError
 
     def download(self, pack: Pack, url: str, dest: str, progress, cancel: threading.Event) -> str:
@@ -234,8 +236,8 @@ class RealServices(Services):
     def activate(self, credential: str, email: str, newsletter: bool, rid: str = "") -> dict:
         return api_client.activate(credential, email, newsletter, rid=rid)
 
-    def content_urls(self, keys, credential, email, rid) -> dict:
-        return api_client.content_urls(keys, credential=credential, email=email, rid=rid)
+    def content_urls(self, keys, credential, email, rid, retry="") -> dict:
+        return api_client.content_urls(keys, credential=credential, email=email, rid=rid, retry=retry)
 
     def download(self, pack: Pack, url: str, dest: str, progress, cancel) -> str:
         size = pack.target.size if pack.target else None
@@ -299,6 +301,7 @@ class FakeServices(Services):
         self.license = "commercial"
         self.catalogue_extra: Dict[str, object] = {}
         self.attempts = 0
+        self.retries: List[str] = []  # the `retry` of every link request
 
     def fetch_catalogue(self) -> Catalogue:
         time.sleep(min(FAKE_CHECK_SECONDS, 0.5))
@@ -316,7 +319,8 @@ class FakeServices(Services):
         upgrade = UPGRADE_URL if self.license == "personal" else None
         return {"ok": True, "license": self.license, "upgrade_url": upgrade}
 
-    def content_urls(self, keys, credential, email, rid) -> dict:
+    def content_urls(self, keys, credential, email, rid, retry="") -> dict:
+        self.retries.append(retry)
         if self.content_error:
             raise api_client.ApiError(self.content_error)
         upgrade = UPGRADE_URL if self.license == "personal" else None
@@ -516,6 +520,33 @@ class SetupState:
         """A stored order the server accepted last time."""
         cred = self.credential
         return cred is not None and cred.status == "ok"
+
+    def support_details(self) -> str:
+        """What support needs to know about where the setup stands: versions,
+        the error, the pack and the folder; the license key only masked."""
+        info = api_client.client_info()
+        lines = [f"Add-on {info['addon']}, Blender {info['blender']}, {info['platform']}"]
+        if self.phase == "failed":
+            lines.append(f"Download failed: {self.failure_code}: {self.error}")
+        if self.license_error:
+            lines.append(f"License: {self.license_error}")
+        if self.catalogue_error:
+            lines.append(f"Pack list: {self.catalogue_error}")
+        pack = self.current
+        if pack is not None:
+            version = ".".join(str(v) for v in pack.target.version) if pack.target is not None else "?"
+            lines.append(f"Pack: {pack.key} {version}, {pack.state}, {format_bytes(pack.done_bytes)} of {format_bytes(pack.size)}")
+        cred = self.credential
+        if cred is not None:
+            lines.append(f"License key {cred.masked}, {cred.status}")
+        lines.append(f"Content folder: {self.folder or '(not set)'}")
+        return "\n".join(lines)
+
+    def support_url(self) -> str:
+        """A mailto link with the details already in the email."""
+        body = "What happened:\n\n\n---\n" + self.support_details()
+        query = urllib.parse.urlencode({"subject": "Human Generator setup", "body": body}, quote_via=urllib.parse.quote)
+        return f"{SUPPORT_URL}?{query}"
 
     @property
     def credential_failed(self) -> bool:
@@ -892,6 +923,7 @@ class SetupState:
             pack.state = "pending"
             if not keep_done:
                 pack.done_bytes = 0
+                pack.last_error = ""
         self.error = ""
         self.failure_code = ""
         self.ready_unseen = False
@@ -1164,6 +1196,7 @@ class InstallWorker(threading.Thread):
             state.error = e.message
             state.failure_code = e.code
             state.phase = "failed"
+            self._note_failure(state, e.code)
         except api_client.ApiError as e:
             if e.code in api_client.CREDENTIAL_CODES:
                 # The stored order no longer passes: mark it, keep it, ask again
@@ -1171,12 +1204,14 @@ class InstallWorker(threading.Thread):
             state.error = e.message
             state.failure_code = e.code
             state.phase = "failed"
+            self._note_failure(state, e.code)
             if e.code in api_client.CREDENTIAL_CODES:
                 state.screen = "done"  # where the ways out are
         except Exception as e:  # noqa: BLE001
             state.error = api_client.MESSAGES["bad_response"] + f" ({e!r})"
             state.failure_code = "bad_response"
             state.phase = "failed"
+            self._note_failure(state, "crash")
         finally:
             state._clear_retry()
             state.finished = time.monotonic()
@@ -1231,10 +1266,12 @@ class InstallWorker(threading.Thread):
                 self._fetch_url(state, pack)
                 state.services.download(pack, pack.url or "", dest, progress, cancel)
                 state._clear_retry()
+                pack.last_error = ""
                 return
             except (downloader.DownloadError, api_client.ApiError) as e:
                 if not _retryable(e) or attempt >= len(RETRY_DELAYS):
                     raise
+                pack.last_error = e.code
                 delay = RETRY_DELAYS[attempt]
                 attempt += 1
                 state.retry_attempt = attempt
@@ -1245,9 +1282,18 @@ class InstallWorker(threading.Thread):
                 pack.url = None  # a fresh link for the next attempt
 
     @staticmethod
+    def _note_failure(state: "SetupState", code: str) -> None:
+        """Remember why the current pack stopped: a Retry tells the server."""
+        if state.current is not None and state.current.state != "done":
+            state.current.last_error = code
+
+    @staticmethod
     def _fetch_url(state: "SetupState", pack: Pack) -> None:
         creds = state.credentials if not pack.free else {"order_guid": "", "email": ""}
-        answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid)
+        if pack.last_error:
+            answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid, retry=pack.last_error)
+        else:
+            answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid)
         # The server says the customer's best licence every time: an upgrade
         # to Commercial shows without entering anything again
         if creds["order_guid"]:

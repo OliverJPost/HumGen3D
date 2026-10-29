@@ -283,7 +283,7 @@ def test_dropped_connection_is_retried_with_a_fresh_link(st):
     links = []
     original = st.services.content_urls
 
-    def content_urls(keys, credential, email, rid):
+    def content_urls(keys, credential, email, rid, retry=""):
         links.append(list(keys))
         return original(keys, credential, email, rid)
 

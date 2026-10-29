@@ -257,7 +257,7 @@ def test_links_are_fetched_per_pack_and_again_on_retry(st):
     requests = []
     original = st.services.content_urls
 
-    def content_urls(keys, credential, email, rid):
+    def content_urls(keys, credential, email, rid, retry=""):
         requests.append(list(keys))
         return original(keys, credential, email, rid)
 
@@ -275,6 +275,45 @@ def test_links_are_fetched_per_pack_and_again_on_retry(st):
     st.start()  # a new run asks again instead of reusing old links
     assert wait_for(lambda: st.phase == "done")
     assert len(requests) == 4
+
+
+def test_a_retry_tells_the_server_why(st):
+    """The link request after a failed attempt carries that attempt's error
+    code, also after the automatic retries ran out and the user presses Retry,
+    so the server can count failed downloads by reason."""
+    user_settings.save_credential("g", "e@x.io")
+    st.set_mode("licensed")
+    loaded(st)
+    for pack in st.packs:
+        pack.selected = pack.key == "Base_Poses"
+    st.services.fail_times = 2
+    st.start()
+    assert wait_for(lambda: st.phase == "done")
+    assert st.services.retries == ["", "offline", "offline"]
+    st.services.retries.clear()
+    for pack in st.packs:
+        pack.state = "pending"
+    st.services.fail_times = 99
+    st.start()
+    assert wait_for(lambda: st.phase == "failed")
+    st.services.fail_times = 0
+    st.services.retries.clear()
+    st.start()
+    assert wait_for(lambda: st.phase == "done")
+    assert st.services.retries == ["offline"]
+
+
+def test_contact_support_fills_in_the_details(st):
+    """The support email says what failed, but never the whole license key or the email."""
+    user_settings.save_credential("ABCD-1234-5678-WXYZ", "e@x.io")
+    st.phase, st.failure_code, st.error = "failed", "checksum", "The download was damaged."
+    details = st.support_details()
+    assert "checksum: The download was damaged." in details and "Blender " in details
+    assert "WXYZ" in details and "ABCD" not in details and "e@x.io" not in details
+    assert st.folder in details
+    url = st.support_url()
+    assert url.startswith("mailto:support@humgen3d.com?subject=Human%20Generator%20setup&body=")
+    assert " " not in url and "checksum" in url
 
 
 def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
@@ -297,7 +336,7 @@ def test_real_services_download_flow_against_fake_server(tmp_path, monkeypatch):
         monkeypatch.setattr(api_client, "fetch_catalogue", lambda: catalogue)
         calls = []
 
-        def content_urls(keys, credential="", email="", rid=""):
+        def content_urls(keys, credential="", email="", rid="", retry=""):
             calls.append(list(keys))
             return {"files": {k: {"url": url, "size": len(pack_bytes)} for k in keys}, "errors": {}}
 

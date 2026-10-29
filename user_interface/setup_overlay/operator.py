@@ -294,6 +294,9 @@ class HG_OT_setup_overlay(bpy.types.Operator, Controller):
     def open_upgrade(self) -> None:
         bpy.ops.hg3d.setup_open_upgrade()
 
+    def contact_support(self) -> None:
+        bpy.ops.hg3d.setup_contact_support()
+
     def to_sidebar(self) -> None:
         area_ptr = self._area_ptr
         setup_state.state.fallback_open = True
@@ -682,6 +685,22 @@ class HG_OT_setup_open_upgrade(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.wm.url_open(url=upgrade_url())
+        return {"FINISHED"}
+
+
+class HG_OT_setup_contact_support(bpy.types.Operator):
+    """Email support with the details of this problem (they are also copied to the clipboard)"""
+
+    bl_idname = "hg3d.setup_contact_support"
+    bl_label = "Contact support"
+    bl_options = {"INTERNAL"}
+
+    def execute(self, context):
+        st = setup_state.state
+        # Webmail users get no email from a mailto link; the clipboard still has it
+        context.window_manager.clipboard = st.support_details()
+        bpy.ops.wm.url_open(url=st.support_url())
+        self.report({"INFO"}, tr("Error details copied to the clipboard"))
         return {"FINISHED"}
 
 
@@ -1231,7 +1250,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         if st.license_error:
             wrapped(layout, context, error_text(st.license_error, tr), icon="ERROR", alert=True)
             if st.license_phase == "failed" or st.license_reason == "rejected":
-                layout.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = setup_state.SUPPORT_URL
+                layout.operator("hg3d.setup_contact_support", text=tr("Contact support"), icon="URL")
         row = layout.row(align=True)
         if st.can_go_back:
             row.operator("hg3d.setup_back", text=tr("Not now") if st.license_reason == "update" else "", icon="BACK")
@@ -1364,7 +1383,7 @@ class HG_PT_SETUP(bpy.types.Panel):
             col.separator()
             col.operator("hg3d.setup_enter_order", text=tr("Enter license key"), icon="KEYINGSET")
             row = col.row(align=True)
-            row.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = setup_state.SUPPORT_URL
+            row.operator("hg3d.setup_contact_support", text=tr("Contact support"), icon="URL")
             row.operator("hg3d.setup_install", text=tr("Retry"), icon="FILE_REFRESH")
             return
         col.label(text=tr("Download failed"), icon="ERROR")
@@ -1372,4 +1391,5 @@ class HG_PT_SETUP(bpy.types.Panel):
         row = col.row(align=True)
         row.operator("hg3d.setup_install", text=tr("Retry"), icon="FILE_REFRESH")
         row.operator("hg3d.setup_overlay", text="", icon="WINDOW")
+        col.operator("hg3d.setup_contact_support", text=tr("Contact support"), icon="URL")
 

@@ -6,7 +6,7 @@ description: "What the Human Generator setup's messages mean and what to do: lic
 
 This page lists the messages the setup can show while it activates your license or downloads the content packs, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
 
-For the normal steps, see [[Installation]]. If nothing here helps, write to support@humgen3d.com with your license key (your Superhive order GUID) and the message you see.
+For the normal steps, see [[Installation]]. If nothing here helps, press **Contact support** in the setup window or the sidebar: it opens an email to support@humgen3d.com with the add-on and Blender version, the error and the pack already filled in, and copies the same details to the clipboard for webmail. Add your license key (your Superhive order GUID); the details show only its last four characters.
 
 ## License key
 

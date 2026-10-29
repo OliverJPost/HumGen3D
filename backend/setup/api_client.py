@@ -119,6 +119,13 @@ def client_info() -> Dict[str, str]:
     return {"addon": addon, "blender": blender, "platform": platform_tag()}
 
 
+def user_agent() -> str:
+    """The User-Agent of the API requests. The catalogue GET has no body, so
+    this is how the server counts which versions run its daily check."""
+    info = client_info()
+    return f"{USER_AGENT}/{info['addon']} (Blender {info['blender']}; {info['platform']})"
+
+
 def ssl_context() -> ssl.SSLContext:
     """The context for every https request, downloads included."""
     context = ssl.create_default_context()
@@ -154,7 +161,7 @@ def request_json(method: str, path: str, body: Optional[dict] = None, timeout: f
     url = path if path.startswith("http") else base_url() + path
     data = json.dumps(body).encode("utf-8") if body is not None else None
     req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("User-Agent", USER_AGENT)
+    req.add_header("User-Agent", user_agent())
     req.add_header("Accept", "application/json")
     if data is not None:
         req.add_header("Content-Type", "application/json")
@@ -243,10 +250,11 @@ def activate(credential: str = "", email: str = "", newsletter: bool = False, ri
     return payload
 
 
-def content_urls(keys: Sequence[str], credential: str = "", email: str = "", rid: str = "", order_guid: str = "") -> Dict[str, Any]:
+def content_urls(keys: Sequence[str], credential: str = "", email: str = "", rid: str = "", order_guid: str = "", retry: str = "") -> Dict[str, Any]:
     """Download URLs for packs: {"files": {key: {...}}, "errors": {key: code},
     "license": tier or None, "upgrade_url": url or None}. `order_guid=` is
-    the old name of `credential`."""
+    the old name of `credential`. `retry` is the error code of the attempt
+    this request follows, so the server can count failed downloads."""
     body: Dict[str, Any] = dict(client_info(), packs=list(keys))
     credential = credential or order_guid
     if credential:
@@ -254,6 +262,8 @@ def content_urls(keys: Sequence[str], credential: str = "", email: str = "", rid
         body["email"] = email.strip()
     if rid:
         body["rid"] = rid
+    if retry:
+        body["retry"] = retry[:32]
     payload = request_json("POST", "/api/addon/content", body)
     files = payload.get("files")
     errors = payload.get("errors") or {}

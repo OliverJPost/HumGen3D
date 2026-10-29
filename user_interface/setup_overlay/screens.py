@@ -334,6 +334,7 @@ class Controller:
     def use_folder(self, folder: str) -> None: ...
     def select_existing_folder(self) -> None: ...
     def open_upgrade(self) -> None: ...
+    def contact_support(self) -> None: ...
     def to_sidebar(self) -> None: ...
 
 
@@ -574,13 +575,13 @@ class Screen:
             if SUPPORT_EMAIL in line:
                 before, _, after = line.partition(SUPPORT_EMAIL)
                 cursor = x + c.text(before, x, y, BODY, color)
-                cursor += self.link(c, SUPPORT_EMAIL, cursor, y, BODY, lambda: self.controller.open_url(setup_state.SUPPORT_URL))
+                cursor += self.link(c, SUPPORT_EMAIL, cursor, y, BODY, self.controller.contact_support)
                 c.text(after, cursor, y, BODY, color)
             else:
                 c.text(line, x, y, BODY, color)
             y -= line_h
         if extra:
-            self.link(c, tr("Contact support"), x, y, BODY, lambda: self.controller.open_url(setup_state.SUPPORT_URL))
+            self.link(c, tr("Contact support"), x, y, BODY, self.controller.contact_support)
         return height
 
     def rich_text(self, c: Canvas, text: str, x: float, y: float, size: float, color: Color, links: List[str]) -> float:
@@ -1257,7 +1258,7 @@ class DoneScreen(Screen):
             height = self.error_paragraph(c, message, cx, 0, cw * 0.9, p.muted, measure=True)
             self.error_paragraph(c, message, cx, cursor + c.px(12) - height, cw * 0.9, p.muted)
             self.footer_actions(c, [
-                (tr("Contact support"), lambda: self.controller.open_url(setup_state.SUPPORT_URL), "ghost", True),
+                (tr("Contact support"), self.controller.contact_support, "ghost", True),
                 (tr("Retry"), self._retry, "secondary", True),
                 (tr("Enter license key"), self._enter_order, "primary", True),
             ])
@@ -1267,7 +1268,10 @@ class DoneScreen(Screen):
         self.error_paragraph(c, message, cx, cursor + c.px(12) - height, cw * 0.9, p.muted)
         cursor += c.px(12) - height - c.px(8)
         c.paragraph(tr("Packs that finished stay installed, and the download resumes where it stopped."), cx, cursor, BODY, p.muted, cw * 0.9)
-        self.footer_actions(c, [(tr("Retry"), self._retry, "primary", True)])
+        self.footer_actions(c, [
+            (tr("Contact support"), self.controller.contact_support, "ghost", True),
+            (tr("Retry"), self._retry, "primary", True),
+        ])
 
     def _retry(self) -> None:
         st = setup_state.state
