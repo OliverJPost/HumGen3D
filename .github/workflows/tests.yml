@@ -42,7 +42,7 @@ jobs:
 
       - name: Run the setup tests inside Blender
         shell: bash
-        run: python3 scripts/ci/run_in_blender.py "$RUNNER_TEMP/blender-dist" "$GITHUB_WORKSPACE" tests/test_setup_catalogue.py tests/test_setup_downloader.py tests/test_setup_client.py tests/test_setup_state.py tests/test_setup_trial_events.py tests/test_extension.py
+        run: python3 scripts/ci/run_in_blender.py "$RUNNER_TEMP/blender-dist" "$GITHUB_WORKSPACE" tests/test_setup_catalogue.py tests/test_setup_downloader.py tests/test_setup_client.py tests/test_setup_state.py tests/test_setup_trial_events.py tests/test_setup_routing.py tests/test_setup_update_check.py tests/test_setup_screens.py tests/test_setup_shell.py tests/test_extension.py
 
       - name: Validate and build the extension
         if: runner.os == 'Linux'
