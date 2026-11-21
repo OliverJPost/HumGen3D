@@ -6,6 +6,7 @@ way is covered by `test_extension_mode.py`.
 """
 import ast
 import importlib
+import importlib.util
 import os
 import re
 import sys
@@ -95,6 +96,23 @@ def test_manifest_build_leaves_out_development_folders(manifest):
     excluded = manifest["build"]["paths_exclude_pattern"]
     for folder in ("/tests/", "/docs/", "/scripts/", "/venv/", "/.git/", "__pycache__/"):
         assert folder in excluded
+    # A git worktree has a `.git` file, not a folder: it holds a path on the build computer
+    assert "/.git" in excluded
+
+
+def test_release_script_refuses_a_zip_that_must_not_ship():
+    """`scripts/release_extension.py` builds and publishes the zip; before either it
+    looks at what is in it."""
+    spec = importlib.util.spec_from_file_location("release_extension", os.path.join(ROOT, "scripts", "release_extension.py"))
+    release = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(release)
+    good = ["blender_manifest.toml", "__init__.py", "human/__init__.py", "user_interface/documentation/tests_tab.py"]
+    assert release.unfit(good) == ([], [])
+    missing, stray = release.unfit(good[1:] + [".git", "trial.json", "tests/test_x.py", "docs/Guide/Installation.md"])
+    assert missing == ["blender_manifest.toml"]
+    assert stray == [".git", "trial.json", "tests/test_x.py", "docs/Guide/Installation.md"]
+    assert release.mirror_url("https://downloads.example/", "ext", "humgen3d-4.1.0.zip") == "https://downloads.example/ext/humgen3d-4.1.0.zip"
+    assert release.mirror_url("http://127.0.0.1:3988", "", "index.json") == "http://127.0.0.1:3988/index.json"
 
 
 # Version

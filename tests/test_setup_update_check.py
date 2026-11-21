@@ -54,7 +54,7 @@ def test_old_trial_pack_gets_its_update(folder):
 def test_typical_buyer_is_silent(folder):
     buyer(folder)
     st = check()
-    assert st.mode == "licensed"
+    assert st.mode == "full"
     assert st.required == [] and st.updates == [] and st.notice() == ""
 
 
@@ -67,8 +67,8 @@ def test_early_v4_buyer_needs_base_humans(folder):
 
 
 def test_put_off_updates_stay_hidden_until_a_newer_version(folder, tmp_path, monkeypatch):
-    """A bundle copy without a license: "Not now" or "Hide" silences the
-    notices for these versions, the preferences still list them."""
+    """Someone who doesn't want an update: "Hide" silences the notices for
+    these versions, the preferences still list them."""
     monkeypatch.setenv("HUMGEN_SETTINGS_FILE", str(tmp_path / "settings.json"))
     buyer(folder, humans=(4, 0))
     (folder / "content_packs" / "Base_Hair.json").unlink()
@@ -84,10 +84,6 @@ def test_put_off_updates_stay_hidden_until_a_newer_version(folder, tmp_path, mon
     humans = next(p for p in data["packs"] if p["key"] == "Base_Humans")
     humans["versions"][0]["version"] = [4, 2]
     assert check(data).notice() == "required"
-    # So does everything after activating
-    user_settings.save_credential("3f2b-9c1e", "a@b.co")
-    st = check()
-    assert {s.key for s in st.shown_updates} == {"Base_Humans", "Base_Hair"}
 
 
 def test_missing_pack_is_never_required(folder):

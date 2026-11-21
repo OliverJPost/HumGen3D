@@ -4,8 +4,8 @@
 
 The built-in recipes, the bone names of the game skeletons and the edge lists
 of the mesh reduction are not part of the add-on. They come as the content
-pack HG Export (`HG_Export.hgpack`), which the setup downloads with the other
-content packs of a licence. It unpacks to:
+pack HG Export (`HG_Export.hgpack`), a file of the purchase that the setup
+installs like the other content packs. It unpacks to:
 
     <content folder>/content_packs/HG_Export.json
     <content folder>/process/recipes/*.json, with order.json

@@ -4,7 +4,7 @@
 schema_version = "1.0.0"
 
 id = "humgen3d"
-version = "4.0.38"
+version = "4.0.39"
 name = "Human Generator 3D"
 tagline = "Generate photorealistic humans with clothing, hair and poses"
 maintainer = "Oliver J. Post <support@humgen3d.com>"
@@ -17,7 +17,7 @@ license = ["SPDX:GPL-3.0-or-later"]
 copyright = ["2022-2026 Oliver J. Post & Alexander Lashko"]
 
 [permissions]
-network = "Check for updates of the add-on and the content packs"
+network = "Download the trial content and check for updates"
 files = "Install and read content packs in the content folder you choose"
 
 [build]
@@ -25,6 +25,7 @@ paths_exclude_pattern = [
   "__pycache__/",
   "*.pyc",
   "/.git/",
+  "/.git",  # a git worktree has a file of that name, holding a path on the build computer
   "/.github/",
   "/.vscode/",
   "/.mypy_cache/",
@@ -40,6 +41,7 @@ paths_exclude_pattern = [
   "/build/",
   "/research_notes/",
   "/*.zip",
+  "/trial.json",
   "/setup.py",
   "/setup.cfg",
   "/.pre-commit-config.yaml",

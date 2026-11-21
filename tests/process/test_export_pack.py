@@ -152,8 +152,8 @@ def test_panel_without_pack(male_human, without_pack, context):
     assert drawn == ["HG_PT_PROCESS"], "The sections are hidden without the pack"
     assert "Export data not installed" in labels
     operators = _operators(ContextProxy(rig, [rig]))
-    assert ("hg3d.setup_update", "Install HG Export") in operators
-    assert not any("Superhive" in (text or "") for _, text in operators), "No manual download"
+    assert ("hg3d.setup_update", "Install HG Export…") in operators, "The button opens the setup's file list for this pack"
+    assert not any("Superhive" in (text or "") for _, text in operators), "The interface names no shop"
     assert not any(op == "hg3d.process" for op, _ in operators)
 
 

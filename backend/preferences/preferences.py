@@ -14,14 +14,12 @@ from ...package import addon_package, is_extension
 from ...user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from .content_pack_saving_ui import CpackEditingSystem
-from .licence import licence_row, support_url
 from .preference_props import HGPreferenceBackend
 from ..content import content_state
-from ..setup import online, repository, update_check, user_settings
+from ..setup import links, online, repository, trial_events, update_check
 from ..setup.catalogue import version_text
 from ...common.i18n import tr
 from ...user_interface.panel_functions import draw_unreachable_folder
-from ...user_interface.setup_overlay.operator import draw_forget_button
 from ... import __version__
 
 
@@ -178,10 +176,10 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row = box.row(align=True)
         row.scale_y = 1.5
         if update_statuscode in ("cpack_required", "cpack_available") and not us.blocked_by_addon:
-            row.operator("hg3d.setup_update", text=tr("Update content packs"), icon="IMPORT", depress=True)
+            row.operator("hg3d.setup_update", text=tr("Update content packs…"), icon="IMPORT", depress=True)
         else:
             self._draw_addon_update_row(row)
-        box.operator("wm.url_open", text=tr("How to update"), icon="URL").url = docs_url("guide/installation")
+        box.operator("wm.url_open", text=tr("How to update"), icon="URL").url = docs_url("guide/installation#updates")
 
     def _draw_addon_update_row(self, row):
         """Where the add-on update comes from depends on how it was installed."""
@@ -189,7 +187,13 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             if repository.installed_from_site():
                 row.label(text="Update it in Blender's extension list (Get Extensions).", icon="INFO")
             else:
-                row.operator("hg3d.add_extension_repo", text="Enable add-on updates", icon="URL", depress=True)
+                # From a zip: the newer zip, dragged into Blender, replaces this
+                # version and keeps the settings. Never offer to add the
+                # repository instead: installing from it gives a second copy
+                # next to this one, and two copies break each other.
+                rid = trial_events.trial_rid()
+                url = links.trial_url(rid) if rid else docs_url("guide/installation#updates")
+                row.operator("wm.url_open", text=tr("Download the new version"), icon="URL", depress=True).url = url
         else:
             row.label(text=tr("Updates come through the updater below."), icon="INFO")
 
@@ -217,37 +221,6 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
             row.label(text=us.message, icon="INFO")
             if getattr(us, "message_url", ""):
                 row.operator("wm.url_open", text="", icon="URL").url = us.message_url
-
-    def _draw_licence_row(self, layout):
-        """The order or licence key this computer downloads with, if any."""
-        credential = user_settings.credential()
-        row_data = licence_row(credential)
-        if row_data is None:
-            return
-        box = layout.box()
-        if row_data.rejected:
-            col = box.column(align=True)
-            col.alert = True
-            col.label(text=tr("Your license key was not accepted."), icon="ERROR")
-            col.alert = False
-            sub = col.column(align=True)
-            sub.enabled = False
-            sub.label(text=row_data.message)
-            row = box.row(align=True)
-            row.operator("hg3d.setup_change_licence", text=tr("Enter again…"), icon="GREASEPENCIL")
-            row.operator("wm.url_open", text=tr("Contact support"), icon="URL").url = support_url(credential.error_code)
-            return
-        row = box.row(align=True)
-        row.label(text=row_data.tier or tr("License"), icon="CHECKMARK")
-        sub = row.row(align=True)
-        sub.enabled = False
-        sub.label(text=row_data.summary)
-        row = box.row(align=True)
-        if row_data.upgrade:
-            row.operator("hg3d.setup_open_upgrade", text=tr("Upgrade to Commercial"), icon="URL")
-        row.operator("hg3d.setup_change_licence", text=tr("Change…"))
-        # With its confirmation: "Forget only removes it from this computer"
-        draw_forget_button(row)
 
     def _build_update_info_dict(self, context) -> dict:
         update_col = context.scene.hg_update_col
@@ -351,13 +324,12 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         row.operator("hg3d.pathchange", text="Change folder…" if self.filepath else "Select folder…")
 
         self._draw_update_check_row(col)
-        self._draw_licence_row(col)
         us = update_check.status
         if us.updates and not us.blocked_by_addon:
             row = col.row()
             row.scale_y = 1.3
             names = ", ".join(f"{u.pack.name} {version_text(u.target.version)}" for u in us.updates if u.target)
-            text = tr("Update {count} packs: {names}") if len(us.updates) > 1 else tr("Update {names}")
+            text = tr("Update {count} packs: {names}…") if len(us.updates) > 1 else tr("Update {names}…")
             row.operator("hg3d.setup_update", text=text.format(count=len(us.updates), names=names), icon="IMPORT", depress=True)
 
         row = col.row(align=False)
@@ -377,11 +349,11 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
         row = col.row()
         row.scale_y = 1.3
-        # An owner adding packs goes straight to the pack list
+        # An owner adding packs goes straight to the file list
         setup_operator = "hg3d.setup_add_packs" if self._content_installed() else "hg3d.setup_start"
-        row.operator(setup_operator, text=tr("Install or add content packs"), icon="IMPORT")
-
-        self._draw_other_creators_packs(col, context)
+        row.operator(setup_operator, text=tr("Install content packs from files…"), icon="IMPORT")
+        if self.is_trial:
+            row.operator("hg3d.buy_full_version", text=tr("Buy full version"), icon="URL").panel = "preferences"
 
         box = layout.box()
         box.scale_y = 1.5
@@ -392,36 +364,6 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
 
     def _content_installed(self) -> bool:
         return content_state.state(self.filepath) == "installed"
-
-    def _draw_other_creators_packs(self, layout, context):
-        """Packs made by other creators, installed from their files. Closed by default."""
-        box = layout.box()
-        box.prop(
-            self,
-            "show_other_packs",
-            icon="TRIA_DOWN" if self.show_other_packs else "TRIA_RIGHT",
-            emboss=False,
-        )
-        if not self.show_other_packs:
-            return
-
-        selected_packs = bool(context.scene.installpacks_col)
-        if selected_packs:
-            row = box.row()
-            row.template_list(
-                "HG_UL_INSTALLPACKS",
-                "",
-                context.scene,
-                "installpacks_col",
-                context.scene,
-                "installpacks_col_index",
-            )
-            row.operator("hg3d.removeipack", icon="TRASH")
-
-        row = box.row(align=True)
-        row.operator("hg3d.cpackselect", text=tr("Select pack files"), icon="PACKAGE")
-        if selected_packs:
-            row.operator("hg3d.cpackinstall", text=tr("Install selected packs"), depress=True, icon="PACKAGE")
 
     def _draw_warning(self, layout, message):
         """Draw a warrning label that's right aligned."""
@@ -438,7 +380,7 @@ class HG_PREF(CpackEditingSystem, HGPreferenceBackend, bpy.types.AddonPreference
         if is_legacy:
             box.label(text="Your content packs are from an older version. Update them to use this add-on.", icon="ERROR")
         else:
-            box.label(text="Human Generator needs its content packs. The setup downloads them for you.")
+            box.label(text="Human Generator needs its content packs. The setup installs them: the free trial, or the files of your purchase.")
         row = box.row()
         row.operator("hg3d.setup_start", text="Set up Human Generator", icon="IMPORT", depress=True)
         row.operator("wm.url_open", text="Installation guide", icon="HELP").url = docs_url("guide/installation")

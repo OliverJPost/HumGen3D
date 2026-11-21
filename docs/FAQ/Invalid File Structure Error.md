@@ -1,12 +1,12 @@
 ---
-description: "Why a content pack from another creator shows Incorrect file structure when you install it in Human Generator, and how to fix it."
+description: "Why a content pack shows Not a content pack when you select it in the Human Generator setup, and how to fix it."
 ---
 
 # Invalid File Structure Error
 
-This is about content packs made by other creators, which you install from a file under **Packs from other creators** in the add-on preferences (see [[Installation#Packs from other creators]]). The Human Generator packs themselves come through the setup, which never shows this error.
+When you select a pack file in the setup (see [[Installation#Install the full version]]), the list can show **Not a content pack** next to it. The pack is then left out. Older versions of Human Generator called this *Incorrect file structure*.
 
-When you select a pack file, the list can show *Incorrect file structure* (or *Incorrect zip method*) next to it. The pack is then not installed. A `.hgpack` file is a zip file with a `content_packs` folder at its top. Something changed that layout, usually a browser that unzipped the download.
+A `.hgpack` file is a zip file with a `content_packs` folder at its top. Something changed that layout, usually a browser that unzipped the download.
 
 ## Download the pack again
 

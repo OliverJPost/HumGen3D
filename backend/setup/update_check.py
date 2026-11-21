@@ -8,10 +8,16 @@ timer a few seconds after load, at most once a day, and only when Blender's
 online access is allowed. The result is kept in a cache file next to the
 settings, so the notice shows at once on the next start.
 
+The request is one GET of the catalogue. It names the add-on, Blender and
+platform versions in its User-Agent. Nothing else is sent, and nothing about
+a trial: the events of an install from the trial page are requests of their
+own (`trial_events`), which this module only gives a second chance at start
+(`_report_trial_events`) when they could not be sent as they happened.
+
 `status` is the single result the sidebar notice, the preferences and the
 setup overlay read. `apply()` recomputes it from the catalogue and the
 content folder, planned in the install's own mode (a trial install sees the
-trial packs, never the licensed ones as "missing"), and also fills the
+trial packs, never the packs of the full version as "missing"), and also fills the
 preference flags the older preference UI still reads.
 
 Content notices are banners, never a lock: a pack that is not installed is
@@ -28,7 +34,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import bpy
 
-from . import api_client, migration, online, user_settings
+from . import api_client, migration, online, trial_events, user_settings
 from .catalogue import (
     REQUIRED,
     Catalogue,
@@ -252,6 +258,8 @@ def schedule(delay: float = START_DELAY) -> None:
     """Fetch the catalogue in the background soon, if it is time and allowed."""
     if bpy.app.background:
         return
+    if not bpy.app.timers.is_registered(_report_trial_events):
+        bpy.app.timers.register(_report_trial_events, first_interval=delay)
     status.checked_at = _last_check_time()
     status.failed_at = _last_check_time("catalogue_failed_at")
     apply()
@@ -265,12 +273,22 @@ def _scheduled_check() -> None:
     check_now()
 
 
+def _report_trial_events() -> None:
+    """At every start, for an install from the trial page: send the events that
+    could not be sent when they happened (offline then), and those of content
+    that was already there. No request when nothing is due."""
+    try:
+        trial_events.report(content_folder())
+    except Exception as e:  # noqa: BLE001
+        print("HumGen: trial events:", repr(e))
+
+
 def stop() -> None:
     """Remove the timers and abandon a running check (its result is
     ignored). For unregister()."""
     global _generation
     _generation += 1
-    for timer in (_scheduled_check, _drain):
+    for timer in (_scheduled_check, _report_trial_events, _drain):
         try:
             if bpy.app.timers.is_registered(timer):
                 bpy.app.timers.unregister(timer)
@@ -305,7 +323,7 @@ def check_now(force: bool = True, on_done: Optional[Callable[[Optional[str]], No
 
     def work() -> None:
         try:
-            payload = api_client.request_json("GET", "/api/addon/catalogue")
+            payload = api_client.request_json("GET", api_client.CATALOGUE_PATH)
             catalogue = Catalogue.from_dict(payload)
             import json
 

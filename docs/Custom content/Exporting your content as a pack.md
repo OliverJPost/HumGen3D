@@ -3,7 +3,7 @@ permalink: custompack
 ---
 
 ## What is a content pack?
-Content packs are ZIP files that contain content for Human Generator. They are renamed to have the `.hgpack` extension to prevent automatic unzipping by Safari. The content of Human Generator itself comes as content packs too, which the setup downloads for you.
+Content packs are ZIP files that contain content for Human Generator. They are renamed to have the `.hgpack` extension to prevent automatic unzipping by Safari. The content of Human Generator itself comes as content packs too.
 
 ## How to save your content as a pack:
 

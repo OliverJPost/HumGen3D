@@ -1,18 +1,17 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 """The requests the add-on makes to humgen3d.com.
 
-Three calls: the public catalogue, the activation of a credential (a
-Superhive order GUID or a license key), and the download URLs of packs. Every
-call is plain `urllib`, blocking, and meant to run in a thread; nothing here
-touches `bpy` except to read the version numbers it sends along. Errors become
-`ApiError` with the server's code and message, or a local code with a
-sentence for the user: `offline`, `timeout`, `tls` (a certificate problem,
-often a proxy or security software in between), `proxy` (the proxy wants a
-login), `unavailable` (any 5xx, whatever its body) and `bad_response`.
-
-`CREDENTIAL_CODES` are definitive answers about the credential: the caller
-marks it rejected (and keeps it). `TRANSIENT_CODES` say nothing about it and
-are worth retrying.
+Three calls: the public catalogue (the update check), the download URLs of
+the free packs, which is the trial content, and the events of an install that
+came from a trial link (`trial_events`). The packs of the full version are
+not downloaded by the add-on: they are installed from the `.hgpack` files of
+the purchase. Every call is plain `urllib`, blocking, and meant to run in a
+thread; nothing here touches `bpy` except to read the version numbers it
+sends along. Errors become `ApiError` with the server's code and message, or
+a local code with a sentence for the user: `offline`, `timeout`, `tls` (a
+certificate problem, often a proxy or security software in between), `proxy`
+(the proxy wants a login), `unavailable` (any 5xx, whatever its body) and
+`bad_response`. `TRANSIENT_CODES` are worth retrying.
 """
 import json
 import os
@@ -25,12 +24,12 @@ import urllib.request
 from typing import Any, Dict, Optional, Sequence
 
 from .catalogue import Catalogue, version_text
+from .links import SUPPORT_EMAIL
 
 DEFAULT_BASE_URL = "https://humgen3d.com"
 ENV_BASE_URL = "HUMGEN_API_URL"
 USER_AGENT = "HumGen3D-addon"
 TIMEOUT = 20.0
-SUPPORT_EMAIL = "support@humgen3d.com"
 
 MESSAGES = {
     "offline": "Can't reach humgen3d.com. Check your internet connection and try again. Your installed content works as usual.",
@@ -38,29 +37,21 @@ MESSAGES = {
     "tls": "A secure connection to humgen3d.com couldn't be made. A proxy or security software may be intercepting it.",
     "proxy": "Your network's proxy asks for a login. Sign in to it, or ask your IT department to allow humgen3d.com.",
     "unavailable": "humgen3d.com is having a problem right now. Try again in a few minutes.",
-    "bad_response": "humgen3d.com gave an unexpected answer. Try again later, or contact support@humgen3d.com.",
-    "not_found": "We couldn't find this license key. Bought on Superhive? Copy the order GUID from your order email again, not the short order number, or contact support@humgen3d.com.",
-    "email_mismatch": "This license is linked to a different email. Use the email you bought with.",
-    "refunded": "This purchase was refunded, so it can't download content. Content you already installed is not affected.",
-    "revoked": "This license is no longer active. Contact support@humgen3d.com if you think this is a mistake.",
-    "pending": "This purchase is still being processed. Try again in a few minutes.",
-    "rate_limited": "Too many attempts from this network. Try again in an hour.",
-    "invalid": "Enter your license key and the email you bought with.",
+    "bad_response": f"humgen3d.com gave an unexpected answer. Try again later, or contact {SUPPORT_EMAIL}.",
+    "rate_limited": "Too many downloads from this network. Try again in an hour.",
 }
 
-# Definitive answers about the credential: mark it rejected, keep it stored
-CREDENTIAL_CODES = ("not_found", "email_mismatch", "refunded", "revoked")
-# Say nothing about the credential; worth trying again
+# Worth trying again
 TRANSIENT_CODES = ("offline", "timeout", "unavailable", "tls", "proxy", "rate_limited", "bad_response")
 
 # Per-pack codes in the `errors` of /api/addon/content
 PACK_MESSAGES = {
-    "license_required": "This pack needs a license. Enter your license key to download it.",
+    "license_required": "This pack comes with the full version. Install it from the files of your purchase.",
     "not_found": "This pack isn't offered for download any more.",
     "needs_newer_addon": "A newer Human Generator is needed for this content.",
     "unavailable": "This pack can't be downloaded right now. Try again in a few minutes.",
 }
-PACK_MESSAGE_DEFAULT = "This pack can't be downloaded right now. Try again later, or contact support@humgen3d.com."
+PACK_MESSAGE_DEFAULT = f"This pack can't be downloaded right now. Try again later, or contact {SUPPORT_EMAIL}."
 
 
 class ApiError(Exception):
@@ -69,11 +60,6 @@ class ApiError(Exception):
         self.message = message or MESSAGES.get(code, MESSAGES["bad_response"])
         self.status = status
         super().__init__(f"{code}: {self.message}")
-
-    @property
-    def about_credential(self) -> bool:
-        """A definitive answer about the credential (see CREDENTIAL_CODES)."""
-        return self.code in CREDENTIAL_CODES
 
     @property
     def transient(self) -> bool:
@@ -85,7 +71,7 @@ def pack_error_message(code: str) -> str:
     code = str(code or "")
     if code in PACK_MESSAGES:
         return PACK_MESSAGES[code]
-    if code in CREDENTIAL_CODES or code in ("pending", "rate_limited"):
+    if code == "rate_limited":
         return MESSAGES[code]
     return PACK_MESSAGE_DEFAULT
 
@@ -213,53 +199,32 @@ def _message_of(text: str) -> str:
     return str(payload.get("message") or "") if isinstance(payload, dict) else ""
 
 
+CATALOGUE_PATH = "/api/addon/catalogue"
+TRIAL_PATH = "/api/trial"
+
+
 def fetch_catalogue() -> Catalogue:
-    payload = request_json("GET", "/api/addon/catalogue")
+    payload = request_json("GET", CATALOGUE_PATH)
     try:
         return Catalogue.from_dict(payload)
     except (ValueError, KeyError, TypeError):
         raise ApiError("bad_response") from None
 
 
-def _credential_fields(credential: str) -> Dict[str, str]:
-    # `order_guid` is the field name for good; `licence` is its alias for
-    # servers that tell keys and orders apart
-    value = credential.strip()
-    return {"order_guid": value, "licence": value}
+def send_event(event: str, rid: str) -> None:
+    """One event of an install that came from a trial link: `setup_opened`,
+    `trial_installed` or `full_installed`, with its trial request id and the
+    versions every request names. `trial_events` decides when; nothing else
+    calls this."""
+    request_json("POST", TRIAL_PATH, dict(client_info(), event=event, trial=rid))
 
 
-def _tier(payload: Dict[str, Any]) -> Dict[str, Optional[str]]:
-    license = payload.get("license")
-    upgrade_url = payload.get("upgrade_url")
-    return {
-        "license": license if license in ("personal", "commercial") else None,
-        "upgrade_url": upgrade_url if isinstance(upgrade_url, str) and upgrade_url.startswith("http") else None,
-    }
-
-
-def activate(credential: str = "", email: str = "", newsletter: bool = False, rid: str = "", order_guid: str = "") -> Dict[str, Any]:
-    """Check a credential (order GUID or licence key). Returns the server's
-    answer: {"ok": True, "license": "personal"|"commercial"|None,
-    "upgrade_url": ...}. `order_guid=` is the old name of `credential`."""
-    body: Dict[str, Any] = dict(client_info(), email=email.strip(), newsletter=bool(newsletter))
-    body.update(_credential_fields(credential or order_guid))
-    if rid:
-        body["rid"] = rid
-    payload = request_json("POST", "/api/addon/activate", body)
-    payload.update(_tier(payload))
-    return payload
-
-
-def content_urls(keys: Sequence[str], credential: str = "", email: str = "", rid: str = "", order_guid: str = "", retry: str = "") -> Dict[str, Any]:
-    """Download URLs for packs: {"files": {key: {...}}, "errors": {key: code},
-    "license": tier or None, "upgrade_url": url or None}. `order_guid=` is
-    the old name of `credential`. `retry` is the error code of the attempt
-    this request follows, so the server can count failed downloads."""
+def content_urls(keys: Sequence[str], rid: str = "", retry: str = "") -> Dict[str, Any]:
+    """Download URLs for free packs: {"files": {key: {...}}, "errors": {key:
+    code}}. `rid` is the trial request id of an install that came from a trial
+    link. `retry` is the error code of the attempt this request follows, so
+    the server can count failed downloads."""
     body: Dict[str, Any] = dict(client_info(), packs=list(keys))
-    credential = credential or order_guid
-    if credential:
-        body.update(_credential_fields(credential))
-        body["email"] = email.strip()
     if rid:
         body["rid"] = rid
     if retry:
@@ -269,7 +234,7 @@ def content_urls(keys: Sequence[str], credential: str = "", email: str = "", rid
     errors = payload.get("errors") or {}
     if not isinstance(files, dict) or not isinstance(errors, dict):
         raise ApiError("bad_response")
-    return dict(files=files, errors=errors, **_tier(payload))
+    return dict(files=files, errors=errors)
 
 
 def python_tag() -> str:

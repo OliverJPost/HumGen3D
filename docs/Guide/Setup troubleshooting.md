@@ -1,72 +1,49 @@
 ---
-description: "What the Human Generator setup's messages mean and what to do: license key not found, wrong email, connection and proxy errors, disk space, paused downloads, online access."
+description: "What the Human Generator setup's messages mean and what to do: files that are not content packs, connection and proxy errors, disk space, paused downloads, online access."
 ---
 
 # Setup troubleshooting
 
-This page lists the messages the setup can show while it activates your license or downloads the content packs, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
+This page lists the messages the setup can show while it downloads the trial or installs content packs from your files, with what to do. Each heading is the message as the add-on shows it. In every case below, content you already installed keeps working.
 
-For the normal steps, see [[Installation]]. If nothing here helps, press **Contact support** in the setup window or the sidebar: it opens an email to support@humgen3d.com with the add-on and Blender version, the error and the pack already filled in, and copies the same details to the clipboard for webmail. Add your license key (your Superhive order GUID); the details show only its last four characters.
+For the normal steps, see [[Installation]]. If nothing here helps, press **Contact support** in the setup window or the sidebar: it opens an email to our support address with the add-on and Blender version, the error and the pack already filled in, and copies the same details to the clipboard for webmail.
 
-## License key
+## Installing from files
 
-### We couldn't find a Superhive order with this order GUID
+These are about the full version and other packs you install from `.hgpack` files, see [[Installation#Install the full version]].
 
-> We couldn't find a Superhive order with this order GUID. Copy the long code from your order email again, not the short order number, or contact support@humgen3d.com.
+### Not a content pack
 
-- Use the order GUID, the long code of letters and numbers, not Superhive's short order number. Copy it again from the order email or from [Orders](https://superhivemarket.com/account/orders) in your Superhive account, see [humgen3d.com/license-key](https://humgen3d.com/license-key). Copy the whole code.
-- Use the order of Human Generator. Orders of other products don't count, also when they are from the same shop.
-- For an `HG3D-` license key the message is *We couldn't find this license key. Check the key in your purchase email, or contact support@humgen3d.com.*
-- Still not found? Write to support with the order GUID.
+The file list shows **Not a content pack** next to a file that is not a Human Generator pack, and leaves it out. Human Generator packs are `.hgpack` files. If the file is one and still shows this, your browser probably unzipped the download and it was zipped again by hand; see [[Invalid File Structure Error]].
 
-### This license is linked to a different email
+### Older than installed
 
-> This license is linked to a different email. Use the email you bought with.
+The file is an older version of a pack than the one in your content folder, so it is left out. Nothing needs doing. If you picked it by mistake, download the current file from your purchase.
 
-Once a license is activated, only the email it was first activated with can activate it again. Use the address the Superhive order email went to, not for example your PayPal address. If your email address changed, write to support.
+### This add-on needs 4.1 or newer
 
-### This purchase was refunded
+> Base Humans is an older file than this add-on needs. Download the current one from your purchase.
 
-> This purchase was refunded, so it can't download content. Content you already installed is not affected.
+The file is a version of the pack from before this version of the add-on. It still installs, but the add-on then asks for an update. Download the current pack from your purchase and select that one.
 
-A refunded purchase can't download content packs. If you moved to another order, for example for an upgrade, press **Change…** in the preferences or **Enter license key** in the setup and enter the new order GUID.
+### Base Humans isn't among these files
 
-### This license is no longer active
+> Base Humans isn't among these files. Humans can't be made without it.
 
-> This license is no longer active. Contact support@humgen3d.com if you think this is a mistake.
+Every human needs the Base Humans pack. Download it from your purchase too and add it with **Select more files…**. When you come from the trial the message is *The trial content stays until it is installed.*: the other packs install, and the trial is replaced once Base Humans is in.
 
-Write to support.
+### Install failed
 
-### This purchase is still being processed
+> Install failed
+> Packs that finished stay installed. Your files are not changed.
 
-> This purchase is still being processed. Try again in a few minutes.
+The reason is shown above it, with the name of the pack. Most often it is [[#Can't write to the content folder]] or [[#Not enough space]]. A file that got damaged on the way shows *This file is not a Human Generator content pack.*: download it again. Then press **Retry**; packs that finished are not installed again.
 
-A new order can take a few minutes to reach us. Wait a little, then press **Activate** again.
+### An install is running
 
-### Too many attempts from this network
+> An install is running. Wait until it is done.
 
-> Too many attempts from this network. Try again in an hour.
-
-After many failed attempts from one network, the activation stops for an hour. This counts every computer on the network, so in a studio or school a colleague's attempts count too. Wait an hour, and check the license key and email before you try again.
-
-### We couldn't confirm your license
-
-The setup shows this when the server refuses the stored license key during a download, with the reason below it. The buttons:
-
-- **Enter license key** opens the license step with the stored key filled in. Correct it or enter another one.
-- **Retry** tries again with the same key, for example after support fixed it.
-- **Contact support** opens an email to support@humgen3d.com.
-
-The key stays stored. The add-on preferences show *Your license key was not accepted.* with **Enter again…** and **Contact support** until you change it.
-
-### The license step says something is missing
-
-The setup checks the form before it sends it:
-
-- *Enter your license key. Bought on Superhive? Use the order GUID from your order email.*
-- *This is the order number. Enter the order GUID instead: the long code of letters and numbers in your order email.* You entered Superhive's short order number. Copy the long order GUID instead.
-- *Enter the email you bought with.*
-- *Accept the license and the privacy policy to continue.* Tick the box below the email field.
+You selected or dropped files while packs are being installed. Add them when it is done.
 
 ## Connection
 
@@ -74,7 +51,7 @@ The setup checks the form before it sends it:
 
 > Can't reach humgen3d.com. Check your internet connection and try again. Your installed content works as usual.
 
-During a download the message is *Can't reach the download server.* Check that this computer is online, then press **Try again** or **Retry**. On a company network, a firewall may block the add-on: ask your IT department to allow the [[#Hosts to allow|hosts below]].
+During a download the message is *Can't reach the download server.* Check that this computer is online, then press **Try again** or **Retry**. On a company network, a firewall may block the add-on: ask your IT department to allow the [[#Hosts to allow|hosts below]]. The full version doesn't need a connection: it installs from files, see [[Installation#Install the full version]].
 
 ### humgen3d.com took too long to answer
 
@@ -98,7 +75,7 @@ Your network sends traffic through a proxy that needs a login, which Blender can
 
 > humgen3d.com is having a problem right now. Try again in a few minutes.
 
-The problem is on our side, or at Superhive, which checks the order. The message can also say *The activation service is unavailable right now.* or *Superhive is slow to answer right now.* Try again in a few minutes.
+The problem is on our side. Try again in a few minutes.
 
 ### The download server sent a web page instead of the file
 
@@ -108,15 +85,21 @@ Hotel, train and guest networks often show a sign-in page first. Open any websit
 
 ### humgen3d.com gave an unexpected answer
 
-> humgen3d.com gave an unexpected answer. Try again later, or contact support@humgen3d.com.
+The setup shows *humgen3d.com gave an unexpected answer. Try again later, or contact* followed by our support address.
 
 Try again later. If it keeps happening, write to support.
+
+### Too many downloads from this network
+
+> Too many downloads from this network. Try again in an hour.
+
+The trial download stops for an hour after many requests from one network. This counts every computer on the network, so in a studio or school a colleague's downloads count too.
 
 ### Downloads are paused right now
 
 > Downloads are paused right now. Try again later.
 
-We switched downloads off for a while, for example during maintenance. The setup may show a message from us with more details instead. Try again later.
+We switched the trial download off for a while, for example during maintenance. The setup may show a message from us with more details instead. Try again later. Installing packs from files works regardless.
 
 ### Hosts to allow
 
@@ -132,7 +115,7 @@ For firewalls, proxies and security software, the setup connects to these hosts 
 
 > Not enough space: 3.2 GB needed, 1.8 GB free
 
-The numbers show what the selected packs need, with room to unpack them, and what is free on the disk of the content folder. Free some space, untick packs you don't need (such as **8K Textures**), or press **Change…** next to *Content folder* and pick a folder on another disk.
+The numbers show what the selected packs need once unpacked, and what is free on the disk of the content folder. Free some space, untick packs you don't need (such as **8K Textures**), or press **Change…** next to *Content folder* and pick a folder on another disk.
 
 When the setup shows *Couldn't check the free space on this disk*, which happens on some network drives, it still installs. Make sure there is enough room.
 
@@ -152,7 +135,7 @@ The content folder is on a drive that isn't there. Connect it, or press **Change
 
 > Another Blender window is downloading the content.
 
-Only one Blender can download into a content folder at a time. Wait until the other window is done, or close it. If that Blender crashed, the setup goes on by itself after 10 minutes.
+For an install from files the message is *Another Blender window is installing content.* Only one Blender can install into a content folder at a time. Wait until the other window is done, or close it. If that Blender crashed, the setup goes on by itself after 10 minutes.
 
 ### Connection lost. Trying again in 10 s
 
@@ -175,7 +158,7 @@ The file didn't arrive complete. Press **Retry**.
 
 **Pause** in the setup stops the download and keeps what it fetched. *Download paused* then shows how much is done, with **Resume** to go on and **Discard download** to throw the partial files away.
 
-If you close Blender during a download, start it again from the HumGen tab (**Set up Human Generator**, or the update button) and press **Install**. Finished packs stay installed and the download continues from the part that was already fetched.
+If you close Blender during a download, start it again from the HumGen tab (**Set up Human Generator**, or the update button) and press **Install**. The download continues from the part that was already fetched.
 
 ### A newer Human Generator is needed for the latest content
 
@@ -185,11 +168,9 @@ The newest content packs need a newer version of the add-on. Update the add-on i
 
 ### A pack can't be downloaded
 
-When the server won't hand out one pack, *Download failed* names the pack and the reason, for example *8K Textures: This pack can't be downloaded right now.*
+When the server won't hand out the trial pack, *Download failed* gives the reason, for example *Trial Content: This pack can't be downloaded right now.* Try again later.
 
-- *This pack needs a license. Enter your license key to download it.* The pack is not part of the trial. See [[Installation#Upgrading from the trial]].
-- *This pack isn't offered for download any more.* Write to support if you need it.
-- *This pack can't be downloaded right now.* Try again later.
+*This pack comes with the full version. Install it from the files of your purchase.* means the pack is not part of the trial. See [[Installation#Install the full version]].
 
 ## The setup window
 
@@ -207,9 +188,9 @@ Make the 3D viewport larger, for example with `Ctrl Space`, or press **Continue 
 
 > Downloading needs Blender's online access, which is turned off.
 
-Blender 4.2 and later has an *Allow Online Access* setting, and the setup needs it to download. Press **Allow online access** in the setup, the HumGen tab or the add-on preferences. The setting is also under Edit > Preferences > System > Network.
+Blender 4.2 and later has an *Allow Online Access* setting, and the setup needs it to download the trial. Press **Allow online access** in the setup, the HumGen tab or the add-on preferences. The setting is also under Edit > Preferences > System > Network.
 
-Apart from the download, Human Generator only uses the network for a daily check for updates. Turning online access off stops that check too.
+Apart from the trial download, Human Generator only uses the network for a daily check for updates. Turning online access off stops that check too. The full version installs from files and needs no connection. See [[Installation#What the add-on sends]].
 
 ### Blender was started in offline mode
 
@@ -223,4 +204,4 @@ The setup couldn't get the list of packs from humgen3d.com. The reason follows t
 
 ### No Human Generator content in this folder
 
-You picked a folder with **Use this folder** or **Select folder** that has no Human Generator content packs in it. Pick the folder that has the `content_packs` folder inside, or download the content with the setup.
+You picked a folder with **Use this folder** or **Select folder** that has no Human Generator content packs in it. Pick the folder that has the `content_packs` folder inside, or install the content with the setup.

@@ -22,7 +22,7 @@ bl_info = {
     "author": "OliverJPost",
     "description": "Human Generator allows you to generate humans including clothing, poses and emotions",  # noqa
     "blender": (4, 0, 0),
-    "version": (4, 0, 38),  # RELEASE update version number
+    "version": (4, 0, 39),  # RELEASE update version number
     "location": "Add-On Sidepanel > HumGen",
     "wiki_url": "https://humgen3d.com",
     "tracker_url": "https://humgen3d.com",
@@ -206,7 +206,6 @@ def _initiate_ui_lists() -> None:
     collections = {
         "batch_clothing_col": batch_ui_lists.BATCH_CLOTHING_ITEM,
         "contentpacks_col": content_packs.HG_CONTENT_PACK,
-        "installpacks_col": content_packs.HG_INSTALLPACK,
         "shapekeys_col": utility_ui_lists.SHAPEKEY_ITEM,
         "savehair_col": utility_ui_lists.SAVEHAIR_ITEM,
         "saveoutfit_col": utility_ui_lists.SAVEOUTFIT_ITEM,
@@ -287,10 +286,6 @@ def _register_full(preferences: Optional[Dict[str, Any]] = None) -> None:
 
     livekeys_coll = bpy.props.CollectionProperty(type=BpyLiveKey)  # type:ignore
     bpy.types.WindowManager.livekeys = livekeys_coll
-
-    from .user_interface.setup_overlay.operator import HG_SETUP_PROPS
-
-    bpy.types.WindowManager.hg_setup = bpy.props.PointerProperty(type=HG_SETUP_PROPS)  # type:ignore
 
     # load handler
     if HG_start not in bpy.app.handlers.load_post:
@@ -388,7 +383,6 @@ def unregister() -> None:
     bpy.utils.previews.remove(hg_icons.pop())
 
     _preview_collections.clear()
-    del bpy.types.WindowManager.hg_setup
     _i18n.unregister()
     _alias.uninstall()
 

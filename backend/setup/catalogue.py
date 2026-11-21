@@ -3,7 +3,9 @@
 
 The server publishes a catalogue (`GET /api/addon/catalogue`) listing every
 pack with its versions, sizes, checksums and the lowest add-on version each
-needs. The add-on keeps its own idea of which pack versions it requires, in
+needs. Only the free packs (the trial content) are downloaded by the add-on;
+for the packs of the full version the catalogue only says which versions
+exist, so the add-on can tell when a newer file is out. The add-on keeps its own idea of which pack versions it requires, in
 `REQUIRED` below, next to the code that needs the data. `plan()` combines the
 catalogue, the packs found in the content folder and the running add-on
 version into one status per pack, which the overlay, the sidebar notice and
@@ -104,7 +106,7 @@ class CataloguePack:
     key: str
     name: str
     blurb: str = ""
-    access: str = "licensed"  # licensed, trial, public
+    access: str = "licensed"  # the server's words: licensed (the full version), trial, public
     required: bool = False
     # Ticked by default in a first install. False for packs that are large
     # and only useful to some, such as the 8K textures.
@@ -159,8 +161,6 @@ class Catalogue:
     # an optional link
     message: str = ""
     message_url: str = ""
-    # Where a Personal owner upgrades, when the credential did not say
-    upgrade_url: str = ""
 
     @classmethod
     def from_dict(cls, data: dict) -> "Catalogue":
@@ -182,7 +182,6 @@ class Catalogue:
             setup_enabled=addon.get("setup", True) is not False,
             message=str(addon.get("message") or ""),
             message_url=str(addon.get("message_url") or ""),
-            upgrade_url=str(addon.get("upgrade_url") or ""),
         )
 
     @property
@@ -254,8 +253,8 @@ def is_trial_install(installed: Dict[str, InstalledPack]) -> bool:
 
 
 def install_mode(installed: Dict[str, InstalledPack]) -> str:
-    """"trial" for a trial install (see `is_trial_install`), else "licensed"."""
-    return "trial" if is_trial_install(installed) else "licensed"
+    """"trial" for a trial install (see `is_trial_install`), else "full"."""
+    return "trial" if is_trial_install(installed) else "full"
 
 
 def has_humans(installed: Dict[str, InstalledPack]) -> bool:
@@ -301,11 +300,12 @@ def status_of(pack: CataloguePack, installed: Optional[InstalledPack], addon_ver
     return PackStatus(pack, "up_to_date", target, installed)
 
 
-def plan(catalogue: Catalogue, installed: Dict[str, InstalledPack], addon_version: Sequence[int], mode: str = "licensed") -> List[PackStatus]:
+def plan(catalogue: Catalogue, installed: Dict[str, InstalledPack], addon_version: Sequence[int], mode: str = "full") -> List[PackStatus]:
     """One status per catalogue pack, for the given mode.
 
-    Trial mode shows the trial packs as installable and the licensed ones as
-    locked. Licensed mode leaves the trial packs out.
+    Trial mode shows the trial packs as installable and the packs of the full
+    version as locked. Full mode leaves the trial packs out; its statuses say
+    which packs have a newer version, which the user installs from files.
     """
     result = []
     for pack in catalogue.packs:

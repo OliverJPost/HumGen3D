@@ -188,9 +188,4 @@ class HGPreferenceBackend:
     )
 
     show_tips: BoolProperty(default=True)
-    show_other_packs: BoolProperty(
-        name="Packs from other creators",
-        description="Install content packs made by other creators from their files",
-        default=False,
-    )
     compress_zip: BoolProperty(default=True)

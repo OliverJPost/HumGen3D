@@ -18,6 +18,7 @@ BPY_CLASSES = (
     bpy.types.Header,
     bpy.types.Menu,
     bpy.types.UIList,
+    bpy.types.FileHandler,
 )
 
 Class = Callable[..., Any]

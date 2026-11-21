@@ -97,8 +97,8 @@ class HG_OT_BUY_FULL_VERSION(bpy.types.Operator):
     panel: bpy.props.StringProperty()  # noqa: F821  which button, for utm_content
 
     def execute(self, context):
-        from ..backend.preferences.licence import buy_url
         from ..backend.setup import repository, user_settings
+        from ..backend.setup.links import buy_url
 
         # Read here, not while drawing: the settings file is a file on disk
         rid = user_settings.get("trial_rid") or repository.trial_rid()

@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 """The add-on around the setup: the content folder as the panels and the
-preferences read it, the trial, the buy links, the licence row, the install
-notices and the startup that must never raise.
+preferences read it, the trial, the buy links, the file operators, the
+install notices and the startup that must never raise.
 
 The real extension loading and the double install are covered by
 `test_extension_mode.py`.
@@ -16,8 +16,7 @@ import bpy
 import pytest
 
 from HumGen3D.backend.content import content_packs, content_state
-from HumGen3D.backend.preferences import licence
-from HumGen3D.backend.setup.user_settings import Credential
+from HumGen3D.backend.setup import links
 from HumGen3D.human.process import export_pack
 from HumGen3D.package import (
     MIN_BLENDER,
@@ -188,7 +187,7 @@ def _query(url):
 
 
 def test_buy_url_names_the_panel_and_the_trial():
-    where, query = _query(licence.buy_url("top_widget", "0123456789abcdef"))
+    where, query = _query(links.buy_url("top_widget", "0123456789abcdef"))
     assert where == "humgen3d.com/pricing"
     assert query == {
         "utm_source": "addon",
@@ -199,10 +198,151 @@ def test_buy_url_names_the_panel_and_the_trial():
     }
 
 
+def test_trial_url_is_the_install_guide_of_the_request():
+    assert links.trial_url("0123456789abcdef") == "https://humgen3d.com/trial?r=0123456789abcdef"
+    assert links.trial_url(None) == "https://humgen3d.com/trial"
+
+
+def test_a_zip_install_is_sent_to_the_newer_zip_not_to_a_repository(monkeypatch):
+    """An add-on update for an install from a zip: the download of the newer
+    zip, which replaces it in place. Adding the repository would lead to a
+    second copy next to it, so no button does that."""
+    from HumGen3D.backend.preferences import preferences as prefs_module
+    from HumGen3D.backend.setup import trial_events
+
+    class Row:
+        def __init__(self):
+            self.operators, self.labels = [], []
+
+        def operator(self, idname, **kwargs):
+            props = SimpleNamespace(idname=idname, **kwargs)
+            self.operators.append(props)
+            return props
+
+        def label(self, **kwargs):
+            self.labels.append(kwargs.get("text", ""))
+
+    monkeypatch.setattr(prefs_module, "is_extension", lambda: True)
+    monkeypatch.setattr(prefs_module.repository, "installed_from_site", lambda: False)
+
+    monkeypatch.setattr(trial_events, "trial_rid", lambda: "0123456789abcdef")
+    row = Row()
+    prefs_module.HG_PREF._draw_addon_update_row(None, row)
+    assert [(op.idname, op.url) for op in row.operators] == [("wm.url_open", "https://humgen3d.com/trial?r=0123456789abcdef")]
+
+    monkeypatch.setattr(trial_events, "trial_rid", lambda: None)
+    row = Row()
+    prefs_module.HG_PREF._draw_addon_update_row(None, row)
+    assert [(op.idname, op.url) for op in row.operators] == [("wm.url_open", "https://humgen3d.com/docs/guide/installation#updates")]
+    from HumGen3D.user_interface.setup_overlay import operator
+
+    assert not hasattr(operator, "HG_OT_add_extension_repo")
+
+    # From our repository, Blender's own list updates it
+    monkeypatch.setattr(prefs_module.repository, "installed_from_site", lambda: True)
+    row = Row()
+    prefs_module.HG_PREF._draw_addon_update_row(None, row)
+    assert not row.operators and "extension list" in row.labels[0]
+
+
 def test_buy_url_without_a_trial_rid():
-    _, query = _query(licence.buy_url("process", None))
+    _, query = _query(links.buy_url("process", None))
     assert "hg_rid" not in query
     assert query["utm_content"] == "process"
+
+
+def test_trial_box_stacks_buy_above_i_bought_it():
+    """The trial's card at the top of the main panel: one box, the buy button
+    large and first, "I bought it" under it on a line of its own."""
+    from HumGen3D.user_interface import panel_functions
+
+    class Node:
+        """A layout that remembers what kind it is and what was put in it."""
+
+        def __init__(self, kind, log):
+            object.__setattr__(self, "kind", kind)
+            object.__setattr__(self, "log", log)
+            object.__setattr__(self, "scale_y", 1.0)
+            log.append(("layout", self))
+
+        def __getattr__(self, name):
+            def call(*args, **kwargs):
+                if name in ("box", "row", "column"):
+                    return Node(name, self.log)
+                if name in ("label", "operator"):
+                    self.log.append((name, self, args[0] if args else "", kwargs.get("text", "")))
+                return SimpleNamespace()
+
+            return call
+
+    log = []
+    panel_functions.draw_trial_box(Node("root", log), "top_widget")
+    assert [entry[1].kind for entry in log if entry[0] == "layout"].count("box") == 1
+    assert [entry[3] for entry in log if entry[0] == "label"] == ["Trial version"]
+    buy, bought = [entry for entry in log if entry[0] == "operator"]
+    assert (buy[2], buy[3]) == ("hg3d.buy_full_version", "Buy Human Generator")
+    assert (bought[2], bought[3]) == ("hg3d.setup_full", "I bought it")
+    # Stacked, not side by side, and the buy button is the large one
+    assert buy[1] is not bought[1] and bought[1].kind == "column"
+    assert buy[1].scale_y >= 1.5 > bought[1].scale_y
+
+
+def test_sidebar_tab_is_tried_again_until_blender_knows_it(monkeypatch):
+    """A sidebar that was closed has no tabs until it is drawn: opening it
+    switches to the HumGen tab a moment later instead of giving up."""
+    from HumGen3D.user_interface.setup_overlay import operator
+
+    class Region:
+        type = "UI"
+
+        def __init__(self, known_after):
+            self.sets, self.known_after, self.current = 0, known_after, "Item"
+
+        @property
+        def active_panel_category(self):
+            return self.current
+
+        @active_panel_category.setter
+        def active_panel_category(self, value):
+            self.sets += 1
+            if self.sets <= self.known_after:
+                raise TypeError('enum "HumGen" not found in ()')
+            self.current = value
+
+    def area_with(region):
+        space = SimpleNamespace(show_region_ui=False)
+        return SimpleNamespace(spaces=SimpleNamespace(active=space), regions=[SimpleNamespace(type="WINDOW"), region], tag_redraw=lambda: None, as_pointer=lambda: 42)
+
+    timers = []
+    monkeypatch.setattr(operator, "can_open_sidebar_tab", lambda: True)
+    monkeypatch.setattr(operator, "tab_name", lambda: "HumGen")
+    monkeypatch.setattr(bpy.app.timers, "register", lambda fn, first_interval=0: timers.append(fn))
+    # Known at once: no timer
+    region = Region(known_after=0)
+    area = area_with(region)
+    operator.open_sidebar_tab(area)
+    assert area.spaces.active.show_region_ui and region.current == "HumGen" and timers == []
+    # Known two redraws later
+    region = Region(known_after=2)
+    area = area_with(region)
+    monkeypatch.setattr(operator, "_all_areas", lambda: [area])
+    operator.open_sidebar_tab(area)
+    assert region.current == "Item" and len(timers) == 1
+    assert timers[0]() == operator.TAB_INTERVAL and region.current == "Item"
+    assert timers[0]() is None and region.current == "HumGen"
+    # Never known, or the area is gone: it stops by itself
+    region = Region(known_after=10 ** 6)
+    area = area_with(region)
+    timers.clear()
+    operator.open_sidebar_tab(area)
+    runs = 0
+    while timers[0]() is not None:
+        runs += 1
+    assert runs == operator.TAB_ATTEMPTS - 1
+    monkeypatch.setattr(operator, "_all_areas", lambda: [])
+    timers.clear()
+    operator.open_sidebar_tab(area)
+    assert timers[0]() is None
 
 
 def test_buy_operator_opens_the_link(monkeypatch):
@@ -219,65 +359,6 @@ def test_buy_operator_opens_the_link(monkeypatch):
     _, query = _query(opened[0])
     assert query["utm_content"] == "content"
     assert query["hg_rid"] == "fedcba9876543210"
-
-
-# The licence row of the preferences
-
-
-def credential(**changes):
-    values = dict(
-        value="1f2e3d4c-aaaa-bbbb-cccc-1234567a1b2c",
-        email="jane@example.com",
-        kind="superhive",
-        license="personal",
-        status="ok",
-        error_code="",
-        error_message="",
-        upgrade_url="",
-    )
-    values.update(changes)
-    return Credential(**values)
-
-
-def test_no_row_without_a_credential():
-    assert licence.licence_row(None) is None
-
-
-def test_personal_licence_offers_the_upgrade():
-    row = licence.licence_row(credential())
-    assert row.tier == "Personal license"
-    assert row.upgrade
-    assert not row.rejected
-    assert row.summary.startswith("Superhive order \u2022\u2022\u2022\u20221b2c")
-    assert "j\u2022\u2022\u2022@example.com" in row.summary
-    assert "jane" not in row.summary
-
-
-def test_commercial_licence_has_no_upgrade():
-    row = licence.licence_row(credential(license="commercial"))
-    assert row.tier == "Commercial license"
-    assert not row.upgrade
-
-
-def test_unknown_tier_shows_no_label():
-    row = licence.licence_row(credential(license=None))
-    assert row.tier == ""
-    assert not row.upgrade
-
-
-def test_licence_key_is_named_as_such():
-    row = licence.licence_row(credential(value="HG3D-AAAAA-BBBBB-CCCCC-9Z9Z", kind="key"))
-    assert row.summary.startswith("License key \u2022\u2022\u2022\u20229Z9Z")
-
-
-def test_rejected_credential_keeps_the_row_with_the_reason():
-    row = licence.licence_row(
-        credential(status="rejected", error_code="refunded", error_message="This order was refunded.")
-    )
-    assert row.rejected
-    assert row.message == "This order was refunded."
-    assert not row.upgrade
-    assert licence.support_url("refunded").startswith("mailto:support@humgen3d.com?subject=")
 
 
 # Export data notice
@@ -439,66 +520,121 @@ def operators(log):
     return [entry[1] for entry in log if entry[0] == "operator"]
 
 
-@pytest.fixture
-def stored_credential():
-    from HumGen3D.backend.setup import user_settings
-
-    def store(**values):
-        user_settings.save_credential("1f2e3d4c-aaaa-bbbb-cccc-1234567a1b2c", "jane@example.com", **values)
-
-    yield store
-    user_settings.forget_credential()
-
-
 def test_prefs_unreachable_folder_card(tmp_path):
     log = draw_prefs(str(tmp_path / "unplugged"))
     assert "Can't find your content folder" in texts(log)
     assert {"hg3d.content_folder_retry", "hg3d.pathchange", "hg3d.setup_start"} <= set(operators(log))
 
 
-def test_prefs_empty_folder_offers_the_setup_without_file_install(tmp_path):
+def test_prefs_empty_folder_offers_the_setup(tmp_path):
     log = draw_prefs(str(tmp_path))
     assert "hg3d.setup_start" in operators(log)
-    assert "hg3d.cpackselect" not in operators(log)
-    assert not any("Superhive" in text for text in texts(log))
+    assert not any("Superhive" in text or "license" in text.lower() for text in texts(log))
 
 
-def test_prefs_installed_content_tab(tmp_path, stored_credential):
+def test_prefs_installed_content_tab(tmp_path):
     write_pack(str(tmp_path), "Base_Humans", (4, 1))
-    stored_credential(license="personal")
     log = draw_prefs(str(tmp_path))
     ops = operators(log)
-    # An owner adding packs goes straight to the pack list
+    # An owner adding packs goes straight to the file list
     assert "hg3d.setup_add_packs" in ops and "hg3d.setup_start" not in ops
-    assert "Personal license" in texts(log)
-    assert {"hg3d.setup_open_upgrade", "hg3d.setup_change_licence", "hg3d.setup_forget_licence"} <= set(ops)
-    # Packs of other creators: closed by default
-    assert "hg3d.cpackselect" not in ops
-    joined = " ".join(texts(log))
-    assert "Superhive order •" in joined
-    # No more downloading pack files from the Superhive order
-    joined = joined.replace("Superhive order •", "")
-    assert "Superhive" not in joined and "First delete the Trial" not in joined and "!" not in joined
+    assert "Install content packs from files…" in texts(log)
+    assert "hg3d.buy_full_version" not in ops
+    # Nothing about a license, a key or an order anywhere
+    joined = " ".join(texts(log)).lower()
+    assert not any(word in joined for word in ("license", "licence", "superhive", "activate"))
+    assert not any(name.startswith("hg3d.setup_") and ("licence" in name or "upgrade" in name or "activate" in name) for name in ops)
 
 
-def test_prefs_commercial_licence_has_no_upgrade(tmp_path, stored_credential):
-    write_pack(str(tmp_path), "Base_Humans", (4, 1))
-    stored_credential(license="commercial")
+def test_prefs_of_a_trial_offer_the_full_version(tmp_path):
+    write_pack(str(tmp_path), "Trial_Content", (4, 1))
     log = draw_prefs(str(tmp_path))
-    assert "Commercial license" in texts(log)
-    assert "hg3d.setup_open_upgrade" not in operators(log)
+    ops = operators(log)
+    assert "hg3d.setup_add_packs" in ops and "hg3d.buy_full_version" in ops
 
 
-def test_prefs_rejected_credential_alert(tmp_path, stored_credential):
-    from HumGen3D.backend.setup import user_settings
+# The operators that hand pack files to the setup
 
-    write_pack(str(tmp_path), "Base_Humans", (4, 1))
-    stored_credential(license="personal")
-    user_settings.mark_credential_rejected("refunded", "This order was refunded.")
-    log = draw_prefs(str(tmp_path))
-    assert "This order was refunded." in texts(log)
-    assert "Enter again…" in texts(log) and "Contact support" in texts(log)
-    assert "hg3d.setup_open_upgrade" not in operators(log)
+
+@pytest.fixture
+def fake_setup(monkeypatch, tmp_path):
+    """The shared setup state on fake services, nothing opened on screen."""
+    from HumGen3D.user_interface.setup_overlay import operator, state as setup_state
+
+    st = setup_state.SetupState(services=setup_state.FakeServices())
+    st.folder = str(tmp_path / "content")
+    monkeypatch.setattr(setup_state, "state", st)
+    monkeypatch.setattr(setup_state, "_start_poll", lambda: None)
+    monkeypatch.setattr(setup_state, "reopen_overlay_soon", lambda *a, **k: None)
+    monkeypatch.setattr(setup_state.migration, "find_existing_content", lambda: None)
+    monkeypatch.setattr(setup_state.repository, "trial_rid", lambda: None)
+    monkeypatch.setattr(operator, "current_folder", lambda: st.folder)
+    monkeypatch.setattr(operator, "open_overlay_or_fallback", lambda context: None)
+    return st
+
+
+def test_hgpack_files_have_a_drop_handler():
+    handler = bpy.types.HG_FH_hgpack
+    assert handler.bl_file_extensions == ".hgpack"
+    assert handler.bl_import_operator == "hg3d.setup_drop_files"
+
+
+def test_dropped_packs_open_the_file_list(fake_setup):
+    st = fake_setup
+    files = [{"name": "Base_Humans_4_1.hgpack"}, {"name": "Base_Hair_4_1.hgpack"}, {"name": "holiday.jpg"}]
+    assert bpy.ops.hg3d.setup_drop_files(directory="/dl", files=files) == {"FINISHED"}
+    assert st.screen == "files" and st.mode == "full" and st.prompted
+    assert [p.path for p in st.packs] == ["/dl/Base_Humans_4_1.hgpack", "/dl/Base_Hair_4_1.hgpack"]
+    # A single file arrives as a path
+    assert bpy.ops.hg3d.setup_drop_files(filepath="/dl/Base_Clothes_4_1.hgpack") == {"FINISHED"}
+    assert len(st.packs) == 3
+    # Nothing that is a pack: nothing happens
+    assert bpy.ops.hg3d.setup_drop_files(directory="/dl", files=[{"name": "holiday.jpg"}]) == {"CANCELLED"}
+    assert len(st.packs) == 3
+
+
+def test_selected_files_land_in_the_list_and_can_be_cleared(fake_setup):
+    st = fake_setup
+    st.begin_full()
+    files = [{"name": "Base_Humans_4_1.hgpack"}, {"name": "notes.zip"}]
+    assert bpy.ops.hg3d.setup_select_files(directory="/dl", files=files) == {"FINISHED"}
+    assert [(p.key, p.status) for p in st.packs] == [("Base_Humans", "missing"), ("/dl/notes.zip", "not_a_pack")]
+    assert bpy.ops.hg3d.setup_clear_files() == {"FINISHED"}
+    assert st.packs == []
+
+
+def test_install_full_version_button_opens_the_file_list(fake_setup, tmp_path):
+    st = fake_setup
+    write_pack(st.folder, "Trial_Content", (4, 1))
+    assert bpy.ops.hg3d.setup_full() == {"FINISHED"}
+    assert st.screen == "files" and st.upgrading_trial
+
+
+def test_setup_opened_by_hand_is_its_first_showing(fake_setup, monkeypatch, tmp_path):
+    """The setup's button, when the setup could not open by itself: the same
+    moment, and for an install from a trial link the same event, once."""
+    import time
+
+    from HumGen3D.backend.setup import online, trial_events, user_settings
+    from HumGen3D.user_interface.setup_overlay import state as setup_state
+
+    def settle():
+        end = time.monotonic() + 5
+        while not trial_events.idle() and time.monotonic() < end:
+            time.sleep(0.02)
+        assert trial_events.idle()
+
+    monkeypatch.setenv(user_settings.ENV_OVERRIDE, str(tmp_path / "settings.json"))
+    monkeypatch.setattr(online, "allowed", lambda: True)
+    monkeypatch.setattr(setup_state.repository, "trial_rid", lambda: "0123456789abcdef")
+    assert not user_settings.setup_shown()
+    assert bpy.ops.hg3d.setup_start() == {"FINISHED"}
+    settle()
+    assert user_settings.setup_shown()
+    assert fake_setup.services.events == [("setup_opened", "0123456789abcdef")]
+    assert bpy.ops.hg3d.setup_start() == {"FINISHED"}
+    settle()
+    assert len(fake_setup.services.events) == 1
 
 
 def test_prefs_settings_tab_hides_the_obsolete_switch(tmp_path):

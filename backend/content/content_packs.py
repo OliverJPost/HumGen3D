@@ -1,29 +1,24 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 """
-Operators and functions used for installing and managing HumGen's content packs.
+Operators and functions used for managing HumGen's content packs.
+
+Packs are installed by the setup (`backend/setup`, `user_interface/setup_overlay`):
+the trial is downloaded, every other pack comes from an `.hgpack` file.
 
 Nomenclature:
-Installpack = a collection item that represents a zip file the user has selected,
-    a pack made by another creator. Pressing 'install' unzips these files into
-    the file structure, making them cpacks (content packs). Human Generator's
-    own packs come through the setup (`backend/setup`), not from files.
 cpack = Abbreviation of content pack. Represents a collection of items
     downloaded together and extracted in the HumGen file strucure, forming
     content to be used in the add-on. Settings and properties stored in a
     .json file
 """
 
-import contextlib
 import json
 import os
-import zipfile
 from typing import Any, no_type_check
 
 import bpy
-from bpy_extras.io_utils import ImportHelper  # type: ignore
 from ...backend import get_prefs, hg_log
-from ...user_interface.documentation.feedback_func import ShowMessageBox
 from ...user_interface.icons.icons import get_hg_icon
 
 from ..setup import downloader
@@ -41,40 +36,6 @@ ICON_DICT = {
     "footwear": "footwear",
     "expression": "expression",
 }
-
-
-class HG_UL_INSTALLPACKS(bpy.types.UIList):
-    """UIList showing cpacks to be installed."""
-
-    @no_type_check
-    def draw_item(
-        self,
-        context,
-        layout,
-        data,
-        item,
-        icon,
-        active_data,
-        active_propname,
-        index,
-    ):
-        alert_dict = {
-            "not_cpack": "Not a content pack",
-            "no_json": "No .json file in pack",
-            "incorrect_structure": "Incorrect file structure",
-            "not_zip": "Not a zip file",
-            "already_installed": (
-                "Already installed, delete old pack before installing a new one"
-            ),
-        }
-
-        row = layout.row(align=True)
-        row.label(text=item.pack_name)
-
-        if item.alert != "None":
-            row.alert = True
-            row = row.row()
-            row.label(text=alert_dict[item.alert], icon="ERROR")
 
 
 class HG_UL_CONTENTPACKS(bpy.types.UIList):
@@ -208,131 +169,6 @@ class HG_UL_CONTENTPACKS(bpy.types.UIList):
         subrow.alert = False
 
 
-class HG_SELECT_CPACK(bpy.types.Operator, ImportHelper):  # type:ignore[misc]
-    """Opens a filebrowser popup, allowing the user to select files.
-
-    This operator adds them to a collection property, meanwhile checking if any
-    problems arise that mean the pack should not be installed
-    """
-
-    bl_idname = "hg3d.cpackselect"
-    bl_label = "Select content pack zips"
-    bl_description = """Opens a file browser for you to select the zip files of
-        the content packs you wish to install"""
-
-    files: bpy.props.CollectionProperty(
-        name="File Path",  # noqa F722
-        type=bpy.types.OperatorFileListElement,
-    )
-    directory: bpy.props.StringProperty(
-        subtype="DIR_PATH",  # noqa F821
-    )
-
-    @no_type_check
-    def execute(self, context):
-        directory = self.directory
-
-        coll = context.scene.installpacks_col
-
-        if not self.files:
-            ShowMessageBox(
-                message="""No files selected,
-                           please select the zip files"""
-            )
-            return {"FINISHED"}
-
-        # iterate over all the files the user selected in the importhelper popup
-        for fn in self.files:
-            self._add_to_collection(coll, directory, fn)
-        return {"FINISHED"}
-
-    @no_type_check
-    def _add_to_collection(self, coll, directory, fn):
-        """Adds this cpack to the installpack collection.
-
-        Args:
-            coll (CollectionProperty): installpack collection
-            directory (dir): directory the cpack zips are in
-            fn (str): names of selected files
-        """
-        item = coll.add()
-        filepath = os.path.join(directory, fn.name)
-
-        item.name = filepath
-        item.pack_name = filepath
-        item.alert = self._check_for_alerts(item, filepath)
-
-    @no_type_check
-    def _check_for_alerts(self, item, filepath) -> str:
-        """Checks for common errors with content packs.
-
-        Args:
-            item (collection item): installpack item
-            filepath (Path): filepath of this installpack
-
-        Returns:
-            str: alert code
-        """
-        if not filepath.endswith("hgpack"):
-            return "not_cpack"  # return error code if the prefix is not correct
-
-        try:
-            zf = zipfile.ZipFile(filepath)
-        except (OSError, zipfile.BadZipFile):
-            return "not_zip"
-
-        members = [file for file in zf.namelist() if file.startswith(CPACK_FOLDER)]
-
-        if not members:
-            return "incorrect_structure"
-            # return error code if the content_packs folder is not present or not
-            # in the correct place
-
-        json_path = next(
-            (file for file in members if os.path.splitext(file)[1] == ".json"),
-            None,
-        )
-        if json_path:
-            item.json_path = json_path
-        else:
-            return "no_json"
-
-        # A pack that is already installed is updated by the installer
-        return "None"
-
-
-class HG_INSTALL_CPACK(bpy.types.Operator):
-    """Installs all valid packs in the installpack collection."""
-
-    bl_idname = "hg3d.cpackinstall"
-    bl_label = "Install"
-    bl_description = "Refresh the content pack list"
-
-    @no_type_check
-    def execute(self, context):
-        folder = get_prefs().filepath
-        if not folder or not os.path.isdir(folder):
-            self.report({"WARNING"}, "Choose a content folder first")
-            return {"CANCELLED"}
-
-        # The setup's installer: no paths outside the folder, the file list
-        # recorded for removal, and an older version of the pack updated
-        for item in context.scene.installpacks_col:
-            if item.alert != "None":
-                continue
-            hg_log("Installing content pack:", item.name)
-            try:
-                downloader.install(item.name, folder)
-            except (downloader.DownloadError, OSError, zipfile.BadZipFile) as e:
-                self.report({"WARNING"}, f"Could not install {os.path.basename(item.name)}: {e}")
-
-        context.scene.installpacks_col.clear()
-        with contextlib.suppress(Exception):
-            cpacks_refresh(self, context)
-
-        return {"FINISHED"}
-
-
 class HG_CONTENT_PACK(bpy.types.PropertyGroup):
     """Properties of the content pack."""
 
@@ -359,36 +195,6 @@ class HG_CONTENT_PACK(bpy.types.PropertyGroup):
     json_path: bpy.props.StringProperty()
     required_version: bpy.props.IntVectorProperty(default=(0, 0), size=2)
     latest_version: bpy.props.IntVectorProperty(default=(0, 0), size=2)
-
-
-class HG_INSTALLPACK(bpy.types.PropertyGroup):
-    """Properties of the installpack representation of the selected zip files."""
-
-    pack_name: bpy.props.StringProperty(
-        name="Content Pack Name",
-        description="",
-        default="",
-    )
-    json_path: bpy.props.StringProperty()
-    installed: bpy.props.BoolProperty(default=False)
-    alert: bpy.props.EnumProperty(
-        name="posing",
-        description="",
-        items=[
-            ("None", "None", "", 0),
-            ("not_cpack", "Not a content pack", "", 1),
-            ("not_zip", "Not a zip file", "", 5),
-            ("incorrect_structure", "Incorrect zip method", "", 2),
-            ("no_json", "Doesn't contain .json file", "", 3),
-            (
-                "already_installed",
-                "Already installed, delete old pack before installing a new one",
-                "",
-                4,
-            ),
-        ],
-        default="None",
-    )
 
 
 class HG_REFRESH_CPACKS(bpy.types.Operator):
@@ -530,26 +336,4 @@ class HG_DELETE_CPACK(bpy.types.Operator):
         cpacks_refresh(self, context)
         context.scene.contentpacks_col_index = min(context.scene.contentpacks_col_index, len(col) - 1)
 
-        return {"FINISHED"}
-
-
-class HG_DELETE_INSTALLPACK(bpy.types.Operator):
-    """Removes installpack from ui_list collection."""
-
-    bl_idname = "hg3d.removeipack"
-    bl_label = ""
-    bl_description = "Remove the active item from the list"
-
-    @no_type_check
-    @classmethod
-    def poll(cls, context):
-        return context.scene.installpacks_col
-
-    @no_type_check
-    def execute(self, context):
-        col = context.scene.installpacks_col
-        index = context.scene.installpacks_col_index
-
-        col.remove(index)
-        context.scene.installpacks_col_index = min(max(0, index - 1), len(col) - 1)
         return {"FINISHED"}

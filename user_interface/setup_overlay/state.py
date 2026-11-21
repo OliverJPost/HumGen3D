@@ -1,22 +1,25 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 """State of the setup, shared by the overlay and the sidebar panel.
 
-The setup is a sequence of steps (`SetupState.screen`): welcome, choose,
-licence, packs, slides (the download) and done. The overlay and the fallback
-in the sidebar panel are two views of the same step, so the user can go on in
-either.
+The setup is a sequence of steps (`SetupState.screen`): welcome, choose, then
+either packs (the free trial, which is downloaded) or files (the full
+version, installed from the `.hgpack` files of the purchase), slides (the
+progress) and done. The overlay and the fallback in the sidebar panel are two
+views of the same step, so the user can go on in either.
 
 Which step comes first depends on what is already known (`begin_setup`,
-`begin_update`, `begin_add_packs`, `begin_upgrade`, `begin_change_credential`):
-installed content skips the welcome and the choice, a stored order skips the
-licence form, a trial link skips the choice. The order is asked only when a
-download needs it, and a rejected order is marked, never forgotten.
+`begin_update`, `begin_add_packs`, `begin_full`, `begin_files`): installed
+content skips the welcome, and only an install from the trial page is offered the
+trial there: every other install is offered the content packs alone.
+
+Only the trial content is downloaded. The full version never is: the user
+picks the files, and installing them asks no server anything.
 
 The work runs in threads polled by a `bpy.app.timers` timer: the catalogue
-fetch, the order check and the download itself. The overlay is only a view of
-it: it can be closed and reopened at any time, and the poll reopens it when
-the download finishes. Nothing here touches `bpy` from a thread; what a
-thread wants done on the main thread goes through `pending`.
+fetch and the download or install itself. The overlay is only a view of it:
+it can be closed and reopened at any time, and the poll reopens it when the
+install finishes. Nothing here touches `bpy` from a thread; what a thread
+wants done on the main thread goes through `pending`.
 
 Everything that talks to a server or a disk goes through `Services`, so the
 tests and the prototype mode run the same state machine against `FakeServices`.
@@ -30,37 +33,34 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import bpy
 
-from ...backend.setup import api_client, downloader, migration, online, repository, user_settings
+from ...backend.setup import api_client, downloader, links, local_packs, migration, online, repository, trial_events, user_settings
 from ...backend.setup.catalogue import (
+    BASE_KEY,
     Catalogue,
     InstalledPack,
     PackStatus,
     PackVersion,
     has_humans,
-    install_mode,
     installed_packs,
     is_trial_install,
     plan,
     required_space,
+    updates,
     version_text,
 )
+from ...backend.setup.local_packs import LocalPack
 
 PHASES = ("idle", "downloading", "installing", "paused", "done", "failed", "cancelled")
-SCREENS = ("welcome", "choose", "license", "packs", "slides", "done")
-MODES = ("", "trial", "licensed")
-# Why the licence form shows: "" in a fresh setup, "update" when a download
-# needs an order and none is stored, "upgrade" for a trial user who bought,
-# "change" to enter another order, "rejected" after the server refused it
-LICENSE_REASONS = ("", "update", "upgrade", "change", "rejected")
+SCREENS = ("welcome", "packs", "files", "slides", "done")
+# "trial": the free packs, downloaded. "full": the packs of the purchase,
+# installed from files the user picks
+MODES = ("", "trial", "full")
 
-LICENSE_URL = "https://humgen3d.com/docs/faq/human-generator-asset-license"
 PRIVACY_URL = "https://humgen3d.com/privacy"
-ORDER_HELP_URL = "https://humgen3d.com/license-key"
-EMAIL_HELP_URL = "https://humgen3d.com/license-key#email"
-BUY_URL = "https://humgen3d.com/pricing"
-UPGRADE_URL = "https://humgen3d.com/upgrade?from=addon"
-SUPPORT_EMAIL = "support@humgen3d.com"
+SUPPORT_EMAIL = api_client.SUPPORT_EMAIL
 SUPPORT_URL = "mailto:" + SUPPORT_EMAIL
+# The docs section that says where the files of a purchase are
+FILES_HELP = "guide/installation#install-the-full-version"
 
 GB = 1024**3
 MB = 1024**2
@@ -76,7 +76,12 @@ STATUS_TAGS = {
     "up_to_date": "Installed",
     "update_available": "Update",
     "update_required": "Needed",
+    "older": "Older than installed",
+    "not_needed": "Not needed",
+    "not_a_pack": "Not a content pack",
 }
+# Statuses of a picked file that is left out of the install
+LEFT_OUT = ("older", "not_needed", "not_a_pack")
 
 
 @dataclass
@@ -95,17 +100,26 @@ class Pack:
     target: Optional[PackVersion] = None
     url: Optional[str] = None
     file: str = ""
-    free: bool = False  # a trial or public pack, downloadable without an order
+    free: bool = False  # a trial or public pack: the add-on can download it
     source: Optional[PackStatus] = None
     last_error: str = ""  # code of the attempt that failed, sent with the next link request
+    path: str = ""  # the file on this computer it installs from; "" for a download
+    needs_version: str = ""  # the version this add-on needs, when the picked file is older
 
     @property
     def installable(self) -> bool:
-        return not self.locked and self.target is not None
+        return not self.locked and self.target is not None and not self.left_out
+
+    @property
+    def left_out(self) -> bool:
+        """A picked file that can't or needn't be installed."""
+        return self.status in LEFT_OUT
 
     @property
     def tag(self) -> str:
         """The short label on the row, "" for a plain installable pack."""
+        if self.path and self.status == "update_available":
+            return ""
         return STATUS_TAGS.get(self.status, "")
 
     @property
@@ -115,8 +129,8 @@ class Pack:
 
 def pack_from_status(s: PackStatus, existing: bool) -> Pack:
     """A row of the pack list. `existing`: the install is up and running
-    (update or add-packs mode), so nothing is forced and only updates and the
-    standard packs it lacks are ticked."""
+    (update mode), so nothing is forced and only updates and the standard
+    packs it lacks are ticked."""
     pack = Pack(
         key=s.pack.key,
         name=s.pack.name,
@@ -144,6 +158,27 @@ def pack_from_status(s: PackStatus, existing: bool) -> Pack:
     return pack
 
 
+def pack_from_file(local: LocalPack, status: str) -> Pack:
+    """A row of the file list: a `.hgpack` the user picked, and what
+    installing it would do (`local_packs.status_of`)."""
+    installs = status in local_packs.INSTALLS
+    target = None
+    if not local.problem:
+        target = PackVersion(version=local.version, size=local.size, sha256=None, min_addon=(0,), file=local.file, unpacked_size=local.unpacked_size or None)
+    return Pack(
+        key=local.key or local.path,
+        name=local.name or local.file,
+        blurb=local.file,
+        size=local.size,
+        selected=installs,
+        status=status,
+        target=target,
+        file=local.file,
+        free=True,
+        path=local.path,
+    )
+
+
 def format_bytes(n: float) -> str:
     if n >= GB:
         return f"{n / GB:.1f} GB"
@@ -152,42 +187,17 @@ def format_bytes(n: float) -> str:
     return f"{n / 1024:.0f} KB"
 
 
-def clean_guid(text: str) -> str:
-    """The order ID or licence key as the server wants it: no surrounding
-    spaces, braces or quotes. Licence keys (HG3D-…) pass unchanged."""
-    return text.strip().strip("{}\"'").strip()
-
-
-def looks_like_guid(text: str) -> bool:
-    # The server is the judge of the format; only catch an empty or partial entry
-    return len(clean_guid(text)) >= 4
-
-
-def looks_like_order_number(text: str) -> bool:
-    """Superhive's short order number (digits only, maybe "#12345"), which
-    people paste instead of the order GUID. A GUID always has letters."""
-    return clean_guid(text).lstrip("#").replace(" ", "").isdigit()
-
-
-def looks_like_email(text: str) -> bool:
-    text = text.strip()
-    return "@" in text and "." in text.rpartition("@")[2] and " " not in text
-
-
 def default_folder() -> str:
     return migration.default_folder()
 
 
 def buy_url(rid: str = "", panel: str = "setup") -> str:
     """The pricing page, with the trial request id for attribution."""
-    query = f"utm_content={panel}"
-    if rid:
-        query = f"hg_rid={rid}&" + query
-    return f"{BUY_URL}?{query}"
+    return links.buy_url(panel, rid or None)
 
 
 def trial_rid() -> str:
-    """The trial request id: from the repository URL, or remembered earlier."""
+    """The trial request id: from the add-on's `trial.json`, or remembered earlier."""
     return repository.trial_rid() or str(user_settings.get("trial_rid", "") or "")
 
 
@@ -196,21 +206,26 @@ def trial_rid() -> str:
 
 class Services:
     """What the state asks of the outside world. All calls block and run in
-    threads, except the lock calls, which are quick."""
+    threads, except the lock calls and `read_pack`, which are quick."""
 
     def fetch_catalogue(self) -> Catalogue:
         raise NotImplementedError
 
-    def activate(self, credential: str, email: str, newsletter: bool, rid: str = "") -> dict:
+    def send_event(self, event: str, rid: str) -> None:
+        """One event of an install from the trial page (`trial_events`). Raises when it did not arrive."""
         raise NotImplementedError
 
-    def content_urls(self, keys: Sequence[str], credential: str, email: str, rid: str, retry: str = "") -> dict:
+    def content_urls(self, keys: Sequence[str], rid: str, retry: str = "") -> dict:
         raise NotImplementedError
 
     def download(self, pack: Pack, url: str, dest: str, progress, cancel: threading.Event) -> str:
         raise NotImplementedError
 
-    def install(self, zip_path: str, folder: str, cancel: threading.Event) -> InstalledPack:
+    def read_pack(self, path: str) -> LocalPack:
+        """What the file at `path` is, without installing it."""
+        raise NotImplementedError
+
+    def install(self, zip_path: str, folder: str, cancel: threading.Event, progress=None) -> InstalledPack:
         raise NotImplementedError
 
     def acquire_lock(self, folder: str) -> bool:
@@ -233,19 +248,22 @@ class RealServices(Services):
     def fetch_catalogue(self) -> Catalogue:
         return api_client.fetch_catalogue()
 
-    def activate(self, credential: str, email: str, newsletter: bool, rid: str = "") -> dict:
-        return api_client.activate(credential, email, newsletter, rid=rid)
+    def send_event(self, event: str, rid: str) -> None:
+        api_client.send_event(event, rid)
 
-    def content_urls(self, keys, credential, email, rid, retry="") -> dict:
-        return api_client.content_urls(keys, credential=credential, email=email, rid=rid, retry=retry)
+    def content_urls(self, keys, rid, retry="") -> dict:
+        return api_client.content_urls(keys, rid=rid, retry=retry)
 
     def download(self, pack: Pack, url: str, dest: str, progress, cancel) -> str:
         size = pack.target.size if pack.target else None
         sha = pack.target.sha256 if pack.target else None
         return downloader.download(url, dest, size, sha, progress, cancel)
 
-    def install(self, zip_path: str, folder: str, cancel) -> InstalledPack:
-        return downloader.install(zip_path, folder, cancel=cancel)
+    def read_pack(self, path: str) -> LocalPack:
+        return local_packs.read(path)
+
+    def install(self, zip_path: str, folder: str, cancel, progress=None) -> InstalledPack:
+        return downloader.install(zip_path, folder, progress=progress, cancel=cancel)
 
     def acquire_lock(self, folder: str) -> bool:
         return downloader.acquire_lock(folder)
@@ -285,8 +303,8 @@ FAKE_CHECK_SECONDS = 1.8
 
 
 class FakeServices(Services):
-    """Counts bytes instead of downloading and answers the order check by a
-    rule: any order passes, except one that starts with "0". Installs nothing.
+    """Counts bytes instead of downloading, and takes a picked file for the
+    pack its name says ("Base_Humans_4_1.hgpack"). Installs nothing.
 
     Switches for the tests and the dev tools: `fail_times` makes that many
     download attempts fail with a retryable error, `content_error` makes the
@@ -297,11 +315,19 @@ class FakeServices(Services):
         self.fail_times = 0
         self.catalogue_error: Optional[str] = None
         self.content_error: Optional[str] = None
+        self.install_error: Optional[str] = None
         self.lock_taken = False
-        self.license = "commercial"
         self.catalogue_extra: Dict[str, object] = {}
         self.attempts = 0
         self.retries: List[str] = []  # the `retry` of every link request
+        self.installed_from: List[str] = []  # the path of every install
+        self.events: List[Tuple[str, str]] = []  # every event sent: (event, trial id)
+        self.event_error: Optional[str] = None
+
+    def send_event(self, event: str, rid: str) -> None:
+        if self.event_error:
+            raise api_client.ApiError(self.event_error)
+        self.events.append((event, rid))
 
     def fetch_catalogue(self) -> Catalogue:
         time.sleep(min(FAKE_CHECK_SECONDS, 0.5))
@@ -312,19 +338,11 @@ class FakeServices(Services):
             data["addon"] = dict(FAKE_CATALOGUE["addon"], **self.catalogue_extra)  # type: ignore[arg-type]
         return Catalogue.from_dict(data)
 
-    def activate(self, credential: str, email: str, newsletter: bool, rid: str = "") -> dict:
-        time.sleep(FAKE_CHECK_SECONDS)
-        if credential.startswith("0"):
-            raise api_client.ApiError("not_found")
-        upgrade = UPGRADE_URL if self.license == "personal" else None
-        return {"ok": True, "license": self.license, "upgrade_url": upgrade}
-
-    def content_urls(self, keys, credential, email, rid, retry="") -> dict:
+    def content_urls(self, keys, rid, retry="") -> dict:
         self.retries.append(retry)
         if self.content_error:
             raise api_client.ApiError(self.content_error)
-        upgrade = UPGRADE_URL if self.license == "personal" else None
-        return {"files": {k: {"url": f"fake://{k}"} for k in keys}, "errors": {}, "license": self.license if credential else None, "upgrade_url": upgrade}
+        return {"files": {k: {"url": f"fake://{k}"} for k in keys}, "errors": {}}
 
     def download(self, pack: Pack, url: str, dest: str, progress, cancel) -> str:
         self.attempts += 1
@@ -343,8 +361,30 @@ class FakeServices(Services):
             progress(done, total)
         return dest
 
-    def install(self, zip_path: str, folder: str, cancel) -> InstalledPack:
-        time.sleep(FAKE_INSTALL_SECONDS)
+    def read_pack(self, path: str) -> LocalPack:
+        """The catalogue pack whose file name the path has, any version in it."""
+        name = os.path.basename(path)
+        stem = os.path.splitext(name)[0].lower()
+        for entry in FAKE_CATALOGUE["packs"]:  # type: ignore[union-attr]
+            version = entry["versions"][0]  # type: ignore[index]
+            key = str(entry["key"])  # type: ignore[index]
+            if stem.startswith(key.lower()) or os.path.splitext(str(version["file"]))[0].lower() == stem:
+                digits = [int(n) for n in stem[len(key):].replace("_v", "_").split("_") if n.isdigit()] if stem.startswith(key.lower()) else []
+                size = int(version["size"])
+                return LocalPack(path=path, key=key, name=str(entry["name"]), version=tuple(digits[:2]) or tuple(version["version"]), creator="HumGen", size=size, unpacked_size=2 * size)
+        return LocalPack(path=path, name=name, problem="not_a_pack")
+
+    def install(self, zip_path: str, folder: str, cancel, progress=None) -> InstalledPack:
+        self.installed_from.append(zip_path)
+        if self.install_error:
+            raise downloader.DownloadError(self.install_error)
+        steps = 20 if progress else 1
+        for index in range(steps):
+            if cancel is not None and cancel.is_set():
+                raise downloader.DownloadError("cancelled")
+            time.sleep(FAKE_INSTALL_SECONDS / steps)
+            if progress:
+                progress(index + 1, steps)
         return InstalledPack("", "", (0,), "")
 
     def acquire_lock(self, folder: str) -> bool:
@@ -379,16 +419,18 @@ def _retryable(error: Exception) -> bool:
 @dataclass
 class SetupState:
     services: Services = field(default_factory=default_services)
-    mode: str = ""  # "", "trial" or "licensed"
+    mode: str = ""  # "", "trial" or "full"
     screen: str = "welcome"  # the step both the overlay and the panel show (SCREENS)
     # The step this run of the setup started on: Back ends there
     entry: str = "welcome"
     phase: str = "idle"
     folder: str = field(default_factory=default_folder)
     packs: List[Pack] = field(default_factory=list)
+    # The files the user picked to install from, in full mode
+    files: List[LocalPack] = field(default_factory=list)
     current: Optional[Pack] = None
     error: str = ""
-    # The code of the error that ended the download (api_client / downloader codes)
+    # The code of the error that ended the install (api_client / downloader codes)
     failure_code: str = ""
     started: float = 0.0
     finished: float = 0.0
@@ -397,21 +439,15 @@ class SetupState:
     prompted: bool = False
     # The fallback in the panel is unfolded
     fallback_open: bool = False
-    # The user closed the overlay during the download: reopen it when done
+    # The user closed the overlay during the install: reopen it when done
     reopen_when_done: bool = False
     # Done or failed while no overlay was open and it could not be reopened
     ready_unseen: bool = False
-    # Licence check: idle, checking, ok, failed
-    license_phase: str = "idle"
-    license_error: str = ""
-    license_reason: str = ""
-    # The form should be filled from the stored order the next time it shows
-    prefill_due: bool = False
     # Catalogue: idle, loading, ok, failed
     catalogue: Optional[Catalogue] = None
     catalogue_phase: str = "idle"
     catalogue_error: str = ""
-    # Blender's online access is off and an action waits for it: "catalogue", "activate" or "start"
+    # Blender's online access is off and an action waits for it: "catalogue" or "start"
     online_blocked: str = ""
     # Another Blender holds the download lock of this folder
     lock_blocked: bool = False
@@ -419,20 +455,21 @@ class SetupState:
     update_mode: bool = False
     # Opened by an owner to add packs to a working install
     add_packs: bool = False
-    # Packs to tick instead of the usual choice, such as HG_Export from the Process tab
+    # Packs to tick instead of the usual choice, in the trial's list
     preselect: Tuple[str, ...] = ()
-    # The trial request id, when installed from a trial link
+    # The packs the file screen asks for, as "Base Humans 4.2": the updates
+    # of an install, or the one pack a button wants, such as HG Export
+    wanted: Tuple[str, ...] = ()
+    # The trial request id, when installed from the trial page
     rid: str = ""
     # Content found elsewhere on this computer, offered on the welcome screen
     found_folder: str = ""
-    # The user pointed the add-on at existing content instead of downloading
+    # The user pointed the add-on at existing content instead of installing
     adopted: bool = False
-    # This download replaces the trial with the full library
+    # This install replaces the trial with the full library
     upgrading_trial: bool = False
     # The locked packs of the trial list are unfolded
     locked_open: bool = False
-    # "Forget" in the preferences waits for its confirmation
-    forget_pending: bool = False
     # Automatic retry under way: attempt number, error, monotonic time of the next try
     retry_attempt: int = 0
     retry_error: str = ""
@@ -477,6 +514,11 @@ class SetupState:
         return self.done_bytes / total if total else 0.0
 
     @property
+    def local(self) -> bool:
+        """Installing from files on this computer: no server is asked."""
+        return self.mode == "full"
+
+    @property
     def active(self) -> bool:
         return self.phase in ("downloading", "installing")
 
@@ -486,12 +528,8 @@ class SetupState:
 
     @property
     def in_progress(self) -> bool:
-        """A download runs or waits to be resumed."""
+        """An install runs, or a download waits to be resumed."""
         return self.active or self.paused
-
-    @property
-    def checking(self) -> bool:
-        return self.license_phase == "checking"
 
     @property
     def loading(self) -> bool:
@@ -503,42 +541,24 @@ class SetupState:
 
     @property
     def busy(self) -> bool:
-        return self.active or self.checking or self.loading
-
-    @property
-    def credential(self) -> Optional[user_settings.Credential]:
-        return user_settings.credential()
-
-    @property
-    def credentials(self) -> Dict[str, str]:
-        """The stored order (or licence key) and email, "" when none."""
-        cred = self.credential
-        return {"order_guid": cred.value if cred else "", "email": cred.email if cred else ""}
-
-    @property
-    def activated(self) -> bool:
-        """A stored order the server accepted last time."""
-        cred = self.credential
-        return cred is not None and cred.status == "ok"
+        return self.active or self.loading
 
     def support_details(self) -> str:
         """What support needs to know about where the setup stands: versions,
-        the error, the pack and the folder; the license key only masked."""
+        the error, the pack and the folder."""
         info = api_client.client_info()
         lines = [f"Add-on {info['addon']}, Blender {info['blender']}, {info['platform']}"]
         if self.phase == "failed":
-            lines.append(f"Download failed: {self.failure_code}: {self.error}")
-        if self.license_error:
-            lines.append(f"License: {self.license_error}")
+            what = "Install from file" if self.local else "Download"
+            lines.append(f"{what} failed: {self.failure_code}: {self.error}")
         if self.catalogue_error:
             lines.append(f"Pack list: {self.catalogue_error}")
         pack = self.current
         if pack is not None:
             version = ".".join(str(v) for v in pack.target.version) if pack.target is not None else "?"
             lines.append(f"Pack: {pack.key} {version}, {pack.state}, {format_bytes(pack.done_bytes)} of {format_bytes(pack.size)}")
-        cred = self.credential
-        if cred is not None:
-            lines.append(f"License key {cred.masked}, {cred.status}")
+            if pack.path:
+                lines.append(f"File: {pack.file}")
         lines.append(f"Content folder: {self.folder or '(not set)'}")
         return "\n".join(lines)
 
@@ -547,11 +567,6 @@ class SetupState:
         body = "What happened:\n\n\n---\n" + self.support_details()
         query = urllib.parse.urlencode({"subject": "Human Generator setup", "body": body}, quote_via=urllib.parse.quote)
         return f"{SUPPORT_URL}?{query}"
-
-    @property
-    def credential_failed(self) -> bool:
-        """The download ended because the server refused the order."""
-        return self.phase == "failed" and self.failure_code in api_client.CREDENTIAL_CODES
 
     @property
     def can_go_back(self) -> bool:
@@ -593,9 +608,17 @@ class SetupState:
         return has_humans(self.installed())
 
     @property
-    def has_licensed_content(self) -> bool:
+    def has_full_content(self) -> bool:
         installed = self.installed()
         return has_humans(installed) and not is_trial_install(installed)
+
+    @property
+    def base_missing(self) -> bool:
+        """Files are picked, but the base pack is neither among them nor
+        installed: no human can be made with what would be on disk."""
+        if not self.local or not self.selected:
+            return False
+        return BASE_KEY not in self.installed() and all(p.key != BASE_KEY for p in self.selected)
 
     def space(self) -> Tuple[int, Optional[int]]:
         """Bytes the selected packs need on disk while installing, and the
@@ -605,7 +628,12 @@ class SetupState:
         if folder != self.folder or now - at > 2.0:
             self._free = downloader.free_space(self.folder)
             self._free_key = (self.folder, now)
-        sources = [p.source for p in self.selected if p.source is not None and p.state != "done"]
+        waiting = [p for p in self.selected if p.state != "done"]
+        if self.local:
+            # Unzipped straight from where the files are: nothing is copied first
+            needed = sum((p.target.unpacked_size if p.target and p.target.unpacked_size else 2 * p.size) for p in waiting)
+            return needed, self._free
+        sources = [p.source for p in waiting if p.source is not None]
         return (required_space(sources) if sources else 0), self._free
 
     @property
@@ -616,12 +644,14 @@ class SetupState:
     @property
     def drive_missing(self) -> bool:
         """The folder is on a drive or share that is not connected: nothing is
-        created or downloaded there."""
+        created or installed there."""
         return migration.drive_missing(self.folder)
 
     @property
     def can_install(self) -> bool:
-        return bool(self.selected) and not self.loading and self.space_ok and not self.downloads_paused and not self.drive_missing
+        if not self.selected or not self.space_ok or self.drive_missing:
+            return False
+        return self.local or (not self.loading and not self.downloads_paused)
 
     # Ways in
 
@@ -636,17 +666,16 @@ class SetupState:
         self.failure_code = ""
         self.finalized = False
         self.ready_unseen = False
-        if not self.checking:
-            self.license_phase = "idle"
-        self.license_error = ""
-        self.license_reason = ""
         self.update_mode = False
         self.add_packs = False
         self.preselect = ()
+        self.wanted = ()
+        self.files = []
         self.adopted = False
         self.upgrading_trial = False
         self.lock_blocked = False
         self.locked_open = False
+        self.online_blocked = ""
         self.found_folder = ""
         self.prompted = True
         self.rid = trial_rid()
@@ -656,14 +685,12 @@ class SetupState:
         self.screen = self.entry = screen
         if screen == "packs":
             self.ensure_catalogue()
-        elif screen == "license":
-            self._license_entered()
 
     def begin_setup(self, folder: str = "") -> None:
         """Fresh setup from "Set up Human Generator". Skips the steps whose
-        answer is known: installed content opens the pack list to add packs,
-        a stored order opens the full pack list, a trial install shows its
-        pack list, a trial link leaves out the choice between trial and licence."""
+        answer is known: installed content opens the file list to add packs,
+        a trial install shows its pack list. The welcome offers the trial
+        only to an install from the trial page (`rid`)."""
         if self.in_progress:
             self.prompted = True
             return
@@ -671,11 +698,6 @@ class SetupState:
         installed = self.installed()
         if has_humans(installed) and not is_trial_install(installed):
             self.begin_add_packs()
-            return
-        if self.activated:
-            self.set_mode("licensed", force=True)
-            self.upgrading_trial = is_trial_install(installed)
-            self._enter("packs")
         elif is_trial_install(installed):
             self.set_mode("trial", force=True)
             self._enter("packs")
@@ -688,75 +710,101 @@ class SetupState:
             self._enter("welcome")
 
     def begin_update(self, folder: str = "", keys: Sequence[str] = ()) -> None:
-        """Entered from the update notice: the pack list in update mode. The
-        order is asked only when Install is pressed and none is stored.
-        `keys`: tick only these packs (installable ones), for a button that
-        installs one pack, such as "Install HG Export"."""
+        """Entered from the update notice or from a button that wants one pack
+        (`keys`), such as "Install HG Export". The trial updates by download,
+        so it gets its pack list. Every other pack comes as a file: the file
+        screen, saying which packs to get."""
         if self.in_progress:
             self.prompted = True
             return
         self._fresh(folder)
-        self.preselect = tuple(k for k in keys if k)
         self.update_mode = True
-        self.set_mode(install_mode(self.installed()), force=True)
-        self._enter("packs")
+        keys = tuple(k for k in keys if k)
+        if is_trial_install(self.installed()) and not keys:
+            self.set_mode("trial", force=True)
+            self._enter("packs")
+            return
+        self.wanted = self._wanted(keys)
+        self.set_mode("full", force=True)
+        self._enter("files")
 
     def begin_add_packs(self, folder: str = "") -> None:
-        """An owner adding packs: the pack list, without welcome, choice or trial."""
+        """An owner adding packs: the file list, without welcome or choice."""
         if self.in_progress:
             self.prompted = True
             return
         self._fresh(folder)
         self.add_packs = True
-        self.set_mode("licensed", force=True)
-        self._enter("packs")
+        self.set_mode("full", force=True)
+        self._enter("files")
 
-    def begin_upgrade(self) -> None:
-        """A trial user who bought: the licence form, or the full pack list when
-        an order is stored. Resets a finished earlier run."""
+    def begin_full(self, folder: str = "") -> None:
+        """Someone who bought the full version: the file list. From the trial,
+        Back returns to the trial's pack list."""
         if self.in_progress:
             self.prompted = True
             return
-        self._fresh()
+        self._fresh(folder)
         self.upgrading_trial = is_trial_install(self.installed())
-        self.set_mode("licensed", force=True)
-        if self.activated:
-            self._enter("packs")
-        else:
-            self.license_reason = "upgrade"
-            self._enter("license")
-            if self.upgrading_trial:
-                self.entry = "packs"  # Back returns to the trial's pack list
+        self.set_mode("full", force=True)
+        self._enter("files")
+        if self.upgrading_trial:
+            self.entry = "packs"
 
-    def begin_change_credential(self) -> None:
-        """The licence form filled with the stored order, to enter another one.
-        The pack list follows in update mode."""
+    def begin_files(self, paths: Sequence[str], folder: str = "") -> bool:
+        """Pack files were handed over (dropped on the viewport): the file
+        list with them in it. False while an install runs."""
         if self.in_progress:
             self.prompted = True
-            return
-        self._fresh()
-        self.update_mode = True
-        self.set_mode("licensed", force=True)
-        self.license_reason = "change"
-        self._enter("license")
+            return False
+        if not (self.local and self.screen == "files" and self.prompted):
+            if folder:
+                self.folder = folder
+            if self.has_full_content:
+                self.begin_add_packs()
+            else:
+                self.begin_full()
+        self.add_files(paths)
+        return True
 
-    def _license_entered(self) -> None:
-        self.prefill_due = True
-        cred = self.credential
-        if cred is not None and cred.status == "rejected" and not self.license_error:
-            self.license_error = cred.error_message or api_client.MESSAGES.get(cred.error_code, "")
+    def _known_catalogue(self) -> Optional[Catalogue]:
+        """The catalogue without asking for it: this run's, or the one the
+        last update check left behind."""
+        if self.catalogue is not None:
+            return self.catalogue
+        try:
+            from ...backend.setup import update_check
+
+            return update_check.status.catalogue or update_check.cached_catalogue()
+        except Exception:  # noqa: BLE001
+            return None
+
+    def _wanted(self, keys: Sequence[str]) -> Tuple[str, ...]:
+        """The packs to ask for on the file screen, as "Base Humans 4.2":
+        the given ones, or the updates of this folder. Names only, from the
+        catalogue the last check left behind; nothing is requested."""
+        catalogue = self._known_catalogue()
+        statuses = plan(catalogue, self.installed(), _addon_version(), "full") if catalogue is not None else []
+        known = {s.key: s for s in (statuses if keys else updates(statuses))}
+        names = []
+        for key in keys or list(known):
+            s = known.get(key)
+            if s is None:
+                names.append(key.replace("_", " "))
+            elif s.target is not None:
+                names.append(f"{s.pack.name} {version_text(s.target.version)}")
+            else:
+                names.append(s.pack.name)
+        return tuple(names)
 
     # Steps
 
     def choose(self, mode: str) -> None:
-        """Choice screen: the trial goes straight to the packs, a licence is checked first."""
-        if mode == "trial" and (self.activated or self.has_licensed_content):
-            mode = "licensed"  # a licensed install never gets the trial
+        """The welcome's buttons: the trial goes to its pack list, the content packs to the file list."""
+        if mode == "trial" and self.has_full_content:
+            mode = "full"  # an install with the full library never gets the trial
         self.set_mode(mode)
-        if mode == "trial" or self.activated:
-            self.go("packs")
-        else:
-            self.go("license")
+        self.go("packs" if mode == "trial" else "files")
 
     def set_mode(self, mode: str, force: bool = False) -> None:
         if mode != self.mode or force:
@@ -767,38 +815,20 @@ class SetupState:
         self.screen = screen
         if screen == "packs":
             self.ensure_catalogue()
-        elif screen == "license":
-            self._license_entered()
 
     def back(self) -> None:
         if not self.can_go_back:
             return
-        if self.screen == "choose":
+        if self.screen == "files" and self.entry == "packs":
+            # The trial user who looked at the full version's step
+            self.set_mode("trial")
+            self.go("packs")
+            return
+        if self.screen in ("files", "packs"):
             self.screen = "welcome"
-        elif self.screen == "license":
-            if self.license_reason == "update":
-                # "Not now": the notices stop asking for these versions, so
-                # someone without a license (a bundle copy) isn't asked daily
-                from ...backend.setup import update_check
-
-                update_check.status.skip([p.source for p in self.selected if p.source is not None])
-            if self.license_reason in ("update", "change", "rejected"):
-                self.go("packs")
-            elif self.license_reason == "upgrade":
-                if is_trial_install(self.installed()):
-                    self.set_mode("trial")
-                self.go("packs")
-            else:
-                # A trial link has no choice screen: its welcome offers both
-                self.screen = "welcome" if self.rid else "choose"
-            self.license_error = ""
-        elif self.screen == "packs":
-            if self.mode == "licensed" and not self.activated:
-                self.go("license")
-            else:
-                self.screen = "welcome" if self.rid else "choose"
-        if self.entry != "welcome" and self.screen in ("welcome", "choose"):
+        if self.entry != "welcome" and self.screen == "welcome":
             self.screen = self.entry
+
     # Catalogue
 
     def ensure_catalogue(self) -> None:
@@ -820,15 +850,58 @@ class SetupState:
         _start_poll()
 
     def build_packs(self) -> None:
-        if self.catalogue is None:
+        """The rows of the list: the picked files in full mode, the trial's
+        packs from the catalogue otherwise."""
+        if self.local:
+            installed = self.installed(refresh=True)
+            picked = [f.key for f in self.files if not f.problem]
+            unticked = {p.path for p in self.packs if p.path and not p.selected}
+            rows = []
+            for local in self.files:
+                row = pack_from_file(local, local_packs.status_of(local, installed, picked))
+                have = installed.get(local.key)
+                row.installed_version = have.version if have is not None else ()
+                needs = local_packs.needs_newer(local)
+                if needs is not None and row.installable:
+                    row.needs_version = version_text(needs)
+                if row.path in unticked:
+                    row.selected = False
+                rows.append(row)
+            self.packs = rows
+            return
+        if self.catalogue is None or self.mode != "trial":
             self.packs = []
             return
-        statuses = plan(self.catalogue, self.installed(refresh=True), _addon_version(), self.mode or "licensed")
-        existing = self.update_mode or self.add_packs
-        self.packs = [pack_from_status(s, existing) for s in statuses]
+        statuses = plan(self.catalogue, self.installed(refresh=True), _addon_version(), "trial")
+        self.packs = [pack_from_status(s, self.update_mode) for s in statuses]
         if self.preselect:
             for pack in self.packs:
                 pack.selected = pack.key in self.preselect and pack.installable and pack.status != "up_to_date"
+
+    # Files
+
+    def add_files(self, paths: Sequence[str]) -> None:
+        """Add the picked files to the list. A newer version of a pack
+        replaces an older one already in it. Main thread: reading a pack's
+        table of contents takes a moment, not more."""
+        if self.in_progress:
+            return
+        known = {f.path: f for f in self.files}
+        for path in paths:
+            if path and path not in known:
+                known[path] = self.services.read_pack(path)
+        self.files = local_packs.newest(known.values())
+        if self.phase in ("done", "failed", "cancelled"):
+            self.phase = "idle"
+        if self.local:
+            self.build_packs()
+
+    def clear_files(self) -> None:
+        if self.in_progress:
+            return
+        self.files = []
+        if self.local:
+            self.build_packs()
 
     # Online access
 
@@ -843,74 +916,18 @@ class SetupState:
         elif action == "start":
             self.start()
 
-    # Licence
-
-    def prefill_form(self, form) -> None:
-        """Fill the licence form from the stored order. Overwrites what is typed
-        only right after a step asked for it (`prefill_due`). Main thread, never
-        from a Panel.draw."""
-        force = self.prefill_due
-        self.prefill_due = False
-        cred = self.credential
-        if cred is not None:
-            if force or not form.order_guid:
-                form.order_guid = cred.value
-            if force or not form.email:
-                form.email = cred.email
-        if user_settings.get("terms_accepted_at") and not form.accept_terms:
-            form.accept_terms = True
-
-    def activate(self, order_guid: str, email: str, accepted: bool, newsletter: bool = False) -> bool:
-        """Start the order check. False (with `license_error` set) if the form is incomplete."""
-        if self.checking:
-            return True
-        if not looks_like_guid(order_guid):
-            self.license_error = "Enter your license key. Bought on Superhive? Use the order GUID from your order email."
-            return False
-        if looks_like_order_number(order_guid):
-            self.license_error = "This is the order number. Enter the order GUID instead: the long code of letters and numbers in your order email."
-            return False
-        if not looks_like_email(email):
-            self.license_error = "Enter the email you bought with."
-            return False
-        if not accepted:
-            self.license_error = "Accept the license and the privacy policy to continue."
-            return False
-        if not online.allowed():
-            self.online_blocked = "activate"
-            self.license_error = ""
-            return True
-        self.online_blocked = ""
-        self.license_error = ""
-        self.license_phase = "checking"
-        self.worker = LicenseCheck(self, clean_guid(order_guid), email.strip(), newsletter)
-        self.worker.start()
-        _start_poll()
-        return True
-
-    def forget_credential(self) -> bool:
-        self.forget_pending = False
-        return user_settings.forget_credential()
-
-    # Download
+    # Install
 
     def start(self) -> None:
         """Install, or resume after a pause or failure: packs already done stay done."""
-        if self.active or self.downloads_paused or self.drive_missing:
+        if self.active or self.drive_missing:
             return
-        if any(not p.free for p in self.selected) and not self.activated:
-            # The order is asked at the moment it is needed, once
-            if not self.license_reason:
-                cred = self.credential
-                if cred is not None and cred.status == "rejected":
-                    self.license_reason = "rejected"
-                elif self.update_mode or self.add_packs or self.screen in ("packs", "done", "slides"):
-                    self.license_reason = "update"
-            self.go("license")
-            return
-        if not online.allowed():
-            self.online_blocked = "start"
-            return
+        if not self.local:
+            if self.downloads_paused:
+                return
+            if not online.allowed():
+                self.online_blocked = "start"
+                return
         self.online_blocked = ""
         if not self.services.acquire_lock(self.folder):
             self.lock_blocked = True
@@ -921,8 +938,9 @@ class SetupState:
             if keep_done and pack.state == "done":
                 continue
             pack.state = "pending"
-            if not keep_done:
+            if not keep_done or pack.path:
                 pack.done_bytes = 0
+            if not keep_done:
                 pack.last_error = ""
         self.error = ""
         self.failure_code = ""
@@ -934,12 +952,12 @@ class SetupState:
         self.rid = trial_rid()
         if self.rid:
             user_settings.update(trial_rid=self.rid)
-        if self.mode == "licensed" and is_trial_install(self.installed()):
+        if self.local and is_trial_install(self.installed()) and any(p.key == BASE_KEY for p in self.selected):
             self.upgrading_trial = True
         self.cancel_event = threading.Event()
         self._pausing = False
         self.started = time.monotonic()
-        self.phase = "downloading"
+        self.phase = "installing" if self.local else "downloading"
         self.screen = "slides"
         self.worker = InstallWorker(self)
         self.worker.start()
@@ -974,8 +992,9 @@ class SetupState:
         self._clear_retry()
         self.reopen_when_done = False
         self.ready_unseen = False
-        self.screen = "packs"
-        self.services.discard(self.folder)
+        self.screen = "files" if self.local else "packs"
+        if not self.local:
+            self.services.discard(self.folder)
 
     def shutdown(self, timeout: float = 1.0) -> None:
         """The add-on is switched off: stop every thread quickly, keep partial files."""
@@ -1027,9 +1046,19 @@ class SetupState:
         except Exception as e:  # noqa: BLE001
             print("HumGen: finishing the install failed:", repr(e))
         _refresh_update_status()
+        self.report_trial_events()
+
+    def report_trial_events(self) -> None:
+        """An install from the trial page says what just became true: the setup
+        opened, the trial or the full version is installed. Each once, as its
+        own request, nothing for any other install (`trial_events`). Main thread."""
+        try:
+            trial_events.report(self.folder or _addon_folder(), send=self.services.send_event)
+        except Exception as e:  # noqa: BLE001
+            print("HumGen: trial events:", repr(e))
 
     def adopt_folder(self, folder: str) -> bool:
-        """Use content already on this computer: no order, no download. Main thread."""
+        """Use content already on this computer: nothing is installed. Main thread."""
         if not migration.folder_has_content(folder):
             return False
         self._fresh(folder)
@@ -1041,6 +1070,7 @@ class SetupState:
         except Exception as e:  # noqa: BLE001
             print("HumGen: using the content folder failed:", repr(e))
         _refresh_update_status()
+        self.report_trial_events()
         self.screen = "done"
         return True
 
@@ -1067,6 +1097,8 @@ class SetupState:
         self.screen = self.entry = "welcome"
         self.mode = ""
         self.packs = []
+        self.files = []
+        self.wanted = ()
         self.current = None
         self.error = ""
         self.failure_code = ""
@@ -1074,9 +1106,6 @@ class SetupState:
         self.fallback_open = False
         self.ready_unseen = False
         self.reopen_when_done = False
-        self.license_phase = "idle"
-        self.license_error = ""
-        self.license_reason = ""
         self.catalogue = None
         self.catalogue_phase = "idle"
         self.catalogue_error = ""
@@ -1099,6 +1128,16 @@ def _addon_version() -> tuple:
         return addon_version()
     except Exception:  # noqa: BLE001
         return (0, 0, 0)
+
+
+def _addon_folder() -> str:
+    """The content folder the add-on uses, "" when none is set."""
+    try:
+        from ...backend.setup import update_check
+
+        return update_check.content_folder()
+    except Exception:  # noqa: BLE001
+        return ""
 
 
 def _refresh_update_status() -> None:
@@ -1132,49 +1171,11 @@ class CatalogueLoad(threading.Thread):
         state.catalogue_phase = "ok"
 
 
-class LicenseCheck(threading.Thread):
-    def __init__(self, state: "SetupState", credential: str, email: str, newsletter: bool) -> None:
-        super().__init__(name="hg-license-check", daemon=True)
-        self.state = state
-        self.credential = credential
-        self.email = email
-        self.newsletter = newsletter
-
-    def run(self) -> None:
-        state = self.state
-        try:
-            answer = state.services.activate(self.credential, self.email, self.newsletter, state.rid)
-        except api_client.ApiError as e:
-            stored = user_settings.credential()
-            if e.code in api_client.CREDENTIAL_CODES and stored is not None and stored.value == self.credential:
-                # A definitive answer about the stored order: mark it, never forget it
-                user_settings.mark_credential_rejected(e.code, e.message)
-            state.license_error = e.message
-            state.license_phase = "failed"
-            return
-        except Exception as e:  # noqa: BLE001
-            state.license_error = api_client.MESSAGES["bad_response"] + f" ({e!r})"
-            state.license_phase = "failed"
-            return
-        user_settings.save_credential(self.credential, self.email, license=answer.get("license"), upgrade_url=answer.get("upgrade_url"))
-        now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        user_settings.update(newsletter=self.newsletter, terms_accepted_at=now)
-        state.license_phase = "ok"
-        reason = state.license_reason
-        state.license_reason = ""
-        if reason in ("update", "rejected") and state.selected:
-            # Asked at Install: go on with the download the user chose
-            state.pending = "start"
-            return
-        state.set_mode("licensed")
-        state.screen = "packs"
-        state.pending = "catalogue"
-
-
 class InstallWorker(threading.Thread):
-    """Downloads and installs the selected packs, one after the other. Packs
-    already done (an earlier attempt) are skipped; a dropped connection is
-    retried a few times with a fresh link, resuming the partial file."""
+    """Installs the selected packs, one after the other: a pack with a file
+    is unzipped from it, any other is downloaded first. Packs already done (an
+    earlier attempt) are skipped; a dropped connection is retried a few times
+    with a fresh link, resuming the partial file."""
 
     def __init__(self, state: "SetupState") -> None:
         super().__init__(name="hg-install", daemon=True)
@@ -1198,15 +1199,10 @@ class InstallWorker(threading.Thread):
             state.phase = "failed"
             self._note_failure(state, e.code)
         except api_client.ApiError as e:
-            if e.code in api_client.CREDENTIAL_CODES:
-                # The stored order no longer passes: mark it, keep it, ask again
-                user_settings.mark_credential_rejected(e.code, e.message)
             state.error = e.message
             state.failure_code = e.code
             state.phase = "failed"
             self._note_failure(state, e.code)
-            if e.code in api_client.CREDENTIAL_CODES:
-                state.screen = "done"  # where the ways out are
         except Exception as e:  # noqa: BLE001
             state.error = api_client.MESSAGES["bad_response"] + f" ({e!r})"
             state.failure_code = "bad_response"
@@ -1221,22 +1217,47 @@ class InstallWorker(threading.Thread):
                 pass
 
     def _run(self, state: "SetupState", cancel: threading.Event) -> None:
-        folder = downloader.download_folder(state.folder)
         for pack in state.selected:
             if pack.state == "done":
                 continue
             if cancel.is_set():
                 raise downloader.DownloadError("cancelled")
-            dest = os.path.join(folder, pack.file or (pack.key + ".hgpack"))
-            self._download(state, pack, dest, cancel)
+            state.current = pack
+            if pack.path:
+                self._install_file(state, pack, cancel)
+            else:
+                dest = os.path.join(downloader.download_folder(state.folder), pack.file or (pack.key + ".hgpack"))
+                self._download(state, pack, dest, cancel)
+                pack.done_bytes = pack.size
+                pack.state = "installing"
+                state.phase = "installing"
+                state.services.install(dest, state.folder, cancel)
+                if isinstance(state.services, RealServices):
+                    downloader._remove(dest)
             pack.done_bytes = pack.size
-            pack.state = "installing"
-            state.phase = "installing"
-            state.services.install(dest, state.folder, cancel)
-            if isinstance(state.services, RealServices):
-                downloader._remove(dest)
             pack.state = "done"
         state.phase = "done"
+
+    @staticmethod
+    def _install_file(state: "SetupState", pack: Pack, cancel: threading.Event) -> None:
+        """Unzip a pack from the file the user picked. The file stays where it is."""
+        last_refresh = [time.monotonic()]
+
+        def progress(done: int, total: int) -> None:
+            pack.done_bytes = int(pack.size * done / total) if total else 0
+            now = time.monotonic()
+            if now - last_refresh[0] > 30.0:
+                last_refresh[0] = now
+                state.services.refresh_lock(state.folder)
+
+        pack.state = "installing"
+        state.phase = "installing"
+        try:
+            state.services.install(pack.path, state.folder, cancel, progress)
+        except downloader.DownloadError as e:
+            if e.code == "cancelled":
+                raise
+            raise downloader.DownloadError(e.code, PackErrorText(pack.name, e.message)) from None
 
     def _download(self, state: "SetupState", pack: Pack, dest: str, cancel: threading.Event) -> None:
         attempt = 0
@@ -1289,15 +1310,10 @@ class InstallWorker(threading.Thread):
 
     @staticmethod
     def _fetch_url(state: "SetupState", pack: Pack) -> None:
-        creds = state.credentials if not pack.free else {"order_guid": "", "email": ""}
         if pack.last_error:
-            answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid, retry=pack.last_error)
+            answer = state.services.content_urls([pack.key], state.rid, retry=pack.last_error)
         else:
-            answer = state.services.content_urls([pack.key], creds["order_guid"], creds["email"], state.rid)
-        # The server says the customer's best licence every time: an upgrade
-        # to Commercial shows without entering anything again
-        if creds["order_guid"]:
-            user_settings.update_license(answer.get("license"), answer.get("upgrade_url"))
+            answer = state.services.content_urls([pack.key], state.rid)
         info = (answer.get("files") or {}).get(pack.key)
         if info and info.get("url"):
             pack.url = info["url"]
@@ -1312,8 +1328,6 @@ class InstallWorker(threading.Thread):
             pack.url = pack.target.url
             return
         code = str((answer.get("errors") or {}).get(pack.key) or "no_download")
-        if code in api_client.CREDENTIAL_CODES:
-            raise api_client.ApiError(code)
         if code in api_client.TRANSIENT_CODES:
             raise api_client.ApiError(code)
         raise downloader.DownloadError("pack", PackErrorText(pack.name, api_client.pack_error_message(code)))

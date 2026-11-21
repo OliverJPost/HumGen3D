@@ -337,7 +337,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         draw_trial_notice(self.layout, "process")
 
     def _draw_pack_notice(self, pack_status: str) -> None:
-        """The HG_Export content pack is missing or too old: install it through the setup."""
+        """The HG_Export content pack is missing or too old: install its file through the setup."""
         outdated = pack_status == "outdated"
         box = self.layout.box()
         row = box.row()
@@ -351,7 +351,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
             (
                 "This version of Human Generator needs a newer version of the HG Export pack."
                 if outdated
-                else "The Process tab needs the HG Export pack, which is included with your license."
+                else "The Process tab needs the HG Export pack, which comes with your purchase as HG_Export.hgpack."
             ),
             alignment="CENTER",
             enabled=False,
@@ -360,7 +360,7 @@ class HG_PT_PROCESS(HGPanel, bpy.types.Panel):
         col.scale_y = 1.3
         col.operator(
             "hg3d.setup_update",
-            text="Update HG Export" if outdated else "Install HG Export",
+            text="Update HG Export…" if outdated else "Install HG Export…",
             icon="IMPORT",
             depress=True,
         ).keys = export_pack.PACK_NAME

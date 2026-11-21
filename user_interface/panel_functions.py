@@ -197,7 +197,8 @@ def searchbox(sett, name, layout):
 
 
 def draw_trial_buttons(layout, panel: str, text: str = "Buy full version") -> None:
-    """The "Buy" button of a trial notice, with "I have a license" next to it.
+    """The "Buy" button of a trial notice, with "I bought it" next to it,
+    which installs the full version from the files of the purchase.
 
     Args:
         layout (UILayout): where the row goes
@@ -206,7 +207,28 @@ def draw_trial_buttons(layout, panel: str, text: str = "Buy full version") -> No
     """
     row = layout.row(align=True)
     row.operator("hg3d.buy_full_version", text=text, depress=True).panel = panel
-    row.operator("hg3d.setup_upgrade", text="I have a license")
+    row.operator("hg3d.setup_full", text="I bought it")
+
+
+def draw_trial_box(layout, panel: str) -> None:
+    """The trial's card at the top of the main panel: a box that says this is
+    the trial, a large buy button and "I bought it" under it, which installs
+    the full version from the files of the purchase.
+
+    Args:
+        layout (UILayout): where the box goes
+        panel (str): which notice this is, sent along with the link (utm_content)
+    """
+    box = layout.box()
+    col = box.column(align=False)
+    title = col.row()
+    title.alert = True
+    title.alignment = "CENTER"
+    title.label(text="Trial version")
+    buy = col.row()
+    buy.scale_y = 1.8
+    buy.operator("hg3d.buy_full_version", text="Buy Human Generator", depress=True).panel = panel
+    col.operator("hg3d.setup_full", text="I bought it")
 
 
 def draw_trial_notice(layout, panel: str) -> None:
@@ -238,4 +260,4 @@ def draw_unreachable_folder(layout, folder: str) -> None:
     row.operator("hg3d.content_folder_retry", text="Try again", icon="FILE_REFRESH", depress=True)
     row = col.row(align=True)
     row.operator("hg3d.pathchange", text="Locate folder…", icon="FILEBROWSER")
-    row.operator("hg3d.setup_start", text="Download again…", icon="IMPORT")
+    row.operator("hg3d.setup_start", text="Install again…", icon="IMPORT")

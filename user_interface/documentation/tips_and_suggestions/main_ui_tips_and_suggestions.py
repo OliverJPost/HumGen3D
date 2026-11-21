@@ -1,7 +1,7 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 from enum import Enum
 
-from ....backend.preferences.licence import buy_url
+from ....backend.setup.links import buy_url
 
 from ....user_interface.documentation.tips_and_suggestions.tip_baseclasses import (
     Tip,

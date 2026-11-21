@@ -162,6 +162,7 @@ class Palette:
         self.on_accent: Color = (1.0, 1.0, 1.0, 1.0)
         self.success: Color = hex_color("6fbf8b")
         self.danger: Color = hex_color("e5736b")
+        self.warning: Color = hex_color("d9a95a")
         self.shadow: Color = (0.0, 0.0, 0.0, 0.45)
 
     @staticmethod

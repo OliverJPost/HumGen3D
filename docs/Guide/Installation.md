@@ -1,10 +1,10 @@
 ---
-description: "Install Human Generator in Blender 4.2 or newer, download the content packs with the setup, activate your license, and find your content folder again after a move."
+description: "Install Human Generator in Blender 4.2 or newer, install the free trial or the content packs of your purchase with the setup, and find your content folder again after a move."
 ---
 
 # Installation
 
-Human Generator has two parts: the add-on, and the content packs with the humans, clothing, hair and poses. You install the add-on yourself. The add-on then downloads the content packs for you.
+Human Generator has two parts: the add-on, and the content packs with the humans, clothing, hair and poses. You install the add-on yourself. Its setup then installs the content: it downloads the free trial, or it installs the full version from the `.hgpack` files of your purchase.
 
 If something goes wrong on the way, see [[Setup troubleshooting]].
 
@@ -21,18 +21,24 @@ On Blender 4.0 and 4.1 the add-on still loads, but it only shows this notice, wi
 
 The **Learn more** button opens this page. You have two choices:
 
-- **Move to Blender 4.2 or newer.** You can install it next to your current Blender. Install the add-on there as described below. It finds the content folder you already have, so you don't download anything again.
+- **Move to Blender 4.2 or newer.** You can install it next to your current Blender. Install the add-on there as described below. It finds the content folder you already have, so you don't install anything again.
 - **Stay on Blender 4.0 or 4.1.** The last version of Human Generator for these Blender versions is **4.0.33**. If you updated and now see the notice, go back to it with the updater: press **Open the updater** in the notice, or open the add-on preferences. There, press **Check now for humgen3d update**, then **Install main / old version**, choose **v4.0.33** and press OK. Restart Blender afterwards. If its updater later offers a newer version, don't install it on this Blender.
 
 ### Disk space and internet
 
-The standard content packs are a 2 to 4 GB download, and installing them needs room to unpack. The setup shows the free space on the disk before it starts. Downloading needs an internet connection and Blender's online access setting (see [[Setup troubleshooting#Downloading needs Blender's online access, which is turned off|online access]]). Once the content is installed, Human Generator works offline.
+The trial is a download of about 270 MB. The full version is 2 to 4 GB of pack files, and installing them needs room to unpack. The setup shows the free space on the disk before it starts.
+
+Only the trial needs an internet connection, and Blender's online access setting (see [[Setup troubleshooting#Downloading needs Blender's online access, which is turned off|online access]]). The full version installs from files on your computer and works offline, as does Human Generator itself once the content is installed.
 
 ## Install the add-on
 
-**From the website (recommended).** Open [humgen3d.com/install](https://humgen3d.com/install), or [humgen3d.com/trial](https://humgen3d.com/trial) for the free trial. Drag the **Drag into Blender to install** button into any Blender window and confirm the dialog. Blender adds the Human Generator repository and installs the add-on from it. Updates then show up in Blender's extension list like any other extension.
+The add-on is a zip file. For the free trial you get it on the install guide of your trial request: request the trial on [humgen3d.com](https://humgen3d.com) and press **Install right away**, or open the link in the email we send you. Do this on the computer you run Blender on. Opened without a trial request, [humgen3d.com/trial](https://humgen3d.com/trial) asks for your email first.
 
-**From a zip file.** Download the add-on zip from the same page. In Blender, go to Edit > Preferences > Get Extensions, open the menu at the top right and choose **Install from Disk**. Pick the zip; don't unzip it first. Blender doesn't update an add-on installed this way. To get updates later, press **Enable add-on updates** in the add-on preferences, which adds the Human Generator repository.
+**Drag the zip file into Blender (recommended).** Press **Download Human Generator** on the install guide, then drag the downloaded zip file into any Blender window, straight from your browser's download list or from your Downloads folder, and confirm with **OK**. Don't unzip it first. Safari unzips downloads by itself: switch off *Open "safe" files after downloading* in Safari's General settings first, or use another browser.
+
+**Install from Disk.** The same zip, without dragging: in Blender, go to Edit > Preferences > Get Extensions, open the menu at the top right and choose **Install from Disk**, and pick the zip.
+
+Blender doesn't update an add-on installed from a zip by itself. See [[#Updates]] for how a new version gets in.
 
 > [!info] Already have Human Generator in your add-ons folder?
 > A legacy install of Human Generator in Blender 4.2 or newer keeps working. If you install the new version next to it, see [[#Installed twice]].
@@ -41,58 +47,79 @@ The standard content packs are a 2 to 4 GB download, and installing them needs r
 
 The setup opens by itself the first time Blender starts with Human Generator and no content. If it doesn't, or you closed it, press `N` in the 3D viewport, open the **HumGen** tab and press **Set up Human Generator**.
 
-1. **Welcome.** Press **Get started**. If you installed from the trial page, the buttons are **Install the free trial** and **I have a license** instead. If the setup found Human Generator content on this computer, it offers that folder first, see [[#Already a customer? Nothing changes]].
-2. **How do you want to start?** Choose **Free trial** or **Activate license**. The trial needs no account and installs one human, an outfit, a hairstyle and four poses. Activate license asks for your license key and installs the full library, see [[#Activate your license]].
-3. **Packs.** The standard packs are ticked. **8K Textures** is unticked: it is a 2 GB download for close-ups and large prints, and Base Humans already has the same skins in 4K. Tick it now or add it later from the preferences. Press **Change…** next to *Content folder* to pick where the content goes.
-4. **Install.** The download runs in the background. Press **Continue in background** to keep working; the progress stays in the HumGen tab. **Pause** stops the download and keeps what it fetched.
-5. **Done.** *Human Generator is ready* shows the folder. Press **Create your first human**, or **Show me around** for a short tour.
+With the add-on from your install guide, the welcome screen has two buttons, **Install the free trial** and **I bought it**: follow [[#Install the free trial]], or [[#Install the full version]] if you already bought it. The free trial is only offered to an add-on that came from an install guide. Any other copy of the add-on has one button there, **Install the content packs**, which leads to [[#Install the full version]].
+
+If the setup found Human Generator content on this computer, the welcome screen offers that folder first, see [[#Already a customer? Nothing changes]].
 
 > [!info]- Setup window not showing?
 > The setup is a window inside the 3D viewport. If it doesn't show, open the HumGen tab in the sidebar. The *Setup* panel there has **Continue setup**, and **Pop-up not showing? Set up in this panel**, which has the same steps as plain buttons.
 
-## Activate your license
+## Install the free trial
 
-The license step asks for two things: your **License key** and **The email you bought with**. You also tick that you accept the Human Generator Asset License and the privacy policy. Then press **Activate**.
+The trial needs no account. It installs one human, an outfit, a hairstyle and four poses, so you can try the workflow. The rest of the library shows as locked.
 
-Your license is checked once. The add-on remembers it on this computer, in a small settings file outside Blender, and uses it only to download content packs and their updates. Only downloads are linked to your license: content you installed keeps working without it, also offline, and also if you forget the license key later.
+1. **Install the free trial** shows the trial pack and its size. Press **Change…** next to *Content folder* to pick where the content goes.
+2. Press **Install**. The download runs in the background. Press **Continue in background** to keep working; the progress stays in the HumGen tab. **Pause** stops the download and keeps what it fetched.
+3. **Done.** *Human Generator is ready* shows the folder. Press **Get started**, or **Show me around** for the pages of the Get started tutorial, which also show while the content installs.
 
-<span id="order-guid"></span>
-### License key
+## Install the full version
 
-[humgen3d.com/license-key](https://humgen3d.com/license-key) shows where to find it. The setup's **Where do I find this?** link opens that page.
+The full version is not downloaded by the add-on. It comes as content packs, files that end in `.hgpack`, with your purchase. You download them yourself and the setup installs them. This needs no account, no key and no connection. If you installed the add-on from your install guide, it tells us one time that the full version was installed, when a connection is allowed: see [[Installation#What the add-on sends|What the add-on sends]].
 
-Bought on Superhive (called BlenderMarket before)? Then the order GUID is your license key: the long code of letters and numbers of your Superhive order. Superhive also shows a short order number; that one doesn't work. You find the GUID in two places:
+1. **Download the packs.** Bought on Superhive (called BlenderMarket before)? Log in, go to [Orders](https://superhivemarket.com/account/orders), open your Human Generator order and download the `.hgpack` files. Don't unzip them. If your browser unzipped one, see [[Invalid File Structure Error]].
+2. **Open the file list.** In the setup, press **Install the content packs**. From the trial, press **I bought it**, which is next to every buy button, also in the *Trial version* box at the top of the HumGen tab.
+3. **Select the files.** Press **Select .hgpack files…** and pick the packs. You can select several at once, and add more with **Select more files…**. You can also drag `.hgpack` files from your file manager onto a 3D viewport while the setup window is closed.
+4. **Check the list.** Every file shows its pack, version and size, with a tick box. Press **Change…** next to *Content folder* to pick where the content goes.
+5. Press **Install**. The packs are unpacked one after the other. Your files stay where they are; you can delete them afterwards, or keep them as a backup.
 
-- the order confirmation email from Superhive;
-- your Superhive account: log in, go to [Orders](https://superhivemarket.com/account/orders) and open your Human Generator order.
+The list says what it does with each file:
 
-Copy the whole code as it is. A license key bought on humgen3d.com starts with `HG3D-` and goes in the same field.
+- A pack you don't have yet is ticked and shows its size.
+- *Installed 4.0, update to 4.1*: the file is newer than the pack you have. Installing it replaces only that pack's files.
+- **Installed**: you already have this version.
+- **Older than installed**: you have a newer version, so the file is left out.
+- **Not needed**: the trial pack, when the full library is installed or among the files.
+- **Not a content pack**: any other file.
 
-### Email
+**Base Humans** is the pack every human needs. When it isn't among the files and isn't installed, the setup says so. Coming from the trial, the trial content stays until Base Humans is installed; the full library then replaces it automatically. Your own saved content stays.
 
-Enter the email you bought with: for Superhive, the address the order email went to. It ties the license to you: once a license is activated with an address, only that address can activate it again. That stops someone who guesses an order GUID from downloading your content. Our server stores the address as a hash, not as text.
+**8K Textures** is optional: it is large, for close-ups and large prints, and Base Humans already has the same skins in 4K.
 
-Tick **Let me know about updates and offers** if you want our news at this address. It is off by default.
+**HG Export** holds the recipes and engine data of the Process tab. Without it that tab is greyed out, see [[Process/Overview#HG Export pack missing?|HG Export pack missing?]].
 
 ## Already a customer? Nothing changes
 
-If you used Human Generator 4 before, you don't need to download or activate anything to keep working.
+If you used Human Generator 4 before, you don't need to install anything again to keep working.
 
-- **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, the welcome screen shows *Found Human Generator content in* with the folder. Press **Use this folder**. Nothing is downloaded and no license key is asked.
-- **If it isn't found,** press **Select folder** next to *I already have the content packs* on the welcome screen, and pick the folder with your packs.
-- **Your license key is asked once,** only when you download something: an update, or a pack you add. The setup then shows *One more step to download updates*. Enter your license key (your Superhive order GUID), or press **Not now** to keep working with the content you have.
+- **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, the welcome screen shows *Found Human Generator content in* with the folder. Press **Use this folder**.
+- **If it isn't found,** press **Select folder** next to *I already have the content installed* on the welcome screen, and pick the folder with your packs.
 
 ## Updates
 
-**The add-on** updates through Blender's extension list (Edit > Preferences > Get Extensions) when you installed it from the website.
+**The add-on.** When a new version is out, the add-on preferences say *A new version of Human Generator is available.* with **Download the new version**. It opens your install guide: download the zip there and drag it into Blender, as you did the first time. Blender replaces the installed version; your content, content folder and settings stay as they are. Restart Blender afterwards, so everything runs on the new version.
 
-**The content packs** are checked once a day while Blender's online access is on. When there is something new, the *Setup* panel in the HumGen tab shows *Content update available*, or *Content update needed* when this version of the add-on needs the newer pack, with a button such as **Update 2 packs**. The add-on preferences list every pack with its version, and have **Check for updates** and an update button.
+The older add-on in your add-ons folder (version 4.0.38 and before) keeps its own updater, at the bottom of its preferences.
 
-Don't want an update now? Press **Hide** next to it, or **Not now** when the setup asks for your license key. The notice then stays away until a newer version of that pack comes out. The preferences still list it. This is also the way to go if you have no license key, for example with a copy of Human Generator from a bundle: the content you have keeps working with every new version of the add-on, and updates and new packs come with a license.
+**The content packs** are checked once a day while Blender's online access is on. The check only compares version numbers. When there is something new, the *Setup* panel in the HumGen tab shows *Content update available*, or *Content update needed* when this version of the add-on needs the newer pack, with a button such as **Update 2 packs**. The add-on preferences list every pack with its version, and have **Check for updates** and an update button.
+
+- **The trial** updates by download: the button opens the trial's list with the newer version ticked.
+- **The full version** updates from files. The button opens the file list, which names the packs that have a newer version, for example *Base Humans 4.2*. Download those files from your purchase and select them, as in [[#Install the full version]].
+
+Don't want an update now? Press **Hide** next to it. The notice then stays away until a newer version of that pack comes out. The preferences still list it.
 
 A pack update replaces only the files of that pack. Your own content, saved with the content saving tools, stays where it is.
 
 If you see *A newer Human Generator is needed for the latest content.*, update the add-on first, then the packs.
+
+## What the add-on sends
+
+Human Generator works offline. It connects to humgen3d.com for the things below, and only while Blender's *Allow Online Access* setting is on:
+
+- **The update check**, once a day: one request for the list of current versions. It carries the versions of the add-on and of Blender, and your operating system.
+- **The trial download**: the request for the download link, and the download itself.
+- **Three events, only if you installed the add-on from your install guide.** The zip you download there holds your trial request id, in a file named `trial.json`. Such an install tells us three things, each one time, when it happens: that the setup opened, that the trial content was installed, and that the full version was installed. Each is one small request that reads `{"event": "trial_installed", "trial": "<your id>"}` plus the same versions as the update check. The trial download names the id too. This is how we know whether the trial gets installed and whether trials lead to the full version.
+
+A copy of the add-on that did not come from an install guide has no trial request id and sends none of these events: there, installing packs from files sends nothing at all. The **Buy** buttons open humgen3d.com in your browser. Our [privacy policy](https://humgen3d.com/privacy) has the details.
 
 ## Installed twice
 
@@ -114,32 +141,12 @@ When the content folder is set but not there, for example on an unplugged drive 
 
 - **Try again** looks again, after you connect the drive.
 - **Locate folder…** lets you pick the folder in its new place.
-- **Download again…** opens the setup to download the content into a new folder.
+- **Install again…** opens the setup to install the content into a new folder.
 
-Nothing is created or downloaded while the folder is missing.
+Nothing is created or installed while the folder is missing.
 
 To move the content on purpose, move the folder in your file manager, then press **Locate folder…**. You can also change the folder in the add-on preferences: Content Packs tab, **Change folder…** next to *Content folder*. Blend files you saved before the move may still look for textures in the old place. Blender's File > External Data > Find Missing Files fixes those.
 
-## Your license
-
-The Content Packs tab of the add-on preferences shows the license this computer downloads with, masked, with its tier: *Personal license* or *Commercial license*. It says *Superhive order* for an order GUID and *License key* for an `HG3D-` key.
-
-- **Upgrade to Commercial** shows for a Personal license. It opens [humgen3d.com/upgrade](https://humgen3d.com/upgrade), which takes you to the Commercial upgrade on Superhive. The row shows *Commercial license* after the next download. To update it right away, press **Change…** and activate again.
-- **Change…** opens the license step of the setup, to enter another license key.
-- **Forget** removes the license key from this computer, after you confirm. Installed content stays. The setup asks for it again the next time you download.
-
-When the server didn't accept the stored license key, the row says *Your license key was not accepted.* with the reason, **Enter again…** and **Contact support**. See [[Setup troubleshooting#License key]].
-
-## Upgrading from the trial
-
-The trial shows **I have a license** next to every buy button, and next to **Get the full version** in the *Setup* panel of the HumGen tab. After you buy Human Generator:
-
-1. Press **I have a license**.
-2. Enter your license key and email in *Activate the full version*, see [[#Activate your license]].
-3. Choose the packs and press **Install**.
-
-The full library replaces the trial content automatically. Your own saved content stays.
-
 ## Packs from other creators
 
-The Human Generator packs always come through the setup. Content packs that other creators made install from files: in the add-on preferences, open the Content Packs tab, then **Packs from other creators**. Press **Select pack files**, pick the `.hgpack` files, and press **Install selected packs**. To make a pack of your own, see [[Exporting your content as a pack]].
+Content packs that other creators made install the same way as the full version: in the add-on preferences, open the Content Packs tab and press **Install content packs from files…**. Select the `.hgpack` files and press **Install**. To make a pack of your own, see [[Exporting your content as a pack]].

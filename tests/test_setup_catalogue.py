@@ -93,8 +93,8 @@ def test_trial_detection(tmp_path):
     assert cat.has_humans(installed_packs(str(tmp_path)))
 
 
-def test_plan_fresh_licensed(catalogue):
-    statuses = plan(catalogue, {}, (4, 0, 38), "licensed")
+def test_plan_fresh_full(catalogue):
+    statuses = plan(catalogue, {}, (4, 0, 38), "full")
     by_key = {s.key: s for s in statuses}
     assert "Trial_Content" not in by_key
     assert by_key["Base_Humans"].status == "missing" and by_key["Base_Humans"].target.version == (4, 1)
@@ -114,7 +114,7 @@ def test_plan_after_auto_update(catalogue, tmp_path):
     write_pack(tmp_path, "Base_Humans", (4, 0))
     write_pack(tmp_path, "Base_Poses", (4, 0))
     installed = installed_packs(str(tmp_path))
-    by_key = {s.key: s for s in plan(catalogue, installed, (4, 0, 38), "licensed")}
+    by_key = {s.key: s for s in plan(catalogue, installed, (4, 0, 38), "full")}
     assert by_key["Base_Humans"].status == "update_required"  # REQUIRED says 4.1
     assert by_key["Base_Poses"].status == "up_to_date"
     assert by_key["HG_Export"].status == "missing"
@@ -125,7 +125,7 @@ def test_plan_after_auto_update(catalogue, tmp_path):
 
 def test_plan_needs_newer_addon(catalogue, tmp_path):
     """The catalogue only has versions for a newer add-on: say so instead of offering them."""
-    by_key = {s.key: s for s in plan(catalogue, {}, (4, 0, 27), "licensed")}
+    by_key = {s.key: s for s in plan(catalogue, {}, (4, 0, 27), "full")}
     assert by_key["HG_Export"].status == "needs_newer_addon" and by_key["HG_Export"].target is None
     assert cat.version_blocks_packs(by_key.values())
     assert cat.addon_update_available(catalogue, (4, 0, 27))
@@ -134,7 +134,7 @@ def test_plan_needs_newer_addon(catalogue, tmp_path):
 
 def test_plan_update_available_not_required(catalogue, tmp_path):
     write_pack(tmp_path, "Base_Humans", (4, 1))
-    by_key = {s.key: s for s in plan(catalogue, installed_packs(str(tmp_path)), (4, 2, 0), "licensed")}
+    by_key = {s.key: s for s in plan(catalogue, installed_packs(str(tmp_path)), (4, 2, 0), "full")}
     assert by_key["Base_Humans"].status == "update_available"
     assert by_key["Base_Humans"].target.version == (5, 0)
     assert isinstance(by_key["Base_Humans"], PackStatus) and by_key["Base_Humans"].needs_install
@@ -144,12 +144,12 @@ def test_catalogue_switches_and_schema():
     plain = Catalogue.from_dict(SAMPLE)
     assert plain.schema == 1 and plain.supported
     assert plain.notices and plain.setup_enabled
-    assert plain.message == plain.message_url == plain.upgrade_url == ""
+    assert plain.message == plain.message_url == ""
     data = dict(SAMPLE, addon={"latest": "4.1.0", "notices": False, "setup": False, "message": "Downloads are slow today.", "message_url": "https://humgen3d.com/status", "upgrade_url": "https://humgen3d.com/upgrade"})
     switched = Catalogue.from_dict(data)
     assert not switched.notices and not switched.setup_enabled
     assert switched.message == "Downloads are slow today." and switched.message_url.endswith("/status")
-    assert switched.upgrade_url == "https://humgen3d.com/upgrade"
+    assert not hasattr(switched, "upgrade_url")  # a field of older servers: read past, not kept
     newer = Catalogue.from_dict(dict(SAMPLE, schema=cat.SUPPORTED_SCHEMA + 1))
     assert not newer.supported and newer.get("Base_Humans") is not None  # the pack list is still read
     assert not Catalogue.from_dict(dict(SAMPLE, schema="1")).supported
@@ -163,7 +163,7 @@ def test_unpacked_size_and_required_space():
     data = json.loads(json.dumps(SAMPLE))
     data["packs"][0]["versions"][0]["unpacked_size"] = 150  # Base_Humans 4.1
     catalogue = Catalogue.from_dict(data)
-    statuses = {s.key: s for s in plan(catalogue, {}, (4, 0, 38), "licensed")}
+    statuses = {s.key: s for s in plan(catalogue, {}, (4, 0, 38), "full")}
     assert statuses["Base_Humans"].target.unpacked_size == 150
     assert statuses["Base_Poses"].target.unpacked_size is None
     # Every pack unpacked (twice the zip when unknown), plus the largest zip
@@ -174,11 +174,11 @@ def test_unpacked_size_and_required_space():
 
 
 def test_install_mode(tmp_path):
-    assert cat.install_mode({}) == "licensed"
+    assert cat.install_mode({}) == "full"
     write_pack(tmp_path, "Trial_Content", (4, 1))
     assert cat.install_mode(installed_packs(str(tmp_path))) == "trial"
     write_pack(tmp_path, "Base_Humans", (4, 1))
-    assert cat.install_mode(installed_packs(str(tmp_path))) == "licensed"
+    assert cat.install_mode(installed_packs(str(tmp_path))) == "full"
     assert cat.REQUIRED["Trial_Content"] == (4, 1)
 
 

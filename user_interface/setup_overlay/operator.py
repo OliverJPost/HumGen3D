@@ -13,16 +13,18 @@ The draw handler removes itself when its operator is gone (a file load can
 end the operator without a cancel), and a `load_pre` handler, added when the
 overlay operator class is registered, closes everything that belongs to it.
 """
+import os
 import textwrap
 import time
 from typing import List, Optional
 
 import bpy
 from bpy.app.handlers import persistent
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, CollectionProperty, StringProperty
 
-from ...backend.setup import migration, online, repository, update_check, user_settings
-from ...backend.setup.catalogue import has_humans, installed_packs, is_trial_install
+from ...backend.setup import local_packs, migration, online, update_check, user_settings
+from ...backend.setup.catalogue import has_humans, installed_packs
+from ...common.documentation import docs_url
 from ...common.i18n import tr
 from . import state as setup_state
 from .draw import Canvas, TextureCache, ease_out
@@ -36,11 +38,13 @@ from .screens import (
     can_open_sidebar_tab,
     download_detail,
     download_label,
-    license_copy,
+    failure_title,
+    file_detail,
+    files_copy,
+    files_notice,
     notice_text,
     pack_count,
     packs_copy,
-    props,
     space_text,
     update_label,
 )
@@ -52,22 +56,9 @@ MARGIN = 24  # design units between the card and the viewport edge
 # Below this the card is not scaled down further; the sidebar takes over
 MIN_FIT = 0.55
 MIN_EFFECTIVE_SCALE = 0.72
-# Grey hint text in a text field (`UILayout.prop(placeholder=...)`), not in every 4.2 build
-PLACEHOLDERS = "placeholder" in bpy.types.UILayout.bl_rna.functions["prop"].parameters
-
 # The running operator, for the sidebar panel and the screenshot harness
 active: Optional["HG_OT_setup_overlay"] = None
 handlers = 0  # draw handlers alive, for the harness
-
-
-class HG_SETUP_PROPS(bpy.types.PropertyGroup):
-    """The licence form. Lives on the window manager, so the overlay and the
-    sidebar panel edit the same values and nothing is saved in the .blend."""
-
-    order_guid: StringProperty(name="License key", description="Your license key. Bought on Superhive? Use the order GUID from your order email, not the order number")  # noqa: F821
-    email: StringProperty(name="Email", description="The email you bought with")  # noqa: F821
-    accept_terms: BoolProperty(name="I accept the Human Generator Asset License and the Privacy policy", default=False)  # noqa: F821
-    newsletter: BoolProperty(name="Let me know about updates and offers", default=False)  # noqa: F821
 
 
 def window_region(area) -> Optional[bpy.types.Region]:
@@ -83,20 +74,61 @@ def tab_name() -> str:
         return "HumGen"
 
 
+# How often, and how long apart, the switch to the HumGen tab is tried again
+TAB_ATTEMPTS = 30
+TAB_INTERVAL = 0.1
+
+
+def _all_areas():
+    for window in bpy.context.window_manager.windows:
+        yield from window.screen.areas
+
+
+def _show_tab(area) -> bool:
+    """Bring the HumGen tab of the area's sidebar to the front. False when
+    Blender does not know the tab yet."""
+    name = tab_name()
+    for region in area.regions:
+        if region.type != "UI":
+            continue
+        try:
+            region.active_panel_category = name
+        except (AttributeError, TypeError, ValueError, ReferenceError):
+            return False
+        return region.active_panel_category == name
+    return False
+
+
 def open_sidebar_tab(area) -> None:
-    """Show the sidebar of a 3D viewport, on the HumGen tab where Blender allows it."""
+    """Show the sidebar of a 3D viewport and bring the HumGen tab to the
+    front, where Blender allows it. A sidebar that was closed has no tabs
+    until it was drawn once, and the tab of an add-on that got its content a
+    moment ago appears a redraw later, so the switch is tried again for a few
+    seconds instead of once."""
     try:
         area.spaces.active.show_region_ui = True
+        area.tag_redraw()
     except (AttributeError, ReferenceError):
         return
-    if not can_open_sidebar_tab():
+    if not can_open_sidebar_tab() or _show_tab(area):
         return
-    for region in area.regions:
-        if region.type == "UI":
-            try:
-                region.active_panel_category = tab_name()
-            except (AttributeError, TypeError, ValueError):
-                pass
+    pointer = area.as_pointer()
+    left = [TAB_ATTEMPTS]
+
+    def again() -> Optional[float]:
+        try:
+            target = next((a for a in _all_areas() if a.as_pointer() == pointer), None)
+            if target is None or _show_tab(target):
+                return None
+            left[0] -= 1
+            if left[0] <= 0:
+                return None
+            target.tag_redraw()
+            return TAB_INTERVAL
+        except Exception:  # noqa: BLE001  never from a timer
+            return None
+
+    bpy.app.timers.register(again, first_interval=TAB_INTERVAL)
 
 
 class _DrawHook:
@@ -253,8 +285,6 @@ class HG_OT_setup_overlay(bpy.types.Operator, Controller):
         if name != self._screen.name and name in self._screens:
             self._screen = self._screens[name]
             self._screen.enter()
-        elif name == "license" and st.prefill_due:
-            self._screen.enter()
 
     def close(self) -> None:
         if setup_state.state.active:
@@ -291,8 +321,9 @@ class HG_OT_setup_overlay(bpy.types.Operator, Controller):
         self._after_close = lambda: bpy.ops.hg3d.setup_use_folder("INVOKE_DEFAULT", reopen=True)
         self._closing = True
 
-    def open_upgrade(self) -> None:
-        bpy.ops.hg3d.setup_open_upgrade()
+    def select_files(self) -> None:
+        self._after_close = lambda: bpy.ops.hg3d.setup_select_files("INVOKE_DEFAULT", reopen=True)
+        self._closing = True
 
     def contact_support(self) -> None:
         bpy.ops.hg3d.setup_contact_support()
@@ -392,7 +423,14 @@ class HG_OT_setup_overlay(bpy.types.Operator, Controller):
             self._textures.release()
         except Exception:  # noqa: BLE001
             pass
-        setup_state.state.overlay_open = False
+        st = setup_state.state
+        st.overlay_open = False
+        if st.phase == "done":
+            # The window was closed on a finished install: the setup is over,
+            # so its card leaves the sidebar too (after the folder was handed
+            # to the add-on, should the poll not have come to it yet)
+            st.finish_on_main_thread()
+            st.dismiss()
         active = None
         try:
             setup_state.redraw_viewports()
@@ -493,22 +531,6 @@ def current_folder() -> str:
     return migration.default_folder()
 
 
-def prefill(context) -> None:
-    """Fill the licence form after a step that shows it. Operators only, never a draw."""
-    st = setup_state.state
-    if st.screen == "license":
-        st.prefill_form(context.window_manager.hg_setup)
-
-
-def _prefill_from_timer() -> None:
-    try:
-        prefill(bpy.context)
-        setup_state.redraw_viewports()
-    except Exception:  # noqa: BLE001
-        pass
-    return None
-
-
 def maybe_auto_open() -> None:
     """Open the setup once on a fresh install: not in background mode, not
     when content is installed or the content folder's drive is missing, and
@@ -531,6 +553,7 @@ def _auto_open(attempt: int) -> Optional[float]:
         st.begin_setup(current_folder())
         if setup_state.reopen_overlay():
             user_settings.mark_setup_shown()
+            st.report_trial_events()
             return None
     except Exception as e:  # noqa: BLE001
         print("HumGen: could not open the setup:", repr(e))
@@ -554,19 +577,22 @@ class HG_OT_setup_start(bpy.types.Operator):
 
     def execute(self, context):
         setup_state.state.begin_setup(current_folder())
-        prefill(context)
         open_overlay_or_fallback(context)
+        # Opened by hand before it could open by itself: that is its first showing
+        if not user_settings.setup_shown():
+            user_settings.mark_setup_shown()
+        setup_state.state.report_trial_events()
         return {"FINISHED"}
 
 
 class HG_OT_setup_update(bpy.types.Operator):
-    """Download the newer versions of your content packs"""
+    """Install newer versions of your content packs, or a pack you don't have yet"""
 
     bl_idname = "hg3d.setup_update"
     bl_label = "Update content"
     bl_options = {"INTERNAL"}
 
-    keys: StringProperty(default="", options={"SKIP_SAVE"})  # noqa: F821  comma-separated pack keys to tick instead of the updates
+    keys: StringProperty(default="", options={"SKIP_SAVE"})  # noqa: F821  comma-separated pack keys to ask for instead of the updates
 
     def execute(self, context):
         st = setup_state.state
@@ -593,98 +619,112 @@ class HG_OT_setup_add_packs(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class HG_OT_setup_upgrade(bpy.types.Operator):
-    """Activate the license you bought and install the full library"""
+class HG_OT_setup_full(bpy.types.Operator):
+    """Bought Human Generator? Install the full library from the .hgpack files of your purchase"""
 
-    bl_idname = "hg3d.setup_upgrade"
-    bl_label = "I have a license"
+    bl_idname = "hg3d.setup_full"
+    bl_label = "Install full version"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
         st = setup_state.state
         if st.active:
             return {"CANCELLED"}
-        st.folder = current_folder()
-        st.begin_upgrade()
-        prefill(context)
+        st.begin_full(current_folder())
         open_overlay_or_fallback(context)
         return {"FINISHED"}
 
 
-class HG_OT_setup_change_licence(bpy.types.Operator):
-    """Enter another license key on this computer"""
+def pack_paths(directory: str, files, filepath: str = "") -> List[str]:
+    """The paths a file browser or a drop handed over."""
+    paths = [os.path.join(directory, f.name) for f in files if f.name]
+    if not paths and filepath and not os.path.isdir(filepath):
+        paths = [filepath]
+    return paths
 
-    bl_idname = "hg3d.setup_change_licence"
-    bl_label = "Change…"
+
+class HG_OT_setup_select_files(bpy.types.Operator):
+    """Select the .hgpack files of your purchase. You can select several at once"""
+
+    bl_idname = "hg3d.setup_select_files"
+    bl_label = "Select pack files"
     bl_options = {"INTERNAL"}
+
+    directory: StringProperty(subtype="DIR_PATH", options={"SKIP_SAVE"})  # noqa: F821
+    files: CollectionProperty(type=bpy.types.OperatorFileListElement, options={"SKIP_SAVE"})  # noqa: F821
+    filter_glob: StringProperty(default="*.hgpack;*.zip", options={"HIDDEN"})  # noqa: F821,F722
+    reopen: BoolProperty(default=False, options={"SKIP_SAVE"})  # noqa: F821  reopen the overlay afterwards
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
 
     def execute(self, context):
         st = setup_state.state
-        if st.active:
+        paths = pack_paths(self.directory, self.files)
+        if not st.begin_files(paths, current_folder()):
+            self.report({"WARNING"}, tr("An install is running. Wait until it is done."))
+        if self.reopen:
+            setup_state.reopen_overlay_soon()
+        setup_state.redraw_viewports()
+        return {"FINISHED"}
+
+    def cancel(self, context):
+        if self.reopen:
+            setup_state.reopen_overlay_soon()
+
+
+class HG_OT_setup_drop_files(bpy.types.Operator):
+    """Install the content packs you dropped on the viewport"""
+
+    bl_idname = "hg3d.setup_drop_files"
+    bl_label = "Install content packs"
+    bl_options = {"INTERNAL"}
+
+    directory: StringProperty(subtype="DIR_PATH", options={"SKIP_SAVE"})  # noqa: F821
+    files: CollectionProperty(type=bpy.types.OperatorFileListElement, options={"SKIP_SAVE"})  # noqa: F821
+    filepath: StringProperty(subtype="FILE_PATH", options={"SKIP_SAVE"})  # noqa: F821
+
+    def invoke(self, context, event):
+        # A drop invokes the operator; without this Blender would ask for a file
+        return self.execute(context)
+
+    def execute(self, context):
+        st = setup_state.state
+        paths = [p for p in pack_paths(self.directory, self.files, self.filepath) if local_packs.is_pack_name(p)]
+        if not paths:
             return {"CANCELLED"}
-        st.folder = current_folder()
-        st.begin_change_credential()
-        prefill(context)
+        if not st.begin_files(paths, current_folder()):
+            self.report({"WARNING"}, tr("An install is running. Wait until it is done."))
+            return {"CANCELLED"}
         open_overlay_or_fallback(context)
+        setup_state.redraw_viewports()
         return {"FINISHED"}
 
 
-class HG_OT_setup_forget_licence(bpy.types.Operator):
-    """Remove the license key from this computer. Installed content keeps working"""
+class HG_FH_hgpack(bpy.types.FileHandler):
+    """`.hgpack` files dropped on a 3D viewport open the setup's file list."""
 
-    bl_idname = "hg3d.setup_forget_licence"
-    bl_label = "Forget"
-    bl_options = {"INTERNAL"}
+    bl_idname = "HG_FH_hgpack"
+    bl_label = "Human Generator content pack"
+    bl_import_operator = "hg3d.setup_drop_files"
+    bl_file_extensions = ".hgpack"
 
-    confirmed: BoolProperty(default=False, options={"SKIP_SAVE"})  # noqa: F821
-    keep: BoolProperty(default=False, options={"SKIP_SAVE"})  # noqa: F821
-
-    def execute(self, context):
-        st = setup_state.state
-        if self.keep:
-            st.forget_pending = False
-        elif not self.confirmed:
-            st.forget_pending = True
-        else:
-            st.forget_credential()
-            self.report({"INFO"}, tr("The license key is no longer stored on this computer. Installed content stays."))
-        for window in context.window_manager.windows:
-            for area in window.screen.areas:
-                area.tag_redraw()
-        return {"FINISHED"}
+    @classmethod
+    def poll_drop(cls, context):
+        return context.area is not None and context.area.type == "VIEW_3D"
 
 
-def draw_forget_button(layout) -> None:
-    """The "Forget" button with its in-panel confirmation, for the preferences."""
-    if not setup_state.state.forget_pending:
-        layout.operator("hg3d.setup_forget_licence", text=tr("Forget"))
-        return
-    col = layout.column(align=True)
-    col.label(text=tr("Forget only removes it from this computer. Installed content stays."), icon="INFO")
-    row = col.row(align=True)
-    row.operator("hg3d.setup_forget_licence", text=tr("Forget")).confirmed = True
-    row.operator("hg3d.setup_forget_licence", text=tr("Keep")).keep = True
+class HG_OT_setup_clear_files(bpy.types.Operator):
+    """Empty the list of files"""
 
-
-def upgrade_url() -> str:
-    cred = user_settings.credential()
-    if cred is not None and cred.upgrade_url:
-        return cred.upgrade_url
-    for catalogue in (setup_state.state.catalogue, update_check.status.catalogue):
-        if catalogue is not None and catalogue.upgrade_url:
-            return catalogue.upgrade_url
-    return setup_state.UPGRADE_URL
-
-
-class HG_OT_setup_open_upgrade(bpy.types.Operator):
-    """Upgrade your Personal license to a Commercial one"""
-
-    bl_idname = "hg3d.setup_open_upgrade"
-    bl_label = "Upgrade to Commercial"
+    bl_idname = "hg3d.setup_clear_files"
+    bl_label = "Clear"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
-        bpy.ops.wm.url_open(url=upgrade_url())
+        setup_state.state.clear_files()
+        setup_state.redraw_viewports()
         return {"FINISHED"}
 
 
@@ -797,26 +837,6 @@ class HG_OT_setup_reload_packs(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class HG_OT_add_extension_repo(bpy.types.Operator):
-    """Add the Human Generator repository to Blender, so Blender's extension list delivers add-on updates"""
-
-    bl_idname = "hg3d.add_extension_repo"
-    bl_label = "Enable add-on updates"
-    bl_options = {"INTERNAL"}
-
-    def execute(self, context):
-        repo = repository.add_repo()
-        if repo is None:
-            self.report({"WARNING"}, tr("Could not add the repository. Add it in the preferences, under Get Extensions > Repositories."))
-            return {"CANCELLED"}
-        try:
-            bpy.ops.wm.save_userpref()
-        except Exception:  # noqa: BLE001
-            pass
-        self.report({"INFO"}, tr("Repository added. Install Human Generator from it to get updates through Blender."))
-        return {"FINISHED"}
-
-
 class HG_OT_setup_fallback(bpy.types.Operator):
     """Show the setup steps here in the panel"""
 
@@ -827,12 +847,11 @@ class HG_OT_setup_fallback(bpy.types.Operator):
     def execute(self, context):
         st = setup_state.state
         st.fallback_open = not st.fallback_open
-        prefill(context)
         return {"FINISHED"}
 
 
 class HG_OT_setup_choose(bpy.types.Operator):
-    """Start with the free trial or activate a license"""
+    """Start with the free trial, or install the full version from files"""
 
     bl_idname = "hg3d.setup_choose"
     bl_label = "Choose"
@@ -842,7 +861,6 @@ class HG_OT_setup_choose(bpy.types.Operator):
 
     def execute(self, context):
         setup_state.state.choose(self.mode)
-        prefill(context)
         setup_state.redraw_viewports()
         return {"FINISHED"}
 
@@ -858,23 +876,6 @@ class HG_OT_setup_go(bpy.types.Operator):
 
     def execute(self, context):
         setup_state.state.go(self.screen)
-        prefill(context)
-        setup_state.redraw_viewports()
-        return {"FINISHED"}
-
-
-class HG_OT_setup_enter_order(bpy.types.Operator):
-    """Correct the license key, or enter another one"""
-
-    bl_idname = "hg3d.setup_enter_order"
-    bl_label = "Enter license key"
-    bl_options = {"INTERNAL"}
-
-    def execute(self, context):
-        st = setup_state.state
-        st.license_reason = "rejected"
-        st.go("license")
-        prefill(context)
         setup_state.redraw_viewports()
         return {"FINISHED"}
 
@@ -888,22 +889,6 @@ class HG_OT_setup_back(bpy.types.Operator):
 
     def execute(self, context):
         setup_state.state.back()
-        prefill(context)
-        setup_state.redraw_viewports()
-        return {"FINISHED"}
-
-
-class HG_OT_setup_activate(bpy.types.Operator):
-    """Check the license key and unlock the full library"""
-
-    bl_idname = "hg3d.setup_activate"
-    bl_label = "Activate"
-    bl_options = {"INTERNAL"}
-
-    def execute(self, context):
-        f = props()
-        if not setup_state.state.activate(f.order_guid, f.email, f.accept_terms, f.newsletter):
-            self.report({"WARNING"}, tr(setup_state.state.license_error))
         setup_state.redraw_viewports()
         return {"FINISHED"}
 
@@ -920,6 +905,8 @@ class HG_OT_setup_toggle_pack(bpy.types.Operator):
     @classmethod
     def description(cls, context, properties):
         pack = next((p for p in setup_state.state.packs if p.key == properties.key), None)
+        if pack is not None and pack.path:
+            return file_detail(pack)
         return tr(pack.blurb) if pack is not None and pack.blurb else tr("Include or leave out this pack")
 
     def execute(self, context):
@@ -946,7 +933,7 @@ class HG_OT_setup_toggle_locked(bpy.types.Operator):
 
 
 class HG_OT_setup_install(bpy.types.Operator):
-    """Download and install the selected packs, or resume the download"""
+    """Install the selected packs, or resume the download"""
 
     bl_idname = "hg3d.setup_install"
     bl_label = "Install"
@@ -954,7 +941,6 @@ class HG_OT_setup_install(bpy.types.Operator):
 
     def execute(self, context):
         setup_state.state.start()
-        prefill(context)
         setup_state.redraw_viewports()
         return {"FINISHED"}
 
@@ -1072,10 +1058,6 @@ def content_installed() -> bool:
     return has_humans(_installed())
 
 
-def trial_installed() -> bool:
-    return is_trial_install(_installed())
-
-
 def dev_tools() -> bool:
     try:
         from ...backend.preferences.preference_func import get_prefs
@@ -1098,8 +1080,10 @@ def wrapped(layout, context, text: str, icon: str = "NONE", alert: bool = False)
 
 class HG_PT_SETUP(bpy.types.Panel):
     """Sidebar card: the setup at a glance, the way back to the overlay, the
-    update notice, the trial's way to the full version, and every step as
-    plain widgets for when the overlay does not show."""
+    update notice, and every step as plain widgets for when the overlay does
+    not show. It is there while something is to be set up or updated and gone
+    once the content is installed, also for a trial: the trial's way to the
+    full version is the "Trial version" box at the top of the main panel."""
 
     bl_label = "Setup"
     bl_space_type = "VIEW_3D"
@@ -1112,7 +1096,7 @@ class HG_PT_SETUP(bpy.types.Panel):
         st = setup_state.state
         if st.prompted or st.phase != "idle":
             return True
-        if not content_installed() or trial_installed():
+        if not content_installed():
             return True
         return bool(update_check.status.notice())
 
@@ -1129,8 +1113,6 @@ class HG_PT_SETUP(bpy.types.Panel):
         elif not st.prompted:
             if content_installed():
                 self.draw_notice(col, context)
-                if trial_installed():
-                    self.draw_trial_card(layout, st)
             else:
                 col.label(text=tr("Not installed yet"))
                 row = col.row(align=True)
@@ -1175,14 +1157,6 @@ class HG_PT_SETUP(bpy.types.Panel):
         if notice == "addon" or us.blocked_by_addon:
             col.operator("hg3d.openpref", text=tr("How to update the add-on"), icon="PREFERENCES")
 
-    def draw_trial_card(self, layout, st) -> None:
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text=tr("Trial version"), icon="INFO")
-        row = col.row(align=True)
-        row.operator("wm.url_open", text=tr("Get the full version"), icon="URL").url = setup_state.buy_url(setup_state.trial_rid())
-        row.operator("hg3d.setup_upgrade", text=tr("I have a license"))
-
     # The steps, as the overlay shows them
 
     def draw_online_notice(self, layout, st) -> None:
@@ -1198,66 +1172,59 @@ class HG_PT_SETUP(bpy.types.Panel):
     def draw_welcome(self, layout, context, st) -> None:
         col = layout.column(align=True)
         col.label(text=tr("Welcome to Human Generator"))
-        wrapped(col, context, tr("Downloads 2–4 GB. You can keep working meanwhile."))
-        col.separator()
         if st.rid:
+            # Only an install from the trial page is offered the trial
+            wrapped(col, context, tr("Start with the free trial, or install the full version from the files of your purchase."))
+            col.separator()
             col.operator("hg3d.setup_choose", text=tr("Install the free trial"), icon="PLAY").mode = "trial"
-            col.operator("hg3d.setup_choose", text=tr("I have a license"), icon="KEYINGSET").mode = "licensed"
+            col.operator("hg3d.setup_choose", text=tr("I bought it"), icon="PACKAGE").mode = "full"
         else:
-            col.operator("hg3d.setup_go", text=tr("Get started"), icon="PLAY").screen = "choose"
+            wrapped(col, context, tr("Install the content packs from the files of your purchase."))
+            col.separator()
+            col.operator("hg3d.setup_choose", text=tr("Install the content packs"), icon="PACKAGE").mode = "full"
         col.separator()
         if st.found_folder:
             col.label(text=tr("Found Human Generator content in"))
             col.label(text=st.found_folder)
             col.operator("hg3d.setup_use_folder", text=tr("Use this folder"), icon="CHECKMARK").directory = st.found_folder
         else:
-            col.operator("hg3d.setup_use_folder", text=tr("I already have the content packs"), icon="FILE_FOLDER")
+            col.operator("hg3d.setup_use_folder", text=tr("I already have the content installed"), icon="FILE_FOLDER")
 
-    def draw_choose(self, layout, context, st) -> None:
-        col = layout.column(align=True)
-        col.label(text=tr("How do you want to start?"))
-        col.operator("hg3d.setup_choose", text=tr("Free trial"), icon="PLAY").mode = "trial"
-        col.operator("hg3d.setup_choose", text=tr("Activate license"), icon="KEYINGSET").mode = "licensed"
-        if st.can_go_back:
-            layout.operator("hg3d.setup_back", text=tr("Back"), icon="BACK")
-
-    def draw_license(self, layout, context, st) -> None:
-        f = props()
-        if st.prefill_due and not bpy.app.timers.is_registered(_prefill_from_timer):
-            # Writing the form is not allowed while a panel draws
-            bpy.app.timers.register(_prefill_from_timer, first_interval=0.0)
-        title, subtitle = license_copy(st)
+    def draw_files(self, layout, context, st) -> None:
+        title, subtitle = files_copy(st)
         layout.label(text=title)
         wrapped(layout, context, subtitle)
-        col = layout.column()
-        col.enabled = not st.checking
-        col.label(text=tr("License key"))
-        if PLACEHOLDERS:
-            col.prop(f, "order_guid", text="", placeholder=tr("Bought on Superhive? Use the order GUID, not the order number"))
-        else:
-            col.prop(f, "order_guid", text="")
-        col.label(text=tr("The email you bought with"))
-        col.prop(f, "email", text="")
+        row = layout.row(align=True)
+        row.operator("wm.url_open", text=tr("Where are my files?"), icon="QUESTION").url = docs_url(setup_state.FILES_HELP)
+        col = layout.column(align=True)
+        col.label(text=tr("Content folder"))
         row = col.row(align=True)
-        row.operator("wm.url_open", text=tr("Where do I find this?"), icon="QUESTION").url = setup_state.ORDER_HELP_URL
-        row.operator("wm.url_open", text=tr("Why is this needed?"), icon="QUESTION").url = setup_state.EMAIL_HELP_URL
-        col.prop(f, "accept_terms")
-        row = col.row(align=True)
-        row.operator("wm.url_open", text=tr("Asset License"), icon="URL").url = setup_state.LICENSE_URL
-        row.operator("wm.url_open", text=tr("Privacy policy"), icon="URL").url = setup_state.PRIVACY_URL
-        col.prop(f, "newsletter")
-        self.draw_online_notice(layout, st)
-        if st.license_error:
-            wrapped(layout, context, error_text(st.license_error, tr), icon="ERROR", alert=True)
-            if st.license_phase == "failed" or st.license_reason == "rejected":
-                layout.operator("hg3d.setup_contact_support", text=tr("Contact support"), icon="URL")
+        row.label(text=st.folder)
+        sub = row.row(align=True)
+        sub.enabled = not st.in_progress
+        sub.operator("hg3d.setup_folder", text="", icon="FILE_FOLDER").reopen = False
+        layout.separator(factor=0.5)
+        col = layout.column(align=True)
+        for pack in st.packs:
+            self.draw_pack_row(col, st, pack)
+        row = layout.row(align=True)
+        row.enabled = not st.in_progress
+        row.operator("hg3d.setup_select_files", text=tr("Select more files…") if st.packs else tr("Select .hgpack files…"), icon="FILEBROWSER").reopen = False
+        if st.packs:
+            row.operator("hg3d.setup_clear_files", text="", icon="X")
+        notice = files_notice(st)
+        if notice:
+            wrapped(layout.box(), context, notice, icon="INFO")
+        if st.selected:
+            layout.label(text=pack_count(len(st.selected), setup_state.format_bytes(st.total_bytes)))
+            space, warn = space_text(st)
+            wrapped(layout, context, space, alert=warn)
         row = layout.row(align=True)
         if st.can_go_back:
-            row.operator("hg3d.setup_back", text=tr("Not now") if st.license_reason == "update" else "", icon="BACK")
-        if st.checking:
-            row.label(text=tr("Checking your license…"))
-        else:
-            row.operator("hg3d.setup_activate", text=tr("Activate"), icon="CHECKMARK")
+            row.operator("hg3d.setup_back", text="", icon="BACK")
+        sub = row.row(align=True)
+        sub.enabled = st.can_install
+        sub.operator("hg3d.setup_install", text=tr("Install"), icon="IMPORT")
 
     def draw_packs(self, layout, context, st) -> None:
         title, _ = packs_copy(st)
@@ -1298,8 +1265,8 @@ class HG_PT_SETUP(bpy.types.Panel):
         if st.trial_installed_here and not st.in_progress:
             layout.label(text=tr("Trial installed"), icon="CHECKMARK")
             row = layout.row(align=True)
-            row.operator("wm.url_open", text=tr("Get the full version"), icon="URL").url = setup_state.buy_url(st.rid)
-            row.operator("hg3d.setup_upgrade", text=tr("I have a license"))
+            row.operator("hg3d.buy_full_version", text=tr("Buy full version"), icon="URL").panel = "setup_panel"
+            row.operator("hg3d.setup_full", text=tr("I bought it"))
             return
         if st.paused:
             layout.label(text=tr("Download paused"))
@@ -1326,6 +1293,11 @@ class HG_PT_SETUP(bpy.types.Panel):
             row.label(text=tr(pack.name), icon="LOCKED")
             row.label(text=tr(pack.tag))
             return
+        if pack.left_out:
+            row.enabled = False
+            row.label(text=tr(pack.name), icon="REMOVE")
+            row.label(text=tr(pack.tag))
+            return
         if pack.status == "up_to_date" or pack.state == "done":
             row.enabled = False
             row.label(text=tr(pack.name), icon="CHECKMARK")
@@ -1344,7 +1316,7 @@ class HG_PT_SETUP(bpy.types.Panel):
             row.label(text=size)
 
     def draw_slides(self, layout, context, st) -> None:
-        layout.operator("hg3d.setup_go", text=tr("Back to the pack list"), icon="BACK").screen = "packs"
+        layout.operator("hg3d.setup_go", text=tr("Back to the pack list"), icon="BACK").screen = "files" if st.local else "packs"
 
     def draw_download(self, col, st) -> None:
         col.progress(text=download_label(st), factor=st.fraction, type="BAR")
@@ -1368,25 +1340,11 @@ class HG_PT_SETUP(bpy.types.Panel):
         col = layout.column(align=True)
         if st.phase == "done":
             col.label(text=tr("Human Generator is ready"), icon="CHECKMARK")
-            cred = st.credential
-            if cred is not None and cred.status == "ok" and cred.is_personal:
-                row = col.row(align=True)
-                row.label(text=tr("Personal license"))
-                row.operator("hg3d.setup_open_upgrade", text=tr("Upgrade to Commercial"), emboss=False)
             row = col.row(align=True)
             row.operator("hg3d.setup_dismiss", text=tr("Done"), icon="CHECKMARK")
             row.operator("hg3d.setup_overlay", text="", icon="WINDOW")
             return
-        if st.credential_failed:
-            col.label(text=tr("We couldn't confirm your license"), icon="ERROR")
-            wrapped(col, context, error_text(st.error, tr), alert=True)
-            col.separator()
-            col.operator("hg3d.setup_enter_order", text=tr("Enter license key"), icon="KEYINGSET")
-            row = col.row(align=True)
-            row.operator("hg3d.setup_contact_support", text=tr("Contact support"), icon="URL")
-            row.operator("hg3d.setup_install", text=tr("Retry"), icon="FILE_REFRESH")
-            return
-        col.label(text=tr("Download failed"), icon="ERROR")
+        col.label(text=failure_title(st), icon="ERROR")
         wrapped(col, context, error_text(st.error, tr), alert=True)
         row = col.row(align=True)
         row.operator("hg3d.setup_install", text=tr("Retry"), icon="FILE_REFRESH")

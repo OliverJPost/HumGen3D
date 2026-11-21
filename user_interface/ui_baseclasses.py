@@ -15,7 +15,7 @@ from ..human.human import Human
 
 from ..user_interface.icons.icons import get_hg_icon
 from .documentation.tips_suggestions_ui import draw_tips_suggestions_ui
-from .panel_functions import draw_trial_buttons, draw_unreachable_folder
+from .panel_functions import draw_trial_box, draw_trial_buttons, draw_unreachable_folder
 from functools import partial
 
 
@@ -412,11 +412,8 @@ class MainPanelPart(HGPanel):
         col = layout
         is_trial = get_prefs().is_trial
         if is_trial:
-            row = col.row(align=False)
-            subrow = row.row(align=True)
-            subrow.alert = True
-            subrow.label(text="Trial version")
-            draw_trial_buttons(row, "top_widget")
+            draw_trial_box(col, "top_widget")
+            col.separator()
 
         row = col.row(align=True)
         row.scale_y = 1.5

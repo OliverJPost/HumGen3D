@@ -11,6 +11,10 @@ Every step uses the same card: a header with the logo, the step's content and
 a footer with its buttons, so moving through the setup never resizes or
 rearranges the window. The welcome and slide screens split the card into a
 picture and a text column instead.
+
+Two steps are lists: `PacksScreen` shows the trial's packs, which are
+downloaded, and `FilesScreen` the `.hgpack` files the user picked for the
+full version.
 """
 import math
 import os
@@ -21,6 +25,7 @@ from typing import Callable, List, Optional, Tuple
 
 import bpy
 
+from ...common.documentation import docs_url
 from ...common.i18n import tr
 from . import state as setup_state
 from .draw import Canvas, Color, TextureCache, ease_out, lerp
@@ -28,33 +33,18 @@ from .state import SUPPORT_EMAIL, error_text, format_bytes
 
 Rect = Tuple[float, float, float, float]
 
-SLIDE_IMAGE_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "icons"
-)
-# Pictures of the welcome and choice screens ship with the add-on
+# Pictures of the welcome screen ship with the add-on
 SETUP_IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 LOGO = os.path.join(SETUP_IMAGE_DIR, "hg_logo.png")
 
-# What the slides show while the content downloads. Numbers come from the
-# catalogue's pack descriptions. Texts are English keys, translated through
-# tr() when drawn.
-DECKS = {
-    "licensed": [
-        ("haircards_high.png", "Start with a human", "Pick a starting human and change the body, face and age with the sliders. Everything stays editable, also after you add clothing."),
-        ("haircards_medium.png", "Dress and style", "48 outfits and 22 pairs of shoes fit the body you made. 43 hairstyles, 13 beards and eyebrows come as particle systems you can comb."),
-        ("haircards_low.png", "Pose and express", "160 poses in categories, Rigify for your own, and expressions you can mix and key."),
-        ("haircards_ultra.png", "Export to your engine", "The Process tab bakes textures, builds hair cards and LODs, and writes a manifest the Unity, Unreal and Godot companions read."),
-        ("livekey.png", "Make it yours", "Save your own humans, outfits, poses and textures as content packs and share them with your team."),
-    ],
-    "trial": [
-        ("haircards_high.png", "Welcome to the trial", "One of each: a human, a skin, an outfit, a hairstyle and four poses. Everything else is visible but locked, so you can see what the full library holds."),
-        ("haircards_medium.png", "The full library", "The full version has 48 outfits, 22 pairs of shoes, 43 hairstyles and 160 poses, in 4K and without watermark."),
-        ("haircards_low.png", "Batch generation", "Generate crowds with randomised bodies, faces, clothing and poses in one go."),
-        ("haircards_ultra.png", "Game export", "Bake, reduce and rig for Unity, Unreal and Godot. Full version only."),
-    ],
-}
+# What shows while the content installs: the pages of the "Get started"
+# tutorial the add-on has always had (1200 x 600, the words are in the picture)
+TUTORIAL_IMAGE_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "documentation", "tutorial_operator", "images", "get_started_tutorial"
+)
+TUTORIAL_PAGES = tuple(f"quick_start_{index:02d}.png" for index in range(6))
+TUTORIAL_ASPECT = 2.0
 
-SLIDE_SECONDS = 7.0
 FADE_SECONDS = 0.35
 CLOSE_GLYPH = "✕"
 CHECK_GLYPH = "✓"
@@ -72,11 +62,6 @@ RADIUS = 8  # buttons, fields and lists
 TITLE = 20
 BODY = 13
 SMALL = 12
-
-
-def props():
-    """The licence form, shared with the sidebar panel through the window manager."""
-    return bpy.context.window_manager.hg_setup
 
 
 def pack_count(count: int, size: str) -> str:
@@ -125,6 +110,11 @@ def download_label(st, count: bool = True) -> str:
     return label
 
 
+def failure_title(st) -> str:
+    """Nothing was downloaded when the packs came from files."""
+    return tr("Install failed") if st.local else tr("Download failed")
+
+
 def space_text(st) -> Tuple[str, bool]:
     """The disk line of the pack footer, and whether it is a problem."""
     needed, free = st.space()
@@ -135,34 +125,59 @@ def space_text(st) -> Tuple[str, bool]:
     return tr("Not enough space: {needed} needed, {free} free").format(needed=format_bytes(needed), free=format_bytes(free)), True
 
 
-def license_copy(st) -> Tuple[str, str]:
-    """Title and subtitle of the licence form, by why it shows."""
-    reason = st.license_reason
-    if reason == "update":
-        title = tr("One more step to download content packs") if st.add_packs else tr("One more step to download updates")
-        return title, tr("Downloads are linked to your license. You do this once on this computer; your installed content keeps working either way.")
-    if reason == "upgrade":
-        return tr("Activate the full version"), tr("Enter the license key of your purchase. The trial content is replaced by the full library.")
-    if reason == "change":
-        return tr("Change the license on this computer"), tr("Enter another license key. Your installed content keeps working either way.")
-    if reason == "rejected":
-        return tr("Check your license key"), tr("The license key on this computer was not accepted. Correct it or enter another one; your installed content keeps working either way.")
-    return tr("Activate your license"), tr("Enter your license key. It is checked once and remembered on this computer.")
-
-
 def packs_copy(st) -> Tuple[str, str]:
-    if st.add_packs:
-        return tr("Add content packs"), tr("Choose the packs to add. Installed packs stay as they are.")
+    """Title and subtitle of the trial's pack list."""
     if st.update_mode:
-        if st.selected and all(p.status == "missing" for p in st.selected):
-            # Opened to install one pack, such as HG Export from the Process tab
-            return tr("Add content packs"), tr("Choose the packs to add. Installed packs stay as they are.")
-        return tr("Update Human Generator"), tr("Newer versions of your content packs are available. Your own content stays as it is.")
-    if st.mode == "trial":
-        if st.trial_installed_here:
-            return tr("The trial is installed"), tr("Get the full version for the whole library, or activate a license you already have.")
-        return tr("Install the free trial"), tr("One human, an outfit, a hairstyle and four poses. The rest of the library comes with the full version.")
-    return tr("Install Human Generator"), tr("Choose what to install. You can add packs later from the preferences.")
+        return tr("Update the trial content"), tr("A newer version of the trial content is available. Your own content stays as it is.")
+    if st.trial_installed_here:
+        return tr("The trial is installed"), tr("Buy the full version for the whole library. Already bought it? Install it from the files of your purchase.")
+    return tr("Install the free trial"), tr("One human, an outfit, a hairstyle and four poses. The rest of the library comes with the full version.")
+
+
+def files_copy(st) -> Tuple[str, str]:
+    """Title and subtitle of the file list, by why it shows."""
+    if st.wanted:
+        names = ", ".join(tr(name) for name in st.wanted)
+        if st.update_mode and len(st.wanted) > 1:
+            return tr("Update your content packs"), tr("Newer files are with your purchase: {names}. Download them, then select them here.").format(names=names)
+        return tr("Install {names}").format(names=names), tr("This pack comes with your purchase. Download its .hgpack file, then select it here.")
+    if st.add_packs or st.update_mode:
+        return tr("Add content packs"), tr("Select the .hgpack files to add. Installed packs stay as they are.")
+    if st.upgrading_trial:
+        return tr("Install the full version"), tr("Download the content packs of your purchase, then select the .hgpack files here. They replace the trial content.")
+    return tr("Install the full version"), tr("Download the content packs of your purchase, then select the .hgpack files here.")
+
+
+def file_detail(pack) -> str:
+    """The second line of a row of the file list."""
+    version = tr("Version {version}").format(version=pack.version) if pack.version else ""
+    if pack.status == "not_a_pack":
+        return tr("Human Generator packs are .hgpack files")
+    if pack.status == "not_needed":
+        return tr("The full library replaces the trial content")
+    if pack.status == "older" and pack.installed_version:
+        return tr("Version {version}, installed is {installed}").format(version=pack.version, installed=".".join(str(n) for n in pack.installed_version))
+    if pack.status == "update_available" and pack.installed_version:
+        return tr("Installed {old}, update to {new}").format(old=".".join(str(n) for n in pack.installed_version), new=pack.version)
+    if pack.needs_version:
+        return tr("Version {version}. This add-on needs {needed} or newer").format(version=pack.version, needed=pack.needs_version)
+    return " · ".join(part for part in (version, pack.file) if part)
+
+
+def files_notice(st) -> str:
+    """The one notice the file list shows above the footer."""
+    if st.drive_missing:
+        return tr("That drive isn't connected. Connect it, or choose another folder.")
+    if st.lock_blocked:
+        return tr("Another Blender window is installing content.")
+    if st.base_missing:
+        if st.upgrading_trial:
+            return tr("Base Humans isn't among these files. The trial content stays until it is installed.")
+        return tr("Base Humans isn't among these files. Humans can't be made without it.")
+    outdated = [p for p in st.selected if p.needs_version]
+    if outdated:
+        return tr("{pack} is an older file than this add-on needs. Download the current one from your purchase.").format(pack=tr(outdated[0].name))
+    return ""
 
 
 def paused_text() -> str:
@@ -243,86 +258,6 @@ class Button:
         c.alpha = alpha
 
 
-class TextField:
-    """A single-line text input bound to a property of the licence form."""
-
-    def __init__(self, prop: str, placeholder: str) -> None:
-        self.prop = prop
-        self.placeholder = placeholder
-        self.rect: Rect = (0, 0, 0, 0)
-        self.focused = False
-        self.select_all = False
-        self.enabled = True
-
-    @property
-    def value(self) -> str:
-        return getattr(props(), self.prop)
-
-    @value.setter
-    def value(self, text: str) -> None:
-        setattr(props(), self.prop, text)
-
-    def focus(self, on: bool = True) -> None:
-        self.focused = on
-        self.select_all = False
-
-    def draw(self, c: Canvas, x: float, y: float, w: float, h: float) -> None:
-        p = c.palette
-        self.rect = (x, y, w, h)
-        alpha = c.alpha
-        if not self.enabled:
-            c.alpha = alpha * 0.5
-        line = max(1.0, round(c.scale))
-        c.outline(x, y, w, h, p.accent if self.focused else p.border, c.px(RADIUS), line * (1.5 if self.focused else 1), p.inset)
-        text = self.value
-        pad = c.px(12)
-        baseline = centered_baseline(c, y, h, BODY)
-        c.clip(x + line, y, w - 2 * line, h)
-        if text:
-            tw = c.text_width(text, BODY)
-            shift = max(0.0, tw - (w - 2 * pad))  # keep the end in view
-            if self.select_all and self.focused:
-                c.rect(x + pad - shift, baseline - c.px(4), tw, c.px(BODY) + c.px(5), p.with_alpha(p.accent, 0.55), c.px(2))
-            c.text(text, x + pad - shift, baseline, BODY, p.text)
-            caret_x = x + pad - shift + tw + c.px(1)
-        else:
-            c.text(self.placeholder, x + pad, baseline, BODY, p.faint)
-            caret_x = x + pad
-        if self.focused and int(time.monotonic() * 2) % 2 == 0:
-            c.rect(round(caret_x), baseline - c.px(3), line, c.px(BODY) + c.px(3), p.text)
-        c.unclip()
-        c.alpha = alpha
-
-    def key(self, event) -> bool:
-        """Edit on a key press. Returns True when the event was used."""
-        if not self.focused:
-            return False
-        command = event.ctrl or event.oskey
-        if command and event.type == "V":
-            self._insert(bpy.context.window_manager.clipboard.replace("\n", " ").strip())
-            return True
-        if command and event.type == "A":
-            self.select_all = bool(self.value)
-            return True
-        if event.type == "BACK_SPACE":
-            self.value = "" if self.select_all else self.value[:-1]
-            self.select_all = False
-            return True
-        if event.type == "DEL":
-            if self.select_all:
-                self.value = ""
-                self.select_all = False
-            return True
-        if not command and len(event.unicode) == 1 and event.unicode.isprintable():
-            self._insert(event.unicode)
-            return True
-        return False
-
-    def _insert(self, text: str) -> None:
-        self.value = text if self.select_all else self.value + text
-        self.select_all = False
-
-
 class Controller:
     """What a screen may ask of the operator."""
 
@@ -333,7 +268,7 @@ class Controller:
     def open_url(self, url: str) -> None: ...
     def use_folder(self, folder: str) -> None: ...
     def select_existing_folder(self) -> None: ...
-    def open_upgrade(self) -> None: ...
+    def select_files(self) -> None: ...
     def contact_support(self) -> None: ...
     def to_sidebar(self) -> None: ...
 
@@ -618,8 +553,9 @@ class Screen:
 
 class WelcomeScreen(Screen):
     """The first thing a new user sees: a picture, a few words and one button.
-    From a trial link it offers the trial at once; content found elsewhere on
-    the computer can be used without downloading."""
+    An install from the trial page is offered the trial (and "I bought it");
+    every other install is offered the content packs alone. Content found
+    elsewhere on the computer can be used as it is."""
 
     name = "welcome"
 
@@ -638,19 +574,24 @@ class WelcomeScreen(Screen):
         top -= c.paragraph(tr("Welcome to Human Generator"), column_x, top, 26, p.text, column_w, leading=1.2, bold=True) + c.px(20)
         body = tr("Make realistic humans in Blender: shape the body and face, then add clothing, hair, poses and expressions.")
         top -= c.paragraph(body, column_x, top, 14, p.muted, column_w, leading=1.55) + c.px(18)
-        c.paragraph(tr("Downloads 2–4 GB. You can keep working meanwhile."), column_x, top, 14, p.muted, column_w, leading=1.55)
+        if st.rid:
+            offer = tr("Start with the free trial, or install the full version from the files of your purchase.")
+        else:
+            offer = tr("Install the content packs from the files of your purchase.")
+        c.paragraph(offer, column_x, top, 14, p.muted, column_w, leading=1.55)
 
         button_y = y + c.px(48)
         if st.rid:
+            # Only an install from the trial page is offered the trial
             label = tr("Install the free trial")
             bw = self.button_width(c, label, "primary") + c.px(16)
             self.button(label, column_x, button_y, bw, c.px(40), self._trial, "primary")
-            other = tr("I have a license")
-            self.button(other, column_x + bw + c.px(8), button_y, self.button_width(c, other, "ghost"), c.px(40), self._licence, "ghost")
+            other = tr("I bought it")
+            self.button(other, column_x + bw + c.px(8), button_y, self.button_width(c, other, "ghost"), c.px(40), self._full, "ghost")
         else:
-            label = tr("Get started")
+            label = tr("Install the content packs")
             bw = self.button_width(c, label, "primary") + c.px(16)
-            self.button(label, column_x, button_y, bw, c.px(40), lambda: self.controller.go("choose"), "primary")
+            self.button(label, column_x, button_y, bw, c.px(40), self._full, "primary")
 
         # Content that is already on this computer
         line = c.px(SMALL) * 1.5
@@ -660,15 +601,15 @@ class WelcomeScreen(Screen):
             c.text(c.ellipsize(st.found_folder, SMALL, column_w), column_x, baseline + line, SMALL, p.text)
             c.text(tr("Found Human Generator content in"), column_x, baseline + 2 * line, SMALL, p.muted)
         else:
-            used = c.text(tr("I already have the content packs"), column_x, baseline, SMALL, p.muted)
+            used = c.text(tr("I already have the content installed"), column_x, baseline, SMALL, p.muted)
             self.link(c, tr("Select folder"), column_x + used + c.px(8), baseline, SMALL, self.controller.select_existing_folder)
 
     def _trial(self) -> None:
         setup_state.state.choose("trial")
         self.controller.go(setup_state.state.screen)
 
-    def _licence(self) -> None:
-        setup_state.state.choose("licensed")
+    def _full(self) -> None:
+        setup_state.state.choose("full")
         self.controller.go(setup_state.state.screen)
 
     def key(self, event) -> bool:
@@ -676,140 +617,9 @@ class WelcomeScreen(Screen):
             if setup_state.state.rid:
                 self._trial()
             else:
-                self.controller.go("choose")
+                self._full()
             return True
         return False
-
-
-class ChooseScreen(Screen):
-    """Free trial or licence, as two picture tiles."""
-
-    name = "choose"
-
-    def layout(self, c: Canvas) -> None:
-        content = self.chrome(c)
-        cx, cy, cw, ch = content
-        cursor = self.title_block(c, content, tr("How do you want to start?"), tr("You can activate a license later at any time."))
-        gap = c.px(16)
-        tile_w = (cw - gap) / 2
-        tile_y = cy + c.px(28)
-        tile_h = cursor - tile_y
-        self.tile(c, cx, tile_y, tile_w, tile_h, "trial.jpg", tr("Free trial"), tr("One human, an outfit, a hairstyle and four poses, so you can try the workflow."), tr("Start the trial"), lambda: self._choose("trial"))
-        self.tile(c, cx + tile_w + gap, tile_y, tile_w, tile_h, "license.jpg", tr("Activate license"), tr("Bought Human Generator? Enter your license key to install the full library."), tr("Enter license key"), lambda: self._choose("licensed"))
-        self.footer_actions(c, [self.back_or_close()])
-
-    def tile(self, c: Canvas, x: float, y: float, w: float, h: float, image: str, title: str, blurb: str, action: str, on_click: Callable[[], None]) -> None:
-        p = c.palette
-        x, y, w, h = round(x), round(y), round(w), round(h)
-        hovered = in_rect((x, y, w, h), *self.mouse)
-        radius = c.px(10)
-        line = max(1.0, round(c.scale))
-        c.outline(x, y, w, h, p.accent if hovered else p.line, radius, line, p.hover if hovered else p.card)
-        image_h = round(h * 0.5)
-        image_y = y + h - image_h
-        texture = self.textures.get(os.path.join(SETUP_IMAGE_DIR, image))
-        if texture:
-            c.clip(x, image_y, w, image_h)
-            c.image(texture, x + line, image_y, w - 2 * line, image_h - line, radius - line)
-            c.unclip()
-        c.hline(x + line, image_y, w - 2 * line, p.line)
-        inner = c.px(20)
-        top = image_y - c.px(20)
-        c.text(title, x + inner, top - c.px(15), 15, p.text, bold=True)
-        c.paragraph(blurb, x + inner, top - c.px(26), BODY, p.muted, w - 2 * inner, leading=1.45)
-        c.text(action, x + inner, y + inner, BODY, p.text if hovered else p.link, bold=True)
-        self.rows.append(((x, y, w, h), on_click))
-
-    def _choose(self, mode: str) -> None:
-        setup_state.state.choose(mode)
-        self.controller.go(setup_state.state.screen)
-
-
-class LicenseScreen(Screen):
-    name = "license"
-
-    def __init__(self, controller, textures) -> None:
-        super().__init__(controller, textures)
-        self.guid = TextField("order_guid", tr("Bought on Superhive? Use the order GUID, not the order number"))
-        self.email = TextField("email", tr("you@example.com"))
-        self.fields = [self.guid, self.email]
-
-    def enter(self) -> None:
-        setup_state.state.prefill_form(props())
-        for field in self.fields:
-            field.focus(False)
-        (self.guid if not self.guid.value else self.email).focus()
-
-    def layout(self, c: Canvas) -> None:
-        st = setup_state.state
-        p = c.palette
-        f = props()
-        content = self.chrome(c)
-        cx, cy, cw, ch = content
-        title, subtitle = license_copy(st)
-        cursor = self.title_block(c, content, title, subtitle)
-        field_h = c.px(CONTROL_H + 2)
-        checking = st.checking
-        for field in self.fields:
-            field.enabled = not checking
-
-        for field, label, link, url in (
-            (self.guid, tr("License key"), tr("Where do I find this?"), setup_state.ORDER_HELP_URL),
-            (self.email, tr("The email you bought with"), tr("Why is this needed?"), setup_state.EMAIL_HELP_URL),
-        ):
-            baseline = cursor - c.px(SMALL)
-            c.text(label, cx, baseline, SMALL, p.muted)
-            self.link(c, link, cx + cw, baseline, SMALL, lambda url=url: self.controller.open_url(url), align="RIGHT")
-            cursor = baseline - c.px(10) - field_h
-            field.draw(c, cx, cursor, cw, field_h)
-            self.rows.append((field.rect, lambda field=field: self._focus(field)))
-            cursor -= c.px(20)
-
-        cursor -= c.px(6)
-        size = self.checkbox(c, cx, cursor - c.px(16), f.accept_terms, lambda: self._toggle("accept_terms"), enabled=not checking)
-        text_x = cx + size + c.px(10)
-        self.rich_text(c, tr("I accept the [Human Generator Asset License] and the [Privacy policy]"), text_x, centered_baseline(c, cursor - c.px(16), size, BODY), BODY, p.text, [setup_state.LICENSE_URL, setup_state.PRIVACY_URL])
-        cursor -= c.px(30)
-        self.checkbox(c, cx, cursor - c.px(16), f.newsletter, lambda: self._toggle("newsletter"), enabled=not checking)
-        c.text(tr("Let me know about updates and offers"), text_x, centered_baseline(c, cursor - c.px(16), size, BODY), BODY, p.text)
-        cursor -= c.px(16)
-
-        label = tr("Checking your license…") if checking else tr("Activate")
-        if st.license_reason == "update" and st.can_go_back:
-            left = (tr("Not now"), self._back, "ghost", not checking)
-        else:
-            left = self.back_or_close()
-        self.footer_actions(c, [left, (label, self._activate, "primary", not checking)])
-        # Messages go in the room between the form and the footer, wrapped
-        bottom = cy + c.px(14)
-        if st.online_blocked:
-            self.online_notice(c, cx, bottom, cw)
-        elif st.license_error:
-            text = error_text(st.license_error, tr)
-            server = st.license_phase == "failed" or st.license_reason == "rejected"
-            self.error_paragraph(c, text, cx, bottom, cw, support=server)
-
-    def _focus(self, field: TextField) -> None:
-        for other in self.fields:
-            other.focus(other is field)
-
-    def _toggle(self, prop: str) -> None:
-        setattr(props(), prop, not getattr(props(), prop))
-
-    def _activate(self) -> None:
-        f = props()
-        setup_state.state.activate(f.order_guid, f.email, f.accept_terms, f.newsletter)
-
-    def key(self, event) -> bool:
-        if event.type == "TAB":
-            focused = next((i for i, f in enumerate(self.fields) if f.focused), -1)
-            step = -1 if event.shift else 1
-            self._focus(self.fields[(focused + step) % len(self.fields)])
-            return True
-        if event.type in ("RET", "NUMPAD_ENTER"):
-            self._activate()
-            return True
-        return any(field.key(event) for field in self.fields)
 
 
 FOLD = "fold"  # the "In the full version" row of the trial list
@@ -874,7 +684,7 @@ class PacksScreen(Screen):
         content = self.chrome(c)
         cx, cy, cw, ch = content
         line = max(1.0, round(c.scale))
-        title, subtitle = packs_copy(st)
+        title, subtitle = self.copy(st)
         cursor = self.title_block(c, content, title, subtitle)
 
         # Folder: a read-only field and the button that changes it
@@ -891,13 +701,14 @@ class PacksScreen(Screen):
         c.text(c.ellipsize(st.folder, BODY, cx + field_w - c.px(12) - path_x), path_x, baseline, BODY, p.text)
         self.button(change, cx + cw - button_w, cursor, button_w, row_h, self.controller.change_folder, "secondary", enabled=not st.in_progress)
         cursor -= c.px(16)
+        cursor -= self.toolbar(c, st, cx, cursor, cw)
 
-        # Pack list, in a clipped, scrollable box between the folder and the footer
+        # The list, in a clipped, scrollable box between the folder and the footer
         list_bottom = cy + c.px(24)
-        if st.online_blocked:
+        if st.online_blocked and not st.local:
             list_bottom += self.online_notice(c, cx, list_bottom, cw) + c.px(12)
         else:
-            text, url = notice_text(st)
+            text, url = self.notice(st)
             if text:
                 button = (tr("Learn more"), lambda: self.controller.open_url(url)) if url else None
                 list_bottom += self.notice_box(c, cx, list_bottom, cw, text, button) + c.px(12)
@@ -908,16 +719,7 @@ class PacksScreen(Screen):
         if not rows:
             self._track = self._thumb = (0, 0, 0, 0)
             self._max_offset = 0.0
-            mid = list_bottom + area_h / 2
-            if st.loading:
-                c.text(tr("Loading the pack list…"), cx + cw / 2, mid, BODY, p.muted, "CENTER")
-            elif st.catalogue_phase == "failed":
-                c.paragraph(tr("Could not load the pack list.") + " " + tr(st.catalogue_error), cx + cw / 2, mid + c.px(36), BODY, p.danger, cw - c.px(80), align="CENTER")
-                label = tr("Try again")
-                bw = self.button_width(c, label, "secondary")
-                self.button(label, cx + (cw - bw) / 2, mid - c.px(36), bw, c.px(CONTROL_H), st.load_catalogue, "secondary")
-            elif not st.online_blocked:
-                c.text(tr("Nothing to install."), cx + cw / 2, mid, BODY, p.muted, "CENTER")
+            self.empty(c, st, cx, list_bottom, cw, area_h)
             self._footer(c, st)
             return
 
@@ -954,8 +756,41 @@ class PacksScreen(Screen):
             c.rect(bar_x, thumb_y, bar_w, thumb_h, p.muted if grabbed else p.border, bar_w / 2)
         else:
             self._track = self._thumb = (0, 0, 0, 0)
+            self.below_rows(c, st, cx, list_bottom, cw, list_top - content_h - list_bottom)
 
         self._footer(c, st)
+
+    # What differs between the trial's pack list and the file list
+
+    def copy(self, st) -> Tuple[str, str]:
+        return packs_copy(st)
+
+    def notice(self, st) -> Tuple[str, str]:
+        return notice_text(st)
+
+    def toolbar(self, c: Canvas, st, cx: float, top: float, cw: float) -> float:
+        """A strip between the folder and the list. Returns the height it used."""
+        return 0.0
+
+    def empty(self, c: Canvas, st, cx: float, bottom: float, cw: float, area_h: float) -> None:
+        """What the list box shows when it has no rows."""
+        p = c.palette
+        mid = bottom + area_h / 2
+        if st.loading:
+            c.text(tr("Loading the pack list…"), cx + cw / 2, mid, BODY, p.muted, "CENTER")
+        elif st.catalogue_phase == "failed":
+            c.paragraph(tr("Could not load the pack list.") + " " + tr(st.catalogue_error), cx + cw / 2, mid + c.px(36), BODY, p.danger, cw - c.px(80), align="CENTER")
+            label = tr("Try again")
+            bw = self.button_width(c, label, "secondary")
+            self.button(label, cx + (cw - bw) / 2, mid - c.px(36), bw, c.px(CONTROL_H), st.load_catalogue, "secondary")
+        elif not st.online_blocked:
+            c.text(tr("Nothing to install."), cx + cw / 2, mid, BODY, p.muted, "CENTER")
+
+    def below_rows(self, c: Canvas, st, cx: float, bottom: float, cw: float, room: float) -> None:
+        """The room the rows leave in the list box: what the download sends, with the policy."""
+        if room < c.px(44):
+            return
+        self.rich_text(c, tr("The download and a daily update check go to humgen3d.com. [Privacy policy]"), cx + c.px(16), bottom + c.px(16), SMALL, c.palette.faint, [setup_state.PRIVACY_URL])
 
     def _pack_row(self, c: Canvas, st, pack, cx, row_y, cw, row_h, right, visible) -> None:
         p = c.palette
@@ -967,6 +802,9 @@ class PacksScreen(Screen):
         lead_x = cx + c.px(16)
         if pack.locked:
             self.lock_glyph(c, lead_x + c.px(2), mid - c.px(7), p.faint)
+            name_color = p.muted
+        elif pack.left_out:
+            c.text("–", lead_x + c.px(8), centered_baseline(c, mid - c.px(8), c.px(16), BODY), BODY, p.faint, "CENTER", bold=True)
             name_color = p.muted
         elif pack.status == "up_to_date" or pack.state == "done":
             c.text(CHECK_GLYPH, lead_x + c.px(8), centered_baseline(c, mid - c.px(8), c.px(16), BODY), BODY, p.success, "CENTER", bold=True)
@@ -981,7 +819,9 @@ class PacksScreen(Screen):
         detail_baseline = mid - c.px(14)
 
         tag = tr(pack.tag) if pack.tag else ""
-        if pack.status in ("update_available", "update_required") and pack.installed_version:
+        if pack.path:
+            detail = file_detail(pack)
+        elif pack.status in ("update_available", "update_required") and pack.installed_version:
             detail = tr("Installed {old}, update to {new}").format(old=".".join(str(n) for n in pack.installed_version), new=pack.version)
         else:
             detail = tr(pack.blurb)
@@ -998,7 +838,7 @@ class PacksScreen(Screen):
                 c.text(tr("Required"), right, detail_baseline, SMALL, p.faint, "RIGHT")
         text_w = right - right_w - c.px(16) - text_x
         c.text(c.ellipsize(tr(pack.name), BODY, text_w, bold=True), text_x, name_baseline, BODY, name_color, bold=True)
-        c.text(c.ellipsize(detail, SMALL, text_w), text_x, detail_baseline, SMALL, p.muted)
+        c.text(c.ellipsize(detail, SMALL, text_w), text_x, detail_baseline, SMALL, p.warning if pack.needs_version and pack.installable else p.muted)
 
     def _fold_row(self, c: Canvas, st, cx, row_y, cw, row_h, right, visible) -> None:
         p = c.palette
@@ -1030,8 +870,8 @@ class PacksScreen(Screen):
         if st.trial_installed_here and not st.in_progress:
             left = self.footer_actions(c, [
                 (tr("Close"), self.controller.close, "ghost", True),
-                (tr("I have a license"), self._upgrade, "secondary", True),
-                (tr("Get the full version"), lambda: self.controller.open_url(setup_state.buy_url(st.rid)), "primary", True),
+                (tr("I bought it"), self._full, "secondary", True),
+                (tr("Buy full version"), lambda: self.controller.open_url(setup_state.buy_url(st.rid)), "primary", True),
             ])
             mid = y + c.px(FOOTER) / 2
             c.text(c.ellipsize(tr("Trial installed"), BODY, left - c.px(16) - x - c.px(PAD), bold=True), x + c.px(PAD), mid - c.px(4), BODY, p.text, bold=True)
@@ -1042,9 +882,12 @@ class PacksScreen(Screen):
             detail = tr("{done} of {total}").format(done=format_bytes(st.done_bytes), total=format_bytes(st.total_bytes))
             warn = False
         else:
-            label = update_label(len(st.selected)) if st.update_mode else tr("Install")
+            label = update_label(len(st.selected)) if st.update_mode and st.selected else tr("Install")
             left = self.footer_actions(c, [self.back_or_close(), (label, self._install, "primary", st.can_install)])
-            summary = pack_count(len(st.selected), format_bytes(st.total_bytes))
+            if st.local and not st.selected:
+                summary = tr("No files to install yet")
+            else:
+                summary = pack_count(len(st.selected), format_bytes(st.total_bytes))
             detail, warn = space_text(st)
         text_x = x + c.px(PAD)
         text_w = left - c.px(16) - text_x
@@ -1064,16 +907,72 @@ class PacksScreen(Screen):
 
     def _discard(self) -> None:
         setup_state.state.abort()
-        self.controller.go("packs")
+        self.controller.go(setup_state.state.screen)
 
-    def _upgrade(self) -> None:
-        setup_state.state.begin_upgrade()
+    def _full(self) -> None:
+        setup_state.state.begin_full()
         self.controller.go(setup_state.state.screen)
 
 
+class FilesScreen(PacksScreen):
+    """The full version: the `.hgpack` files the user picked, as a list, with
+    what installing each one does. Nothing here asks a server anything."""
+
+    name = "files"
+
+    @staticmethod
+    def rows_of(st) -> list:
+        return list(st.packs)
+
+    def copy(self, st) -> Tuple[str, str]:
+        return files_copy(st)
+
+    def notice(self, st) -> Tuple[str, str]:
+        return files_notice(st), ""
+
+    def empty(self, c: Canvas, st, cx: float, bottom: float, cw: float, area_h: float) -> None:
+        p = c.palette
+        mid = bottom + area_h / 2
+        label = tr("Select .hgpack files…")
+        bw = self.button_width(c, label, "primary") + c.px(16)
+        self.button(label, cx + (cw - bw) / 2, mid - c.px(4), bw, c.px(40), self.controller.select_files, "primary")
+        c.text(tr("You can select several files at once."), cx + cw / 2, mid - c.px(32), SMALL, p.muted, "CENTER")
+        self.link(c, tr("Where are my files?"), cx + cw / 2 - c.text_width(tr("Where are my files?"), SMALL) / 2, mid - c.px(56), SMALL, self._help)
+
+    def toolbar(self, c: Canvas, st, cx: float, top: float, cw: float) -> float:
+        """Above the rows, so it shows however long the list is: the way to
+        add more files, and where the files of a purchase are."""
+        if not st.packs:
+            return 0.0
+        baseline = top - c.px(SMALL) - c.px(2)
+        if not st.in_progress:
+            self.link(c, tr("Select more files…"), cx, baseline, SMALL, self.controller.select_files)
+        self.link(c, tr("Where are my files?"), cx + cw, baseline, SMALL, self._help, align="RIGHT")
+        return c.px(SMALL) + c.px(16)
+
+    def below_rows(self, c: Canvas, st, cx: float, bottom: float, cw: float, room: float) -> None:
+        """The room the rows leave: these packs come from this computer."""
+        if room < c.px(44):
+            return
+        c.text(tr("Installed from the files on this computer. Nothing is downloaded."), cx + c.px(16), bottom + c.px(16), SMALL, c.palette.faint)
+
+    def _help(self) -> None:
+        self.controller.open_url(docs_url(setup_state.FILES_HELP))
+
+    def key(self, event) -> bool:
+        if event.type in ("RET", "NUMPAD_ENTER") and not setup_state.state.packs:
+            self.controller.select_files()
+            return True
+        return False
+
+
 class SlidesScreen(Screen):
+    """What shows while the content installs, and from "Show me around": the
+    pages of the Get started tutorial, turned by hand, above the progress."""
+
     name = "slides"
-    PROGRESS = 100  # height of the progress block under the slide text
+    PROGRESS = 100  # height of the progress block
+    NAV = 46  # height of the row with the dots and the arrows
 
     def __init__(self, controller, textures) -> None:
         super().__init__(controller, textures)
@@ -1081,20 +980,12 @@ class SlidesScreen(Screen):
         self.changed_at = time.monotonic()
         self.bar_shown = 0.0
 
-    @property
-    def deck(self):
-        return DECKS.get(setup_state.state.mode, DECKS["licensed"])
-
     def enter(self) -> None:
         self.changed_at = time.monotonic()
 
     def go_to(self, index: int) -> None:
-        self.index = index % len(self.deck)
+        self.index = index % len(TUTORIAL_PAGES)
         self.changed_at = time.monotonic()
-
-    def tick(self, now: float) -> None:
-        if now - self.changed_at > SLIDE_SECONDS:
-            self.go_to(self.index + 1)
 
     def key(self, event) -> bool:
         if event.type in ("RIGHT_ARROW", "RET", "SPACE"):
@@ -1119,39 +1010,43 @@ class SlidesScreen(Screen):
         st = setup_state.state
         p = c.palette
         x, y, w, h = self.rect
-        fade = ease_out((time.monotonic() - self.changed_at) / FADE_SECONDS)
-        image_name, title, body = self.deck[self.index % len(self.deck)]
-        title, body = tr(title), tr(body)
-        column_x = self.picture_column(c, os.path.join(SLIDE_IMAGE_DIR, image_name), alpha=fade) + c.px(40)
-        column_w = x + w - c.px(PAD) - column_x
+        column_x = x + c.px(PAD)
+        column_w = w - 2 * c.px(PAD)
+        right = column_x + column_w
 
         header_y = y + h - c.px(HEADER)
         self.brand(c, column_x, header_y, c.px(HEADER))
         self.close_button(c, header_y, c.px(HEADER))
 
-        # Slide text
-        top = header_y - c.px(32)
-        c.alpha = fade
-        used = c.paragraph(title, column_x, top, 22, p.text, column_w, leading=1.25, bold=True)
-        c.paragraph(body, column_x, top - used - c.px(14), 14, p.muted, column_w, leading=1.55)
-        c.alpha = 1.0
+        # The tutorial page, as large as fits between the header and the dots
+        block_top = y + c.px(self.PROGRESS)
+        area_y = block_top + c.px(self.NAV)
+        area_h = header_y - area_y
+        image_w = round(min(column_w, area_h * TUTORIAL_ASPECT))
+        image_h = round(image_w / TUTORIAL_ASPECT)
+        image_x = round(x + (w - image_w) / 2)
+        image_y = round(area_y + (area_h - image_h) / 2)
+        radius = c.px(RADIUS)
+        c.rect(image_x, image_y, image_w, image_h, p.inset, radius)
+        texture = self.textures.get(os.path.join(TUTORIAL_IMAGE_DIR, TUTORIAL_PAGES[self.index % len(TUTORIAL_PAGES)]))
+        if texture:
+            fade = ease_out((time.monotonic() - self.changed_at) / FADE_SECONDS)
+            c.image(texture, image_x, image_y, image_w, image_h, radius, alpha=fade)
 
         # Dots and arrows
-        block_top = y + c.px(self.PROGRESS)
         arrow = c.px(30)
-        arrows_y = block_top + c.px(24)
+        arrows_y = block_top + (c.px(self.NAV) - arrow) / 2
         dot = c.px(6)
         dx = column_x
-        for i in range(len(self.deck)):
+        for i in range(len(TUTORIAL_PAGES)):
             current = i == self.index
             c.rect(dx, arrows_y + (arrow - dot) / 2, dot * 3 if current else dot, dot, p.text if current else p.border, dot / 2)
             dx += dot * (3 if current else 1) + c.px(6)
-        right = x + w - c.px(PAD)
         self.button("‹", right - 2 * arrow - c.px(4), arrows_y, arrow, arrow, lambda: self.go_to(self.index - 1), "ghost", size=16)
         self.button("›", right - arrow, arrows_y, arrow, arrow, lambda: self.go_to(self.index + 1), "ghost", size=16)
 
         # Progress
-        c.hline(column_x - c.px(40), block_top, x + w - column_x + c.px(40), p.line)
+        c.hline(x, block_top, w, p.line)
         actions: List[Tuple[str, Callable[[], None], str]] = []
         if st.active:
             label, detail, fraction, color = download_label(st), download_detail(st), st.fraction, None
@@ -1161,16 +1056,16 @@ class SlidesScreen(Screen):
         elif st.paused:
             label, fraction, color = tr("Download paused"), st.fraction, p.faint
             detail = tr("{done} of {total}").format(done=format_bytes(st.done_bytes), total=format_bytes(st.total_bytes))
-            actions = [(tr("Packs"), lambda: self.controller.go("packs"), "ghost"), (tr("Resume"), self._resume, "primary")]
+            actions = [(tr("Packs"), self._list, "ghost"), (tr("Resume"), self._resume, "primary")]
         elif st.phase == "done":
             label, detail, fraction, color = tr("All packs installed"), tr("Ready to use"), 1.0, p.success
             actions = [(tr("Continue"), lambda: self.controller.go("done"), "primary")]
         elif st.phase == "failed":
-            label, detail, fraction, color = tr("Download failed"), error_text(st.error, tr), st.fraction, p.danger
+            label, detail, fraction, color = failure_title(st), error_text(st.error, tr), st.fraction, p.danger
             actions = [(tr("Continue"), lambda: self.controller.go("done"), "primary")]
         else:
             label, detail, fraction, color = tr("Not started"), "", st.fraction, p.faint
-            actions = [(tr("Packs"), lambda: self.controller.go("packs"), "primary")]
+            actions = [(tr("Packs"), self._list, "primary")]
         widths = [self.button_width(c, a[0], a[2]) for a in actions]
         buttons_w = sum(widths) + c.px(8) * max(0, len(widths) - 1)
         bar_w = column_w - buttons_w - (c.px(24) if actions else 0)
@@ -1192,6 +1087,10 @@ class SlidesScreen(Screen):
     def _pause(self) -> None:
         """Stop and keep what was fetched; Resume continues from there."""
         setup_state.state.pause()
+
+    def _list(self) -> None:
+        """Back to the list this install came from."""
+        self.controller.go("files" if setup_state.state.local else "packs")
 
     def _resume(self) -> None:
         st = setup_state.state
@@ -1234,13 +1133,8 @@ class DoneScreen(Screen):
         c.outline(cx, cursor - row_h, cw, row_h, p.line, c.px(RADIUS), max(1.0, round(c.scale)), p.inset)
         c.text(c.ellipsize(st.folder, BODY, cw - c.px(24)), cx + c.px(12), centered_baseline(c, cursor - row_h, row_h, BODY), BODY, p.text)
         cursor -= row_h + c.px(28)
-        cred = st.credential
-        if cred is not None and cred.status == "ok" and cred.is_personal:
-            used = c.text(tr("Personal license") + " · ", cx, cursor, SMALL, p.muted)
-            self.link(c, tr("Upgrade to Commercial"), cx + used, cursor, SMALL, self.controller.open_upgrade)
-            cursor -= c.px(SMALL) * 1.8
         if can_open_sidebar_tab():
-            primary = tr("Create your first human")
+            primary = tr("Get started")
         else:
             primary = tr("Close")
             c.text(tr("Open the HumGen tab in the sidebar (N)"), cx, cursor, SMALL, p.muted)
@@ -1253,21 +1147,15 @@ class DoneScreen(Screen):
         p = c.palette
         cx, cy, cw, ch = area
         message = error_text(st.error, tr)
-        if st.credential_failed:
-            cursor = self.title_block(c, area, tr("We couldn't confirm your license"), "")
-            height = self.error_paragraph(c, message, cx, 0, cw * 0.9, p.muted, measure=True)
-            self.error_paragraph(c, message, cx, cursor + c.px(12) - height, cw * 0.9, p.muted)
-            self.footer_actions(c, [
-                (tr("Contact support"), self.controller.contact_support, "ghost", True),
-                (tr("Retry"), self._retry, "secondary", True),
-                (tr("Enter license key"), self._enter_order, "primary", True),
-            ])
-            return
-        cursor = self.title_block(c, area, tr("Download failed"), "")
+        cursor = self.title_block(c, area, failure_title(st), "")
         height = self.error_paragraph(c, message, cx, 0, cw * 0.9, p.muted, measure=True)
         self.error_paragraph(c, message, cx, cursor + c.px(12) - height, cw * 0.9, p.muted)
         cursor += c.px(12) - height - c.px(8)
-        c.paragraph(tr("Packs that finished stay installed, and the download resumes where it stopped."), cx, cursor, BODY, p.muted, cw * 0.9)
+        if st.local:
+            rest = tr("Packs that finished stay installed. Your files are not changed.")
+        else:
+            rest = tr("Packs that finished stay installed, and the download resumes where it stopped.")
+        c.paragraph(rest, cx, cursor, BODY, p.muted, cw * 0.9)
         self.footer_actions(c, [
             (tr("Contact support"), self.controller.contact_support, "ghost", True),
             (tr("Retry"), self._retry, "primary", True),
@@ -1277,12 +1165,6 @@ class DoneScreen(Screen):
         st = setup_state.state
         st.start()
         self.controller.go(st.screen)
-
-    def _enter_order(self) -> None:
-        st = setup_state.state
-        st.license_reason = "rejected"
-        st.go("license")
-        self.controller.go("license")
 
     def _tour(self) -> None:
         self.controller.go("slides")
@@ -1310,4 +1192,4 @@ class TooSmallScreen(Screen):
         self.button(tr("Close"), x + pad - c.px(10), y + pad, self.button_width(c, tr("Close"), "ghost"), c.px(CONTROL_H), self.controller.close, "ghost")
 
 
-SCREENS = {cls.name: cls for cls in (WelcomeScreen, ChooseScreen, LicenseScreen, PacksScreen, SlidesScreen, DoneScreen)}
+SCREENS = {cls.name: cls for cls in (WelcomeScreen, PacksScreen, FilesScreen, SlidesScreen, DoneScreen)}
