@@ -599,7 +599,7 @@ def test_selected_files_land_in_the_list_and_can_be_cleared(fake_setup):
     st.begin_full()
     files = [{"name": "Base_Humans_4_1.hgpack"}, {"name": "notes.zip"}]
     assert bpy.ops.hg3d.setup_select_files(directory="/dl", files=files) == {"FINISHED"}
-    assert [(p.key, p.status) for p in st.packs] == [("Base_Humans", "missing"), ("/dl/notes.zip", "not_a_pack")]
+    assert [(p.key, p.status) for p in st.packs] == [("Base_Humans", "missing"), (os.path.join("/dl", "notes.zip"), "not_a_pack")]
     assert bpy.ops.hg3d.setup_clear_files() == {"FINISHED"}
     assert st.packs == []
 
