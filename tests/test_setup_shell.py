@@ -584,7 +584,8 @@ def test_dropped_packs_open_the_file_list(fake_setup):
     files = [{"name": "Base_Humans_4_1.hgpack"}, {"name": "Base_Hair_4_1.hgpack"}, {"name": "holiday.jpg"}]
     assert bpy.ops.hg3d.setup_drop_files(directory="/dl", files=files) == {"FINISHED"}
     assert st.screen == "files" and st.mode == "full" and st.prompted
-    assert [p.path for p in st.packs] == ["/dl/Base_Humans_4_1.hgpack", "/dl/Base_Hair_4_1.hgpack"]
+    # joined the way this system joins a folder and a file name
+    assert [p.path for p in st.packs] == [os.path.join("/dl", "Base_Humans_4_1.hgpack"), os.path.join("/dl", "Base_Hair_4_1.hgpack")]
     # A single file arrives as a path
     assert bpy.ops.hg3d.setup_drop_files(filepath="/dl/Base_Clothes_4_1.hgpack") == {"FINISHED"}
     assert len(st.packs) == 3
