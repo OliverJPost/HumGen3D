@@ -6,6 +6,8 @@ description: "Install Human Generator in Blender 4.2 or newer: the add-on, the f
 
 Human Generator needs Blender 4.2 or newer. You install the add-on, and its setup installs the content. If something doesn't work, see [[Setup troubleshooting]].
 
+> [!info] Installing the add-on zip that came with your Superhive order? That one installs differently, see [[How to install HG]].
+
 ## Install the add-on
 
 1. Open your install guide on the computer you run Blender on: request the trial on [humgen3d.com](https://humgen3d.com) and press **Install right away**, or open the link in our email.
