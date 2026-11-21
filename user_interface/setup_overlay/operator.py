@@ -1249,6 +1249,11 @@ class HG_PT_SETUP(bpy.types.Panel):
         elif st.catalogue_phase == "failed":
             wrapped(layout, context, tr("Could not load the pack list.") + " " + tr(st.catalogue_error), icon="ERROR", alert=True)
             layout.operator("hg3d.setup_reload_packs", text=tr("Try again"), icon="FILE_REFRESH")
+        if setup_state.shows_trial_notice():
+            # The same sentence as the window's trial screen, where the request form said it
+            note = layout.column(align=True)
+            wrapped(note, context, tr(setup_state.TRIAL_NOTICE).replace(" [Privacy policy]", ""))
+            note.operator("wm.url_open", text=tr("Privacy policy"), icon="URL", emboss=False).url = setup_state.PRIVACY_URL
         col = layout.column(align=True)
         trial = st.mode == "trial"
         locked = [p for p in st.packs if p.locked] if trial else []

@@ -14,7 +14,10 @@ the moment it happens:
 
 Each is one small request of its own: `POST /api/trial` with
 `{"event": "trial_installed", "trial": "<id>"}` plus the versions every
-request names. The rules, which the privacy policy on humgen3d.com states too:
+request names. The setup opens by itself the first time Blender runs the
+add-on, so `setup_opened` is the add-on installed: with `trial_installed` it
+is what the request form calls "when it's installed". The rules, which the
+privacy policy on humgen3d.com states too:
 - An install whose zip did not come from the trial page has no id and
   sends nothing.
 - The events are named for what they are and sent readable. Don't shorten,
@@ -76,6 +79,25 @@ def trial_rid() -> Optional[str]:
     if rid and rid != stored:
         user_settings.update(trial_rid=rid)
     return rid or (stored if isinstance(stored, str) and stored else None)
+
+
+def trial_notice() -> str:
+    """"strict" or "none": which wording this install shows about what it
+    tells humgen3d.com (`repository.trial_notice`). The site wrote it into
+    the zip to match the request form the lead saw. Remembered like the id,
+    and "strict" when nothing says: then the setup says it."""
+    try:
+        from . import repository
+
+        notice = repository.trial_notice()
+    except Exception:  # noqa: BLE001  outside Blender (tests)
+        notice = None
+    stored = user_settings.get("trial_notice")
+    if notice and notice != stored:
+        user_settings.update(trial_notice=notice)
+    if notice:
+        return notice
+    return stored if stored in ("strict", "none") else "strict"
 
 
 def _stored(rid: str) -> Dict[str, List[str]]:

@@ -216,6 +216,30 @@ def test_welcome_from_a_trial_link_offers_both(st):
     assert "Install the free trial" in texts
 
 
+TRIAL_NOTICE = "This trial tells humgen3d.com when it is installed and when the full version replaces it."
+
+
+def test_trial_screen_says_what_the_request_form_said(st, monkeypatch):
+    """In the EU, the EEA and the UK the request form says that the trial lets
+    us know when it is installed and upgraded; the zip then carries
+    `notice: strict` and the trial screen says the same, in the window and in
+    the sidebar. With `notice: none` it keeps its usual line, and it says it
+    when the zip does not say which."""
+    user_settings.update(trial_rid="0123456789abcdef")
+    for notice, shown in (("strict", True), ("none", False), (None, True)):
+        monkeypatch.setattr(setup_state.repository, "trial_notice", lambda notice=notice: notice)
+        user_settings.update(trial_notice=None)
+        st.begin_setup()
+        st.choose("trial")
+        loaded(st)
+        _, texts = show(st)
+        assert any(TRIAL_NOTICE in t for t in texts) == shown, notice
+        assert any("Privacy policy" in t for t in texts)
+        assert any("The download and a daily update check go to humgen3d.com." in t for t in texts)
+        labels, _ = panel_texts(st)
+        assert (TRIAL_NOTICE in " ".join(labels)) == shown, notice
+
+
 def test_trial_list_and_its_download(st):
     st.choose("trial")
     loaded(st)
@@ -224,6 +248,8 @@ def test_trial_list_and_its_download(st):
     assert "In the full version: 6 more packs" in texts and no_activation(texts)
     # What the download sends is said where it starts
     assert any("Privacy policy" in t for t in texts) and any("humgen3d.com" in t for t in texts)
+    # An add-on that did not come from an install guide has nothing more to say
+    assert not any(TRIAL_NOTICE in t for t in texts)
     press(screen, "Install")
     assert st.screen == "slides" and st.phase == "downloading"
     _, texts = show(st)

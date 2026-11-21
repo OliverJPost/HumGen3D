@@ -145,6 +145,26 @@ def test_the_trial_id_comes_from_the_file_in_the_zip(tmp_path, monkeypatch):
         assert repository.trial_rid() is None, content
 
 
+def test_the_notice_comes_from_the_same_file_and_is_strict_when_nothing_says(tmp_path, folder, monkeypatch):
+    """`trial.json` also says which wording the lead was shown on the request
+    form: "strict" (the EU, the EEA and the UK) or "none". The setup's trial
+    screen follows it, and says it when in doubt."""
+    monkeypatch.setattr(repository, "addon_root", lambda: str(tmp_path))
+    file = tmp_path / repository.TRIAL_FILE
+    assert repository.trial_notice() is None and trial_events.trial_notice() == "strict"
+    file.write_text(json.dumps({"trial": RID, "notice": "none"}) + "\n")
+    assert repository.trial_notice() == "none"
+    assert trial_events.trial_notice() == "none"
+    # An update of the add-on removed the file: what it said stays known
+    file.write_text("")
+    assert repository.trial_notice() is None and trial_events.trial_notice() == "none"
+    file.write_text(json.dumps({"trial": RID, "notice": "strict"}) + "\n")
+    assert trial_events.trial_notice() == "strict"
+    for content in (json.dumps({"trial": RID}), json.dumps({"trial": RID, "notice": "loud"}), json.dumps({"trial": RID, "notice": 1})):
+        file.write_text(content)
+        assert repository.trial_notice() is None, content
+
+
 def test_a_stray_trial_file_never_ships():
     """A developer's own `trial.json` stays out of the released zip."""
     import tomllib

@@ -201,6 +201,17 @@ def trial_rid() -> str:
     return repository.trial_rid() or str(user_settings.get("trial_rid", "") or "")
 
 
+# What the trial screen says in the EU, the EEA and the UK (`trial_events.trial_notice`): the
+# same as the request form there. The wording is agreed with the privacy policy; keep them in step.
+TRIAL_NOTICE = "This trial tells humgen3d.com when it is installed and when the full version replaces it. [Privacy policy]"
+
+
+def shows_trial_notice() -> bool:
+    """Whether this install says `TRIAL_NOTICE` on its trial screen: it came
+    from an install guide and its notice is the strict one."""
+    return bool(trial_rid()) and trial_events.trial_notice() == "strict"
+
+
 # Services: the server and the disk, swappable for tests
 
 

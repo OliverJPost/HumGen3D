@@ -787,10 +787,20 @@ class PacksScreen(Screen):
             c.text(tr("Nothing to install."), cx + cw / 2, mid, BODY, p.muted, "CENTER")
 
     def below_rows(self, c: Canvas, st, cx: float, bottom: float, cw: float, room: float) -> None:
-        """The room the rows leave in the list box: what the download sends, with the policy."""
+        """The room the rows leave in the list box: what goes to humgen3d.com,
+        with the policy. Where the request form said that the trial lets us
+        know when it is installed and upgraded (`shows_trial_notice`), this
+        screen says it too; it comes first when there is room for one line only."""
         if room < c.px(44):
             return
-        self.rich_text(c, tr("The download and a daily update check go to humgen3d.com. [Privacy policy]"), cx + c.px(16), bottom + c.px(16), SMALL, c.palette.faint, [setup_state.PRIVACY_URL])
+        x, y = cx + c.px(16), bottom + c.px(16)
+        usual = tr("The download and a daily update check go to humgen3d.com. [Privacy policy]")
+        if not setup_state.shows_trial_notice():
+            self.rich_text(c, usual, x, y, SMALL, c.palette.faint, [setup_state.PRIVACY_URL])
+            return
+        self.rich_text(c, tr(setup_state.TRIAL_NOTICE), x, y, SMALL, c.palette.faint, [setup_state.PRIVACY_URL])
+        if room >= c.px(66):
+            c.text(usual.replace(" [Privacy policy]", ""), x, y + c.px(SMALL) * 1.6, SMALL, c.palette.faint)
 
     def _pack_row(self, c: Canvas, st, pack, cx, row_y, cw, row_h, right, visible) -> None:
         p = c.palette

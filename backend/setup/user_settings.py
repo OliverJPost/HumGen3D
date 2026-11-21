@@ -11,6 +11,8 @@ every Blender version.
 Keys in use:
     content_folder   the folder the packs are installed in
     trial_rid        the trial request id found in the add-on's trial.json
+    trial_notice     "strict" or "none" from the same file: which wording the
+                     trial screen shows (see trial_events.trial_notice)
     setup_shown_at   ISO time the setup first opened (by itself, which it
                      does once, or from its button)
     trial_events     what happened on an install from the trial page and what
