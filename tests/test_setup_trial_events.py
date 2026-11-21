@@ -204,7 +204,7 @@ def test_each_event_is_its_own_request_at_its_moment_and_once(folder, monkeypatc
 
 
 def test_the_request_reads_as_what_it_is(folder, monkeypatch):
-    """What the installation guide quotes: a plainly named event, the trial
+    """What the privacy policy describes: a plainly named event, the trial
     id under its own name, the versions, and nothing else."""
     monkeypatch.setattr(repository, "trial_rid", lambda: RID)
     write_pack(folder, "Trial_Content", (4, 1))

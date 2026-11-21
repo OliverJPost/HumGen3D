@@ -31,7 +31,7 @@ Content packs are ZIP files that contain content for Human Generator. They are r
 
 A `.hgpack` file is now added to the folder you selected!
 
-Others install your pack in the add-on preferences, under Content Packs > **Packs from other creators**, see [[Installation#Packs from other creators]].
+Others install your pack in the add-on preferences: open the Content Packs tab, press **Install content packs from files…**, select the `.hgpack` file and press **Install**.
 
 ### Want to edit the pack?
 

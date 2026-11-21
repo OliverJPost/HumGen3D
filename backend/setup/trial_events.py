@@ -14,13 +14,12 @@ the moment it happens:
 
 Each is one small request of its own: `POST /api/trial` with
 `{"event": "trial_installed", "trial": "<id>"}` plus the versions every
-request names. The rules, which the privacy policy and the installation guide
-state too:
+request names. The rules, which the privacy policy on humgen3d.com states too:
 - An install whose zip did not come from the trial page has no id and
   sends nothing.
 - The events are named for what they are and sent readable. Don't shorten,
   encode or fold them into another request: what the add-on sends has to
-  match what its documentation says it sends.
+  match what the privacy policy says it sends.
 - Once each per install: what was sent is kept in the settings file.
 - In a thread, never while Blender's online access is off, and a failure
   shows nowhere. An event that could not be sent stays due and goes out at

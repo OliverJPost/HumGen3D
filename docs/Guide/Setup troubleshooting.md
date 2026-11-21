@@ -129,7 +129,7 @@ The disk is full, or you don't have permission to write to the folder. On a shar
 
 > That drive isn't connected. Connect it, or choose another folder.
 
-The content folder is on a drive that isn't there. Connect it, or press **Change…** and pick another folder. See also [[Installation#Moving or reconnecting your content folder]].
+The content folder is on a drive that isn't there. Connect it, or press **Change…** and pick another folder. See also [[#Can't find your content folder]].
 
 ### Another Blender window is downloading the content
 
@@ -190,7 +190,7 @@ Make the 3D viewport larger, for example with `Ctrl Space`, or press **Continue 
 
 Blender 4.2 and later has an *Allow Online Access* setting, and the setup needs it to download the trial. Press **Allow online access** in the setup, the HumGen tab or the add-on preferences. The setting is also under Edit > Preferences > System > Network.
 
-Apart from the trial download, Human Generator only uses the network for a daily check for updates. Turning online access off stops that check too. The full version installs from files and needs no connection. See [[Installation#What the add-on sends]].
+Turning online access off also stops the daily check for updates. The full version installs from files and needs no connection. Our [privacy policy](https://humgen3d.com/privacy) says what the add-on sends.
 
 ### Blender was started in offline mode
 
@@ -205,3 +205,31 @@ The setup couldn't get the list of packs from humgen3d.com. The reason follows t
 ### No Human Generator content in this folder
 
 You picked a folder with **Use this folder** or **Select folder** that has no Human Generator content packs in it. Pick the folder that has the `content_packs` folder inside, or install the content with the setup.
+
+
+## Content from an earlier install
+
+If you used Human Generator 4 before, you don't install the content again.
+
+- **Your content is found automatically.** The setup looks in the folder of your preferences, the folder an earlier version remembered, the preferences of the older add-on and the default folder. When it finds content, its first screen shows *Found Human Generator content in* with the folder. Press **Use this folder**.
+- **If it isn't found,** press **Select folder** next to *I already have the content installed* on that screen, and pick the folder with your packs.
+
+### Can't find your content folder
+
+> Can't find your content folder
+> If it's on an external or network drive, connect it and press Try again.
+
+The content folder is set but not there, for example on an unplugged drive or a folder you renamed. Nothing is created or installed while it is missing.
+
+- **Try again** looks again, after you connect the drive.
+- **Locate folder…** lets you pick the folder in its new place.
+- **Install again…** opens the setup to install the content into a new folder.
+
+To move the content on purpose, move the folder in your file manager, then press **Locate folder…**. Blend files you saved before the move may still look for textures in the old place; Blender's File > External Data > Find Missing Files fixes those.
+
+### Human Generator is installed twice
+
+> Human Generator is installed twice.
+> The older copy in your add-ons folder is still switched on.
+
+You installed the new version next to an older Human Generator in your add-ons folder. Two copies can't run at once. Press **Use the new version**: it takes over the content folder and settings of the older copy and switches that copy off. If Blender asks you to restart, do so.
