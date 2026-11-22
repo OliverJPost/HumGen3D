@@ -3,9 +3,9 @@
 
 
 from bpy.props import BoolProperty, EnumProperty, IntProperty, StringProperty
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...backend.preferences.preference_func import get_prefs
+from ...common.documentation import docs_url
+from ...user_interface.icons.icons import get_hg_icon
 
 
 class CpackEditingSystem:

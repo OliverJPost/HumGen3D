@@ -3,7 +3,7 @@
 from sys import platform
 
 import bpy
-from HumGen3D.user_interface.panel_functions import draw_paragraph
+from ...user_interface.panel_functions import draw_paragraph
 
 from ..ui_baseclasses import MainPanelPart, forbidden_for_baked, subpanel_draw
 

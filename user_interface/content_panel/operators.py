@@ -2,12 +2,12 @@ import json
 import os
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.human.clothing.saving import has_deform_weights
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.documentation.feedback_func import show_message
-from HumGen3D.user_interface.documentation.tips_suggestions_ui import (
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_prefs
+from ...human.clothing.saving import has_deform_weights
+from ...human.human import Human
+from ...user_interface.documentation.feedback_func import show_message
+from ...user_interface.documentation.tips_suggestions_ui import (
     update_tips_from_context,
 )
 

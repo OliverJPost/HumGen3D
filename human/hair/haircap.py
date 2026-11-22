@@ -12,10 +12,10 @@ from typing import TYPE_CHECKING, Literal, Optional
 import bmesh
 import bpy
 import numpy as np
-from HumGen3D import get_prefs
-from HumGen3D.common.math import create_kdtree
-from HumGen3D.human.hair import hair_binding
-from HumGen3D.human.hair.haircards import (
+from ... import get_prefs
+from ...common.math import create_kdtree
+from ...human.hair import hair_binding
+from ...human.hair.haircards import (
     STATIONS,
     BodyReference,
     HairStrands,

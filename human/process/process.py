@@ -5,23 +5,23 @@ import uuid
 from typing import TYPE_CHECKING, Dict, Iterable, List, Literal, Optional
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.object_finding import (
+from ...backend.logging import hg_log
+from ...common.decorators import injected_context
+from ...common.exceptions import HumGenException
+from ...common.object_finding import (
     HUMAN_ID_KEY,
     ORIGINAL_ID_KEY,
     PROCESSED_KEY,
 )
-from HumGen3D.common.progress import ProgressCallback, Steps
-from HumGen3D.common.progress import run as run_steps
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.hair import haircards
+from ...common.progress import ProgressCallback, Steps
+from ...common.progress import run as run_steps
+from ...common.type_aliases import C
+from ...human.hair import haircards
 
 from .lod import LOD_KEY, LOD_RIG_KEY, LodSettings, merge_levels
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 from . import animations, naming, textures
 from .apply_modifiers import apply_modifiers
@@ -88,8 +88,8 @@ class ProcessSettings:
     The steps that change the human for good refuse to run twice, see the
     `has_*` and `was_*` properties.
 
-    The process system runs on the data of the HG_Export content pack, which is
-    downloaded from your Superhive account (formerly BlenderMarket). Without it, `run`, the steps,
+    The process system runs on the data of the HG_Export content pack, which the
+    add-on's setup installs ("Install HG Export" in the Process tab). Without it, `run`, the steps,
     `lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The
     `has_*`, `was_*` and `is_*` properties and `settings` work without it.
     """

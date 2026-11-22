@@ -19,12 +19,12 @@ from bpy.props import (  # type:ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.process import export_pack
-from HumGen3D.human.process import scripts as script_tools
-from HumGen3D.human.process.game_rig import INFLUENCE_LIMITS, REST_POSE_ITEMS, UNIT_ITEMS
-from HumGen3D.human.process.quality import (
+from ...backend.logging import hg_log
+from ...common.exceptions import HumGenException
+from ...human.process import export_pack
+from ...human.process import scripts as script_tools
+from ...human.process.game_rig import INFLUENCE_LIMITS, REST_POSE_ITEMS, UNIT_ITEMS
+from ...human.process.quality import (
     CUSTOM_TIER,
     RESOLUTIONS,
     TEXTURE_TIERS,
@@ -33,7 +33,7 @@ from HumGen3D.human.process.quality import (
     texture_tier_of,
     tier_of,
 )
-from HumGen3D.human.process.settings import (
+from ...human.process.settings import (
     CLIP_LAYOUTS,
     CLIP_SOURCES,
     FBX_AXES,
@@ -65,13 +65,13 @@ from HumGen3D.human.process.settings import (
     TextureBakeSettings,
     recipe_items,
 )
-from HumGen3D.human.process.shape_keys import (
+from ...human.process.shape_keys import (
     GROUP_ACTIONS,
     KEY_ACTIONS,
     KEY_GROUPS,
     keep_options,
 )
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...user_interface.icons.icons import get_hg_icon
 
 MAX_LOD_LEVELS = 4
 # Tier of each level added after the first, so a new level is lower than the last
@@ -922,7 +922,7 @@ def is_modified(props: ProcessProps) -> bool:
 
 
 def _refresh_clips_of(context) -> None:  # noqa: ANN001
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
     if _loading or not context:
         return
@@ -933,7 +933,7 @@ def _refresh_clips_of(context) -> None:  # noqa: ANN001
 
 def refresh_clips(props: ProcessProps, human, context) -> None:  # noqa: ANN001
     """Fills the clip list: the actions on the human or the clips of the library."""
-    from HumGen3D.human.process.animations import clip_names, library_clips
+    from ...human.process.animations import clip_names, library_clips
 
     anim_props = props.animations
     enabled = _refreshed_ticks(anim_props.clips, "identifier", anim_props.clips_explicit)

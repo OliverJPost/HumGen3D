@@ -5,12 +5,12 @@
 from typing import TYPE_CHECKING, Callable, Optional
 
 import bpy
-from HumGen3D.common.type_aliases import C
+from ...common.type_aliases import C
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.common.decorators import injected_context
+from ...common.decorators import injected_context
 
 from .base_clothing import BaseClothing
 

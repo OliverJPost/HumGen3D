@@ -8,8 +8,8 @@ import os
 from typing import Dict, Optional, Union
 
 import bpy
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.common.type_aliases import BpyEnum, GenderStr
+from ..backend.preferences.preference_func import get_addon_root
+from ..common.type_aliases import BpyEnum, GenderStr
 
 from ..common.exceptions import HumGenException  # type: ignore
 from . import get_prefs, hg_log

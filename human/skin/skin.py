@@ -7,19 +7,18 @@ from __future__ import annotations
 import os
 import random
 import shutil
-import subprocess
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Optional, Union, cast, Literal
 
 import bpy
 from bpy.types import Material, ShaderNode, bpy_prop_collection  # type:ignore
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.common.shadernode import FACTOR_INPUT_NAME, NodeInput
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from HumGen3D.common.exceptions import HumGenException
+from ...backend import get_prefs, hg_log
+from ...common.shadernode import FACTOR_INPUT_NAME, NodeInput
+from ...common.type_aliases import C
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...user_interface.documentation.feedback_func import ShowMessageBox
+from ...common.exceptions import HumGenException
+from ...common.images import save_resized
 from ..hair.compatibility import SUBSURFACE_INPUT_NAME
 
 from ...common.decorators import injected_context
@@ -348,27 +347,6 @@ class TextureSettings(PreviewCollectionContent):
         category="Default",
         thumbnail: Optional[bpy.types.Image] = None,
     ) -> None:
-        try:
-            from PIL import Image
-        except ImportError:
-            python_exe = os.path.join(sys.prefix, "bin", "python.exe")
-            target = os.path.join(sys.prefix, "lib", "site-packages")
-            subprocess.call([python_exe, "-m", "ensurepip"])
-            subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
-            subprocess.call(
-                [
-                    python_exe,
-                    "-m",
-                    "pip",
-                    "install",
-                    "--upgrade",
-                    "Pillow",
-                    "-t",
-                    target,
-                ]
-            )
-            from PIL import Image
-
         category = category.strip()
         nodes = self._human.materials.body.node_tree.nodes
         image = nodes.get("Color").image
@@ -391,13 +369,11 @@ class TextureSettings(PreviewCollectionContent):
         )
         self.save_thumb(save_name, thumbnail, texture_folder, categ_folder)
 
-        image = Image.open(filepath)
         for res_name, res in (("1K", 1024), ("512px", 512)):
-            new_image = image.resize((res, res))
             categ_folder = f"{category} {res_name}"
-            if not os.path.exists(os.path.join(texture_folder, categ_folder)):
-                os.makedirs(os.path.join(texture_folder, categ_folder))
-            new_image.save(os.path.join(texture_folder, categ_folder, save_name + ext))
+            save_resized(
+                filepath, os.path.join(texture_folder, categ_folder, save_name + ext), res
+            )
             self.save_thumb(save_name, thumbnail, texture_folder, categ_folder)
 
     def save_thumb(self, save_name, thumbnail, texture_folder, categ_folder):

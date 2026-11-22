@@ -9,8 +9,9 @@ import traceback
 from typing import Any, Callable, TypeVar, cast
 import addon_utils
 import bpy
-from HumGen3D.backend import hg_log
-from HumGen3D.common.exceptions import HumGenException
+from ..backend import hg_log
+from ..common.exceptions import HumGenException
+from ..package import addon_package
 from functools import wraps
 import functools
 import inspect
@@ -125,7 +126,7 @@ def disable_mesh_changing_modifiers(func: F) -> F:
 
 
 def check_for_addon_issues():
-    addon = bpy.context.preferences.addons.get("HumGen3D")
+    addon = bpy.context.preferences.addons.get(addon_package())
     if not addon:
         raise HumGenException("HumGen3D addon not enabled.")
     if not addon.preferences.filepath:

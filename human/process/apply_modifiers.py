@@ -18,17 +18,17 @@ from typing import Iterable
 import bpy
 import numpy as np
 
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.objects import (
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.objects import (
     bake_shape_key,
     delete_object,
     duplicate_object,
     remove_all_shapekeys,
     transfer_as_shape_key,
 )
-from HumGen3D.common.type_aliases import C  # type: ignore
-from HumGen3D.common.drivers import build_driver_dict
+from ...common.type_aliases import C  # type: ignore
+from ...common.drivers import build_driver_dict
 
 # Modifiers that only move vertices. Applying them is writing the evaluated
 # coordinates, which is also possible for every shape key.

@@ -2,8 +2,9 @@
 
 
 import bpy
-from HumGen3D.backend import get_prefs
+from ...backend import get_prefs
 
+from ...common.exceptions import HumGenException
 from ...human.human import Human  # type: ignore
 from ..documentation.tips_suggestions_ui import draw_tips_suggestions_ui  # type: ignore
 from ..panel_functions import draw_panel_switch_header, draw_spoiler_box
@@ -41,7 +42,10 @@ class HG_PT_PANEL(MainPanelPart, bpy.types.Panel):
         self.sett = context.scene.HG3D  # type:ignore[attr-defined]
         self.pref = get_prefs()
 
-        self.human = Human.from_existing(context.active_object, strict_check=False)
+        try:
+            self.human = Human.from_existing(context.active_object, strict_check=False)
+        except HumGenException:  # no content: the labels below say what to do
+            self.human = None
 
         if self.draw_info_and_warning_labels(context):
             return

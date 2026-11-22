@@ -14,12 +14,12 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Dict, Iterator, List, Tuple
 
 import bpy
-from HumGen3D.human.hair.haircards import CARDS_KEY
+from ...human.hair.haircards import CARDS_KEY
 
 from .settings import OutputSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Templates of each scheme, see OutputSettings.naming_templates for the custom one
 SCHEMES = {

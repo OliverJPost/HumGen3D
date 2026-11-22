@@ -6,18 +6,18 @@ import random
 from typing import TYPE_CHECKING, cast
 
 import bpy
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.geometry import world_coords_from_obj
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.hair import hair_binding
-from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.geometry import world_coords_from_obj
+from ...common.type_aliases import C
+from ...human.hair import hair_binding
+from ...human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
 from mathutils import Vector
 
 from ...common.math import centroid
 
 if TYPE_CHECKING:
-    from HumGen3D import Human
+    from ... import Human
 
 import numpy as np
 

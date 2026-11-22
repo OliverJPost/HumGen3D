@@ -1,14 +1,14 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
-import os
 from typing import TYPE_CHECKING
 
 import addon_utils  # type:ignore
 import bpy
-import HumGen3D
+
+from ...package import addon_package, addon_root
 
 if TYPE_CHECKING:
-    from HumGen3D.backend.preferences.preferences import HG_PREF
+    from ...backend.preferences.preferences import HG_PREF
 
 
 def get_prefs() -> "HG_PREF":
@@ -17,9 +17,7 @@ def get_prefs() -> "HG_PREF":
     Returns:
         HG_PREF: HumGen user preferences
     """
-    addon_name = "HumGen3D"
-
-    return bpy.context.preferences.addons[addon_name].preferences  # type: ignore
+    return bpy.context.preferences.addons[addon_package()].preferences  # type: ignore
 
 
 def get_addon_root() -> str:
@@ -28,7 +26,7 @@ def get_addon_root() -> str:
     Returns:
         str: path of the root directory of the add-on
     """
-    return os.path.dirname(os.path.abspath(HumGen3D.__file__))  # type: ignore
+    return addon_root()
 
 
 def open_preferences_as_new_window() -> None:
@@ -41,7 +39,7 @@ def open_preferences_as_new_window() -> None:
     bpy.context.window_manager.addon_search = "Human Generator 3D"
 
     try:
-        mod = addon_utils.addons_fake_modules["HumGen3D"]
+        mod = addon_utils.addons_fake_modules[addon_package()]
         info = addon_utils.module_bl_info(mod)
         info["show_expanded"] = True
     except Exception as e:

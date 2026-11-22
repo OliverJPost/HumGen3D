@@ -24,13 +24,13 @@ from typing import no_type_check
 from zipfile import ZIP_DEFLATED, ZipFile
 
 import bpy
-from HumGen3D.backend import preview_collections
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences import get_prefs
-from HumGen3D.backend.preferences.preference_func import open_preferences_as_new_window
-from HumGen3D.backend.preview_collections import PREVIEW_COLLECTION_DATA
-from HumGen3D.extern.blendfile import open_blend
-from HumGen3D.user_interface.documentation.feedback_func import (  # type: ignore
+from ...backend import preview_collections
+from ...backend.logging import hg_log
+from ...backend.preferences import get_prefs
+from ...backend.preferences.preference_func import open_preferences_as_new_window
+from ...backend.preview_collections import PREVIEW_COLLECTION_DATA
+from ...extern.blendfile import open_blend
+from ...user_interface.documentation.feedback_func import (  # type: ignore
     ShowMessageBox,
     show_message,
 )

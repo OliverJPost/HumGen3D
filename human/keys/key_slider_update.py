@@ -58,7 +58,7 @@ class HG3D_OT_SLIDER_SUBSCRIBE(bpy.types.Operator):
     @no_type_check
     def invoke(self, context, event):
         # To prevent circular import
-        from HumGen3D.human.human import Human
+        from ...human.human import Human
 
         # Set handler property for checking if the modal is running
         cls = self.__class__

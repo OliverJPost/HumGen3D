@@ -9,10 +9,10 @@ from typing import Any, cast
 import bpy
 import numpy as np
 from bpy.props import FloatProperty, StringProperty  # type:ignore
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.human import Human
-from HumGen3D.human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
-from HumGen3D.human.keys.keys import _get_starting_coordinates
+from ...common.exceptions import HumGenException
+from ...human.human import Human
+from ...human.keys.key_slider_update import HG3D_OT_SLIDER_SUBSCRIBE
+from ...human.keys.keys import _get_starting_coordinates
 
 
 def get_livekey(self: BpyLiveKey) -> float:

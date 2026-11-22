@@ -17,7 +17,7 @@ import re
 from typing import Dict, List, Optional
 
 import bpy
-from HumGen3D.common.exceptions import HumGenException
+from ...common.exceptions import HumGenException
 from mathutils import Vector
 
 from .clip import FORMAT_VERSION, LEG_BONES, ROOT_BONE

@@ -17,14 +17,14 @@ import traceback
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root, get_prefs
-from HumGen3D.common.exceptions import HumGenException
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_addon_root, get_prefs
+from ...common.exceptions import HumGenException
 
 from .settings import SCRIPT_STAGES, ScriptSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 ARG_TYPES = {"str": str, "int": int, "float": float, "bool": bool}
 FILES_PARAMETER = "files"
@@ -33,7 +33,7 @@ STAGE_IDS = tuple(stage for stage, *_ in SCRIPT_STAGES)
 SCRIPT_TEMPLATE = '''"""Describe what the script does here, the interface shows it."""
 
 import bpy
-from HumGen3D import Human
+from ... import Human
 
 # The stage the script is added with, one of: {stages}
 STAGE = "after_processing"

@@ -9,11 +9,11 @@ import re
 from typing import TYPE_CHECKING, Any, Optional
 
 import bpy
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...backend import get_prefs, hg_log
+from ...common.decorators import injected_context
+from ...common.exceptions import HumGenException
+from ...common.type_aliases import C
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
 from mathutils import Matrix
 
 from .clip import read_clip, write_clip
@@ -27,7 +27,7 @@ from .retarget import (
 )
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Custom properties on actions created by Human Generator
 ACTION_PRESET_PROP = "hg_animation"

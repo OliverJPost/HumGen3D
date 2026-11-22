@@ -5,9 +5,9 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.human.hair.basehair import ImportableHair
+from ...human.hair.basehair import ImportableHair
 
 
 class FacialHairSettings(ImportableHair):

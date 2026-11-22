@@ -9,9 +9,9 @@ from bpy.props import (  # type:ignore
     StringProperty,
 )
 from bpy.types import Object  # type:ignore
-from HumGen3D.common.documentation import docs_url
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...common.documentation import docs_url
+from ...human.human import Human
+from ...user_interface.icons.icons import get_hg_icon
 
 # Page of the documentation about saving each category of custom content
 CONTENT_DOCS = {

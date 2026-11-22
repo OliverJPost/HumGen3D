@@ -5,10 +5,10 @@ import random
 from typing import Literal, Optional, Union
 
 import bpy
-from HumGen3D.batch_generator.batch_functions import height_from_bell_curve
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C  # type:ignore
-from HumGen3D.human.human import Human
+from ..batch_generator.batch_functions import height_from_bell_curve
+from ..common.decorators import injected_context
+from ..common.type_aliases import C  # type:ignore
+from ..human.human import Human
 
 SettingsDict = dict[str, Union[str, int, float]]
 

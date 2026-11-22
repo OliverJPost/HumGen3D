@@ -9,9 +9,9 @@ import subprocess
 from typing import Iterable
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.common.memory_management import hg_delete
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_addon_root
+from ...common.memory_management import hg_delete
 
 
 class SavableContent:

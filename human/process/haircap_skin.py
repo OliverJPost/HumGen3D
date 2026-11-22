@@ -33,10 +33,10 @@ import numpy as np
 from mathutils.bvhtree import BVHTree
 from mathutils.geometry import barycentric_transform
 
-from HumGen3D.human.hair.haircards import CARDS_KEY, _keep_slot
+from ...human.hair.haircards import CARDS_KEY, _keep_slot
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
     from .textures import TextureSet
 

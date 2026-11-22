@@ -8,13 +8,13 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from HumGen3D.common.os import correct_presetpath
+from ...common.os import correct_presetpath
 
 from .footwear import FootwearSettings
 from .outfit import OutfitSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 
 class ClothingSettings:

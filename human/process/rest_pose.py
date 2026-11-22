@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING, Any
 
 import bpy
 import numpy as np
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.common import is_legacy
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.expression.expression import FACE_RIG_BONE_NAMES
+from ...backend.preferences.preference_func import get_addon_root
+from ...common import is_legacy
+from ...common.exceptions import HumGenException
+from ...human.expression.expression import FACE_RIG_BONE_NAMES
 from mathutils import Matrix, Quaternion, Vector
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 # Set on the rig when the T-pose is its rest pose
 T_POSE_KEY = "t_pose_rest"

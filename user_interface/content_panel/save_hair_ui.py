@@ -1,4 +1,4 @@
-from HumGen3D.user_interface.icons.icons import get_hg_icon
+from ...user_interface.icons.icons import get_hg_icon
 
 from .base_draw_functions import _draw_header_box, _draw_next_button
 

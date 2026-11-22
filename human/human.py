@@ -15,16 +15,16 @@ import bpy
 from bpy.props import FloatVectorProperty  # type:ignore
 from bpy.types import Object  # type:ignore
 from bpy.types import Context, Image, bpy_prop_collection  # type:ignore
-from HumGen3D.backend import preview_collections
-from HumGen3D.backend.content.content_saving import save_thumb
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.backend.properties.object_props import HG_OBJECT_PROPS
-from HumGen3D.common import find_hg_rig, is_legacy
-from HumGen3D.common.context import context_override
-from HumGen3D.common.type_aliases import BpyEnum, C, GenderStr
-from HumGen3D.human.age import AgeSettings
-from HumGen3D.human.materials import MaterialSettings
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
+from ..backend import preview_collections
+from ..backend.content.content_saving import save_thumb
+from ..backend.preferences.preference_func import get_addon_root
+from ..backend.properties.object_props import HG_OBJECT_PROPS
+from ..common import find_hg_rig, is_legacy
+from ..common.context import context_override
+from ..common.type_aliases import BpyEnum, C, GenderStr
+from ..human.age import AgeSettings
+from ..human.materials import MaterialSettings
+from ..user_interface.documentation.feedback_func import ShowMessageBox
 from mathutils import Vector
 
 from .process.export import ExportBuilder
@@ -48,8 +48,7 @@ from .objects import ObjectCollection
 from .pose.pose import PoseSettings, remove_broken_constraints  # type:ignore
 from .process.process import ProcessSettings
 from .skin.skin import SkinSettings
-
-import HumGen3D
+from ..package import addon_version
 
 class Human:
     """Python representation of a Human Generator human.
@@ -237,9 +236,7 @@ class Human:
             errors.extend(occurred_errors)
         human._set_random_name()
 
-        from HumGen3D import bl_info
-
-        human.props.version = HumGen3D.__version__
+        human.props.version = addon_version()
         human.props.hashes["$pose"] = str(hash(human.pose))
         human.props.hashes["$outfit"] = str(hash(human.clothing.outfit))
         human.props.hashes["$footwear"] = str(hash(human.clothing.footwear))

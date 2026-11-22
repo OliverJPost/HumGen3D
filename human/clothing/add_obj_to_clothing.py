@@ -9,14 +9,14 @@ import bpy
 import numpy as np
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend.preferences.preference_func import get_addon_root
-from HumGen3D.common.exceptions import HumGenException  # type:ignore
-from HumGen3D.common.geometry import world_coords_from_obj
-from HumGen3D.common.math import centroid
-from HumGen3D.common.progress import Steps, phase, run
-from HumGen3D.human.clothing.garment_fit import (
+from ...backend.preferences.preference_func import get_addon_root
+from ...common.exceptions import HumGenException  # type:ignore
+from ...common.geometry import world_coords_from_obj
+from ...common.math import centroid
+from ...common.progress import Steps, phase, run
+from ...human.clothing.garment_fit import (
     convert_worn_steps,
     corrective_deltas,
     triangles,
@@ -211,6 +211,6 @@ def get_human_from_distance(cloth_obj: bpy.types.Object) -> "Human":
     if human_distances[closest_human_rig] > 2.0:
         raise HumGenException("Clothing does not seem to be on a HG body object.")
 
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
     return cast(Human, Human.from_existing(closest_human_rig))

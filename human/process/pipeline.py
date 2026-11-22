@@ -23,14 +23,14 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common import is_legacy
-from HumGen3D.common.collections import add_to_collection
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.object_finding import PROCESSED_KEY
-from HumGen3D.common.progress import ProgressCallback, Steps
-from HumGen3D.common.progress import run as run_steps
+from ...backend.logging import hg_log
+from ...backend.preferences.preference_func import get_prefs
+from ...common import is_legacy
+from ...common.collections import add_to_collection
+from ...common.exceptions import HumGenException
+from ...common.object_finding import PROCESSED_KEY
+from ...common.progress import ProgressCallback, Steps
+from ...common.progress import run as run_steps
 from mathutils import Vector
 
 from . import animations, manifest, naming, scripts, textures
@@ -39,7 +39,7 @@ from .settings import EXPORT_STAGES, TEETH_LEVELS, ExportSettings, QualitySettin
 from .shape_keys import driven_groups_kept
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 EXPORT_KEY = "hg_export"
 LEVEL_KEY = "hg_export_level"

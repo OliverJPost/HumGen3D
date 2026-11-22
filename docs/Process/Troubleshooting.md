@@ -10,8 +10,8 @@ Problems with the Process tab itself. What to do in the engine is on the pages p
 
 ## The tab is greyed out
 
-- ***HG_Export.hgpack missing***: the Export content pack isn't installed. Download it from your Superhive account (formerly BlenderMarket), then press **Install HG_Export.hgpack** in the tab and pick the file, see [[Process/Overview#HG Export pack missing?|HG Export pack missing?]]. If you installed it and still see this, check that the content folder in the add-on preferences is the one you installed it to.
-- ***HG_Export.hgpack outdated***: this version of Human Generator needs a newer pack. Download it again and install it over the old one.
+- ***Export data not installed***: the HG Export content pack isn't installed. Press **Install HG Export** in the tab; the setup downloads it, see [[Process/Overview#HG Export pack missing?|HG Export pack missing?]]. If you installed it and still see this, check that the content folder in the add-on preferences is the one you installed it to. If the download shows an error, see [[Setup troubleshooting]].
+- ***Export data needs an update***: this version of Human Generator needs a newer HG Export pack. Press **Update HG Export**.
 - ***Disabled in Trial Version***: the Process tab is not part of the trial.
 
 ## The red lines under the button

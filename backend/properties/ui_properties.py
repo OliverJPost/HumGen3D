@@ -11,8 +11,8 @@ Properties related to the user interface of Human Generator.
 
 import bpy
 from bpy.props import BoolProperty, EnumProperty  # type:ignore
-from HumGen3D import Human
-from HumGen3D.user_interface.icons.icons import get_hg_icon  # type: ignore
+from ... import Human
+from ...user_interface.icons.icons import get_hg_icon  # type: ignore
 
 from ..callback import hg_callback, tab_change_update
 

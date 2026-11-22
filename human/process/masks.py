@@ -12,11 +12,11 @@ from typing import TYPE_CHECKING
 
 import bmesh
 import bpy
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 
 @injected_context

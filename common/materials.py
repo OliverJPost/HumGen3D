@@ -1,6 +1,6 @@
 import bpy.types
 
-from HumGen3D.common.exceptions import HumGenException
+from ..common.exceptions import HumGenException
 
 
 def verify_no_undefined_nodes_in_mat(mat: bpy.types.Material) -> None:

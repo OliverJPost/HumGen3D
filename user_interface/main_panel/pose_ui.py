@@ -5,8 +5,8 @@ import os
 import addon_utils
 import bpy
 
-from HumGen3D.backend import get_prefs
-from ..panel_functions import draw_paragraph
+from ...backend import get_prefs
+from ..panel_functions import draw_paragraph, draw_trial_notice
 
 from ..ui_baseclasses import MainPanelPart, subpanel_draw
 
@@ -135,16 +135,7 @@ class HG_PT_POSE(MainPanelPart, bpy.types.Panel):
             box.label(text="Load facial rig first", icon="INFO")
             is_trial = get_prefs().is_trial
             if is_trial:
-                tbox = box.box()
-                row = tbox.row(align=True)
-                row.alert = True
-                row.label(text="Disabled in Trial Version")
-                tbox.operator("wm.url_open", text="Buy Human Generator", depress=True).url = (
-                    "https://humgen3d.com/pricing"
-                    "?utm_source=addon"
-                    "&utm_medium=ui_link"
-                    "&utm_campaign=trial_click"
-                )
+                draw_trial_notice(box, "rigify")
             col = box.column()
             col.enabled = not is_trial
             col.scale_y = 1.5

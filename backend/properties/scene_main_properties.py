@@ -17,8 +17,8 @@ from bpy.props import (  # type: ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend import preview_collections
-from HumGen3D.human.human import Human
+from ...backend import preview_collections
+from ...human.human import Human
 
 from ...user_interface.documentation.tips_suggestions_ui import update_tips_from_context
 from .batch_props import BatchProps

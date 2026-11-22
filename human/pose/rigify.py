@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, Literal
 
 import bpy
-from HumGen3D.common.collections import add_to_collection
-from HumGen3D.common.context import context_override
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.drivers import build_driver_dict
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.common.memory_management import hg_delete
-from HumGen3D.common.type_aliases import C
+from ...common.collections import add_to_collection
+from ...common.context import context_override
+from ...common.decorators import injected_context
+from ...common.drivers import build_driver_dict
+from ...common.exceptions import HumGenException
+from ...common.memory_management import hg_delete
+from ...common.type_aliases import C
 import rigify
 
 if TYPE_CHECKING:

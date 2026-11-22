@@ -12,9 +12,9 @@ via Weight Inpainting".
 from typing import Any, Callable, Optional
 
 import numpy as np
-from HumGen3D.common.progress import Steps, phase, run
-from HumGen3D.common.sparse import Sparse, block_cg_steps, cot_laplacian
-from HumGen3D.common.surface import (
+from ...common.progress import Steps, phase, run
+from ...common.sparse import Sparse, block_cg_steps, cot_laplacian
+from ...common.surface import (
     closest_points,
     components,
     edges_from_tris,

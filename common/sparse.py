@@ -5,7 +5,7 @@
 from typing import Callable, Optional
 
 import numpy as np
-from HumGen3D.common.progress import Steps, run
+from ..common.progress import Steps, run
 
 
 class Sparse:

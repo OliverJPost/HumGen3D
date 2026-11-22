@@ -44,13 +44,14 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import bpy
-from HumGen3D.human.hair.compatibility import SPECULAR_INPUT_NAME
+from ...human.hair.compatibility import SPECULAR_INPUT_NAME
+from ...package import addon_version
 
 from .naming import HAIRCAP_PART, PART_KEY, SKIN_PART
 from .settings import ExportSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 FORMAT = 1
 EXTENSION = ".humgen3d.json"
@@ -111,8 +112,6 @@ def build(
         character_file (str): Path of the file with the meshes.
         animation_files (List[str]): Paths of the files with only clips.
     """
-    from HumGen3D import bl_info
-
     folder = os.path.dirname(os.path.abspath(character_file))
     meshes: Dict[str, Any] = {}
     materials: Dict[str, Any] = {}
@@ -135,7 +134,7 @@ def build(
 
     return {
         FORMAT_KEY: FORMAT,
-        "generator": "Human Generator 3D " + ".".join(str(n) for n in bl_info["version"]),
+        "generator": "Human Generator 3D " + ".".join(str(n) for n in addon_version()),
         "name": name,
         "recipe": settings.recipe,
         "rig": _name(human.objects.rig),

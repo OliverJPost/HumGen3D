@@ -8,19 +8,19 @@ from typing import TYPE_CHECKING
 
 import bpy
 import numpy as np
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.keys.keys import ShapeKeyItem
+from ...common.type_aliases import C
+from ...human.keys.keys import ShapeKeyItem
 
-from HumGen3D.common.context import context_override
+from ...common.context import context_override
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend import get_prefs, remove_broken_drivers
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.exceptions import HumGenException
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.hair import hair_binding
+from ...backend import get_prefs, remove_broken_drivers
+from ...common.decorators import injected_context
+from ...common.exceptions import HumGenException
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...human.hair import hair_binding
 
 FACE_RIG_BONE_NAMES = [
     "brow_inner_up",

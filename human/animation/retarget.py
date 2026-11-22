@@ -25,7 +25,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import bpy
 from bpy.types import Bone, Object, PoseBone  # type:ignore
-from HumGen3D.human.process.rest_pose import ARM_BONES, ELBOW_BEND, load_t_pose
+from ...human.process.rest_pose import ARM_BONES, ELBOW_BEND, load_t_pose
 from mathutils import Matrix, Quaternion, Vector
 
 from .clip import LEG_BONES, ROOT_BONE

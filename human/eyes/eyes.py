@@ -7,12 +7,12 @@ import random
 from typing import TYPE_CHECKING, Any, Optional, cast
 
 from bpy.types import Material, Object  # type:ignore
-from HumGen3D.common.shadernode import NodeInput  # type:ignore
-from HumGen3D.common.shadernode import COLOR2_INPUT_NAME
-from HumGen3D.human.common_baseclasses.prop_collection import PropCollection
+from ...common.shadernode import NodeInput  # type:ignore
+from ...common.shadernode import COLOR2_INPUT_NAME
+from ...human.common_baseclasses.prop_collection import PropCollection
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human  # type:ignore
+    from ...human.human import Human  # type:ignore
 
 T_CLASS = [
     0x3F313B,  # T50

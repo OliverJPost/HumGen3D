@@ -4,10 +4,10 @@
 
 from typing import TYPE_CHECKING
 
-from HumGen3D.human.hair.basehair import BaseHair
+from ...human.hair.basehair import BaseHair
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 
 class EyelashSettings(BaseHair):

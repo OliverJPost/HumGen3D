@@ -16,18 +16,18 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Literal, Optional
 
 import bpy
 
-from HumGen3D.backend.preferences.preference_func import get_prefs
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.objects import bake_shape_key, remove_shape_key
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.hair import hair_binding
-from HumGen3D.human.hair.hair_binding import EXPRESSION_KEY_PREFIXES
+from ...backend.preferences.preference_func import get_prefs
+from ...common.decorators import injected_context
+from ...common.objects import bake_shape_key, remove_shape_key
+from ...common.type_aliases import C
+from ...human.hair import hair_binding
+from ...human.hair.hair_binding import EXPRESSION_KEY_PREFIXES
 
 from .settings import ShapeKeySettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
-    from HumGen3D.human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
+    from ...human.human import Human
+    from ...human.keys.keys import KeyItem, LiveKeyItem, ShapeKeyItem
 
 KeyAction = Literal["keep", "bake", "remove"]
 # Per group the names of the keys to keep, None for all of them

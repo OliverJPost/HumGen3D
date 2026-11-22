@@ -7,18 +7,18 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import bpy
 from bpy.types import Image  # type:ignore
-from HumGen3D.backend import get_prefs, hg_delete, hg_log
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
-from HumGen3D.human.common_baseclasses.pcoll_content import PreviewCollectionContent
-from HumGen3D.human.common_baseclasses.savable_content import SavableContent
+from ...backend import get_prefs, hg_delete, hg_log
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
+from ...human.common_baseclasses.pcoll_content import PreviewCollectionContent
+from ...human.common_baseclasses.savable_content import SavableContent
 
 from .rigify import RigifySettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend.content.content_saving import save_objects_optimized, save_thumb
+from ...backend.content.content_saving import save_objects_optimized, save_thumb
 
 def remove_broken_constraints(armature):
 

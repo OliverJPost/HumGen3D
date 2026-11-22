@@ -14,7 +14,7 @@ A free Unreal Engine plugin that sets up a character exported with the **Unreal*
 | --- | --- |
 | Tested with | Unreal Engine 5.8, with the Interchange FBX import (the default) |
 | Needs | A character exported by the early access version of Human Generator, with its `.humgen3d.json` file next to it, and the *Python Editor Script Plugin* that comes with Unreal |
-| Licence | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-unreal) |
+| License | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-unreal) |
 
 ## Install
 

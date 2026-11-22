@@ -16,15 +16,15 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
 
 import bpy
-from HumGen3D.backend.logging import hg_log
-from HumGen3D.human.animation.animation import ACTION_PRESET_PROP, NLA_TRACK_NAME
-from HumGen3D.human.animation.retarget import _channels, original_name
+from ...backend.logging import hg_log
+from ...human.animation.animation import ACTION_PRESET_PROP, NLA_TRACK_NAME
+from ...human.animation.retarget import _channels, original_name
 from mathutils import Vector
 
 from .settings import AnimationClipSettings
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
 HIPS_BONE = "spine"
 

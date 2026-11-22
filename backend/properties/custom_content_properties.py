@@ -19,11 +19,11 @@ from bpy.props import (  # type:ignore
     PointerProperty,
     StringProperty,
 )
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.human import Human
-from HumGen3D.user_interface.content_panel.operators import refresh_hair_ul
-from HumGen3D.user_interface.documentation.feedback_func import ShowMessageBox
-from HumGen3D.user_interface.panel_functions import prettify
+from ...backend import get_prefs, hg_log
+from ...human.human import Human
+from ...user_interface.content_panel.operators import refresh_hair_ul
+from ...user_interface.documentation.feedback_func import ShowMessageBox
+from ...user_interface.panel_functions import prettify
 
 from ..content.custom_content_packs import build_content_collection
 from ..content.possible_content import find_possible_content

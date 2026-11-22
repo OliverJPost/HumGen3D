@@ -1,8 +1,8 @@
 # Copyright (c) 2022 Oliver J. Post & Alexander Lashko - GNU GPL V3.0, see LICENSE
 
 import bpy
-from HumGen3D.backend import get_prefs
-from HumGen3D.backend.logging import hg_log
+from ...backend import get_prefs
+from ...backend.logging import hg_log
 
 from ..panel_functions import draw_paragraph
 from ..ui_baseclasses import MainPanelPart, forbidden_for_lod, subpanel_draw

@@ -10,7 +10,7 @@ What the process system can't do yet, or does differently from what you might ex
 
 ## Blender and engines
 
-- Human Generator needs **Blender 4.0 or newer**. The process system is tested with Blender 5.1.
+- Human Generator needs **Blender 4.2 or newer**, see [[Installation#Blender version]]. The process system is tested with Blender 5.1.
 - The engine pages say which engine versions were tested: [[Export to Unity|Unity]] 6000.6 with the Built-in pipeline and URP 17.2, [[Export to Unreal Engine|Unreal Engine]] 5.8, [[Export to Godot|Godot]] 4.7. Other versions likely work but were not checked. In Unity, HDRP materials are set up by the [[Unity Companion]] but not reviewed.
 - The Companions only set up characters with their `.humgen3d.json` file next to them, see [[Output#The .humgen3d.json file]]. Characters exported by earlier versions of Human Generator don't have it.
 

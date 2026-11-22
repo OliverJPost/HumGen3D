@@ -15,17 +15,17 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Literal, Optional, Union,
 import bpy
 import numpy as np
 from bpy.types import Object, ShapeKey  # type:ignore
-from HumGen3D.common.decorators import injected_context
-from HumGen3D.common.type_aliases import C
-from HumGen3D.user_interface.panel_functions import prettify
+from ...common.decorators import injected_context
+from ...common.type_aliases import C
+from ...user_interface.panel_functions import prettify
 from ...backend.properties.randomize_locks import RandomizeLockProps, get_prop
 
 if TYPE_CHECKING:
-    from HumGen3D.human.human import Human
+    from ...human.human import Human
 
-from HumGen3D.backend import get_prefs, hg_log
-from HumGen3D.human.common_baseclasses.savable_content import SavableContent
-from HumGen3D.human.hair import hair_binding
+from ...backend import get_prefs, hg_log
+from ...human.common_baseclasses.savable_content import SavableContent
+from ...human.hair import hair_binding
 if TYPE_CHECKING:
     from .bpy_livekey import BpyLiveKey
 
@@ -102,7 +102,7 @@ def update_livekey_collection() -> None:
             item.subcategory = subcategory
             item.path = os.path.relpath(abspath, get_prefs().filepath)
 
-    from HumGen3D.backend.properties.ui_properties import UserInterfaceProps
+    from ...backend.properties.ui_properties import UserInterfaceProps
 
     for category in set(subcategories):
         if not category:

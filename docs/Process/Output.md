@@ -1,5 +1,5 @@
 ---
-description: "Output options of the Human Generator Process tab: FBX, glTF, OBJ and Alembic export, processed copies in the Blender file, naming, texture folders, licence."
+description: "Output options of the Human Generator Process tab: FBX, glTF, OBJ and Alembic export, processed copies in the Blender file, naming, texture folders, license."
 ---
 # Output formats and names
 
@@ -79,9 +79,9 @@ The Companions for [[Unity Companion|Unity]], [[Unreal Engine Companion|Unreal E
 > [!note]- Reading it from your own tools
 > The format is described in `human/process/manifest.py` inside the add-on. The number in `humgen3d_export` only goes up when a change would make older readers misread it.
 
-## Licence of exported characters
+## License of exported characters
 
-Exported characters fall under the [Human Generator Asset License](https://humgen3d.com/docs/faq/human-generator-asset-license). With the commercial licence you can ship them in commercial games and software, as long as players can't take the character out and reuse it. The personal licence covers personal, educational and portfolio work, not commercial games. With either licence, don't share or sell the exported files themselves (the FBX, glTF or texture files), also not modified. glTF files carry a line about this licence in their copyright field. The [License FAQ](https://humgen3d.com/docs/faq/license-faq) answers the common questions.
+Exported characters fall under the [Human Generator Asset License](https://humgen3d.com/docs/faq/human-generator-asset-license). With the commercial license you can ship them in commercial games and software, as long as players can't take the character out and reuse it. The personal license covers personal, educational and portfolio work, not commercial games. With either license, don't share or sell the exported files themselves (the FBX, glTF or texture files), also not modified. glTF files carry a line about this license in their copyright field. The [License FAQ](https://humgen3d.com/docs/faq/license-faq) answers the common questions.
 
 ## Processed copies
 

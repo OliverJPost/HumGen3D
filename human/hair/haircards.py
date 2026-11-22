@@ -33,14 +33,14 @@ from typing import (
 import bmesh
 import bpy
 import numpy as np
-from HumGen3D import get_prefs
-from HumGen3D.common.context import context_override
-from HumGen3D.common.geometry import world_coords_from_obj
-from HumGen3D.common.math import create_kdtree
-from HumGen3D.common.memory_management import hg_delete
-from HumGen3D.common.shadernode import COLOR1_INPUT_NAME, COLOR2_INPUT_NAME
-from HumGen3D.human.hair import card_atlas, hair_binding
-from HumGen3D.human.hair.compatibility import (
+from ... import get_prefs
+from ...common.context import context_override
+from ...common.geometry import world_coords_from_obj
+from ...common.math import create_kdtree
+from ...common.memory_management import hg_delete
+from ...common.shadernode import COLOR1_INPUT_NAME, COLOR2_INPUT_NAME
+from ...human.hair import card_atlas, hair_binding
+from ...human.hair.compatibility import (
     SPECULAR_INPUT_NAME,
     get_children_percent,
     set_children_percent,
@@ -278,6 +278,30 @@ GREY_HAIR_SHARE = 0.09
 COLOR_MATCH_NODE_NAME = "HG_Color_Match"
 SPECULAR_MATCH_NODE_NAME = "HG_Specular_Match"
 GREY_HAIR_NODE_NAME = "HG_Grey_Hair"
+
+# Nodes of a card material that only change how the cards look in Blender, see
+# add_blender_look. Their names start with this, and the name of the input the
+# texture bake reads past them to is stored on them under BAKE_PASSTHROUGH
+BLENDER_LOOK_PREFIX = "HG_Blender_"
+BAKE_PASSTHROUGH = "hg_bake_passthrough"
+# The color of the cards is matched to particle hair for the engines, which cut
+# the cards out. Blender draws them translucent and stacked, which showed them
+# pale and washed out next to the particle hair. Measured on renders of the same
+# hairstyles as particles and cards in Eevee and Cycles:
+#: Factors for the value and saturation of the card color, for dark and brown
+#: hair and for blonde hair (Lightness of 1 and 4 and more), in between they are
+#: interpolated. Blonde cards came out orange and dark with the factors of brown
+CARD_LOOK_VALUE = (0.8, 1.25)
+CARD_LOOK_SATURATION = (1.4, 1.15)
+#: Atlas alpha from which a strand is opaque. The engines cut the cards out at
+#: half alpha, Blender drew every strand at 0.7 and the cards looked hazy
+CARD_LOOK_SOLID_ALPHA = 0.3
+#: Texels the strands are widened by for the alpha. The atlas is drawn sparse
+#: for the engines' cut-out, and Blender showed the head through the hair
+CARD_LOOK_DILATE = 1.5
+#: Factor for the specular. Flat cards mirrored the sky as a grey sheen,
+#: worst on the cards at the outline
+CARD_LOOK_SPECULAR = 0.0
 
 # Part of the hair texture without gaps between the hairs, not in the zones json
 SOLID_ZONE: Rect = ((0.0, 0.3), (0.2, 1.0))
@@ -2362,6 +2386,150 @@ def match_particle_color(
         dim.inputs[1].default_value = color_match.specular
     if color_match.roughness is not None:
         principled.inputs["Roughness"].default_value = color_match.roughness
+
+
+def add_blender_look(material: bpy.types.Material) -> None:
+    """Makes hair cards look like the particle hair in Eevee and Cycles.
+
+    Puts nodes between the inputs of the Principled BSDF and what feeds them:
+    a correction of the color, opaque and wider strands and no specular. The
+    texture bake leaves these nodes out, see remove_blender_look, so exports
+    are the same as without them. Nodes of an earlier look are replaced: a card
+    material is copied from the one of the last conversion, whose look reads
+    the atlas of another human. Does nothing for a material without the atlas.
+
+    Args:
+        material (bpy.types.Material): Material from load_card_material.
+    """
+    remove_blender_look(material)
+    nodes = material.node_tree.nodes
+    principled = next(
+        (node for node in nodes if node.bl_idname == "ShaderNodeBsdfPrincipled"), None
+    )
+    group = next((node for node in nodes if node.bl_idname == "ShaderNodeGroup"), None)
+    if not principled or not group:
+        return
+    image = next(
+        (
+            node.image
+            for node in group.node_tree.nodes
+            if node.bl_idname == "ShaderNodeTexImage"
+            and node.image
+            and "_ALPHA" in node.image.name
+        ),
+        None,
+    )
+    if image is None:
+        return
+
+    links = material.node_tree.links
+
+    def new_node(bl_idname: str, name: str) -> bpy.types.Node:
+        node = nodes.new(bl_idname)
+        node.name = node.label = BLENDER_LOOK_PREFIX + name
+        return node
+
+    uv = new_node("ShaderNodeUVMap", "UV")
+    atlas = new_node("ShaderNodeTexImage", "Atlas_Alpha")
+    atlas.image = image
+    links.new(uv.outputs[0], atlas.inputs[0])
+
+    def insert(input_name: str, node: bpy.types.Node, passthrough: str) -> None:
+        """Puts node in front of an input, fed by what fed the input before."""
+        target = principled.inputs[input_name]
+        through = next(i for i in node.inputs if i.identifier == passthrough)
+        if target.links:
+            links.new(target.links[0].from_socket, through)
+        else:
+            through.default_value = target.default_value
+        links.new(node.outputs[0], target)
+        node[BAKE_PASSTHROUGH] = passthrough
+
+    color = new_node("ShaderNodeHueSaturation", "Color")
+    insert("Base Color", color, "Color")
+    # Follows the Lightness slider of the hair color
+    for input_name, (dark, light) in (
+        ("Value", CARD_LOOK_VALUE),
+        ("Saturation", CARD_LOOK_SATURATION),
+    ):
+        driver = color.inputs[input_name].driver_add("default_value").driver
+        driver.type = "SCRIPTED"
+        variable = driver.variables.new()
+        variable.name = "lightness"
+        variable.targets[0].id_type = "MATERIAL"
+        variable.targets[0].id = material
+        variable.targets[0].data_path = (
+            f'node_tree.nodes["{group.name}"].inputs["Lightness"].default_value'
+        )
+        driver.expression = (
+            f"{dark} + {light - dark} * min(max((lightness - 1) / 3, 0), 1)"
+        )
+
+    # The largest alpha of the atlas at a few offsets, which widens the strands
+    texel = CARD_LOOK_DILATE / max(image.size[0], 1)
+    offsets = ((texel, 0), (-texel, 0), (0, texel), (0, -texel)) if texel else ()
+    widest = atlas.outputs["Color"]
+    for index, offset in enumerate(offsets):
+        shift = new_node("ShaderNodeVectorMath", f"Dilate_UV_{index}")
+        shift.inputs[1].default_value = (*offset, 0.0)
+        links.new(uv.outputs[0], shift.inputs[0])
+        tap = new_node("ShaderNodeTexImage", f"Dilate_{index}")
+        tap.image = image
+        links.new(shift.outputs[0], tap.inputs[0])
+        larger = new_node("ShaderNodeMath", f"Dilate_Max_{index}")
+        larger.operation = "MAXIMUM"
+        links.new(widest, larger.inputs[0])
+        links.new(tap.outputs["Color"], larger.inputs[1])
+        widest = larger.outputs[0]
+
+    alpha = new_node("ShaderNodeMapRange", "Alpha_Range")
+    alpha.inputs["From Max"].default_value = CARD_LOOK_SOLID_ALPHA
+    links.new(widest, alpha.inputs["Value"])
+    # A mix that passes the new alpha, keeping the old one for the bake
+    use_alpha = new_node("ShaderNodeMix", "Alpha")
+    use_alpha.data_type = "FLOAT"
+    use_alpha.inputs[0].default_value = 1.0
+    links.new(alpha.outputs[0], next(i for i in use_alpha.inputs if i.identifier == "B_Float"))
+    insert("Alpha", use_alpha, "A_Float")
+
+    specular = new_node("ShaderNodeMath", "Specular")
+    specular.operation = "MULTIPLY"
+    specular.inputs[1].default_value = CARD_LOOK_SPECULAR
+    insert(SPECULAR_INPUT_NAME, specular, "Value")
+
+
+def remove_blender_look(material: bpy.types.Material) -> None:
+    """Undoes add_blender_look: the inputs of the Principled BSDF get their old
+    sources back and the nodes of the look are removed.
+
+    Args:
+        material (bpy.types.Material): Material of hair cards.
+    """
+    nodes = material.node_tree.nodes
+    look = [node for node in nodes if node.name.startswith(BLENDER_LOOK_PREFIX)]
+    if not look:
+        return
+    links = material.node_tree.links
+    principled = next(
+        node for node in nodes if node.bl_idname == "ShaderNodeBsdfPrincipled"
+    )
+    for target in principled.inputs:
+        source = target
+        while source.links and source.links[0].from_node.get(BAKE_PASSTHROUGH):
+            node = source.links[0].from_node
+            source = next(i for i in node.inputs if i.identifier == node[BAKE_PASSTHROUGH])
+        if source is target:
+            continue
+        if source.links:
+            links.new(source.links[0].from_socket, target)
+        else:
+            links.remove(target.links[0])
+            target.default_value = source.default_value
+    for node in look:
+        for socket in node.inputs:
+            if hasattr(socket, "default_value"):
+                socket.driver_remove("default_value")
+        nodes.remove(node)
 
 
 def load_card_material() -> bpy.types.Material:

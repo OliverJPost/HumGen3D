@@ -1441,22 +1441,10 @@
    "examples": [],
    "bases": [],
    "file": "human/hair/basehair.py",
-   "line": 39,
+   "line": 40,
    "members": [
     {
      "name": "lightness",
-     "summary": "",
-     "description": "",
-     "examples": [],
-     "inheritedFrom": null,
-     "file": "human/hair/basehair.py",
-     "line": 47,
-     "kind": "attribute",
-     "type": "NodeInput",
-     "readonly": false
-    },
-    {
-     "name": "redness",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1468,7 +1456,7 @@
      "readonly": false
     },
     {
-     "name": "roughness",
+     "name": "redness",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1480,7 +1468,7 @@
      "readonly": false
     },
     {
-     "name": "salt_and_pepper",
+     "name": "roughness",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1492,7 +1480,7 @@
      "readonly": false
     },
     {
-     "name": "roots",
+     "name": "salt_and_pepper",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1504,7 +1492,7 @@
      "readonly": false
     },
     {
-     "name": "root_lightness",
+     "name": "roots",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1516,7 +1504,7 @@
      "readonly": false
     },
     {
-     "name": "root_redness",
+     "name": "root_lightness",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1528,7 +1516,7 @@
      "readonly": false
     },
     {
-     "name": "roots_hue",
+     "name": "root_redness",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1540,7 +1528,7 @@
      "readonly": false
     },
     {
-     "name": "fast_or_accurate",
+     "name": "roots_hue",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1552,7 +1540,7 @@
      "readonly": false
     },
     {
-     "name": "hue",
+     "name": "fast_or_accurate",
      "summary": "",
      "description": "",
      "examples": [],
@@ -1564,13 +1552,25 @@
      "readonly": false
     },
     {
+     "name": "hue",
+     "summary": "",
+     "description": "",
+     "examples": [],
+     "inheritedFrom": null,
+     "file": "human/hair/basehair.py",
+     "line": 57,
+     "kind": "attribute",
+     "type": "NodeInput",
+     "readonly": false
+    },
+    {
      "name": "particle_systems",
      "summary": "Get propcollection of particle systems on the human used by this hair type.",
      "description": "",
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -1582,7 +1582,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -1594,7 +1594,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -1606,7 +1606,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -1618,7 +1618,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -1630,7 +1630,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -1673,7 +1673,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -1697,7 +1697,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -1713,7 +1713,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -1729,7 +1729,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 322,
+     "line": 326,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3641,7 +3641,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 47,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3653,7 +3653,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 48,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3665,7 +3665,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 49,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3677,7 +3677,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 50,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3689,7 +3689,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 51,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3701,7 +3701,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 52,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3713,7 +3713,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 53,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3725,7 +3725,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 54,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3737,7 +3737,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 55,
+     "line": 56,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3749,7 +3749,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 56,
+     "line": 57,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3761,7 +3761,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -3773,7 +3773,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -3785,7 +3785,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -3797,7 +3797,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -3809,7 +3809,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -3821,7 +3821,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -3864,7 +3864,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -3888,7 +3888,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3904,7 +3904,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -3938,7 +3938,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 47,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3950,7 +3950,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 48,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3962,7 +3962,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 49,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3974,7 +3974,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 50,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3986,7 +3986,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 51,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -3998,7 +3998,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 52,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4010,7 +4010,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 53,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4022,7 +4022,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 54,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4034,7 +4034,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 55,
+     "line": 56,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4046,7 +4046,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 56,
+     "line": 57,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4058,7 +4058,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4070,7 +4070,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4082,7 +4082,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -4094,7 +4094,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -4106,7 +4106,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4118,7 +4118,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -4161,7 +4161,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -4185,7 +4185,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4201,7 +4201,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4217,7 +4217,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 322,
+     "line": 326,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4575,7 +4575,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 47,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4587,7 +4587,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 48,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4599,7 +4599,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 49,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4611,7 +4611,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 50,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4623,7 +4623,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 51,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4635,7 +4635,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 52,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4647,7 +4647,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 53,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4659,7 +4659,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 54,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4671,7 +4671,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 55,
+     "line": 56,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4683,7 +4683,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 56,
+     "line": 57,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -4695,7 +4695,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4707,7 +4707,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4719,7 +4719,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -4731,7 +4731,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -4743,7 +4743,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -4755,7 +4755,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -4798,7 +4798,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -4822,7 +4822,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4838,7 +4838,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4854,7 +4854,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 377,
+     "line": 381,
      "kind": "method",
      "params": [
       {
@@ -4885,7 +4885,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 473,
+     "line": 477,
      "kind": "method",
      "params": [
       {
@@ -4951,7 +4951,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 511,
+     "line": 515,
      "kind": "method",
      "params": [],
      "returns": {
@@ -4967,7 +4967,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 517,
+     "line": 521,
      "kind": "method",
      "params": [
       {
@@ -5404,7 +5404,7 @@
    "examples": [],
    "bases": [],
    "file": "human/skin/skin.py",
-   "line": 41,
+   "line": 40,
    "members": [
     {
      "name": "nodes",
@@ -5413,7 +5413,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 45,
+     "line": 44,
      "kind": "attribute",
      "type": null,
      "readonly": false
@@ -5425,7 +5425,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 47,
+     "line": 46,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5437,7 +5437,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 48,
+     "line": 47,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5449,7 +5449,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 49,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5461,7 +5461,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 50,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5473,7 +5473,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 51,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5485,7 +5485,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 52,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5497,7 +5497,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 53,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5509,7 +5509,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 54,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5521,7 +5521,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 55,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -5533,7 +5533,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 56,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -6997,7 +6997,7 @@
    "examples": [],
    "bases": [],
    "file": "human/human.py",
-   "line": 54,
+   "line": 53,
    "members": [
     {
      "name": "get_preset_options",
@@ -7006,7 +7006,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 78,
+     "line": 77,
      "kind": "staticmethod",
      "params": [
       {
@@ -7044,7 +7044,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 123,
+     "line": 122,
      "kind": "classmethod",
      "params": [
       {
@@ -7084,7 +7084,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 168,
+     "line": 167,
      "kind": "classmethod",
      "params": [
       {
@@ -7129,7 +7129,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 259,
+     "line": 256,
      "kind": "staticmethod",
      "params": [
       {
@@ -7153,7 +7153,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 281,
+     "line": 278,
      "kind": "property",
      "type": "BodySettings",
      "readonly": true
@@ -7165,7 +7165,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 290,
+     "line": 287,
      "kind": "property",
      "type": "HeightSettings",
      "readonly": true
@@ -7177,7 +7177,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 299,
+     "line": 296,
      "kind": "property",
      "type": "FaceSettings",
      "readonly": true
@@ -7189,7 +7189,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 308,
+     "line": 305,
      "kind": "property",
      "type": "AgeSettings",
      "readonly": true
@@ -7201,7 +7201,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 317,
+     "line": 314,
      "kind": "property",
      "type": "PoseSettings",
      "readonly": true
@@ -7213,7 +7213,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 326,
+     "line": 323,
      "kind": "property",
      "type": "AnimationSettings",
      "readonly": true
@@ -7225,7 +7225,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 335,
+     "line": 332,
      "kind": "property",
      "type": "ClothingSettings",
      "readonly": true
@@ -7237,7 +7237,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 344,
+     "line": 341,
      "kind": "property",
      "type": "ExpressionSettings",
      "readonly": true
@@ -7249,7 +7249,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 353,
+     "line": 350,
      "kind": "property",
      "type": "ProcessSettings",
      "readonly": true
@@ -7261,7 +7261,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 362,
+     "line": 359,
      "kind": "property",
      "type": "MaterialSettings",
      "readonly": true
@@ -7273,7 +7273,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 371,
+     "line": 368,
      "kind": "property",
      "type": "ObjectCollection",
      "readonly": true
@@ -7285,7 +7285,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 381,
+     "line": 378,
      "kind": "property",
      "type": "Iterable[Object]",
      "readonly": true
@@ -7297,7 +7297,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 392,
+     "line": 389,
      "kind": "property",
      "type": "GenderStr",
      "readonly": true
@@ -7309,7 +7309,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 401,
+     "line": 398,
      "kind": "property",
      "type": "bpy_prop_collection",
      "readonly": true
@@ -7321,7 +7321,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 410,
+     "line": 407,
      "kind": "property",
      "type": "HG_OBJECT_PROPS",
      "readonly": true
@@ -7333,7 +7333,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 423,
+     "line": 420,
      "kind": "property",
      "type": "SkinSettings",
      "readonly": true
@@ -7345,7 +7345,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 432,
+     "line": 429,
      "kind": "property",
      "type": "KeySettings",
      "readonly": true
@@ -7357,7 +7357,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 444,
+     "line": 441,
      "kind": "property",
      "type": "EyeSettings",
      "readonly": true
@@ -7369,7 +7369,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 454,
+     "line": 451,
      "kind": "property",
      "type": "HairSettings",
      "readonly": true
@@ -7381,7 +7381,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 464,
+     "line": 461,
      "kind": "property",
      "type": "ExportBuilder",
      "readonly": true
@@ -7393,7 +7393,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 473,
+     "line": 470,
      "kind": "property",
      "type": "FloatVectorProperty",
      "readonly": false
@@ -7405,7 +7405,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 493,
+     "line": 490,
      "kind": "property",
      "type": "FloatVectorProperty",
      "readonly": false
@@ -7417,7 +7417,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 513,
+     "line": 510,
      "kind": "property",
      "type": "str",
      "readonly": false
@@ -7429,7 +7429,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 531,
+     "line": 528,
      "kind": "property",
      "type": "bool",
      "readonly": true
@@ -7441,7 +7441,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 547,
+     "line": 544,
      "kind": "method",
      "params": [],
      "returns": {
@@ -7457,7 +7457,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 632,
+     "line": 629,
      "kind": "method",
      "params": [
       {
@@ -7481,7 +7481,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 642,
+     "line": 639,
      "kind": "method",
      "params": [
       {
@@ -7512,7 +7512,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 666,
+     "line": 663,
      "kind": "method",
      "params": [
       {
@@ -7557,7 +7557,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 703,
+     "line": 700,
      "kind": "method",
      "params": [],
      "returns": {
@@ -7573,7 +7573,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 718,
+     "line": 715,
      "kind": "method",
      "params": [
       {
@@ -7597,7 +7597,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/human.py",
-     "line": 774,
+     "line": 771,
      "kind": "method",
      "params": [
       {
@@ -7667,7 +7667,7 @@
     "SavableContent"
    ],
    "file": "human/hair/basehair.py",
-   "line": 374,
+   "line": 378,
    "members": [
     {
      "name": "set",
@@ -7676,7 +7676,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 377,
+     "line": 381,
      "kind": "method",
      "params": [
       {
@@ -7707,7 +7707,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 473,
+     "line": 477,
      "kind": "method",
      "params": [
       {
@@ -7773,7 +7773,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 511,
+     "line": 515,
      "kind": "method",
      "params": [],
      "returns": {
@@ -7789,7 +7789,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/hair/basehair.py",
-     "line": 517,
+     "line": 521,
      "kind": "method",
      "params": [
       {
@@ -7813,7 +7813,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 47,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7825,7 +7825,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 48,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7837,7 +7837,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 49,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7849,7 +7849,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 50,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7861,7 +7861,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 51,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7873,7 +7873,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 52,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7885,7 +7885,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 53,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7897,7 +7897,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 54,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7909,7 +7909,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 55,
+     "line": 56,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7921,7 +7921,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 56,
+     "line": 57,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -7933,7 +7933,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -7945,7 +7945,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -7957,7 +7957,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -7969,7 +7969,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -7981,7 +7981,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -7993,7 +7993,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -8036,7 +8036,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -8060,7 +8060,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -8076,7 +8076,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -8092,7 +8092,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 322,
+     "line": 326,
      "kind": "method",
      "params": [],
      "returns": {
@@ -9106,7 +9106,7 @@
    "examples": [],
    "bases": [],
    "file": "human/skin/skin.py",
-   "line": 32,
+   "line": 31,
    "members": [
     {
      "name": "nodes",
@@ -9115,7 +9115,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 36,
+     "line": 35,
      "kind": "attribute",
      "type": null,
      "readonly": false
@@ -9127,7 +9127,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 37,
+     "line": 36,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -9139,7 +9139,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 38,
+     "line": 37,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -11377,7 +11377,7 @@
    "name": "ProcessSettings",
    "path": "human.process.process.ProcessSettings",
    "summary": "Processes the human for export, as the Process tab does, or step by step.",
-   "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.\n\nThe process system runs on the data of the HG_Export content pack, which is\ndownloaded from your Superhive account (formerly BlenderMarket). Without it, `run`, the steps,\n`lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The\n`has_*`, `was_*` and `is_*` properties and `settings` work without it.",
+   "description": "`run` does everything the Process tab does, from an `ExportSettings`:\n\n    settings = ExportSettings.from_recipe(\"unity\")\n    settings.output.folder = \"/path/to/project/Assets/Characters\"\n    result = human.process.run(settings)\n    print(result.files)\n\nThe other methods are the single steps of `run`, which change this human in\nplace, so call them on a `human.duplicate()`. They take the section of the\nsettings they are about, or plain arguments. `run` does them in this order,\nwhich the steps depend on:\n\n    1. `set_shape_keys`, so the other steps only carry the keys that stay\n    2. `convert_to_haircards`\n    3. `convert_to_game_eyes` and `lod.set_teeth_lod`, before baking, as\n       they change the materials\n    4. `bake_textures`, before the meshes are reduced\n    5. `set_quality` (or `lod.set_body_lod` and `lod.set_clothing_lod`)\n    6. `remove_hidden_skin`\n    7. `set_t_pose_as_rest` and `convert_to_game_rig`\n    8. `apply_names`\n    9. `prepare_clips`, once the skeleton is final\n    10. `human.export.write`, or `mark_as_processed` to keep it in the file\n\nThe steps that change the human for good refuse to run twice, see the\n`has_*` and `was_*` properties.\n\nThe process system runs on the data of the HG_Export content pack, which the\nadd-on's setup installs (\"Install HG Export\" in the Process tab). Without it, `run`, the steps,\n`lod` and `baking` raise `ExportPackMissing`, a `HumGenException`. The\n`has_*`, `was_*` and `is_*` properties and `settings` work without it.",
    "examples": [],
    "bases": [],
    "file": "human/process/process.py",
@@ -12746,7 +12746,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 47,
+     "line": 48,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12758,7 +12758,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 48,
+     "line": 49,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12770,7 +12770,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 49,
+     "line": 50,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12782,7 +12782,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 50,
+     "line": 51,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12794,7 +12794,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 51,
+     "line": 52,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12806,7 +12806,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 52,
+     "line": 53,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12818,7 +12818,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 53,
+     "line": 54,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12830,7 +12830,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 54,
+     "line": 55,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12842,7 +12842,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 55,
+     "line": 56,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12854,7 +12854,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 56,
+     "line": 57,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -12866,7 +12866,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 59,
+     "line": 60,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -12878,7 +12878,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 71,
+     "line": 72,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -12890,7 +12890,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 86,
+     "line": 87,
      "kind": "property",
      "type": "Optional[bpy.types.Object]",
      "readonly": true
@@ -12902,7 +12902,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 97,
+     "line": 98,
      "kind": "property",
      "type": "list[bpy.types.Material]",
      "readonly": true
@@ -12914,7 +12914,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 111,
+     "line": 112,
      "kind": "property",
      "type": "PropCollection",
      "readonly": true
@@ -12926,7 +12926,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 122,
+     "line": 123,
      "kind": "method",
      "params": [
       {
@@ -12969,7 +12969,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 283,
+     "line": 287,
      "kind": "method",
      "params": [
       {
@@ -12993,7 +12993,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 299,
+     "line": 303,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13009,7 +13009,7 @@
      "examples": [],
      "inheritedFrom": "BaseHair",
      "file": "human/hair/basehair.py",
-     "line": 302,
+     "line": 306,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13025,7 +13025,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 377,
+     "line": 381,
      "kind": "method",
      "params": [
       {
@@ -13056,7 +13056,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 473,
+     "line": 477,
      "kind": "method",
      "params": [
       {
@@ -13122,7 +13122,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 511,
+     "line": 515,
      "kind": "method",
      "params": [],
      "returns": {
@@ -13138,7 +13138,7 @@
      "examples": [],
      "inheritedFrom": "ImportableHair",
      "file": "human/hair/basehair.py",
-     "line": 517,
+     "line": 521,
      "kind": "method",
      "params": [
       {
@@ -14591,7 +14591,7 @@
     "bpy_prop_collection"
    ],
    "file": "human/skin/skin.py",
-   "line": 550,
+   "line": 526,
    "members": [
     {
      "name": "from_human",
@@ -14600,7 +14600,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 553,
+     "line": 529,
      "kind": "staticmethod",
      "params": [
       {
@@ -14633,7 +14633,7 @@
     "bpy_prop_collection"
    ],
    "file": "human/skin/skin.py",
-   "line": 531,
+   "line": 507,
    "members": [
     {
      "name": "from_human",
@@ -14642,7 +14642,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 534,
+     "line": 510,
      "kind": "staticmethod",
      "params": [
       {
@@ -14666,7 +14666,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 541,
+     "line": 517,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14689,7 +14689,7 @@
    "examples": [],
    "bases": [],
    "file": "human/skin/skin.py",
-   "line": 59,
+   "line": 58,
    "members": [
     {
      "name": "cavity_strength",
@@ -14698,7 +14698,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 65,
+     "line": 64,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14710,7 +14710,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 66,
+     "line": 65,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14722,7 +14722,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 67,
+     "line": 66,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14734,7 +14734,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 68,
+     "line": 67,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14746,7 +14746,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 69,
+     "line": 68,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14758,7 +14758,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 70,
+     "line": 69,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14770,7 +14770,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 71,
+     "line": 70,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14782,7 +14782,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 72,
+     "line": 71,
      "kind": "attribute",
      "type": "NodeInput",
      "readonly": false
@@ -14794,7 +14794,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 75,
+     "line": 74,
      "kind": "property",
      "type": "TextureSettings",
      "readonly": true
@@ -14806,7 +14806,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 84,
+     "line": 83,
      "kind": "property",
      "type": "SkinNodes",
      "readonly": true
@@ -14818,7 +14818,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 94,
+     "line": 93,
      "kind": "property",
      "type": "SkinLinks",
      "readonly": true
@@ -14830,7 +14830,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 104,
+     "line": 103,
      "kind": "property",
      "type": "Material",
      "readonly": true
@@ -14842,7 +14842,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 113,
+     "line": 112,
      "kind": "property",
      "type": "Union[MaleSkin, FemaleSkin]",
      "readonly": true
@@ -14854,7 +14854,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 126,
+     "line": 125,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14870,7 +14870,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 167,
+     "line": 166,
      "kind": "method",
      "params": [
       {
@@ -14901,7 +14901,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 186,
+     "line": 185,
      "kind": "method",
      "params": [
       {
@@ -14932,7 +14932,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 203,
+     "line": 202,
      "kind": "method",
      "params": [],
      "returns": {
@@ -14948,7 +14948,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 226,
+     "line": 225,
      "kind": "method",
      "params": [
       {
@@ -15199,7 +15199,7 @@
     "PreviewCollectionContent"
    ],
    "file": "human/skin/skin.py",
-   "line": 284,
+   "line": 283,
    "members": [
     {
      "name": "set",
@@ -15208,7 +15208,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 292,
+     "line": 291,
      "kind": "method",
      "params": [
       {
@@ -15232,7 +15232,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 328,
+     "line": 327,
      "kind": "method",
      "params": [
       {
@@ -15256,7 +15256,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 345,
+     "line": 344,
      "kind": "method",
      "params": [
       {
@@ -15294,7 +15294,7 @@
      "examples": [],
      "inheritedFrom": null,
      "file": "human/skin/skin.py",
-     "line": 403,
+     "line": 379,
      "kind": "method",
      "params": [
       {

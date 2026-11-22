@@ -14,7 +14,7 @@ A free Godot editor plugin that sets up a character exported with the **Godot** 
 | --- | --- |
 | Tested with | Godot 4.7 |
 | Needs | A character exported by the early access version of Human Generator, with its `.humgen3d.json` file and flow map next to it |
-| Licence | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-godot) |
+| License | MIT, the source is on [GitHub](https://github.com/OliverJPost/humgen3d-companion-godot) |
 
 ## Install
 
