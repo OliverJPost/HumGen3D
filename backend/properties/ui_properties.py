@@ -92,67 +92,6 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
 
     _register_priority = 4
 
-    # UI box toggles
-    __annotations__.update(  # noqa: CCE002,  CCE001
-        create_ui_toggles(
-            [
-                "indiv_scale",
-                "hair_length",
-                "face_hair",
-                "hair_mat",
-                "hair_cards",
-                "makeup",
-                "beard_shadow",
-                "main_skin",
-                "light_dark",
-                "freckles",
-                "age",
-                "beautyspots",
-                "texture",
-                "material",
-                "pattern_bool",
-                "decal_bool",
-                "thumb_ui",
-                "expression_slider",
-                "content_saving",
-                "other",
-                "main",
-                "eyes",
-                "expression_sliders",
-                "age_hairmat_ui",
-                "age_slider_ui",
-                "animation_nla",
-            ]
-        )
-    )
-
-    # Face category toggles
-    __annotations__.update(  # noqa: CCE002, CCE001
-        create_ui_toggles(
-            [
-                "nose",
-                "cheeks",
-                "eyes",
-                "l_skull",
-                "u_skull",
-                "chin",
-                "ears",
-                "mouth",
-                "jaw",
-                "other",
-                "custom",
-                "special",
-                "presets",
-                "Special",
-                "Arms",
-                "Legs",
-                "Torso",
-                "Head",
-                "Muscles",
-            ]
-        )
-    )
-
     phase: EnumProperty(
         name="Category",
         items=active_phase_enum,
@@ -197,3 +136,65 @@ class UserInterfaceProps(bpy.types.PropertyGroup):
         ],
         update=lambda self, context: hg_callback(self),
     )
+
+
+# UI box toggles
+UserInterfaceProps.__annotations__.update(
+    create_ui_toggles(
+        [
+            "indiv_scale",
+            "hair_length",
+            "face_hair",
+            "hair_mat",
+            "hair_cards",
+            "makeup",
+            "beard_shadow",
+            "main_skin",
+            "light_dark",
+            "freckles",
+            "age",
+            "beautyspots",
+            "texture",
+            "material",
+            "pattern_bool",
+            "decal_bool",
+            "thumb_ui",
+            "expression_slider",
+            "content_saving",
+            "other",
+            "main",
+            "eyes",
+            "expression_sliders",
+            "age_hairmat_ui",
+            "age_slider_ui",
+            "animation_nla",
+        ]
+    )
+)
+
+# Face category toggles
+UserInterfaceProps.__annotations__.update(
+    create_ui_toggles(
+        [
+            "nose",
+            "cheeks",
+            "eyes",
+            "l_skull",
+            "u_skull",
+            "chin",
+            "ears",
+            "mouth",
+            "jaw",
+            "other",
+            "custom",
+            "special",
+            "presets",
+            "Special",
+            "Arms",
+            "Legs",
+            "Torso",
+            "Head",
+            "Muscles",
+        ]
+    )
+)

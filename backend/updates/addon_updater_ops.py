@@ -95,9 +95,12 @@ def make_annotations(cls):
             if isinstance(v, bpy.props._PropertyDeferred)
         }
     if bl_props:
-        if "__annotations__" not in cls.__dict__:
+        if (
+            "__annotations__" not in cls.__dict__
+            and getattr(cls, "__annotate__", None) is None
+        ):
             setattr(cls, "__annotations__", {})
-        annotations = cls.__dict__["__annotations__"]
+        annotations = cls.__annotations__
         for k, v in bl_props.items():
             annotations[k] = v
             delattr(cls, k)

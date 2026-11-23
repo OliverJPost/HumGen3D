@@ -282,8 +282,6 @@ def _keep_props() -> Dict[str, Any]:
 class ShapeKeyProps(bpy.types.PropertyGroup):
     _register_priority = 3
 
-    __annotations__.update(_keep_props())  # noqa
-
     enabled: BoolProperty(
         name="Shape Keys",
         description="Keep shape keys on the processed human, otherwise all of"
@@ -301,6 +299,9 @@ class ShapeKeyProps(bpy.types.PropertyGroup):
         description="Lower levels get no shape keys, their values are baked in",
         default=True,
     )
+
+
+ShapeKeyProps.__annotations__.update(_keep_props())
 
 
 def _texture_tier_items(self, context):
@@ -347,8 +348,6 @@ def _texture_props() -> Dict[str, Any]:
 class TextureProps(bpy.types.PropertyGroup):
     _register_priority = 2
 
-    __annotations__.update(_texture_props())  # noqa
-
     enabled: BoolProperty(
         name="Textures",
         description="Bake the materials to textures. Files always need them",
@@ -377,6 +376,9 @@ class TextureProps(bpy.types.PropertyGroup):
         name="Samples", items=[("4", "4", "", 0), ("16", "16", "", 1), ("64", "64", "", 2)], default="4"
     )
     show_advanced: BoolProperty(name="Advanced", default=False)
+
+
+TextureProps.__annotations__.update(_texture_props())
 
 
 class ClipProps(bpy.types.PropertyGroup):
